@@ -88,6 +88,7 @@ lib/
 │   ├── network_file.dart      # 远程目录/文件条目模型（供网络浏览 UI 展示）
 │   ├── danmaku_auto_match_cache.dart # 弹幕自动匹配缓存模型（番剧 + 集列表，供切集自动匹配）
 │   ├── danmaku_font_mode.dart # 弹幕字体三态枚举（跟随系统/跟随App/自定义）+ 解析纯函数
+│   ├── cast_device.dart       # 投屏目标设备模型（DLNA MediaRenderer：id/设备名/设备类型，§4.18）
 │   ├── bilibili_user.dart      # 哔哩哔哩用户信息模型（nav 接口，mid/昵称/头像/等级/经验/大会员状态/硬币）
 │   ├── bili_bangumi.dart       # 哔哩番剧（PGC）模型：索引筛选/条目、搜索、季详情/选集/多季、时间表（fromJson 容错）
 │   ├── bili_dash.dart          # playurl DASH 模型：流条目/清晰度档/OP-ED clip（baseUrl/baseUrls 双格式兼容，§4.15）
@@ -151,6 +152,9 @@ lib/
 │   │   ├── download_settings.dart # 下载目录设置（ChangeNotifier + 持久化）
 │   │   ├── download_task.dart     # 下载任务状态机 + Range 流式下载 + 合并
 │   │   └── download_manager.dart  # 任务队列 + 并发槽调度 + 跨重启持久化（ChangeNotifier）
+│   ├── cast/                    # 投屏域（DLNA/UPnP，P0 仅本地文件推流，§4.18）
+│   │   ├── cast_service.dart    #   投屏服务（SSDP 发现渲染器 + 源分流 + SetAVTransportURI/Play 推流）
+│   │   └── lan_media_server.dart #  局域网媒体服务器（本地文件 → http://LAN:port/token，Range/CORS）
 │   └── ...                    #   ⚠️ 不要在这里加全局 ValueNotifier hack（见 §4.1）
 ├── widgets/                   # 可复用 UI 组件（跨页面）
 │   ├── app_frame.dart         #   ★ 全局框架：安全区 + 播放页全屏检测
@@ -169,6 +173,7 @@ lib/
 │   ├── bili_cover_card.dart   #   番剧封面卡片（竖版封面 + 右上角标 + 左下角灰标 + 标题/副标题，索引/推荐/时间表共用）
 │   ├── bili_episode_tile.dart #   番剧单集磁贴（集号 + 集名 + 胶囊角标，内联选集/全屏选集页共用）
 │   ├── directory_picker_dialog.dart # 目录选择器弹窗（复用 listDirectory，返回真实路径）
+│   ├── cast_device_dialog.dart # 投屏设备选择弹窗（SSDP 发现列表 + 点选推流，§4.18）
 │   └── marquee_text.dart      #   无缝循环跑马灯
 ├── pages/                     # 页面（每页一个目录）
 │   ├── bilibili/
@@ -285,6 +290,7 @@ lib/
     ├── bili_fingerprint_utils.dart # 反爬指纹纯函数（murmur3×64_128/uuid/b_lsid/bili_ticket hexsign/dm_img）
     ├── bili_bangumi_url.dart  #   番剧/视频链接解析纯函数（提取 ss/ep/BV/av 令牌 + 合集列表链接）
     ├── bili_short_link.dart   #   b23.tv 分享短链提取+展开（任意分享文本提取，302 命中令牌即停）
+    ├── cast_source.dart       #   投屏源分类纯函数（本地/直链/loopback/content + file:// 去前缀，§4.18）
     └── network_mime_types.dart # 文件名→MIME 类型映射
 ```
 
@@ -890,6 +896,32 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | 网速 | `player_status_bar.dart` + 两播放页 | 直链播放不走本地代理，状态栏两个代理查询均 null → 兜底读 mpv `cache-speed`（`directNetSpeedReader` 闭包，横竖屏播放页各传一份；直链/HLS/DASH 通吃） |
 | 播放 | `home_page.dart` | push `PlayerPage(path: url)`；章节由现有 `_chapterTracker.load()`（mpv chapter-list）对远程容器原生读取 |
 
+### 4.18 投屏（DLNA/UPnP，P0 仅本地文件推流）
+
+> 调研见 `杂项文件/参考项目/投屏功能调研文档.md`；P0 只做「DLNA 发现 + 本地文件
+> 推流（仅推流）」，不做遥控/进度回传/Chromecast/转码/在线直链（留 P1+）。
+
+**分层**（自下而上）：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 纯函数 | `utils/cast_source.dart` | 源分类（本地/直链/loopback/content）+ `file://` 去前缀 + loopback 主机判定 |
+| 服务 | `services/cast/lan_media_server.dart` | 本地文件 → `http://<LAN_IP>:<port>/<token>`（绑 0.0.0.0 + Range + CORS + token），复用 `HttpByteRange`/`networkMimeTypeForFileName`；`isSiteLocalIpv4` 挑站点本地 IPv4 |
+| 服务 | `services/cast/cast_service.dart` | SSDP 发现（dlna_dart `DLNAManager`）+ 按 `deviceType` 过滤 MediaRenderer + `setUrl/play` 推流；`resolveUrl` 仅本地文件 |
+| 模型 | `models/cast_device.dart` | 渲染器设备模型（id/设备名/设备类型） |
+| UI | `widgets/cast_device_dialog.dart` | 设备选择弹窗（进入即发现，列表点选推流，关闭停发现） |
+| 入口 | `models/player_action.dart` + `player_page.dart` / `player_portrait_page.dart` | `PlayerTopAction.cast`（投屏）：可加至顶栏槽位/「更多」，点击时仅本地文件可投、其余 toast 提示 |
+
+**关键决策**：
+- **选型**：dlna_dart（纯 Dart，Kazumi 同款）+ 自研 LanMediaServer（本地文件局域网暴露），
+  对齐 mpvRx CastMediaServer 的「0.0.0.0 + token + Range + CORS」。
+- **源分流**：P0 仅本地文件（绝对路径 / file://）；loopback 代理 URL（网络存储 / B 站）、
+  content:// 与在线直链点击时 toast「暂不支持投屏该来源」，在线直链留 P1。
+- **仅推流**：只 `SetAVTransportURI → Play`，投屏后不暂停手机、不回传进度/遥控（P0）。
+- **服务器生命周期**：expose 前 stop 旧的；投屏成功后服务器保持运行供电视拉流，
+  由横屏播放页 `dispose` 统一 `LanMediaServer.instance.stop()` 释放端口。
+- **权限**：AndroidManifest 补 `ACCESS_WIFI_STATE` / `CHANGE_WIFI_MULTICAST_STATE`
+  （SSDP 多播发现，normal 权限）。
 
 ---
 
@@ -1028,6 +1060,9 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/open_link_dialog_test.dart` — 打开链接弹窗（有效链接回调并关弹窗/自动补协议/无效行内提示不关弹窗/取消不回调/**回调内 push 不被弹掉**：先关弹窗再进播放页的回归）
   - `test/device_services_external_video_test.dart` — 外部打开视频通道封装（takeExternalVideo/resolveVideoUri 返回解析/空值降级/通道异常静默，§4.17）
   - `test/player_status_bar_net_speed_test.dart` — 顶部信息行网速来源分流（直连播放走 directNetSpeedReader/B 站代理命中不走 reader/reader 返回 null 不崩/本地播放隐藏胶囊，§4.17）
+  - `test/cast_source_test.dart` — 投屏源分类纯函数（本地/直链/loopback/content + file:// 去前缀 + loopback 判定，§4.18）
+  - `test/lan_media_server_test.dart` — 局域网媒体服务器（LAN URL 格式/全量+Range 拉流/错误 token 404/stop 释放/文件不存在抛错 + isSiteLocalIpv4，§4.18）
+  - `test/cast_service_test.dart` — 投屏服务（isMediaRenderer 过滤 + CastDevice.kind，§4.18）
 - 改以下代码必须跑对应测试：`AppFrame`、`ViewSettings` 排序、权限流程、`CapsuleNavBar`
 
 ---
@@ -1152,3 +1187,4 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | 网络存储的 `127.0.0.1` loopback 代理 URL 退出即失效，写入播放历史成死链 | `_recordPlaybackHistory` 按 loopback 前缀过滤；B 站在线播放走 `_biliMedia` 分支天然不记录（§4.17） |
 | Dart `Uri` 对含空格 host 宽松（`https://not a url` 能解析）；裸补 `https://` 会把 `mailto:` 错位成 userinfo | URL 校验先拒内部空白；`scheme:` 形态不补协议，交给白名单判定（`utils/url_media.dart`，§4.17） |
 | 在线直链的章节信息无需网站接口 | mpv/FFmpeg 解封装远程容器原生读 chapter（MKV 内嵌章节），现有 `ChapterTracker`（mpv chapter-list）天然覆盖 URL 播放（§4.17） |
+| 投屏 LAN 服务器绑 127.0.0.1 → 电视拉不到流 | 绑 `0.0.0.0` + URL 用手机局域网 IPv4（`isSiteLocalIpv4` 挑站点本地地址、排除回环）（§4.18） |

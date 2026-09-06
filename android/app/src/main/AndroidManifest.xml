@@ -13,6 +13,9 @@
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
     <!-- 播放界面顶部读取网络类型（WiFi/移动数据，normal 权限，安装即授予） -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- 投屏（DLNA/UPnP）：SSDP 多播发现需要 WiFi 状态 + 多播锁权限（normal，安装即授予） -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
     <!-- 听视频后台播放：前台服务保活（工作.md 阶段1 第 2 点） -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>

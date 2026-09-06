@@ -51,6 +51,7 @@ import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/services/subtitle_service.dart';
 import 'package:moumou/services/super_resolution_service.dart';
 import 'package:moumou/utils/app_dialog.dart';
+import 'package:moumou/utils/cast_source.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/intro_outro_skip.dart';
 import 'package:moumou/utils/playback_completion.dart';
@@ -58,6 +59,7 @@ import 'package:moumou/utils/playback_restore.dart';
 import 'package:moumou/utils/pip_aspect.dart';
 import 'package:moumou/utils/player_gestures.dart';
 import 'package:moumou/widgets/app_frame.dart';
+import 'package:moumou/widgets/cast_device_dialog.dart';
 import 'package:moumou/widgets/player_bottom_panel.dart';
 import 'package:moumou/widgets/player_panel.dart';
 import 'package:saver_gallery/saver_gallery.dart';
@@ -1009,6 +1011,17 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   PlayerPanelPage _equalizerPanelPage() =>
       const PlayerPanelPage(title: '音频均衡器', body: PlayerEqualizerPanel());
 
+  /// 投屏（顶栏槽位/「更多」面板共用的 PlayerTopAction.cast）：
+  /// 与横屏一致，P0 仅本地文件可投、其余来源 toast 提示；LAN 服务器
+  /// 生命周期由横屏页统一管理（退出播放时释放）。
+  Future<void> _openCast() async {
+    if (classifyCastSource(_path) != CastSource.localFile) {
+      _toast('暂不支持投屏该来源');
+      return;
+    }
+    await showCastDeviceDialog(context, path: _path);
+  }
+
   /// 「更多」面板主页：未放入槽位的动作 +「编辑控制栏」入口（与横屏一致）。
   Widget _buildMorePanel() {
     return Builder(
@@ -1219,6 +1232,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         _openAudioPlayer();
       case PlayerTopAction.pip:
         _enterPip();
+      case PlayerTopAction.cast:
+        _openCast();
     }
   }
 
@@ -1248,6 +1263,10 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         // 先关闭「更多」面板再进入画中画（与横屏一致，§4.5）
         Navigator.of(panelContext).pop();
         _enterPip();
+      case PlayerTopAction.cast:
+        // 先关闭「更多」面板再弹投屏设备选择（与横屏一致，§4.5）
+        Navigator.of(panelContext).pop();
+        _openCast();
     }
   }
 

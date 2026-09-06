@@ -49,6 +49,7 @@ import 'package:moumou/services/decode_settings.dart';
 import 'package:moumou/services/bilibili/bili_danmaku_service.dart';
 import 'package:moumou/services/bilibili/bili_constants.dart';
 import 'package:moumou/services/bilibili/bili_stream_proxy.dart';
+import 'package:moumou/services/cast/lan_media_server.dart';
 import 'package:moumou/services/device_services.dart';
 import 'package:moumou/services/fast_thumbnails.dart';
 import 'package:moumou/services/intro_outro_settings.dart';
@@ -60,6 +61,7 @@ import 'package:moumou/services/subtitle_service.dart';
 import 'package:moumou/services/subtitle_settings.dart';
 import 'package:moumou/services/super_resolution_service.dart';
 import 'package:moumou/utils/app_dialog.dart';
+import 'package:moumou/utils/cast_source.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/intro_outro_skip.dart';
 import 'package:moumou/utils/pip_aspect.dart';
@@ -67,6 +69,7 @@ import 'package:moumou/utils/playback_completion.dart';
 import 'package:moumou/utils/playback_restore.dart';
 import 'package:moumou/utils/player_gestures.dart';
 import 'package:moumou/widgets/app_frame.dart';
+import 'package:moumou/widgets/cast_device_dialog.dart';
 import 'package:moumou/widgets/player_panel.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 
@@ -1715,6 +1718,17 @@ class _PlayerPageState extends State<PlayerPage>
         body: const PlayerFitPanel(),
       );
 
+  /// 投屏（顶栏槽位/「更多」面板共用的 PlayerTopAction.cast）：
+  /// P0 仅本地文件可投，其余来源 toast 提示；LAN 服务器在投屏成功后
+  /// 保持运行供电视拉流，退出播放页时释放。
+  Future<void> _openCast() async {
+    if (classifyCastSource(_path) != CastSource.localFile) {
+      _toast('暂不支持投屏该来源');
+      return;
+    }
+    await showCastDeviceDialog(context, path: _path);
+  }
+
   /// 「更多」面板主页：未放入槽位的动作 +「编辑控制栏」入口。
   ///
   /// 工作.md 第 14 点：未放置到顶部 5 槽位的动作自动出现在「更多」里
@@ -1931,6 +1945,8 @@ class _PlayerPageState extends State<PlayerPage>
         _openChapterPanel();
       case PlayerTopAction.introOutro:
         _openIntroOutroPanel();
+      case PlayerTopAction.cast:
+        _openCast();
     }
   }
 
@@ -1989,6 +2005,10 @@ class _PlayerPageState extends State<PlayerPage>
       case PlayerTopAction.pip:
         Navigator.of(panelContext).pop();
         _enterPip();
+      case PlayerTopAction.cast:
+        // 动作类：先关「更多」面板再弹投屏设备选择（§4.5 不叠加弹窗）
+        Navigator.of(panelContext).pop();
+        _openCast();
     }
   }
 
@@ -2722,6 +2742,8 @@ class _PlayerPageState extends State<PlayerPage>
     unawaited(_disposePlayer());
     // 停止 B 站流代理（mbedTLS 绕过的本地 HTTP 服务，退出即释放端口）
     BiliStreamProxy.instance.stop();
+    // 停止投屏局域网媒体服务器（本地文件暴露给电视的 HTTP 服务，退出即释放端口）
+    LanMediaServer.instance.stop();
     super.dispose();
   }
 

@@ -121,6 +121,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.7.14"
+  dlna_dart:
+    dependency: "direct main"
+    description:
+      name: dlna_dart
+      sha256: da607931548720331b7503f72c426fa7fbd19e9144a4778d293c16a5bc186407
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.1.1"
   fake_async:
     dependency: transitive
     description:

@@ -68,6 +68,8 @@ enum PlayerTopAction {
   decode('decode', '解码', Icons.deblur_outlined, true),
   // 章节：已接入（工作.md 章节功能），点击呼出章节列表（无章节时提示）
   chapter('chapter', '章节', Icons.bookmarks_outlined, true),
+  // 投屏：已接入（工作.md 投屏 P0），点击弹设备选择（仅本地文件可投）
+  cast('cast', '投屏', Icons.cast, true),
   // v2 新增：pip/listen 已实现（implemented=true）
   pip('pip', '画中画', Icons.picture_in_picture_alt_outlined, true),
   // 听视频：已接入（工作.md 第 10 点），点击进入听视频界面
@@ -77,7 +79,7 @@ enum PlayerTopAction {
   // 片头片尾：已接入（工作.md 片头片尾功能），点击呼出跳过设置面板
   introOutro('intro_outro', '片头片尾', Icons.movie_filter_outlined, true),
   // 枚举声明序 = 未自定义槽位时「更多」面板与「可添加」列表的默认展示序：
-  // 字幕/弹幕/音频/比例/**解码/章节**/画中画/听视频/循环/片头片尾/均衡器
+  // 字幕/弹幕/音频/比例/**解码/章节**/投屏/画中画/听视频/循环/片头片尾/均衡器
   //（工作.md：解码与章节在「比例」之后、「画中画」之前；均衡器在「片头片尾」之后）
   equalizer('equalizer', '音频均衡器', Icons.equalizer_outlined, true);
 
