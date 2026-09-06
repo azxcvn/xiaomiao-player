@@ -41,6 +41,12 @@ android {
             keyPassword = keystoreProperties["keyPassword"] as String
             storeFile = file(keystoreProperties["storeFile"] as String)
             storePassword = keystoreProperties["storePassword"] as String
+            storeType = "JKS"
+            // 签名方案：v2(Android 7.0+) + v3(Android 9.0+，支持密钥轮换)
+            enableV1Signing = false
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = false
         }
     }
 
