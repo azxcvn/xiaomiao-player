@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
 import 'package:moumou/models/tree_node.dart';
 import 'package:moumou/models/video_file.dart';
 import 'package:moumou/pages/home/folder_detail_page.dart';
+import 'package:moumou/pages/home/open_link_dialog.dart';
 import 'package:moumou/pages/home/tree_folder_page.dart';
 import 'package:moumou/pages/home/views/folder_list_view.dart';
 import 'package:moumou/pages/home/views/tree_list_view.dart';
@@ -11,10 +14,12 @@ import 'package:moumou/services/bilibili/bili_account.dart';
 import 'package:moumou/pages/media_info/media_info_page.dart';
 import 'package:moumou/pages/network/network_storage_page.dart';
 import 'package:moumou/pages/player/player_page.dart';
+import 'package:moumou/services/playback_history_service.dart';
 import 'package:moumou/services/playback_progress_service.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/services/video_scanner.dart';
 import 'package:moumou/services/view_settings.dart';
+import 'package:moumou/utils/url_media.dart';
 import 'package:moumou/widgets/app_frame.dart';
 import 'package:moumou/widgets/options_sheet.dart';
 import 'package:moumou/widgets/speed_dial_fab.dart';
@@ -245,7 +250,9 @@ class _HomePageState extends State<HomePage>
   }
 
   /// 右下角速拨按钮：最近播放 / 打开链接 / 哔哩番剧 / 网络存储。
-  /// 「哔哩番剧」进入番剧索引页（阶段二）；「最近播放」「打开链接」预留。
+  /// 「哔哩番剧」进入番剧索引页（阶段二）；「最近播放」直启最后一次播放的
+  /// 视频（工作.md：播放历史记录功能）；「打开链接」弹窗输入直链在线播放
+  /// （工作.md：链接播放功能）。
   Widget _buildSpeedDial() {
     return SpeedDialFab(
       heroTag: 'home_speed_dial',
@@ -253,12 +260,12 @@ class _HomePageState extends State<HomePage>
         SpeedDialAction(
           icon: Icons.history,
           label: '最近播放',
-          onTap: () => _comingSoon('最近播放'),
+          onTap: _openRecent,
         ),
         SpeedDialAction(
           icon: Icons.link,
           label: '打开链接',
-          onTap: () => _comingSoon('打开链接'),
+          onTap: _openLink,
         ),
         SpeedDialAction(
           icon: Icons.live_tv_outlined,
@@ -274,12 +281,49 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  void _comingSoon(String feature) {
+  void _toast(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text('「$feature」功能正在开发中，敬请期待')),
-      );
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  /// 最近播放（工作.md：播放历史记录功能）：直接播放**最后一次**播放的
+  /// 视频；进度由播放页按保存的播放进度自动恢复。无历史提示；本地文件
+  /// 已被删除/移动时提示（条目保留，可在「历史记录」页管理删除）。
+  Future<void> _openRecent() async {
+    final history = PlaybackHistoryService.instance;
+    await history.ensureLoaded();
+    if (!mounted) return;
+    final entry = history.mostRecent;
+    if (entry == null) {
+      _toast('暂无播放历史');
+      return;
+    }
+    if (!entry.isUrl && !File(entry.path).existsSync()) {
+      _toast('文件不存在或已被移动：${entry.title}');
+      return;
+    }
+    await Navigator.of(context).push(
+      playerPageRoute(PlayerPage(path: entry.path, title: entry.title)),
+    );
+    // 返回后刷新，进度条立即更新
+    if (mounted) setState(() {});
+  }
+
+  /// 打开链接（工作.md：链接播放功能）：弹窗输入在线视频直链 → 播放。
+  /// 章节信息由 mpv 解封装远程容器原生读取（对齐 mpvRx：直链交给 mpv，
+  /// 章节随容器自带，无需网站接口）。参考 mpvRx 的实现。
+  Future<void> _openLink() async {
+    await showOpenLinkDialog(
+      context,
+      onPlay: (url) {
+        Navigator.of(context).push(
+          playerPageRoute(
+            PlayerPage(path: url, title: mediaTitleFromUrl(url)),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _openNetworkStorage() async {

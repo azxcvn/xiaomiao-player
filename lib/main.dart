@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:moumou/models/danmaku_font_mode.dart';
 import 'package:moumou/pages/home/home_page.dart';
+import 'package:moumou/pages/player/player_page.dart';
 import 'package:moumou/pages/settings/settings_page.dart';
 import 'package:moumou/services/app_font_settings.dart';
 import 'package:moumou/services/bilibili/bili_account.dart';
@@ -11,11 +12,13 @@ import 'package:moumou/services/crash_log_service.dart';
 import 'package:moumou/services/danmaku_server_settings.dart';
 import 'package:moumou/services/danmaku_settings.dart';
 import 'package:moumou/services/decode_settings.dart';
+import 'package:moumou/services/device_services.dart';
 import 'package:moumou/services/download/download_manager.dart';
 import 'package:moumou/services/equalizer_settings.dart';
 import 'package:moumou/services/intro_outro_settings.dart';
 import 'package:moumou/services/media_scan_settings.dart';
 import 'package:moumou/services/network/network_connection_settings.dart';
+import 'package:moumou/services/playback_history_service.dart';
 import 'package:moumou/services/playback_progress_service.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/services/subtitle_settings.dart';
@@ -23,6 +26,8 @@ import 'package:moumou/services/super_resolution_service.dart';
 import 'package:moumou/services/view_settings.dart';
 import 'package:moumou/theme/app_theme.dart';
 import 'package:moumou/theme/theme_controller.dart';
+import 'package:moumou/utils/formatters.dart';
+import 'package:moumou/utils/url_media.dart';
 import 'package:moumou/widgets/app_frame.dart';
 import 'package:moumou/widgets/capsule_nav_bar.dart';
 import 'package:moumou/widgets/main_scaffold.dart';
@@ -84,11 +89,22 @@ class _MoumouAppState extends State<MoumouApp> {
   final ThemeController _themeController = ThemeController();
   final ViewSettings _viewSettings = ViewSettings();
 
+  /// 根 Navigator key：外部打开视频（系统「打开方式」）从 App 顶层 push
+  /// 播放页用（widgets/ 层不 import pages/，故挂在这里，见 §3 分层）
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
   @override
   void initState() {
     super.initState();
     _themeController.load();
     _viewSettings.load();
+    // 外部打开视频（注册为系统播放器，工作.md）：
+    // - 热启动（onNewIntent）：原生推送 onExternalVideo → 取走并播放；
+    // - 冷启动（onCreate intent 暂存原生侧）：首帧后取走并播放。
+    DeviceServices.onExternalVideo = _consumePendingExternalVideo;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _consumePendingExternalVideo();
+    });
     // 用 ensureLoaded 而非 load：播放页恢复进度时也用 ensureLoaded，
     // 两者共享同一 load Future，防止「main 的 load 未完成、播放页已读
     // 空缓存」的竞态（用户反馈：重启后恢复不了进度的根因）
@@ -121,6 +137,9 @@ class _MoumouAppState extends State<MoumouApp> {
     // 网络存储账户（阶段4 网络存储）：同 ensureLoaded 模式，账户列表页
     // ListenableBuilder 订阅、账户增删改用 setter 与这里共享同一 load Future
     NetworkConnectionSettings.instance.ensureLoaded();
+    // 播放历史（工作.md：播放历史记录功能）：同 ensureLoaded 模式；
+    // 首页速拨「最近播放」与「历史记录」页读取
+    PlaybackHistoryService.instance.ensureLoaded();
     // App 全局字体设置（工作.md 第 3 点）：同 ensureLoaded 模式；main() 已在
     // runApp 前 await 注册，这里补 ensureLoaded 防测试/热重载路径竞态
     AppFontSettings.instance.ensureLoaded();
@@ -134,9 +153,51 @@ class _MoumouAppState extends State<MoumouApp> {
 
   @override
   void dispose() {
+    DeviceServices.onExternalVideo = null;
     _themeController.dispose();
     _viewSettings.dispose();
     super.dispose();
+  }
+
+  // ── 外部打开视频（系统「打开方式」→ 本项目播放，工作.md）──
+
+  /// 取走原生侧暂存的外部视频并播放（冷启动 + onNewIntent 推送共用入口）
+  Future<void> _consumePendingExternalVideo() async {
+    final pending = await DeviceServices.takeExternalVideo();
+    if (pending == null) return;
+    final uri = pending['uri'] ?? '';
+    if (uri.isEmpty) return;
+    await _playExternalVideo(uri, fallbackTitle: pending['title'] ?? '');
+  }
+
+  Future<void> _playExternalVideo(
+    String uri, {
+    String fallbackTitle = '',
+  }) async {
+    // 解析为可播放路径（content:// 真实路径或缓存拷贝 / file:// / 流媒体直链）
+    final resolved = await DeviceServices.resolveVideoUri(uri);
+    if (resolved == null) {
+      final context = _navigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(const SnackBar(content: Text('无法打开该视频')));
+      }
+      return;
+    }
+    // 标题：原生解析的文件名优先；直链由 URL 提取；兜底路径最后一段
+    var title = resolved.title;
+    if (title.isEmpty) {
+      title = isOnlineMedia(resolved.path)
+          ? mediaTitleFromUrl(resolved.path)
+          : resolved.path.split('/').where((s) => s.isNotEmpty).lastOrNull ??
+              resolved.path;
+    }
+    if (title.isEmpty) title = fallbackTitle;
+    if (!mounted) return;
+    _navigatorKey.currentState?.push(
+      playerPageRoute(PlayerPage(path: resolved.path, title: title)),
+    );
   }
 
   @override
@@ -183,6 +244,8 @@ class _MoumouAppState extends State<MoumouApp> {
           theme: light,
           darkTheme: dark,
           themeMode: themeMode,
+          // 根 Navigator key：外部打开视频从 App 顶层 push 播放页（见 initState）
+          navigatorKey: _navigatorKey,
           // 全局框架：安全区 + 播放页全屏（详见 AppFrame）；
           // App 自定义字体启用时叠加整体字号缩放（仅 Flutter Text）
           builder: (context, child) {

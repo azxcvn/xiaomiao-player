@@ -8,6 +8,7 @@ import 'package:moumou/pages/settings/about_page.dart';
 import 'package:moumou/pages/settings/appearance_page.dart';
 import 'package:moumou/pages/settings/danmaku_server_page.dart';
 import 'package:moumou/pages/settings/media_scan_settings_page.dart';
+import 'package:moumou/pages/settings/playback_history_page.dart';
 import 'package:moumou/pages/settings/player_settings_page.dart';
 import 'package:moumou/services/bilibili/bili_account.dart';
 import 'package:moumou/theme/theme_controller.dart';
@@ -94,17 +95,36 @@ class SettingsPage extends StatelessWidget {
               // ── 播放（工作.md 第 6 点：原「播放器」改名）──
               const SettingsGroupTitle(title: '播放'),
               SettingsCard(
-                child: SettingsTile(
-                  icon: Icons.play_circle_outline,
-                  title: '播放设置',
-                  subtitle: const Text('调整播放相关设置'),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const PlayerSettingsPage(),
-                      ),
-                    );
-                  },
+                child: Column(
+                  children: [
+                    SettingsTile(
+                      icon: Icons.play_circle_outline,
+                      title: '播放设置',
+                      subtitle: const Text('调整播放相关设置'),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const PlayerSettingsPage(),
+                          ),
+                        );
+                      },
+                    ),
+                    const Divider(height: 1),
+                    // 播放历史（工作.md：播放历史记录功能）——查看/删除/清空/
+                    // 关闭记录；首页速拨「最近播放」直启最后一条
+                    SettingsTile(
+                      icon: Icons.history,
+                      title: '历史记录',
+                      subtitle: const Text('查看与管理播放历史'),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const PlaybackHistoryPage(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
               // ── 媒体扫描与过滤 ────────────────────────────

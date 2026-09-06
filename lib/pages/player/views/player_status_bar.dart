@@ -37,11 +37,21 @@ class PlayerStatusBar extends StatefulWidget {
   /// 本地播放传 null 即可。
   final String? streamUrl;
 
+  /// 直连播放的网速兜底来源（字节/秒）：**两个本地代理都查不到时**调用。
+  ///
+  /// 链接播放（打开链接/外部直链）由 mpv 直连远程 URL，不经过
+  /// `NetworkStreamingProxy`（网络存储）与 `BiliStreamProxy`（B 站）任何
+  /// 一个本地代理——按 URL 查询恒为 null，网速会一直显示 0 KB/s。
+  /// 播放页传「读 mpv `cache-speed` 属性」的闭包（demuxer 缓存的网络
+  /// 吞吐估计，直链/HLS/DASH 通吃）。两个代理命中时不会调用本回调。
+  final Future<double?> Function()? directNetSpeedReader;
+
   const PlayerStatusBar({
     super.key,
     this.portrait = false,
     this.isOnlinePlayback = false,
     this.streamUrl,
+    this.directNetSpeedReader,
   });
 
   @override
@@ -121,9 +131,10 @@ class _PlayerStatusBarState extends State<PlayerStatusBar> {
     if (mounted && type != _netType) setState(() => _netType = type);
   }
 
-  /// 每秒采样一次网速：直接读取代理层「最近 1 秒滑动窗口」的真实下行速率。
+  /// 每秒采样一次网速：优先读代理层「最近 1 秒滑动窗口」的真实下行速率，
+  /// 两个代理都未参与（直连播放）时读 [directNetSpeedReader]。
   /// 不做差分、不做平滑，稳定且贴近实际下载速度；播放期间胶囊常驻（见 build 中显示条件）。
-  void _tickNetSpeed() {
+  Future<void> _tickNetSpeed() async {
     if (!widget.isOnlinePlayback || widget.streamUrl == null) {
       if (_netSpeedBytesPerSec != 0) setState(() => _netSpeedBytesPerSec = 0);
       return;
@@ -131,11 +142,17 @@ class _PlayerStatusBarState extends State<PlayerStatusBar> {
     // 网速来源按代理类型分流（工作.md 第 6 点——之前只读网络存储代理，B 站恒为 0 KB/s）：
     // - 网络存储播放：streamUrl 就是本地代理 URL，按 URL 匹配查 NetworkStreamingProxy；
     // - B 站在线播放：streamUrl 是 CDN 原始 URL（本地代理 URL 只在播放器内部使用），
-    //   按匹配查不到，改读 BiliStreamProxy 全部流（video+audio）的聚合速率。
+    //   按匹配查不到，改读 BiliStreamProxy 全部流（video+audio）的聚合速率；
+    // - 链接直连播放（打开链接/外部直链）：mpv 直连远程 URL，**不经过任何本地代理**，
+    //   两处查询均为 null——读 mpv `cache-speed`（demuxer 缓存网络吞吐估计，
+    //   直链/HLS/DASH 通吃；不能给直链套 B 站代理，m3u8 相对分段会解析成
+    //   127.0.0.1 地址而 404）。
     final speed = NetworkStreamingProxy.instance
             .recentSpeedBytesPerSec(widget.streamUrl!) ??
-        BiliStreamProxy.instance.recentTotalSpeedBytesPerSec();
+        BiliStreamProxy.instance.recentTotalSpeedBytesPerSec() ??
+        await widget.directNetSpeedReader?.call();
     if (speed == null) return;
+    if (!mounted) return;
     if ((speed - _netSpeedBytesPerSec).abs() > 1.0) {
       setState(() => _netSpeedBytesPerSec = speed);
     }

@@ -26,12 +26,17 @@ class VideoCard extends StatefulWidget {
   /// 点击最右侧「i」图标（打开媒体信息页）；null 时显示播放图标
   final VoidCallback? onInfoTap;
 
+  /// 覆盖最右侧图标（优先于 onInfoTap 的「i」/播放图标）。
+  /// 历史记录页用它放垃圾桶删除按钮；不传走原有语义。
+  final Widget? trailing;
+
   const VideoCard({
     super.key,
     required this.video,
     required this.fields,
     required this.onTap,
     this.onInfoTap,
+    this.trailing,
   });
 
   @override
@@ -258,8 +263,10 @@ class _VideoCardState extends State<VideoCard> {
                   ],
                 ),
               ),
-              // 最右侧：媒体信息「i」入口（替换原播放图标）
-              if (widget.onInfoTap != null)
+              // 最右侧：trailing 覆盖（如历史页垃圾桶）> 媒体信息「i」> 播放图标
+              if (widget.trailing != null)
+                widget.trailing!
+              else if (widget.onInfoTap != null)
                 IconButton(
                   icon: Icon(
                     Icons.info_outline,

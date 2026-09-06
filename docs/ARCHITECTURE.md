@@ -53,6 +53,9 @@ Flutter 本地视频播放器（Android），核心能力：
   自定义复用字体目录批量导入 + 列表选择），两者走 Flutter 引擎 `loadFontFromList` 注册（§4.12）
 - **哔哩哔哩账号登录**（哔哩生态阶段一）：我的→登录，TV 扫码（刷新/保存相册/打开哔哩哔哩自动扫码）
   + Cookie 导入兜底；凭证加密存储（flutter_secure_storage）+ 登录态自检（nav）+ WBI 签名 + buvid 预取（§4.13）
+- **系统播放器接入**：注册为系统视频播放器（其他 App「打开方式」/浏览器直链可选本项目，
+  content:// 三级解析）；**播放历史**（速拨「最近播放」直启 + 我的→历史记录管理，
+  只记本地与直链）；**打开链接**（速拨输入直链在线播放，章节随容器原生读取）（§4.17）
 
 技术栈：Flutter 3.44+ / Dart 3.12+，依赖见 `pubspec.yaml`。
 
@@ -73,6 +76,7 @@ lib/
 │   ├── player_loop.dart       # 循环播放模式枚举（off/列表循环/单集循环）
 │   ├── playlist_sort.dart     # 播放列表排序 + 目录过滤纯函数
 │   ├── chapter_info.dart      # 章节模型（ChapterInfo/SkipSegment/跳过类型枚举）
+│   ├── playback_history_entry.dart # 播放历史条目模型（路径/标题/是否直链/时间/时长，toJson 容错）
 │   ├── audio_track.dart       # 音轨模型 + 声道枚举（auto/auto-safe/mono/stereo/反向立体声）+ 格式过滤/af 滤镜链纯函数
 │   ├── subtitle_track.dart    # 字幕轨道模型 + 展示名/格式过滤/对齐/颜色/RGBA 转换/字体过滤纯函数
 │   ├── super_resolution_mode.dart  # 超分模式/质量枚举 + 着色器链构建纯函数
@@ -93,6 +97,7 @@ lib/
 │   ├── video_scanner.dart     # 扫描 + 建树 + 建文件夹列表
 │   ├── video_info_service.dart# 列表封面缩略图（磁盘缓存）+ 基本元数据 + 完整媒体信息
 │   ├── playback_progress_service.dart  # 播放进度（ChangeNotifier + 持久化 + 串行写盘）
+│   ├── playback_history_service.dart # 播放历史（记录/去重置顶/上限淘汰/删除/清空/开关，ChangeNotifier + 持久化，§4.17）
 │   ├── player_controls_settings.dart   # 播放器控制设置（槽位/手势/倍速/比例/长按/方向/顶部信息等）
 │   ├── device_services.dart   # 设备能力：音量/亮度/画中画/电量/网络类型/后台服务启停/字幕·字体文件与目录操作（MethodChannel）+ 任意时刻抓帧（FFmpeg 引擎 + 秒桶内存 LRU）
 │   ├── fast_thumbnails.dart   # FFmpeg 快速缩略图引擎（FFI 直连自建 libmpv.so 的 mk_thumbnail_*，单飞+顶旧调度）
@@ -180,7 +185,8 @@ lib/
 │   ├── download/
 │   │   └── download_manager_page.dart # 下载管理页（任务列表 + 暂停/恢复/重试/删除，§4.16）
 │   ├── home/
-│   │   ├── home_page.dart     #   首页（权限门禁 + 视图分发 + 搜索入口）
+│   │   ├── home_page.dart     #   首页（权限门禁 + 视图分发 + 搜索入口 + 速拨：最近播放/打开链接）
+│   │   ├── open_link_dialog.dart # 「打开链接」弹窗（输入直链 → 规范化校验 → 播放，§4.17）
 │   │   ├── views/             #   首页专属视图组件
 │   │   │   ├── folder_list_view.dart  # 列表视图
 │   │   │   └── tree_list_view.dart    # 树状一级视图
@@ -235,6 +241,7 @@ lib/
 │   └── settings/
 │       ├── settings_page.dart #   设置主页（分组结构）
 │       ├── appearance_page.dart      # 外观设置子页
+│       ├── playback_history_page.dart # 历史记录页（VideoCard 仅进度字段 + 右侧垃圾桶删除 + 清空二次确认 + 记录开关，§4.17）
 │       ├── font_page.dart            # App字体设置页（预览 + 开关 + 导入字体 + 字号/字重滑杆）
 │       ├── player_settings_page.dart # 播放器设置子页（手势/视频方向/顶部信息/播放行为/阈值）
 │       ├── media_scan_settings_page.dart # 媒体扫描与过滤设置子页（.nomedia/隐藏文件夹/黑白名单）
@@ -249,6 +256,7 @@ lib/
 └── utils/                     # 纯工具函数
     ├── app_dialog.dart        #   （见 widgets/app_dialog.dart 说明）
     ├── formatters.dart        #   大小/日期/时长/倍速/网速格式化 + 在线媒体判定
+    ├── url_media.dart         #   在线直链纯函数（规范化补协议/流媒体协议白名单/URL 提取标题，§4.17）
     ├── natural_compare.dart   #   自然序（数字感知）比较
     ├── watch_state.dart       #   观看状态纯函数（未观看/观看中/已看完）
     ├── playback_completion.dart # EOF 动作解析纯函数（优先级链）
@@ -303,7 +311,7 @@ models（模型）     → 无依赖（纯数据）
 ### 4.1 状态管理
 
 - **约定**：`ChangeNotifier` + `ListenableBuilder`（或 `Listenable.merge`），需要持久化的用 `shared_preferences`
-- 现有控制器：`ViewSettings`（排序/字段/视图模式）、`ThemeController`（外观）、`PlaybackProgressService`（单例，进度）、`SuperResolutionService`（单例，超分模式+质量+记忆开关）、`SubtitleSettings`（单例，字幕延迟/大小/位置/对齐/颜色/字体/内嵌样式覆盖，默认关闭）、`EqualizerSettings`（单例，均衡器 5 频段/低音增强/虚拟环绕/预设，默认关闭，全局持久化）、`AppFontSettings`（单例，App 全局字体开关/族名/字号/字重，默认关闭，§4.12）；控制按钮背景（底栏倍速/列表图标/顶栏控制图标，默认关闭）、倍速记忆（默认关闭）、画面比例（默认自动）、**长按倍速（倍率 1–4 步进 0.5/指示器开关/首次提示标记，阶段1 第 4 点）**、音量亮度手势灵敏度（默认 1.0）、保存音量到系统（默认开启）、双指缩小视频（默认开启）、进度条缩略图（默认开启，见 §4.9）、已观看进度阈值（5%–100% 步进 5%，默认 95%）、自动连播（默认开启）、播放完毕自动退出（默认开启）、循环播放模式（off/列表循环/单集循环，默认关闭）、视频方向（自动/锁定竖屏/锁定横屏，默认自动）、播放界面动画（默认开启）、**顶部信息多选（时间/电量/网速/数据类型四项，默认全选，阶段1 第 1 点；旧单选枚举一次性迁移）** 属 `PlayerControlsSettings`
+- 现有控制器：`ViewSettings`（排序/字段/视图模式）、`ThemeController`（外观）、`PlaybackProgressService`（单例，进度）、`PlaybackHistoryService`（单例，播放历史：记录/删除/清空/开关，默认开启，§4.17）、`SuperResolutionService`（单例，超分模式+质量+记忆开关）、`SubtitleSettings`（单例，字幕延迟/大小/位置/对齐/颜色/字体/内嵌样式覆盖，默认关闭）、`EqualizerSettings`（单例，均衡器 5 频段/低音增强/虚拟环绕/预设，默认关闭，全局持久化）、`AppFontSettings`（单例，App 全局字体开关/族名/字号/字重，默认关闭，§4.12）；控制按钮背景（底栏倍速/列表图标/顶栏控制图标，默认关闭）、倍速记忆（默认关闭）、画面比例（默认自动）、**长按倍速（倍率 1–4 步进 0.5/指示器开关/首次提示标记，阶段1 第 4 点）**、音量亮度手势灵敏度（默认 1.0）、保存音量到系统（默认开启）、双指缩小视频（默认开启）、进度条缩略图（默认开启，见 §4.9）、已观看进度阈值（5%–100% 步进 5%，默认 95%）、自动连播（默认开启）、播放完毕自动退出（默认开启）、循环播放模式（off/列表循环/单集循环，默认关闭）、视频方向（自动/锁定竖屏/锁定横屏，默认自动）、播放界面动画（默认开启）、**顶部信息多选（时间/电量/网速/数据类型四项，默认全选，阶段1 第 1 点；旧单选枚举一次性迁移）** 属 `PlayerControlsSettings`
 - 播放页音量/亮度属于**页面局部状态**（进入时从系统同步，退出时按设置写回/恢复，见 §4.8），禁止做成全局服务
 - 音频声道/音频处理（音量标准化/动态范围压缩）为**会话级状态**（随 `AudioController` 生命周期，每次进播放器重置为默认：安全自动/关/关），不持久化
 - 片头片尾跳过设置属 `IntroOutroSettings`（独立单例 ChangeNotifier）：启用开关（默认关闭）、片头/片尾跳过秒数（默认 0）、各自范围上限（10–600 秒，默认 180）；范围收窄时秒数联动收窄；一键重置只清秒数与范围、保留开关；跟踪器 `IntroOutroTracker` 为普通类（随播放页生命周期），就绪门控防 open 期间误触发
@@ -355,7 +363,7 @@ models（模型）     → 无依赖（纯数据）
 ### 4.6 卡片复用（树状/列表视觉一致的根基）
 
 - 文件夹 → `FolderCard`（`widgets/folder_card.dart`），参数：`node / fields / onTap`
-- 视频 → `VideoCard`（`widgets/video_card.dart`），参数：`video / fields / onTap / onInfoTap`
+- 视频 → `VideoCard`（`widgets/video_card.dart`），参数：`video / fields / onTap / onInfoTap / trailing`（trailing 覆盖最右侧图标，历史记录页放垃圾桶）
 - **任何新视图/新页面显示文件夹或视频时，必须复用这两个卡片**，禁止另写一套样式
 - 字段由 `ViewSettings.fields`（FolderField）和 `viewSettings.videoFields`（VideoField）驱动
 - VideoCard 字段布局：**时长** = 缩略图右下角标签、**大小** = 缩略图左下角标签（两者自动避让底部进度条，有进度条时上移）；其余字段（日期/分辨率/进度/帧率/字幕指示器）为名称下方标签行；最右侧「i」媒体信息入口（`onInfoTap`，点击打开 `MediaInfoPage`）
@@ -838,6 +846,53 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 
 ---
 
+### 4.17 播放历史 / 外部打开视频 / 打开链接（系统播放器接入）
+
+> 三项能力：① 本项目注册为系统视频播放器（其他 App「打开方式」可选本项目）；
+> ② 播放历史记录（首页速拨「最近播放」直启 + 「我的→播放→历史记录」管理）；
+> ③ 首页速拨「打开链接」输入直链在线播放（对齐 mpvRx——直链直接交给 mpv，
+> 章节信息由 mpv 解封装远程容器原生读取，无需网站接口）。
+
+**播放历史**（`PlaybackHistoryService` 单例 ChangeNotifier + SharedPreferences 单键 JSON）：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 模型 | `models/playback_history_entry.dart` | 条目（path/title/isUrl/playedAtMs/durationMs）+ toJson/fromJson 容错 |
+| 服务 | `services/playback_history_service.dart` | 记录（同 path 去重置顶）/上限 500 淘汰最旧/删除单条/清空/开关/时长回填，`ensureLoaded`（main.dart） |
+| 记录点 | `pages/player/player_page.dart` | `_recordPlaybackHistory`（open 与切集时记录）+ `_saveProgress` 内时长回填 |
+| UI | `pages/settings/playback_history_page.dart` | VideoCard 条目（**固定只显示进度字段**——历史读不到文件大小，不展示大小/时长）+ **右侧垃圾桶按钮删除单条** + 清空二次确认（showAppDialog）+ 记录开关 |
+| 入口 | `widgets/speed_dial_fab.dart` + `home_page.dart` + `settings_page.dart` | 速拨「最近播放」直启最后一条（进度自动恢复）；「我的→播放→历史记录」 |
+
+**关键决策**：
+- **只记录可重放来源**（用户拍板）：本地真实路径 + 在线直链；loopback 代理 URL
+  （网络存储 `127.0.0.1` 流，退出即失效）与哔哩哔哩在线播放（需登录态重新解析
+  playurl）**不写入**——B 站走 `_biliMedia` 分支天然跳过，loopback 由
+  `_recordPlaybackHistory` 前缀过滤。
+- 关闭记录只停新写入，已存历史保留可查看/删除（开关不隐含清空）。
+- 时长记录两段式：open 时能从播放列表 MediaStore 拿到就先记，否则退出时
+  `_saveProgress` 回填（历史条目显示时长徽标与进度条的依据）。
+
+**外部打开视频（注册系统播放器）**：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 注册 | `AndroidManifest.xml` | MainActivity 加 VIEW intent-filter（对齐 mpvRx）：**①scheme(content/file/http/https)+视频 MIME 同一过滤器**（外部播放器以 `URL+video/*` 查询；⚠️ 只声明 MIME 不声明 scheme 的过滤器 scheme 默认仅 content/file，匹配不到 http 直链——「外部播放器列表没有本应用」的根因）、②仅 MIME（发现查询）、③rtmp/rtsp/mms 等流媒体 scheme、④http/https+视频扩展名 pathPattern |
+| 原生 | `MainActivity.kt` | `handleViewIntent`（onCreate/onNewIntent 暂存 ACTION_VIEW 视频 uri；MIME 判定含注册的 application/* 容器类型——mkv/m3u8 的 MIME 不以 video/ 开头）+ `takeExternalVideo`/`resolveVideoUri` 通道方法；content:// 三级解析（MediaStore DATA 列 → DocumentsProvider documentId → 拷贝 cacheDir/external_open/） |
+| 服务 | `services/device_services.dart` | `takeExternalVideo`/`resolveVideoUri` 封装 + `onExternalVideo` 回调（原生 onNewIntent 推送） |
+| 装配 | `main.dart` | `navigatorKey` + App 顶层消费（首帧后取冷启动 intent；`onExternalVideo` 取热启动）→ push `PlayerPage`；widgets/ 层不 import pages/ 故挂在此 |
+
+**打开链接**：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 纯函数 | `utils/url_media.dart` | `normalizeMediaUrl`（裸域名补 https；含空白拒绝；`scheme:` 形态不补——补了会把 scheme 错位成 userinfo）/ `isPlayableMediaUrl`（mpv 协议白名单 http/https/rtmp/rtmps/rtsp/rtsps/rtp/mms/mmst/mmsh/ftp）/ `mediaTitleFromUrl`（末段路径解码 → host 兜底） |
+| UI | `pages/home/open_link_dialog.dart` | 速拨「打开链接」弹窗：输入 + 粘贴按钮 + 行内校验提示，确认**先关弹窗再回调**（见 §7 pop 顺序坑） |
+| 网速 | `player_status_bar.dart` + 两播放页 | 直链播放不走本地代理，状态栏两个代理查询均 null → 兜底读 mpv `cache-speed`（`directNetSpeedReader` 闭包，横竖屏播放页各传一份；直链/HLS/DASH 通吃） |
+| 播放 | `home_page.dart` | push `PlayerPage(path: url)`；章节由现有 `_chapterTracker.load()`（mpv chapter-list）对远程容器原生读取 |
+
+
+---
+
 ## 5. 新增功能指南（按功能类型）
 
 ### 5.1 新增一个页面
@@ -967,6 +1022,12 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/bili_stream_proxy_test.dart` — 本地流代理（转发字节/Range 与响应头透传/未注册 404/start·stop 生命周期/网速 recentSpeedBytesPerSec）
   - `test/bili_auth_service_test.dart` — Web 扫码登录服务（generate 解析 url+qrcode_key / poll 成功从 data.url query 解析 Cookie+refresh_token / 86101·86090 状态）
   - `test/download_manager_test.dart` — 下载记录持久化（DownloadTask toJson/fromJson 往返 / 重启恢复未完成归位暂停·已完成保留 / 损坏数据防御）
+  - `test/playback_history_test.dart` — 播放历史服务（记录去重置顶/上限淘汰/删除单条/清空/关闭记录保留已存/时长回填/持久化恢复/损坏数据防御 + 条目模型往返，§4.17）
+  - `test/playback_history_page_test.dart` — 历史记录页（空态/条目渲染/垃圾桶按钮删除单条落盘/清空二次确认取消与确认/无历史禁用清空/记录开关持久化）
+  - `test/url_media_test.dart` — 在线直链纯函数（规范化补协议/内部空白拒绝/scheme 形态不补/协议白名单/标题提取解码与兜底，§4.17）
+  - `test/open_link_dialog_test.dart` — 打开链接弹窗（有效链接回调并关弹窗/自动补协议/无效行内提示不关弹窗/取消不回调/**回调内 push 不被弹掉**：先关弹窗再进播放页的回归）
+  - `test/device_services_external_video_test.dart` — 外部打开视频通道封装（takeExternalVideo/resolveVideoUri 返回解析/空值降级/通道异常静默，§4.17）
+  - `test/player_status_bar_net_speed_test.dart` — 顶部信息行网速来源分流（直连播放走 directNetSpeedReader/B 站代理命中不走 reader/reader 返回 null 不崩/本地播放隐藏胶囊，§4.17）
 - 改以下代码必须跑对应测试：`AppFrame`、`ViewSettings` 排序、权限流程、`CapsuleNavBar`
 
 ---
@@ -1075,6 +1136,7 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | Windows 拒绝枚举共享列表却允许直连具体共享 | 路径字段留空/`/` 才 `listShares` 列共享；被拒时就填 `/共享名` 跳过枚举直连 |
 | 网络浏览页按系统返回键直接退回首页而非上级目录 | `NetworkBrowserPage` 包 `PopScope(canPop:false)` 拦截系统返回，与左上角箭头一致逐级回退、到根才真正退出 |
 | 播放页网速忽高忽低 / 比系统状态栏低估（周期性差分 + 突发下载采样错位） | 代理层记录每笔 chunk 时间戳，网速 = 最近 1 秒滑动窗口字节 ÷ 实际跨度，1s 刷新、不做平滑；网速胶囊在线播放常驻（本地隐藏） |
+| **链接直连播放网速恒 0 KB/s**（mpv 直连远程 URL，不经 NetworkStreamingProxy/BiliStreamProxy 任何代理，两处查询均 null） | 状态栏第三来源兜底：`directNetSpeedReader` 读 mpv `cache-speed`（demuxer 吞吐估计）；⚠️ 不能给直链套本地代理——m3u8 相对分段会按代理地址解析成 `127.0.0.1/seg.ts` 而代理注册表无此 key → 404（§4.17） |
 | 面板带背景色 `Container`（`_SettingsGroup`）内放 `ListTile` → 触发「ink 不可见」断言 | ListTile 外包 `Material(type: MaterialType.transparency)`（§4.12 弹幕字体段） |
 | `loadFontFromList` 只对当前进程有效，首帧前未注册回落默认字体 | `main()` 改 async，`runApp` 前 await 注册 App/弹幕自定义字体（§4.12） |
 | `AnimatedDefaultTextStyle` 用默认构造**不 merge** 父级 DefaultTextStyle，导致字体族名丢失（主题色/调色板/胶囊标签不跟随自定义字体） | 显式在 style 里带 `fontFamily: Theme.of(context).textTheme.bodyMedium?.fontFamily`（§4.12） |
@@ -1083,3 +1145,10 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | B 站在线播放网速恒 0 KB/s | 状态栏拿到的 streamUrl 是 CDN 原始 URL（本地代理 URL 只在播放器内部），按 URL 匹配查不到；网络存储仍按 URL 查 `NetworkStreamingProxy`，B 站读 `BiliStreamProxy.recentTotalSpeedBytesPerSec()`（video+audio 聚合，§4.15/§4.16） |
 | Web 扫码 `data.url` 已是 ticket 换凭证（旧文档 query 带 SESSDATA 的格式过时）；实测 crossDomain 302 对非浏览器客户端**不下发 Set-Cookie**（逐跳跟随亦然） | 登录走 TV 通道（凭证直接在 poll JSON，PiliPlus 同款）；勿再按旧文档实现 Web 扫码（§4.13） |
 | 轮询到 code=0 但凭证缺失时静默 cancel 定时器 → 页面冻结无反应（倒计时卡死） | 成功但凭证为空时 toast+刷新重试，勿静默 cancel（§4.13） |
+| 外部 content:// 视频直接喂 libmpv 打不开 | 原生三级解析：MediaStore DATA 列 → documentId → 拷贝 cacheDir/external_open/（§4.17） |
+| **弹窗「确认→push 播放页→pop 弹窗」顺序错 → 点播放毫无反应**（`Navigator.pop()` 弹的是**栈顶**，先 push 再 pop 会把刚 push 的播放页弹掉、弹窗残留；对任何链接都中招，曾被误报为「不支持 m3u8」） | 弹窗确认必须**先 pop 自己再回调**（open_link_dialog.dart `_confirm`，§4.17） |
+| **intent-filter 只声明 MIME 不声明 scheme → scheme 默认仅 content/file，外部播放器以 `http URL+video/*` 查询时匹配不到**（「调用外部播放」列表里没有本应用） | scheme(content/file/http/https) 与视频 MIME **声明在同一过滤器**（mpvRx 同款，§4.17） |
+| mkv/m3u8 的 MIME 是 `application/x-matroska`/`vnd.apple.mpegurl`，**不以 video/ 开头**——原生按 video/* 前缀过滤会把这类外部拉起误拒（点了没反应） | `isVideoMimeType` 用与 manifest 同步的注册集合判定（§4.17） |
+| 网络存储的 `127.0.0.1` loopback 代理 URL 退出即失效，写入播放历史成死链 | `_recordPlaybackHistory` 按 loopback 前缀过滤；B 站在线播放走 `_biliMedia` 分支天然不记录（§4.17） |
+| Dart `Uri` 对含空格 host 宽松（`https://not a url` 能解析）；裸补 `https://` 会把 `mailto:` 错位成 userinfo | URL 校验先拒内部空白；`scheme:` 形态不补协议，交给白名单判定（`utils/url_media.dart`，§4.17） |
+| 在线直链的章节信息无需网站接口 | mpv/FFmpeg 解封装远程容器原生读 chapter（MKV 内嵌章节），现有 `ChapterTracker`（mpv chapter-list）天然覆盖 URL 播放（§4.17） |

@@ -17,6 +17,7 @@ import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.provider.Settings
@@ -47,11 +48,25 @@ class MainActivity : FlutterActivity() {
     /** 本地网络权限（Android 16+ ACCESS_LOCAL_NETWORK）请求的待回结果。 */
     private var pendingLocalNetworkResult: MethodChannel.Result? = null
 
+    /**
+     * 外部打开视频（系统「打开方式」ACTION_VIEW intent，工作.md：注册为播放器）
+     * 待处理项：冷启动（onCreate）先暂存，Flutter 首帧后 Dart 调
+     * takeExternalVideo 取走；热启动（onNewIntent，launchMode=singleTop）
+     * 暂存后主动 invokeMethod("onExternalVideo") 通知 Dart 来取。
+     */
+    private var pendingExternalVideo: Map<String, String>? = null
+
+    /** 主通道引用（onNewIntent 时向 Dart 推送通知用）。 */
+    private var flutterChannel: MethodChannel? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Flutter 首帧前按 App 主题设置系统导航栏（三大金刚键区域）颜色，
         // 避免深色/AMOLED 下启动阶段露出白底；首帧后由 Dart 侧 SystemChrome 接管
         applySystemBarStyle()
+        // 外部「打开方式」进来的视频（其他 App 分享/文件管理器打开）：
+        // 暂存，等 Flutter 首帧后由 Dart 取走播放
+        handleViewIntent(intent)
     }
 
     // ── 系统导航栏颜色（三大金刚键区域）────────────
@@ -126,7 +141,9 @@ class MainActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
         // 崩溃日志自动记录（未捕获异常 → files/crash_logs/）
         CrashHandler.init(this)
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName)
+        val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName)
+        flutterChannel = channel
+        channel
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "getVideoInfo" -> {
@@ -407,9 +424,180 @@ class MainActivity : FlutterActivity() {
                             result.success(true)
                         }
                     }
+                    // ── 外部打开视频（注册为系统播放器，工作.md）──────
+                    // 取走待处理的外部视频（返回 {uri, title} 或 null，取后即清）
+                    "takeExternalVideo" -> {
+                        val pending = pendingExternalVideo
+                        pendingExternalVideo = null
+                        result.success(pending)
+                    }
+                    // 解析外部视频 uri 为可播放路径（content:// 真实路径/拷贝缓存、
+                    // file:// 路径、流媒体直链原样返回；可能拷贝大文件 → 后台线程）
+                    "resolveVideoUri" -> {
+                        val uri = call.argument<String>("uri") ?: ""
+                        if (uri.isEmpty()) {
+                            result.error("INVALID_ARG", "uri required", null)
+                        } else {
+                            Thread {
+                                val resolved = resolveExternalVideo(uri)
+                                runOnUiThread { result.success(resolved) }
+                            }.start()
+                        }
+                    }
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    // ── 外部打开视频（注册为系统播放器，工作.md）──────────────
+
+    /**
+     * 热启动：其他 App 以「打开方式」再次拉起本应用（launchMode=singleTop，
+     * 不重建 Activity，走 onNewIntent）。暂存后通知 Dart 取走播放。
+     */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleViewIntent(intent)
+        if (pendingExternalVideo != null) {
+            flutterChannel?.invokeMethod("onExternalVideo", null)
+        }
+    }
+
+    /**
+     * 解析外部「打开方式」intent：ACTION_VIEW 且为视频（或未声明 MIME /
+     * 流媒体直链）时暂存待处理项。非视频 VIEW（网页/图片等）忽略。
+     */
+    private fun handleViewIntent(intent: Intent?) {
+        if (intent == null || Intent.ACTION_VIEW != intent.action) return
+        val uri = intent.data ?: return
+        // 声明了非视频 MIME 的（text/html、image/* 等）不进播放器；
+        // 未声明 MIME 的按直链处理（intent-filter 已保证只收到视频类 intent）。
+        // ⚠️ 除 video/* 外还需接受注册过的 application/* 容器 MIME
+        //（mkv=x-matroska、m3u8=vnd.apple.mpegurl 等，否则外部 App 用这些
+        // MIME 拉起时被误拒、点了没反应）。
+        val type = intent.type
+        if (type != null && !isVideoMimeType(type)) return
+        val title = try {
+            queryDisplayName(uri) ?: uri.lastPathSegment ?: ""
+        } catch (e: Exception) {
+            ""
+        }
+        pendingExternalVideo = mapOf("uri" to uri.toString(), "title" to title)
+    }
+
+    /** 与 AndroidManifest intent-filter 注册的视频类 MIME 保持一致 */
+    private fun isVideoMimeType(type: String): Boolean {
+        if (type.startsWith("video/") || type == "*/*") return true
+        return type in videoContainerMimeTypes
+    }
+
+    private val videoContainerMimeTypes = setOf(
+        "application/x-matroska",
+        "application/mp4",
+        "application/mpeg",
+        "application/vnd.apple.mpegurl",
+        "application/x-mpegurl",
+        "application/x-quicktimeplayer",
+        "application/vnd.rn-realmedia",
+        "application/vnd.rn-realmedia-vbr",
+        "application/3gpp",
+        "application/vnd.3gpp",
+    )
+
+    /**
+     * 把外部视频 uri 解析为可播放路径 + 标题（后台线程执行，可能拷贝大文件）。
+     * content:// → 优先解析真实路径（App 持有 MANAGE_EXTERNAL_STORAGE），
+     * 解析不到再拷贝到 cacheDir/external_open/；file:// → 直接取路径；
+     * http(s)/rtmp/rtsp 等流媒体直链 → 原样返回（mpv 直接拉流）。
+     */
+    private fun resolveExternalVideo(uriString: String): Map<String, Any?>? {
+        return try {
+            val uri = Uri.parse(uriString)
+            when (uri.scheme?.lowercase()) {
+                "content" -> resolveContentVideo(uri)
+                "file" -> {
+                    val path = uri.path ?: return null
+                    mapOf("path" to File(path).absolutePath, "title" to File(path).name)
+                }
+                "http", "https", "rtmp", "rtmps", "rtsp", "rtsps",
+                "rtp", "mms", "mmst", "mmsh" ->
+                    mapOf("path" to uriString, "title" to null)
+                else -> null
+            }
+        } catch (e: Exception) {
+            Log.w("MainActivity", "resolveExternalVideo failed: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * content:// 视频解析，三级回退：
+     * 1. MediaStore 等 provider 的 DATA 列 → 真实路径（零拷贝）；
+     * 2. ExternalStorageProvider 的 documentId（primary:xxx / raw:/path 形态）；
+     * 3. 兜底拷贝到 cacheDir/external_open/（libmpv 无法直接读 content://，
+     *    与字幕/音轨导入的拷贝思路一致；缓存目录交给系统回收）。
+     */
+    private fun resolveContentVideo(uri: Uri): Map<String, Any?>? {
+        @Suppress("DEPRECATION")
+        val dataPath = queryDataColumn(uri)
+        if (dataPath != null && File(dataPath).isFile) {
+            return mapOf("path" to dataPath, "title" to File(dataPath).name)
+        }
+        val docPath = resolveDocumentPath(uri)
+        if (docPath != null && File(docPath).isFile) {
+            return mapOf("path" to docPath, "title" to File(docPath).name)
+        }
+        val rawName = queryDisplayName(uri) ?: "external_video"
+        val name = rawName.replace(Regex("[\\\\/:*?\"<>|]"), "_")
+        val dir = File(cacheDir, "external_open")
+        if (!dir.exists()) dir.mkdirs()
+        val dest = File(dir, name)
+        val input = try {
+            contentResolver.openInputStream(uri)
+        } catch (e: Exception) {
+            null
+        } ?: return null
+        try {
+            input.use { s -> FileOutputStream(dest).use { s.copyTo(it) } }
+        } catch (e: Exception) {
+            Log.w("MainActivity", "copyExternalVideo failed: ${e.message}")
+            dest.delete()
+            return null
+        }
+        if (!dest.isFile || dest.length() == 0L) {
+            dest.delete()
+            return null
+        }
+        return mapOf("path" to dest.absolutePath, "title" to name)
+    }
+
+    /** 查询 provider 的 DATA 列（MediaStore 视频的真实路径；无该列/失败返回 null） */
+    @Suppress("DEPRECATION")
+    private fun queryDataColumn(uri: Uri): String? {
+        return try {
+            contentResolver
+                .query(uri, arrayOf(MediaStore.MediaColumns.DATA), null, null, null)
+                ?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /** DocumentsProvider documentId → 本地路径（primary:xxx 与 raw:/path 两种形态） */
+    private fun resolveDocumentPath(uri: Uri): String? {
+        return try {
+            val docId = DocumentsContract.getDocumentId(uri)
+            when {
+                docId.startsWith("raw:") ->
+                    docId.removePrefix("raw:")
+                docId.startsWith("primary:") ->
+                    Environment.getExternalStorageDirectory().toString() +
+                        "/" + docId.removePrefix("primary:")
+                else -> null
+            }
+        } catch (e: Exception) {
+            null
+        }
     }
 
     // ── B站视频下载：MediaExtractor + MediaMuxer 流直拷合并 ──────────

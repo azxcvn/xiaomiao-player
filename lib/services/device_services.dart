@@ -294,6 +294,65 @@ class DeviceServices {
     }
   }
 
+  // ── 外部打开视频（注册为系统播放器，工作.md）────────────
+
+  /// 外部打开视频通知（原生 onNewIntent 推送 `onExternalVideo` 触发；
+  /// App 顶层注册：收到后走 takeExternalVideo → resolveVideoUri → 播放）。
+  static void Function()? onExternalVideo;
+
+  /// 原生 → Dart 推送 handler 是否已安装（只装一次）
+  static bool _nativeHandlerInstalled = false;
+
+  static void _ensureNativeCallHandler() {
+    if (_nativeHandlerInstalled) return;
+    _nativeHandlerInstalled = true;
+    _channel.setMethodCallHandler((call) async {
+      if (call.method == 'onExternalVideo') {
+        onExternalVideo?.call();
+      }
+    });
+  }
+
+  /// 取走待处理的外部视频（冷启动 intent 暂存于原生侧；取后即清）。
+  /// 返回 `{uri, title}`（title 可能为空串），无待处理返回 null。
+  static Future<Map<String, String>?> takeExternalVideo() async {
+    _ensureNativeCallHandler();
+    try {
+      final result =
+          await _channel.invokeMethod<Map<dynamic, dynamic>>(
+        'takeExternalVideo',
+      );
+      if (result == null) return null;
+      return {
+        'uri': (result['uri'] as String?) ?? '',
+        'title': (result['title'] as String?) ?? '',
+      };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// 解析外部视频 uri 为可播放路径：content:// → 真实路径或拷贝缓存
+  /// （后台线程，可能耗时）；file:// → 文件路径；http(s)/rtmp/rtsp 等
+  /// 流媒体直链 → 原样返回。失败返回 null（调用方提示「无法打开」）。
+  static Future<({String path, String title})?> resolveVideoUri(
+    String uri,
+  ) async {
+    try {
+      final result =
+          await _channel.invokeMethod<Map<dynamic, dynamic>>(
+        'resolveVideoUri',
+        {'uri': uri},
+      );
+      if (result == null) return null;
+      final path = result['path'] as String?;
+      if (path == null || path.isEmpty) return null;
+      return (path: path, title: (result['title'] as String?) ?? '');
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// 把 B 站 DASH 的 video.m4s + audio.m4s 合并成单个 mp4（原生 MediaMuxer 流直拷，
   /// 不重编码）。返回是否成功；成功会删除两个临时 m4s。
   static Future<bool> mergeM4s(

@@ -53,6 +53,7 @@ import 'package:moumou/services/device_services.dart';
 import 'package:moumou/services/fast_thumbnails.dart';
 import 'package:moumou/services/intro_outro_settings.dart';
 import 'package:moumou/services/intro_outro_tracker.dart';
+import 'package:moumou/services/playback_history_service.dart';
 import 'package:moumou/services/playback_progress_service.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/services/subtitle_service.dart';
@@ -560,6 +561,39 @@ class _PlayerPageState extends State<PlayerPage>
     return saved;
   }
 
+  /// 播放历史（工作.md：播放历史记录功能）：记录一次播放。
+  ///
+  /// 只记录**可重放**来源——本地真实路径与在线直链；loopback 代理 URL
+  /// （网络存储的 `127.0.0.1` 流，退出即失效）不写入（哔哩哔哩在线播放
+  /// 走 `_biliMedia` 分支，不经过本方法）。时长优先取播放列表
+  /// MediaStore 的 durationMs（open 前就可知），未知传 0 由退出时回填。
+  void _recordPlaybackHistory(String path, String title) {
+    final lower = path.toLowerCase();
+    final isLoopback = lower.startsWith('http://127.0.0.1') ||
+        lower.startsWith('http://localhost') ||
+        lower.startsWith('https://127.0.0.1') ||
+        lower.startsWith('https://localhost');
+    if (isLoopback) return;
+    unawaited(
+      PlaybackHistoryService.instance.record(
+        path,
+        title,
+        isUrl: isOnlineMedia(path),
+        durationMs: _playlistDurationMsFor(path),
+      ),
+    );
+  }
+
+  /// 从播放列表查该路径的 MediaStore 时长（毫秒；未知返回 0）
+  int _playlistDurationMsFor(String path) {
+    final list = widget.playlist;
+    if (list == null) return 0;
+    for (final v in list) {
+      if (v.path == path && v.durationMs > 0) return v.durationMs;
+    }
+    return 0;
+  }
+
   /// 打开媒体、设置倍速、应用超分着色器，并按需恢复进度。
   ///
   /// **恢复进度 v5 重写（用户反馈 v5：仍有 1–1.5s 开头闪现）**：
@@ -583,6 +617,8 @@ class _PlayerPageState extends State<PlayerPage>
       await _applyVideoOrientation();
       return;
     }
+    // 播放历史：记录本次播放（本地路径 / 在线直链；见方法注释的过滤规则）
+    _recordPlaybackHistory(_path, _title);
     final start = _resumeStartFor(_path);
     // 片头片尾：新媒体重置跟踪状态（open 期间位置事件不评估）
     _introOutroTracker.reset();
@@ -1592,6 +1628,8 @@ class _PlayerPageState extends State<PlayerPage>
         },
       );
       if (_disposed || !mounted) return;
+      // 播放历史：切集同样记录新的一集（列表播放均为可重放来源）
+      _recordPlaybackHistory(path, title);
       if (mounted) {
         setState(() {
           _path = path;
@@ -2624,6 +2662,14 @@ class _PlayerPageState extends State<PlayerPage>
   /// 能恢复——修复用户反馈「重启后恢复不了」的另一半根因：节流导致
   /// 磁盘上可能没有最新进度）。
   Future<void> _saveProgress({bool forcePersist = false}) async {
+    // 播放历史：时长回填（条目存在且时长已就绪时一次生效；
+    // 记录时未知的时长——如在线直链——在此补全，供历史列表显示时长/进度条）
+    final durationMs = _duration.inMilliseconds;
+    if (durationMs > 0) {
+      unawaited(
+        PlaybackHistoryService.instance.updateDuration(_path, durationMs),
+      );
+    }
     if (_position.inMilliseconds > 0 &&
         _duration.inMilliseconds > 0 &&
         _position < _duration) {
@@ -2680,6 +2726,22 @@ class _PlayerPageState extends State<PlayerPage>
   }
 
   String _fmt(Duration d) => formatDuration(d.inMilliseconds);
+
+  /// 直连播放（打开链接/外部直链）的网速兜底来源：读 mpv `cache-speed`
+  /// 只读属性（demuxer 缓存的网络吞吐估计，字节/秒）。这类播放 mpv 直连
+  /// 远程 URL、不经过任何本地代理，状态栏两个代理查询恒为 null——详见
+  /// [PlayerStatusBar.directNetSpeedReader]。
+  Future<double?> _readDirectNetSpeed() async {
+    final native = _player.platform;
+    if (native is! NativePlayer) return null;
+    try {
+      final v = await native.getProperty('cache-speed');
+      // 属性未激活（流未开/无缓存活动）时为空串 → 解析 null，保持原显示
+      return double.tryParse(v);
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// 时间文本显示模式：false =「已播/总时长」；true =「已播/剩余时长」
   /// （工作.md 第 20 点，点击底栏时间文本切换）
@@ -2809,6 +2871,7 @@ class _PlayerPageState extends State<PlayerPage>
                             PlayerStatusBar(
                               isOnlinePlayback: isOnlineMedia(_path),
                               streamUrl: isOnlineMedia(_path) ? _path : null,
+                              directNetSpeedReader: _readDirectNetSpeed,
                             ),
                             PlayerTopBar(                            title: _title,
                               onBack: _exitPlayer,

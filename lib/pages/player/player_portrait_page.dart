@@ -1666,6 +1666,20 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
 
   String _fmt(Duration d) => formatDuration(d.inMilliseconds);
 
+  /// 直连播放（打开链接/外部直链）的网速兜底来源：读 mpv `cache-speed`
+  /// （demuxer 缓存网络吞吐估计）。与横屏页同一实现（共享同一 Player），
+  /// 详见 [PlayerStatusBar.directNetSpeedReader]。
+  Future<double?> _readDirectNetSpeed() async {
+    final native = _player.platform;
+    if (native is! NativePlayer) return null;
+    try {
+      final v = await native.getProperty('cache-speed');
+      return double.tryParse(v);
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// 控制层滑入动画时长（工作.md 第 7 点：关闭「启用播放界面动画」后归零）
   Duration get _controlsAnimDuration =>
       _settings.playerAnimations ? const Duration(milliseconds: 250) : Duration.zero;
@@ -1792,6 +1806,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
                                 portrait: true,
                                 isOnlinePlayback: isOnlineMedia(_path),
                                 streamUrl: isOnlineMedia(_path) ? _path : null,
+                                directNetSpeedReader: _readDirectNetSpeed,
                               ),
                               PortraitPlayerTopBar(
                                 title: _title,

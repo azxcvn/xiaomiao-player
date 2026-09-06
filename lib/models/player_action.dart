@@ -64,20 +64,22 @@ enum PlayerTopAction {
   danmaku('danmaku', '弹幕', Icons.comment_outlined, true),
   audio('audio', '音频', Icons.library_music_outlined, true),
   aspect('aspect', '比例', Icons.aspect_ratio, true),
-  // v2 新增：pip/listen 已实现（implemented=true）；
-  // equalizer（音频均衡器）已实现；decode 已实现；弹幕阶段1 已接入
+  // 解码：已接入（方案 A，四档 hwdec），点击呼出解码面板
+  decode('decode', '解码', Icons.deblur_outlined, true),
+  // 章节：已接入（工作.md 章节功能），点击呼出章节列表（无章节时提示）
+  chapter('chapter', '章节', Icons.bookmarks_outlined, true),
+  // v2 新增：pip/listen 已实现（implemented=true）
   pip('pip', '画中画', Icons.picture_in_picture_alt_outlined, true),
   // 听视频：已接入（工作.md 第 10 点），点击进入听视频界面
   listen('listen', '听视频', Icons.headphones_outlined, true),
   // v3：循环播放从设置页移入播放界面，作为可自定义槽位动作（可增删）
   loop('loop', '循环播放', Icons.repeat, true),
-  equalizer('equalizer', '音频均衡器', Icons.equalizer_outlined, true),
-  // 解码：已接入（方案 A，四档 hwdec），点击呼出解码面板
-  decode('decode', '解码', Icons.deblur_outlined, true),
-  // 章节：已接入（工作.md 章节功能），点击呼出章节列表（无章节时提示）
-  chapter('chapter', '章节', Icons.bookmarks_outlined, true),
   // 片头片尾：已接入（工作.md 片头片尾功能），点击呼出跳过设置面板
-  introOutro('intro_outro', '片头片尾', Icons.movie_filter_outlined, true);
+  introOutro('intro_outro', '片头片尾', Icons.movie_filter_outlined, true),
+  // 枚举声明序 = 未自定义槽位时「更多」面板与「可添加」列表的默认展示序：
+  // 字幕/弹幕/音频/比例/**解码/章节**/画中画/听视频/循环/片头片尾/均衡器
+  //（工作.md：解码与章节在「比例」之后、「画中画」之前；均衡器在「片头片尾」之后）
+  equalizer('equalizer', '音频均衡器', Icons.equalizer_outlined, true);
 
   /// 持久化标识（稳定，勿改）
   final String id;

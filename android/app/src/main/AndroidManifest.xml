@@ -48,6 +48,109 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- ── 注册为系统视频播放器（工作.md：其他软件打开视频时可选本项目）──
+                 对齐 mpvRx 的注册结构（视频向）：
+                 ① scheme(content/file/http/https) + 视频 MIME：文件管理器「打开方式」、
+                    **其他播放器 App 的「调用外部播放」选择器**（它们以
+                    `setDataAndType(httpUrl, "video/*")` 查询——⚠️ 只声明 MIME 不声明
+                    scheme 的过滤器 scheme 默认仅 content/file，匹配不到 http 直链，
+                    这正是「外部播放器列表里没有本应用」的根因，故 scheme 与 MIME
+                    必须同过滤器声明）；
+                 ② 仅 MIME（不限 scheme）：选择器未附最终流 URI 前的发现查询；
+                 ③ rtmp/rtsp/mms 等流媒体协议直链（mpv 原生支持拉流）；
+                 ④ http/https + 视频扩展名 pathPattern：浏览器打开无 MIME 的直链
+                    （多级 .* 前缀是 Android pathPattern 的经典 workaround）。 -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <data android:scheme="http"/>
+                <data android:scheme="https"/>
+                <data android:mimeType="video/*"/>
+                <data android:mimeType="application/x-matroska"/>
+                <data android:mimeType="application/mp4"/>
+                <data android:mimeType="application/mpeg"/>
+                <data android:mimeType="application/vnd.apple.mpegurl"/>
+                <data android:mimeType="application/x-mpegurl"/>
+                <data android:mimeType="application/x-quicktimeplayer"/>
+                <data android:mimeType="application/vnd.rn-realmedia"/>
+                <data android:mimeType="application/vnd.rn-realmedia-vbr"/>
+                <data android:mimeType="application/3gpp"/>
+                <data android:mimeType="application/vnd.3gpp"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="video/*"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="rtmp"/>
+                <data android:scheme="rtmps"/>
+                <data android:scheme="rtp"/>
+                <data android:scheme="rtsp"/>
+                <data android:scheme="rtsps"/>
+                <data android:scheme="mms"/>
+                <data android:scheme="mmst"/>
+                <data android:scheme="mmsh"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="http"/>
+                <data android:scheme="https"/>
+                <data android:host="*"/>
+                <data android:pathPattern=".*\.mkv"/>
+                <data android:pathPattern=".*\..*\.mkv"/>
+                <data android:pathPattern=".*\..*\..*\.mkv"/>
+                <data android:pathPattern=".*\.mp4"/>
+                <data android:pathPattern=".*\..*\.mp4"/>
+                <data android:pathPattern=".*\..*\..*\.mp4"/>
+                <data android:pathPattern=".*\.webm"/>
+                <data android:pathPattern=".*\..*\.webm"/>
+                <data android:pathPattern=".*\..*\..*\.webm"/>
+                <data android:pathPattern=".*\.avi"/>
+                <data android:pathPattern=".*\..*\.avi"/>
+                <data android:pathPattern=".*\..*\..*\.avi"/>
+                <data android:pathPattern=".*\.mov"/>
+                <data android:pathPattern=".*\..*\.mov"/>
+                <data android:pathPattern=".*\..*\..*\.mov"/>
+                <data android:pathPattern=".*\.m4v"/>
+                <data android:pathPattern=".*\..*\.m4v"/>
+                <data android:pathPattern=".*\..*\..*\.m4v"/>
+                <data android:pathPattern=".*\.flv"/>
+                <data android:pathPattern=".*\..*\.flv"/>
+                <data android:pathPattern=".*\..*\..*\.flv"/>
+                <data android:pathPattern=".*\.ts"/>
+                <data android:pathPattern=".*\..*\.ts"/>
+                <data android:pathPattern=".*\..*\..*\.ts"/>
+                <data android:pathPattern=".*\.m2ts"/>
+                <data android:pathPattern=".*\..*\.m2ts"/>
+                <data android:pathPattern=".*\..*\..*\.m2ts"/>
+                <data android:pathPattern=".*\.m3u8"/>
+                <data android:pathPattern=".*\..*\.m3u8"/>
+                <data android:pathPattern=".*\..*\..*\.m3u8"/>
+                <data android:pathPattern=".*\.mpg"/>
+                <data android:pathPattern=".*\..*\.mpg"/>
+                <data android:pathPattern=".*\..*\..*\.mpg"/>
+                <data android:pathPattern=".*\.mpeg"/>
+                <data android:pathPattern=".*\..*\.mpeg"/>
+                <data android:pathPattern=".*\..*\..*\.mpeg"/>
+                <data android:pathPattern=".*\.wmv"/>
+                <data android:pathPattern=".*\..*\.wmv"/>
+                <data android:pathPattern=".*\..*\..*\.wmv"/>
+                <data android:pathPattern=".*\.rmvb"/>
+                <data android:pathPattern=".*\..*\.rmvb"/>
+                <data android:pathPattern=".*\..*\..*\.rmvb"/>
+                <data android:pathPattern=".*\.rm"/>
+                <data android:pathPattern=".*\..*\.rm"/>
+                <data android:pathPattern=".*\..*\..*\.rm"/>
+            </intent-filter>
         </activity>
         <!-- 听视频后台播放前台服务（保活进程，实际音频由 libmpv 播放） -->
         <service
