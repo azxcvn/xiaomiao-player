@@ -1,4 +1,4 @@
-# 小牛Player（Flutter版小喵）项目架构指南
+# 小喵Player 项目架构指南
 
 > 本文件是项目的**唯一架构契约**。任何 AI / 开发者在本仓库添加新功能前，必须先读完本文件。
 > 遵循本文件的约定，项目可以健康扩展到 PiliPlus / mpvRx 同量级规模；违反约定堆代码，项目会退化为屎山。
@@ -56,6 +56,11 @@ Flutter 本地视频播放器（Android），核心能力：
 - **系统播放器接入**：注册为系统视频播放器（其他 App「打开方式」/浏览器直链可选本项目，
   content:// 三级解析）；**播放历史**（速拨「最近播放」直启 + 我的→历史记录管理，
   只记本地与直链）；**打开链接**（速拨输入直链在线播放，章节随容器原生读取）（§4.17）
+- **隐私政策**：首次启动隐私门禁弹窗（5 秒倒计时 + 勾选同意才可确认，取消退出应用）
+  + 关于页「用户协议」组（预览用户服务协议与隐私政策正文）（§4.19）
+- **应用更新**：我的→关于→更新组（手动检查更新 + 自动检查更新开关）；更新弹窗（Markdown
+  渲染更新说明 + 立即更新/稍后提醒/忽略 + 主·备下载站子菜单）；更新源（GitHub API）与
+  主·备下载链接已就绪，`checkForUpdate` 仍开发写死（未接入真实抓取，§4.20）
 
 技术栈：Flutter 3.44+ / Dart 3.12+，依赖见 `pubspec.yaml`。
 
@@ -92,7 +97,8 @@ lib/
 │   ├── bilibili_user.dart      # 哔哩哔哩用户信息模型（nav 接口，mid/昵称/头像/等级/经验/大会员状态/硬币）
 │   ├── bili_bangumi.dart       # 哔哩番剧（PGC）模型：索引筛选/条目、搜索、季详情/选集/多季、时间表（fromJson 容错）
 │   ├── bili_dash.dart          # playurl DASH 模型：流条目/清晰度档/OP-ED clip（baseUrl/baseUrls 双格式兼容，§4.15）
-│   └── bili_media.dart         # 在线播放值对象：DASH 流 + 弹幕/章节元数据 + 画质切换回调（§4.15）
+│   ├── bili_media.dart         # 在线播放值对象：DASH 流 + 弹幕/章节元数据 + 画质切换回调（§4.15）
+│   └── update_info.dart        # 更新信息值对象（新版本号/Markdown 更新说明/主·备下载站链接，§4.20）
 ├── services/                  # 业务逻辑 / 数据层（无 UI）
 │   ├── view_settings.dart     # 排序/字段/视图模式设置（ChangeNotifier + 持久化）
 │   ├── video_scanner.dart     # 扫描 + 建树 + 建文件夹列表
@@ -124,6 +130,8 @@ lib/
 │   ├── danmaku_search_history.dart  # 网络弹幕搜索历史（关键词去重/上限淘汰最旧/一键清除，持久化）
 │   ├── danmaku_auto_match_cache_store.dart # 弹幕自动匹配缓存存储（番剧+集列表，切集自动匹配用）
 │   ├── danmaku_network_service.dart # 弹幕网络服务（搜索合并/文件匹配/下载落盘 filesDir/danmaku/network + 文件前16MB MD5，无 UI）
+│   ├── privacy_policy_settings.dart # 隐私政策同意状态（首次启动门禁，ChangeNotifier + 持久化，§4.19）
+│   ├── privacy_policy_content.dart # 用户隐私政策与用户服务协议正文（纯常量文本，唯一文案来源，§4.19）
 │   ├── network/                    # 网络存储（WebDAV/SMB/FTP）抽象层
 │   │   ├── network_client.dart     #   NetworkClient 抽象接口（connect/listFiles/getFileSize/openStream/disconnect）
 │   │   ├── network_client_factory.dart # 按协议创建客户端（连接配置 → 具体客户端实例）
@@ -155,6 +163,9 @@ lib/
 │   ├── cast/                    # 投屏域（DLNA/UPnP，P0 仅本地文件推流，§4.18）
 │   │   ├── cast_service.dart    #   投屏服务（SSDP 发现渲染器 + 源分流 + SetAVTransportURI/Play 推流）
 │   │   └── lan_media_server.dart #  局域网媒体服务器（本地文件 → http://LAN:port/token，Range/CORS）
+│   ├── update/                  # 更新域（工作.md：更新功能，§4.20）
+│   │   ├── update_settings.dart #   更新设置（自动检查开关 + 忽略版本，ChangeNotifier + 持久化）
+│   │   └── update_service.dart  #   更新服务（更新源/下载链接常量 + 检查更新，开发阶段写死新版本）
 │   └── ...                    #   ⚠️ 不要在这里加全局 ValueNotifier hack（见 §4.1）
 ├── widgets/                   # 可复用 UI 组件（跨页面）
 │   ├── app_frame.dart         #   ★ 全局框架：安全区 + 播放页全屏检测
@@ -174,6 +185,8 @@ lib/
 │   ├── bili_episode_tile.dart #   番剧单集磁贴（集号 + 集名 + 胶囊角标，内联选集/全屏选集页共用）
 │   ├── directory_picker_dialog.dart # 目录选择器弹窗（复用 listDirectory，返回真实路径）
 │   ├── cast_device_dialog.dart # 投屏设备选择弹窗（SSDP 发现列表 + 点选推流，§4.18）
+│   ├── privacy_policy_dialog.dart # 首次启动隐私门禁弹窗（5 秒倒计时 + 勾选同意 + 取消退出，§4.19）
+│   ├── update_dialog.dart       # 更新弹窗（Markdown 更新内容 + 立即更新/稍后提醒/忽略 + 主·备下载站子菜单，§4.20）
 │   └── marquee_text.dart      #   无缝循环跑马灯
 ├── pages/                     # 页面（每页一个目录）
 │   ├── bilibili/
@@ -251,8 +264,9 @@ lib/
 │       ├── player_settings_page.dart # 播放器设置子页（手势/视频方向/顶部信息/播放行为/阈值）
 │       ├── media_scan_settings_page.dart # 媒体扫描与过滤设置子页（.nomedia/隐藏文件夹/黑白名单）
 │       ├── danmaku_server_page.dart # 弹幕服务器设置子页（默认+自建服务器增删启停 + 切集自动匹配开关，互斥时变灰+原因文案+点击 toast）
-│       ├── about_page.dart           # 关于页（软件信息/工具/信息）
+│       ├── about_page.dart           # 关于页（软件信息/工具/信息/用户协议）
 │       ├── license_page.dart         # 许可证书页（列表 + 二级详情页，非折叠式）
+│       ├── privacy_policy_page.dart  # 用户协议页（预览用户服务协议与隐私政策正文，可选中复制，§4.19）
 │       ├── error_log_page.dart       # 错误日志页
 │       └── cache_management_page.dart# 缓存管理页
 ├── theme/                     # 主题
@@ -291,6 +305,7 @@ lib/
     ├── bili_bangumi_url.dart  #   番剧/视频链接解析纯函数（提取 ss/ep/BV/av 令牌 + 合集列表链接）
     ├── bili_short_link.dart   #   b23.tv 分享短链提取+展开（任意分享文本提取，302 命中令牌即停）
     ├── cast_source.dart       #   投屏源分类纯函数（本地/直链/loopback/content + file:// 去前缀，§4.18）
+    ├── version_compare.dart   #   版本号比较纯函数（忽略 v 前缀/按 . 逐段整数比较，§4.20）
     └── network_mime_types.dart # 文件名→MIME 类型映射
 ```
 
@@ -354,7 +369,7 @@ models（模型）     → 无依赖（纯数据）
 
 ### 4.5 弹窗 / 面板
 
-- **所有弹窗统一用** `showAppDialog`（`lib/utils/app_dialog.dart`，缩放 + 淡入动画），**不要**直接 `showDialog`
+- **所有弹窗统一用** `showAppDialog`（`lib/utils/app_dialog.dart`，缩放 + 淡入动画），**不要**直接 `showDialog`。`barrierDismissible` 参数（默认 true）控制是否可点遮罩关闭；门禁类弹窗传 false 并让内容包 `PopScope(canPop: false)`（§4.19）
 - **播放器内右侧滑入面板统一用** `showPlayerPanel`（`lib/widgets/player_panel.dart`，滑入 + 淡入 + 面板内页面栈）。倍速 / 超分 / 画面比例 / 更多 / 编辑控制栏共用；面板内二级页面用 `PlayerPanelNavigator.of(context).push(...)` 就地切换，禁止叠加第二个面板。**新增类似右侧面板需求时直接复用，勿另写一套**。注意：`of` 必须用面板树内的 context（内容里先包一层 `Builder` 再取），不能用页面 State 的 context。`showPlayerPanel` / `showPlayerBottomPanel` 的 `animate` 参数（默认 null = 跟随「播放器设置 → 启用播放界面动画」开关）控制进出场与页内切换动画
 - **播放界面二级界面硬性约定**：播放器内凡需弹出二级界面（倍速、超分、画面比例、字幕/音频等后续功能）的，**横屏一律使用 `showPlayerPanel` 右侧滑入外壳**（同款外壳必须保证）；**竖屏播放页（`player_portrait_page.dart`）一律使用 `showPlayerBottomPanel` 底部弹出外壳**（`lib/widgets/player_bottom_panel.dart`，底部上滑 + 淡入，Material 外壳，面板内页面栈 `PlayerBottomPanelNavigator`）。两种外壳的面板内容组件（倍速/超分/画面比例/编辑控制栏）共用同一份数据与交互逻辑，只换容器。面板内容可选用 `PlayerOptionChip` 胶囊选择（视功能而定），也可用列表等其他形式，但**不得另写一套弹窗/面板外壳**。**竖屏页高需求**：`PlayerPanelPage.bottomHeightFactor`（默认 null = 外壳 0.42）可按页覆写底部外壳最大高度占比，只影响该页、返回上一页自动收回（高度差 240ms easeOutCubic 过渡）；网络弹幕搜索页用 0.82。**禁止**为了页高另开一个外壳
 - **「更多」面板交互**：横竖屏「更多」面板均只列出**未放入槽位的动作**（`PlayerTopAction.values` 中不在 `topActions` 的）；点面板类动作（字幕/音频/比例/循环/章节/片头片尾）→ 面板内 `push` 就地切换（外壳 header 自动显示返回按钮，可返回「更多」列表，勿再关面板重开）；点动作类（画中画/听视频）→ 先关「更多」面板再执行（防叠加第二面板）；未实现动作提示「即将上线」；「编辑控制栏」为固定入口。**一级菜单 ListView 带 `PageStorageKey('more_panel')` 记忆滚动位置**（进二级再返回不回顶部）
@@ -925,6 +940,72 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 
 ---
 
+### 4.19 隐私政策（首次启动门禁 + 关于页用户协议）
+
+> 工作.md：首次安装打开弹出隐私弹窗（5 秒倒计时 + 勾选同意才可确认，取消退出）；
+> 关于页「用户协议」并入「信息」组（预览用户服务协议与隐私政策正文，仅内容无同意交互）。
+
+**分层**（自下而上）：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 正文 | `services/privacy_policy_content.dart` | 两份纯常量文案：`kPrivacyPolicyBody`（隐私政策）、`kUserAgreementBody`（服务协议+隐私政策），唯一文案来源 |
+| 状态 | `services/privacy_policy_settings.dart` | 同意状态 `accepted`（ChangeNotifier + SharedPreferences，默认 false） |
+| 门禁弹窗 | `widgets/privacy_policy_dialog.dart` | 5 秒倒计时 + 勾选同意才可确认；不同意退出；不可点遮罩/返回键关闭 |
+| 门禁装配 | `main.dart` | runApp 前 await `ensureLoaded`；首帧 `_onFirstFrame` 先确认隐私再消费外部视频；取消 `SystemNavigator.pop()` |
+| 页面 | `pages/settings/privacy_policy_page.dart` | 用户协议页（仅正文可选中复制，无同意交互） |
+| 入口 | `pages/settings/about_page.dart` | 关于页「信息」组内「用户协议」项（许可证书下方） |
+
+**关键决策**：
+- **同意状态在 runApp 前加载**：`main()` await `ensureLoaded`，否则首帧读到的默认 false
+  会让已同意用户再次弹窗。
+- **门禁弹窗不可关闭**：`showAppDialog(barrierDismissible: false)` + 内容包
+  `PopScope(canPop: false)`；确认按钮 `enabled = 倒计时归零 && 勾选同意`。
+- **倒计时文本防换行**：确认按钮文本包 `FittedBox(scaleDown)`，倒计时期间「同意并继续 (n 秒)」
+  不换行、不把文本顶高。
+- **取消退出**：`SystemNavigator.pop()`（Android 结束 Activity），再次启动仍会弹窗（未同意）。
+- **两版文案**：首次弹窗用《用户隐私政策》；关于页用《用户服务协议与隐私政策》（含服务协议 + 隐私政策两部分）。
+- **外部打开视频让位于门禁**：`_consumePendingExternalVideo` 未同意时直接返回，
+  防外部拉起把播放页盖过隐私弹窗。
+
+---
+
+### 4.20 应用更新（入口 + 更新弹窗）
+
+> 工作.md：我的→关于→「更新」组（手动检查更新 + 自动检查更新开关）；
+> 更新弹窗用 flutter_markdown 渲染 GitHub Release 的 Markdown 正文，三个按钮
+> （立即更新 / 稍后提醒 / 忽略），点「立即更新」出主 / 备用下载站子菜单。
+> 更新源（GitHub API）与主·备下载链接已就绪，version.json 兜底未配置（留空）。
+
+**分层**（自下而上）：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 模型 | `models/update_info.dart` | `UpdateInfo`（version / Markdown body / 主·备下载站链接） |
+| 纯函数 | `utils/version_compare.dart` | `needUpdate(local, remote)`：忽略 v 前缀、按 `.` 逐段整数比较 |
+| 设置 | `services/update/update_settings.dart` | `autoUpdateEnabled`（默认开）+ `ignoredVersion`，ChangeNotifier + 持久化 |
+| 服务 | `services/update/update_service.dart` | 更新源/下载链接常量 + `checkForUpdate()`（抓 GitHub API → `needUpdate` 比较，失败抛 `UpdateCheckException`） |
+| 弹窗 | `widgets/update_dialog.dart` | 固定尺寸 + 可滚动 Markdown + 三按钮 + 下载站子菜单 |
+| 入口 | `pages/settings/about_page.dart` | 「更新」组（手动检查更新 / 自动检查更新开关） |
+| 装配 | `main.dart` | runApp 前 await `ensureLoaded`；隐私同意后 2 秒自动检查（开关开启且未忽略才弹） |
+
+**关键决策**：
+- **版本比较对齐 Kazumi**：`needUpdate` 逐段整数比较，替换旧的「版本号后两位 ×10 + 位宽」算法；
+  支持 `v` 前缀、缺段补 0、非数字段取数字前缀。
+- **检查更新真实抓取**：`checkForUpdate` 取本地版本（`package_info_plus`）→ 抓 GitHub API
+  `releases/latest` 的 `tag_name`/`body`（失败按需回落 version.json）→ `needUpdate` 比较：
+  远端 > 本地返回 `UpdateInfo`、否则返回 null（已是最新）、网络/解析失败抛
+  `UpdateCheckException`；手动检查失败 Toast、自动检查失败静默。`tag_name` 前导 `v` 归一化去掉。
+- **Markdown 渲染**：`flutter_markdown`（`MarkdownBody`）+ `MarkdownStyleSheet.fromTheme`
+  定制字号/引用块样式，消除原生 `##`/`**`/`-` 符号。
+- **三按钮语义**：立即更新 → 子菜单（主/备用下载站，链接待接入时 Toast）；稍后提醒 → 仅关闭；
+  忽略 → 写 `ignoredVersion`，自动检查不再弹该版本（手动检查不受影响，保证开发期可反复验收）。
+  三按钮文本包 `FittedBox(scaleDown)`，防窄屏「立即更新」换行。
+- **下载不内置**：不做应用内下载，走「跳转网盘分享页」；主 / 备用下载站链接空时 Toast「链接待接入」。
+- **自动检查 2 秒**：`main.dart` 隐私同意后 `Future.delayed(2s)` 检查；开关关闭或已忽略则跳过。
+
+---
+
 ## 5. 新增功能指南（按功能类型）
 
 ### 5.1 新增一个页面
@@ -1063,6 +1144,11 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/cast_source_test.dart` — 投屏源分类纯函数（本地/直链/loopback/content + file:// 去前缀 + loopback 判定，§4.18）
   - `test/lan_media_server_test.dart` — 局域网媒体服务器（LAN URL 格式/全量+Range 拉流/错误 token 404/stop 释放/文件不存在抛错 + isSiteLocalIpv4，§4.18）
   - `test/cast_service_test.dart` — 投屏服务（isMediaRenderer 过滤 + CastDevice.kind，§4.18）
+  - `test/privacy_policy_settings_test.dart` — 隐私政策同意状态服务（默认未同意/同意持久化/load 恢复，§4.19）
+  - `test/privacy_policy_dialog_test.dart` — 隐私弹窗（5 秒倒计时门禁/勾选同意才可确认/取消返回 false 同意返回 true，§4.19）
+  - `test/version_compare_test.dart` — 版本号比较纯函数（v 前缀/逐段整数比较/缺段补 0/数字前缀，§4.20）
+  - `test/update_settings_test.dart` — 更新设置服务（默认开启/开关持久化/忽略版本持久化，§4.20）
+  - `test/update_dialog_test.dart` — 更新弹窗（三按钮齐全/Markdown 无原生符号/忽略落盘/立即更新弹子菜单与 Toast，§4.20）
 - 改以下代码必须跑对应测试：`AppFrame`、`ViewSettings` 排序、权限流程、`CapsuleNavBar`
 
 ---
@@ -1188,3 +1274,4 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | Dart `Uri` 对含空格 host 宽松（`https://not a url` 能解析）；裸补 `https://` 会把 `mailto:` 错位成 userinfo | URL 校验先拒内部空白；`scheme:` 形态不补协议，交给白名单判定（`utils/url_media.dart`，§4.17） |
 | 在线直链的章节信息无需网站接口 | mpv/FFmpeg 解封装远程容器原生读 chapter（MKV 内嵌章节），现有 `ChapterTracker`（mpv chapter-list）天然覆盖 URL 播放（§4.17） |
 | 投屏 LAN 服务器绑 127.0.0.1 → 电视拉不到流 | 绑 `0.0.0.0` + URL 用手机局域网 IPv4（`isSiteLocalIpv4` 挑站点本地地址、排除回环）（§4.18） |
+| 门禁弹窗被点遮罩/系统返回键关闭（用户未同意也能进入） | `showAppDialog(barrierDismissible: false)` + 内容包 `PopScope(canPop: false)`；确认按钮 `enabled = 倒计时归零 && 勾选同意`（§4.19） |

@@ -52,7 +52,7 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
   List<({String label, int targetIndex})> get _crumbs {
     final path = widget.path;
     return [
-      (label: '小牛Player', targetIndex: -1),
+      (label: '小喵Player', targetIndex: -1),
       for (var i = 0; i < path.length; i++)
         (label: path[i].name, targetIndex: i),
     ];
@@ -231,7 +231,7 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
   }
 }
 
-/// 顶部面包屑导航栏：横向可滚动，显示「小牛Player → … → 当前目录」路径，
+/// 顶部面包屑导航栏：横向可滚动，显示「小喵Player → … → 当前目录」路径，
 /// 点击任意上级层级跳回对应页面（参考 mpvRx 的 BreadcrumbNavigation）。
 class _BreadcrumbBar extends StatefulWidget {
   final List<({String label, int targetIndex})> crumbs;

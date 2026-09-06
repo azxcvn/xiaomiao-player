@@ -148,7 +148,7 @@ class _LicenseHeaderCard extends StatelessWidget {
                 textBaseline: TextBaseline.alphabetic,
                 children: [
                   const Text(
-                    '小牛Player',
+                    '小喵Player',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(width: 6),

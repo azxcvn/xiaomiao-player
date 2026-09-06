@@ -215,7 +215,7 @@ class _HomePageState extends State<HomePage>
                 ),
                 onChanged: _onQueryChanged,
               )
-            : const Text('小牛Player'),
+            : const Text('小喵Player'),
         actions: [
           if (_searching)
             IconButton(

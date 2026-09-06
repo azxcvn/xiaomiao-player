@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:moumou/models/danmaku_font_mode.dart';
 import 'package:moumou/pages/home/home_page.dart';
@@ -21,8 +22,11 @@ import 'package:moumou/services/network/network_connection_settings.dart';
 import 'package:moumou/services/playback_history_service.dart';
 import 'package:moumou/services/playback_progress_service.dart';
 import 'package:moumou/services/player_controls_settings.dart';
+import 'package:moumou/services/privacy_policy_settings.dart';
 import 'package:moumou/services/subtitle_settings.dart';
 import 'package:moumou/services/super_resolution_service.dart';
+import 'package:moumou/services/update/update_service.dart';
+import 'package:moumou/services/update/update_settings.dart';
 import 'package:moumou/services/view_settings.dart';
 import 'package:moumou/theme/app_theme.dart';
 import 'package:moumou/theme/theme_controller.dart';
@@ -31,6 +35,8 @@ import 'package:moumou/utils/url_media.dart';
 import 'package:moumou/widgets/app_frame.dart';
 import 'package:moumou/widgets/capsule_nav_bar.dart';
 import 'package:moumou/widgets/main_scaffold.dart';
+import 'package:moumou/widgets/privacy_policy_dialog.dart';
+import 'package:moumou/widgets/update_dialog.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,6 +60,11 @@ Future<void> main() async {
   await AppFontSettings.instance.registerCurrentFont();
   await DanmakuSettings.instance.ensureLoaded();
   await _registerDanmakuFont();
+  // 隐私政策同意状态：runApp 前加载，确保首帧即可读到正确状态
+  // （首次启动未同意 → 启动门禁弹隐私弹窗）。
+  await PrivacyPolicySettings.instance.ensureLoaded();
+  // 更新设置：runApp 前加载，确保自动检查更新读正确开关/忽略版本状态。
+  await UpdateSettings.instance.ensureLoaded();
   // Zone 层兜底：异步未捕获异常也写日志
   runZonedGuarded(
     () => runApp(const MoumouApp()),
@@ -102,8 +113,9 @@ class _MoumouAppState extends State<MoumouApp> {
     // - 热启动（onNewIntent）：原生推送 onExternalVideo → 取走并播放；
     // - 冷启动（onCreate intent 暂存原生侧）：首帧后取走并播放。
     DeviceServices.onExternalVideo = _consumePendingExternalVideo;
+    // 首帧门禁：先确认隐私政策（未同意弹隐私弹窗），再消费冷启动外部视频。
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _consumePendingExternalVideo();
+      _onFirstFrame();
     });
     // 用 ensureLoaded 而非 load：播放页恢复进度时也用 ensureLoaded，
     // 两者共享同一 load Future，防止「main 的 load 未完成、播放页已读
@@ -149,6 +161,11 @@ class _MoumouAppState extends State<MoumouApp> {
     // 下载管理器（工作.md 第 2 点）：启动恢复持久化的下载记录，下载管理页
     // 不再「重启即清空」。
     DownloadManager.instance.ensureLoaded();
+    // 隐私政策同意状态：main() 已在 runApp 前 await 加载，这里补 ensureLoaded
+    // 防测试/热重载路径竞态（与其他设置服务同模式）。
+    PrivacyPolicySettings.instance.ensureLoaded();
+    // 更新设置：main() 已在 runApp 前 await 加载，这里补 ensureLoaded 防竞态。
+    UpdateSettings.instance.ensureLoaded();
   }
 
   @override
@@ -161,8 +178,54 @@ class _MoumouAppState extends State<MoumouApp> {
 
   // ── 外部打开视频（系统「打开方式」→ 本项目播放，工作.md）──
 
+  /// 首帧门禁：先确认隐私政策，再安排自动检查更新，最后消费冷启动外部视频。
+  Future<void> _onFirstFrame() async {
+    final ok = await _ensurePrivacyAccepted();
+    if (!ok) return; // 用户未同意 → 已退出应用
+    _scheduleAutoUpdateCheck();
+    await _consumePendingExternalVideo();
+  }
+
+  /// 启动 2 秒后自动检查更新（仅开关开启且未忽略该版本时弹窗）。
+  void _scheduleAutoUpdateCheck() {
+    Future.delayed(const Duration(seconds: 2), _autoCheckUpdate);
+  }
+
+  Future<void> _autoCheckUpdate() async {
+    final settings = UpdateSettings.instance;
+    if (!settings.autoUpdateEnabled) return;
+    try {
+      final info = await UpdateService.checkForUpdate();
+      if (info == null) return;
+      if (settings.isVersionIgnored(info.version)) return;
+      final context = _navigatorKey.currentContext;
+      if (context == null || !context.mounted) return;
+      await showUpdateDialog(context, info: info, settings: settings);
+    } catch (_) {
+      return; // 自动检查失败静默
+    }
+  }
+
+  /// 确保隐私政策已同意；未同意时弹隐私弹窗（10 秒倒计时 + 勾选同意）。
+  /// 返回 true 表示可继续进入应用，false 表示用户选择退出。
+  Future<bool> _ensurePrivacyAccepted() async {
+    if (PrivacyPolicySettings.instance.accepted) return true;
+    final context = _navigatorKey.currentContext;
+    if (context == null || !context.mounted) return false;
+    final agreed = await showPrivacyPolicyDialog(context);
+    if (agreed == true) {
+      await PrivacyPolicySettings.instance.accept();
+      return true;
+    }
+    // 取消：退出应用（Android 上结束当前 Activity）
+    SystemNavigator.pop();
+    return false;
+  }
+
   /// 取走原生侧暂存的外部视频并播放（冷启动 + onNewIntent 推送共用入口）
   Future<void> _consumePendingExternalVideo() async {
+    // 隐私政策未同意前不处理外部打开（防播放页盖过隐私门禁弹窗）
+    if (!PrivacyPolicySettings.instance.accepted) return;
     final pending = await DeviceServices.takeExternalVideo();
     if (pending == null) return;
     final uri = pending['uri'] ?? '';
@@ -239,7 +302,7 @@ class _MoumouAppState extends State<MoumouApp> {
         };
 
         return MaterialApp(
-          title: '小牛Player',
+          title: '小喵Player',
           debugShowCheckedModeBanner: false,
           theme: light,
           darkTheme: dark,

@@ -4,7 +4,11 @@ import 'package:moumou/pages/settings/cache_management_page.dart';
 import 'package:moumou/pages/settings/error_log_page.dart';
 // 前缀导入：本文件自定义 LicensePage 与 material 内置 LicensePage 同名
 import 'package:moumou/pages/settings/license_page.dart' as app;
+import 'package:moumou/pages/settings/privacy_policy_page.dart';
+import 'package:moumou/services/update/update_service.dart';
+import 'package:moumou/services/update/update_settings.dart';
 import 'package:moumou/widgets/settings_ui.dart';
+import 'package:moumou/widgets/update_dialog.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -25,8 +29,8 @@ class _AboutPageState extends State<AboutPage> {
   /// 使用反馈收件邮箱
   static const _feedbackEmail = '2297065843@qq.com';
 
-  /// GitHub 主页地址（暂时留空，后续接入）
-  static const _githubUrl = '';
+  /// GitHub 主页地址（与更新服务共用仓库地址）
+  static const _githubUrl = UpdateService.repoUrl;
 
   @override
   void initState() {
@@ -63,6 +67,27 @@ class _AboutPageState extends State<AboutPage> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       _toast('无法打开链接');
+    }
+  }
+
+  /// 手动检查更新：有更新弹窗，已是最新 Toast，失败 Toast。
+  Future<void> _checkForUpdate() async {
+    try {
+      final info = await UpdateService.checkForUpdate();
+      if (info == null) {
+        if (!mounted) return;
+        _toast('已是最新版本');
+        return;
+      }
+      if (!mounted) return;
+      await showUpdateDialog(
+        context,
+        info: info,
+        settings: UpdateSettings.instance,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      _toast('检查更新失败，请稍后重试');
     }
   }
 
@@ -115,14 +140,14 @@ class _AboutPageState extends State<AboutPage> {
                   ),
                   const SizedBox(width: 14),
                   // 名称 + 版本：两行左对齐；名称 24sp，视觉宽度与
-                  // 下行「版本 v1.0.0」接近
+                  // 下行「版本 v1.3.3」接近
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Text(
-                          '小牛Player',
+                          '小喵Player',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -182,7 +207,43 @@ class _AboutPageState extends State<AboutPage> {
             ),
           ),
           const SizedBox(height: 24),
-          // ── 工具组 ──────────────────────────────────────
+          // ── 信息组（第一位）─────────────────────────────
+          const SettingsGroupTitle(title: '信息'),
+          SettingsCard(
+            child: Column(
+              children: [
+                SettingsTile(
+                  icon: Icons.gavel_outlined,
+                  title: '许可证书',
+                  subtitle: const Text('查看本应用使用的全部开源许可'),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        // 前缀引用避免与 Flutter material 内置 LicensePage 冲突
+                        builder: (_) => const app.LicensePage(),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                // 用户协议并入信息组（工作.md：隐私政策功能）
+                SettingsTile(
+                  icon: Icons.description_outlined,
+                  title: '用户协议',
+                  subtitle: const Text('预览用户服务协议与隐私政策'),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const PrivacyPolicyPage(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          // ── 工具组（正中间）─────────────────────────────
           const SettingsGroupTitle(title: '工具'),
           SettingsCard(
             child: Column(
@@ -216,22 +277,33 @@ class _AboutPageState extends State<AboutPage> {
             ),
           ),
           const SizedBox(height: 16),
-          // ── 信息组 ──────────────────────────────────────
-          const SettingsGroupTitle(title: '信息'),
-          SettingsCard(
-            child: SettingsTile(
-              icon: Icons.gavel_outlined,
-              title: '许可证书',
-              subtitle: const Text('查看本应用使用的全部开源许可'),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    // 前缀引用避免与 Flutter material 内置 LicensePage 冲突
-                    builder: (_) => const app.LicensePage(),
-                  ),
-                );
-              },
-            ),
+          // ── 更新组（最后一位）────────────────────────────
+          const SettingsGroupTitle(title: '更新'),
+          ListenableBuilder(
+            listenable: UpdateSettings.instance,
+            builder: (context, _) {
+              final update = UpdateSettings.instance;
+              return SettingsCard(
+                child: Column(
+                  children: [
+                    SettingsTile(
+                      icon: Icons.system_update_outlined,
+                      title: '手动检查更新',
+                      subtitle: const Text('检查是否有新版本'),
+                      onTap: _checkForUpdate,
+                    ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    SettingsSwitchTile(
+                      icon: Icons.update_outlined,
+                      title: '自动检查更新',
+                      subtitle: const Text('启动后自动检查新版本'),
+                      value: update.autoUpdateEnabled,
+                      onChanged: (v) => update.setAutoUpdateEnabled(v),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),

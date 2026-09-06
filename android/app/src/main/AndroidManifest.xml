@@ -24,7 +24,7 @@
     <!-- 允许此 App 管理所有文件（All files access），首次授权由用户主动点击触发 -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
     <application
-        android:label="小牛Player"
+        android:label="小喵Player"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:networkSecurityConfig="@xml/network_security_config">

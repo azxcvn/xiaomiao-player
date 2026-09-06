@@ -3,7 +3,7 @@
 
 ## 第三方组件声明 / Third-Party Notices
 
-小牛Player（moumou）基于以下开源组件构建。各组件版权归其各自作者所有，并
+小喵Player（moumou）基于以下开源组件构建。各组件版权归其各自作者所有，并
 在各自许可证条款下分发。应用内「设置 → 关于 → 许可证书」页面（Flutter
 LicenseRegistry / showLicensePage）会自动汇总并展示已随包分发的全部许可证
 全文，本清单为概要说明。

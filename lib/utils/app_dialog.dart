@@ -7,10 +7,11 @@ import 'package:flutter/material.dart';
 Future<T?> showAppDialog<T>({
   required BuildContext context,
   required WidgetBuilder builder,
+  bool barrierDismissible = true,
 }) {
   return showGeneralDialog<T>(
     context: context,
-    barrierDismissible: true,
+    barrierDismissible: barrierDismissible,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
     barrierColor: Colors.black54,
     transitionDuration: const Duration(milliseconds: 220),
