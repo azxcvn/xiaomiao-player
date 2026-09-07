@@ -1,5 +1,5 @@
 /// 弹幕设置（阶段2，工作.md 弹幕第 4 点）：样式（字号/字重/速度/描边/
-/// 不透明度/随机渐变色）+ 配置（显示区域/行高/三类弹幕显隐/海量弹幕/去重）。
+/// 不透明度/随机渐变色）+ 配置（显示区域/行高/三类弹幕显隐/海量弹幕/去重/屏蔽词）。
 ///
 /// 全局单例（同 [IntroOutroSettings] 模式）：ChangeNotifier +
 /// shared_preferences 持久化——所有个性化设置跨重启视频/重启播放保留
@@ -24,6 +24,15 @@ class DanmakuSettings extends ChangeNotifier {
   /// 确保已从磁盘加载完成（首次调用触发 load；并发调用共享同一 Future）
   Future<void> ensureLoaded() => _loadFuture ??= load();
 
+  /// 把任意值吸附到最近的 [areaStep] 档位（10% 一档，范围 0.1–1.0）。
+  /// 用整数档位除以 10 返回，保证结果与 `0.3` 等字面量精确相等
+  /// （避免 `步数 * 0.1` 的浮点累积误差）。
+  static double snapArea(double v) {
+    final clamped = v.clamp(minArea, maxArea);
+    final steps = (clamped / areaStep).round();
+    return steps / 10;
+  }
+
   // ── 滑杆范围常量（面板滑杆与 load 钳制共用）──
 
   static const double minFontSize = 10;
@@ -38,6 +47,10 @@ class DanmakuSettings extends ChangeNotifier {
   static const double maxStrokeWidth = 4;
   static const double minArea = 0.1;
   static const double maxArea = 1.0;
+
+  /// 显示区域档位步进（工作.md 弹幕第 3 点：无极调节改为 10% 固定档位，
+  /// 10/20/…/100% 共 10 档）
+  static const double areaStep = 0.1;
   static const double minLineHeight = 0.5;
   static const double maxLineHeight = 3.0;
   static const double minTimeOffsetSeconds = -180;
@@ -93,6 +106,10 @@ class DanmakuSettings extends ChangeNotifier {
   /// 校准弹幕相对视频画面的显示时间（对齐 Kazumi danmakuTimeOffset）。
   double _timeOffset = 0;
 
+  /// 关键词屏蔽列表（弹幕文本包含任一关键词即被过滤，匹配见
+  /// utils/danmaku_blocklist.dart；空列表 = 不屏蔽）
+  List<String> _blockedKeywords = [];
+
   /// 弹幕字体模式（工作.md 第 4 点）：跟随系统 / 跟随 App / 自定义，默认跟随系统。
   DanmakuFontMode _fontMode = DanmakuFontMode.followSystem;
 
@@ -116,6 +133,7 @@ class DanmakuSettings extends ChangeNotifier {
   bool get massiveMode => _massiveMode;
   bool get deduplication => _deduplication;
   double get timeOffsetSeconds => _timeOffset;
+  List<String> get blockedKeywords => List.unmodifiable(_blockedKeywords);
   DanmakuFontMode get fontMode => _fontMode;
   String? get customFontFamily => _customFontFamily;
   String? get customFontFile => _customFontFile;
@@ -134,7 +152,7 @@ class DanmakuSettings extends ChangeNotifier {
     _strokeWidth = (prefs.getDouble(_keyStrokeWidth) ?? 1.5)
         .clamp(minStrokeWidth, maxStrokeWidth);
     _randomColor = prefs.getBool(_keyRandomColor) ?? false;
-    _area = (prefs.getDouble(_keyArea) ?? 1.0).clamp(minArea, maxArea);
+    _area = snapArea(prefs.getDouble(_keyArea) ?? 1.0);
     _lineHeight = (prefs.getDouble(_keyLineHeight) ?? 1.6)
         .clamp(minLineHeight, maxLineHeight);
     _showTop = prefs.getBool(_keyShowTop) ?? true;
@@ -144,6 +162,8 @@ class DanmakuSettings extends ChangeNotifier {
     _deduplication = prefs.getBool(_keyDedup) ?? false;
     _timeOffset = (prefs.getDouble(_keyTimeOffset) ?? 0)
         .clamp(minTimeOffsetSeconds, maxTimeOffsetSeconds);
+    _blockedKeywords =
+        _normalizeBlocklist(prefs.getStringList(_keyBlockedKeywords) ?? const []);
     _fontMode = _fontModeFromIndex(prefs.getInt(_keyFontMode));
     _customFontFamily = prefs.getString(_keyCustomFontFamily);
     _customFontFile = prefs.getString(_keyCustomFontFile);
@@ -156,6 +176,18 @@ class DanmakuSettings extends ChangeNotifier {
       return DanmakuFontMode.values[index];
     }
     return DanmakuFontMode.followSystem;
+  }
+
+  /// 屏蔽词归一化：去首尾空白、去空串、去重（保持原顺序）。
+  static List<String> _normalizeBlocklist(List<String> raw) {
+    final seen = <String>{};
+    final out = <String>[];
+    for (final item in raw) {
+      final t = item.trim();
+      if (t.isEmpty || !seen.add(t)) continue;
+      out.add(t);
+    }
+    return out;
   }
 
   // ── 样式 setter（改值 → notifyListeners → 异步写盘）──
@@ -223,8 +255,8 @@ class DanmakuSettings extends ChangeNotifier {
 
   Future<void> setArea(double v) async {
     await ensureLoaded();
-    final c = v.clamp(minArea, maxArea);
-    if (_area == c) return;
+    final c = snapArea(v);
+    if ((_area - c).abs() < 0.001) return;
     _area = c;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
@@ -298,6 +330,40 @@ class DanmakuSettings extends ChangeNotifier {
     await prefs.setDouble(_keyTimeOffset, c);
   }
 
+  // ── 关键词屏蔽（架构 §4.11「屏蔽词」）──
+
+  /// 添加屏蔽词（去空白、去重、忽略空串；重复添加幂等）。
+  Future<void> addBlockedKeyword(String keyword) async {
+    await ensureLoaded();
+    final k = keyword.trim();
+    if (k.isEmpty || _blockedKeywords.contains(k)) return;
+    _blockedKeywords = [..._blockedKeywords, k];
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_keyBlockedKeywords, _blockedKeywords);
+  }
+
+  /// 移除屏蔽词（不存在则幂等）。
+  Future<void> removeBlockedKeyword(String keyword) async {
+    await ensureLoaded();
+    final k = keyword.trim();
+    if (k.isEmpty || !_blockedKeywords.contains(k)) return;
+    _blockedKeywords = _blockedKeywords.where((e) => e != k).toList();
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_keyBlockedKeywords, _blockedKeywords);
+  }
+
+  /// 清空全部屏蔽词。
+  Future<void> clearBlockedKeywords() async {
+    await ensureLoaded();
+    if (_blockedKeywords.isEmpty) return;
+    _blockedKeywords = [];
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyBlockedKeywords);
+  }
+
   // ── 弹幕字体（工作.md 第 4 点）──
 
   Future<void> setFontMode(DanmakuFontMode v) async {
@@ -342,6 +408,7 @@ class DanmakuSettings extends ChangeNotifier {
     _massiveMode = false;
     _deduplication = false;
     _timeOffset = 0;
+    _blockedKeywords = [];
     _fontMode = DanmakuFontMode.followSystem;
     _customFontFamily = null;
     _customFontFile = null;
@@ -361,6 +428,7 @@ class DanmakuSettings extends ChangeNotifier {
     await prefs.setBool(_keyMassiveMode, false);
     await prefs.setBool(_keyDedup, false);
     await prefs.setDouble(_keyTimeOffset, 0);
+    await prefs.remove(_keyBlockedKeywords);
     await prefs.setInt(_keyFontMode, DanmakuFontMode.followSystem.index);
     await prefs.remove(_keyCustomFontFamily);
     await prefs.remove(_keyCustomFontFile);
@@ -381,6 +449,7 @@ class DanmakuSettings extends ChangeNotifier {
       !_massiveMode &&
       !_deduplication &&
       _timeOffset == 0 &&
+      _blockedKeywords.isEmpty &&
       _fontMode == DanmakuFontMode.followSystem &&
       _customFontFamily == null &&
       _customFontFile == null;
@@ -401,6 +470,7 @@ class DanmakuSettings extends ChangeNotifier {
   static const _keyMassiveMode = 'danmaku_massive_mode';
   static const _keyDedup = 'danmaku_dedup';
   static const _keyTimeOffset = 'danmaku_time_offset';
+  static const _keyBlockedKeywords = 'danmaku_blocked_keywords';
   static const _keyFontMode = 'danmaku_font_mode';
   static const _keyCustomFontFamily = 'danmaku_font_family';
   static const _keyCustomFontFile = 'danmaku_font_file';
@@ -423,6 +493,7 @@ class DanmakuSettings extends ChangeNotifier {
     _massiveMode = false;
     _deduplication = false;
     _timeOffset = 0;
+    _blockedKeywords = [];
     _fontMode = DanmakuFontMode.followSystem;
     _customFontFamily = null;
     _customFontFile = null;

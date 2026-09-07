@@ -32,6 +32,7 @@ import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/danmaku_scheduler.dart';
 import 'package:moumou/services/danmaku_server_settings.dart';
 import 'package:moumou/services/danmaku_settings.dart';
+import 'package:moumou/utils/danmaku_blocklist.dart';
 import 'package:moumou/utils/danmaku_dedup.dart';
 import 'package:moumou/utils/danmaku_episode.dart';
 import 'package:moumou/utils/danmaku_local_file.dart';
@@ -94,6 +95,7 @@ class DanmakuController extends ChangeNotifier {
     _lastDedup = _settings.deduplication;
     _lastRandomColor = _settings.randomColor;
     _lastTimeOffset = _settings.timeOffsetSeconds;
+    _lastBlocklist = _settings.blockedKeywords;
   }
 
   final Player _player;
@@ -117,6 +119,9 @@ class DanmakuController extends ChangeNotifier {
 
   /// 上次同步的时间轴偏移（偏移变化时重锚定秒桶 + 清屏，弹幕按新偏移对齐）
   double _lastTimeOffset = 0;
+
+  /// 上次同步的屏蔽词列表（变化时按原始条目重灌秒桶，命中词被过滤）
+  List<String> _lastBlocklist = const [];
 
   /// 手动导入记忆（按视频路径持久化，重启播放器/软件后自动恢复）
   final DanmakuManualMemory _memory = DanmakuManualMemory();
@@ -207,17 +212,20 @@ class DanmakuController extends ChangeNotifier {
   /// 「重栅格化」项（canvas 会全量清屏重绘），由设置面板在**松手时**才提交
   /// （见 player_danmaku_settings_panel.dart 的 _CommitSliderTile），所以这里
   /// 无需再逐帧去抖；其余轻量项（不透明度/区域/行高/速度/显隐）实时下发。
-  /// 仅去重/随机色开关变化时才重灌秒桶/重建色轮并清屏。
+  /// 仅去重/屏蔽词/随机色开关变化时才重灌秒桶/重建色轮并清屏。
   void _onSettingsChanged() {
     if (_disposed) return;
     _applyOption();
     final dedupChanged = _settings.deduplication != _lastDedup;
     final randomChanged = _settings.randomColor != _lastRandomColor;
     final offsetChanged = _settings.timeOffsetSeconds != _lastTimeOffset;
+    final blocklistChanged =
+        !listEquals(_settings.blockedKeywords, _lastBlocklist);
     _lastDedup = _settings.deduplication;
     _lastRandomColor = _settings.randomColor;
     _lastTimeOffset = _settings.timeOffsetSeconds;
-    if (dedupChanged) {
+    _lastBlocklist = _settings.blockedKeywords;
+    if (dedupChanged || blocklistChanged) {
       _refeedIfLoaded();
     }
     if (randomChanged) {
@@ -261,10 +269,13 @@ class DanmakuController extends ChangeNotifier {
     }
   }
 
-  /// 去重开关生效后的条目集（关 = 原样；开 = 时间窗合并）
+  /// 屏蔽词 + 去重生效后的条目集：先剔除命中屏蔽词的弹幕（屏蔽词为空则
+  /// 原样），再按去重开关合并。原始条目仍保留在 [_rawEntries]，屏蔽词/去重
+  /// 开关变化时按 [_rawEntries] 重灌（见 [_refeedIfLoaded]）。
   List<DanmakuEntry> _effectiveEntries(List<DanmakuEntry> entries) {
-    if (!_settings.deduplication) return entries;
-    return dedupeDanmakuEntries(entries);
+    final filtered = filterBlockedDanmaku(entries, _settings.blockedKeywords);
+    if (!_settings.deduplication) return filtered;
+    return dedupeDanmakuEntries(filtered);
   }
 
   // ── 渲染层挂载（页面 Stack 内 DanmakuScreen 的 createdController 回调）──
@@ -601,7 +612,8 @@ class DanmakuController extends ChangeNotifier {
     await _memory.set(mediaPath, filePath);
   }
 
-  // ── 1s tick 发射（守卫链对齐 Kazumi 六守卫，减去阶段1 未有的屏蔽词）──
+  // ── 1s tick 发射（守卫链对齐 Kazumi 六守卫；屏蔽词已在装载/重灌时经
+  //    _effectiveEntries 过滤，发射侧无需再判）──
 
   void _onTick() {
     if (_disposed) return;

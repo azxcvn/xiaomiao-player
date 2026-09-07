@@ -527,7 +527,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       return;
     }
     try {
-      final name = 'moumou_${DateTime.now().millisecondsSinceEpoch}.png';
+      final name = formatScreenshotName(DateTime.now());
       final result = await SaverGallery.saveImage(
         bytes,
         fileName: name,

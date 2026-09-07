@@ -862,7 +862,8 @@ class SubtitleStylePanel extends StatelessWidget {
                 border: Border.all(color: const Color(0xFF6B5618)),
               ),
               child: const Text(
-                '若样式调整无效果，可能为ASS字幕，需要启用强制字幕覆盖即可生效',
+                'ASS 内嵌字幕受 mpv 渲染限制：粗体/斜体/模糊即使开启「强制覆盖内嵌样式」也无法强制；'
+                '颜色/大小/位置/描边/阴影/背景/字间距需开启后生效。SRT/VTT 等文本字幕所有样式均直接生效。',
                 style: TextStyle(color: Color(0xFFFFE082), fontSize: 12, height: 1.4),
               ),
             ),

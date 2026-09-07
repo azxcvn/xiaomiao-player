@@ -91,6 +91,17 @@ void main() {
     expect(s.fontWeight, 0);
   });
 
+  test('显示区域 10% 档位吸附：任意值落到最近档位', () async {
+    await s.setArea(0.33);
+    expect(s.area, 0.3);
+    await s.setArea(0.36);
+    expect(s.area, 0.4);
+    await s.setArea(0.09);
+    expect(s.area, DanmakuSettings.minArea); // 下界
+    await s.setArea(1.01);
+    expect(s.area, DanmakuSettings.maxArea); // 上界
+  });
+
   test('load 时越界历史值收窄', () async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('danmaku_font_size', 999);
@@ -169,5 +180,36 @@ void main() {
     expect(s.fontMode, DanmakuFontMode.followSystem);
     expect(s.customFontFamily, isNull);
     expect(s.customFontFile, isNull);
+  });
+
+  test('屏蔽词：添加去空白/去重/忽略空串/持久化', () async {
+    await s.addBlockedKeyword(' 傻逼 ');
+    await s.addBlockedKeyword('傻逼'); // 重复，幂等
+    await s.addBlockedKeyword('   '); // 空串忽略
+    expect(s.blockedKeywords, ['傻逼']);
+    await s.load();
+    expect(s.blockedKeywords, ['傻逼']);
+  });
+
+  test('屏蔽词：移除 / 清空 / 持久化', () async {
+    await s.addBlockedKeyword('a');
+    await s.addBlockedKeyword('b');
+    expect(s.blockedKeywords, ['a', 'b']);
+    await s.removeBlockedKeyword('a');
+    expect(s.blockedKeywords, ['b']);
+    await s.removeBlockedKeyword('x'); // 不存在，幂等
+    expect(s.blockedKeywords, ['b']);
+    await s.clearBlockedKeywords();
+    expect(s.blockedKeywords, isEmpty);
+    await s.load();
+    expect(s.blockedKeywords, isEmpty);
+  });
+
+  test('恢复默认：清空屏蔽词', () async {
+    await s.addBlockedKeyword('a');
+    await s.reset();
+    expect(s.blockedKeywords, isEmpty);
+    await s.load();
+    expect(s.blockedKeywords, isEmpty);
   });
 }

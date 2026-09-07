@@ -52,6 +52,7 @@ void main() {
     expect(find.text('滚动弹幕'), findsOneWidget);
     expect(find.text('海量弹幕'), findsOneWidget);
     expect(find.text('弹幕去重'), findsOneWidget);
+    expect(find.text('屏蔽词'), findsOneWidget);
     // 弹幕偏移
     expect(find.text('弹幕偏移'), findsOneWidget);
     expect(find.text('时间轴偏移'), findsOneWidget);
@@ -142,5 +143,37 @@ void main() {
     await DanmakuSettings.instance.setFontSize(24);
     await tester.pumpAndSettle();
     expect(find.text('24'), findsOneWidget);
+  });
+
+  testWidgets('屏蔽词：展开后输入添加写设置', (tester) async {
+    await pumpPanel(tester);
+    final s = DanmakuSettings.instance;
+    expect(s.blockedKeywords, isEmpty);
+
+    await ensureVisible(tester, find.text('屏蔽词'));
+    await tester.tap(find.text('屏蔽词'));
+    await tester.pumpAndSettle();
+    expect(find.text('输入要屏蔽的关键词'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), '测试词');
+    await tester.tap(find.text('添加'));
+    await tester.pumpAndSettle();
+    expect(s.blockedKeywords, ['测试词']);
+  });
+
+  testWidgets('屏蔽词：词条删除', (tester) async {
+    await pumpPanel(tester);
+    final s = DanmakuSettings.instance;
+    await s.addBlockedKeyword('删除我');
+    await tester.pumpAndSettle();
+
+    await ensureVisible(tester, find.text('屏蔽词'));
+    await tester.tap(find.text('屏蔽词'));
+    await tester.pumpAndSettle();
+
+    await ensureVisible(tester, find.byIcon(Icons.close));
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pumpAndSettle();
+    expect(s.blockedKeywords, isEmpty);
   });
 }

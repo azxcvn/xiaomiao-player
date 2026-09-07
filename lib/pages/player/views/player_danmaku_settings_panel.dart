@@ -5,9 +5,9 @@
 /// 随机渐变色开关（开启后忽略弹幕文件内颜色，所有弹幕按 HSV 色轮黄金角
 /// 渐变随机着色，算法见 utils/danmaku_random_color.dart）；
 ///
-/// **弹幕配置**：显示区域 / 行高滑杆 + 顶部/底部/滚动弹幕显隐开关 +
-/// 海量弹幕开关（轨道占满时叠加绘制）+ 弹幕去重开关（时间窗内相同
-/// 内容合并为一条）。
+/// **弹幕配置**：显示区域（10% 固定档位）/ 行高滑杆 + 顶部/底部/滚动弹幕
+/// 显隐开关 + 海量弹幕开关（轨道占满时叠加绘制）+ 弹幕去重开关（时间窗内
+/// 相同内容合并为一条）+ 屏蔽词（输入添加 / 词条删除 / 一键清空）。
 ///
 /// **弹幕偏移**：时间轴偏移滑杆（-180~+180 秒，正 = 延后、负 = 提前），
 /// 校准弹幕相对视频画面的显示时间（对齐 Kazumi danmakuTimeOffset）。
@@ -131,6 +131,8 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
                   min: DanmakuSettings.minArea,
                   max: DanmakuSettings.maxArea,
                   display: '${(s.area * 100).round()}%',
+                  // 10% 一档（0.1–1.0 共 10 档，工作.md 弹幕第 3 点）
+                  divisions: 9,
                   onChanged: s.setArea,
                 ),
                 _groupDivider(),
@@ -174,6 +176,9 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
                   value: s.deduplication,
                   onChanged: s.setDeduplication,
                 ),
+                _groupDivider(),
+                // 不能加 const：父级 ListenableBuilder 重建时需刷新词条列表
+                _BlocklistTile(),
               ]),
               const SizedBox(height: 16),
               const _SectionLabel('弹幕偏移'),
@@ -304,6 +309,7 @@ class _SliderTile extends StatelessWidget {
   final double max;
   final String display;
   final String? hint;
+  final int? divisions;
   final ValueChanged<double> onChanged;
 
   const _SliderTile({
@@ -314,6 +320,7 @@ class _SliderTile extends StatelessWidget {
     required this.display,
     required this.onChanged,
     this.hint,
+    this.divisions,
   });
 
   @override
@@ -356,6 +363,7 @@ class _SliderTile extends StatelessWidget {
               value: value.clamp(min, max),
               min: min,
               max: max,
+              divisions: divisions,
               onChanged: onChanged,
             ),
           ),
@@ -542,6 +550,191 @@ class _SwitchTile extends StatelessWidget {
             ),
           ),
           Switch(value: value, onChanged: onChanged),
+        ],
+      ),
+    );
+  }
+}
+
+/// 屏蔽词管理（架构 §4.11「屏蔽词」）：折叠行，展开后输入添加 / 词条删除 /
+/// 一键清空。列表持久化在 [DanmakuSettings]，发射前过滤见 danmaku_service
+/// 的 `_effectiveEntries`。
+class _BlocklistTile extends StatefulWidget {
+  const _BlocklistTile();
+
+  @override
+  State<_BlocklistTile> createState() => _BlocklistTileState();
+}
+
+class _BlocklistTileState extends State<_BlocklistTile> {
+  final TextEditingController _controller = TextEditingController();
+  bool _expanded = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _add() async {
+    final text = _controller.text;
+    if (text.trim().isEmpty) return;
+    await DanmakuSettings.instance.addBlockedKeyword(text);
+    if (mounted) _controller.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = DanmakuSettings.instance;
+    final keywords = s.blockedKeywords;
+    return Column(
+      children: [
+        Material(
+          type: MaterialType.transparency,
+          child: ListTile(
+            dense: true,
+            leading: const Icon(Icons.block, color: Colors.white, size: 22),
+            title: const Text(
+              '屏蔽词',
+              style: TextStyle(color: Colors.white, fontSize: 15),
+            ),
+            subtitle: Text(
+              keywords.isEmpty ? '未设置' : keywords.join('、'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.white38, fontSize: 11),
+            ),
+            trailing: Icon(
+              _expanded ? Icons.expand_less : Icons.expand_more,
+              color: Colors.white54,
+            ),
+            onTap: () => setState(() => _expanded = !_expanded),
+          ),
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: _expanded
+              ? Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _controller,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: '输入要屏蔽的关键词',
+                                hintStyle: const TextStyle(
+                                  color: Colors.white38,
+                                  fontSize: 13,
+                                ),
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                filled: true,
+                                fillColor: Colors.white.withValues(alpha: 0.08),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                              textInputAction: TextInputAction.done,
+                              onSubmitted: (_) => _add(),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          FilledButton(
+                            onPressed: _add,
+                            style: FilledButton.styleFrom(
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              foregroundColor: Colors.black87,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                            ),
+                            child: const Text('添加'),
+                          ),
+                        ],
+                      ),
+                      if (keywords.isNotEmpty) ...[
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final kw in keywords)
+                              _KeywordChip(
+                                label: kw,
+                                onDelete: () => DanmakuSettings.instance
+                                    .removeBlockedKeyword(kw),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => DanmakuSettings.instance
+                                .clearBlockedKeywords(),
+                            child: const Text(
+                              '清空',
+                              style: TextStyle(
+                                color: Colors.white54,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+}
+
+/// 屏蔽词胶囊（词条 + 删除 ✕）
+class _KeywordChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onDelete;
+
+  const _KeywordChip({required this.label, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white, fontSize: 13),
+          ),
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: onDelete,
+            child: const Icon(Icons.close, size: 14, color: Colors.white54),
+          ),
         ],
       ),
     );

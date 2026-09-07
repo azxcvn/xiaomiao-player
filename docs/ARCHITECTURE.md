@@ -38,8 +38,8 @@ Flutter 本地视频播放器（Android），核心能力：
   （本地/网络/自动匹配/设置四入口）+ 播放界面开关/设置按钮（横屏左下角时间右侧 /
   竖屏右下角进度条上方）（§4.11）
 - **弹幕设置（阶段2）**：弹幕样式（字号/字重/速度/描边/不透明度无极滑杆 + 随机渐变色
-  忽略文件颜色）+ 弹幕配置（显示区域/行高/顶·底·滚动三类显隐/海量弹幕/弹幕去重）
-  + 弹幕偏移（时间轴偏移 -180~+180 秒，正 = 延后、负 = 提前，对齐 Kazumi）；
+  忽略文件颜色）+ 弹幕配置（显示区域 10% 固定档位/行高/顶·底·滚动三类显隐/海量弹幕/
+  弹幕去重/屏蔽词）+ 弹幕偏移（时间轴偏移 -180~+180 秒，正 = 延后、负 = 提前，对齐 Kazumi）；
   设置全量持久化（`DanmakuSettings`），三入口（横屏底栏设置按钮/竖屏进度条上方设置
   按钮/更多→弹幕→弹幕设置）进入同一面板（§4.11）
 - **网络弹幕 / 自动匹配（阶段3）**：接入弹弹Play 开放弹幕网络（签名验证模式）——
@@ -125,7 +125,7 @@ lib/
 │   ├── danmaku_service.dart    # 弹幕控制器（业务层：本地同名/手动导入/网络弹幕装载 + 1s tick 秒桶发射 + canvas 渲染层显隐/暂停/倍速同步 + 设置订阅应用 + 切集自动匹配，横竖屏共享）
 │   ├── danmaku_scheduler.dart  # 弹幕调度器（纯逻辑：秒桶 + 前向补发 + seek 跳变检测 + 代数失效）
 │   ├── danmaku_memory.dart     # 弹幕手动导入记忆（视频路径→弹幕文件路径，SharedPreferences JSON 持久化）
-│   ├── danmaku_settings.dart   # 弹幕设置（样式：字号/字重/速度/描边/不透明度/随机色 + 配置：区域/行高/三类显隐/海量/去重 + 偏移：时间轴偏移 + 字体：三态/自定义族名·文件名，ChangeNotifier + 持久化）
+│   ├── danmaku_settings.dart   # 弹幕设置（样式：字号/字重/速度/描边/不透明度/随机色 + 配置：区域(10%档位)/行高/三类显隐/海量/去重/屏蔽词 + 偏移：时间轴偏移 + 字体：三态/自定义族名·文件名，ChangeNotifier + 持久化）
 │   ├── dandan_play_keys.dart   # 弹弹Play API 密钥（私有，gitignored，禁止上传 GitHub）
 │   ├── dandan_play_api.dart    # 弹弹Play 开放弹幕网络 API 客户端（签名验证模式：搜索/拉取弹幕/文件匹配）
 │   ├── danmaku_server_settings.dart # 弹幕服务器设置（默认+自建服务器增删启停 + 切集自动匹配开关及其与默认服务器的互斥裁决，ChangeNotifier + 持久化）
@@ -228,7 +228,7 @@ lib/
 │   │       ├── player_danmaku_buttons.dart# 弹幕开关/设置按钮组（Kazumi 图标：开=内联 SVG 主题色对勾，关/设置=资源 SVG）
 │   │       ├── player_danmaku_panel.dart  # 弹幕二级界面（本地弹幕=复用字幕选择器面板导入 / 网络弹幕 / 自动匹配 / 弹幕设置；DanmakuFileService）
 │   │       ├── player_danmaku_network_panel.dart # 网络弹幕搜索三级界面（40dp 胶囊搜索框 + 框下关键词历史胶囊 + 命中后折叠为关键词条 + 结果卡自持动画展开集列表，横竖屏共用）
-│   │       ├── player_danmaku_settings_panel.dart # 弹幕设置面板（样式：字号/字重/速度/描边/不透明度滑杆+随机渐变色；配置：区域/行高/三类显隐/海量/去重；偏移：时间轴偏移；字体：跟随系统/跟随App/自定义三选一+目录导入列表选择；横竖屏外壳共用）
+│   │       ├── player_danmaku_settings_panel.dart # 弹幕设置面板（样式：字号/字重/速度/描边/不透明度滑杆+随机渐变色；配置：区域(10%档位)/行高/三类显隐/海量/去重/屏蔽词；偏移：时间轴偏移；字体：跟随系统/跟随App/自定义三选一+目录导入列表选择；横竖屏外壳共用）
 │   │       ├── player_bottom_bar.dart     # 底栏：进度条 + 下一集 + 时间 + 弹幕开关/设置 + 右下角按钮簇
 │   │       ├── player_seek_bar.dart       # 自绘进度条（替代 Slider，起点对齐 kPlayerLeftInset；章节圆点 + 跳过色段）
 │   │       ├── player_chapter_bar.dart    # 章节名行（可点击呼出列表）+ 跳过胶囊（5 秒自动消失/控制层可见时常驻）
@@ -285,7 +285,7 @@ lib/
 │   └── theme_controller.dart  #   主题控制（模式/色/风格 + 迁移）
 └── utils/                     # 纯工具函数
     ├── app_dialog.dart        #   （见 widgets/app_dialog.dart 说明）
-    ├── formatters.dart        #   大小/日期/时长/倍速/网速格式化 + 在线媒体判定
+    ├── formatters.dart        #   大小/日期/时长/倍速/网速格式化 + 截图文件名 + 在线媒体判定
     ├── url_media.dart         #   在线直链纯函数（规范化补协议/流媒体协议白名单/URL 提取标题，§4.17）
     ├── natural_compare.dart   #   自然序（数字感知）比较
     ├── watch_state.dart       #   观看状态纯函数（未观看/观看中/已看完）
@@ -302,6 +302,7 @@ lib/
     ├── danmaku_local_file.dart #  同名弹幕文件查找纯函数（9 种命名规则，只查同目录）
     ├── danmaku_random_color.dart # 随机渐变色纯函数（HSV 色轮黄金角步进推进器，忽略文件颜色）
     ├── danmaku_dedup.dart     #   弹幕去重纯函数（文本归一化判同 + 时间窗合并）
+    ├── danmaku_blocklist.dart #  弹幕屏蔽词纯函数（子串命中过滤，忽略大小写/空白）
     ├── danmaku_episode.dart   #   弹幕集数提取/匹配纯函数（文件名→集数 + 缓存集列表定位，切集自动匹配）
     ├── dandan_signature.dart  #   弹弹Play 签名纯函数（base64(sha256(AppId+Timestamp+Path+AppSecret))）
     ├── dandan_comment.dart    #   弹弹Play 评论→弹幕条目/B站 XML 纯函数（p 字段解析 + 排序 + 落盘 XML 生成）
@@ -509,9 +510,9 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | 渲染 | `pages/player/views/player_danmaku_layer.dart` | `DanmakuScreen` 封装，挂载/卸载即 attach/detach 到业务控制器；初始 option 从设置单例构建 |
 | UI | `pages/player/views/player_danmaku_buttons.dart` | 开关/设置按钮组（Kazumi 图标：开=内联 `kDanmakuOnSvg` 主题色对勾；关/设置=资源 SVG，`assets/icons/`） |
 | 面板 | `pages/player/views/player_danmaku_panel.dart` | 弹幕二级界面（更多→弹幕/顶栏槽位共用）：本地弹幕=复用 `SubtitleFilePickerPanel`（只换过滤器/图标/记忆键，content:// 走原生 `copyDanmakuFromUri` → `filesDir/danmaku/`）；网络弹幕/自动匹配 toast 待上线；弹幕设置与底栏按钮同一回调 |
-| 设置面板 | `pages/player/views/player_danmaku_settings_panel.dart` | 弹幕设置面板（横竖屏外壳共用）：三段式布局（样式 5 滑杆 + 随机渐变色 / 配置 2 滑杆 + 5 开关 / 偏移 1 滑杆）+ 恢复默认；字号/字重/描边/偏移松手提交，其余实时写 `DanmakuSettings` |
-| 设置 | `services/danmaku_settings.dart` | 弹幕设置单例（`ChangeNotifier` + SharedPreferences 持久化）：字号/字重/速度/描边/不透明度/随机色 + 区域/行高/三类显隐/海量/去重 + 时间轴偏移；启动 `ensureLoaded`（main.dart） |
-| 纯函数 | `utils/danmaku_random_color.dart` / `danmaku_dedup.dart` | 随机渐变色（HSV 色轮黄金角步进 + 随机漂移，种子可复现）/ 去重（文本归一化判同 + 时间窗合并，对齐 Kazumi） |
+| 设置面板 | `pages/player/views/player_danmaku_settings_panel.dart` | 弹幕设置面板（横竖屏外壳共用）：三段式布局（样式 5 滑杆 + 随机渐变色 / 配置 2 滑杆 + 5 开关 + 屏蔽词 / 偏移 1 滑杆）+ 恢复默认；字号/字重/描边/偏移松手提交，其余实时写 `DanmakuSettings` |
+| 设置 | `services/danmaku_settings.dart` | 弹幕设置单例（`ChangeNotifier` + SharedPreferences 持久化）：字号/字重/速度/描边/不透明度/随机色 + 区域/行高/三类显隐/海量/去重/屏蔽词 + 时间轴偏移；启动 `ensureLoaded`（main.dart） |
+| 纯函数 | `utils/danmaku_random_color.dart` / `danmaku_dedup.dart` / `danmaku_blocklist.dart` | 随机渐变色（HSV 色轮黄金角步进 + 随机漂移，种子可复现）/ 去重（文本归一化判同 + 时间窗合并，对齐 Kazumi）/ 屏蔽词（子串命中过滤，忽略大小写/空白） |
 
 **关键决策**：
 - **渲染层 registry（横竖屏双挂）**：横竖屏两个页面各挂一个 `DanmakuScreen`，业务层
@@ -561,7 +562,13 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 播放位置映射到源时间（负秒桶视为空）；偏移变化时重锚定秒桶 + 清屏重新对齐
 （对齐 Kazumi `DanmakuTimeline.resolveSourceSecond` + `danmakuTimeOffset`）。
 
-**阶段2 未做**（后续阶段）：屏蔽词、B站 gRPC。
+**屏蔽词（阶段3 补，已实现）**：`DanmakuSettings` 维护屏蔽词列表（添加/移除/清空/持久化，
+启动 load 归一化去重去空白）；纯函数 `utils/danmaku_blocklist.dart` 做子串命中判定
+（忽略大小写/空白）；`DanmakuController._effectiveEntries` 在装载/重灌时先过滤屏蔽词再按
+去重开关合并，屏蔽词变化重灌秒桶（`_refeedIfLoaded`）；面板「弹幕配置 → 屏蔽词」折叠行
+输入添加/词条删除/一键清空。
+
+**阶段2 未做**（后续阶段）：B站 gRPC。
 顶栏「弹幕」槽位与「更多→弹幕」进入弹幕二级界面（`implemented=true`）。
 
 **网络弹幕 / 自动匹配 / 弹幕服务器（阶段3）**：
@@ -1178,6 +1185,7 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/intro_outro_tracker_test.dart` — 片头片尾跟踪器（就绪门控/每集一次/越过即标记/恢复点感知/切集重置）
   - `test/intro_outro_panel_test.dart` — 片头片尾面板（开关展开/输入换算 mm:ss/滑杆/设为当前时间与剩余时间/一键重置）
   - `test/formatters_network_test.dart` — 网速格式化（KB/MB 自动切换两位小数）与在线媒体判定纯函数（阶段1 第 1 点）
+  - `test/formatters_test.dart` — 截图文件名纯函数（app名称 + 日期 + 到秒时间，避免同日覆盖）
   - `test/subtitle_track_test.dart` — 字幕轨道纯函数（展示名/ASS 样式判定/格式过滤/对齐/颜色 + RGBA↔mpv 颜色转换，阶段1 第 3 点）
   - `test/subtitle_settings_test.dart` — 字幕设置服务（默认值/延迟叠加与钳制/描边模式/外挂字幕记忆/字体源目录记忆/重置样式持久化）
   - `test/subtitle_auto_match_test.dart` — 同名字幕自动匹配纯函数（同名候选/扩展名优先级/完全同名优先/简繁语言后缀/短名优先/无匹配）
@@ -1189,11 +1197,12 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/danmaku_scheduler_test.dart` — 弹幕调度器（秒桶前向补发/首 tick 锚定/seek 检测/代数失效/微幅回抖）
   - `test/player_danmaku_panel_test.dart` — 弹幕二级界面（四入口齐全/网络·自动匹配回调注入/设置回调注入/无平台通道不崩溃）
   - `test/danmaku_memory_test.dart` — 弹幕手动导入记忆（set/get/remove/持久化恢复/损坏数据防御）
-  - `test/danmaku_settings_test.dart` — 弹幕设置服务（默认值/钳制/持久化恢复/越界收窄/恢复默认/通知 + 字体三态/自定义字体持久化）
+  - `test/danmaku_settings_test.dart` — 弹幕设置服务（默认值/钳制/持久化恢复/越界收窄/恢复默认/通知 + 字体三态/自定义字体持久化 + 屏蔽词增删清/显示区域档位吸附）
   - `test/danmaku_font_mode_test.dart` — 弹幕字体三态解析纯函数（跟随系统/跟随 App/自定义）
   - `test/app_font_settings_test.dart` — App 全局字体设置服务（默认值/开关·字体·缩放·字重持久化/钳制/effective 生效条件/通知）
   - `test/danmaku_random_color_test.dart` — 随机渐变色纯函数（HSV 转换/色相环绕/种子可复现/色轮均匀分布/高明度约束）
   - `test/danmaku_dedup_test.dart` — 弹幕去重纯函数（归一化判同/时间窗合并/链式推进/无序输入/原文保留）
+  - `test/danmaku_blocklist_test.dart` — 弹幕屏蔽词纯函数（子串命中/忽略大小写·空白/列表过滤）
   - `test/danmaku_episode_test.dart` — 弹幕集数提取/匹配纯函数（文件名各规则 + 集列表定位，切集自动匹配）
   - `test/dandan_signature_test.dart` — 弹弹Play 签名纯函数（官方示例 + 三条真实路径的**合成密钥**已知向量；⚠️ 禁止写入真实 AppId/AppSecret）
   - `test/dandan_comment_test.dart` — 弹弹Play 评论→弹幕条目/B站 XML（p 字段解析/容错/排序/XML 往返转义）
@@ -1205,7 +1214,7 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/danmaku_auto_match_cache_test.dart` — 自动匹配缓存存储（保存/读回/清空/持久化/损坏防御）
   - `test/danmaku_network_service_test.dart` — 弹幕网络服务（文件名清洗/搜索合并去重来源/下载落盘可回读/落盘失败降级）
   - `test/player_danmaku_network_panel_test.dart` — 网络弹幕搜索面板（40dp 搜索框定高/框下历史胶囊+清除/命中折叠与重新展开/结果卡收起态不构建子树+手风琴/选集回调+关闭面板）
-  - `test/player_danmaku_settings_panel_test.dart` — 弹幕设置面板（两段式布局/开关滑杆实时写设置/恢复默认/读数联动）
+  - `test/player_danmaku_settings_panel_test.dart` — 弹幕设置面板（两段式布局/开关滑杆实时写设置/恢复默认/读数联动/屏蔽词增删）
   - `test/player_panel_theme_test.dart` — 播放器暗色面板强调色跟随主题（换主题色滑杆轨道/拇指随之改变且不等于旧写死蓝 0xFF4FC3F7；保留无气泡外观；浅色主题下派生色更亮；同 seed 复用缓存实例）
   - `test/subtitle_file_picker_panel_test.dart` — 自建选择器面板（记忆文件夹被删向上回退/空目录正常落地/导航失败维持原状/选择回调+文件夹记忆）
   - `test/bili_bangumi_test.dart` — 番剧模型 fromJson（索引/条件/搜索/季详情/选集/时间表 + 数字字段字符串兼容）+ 链接解析纯函数（ss/ep/BV）

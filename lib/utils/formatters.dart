@@ -17,6 +17,14 @@ String formatDate(DateTime? dt) {
   return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
 }
 
+/// 截图文件名：`小喵Player-yyyy-MM-dd-HHmmss.png`（含到秒的时间，
+/// 避免同一天多张截图重名互相覆盖；工作.md 播放器截图命名）。
+String formatScreenshotName(DateTime dt) {
+  String two(int n) => n.toString().padLeft(2, '0');
+  return '小喵Player-${dt.year}-${two(dt.month)}-${two(dt.day)}'
+      '-${two(dt.hour)}${two(dt.minute)}${two(dt.second)}.png';
+}
+
 /// 毫秒 → 时长文本（mm:ss 或 h:mm:ss）
 String formatDuration(int ms) {
   final totalSeconds = ms ~/ 1000;
