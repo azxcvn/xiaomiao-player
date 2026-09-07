@@ -44,6 +44,15 @@ const List<String> chapterPreviewKeywords = [
 /// 片段最短有效时长（秒）：短于该值的派生片段直接丢弃
 const double minSkipSegmentSeconds = 5.0;
 
+/// 解析用户自定义关键词串（逗号 / 分号 / 换行分隔，去空白、去空项）。
+///
+/// 与参考项目（mpvRx `SkipMarkerResolver.parseCustomKeywords`）一致。
+List<String> parseCustomKeywords(String value) => value
+    .split(RegExp(r'[,;\n\r]+'))
+    .map((s) => s.trim())
+    .where((s) => s.isNotEmpty)
+    .toList();
+
 /// 章节标题 → 跳过片段类型。
 ///
 /// 匹配规则（参考小喵 player）：
@@ -51,9 +60,17 @@ const double minSkipSegmentSeconds = 5.0;
 ///   （如 "op" 只匹配独立单词，避免 "opening" 被 "op" 误匹配冲突）；
 /// - 非拉丁（中文/日文/带重音）：去空白与标点后子串包含匹配。
 ///
+/// [customIntro] / [customOutro] 为用户自定义关键词，与内置关键词表合并
+/// 参与匹配（用户把某关键词填进哪个类别就归属哪类，如把 "AP" 填进片头
+/// 关键词即判定为片头）。
+///
 /// 优先级（参考 mpvRx）：前情提要 > 正片前段 > 制作人员 > 下集预告 >
 /// 片尾（且非片头）> 片头；无法识别返回 null。
-ChapterSkipType? classifyChapterTitle(String? title) {
+ChapterSkipType? classifyChapterTitle(
+  String? title, {
+  List<String> customIntro = const [],
+  List<String> customOutro = const [],
+}) {
   if (title == null || title.trim().isEmpty) return null;
   final lowered = title.trim().toLowerCase();
   final normalizedLatin =
@@ -74,8 +91,8 @@ ChapterSkipType? classifyChapterTitle(String? title) {
     return false;
   }
 
-  final hasIntro = hasKeyword(chapterIntroKeywords);
-  final hasOutro = hasKeyword(chapterOutroKeywords);
+  final hasIntro = hasKeyword([...chapterIntroKeywords, ...customIntro]);
+  final hasOutro = hasKeyword([...chapterOutroKeywords, ...customOutro]);
   return switch ((hasKeyword(chapterRecapKeywords), hasKeyword(chapterColdOpenKeywords), hasKeyword(chapterCreditsKeywords), hasKeyword(chapterPreviewKeywords), hasOutro, hasIntro)) {
     (true, _, _, _, _, _) => ChapterSkipType.recap,
     (_, true, _, _, false, false) => ChapterSkipType.coldOpen,
@@ -95,14 +112,20 @@ ChapterSkipType? classifyChapterTitle(String? title) {
 /// - 类型相同且起止（取整后）重复的片段去重。
 List<SkipSegment> resolveSkipSegments(
   List<ChapterInfo> chapters,
-  double durationSeconds,
-) {
+  double durationSeconds, {
+  List<String> customIntro = const [],
+  List<String> customOutro = const [],
+}) {
   if (!durationSeconds.isFinite || durationSeconds <= 0) return const [];
   final result = <SkipSegment>[];
   for (var i = 0; i < chapters.length; i++) {
     final chapter = chapters[i];
     if (!chapter.startSeconds.isFinite || chapter.startSeconds < 0) continue;
-    final type = classifyChapterTitle(chapter.title);
+    final type = classifyChapterTitle(
+      chapter.title,
+      customIntro: customIntro,
+      customOutro: customOutro,
+    );
     if (type == null) continue;
     final end = i + 1 < chapters.length
         ? chapters[i + 1].startSeconds

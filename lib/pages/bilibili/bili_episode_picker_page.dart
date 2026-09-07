@@ -6,7 +6,8 @@ import 'package:moumou/pages/bilibili/bili_play_launcher.dart';
 import 'package:moumou/widgets/bili_episode_tile.dart';
 
 /// 全屏选集页：按 30 集一段分段（「1-30」「31-60」…）+ 2 列网格（集号 + 集名 +
-/// 角标）+ 正序/倒序。点击选集提示「播放即将上线」（播放属阶段三）。
+/// 角标）+ 正序/倒序。切分段时按方向滑入/滑出（向前翻新页从右进、旧页左出，
+/// 向后翻反之）。点击选集提示「播放即将上线」（播放属阶段三）。
 class BiliEpisodePickerPage extends StatefulWidget {
   final List<BiliEpisode> episodes;
   final bool initialReverse;
@@ -21,25 +22,55 @@ class BiliEpisodePickerPage extends StatefulWidget {
   State<BiliEpisodePickerPage> createState() => _BiliEpisodePickerPageState();
 }
 
-class _BiliEpisodePickerPageState extends State<BiliEpisodePickerPage> {
+class _BiliEpisodePickerPageState extends State<BiliEpisodePickerPage>
+    with SingleTickerProviderStateMixin {
   static const int _pageSize = 30;
 
   late bool _reverse = widget.initialReverse;
   int _page = 0;
+
+  /// 动画期间的上一分段页（与新页一起滑出）。
+  int _prevPage = 0;
+
+  /// 翻页方向：1 = 向后翻（页号增大），-1 = 向前翻（页号减小）。
+  int _pageDirection = 1;
+
+  late final AnimationController _slideController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 260),
+    // 初始即处于「动画已完成」状态，第一页正常居中显示；切页时才 forward(0) 重播。
+    value: 1.0,
+  );
 
   List<BiliEpisode> get _ordered =>
       _reverse ? widget.episodes.reversed.toList() : widget.episodes;
 
   int get _pageCount => (_ordered.length / _pageSize).ceil();
 
-  List<BiliEpisode> get _currentPage =>
-      _ordered.skip(_page * _pageSize).take(_pageSize).toList();
+  @override
+  void dispose() {
+    _slideController.dispose();
+    super.dispose();
+  }
 
   void _toggleReverse() {
     setState(() {
       _reverse = !_reverse;
       _page = 0;
+      _prevPage = 0;
+      _pageDirection = 1;
     });
+  }
+
+  /// 切到指定分段页（记录方向并触发滑入/滑出动画）。
+  void _goToPage(int i) {
+    if (i == _page) return;
+    setState(() {
+      _prevPage = _page;
+      _pageDirection = i > _page ? 1 : -1;
+      _page = i;
+    });
+    _slideController.forward(from: 0);
   }
 
   void _playEpisode(BiliEpisode ep) => playBiliEpisode(context, ep);
@@ -81,7 +112,7 @@ class _BiliEpisodePickerPageState extends State<BiliEpisodePickerPage> {
           final selected = _page == i;
           return InkWell(
             borderRadius: BorderRadius.circular(20),
-            onTap: () => setState(() => _page = i),
+            onTap: () => _goToPage(i),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -105,6 +136,33 @@ class _BiliEpisodePickerPageState extends State<BiliEpisodePickerPage> {
   }
 
   Widget _buildGrid() {
+    return AnimatedBuilder(
+      animation: _slideController,
+      builder: (context, _) {
+        final t = Curves.easeOutCubic.transform(_slideController.value);
+        // 新页从翻页方向一侧滑入（t 0→1：dir → 0），旧页滑向反方向（0 → -dir）。
+        final newTranslation = Offset((1 - t) * _pageDirection, 0);
+        final oldTranslation = Offset(-t * _pageDirection, 0);
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            if (_slideController.isAnimating)
+              FractionalTranslation(
+                translation: oldTranslation,
+                child: _buildPageGrid(_prevPage),
+              ),
+            FractionalTranslation(
+              translation: newTranslation,
+              child: _buildPageGrid(_page),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildPageGrid(int page) {
+    final items = _ordered.skip(page * _pageSize).take(_pageSize).toList();
     return GridView.builder(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -113,10 +171,10 @@ class _BiliEpisodePickerPageState extends State<BiliEpisodePickerPage> {
         mainAxisSpacing: 8,
         mainAxisExtent: 60,
       ),
-      itemCount: _currentPage.length,
+      itemCount: items.length,
       itemBuilder: (context, i) => BiliEpisodeTile(
-        episode: _currentPage[i],
-        onTap: () => _playEpisode(_currentPage[i]),
+        episode: items[i],
+        onTap: () => _playEpisode(items[i]),
       ),
     );
   }

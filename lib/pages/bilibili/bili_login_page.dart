@@ -157,6 +157,7 @@ class _BiliLoginPageState extends State<BiliLoginPage> {
       final result = await SaverGallery.saveImage(
         bytes,
         fileName: name,
+        albumPath: '小喵Player',
         skipIfExists: false,
       );
       _toast(result.isSuccess ? '二维码已保存到相册' : '保存失败：${result.errorMessage}');

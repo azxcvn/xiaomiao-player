@@ -531,6 +531,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       final result = await SaverGallery.saveImage(
         bytes,
         fileName: name,
+        albumPath: '小喵Player',
         skipIfExists: false,
       );
       _toast(result.isSuccess ? '已保存到相册' : '截图保存失败：${result.errorMessage}');
@@ -1094,9 +1095,16 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   PlayerPanelPage _chapterPanelPage() {
     return PlayerPanelPage(
       title: '章节',
-      body: PlayerChapterPanel(
-        tracker: _chapterTracker,
-        onSelect: (chapter) => _chapterTracker.seekToChapter(chapter),
+      body: Builder(
+        builder: (panelContext) {
+          final navigator = PlayerBottomPanelNavigator.of(panelContext);
+          return PlayerChapterPanel(
+            tracker: _chapterTracker,
+            onSelect: (chapter) => _chapterTracker.seekToChapter(chapter),
+            onPushSubPage: (title, body) =>
+                navigator.push(PlayerPanelPage(title: title, body: body)),
+          );
+        },
       ),
     );
   }

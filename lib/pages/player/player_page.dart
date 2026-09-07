@@ -1080,6 +1080,7 @@ class _PlayerPageState extends State<PlayerPage>
       final result = await SaverGallery.saveImage(
         bytes,
         fileName: name,
+        albumPath: '小喵Player',
         skipIfExists: false,
       );
       _toast(result.isSuccess ? '已保存到相册' : '截图保存失败：${result.errorMessage}');
@@ -2016,9 +2017,16 @@ class _PlayerPageState extends State<PlayerPage>
   /// 无章节时面板内显示空状态提示）。
   PlayerPanelPage _chapterPanelPage() => PlayerPanelPage(
         title: '章节',
-        body: PlayerChapterPanel(
-          tracker: _chapterTracker,
-          onSelect: (chapter) => _chapterTracker.seekToChapter(chapter),
+        body: Builder(
+          builder: (panelContext) {
+            final navigator = PlayerPanelNavigator.of(panelContext);
+            return PlayerChapterPanel(
+              tracker: _chapterTracker,
+              onSelect: (chapter) => _chapterTracker.seekToChapter(chapter),
+              onPushSubPage: (title, body) =>
+                  navigator.push(PlayerPanelPage(title: title, body: body)),
+            );
+          },
         ),
       );
 

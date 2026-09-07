@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:moumou/models/chapter_info.dart';
+import 'package:moumou/services/chapter_skip_settings.dart';
 import 'package:moumou/utils/chapter_utils.dart' as chapter_utils;
 
 /// 章节数据来源抽象（测试注入假实现；生产实现见 [MpvChapterSource]）。
@@ -58,9 +59,16 @@ class MpvChapterSource implements ChapterSource {
 ///   超时自动消失；回拖出片段再进入可重复触发（工作.md 第 4 点）；
 /// - 胶囊常驻显示由 UI 层组合判断：`autoChipVisible || 控制层可见`。
 class ChapterTracker extends ChangeNotifier {
-  ChapterTracker(this._source, {this.autoChipWindow = const Duration(seconds: 5)});
+  ChapterTracker(
+    this._source, {
+    this.autoChipWindow = const Duration(seconds: 5),
+    ChapterSkipSettings? settings,
+  }) : _settings = settings ?? ChapterSkipSettings.instance {
+    _settings.addListener(_onSettingsChanged);
+  }
 
   final ChapterSource _source;
+  final ChapterSkipSettings _settings;
 
   /// 自动弹出窗口时长（工作.md 第 4 点：弹出后 5 秒倒计时自动消失；
   /// 测试可注入更短窗口）
@@ -72,6 +80,14 @@ class ChapterTracker extends ChangeNotifier {
   SkipSegment? _activeSegment;
   bool _autoChipVisible = false;
   Timer? _chipTimer;
+
+  /// 本会话已自动跳过的片段（每片段只自动跳一次，回拖进去不再重复跳）。
+  final Set<SkipSegment> _skippedSegments = {};
+
+  /// 当前片段是否来自外部精确来源（B 站 playurl `clip_info_list` 等）而非
+  /// 章节标题派生。外部片段已带精确起止，设置变化时**不得**用
+  /// `resolveSkipSegments` 重派生（否则会把 OP 结束错扩到下一章起点）。
+  bool _externalSegments = false;
 
   /// 当前媒体的章节列表（空 = 无章节）
   List<ChapterInfo> get chapters => _chapters;
@@ -101,6 +117,7 @@ class ChapterTracker extends ChangeNotifier {
     _autoChipVisible = false;
     _currentChapterIndex = null;
     _activeSegment = null;
+    _skippedSegments.clear();
     List<ChapterInfo> chapters;
     try {
       chapters = await _source.loadChapters();
@@ -108,12 +125,38 @@ class ChapterTracker extends ChangeNotifier {
       chapters = const [];
     }
     _chapters = chapters;
-    _skipSegments = chapters.isEmpty
-        ? const []
-        : chapter_utils.resolveSkipSegments(
-            chapters,
-            _source.duration.inMilliseconds / 1000.0,
-          );
+    _externalSegments = false;
+    _rebuildSegments();
+    notifyListeners();
+  }
+
+  /// 依据当前章节 + 时长 + 自定义关键词重新派生跳过片段，并清空已跳过记录。
+  void _rebuildSegments() {
+    if (_chapters.isEmpty) {
+      _skipSegments = const [];
+    } else {
+      _skipSegments = chapter_utils.resolveSkipSegments(
+        _chapters,
+        _source.duration.inMilliseconds / 1000.0,
+        customIntro:
+            chapter_utils.parseCustomKeywords(_settings.customIntroKeywords),
+        customOutro:
+            chapter_utils.parseCustomKeywords(_settings.customOutroKeywords),
+      );
+    }
+    _skippedSegments.clear();
+  }
+
+  /// 设置变化（自定义关键词 / 自动跳过类型）：清空临时状态；只有标题派生的
+  /// 片段才按新关键词重派生（外部精确片段保持原起止，避免 OP 结束被错扩）。
+  void _onSettingsChanged() {
+    _chipTimer?.cancel();
+    _autoChipVisible = false;
+    _activeSegment = null;
+    if (!_externalSegments) {
+      _rebuildSegments();
+    }
+    _skippedSegments.clear();
     notifyListeners();
   }
 
@@ -125,6 +168,8 @@ class ChapterTracker extends ChangeNotifier {
     _skipSegments = const [];
     _currentChapterIndex = null;
     _activeSegment = null;
+    _skippedSegments.clear();
+    _externalSegments = false;
     notifyListeners();
   }
 
@@ -140,6 +185,8 @@ class ChapterTracker extends ChangeNotifier {
     _skipSegments = List.of(segments);
     _currentChapterIndex = null;
     _activeSegment = null;
+    _skippedSegments.clear();
+    _externalSegments = true;
     notifyListeners();
   }
 
@@ -160,13 +207,20 @@ class ChapterTracker extends ChangeNotifier {
     if (segment != _activeSegment) {
       _activeSegment = segment;
       if (segment != null) {
-        // 进入片段：自动弹出胶囊，窗口结束后消失（可重复触发）
-        _autoChipVisible = true;
-        _chipTimer?.cancel();
-        _chipTimer = Timer(autoChipWindow, () {
-          _autoChipVisible = false;
-          notifyListeners();
-        });
+        if (_settings.autoSkip(segment.type) &&
+            !_skippedSegments.contains(segment)) {
+          // 自动跳过：每片段每会话只跳一次，进入即异步 seek（不弹胶囊）
+          _skippedSegments.add(segment);
+          unawaited(_autoSkipSegment(segment));
+        } else {
+          // 进入片段：自动弹出胶囊，窗口结束后消失（可重复触发）
+          _autoChipVisible = true;
+          _chipTimer?.cancel();
+          _chipTimer = Timer(autoChipWindow, () {
+            _autoChipVisible = false;
+            notifyListeners();
+          });
+        }
       } else {
         _autoChipVisible = false;
         _chipTimer?.cancel();
@@ -188,6 +242,14 @@ class ChapterTracker extends ChangeNotifier {
     );
   }
 
+  /// 自动跳过：进入片段即 seek 到片段结束（EOF 保护见 [skipSeekTarget]）。
+  Future<void> _autoSkipSegment(SkipSegment segment) async {
+    final dur = _source.duration.inMilliseconds / 1000.0;
+    await _source.seek(
+      Duration(milliseconds: (chapter_utils.skipSeekTarget(segment, dur) * 1000).round()),
+    );
+  }
+
   /// 跳转到指定章节起点（章节列表面板点击）。
   Future<void> seekToChapter(ChapterInfo chapter) async {
     await _source.seek(
@@ -198,6 +260,7 @@ class ChapterTracker extends ChangeNotifier {
   @override
   void dispose() {
     _chipTimer?.cancel();
+    _settings.removeListener(_onSettingsChanged);
     super.dispose();
   }
 }

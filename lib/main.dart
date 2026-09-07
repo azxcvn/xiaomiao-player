@@ -16,6 +16,7 @@ import 'package:moumou/services/decode_settings.dart';
 import 'package:moumou/services/device_services.dart';
 import 'package:moumou/services/download/download_manager.dart';
 import 'package:moumou/services/equalizer_settings.dart';
+import 'package:moumou/services/chapter_skip_settings.dart';
 import 'package:moumou/services/intro_outro_settings.dart';
 import 'package:moumou/services/media_scan_settings.dart';
 import 'package:moumou/services/network/network_connection_settings.dart';
@@ -128,6 +129,9 @@ class _MoumouAppState extends State<MoumouApp> {
     // 片头片尾设置：同 ensureLoaded 模式（面板 setter 与这里共享同一
     // load Future，防竞态）
     IntroOutroSettings.instance.ensureLoaded();
+    // 章节跳段设置（工作.md 章节跳段）：同 ensureLoaded 模式，ChapterTracker
+    // 构造时订阅、load/位置流读取（防竞态）
+    ChapterSkipSettings.instance.ensureLoaded();
     // 字幕设置（工作.md 阶段1 第 3 点）：同 ensureLoaded 模式（面板 setter
     // 与这里共享同一 load Future，防竞态）
     SubtitleSettings.instance.ensureLoaded();

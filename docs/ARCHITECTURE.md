@@ -98,7 +98,8 @@ lib/
 │   ├── bili_bangumi.dart       # 哔哩番剧（PGC）模型：索引筛选/条目、搜索、季详情/选集/多季、时间表（fromJson 容错）
 │   ├── bili_dash.dart          # playurl DASH 模型：流条目/清晰度档/OP-ED clip（baseUrl/baseUrls 双格式兼容，§4.15）
 │   ├── bili_media.dart         # 在线播放值对象：DASH 流 + 弹幕/章节元数据 + 画质切换回调（§4.15）
-│   └── update_info.dart        # 更新信息值对象（新版本号/Markdown 更新说明/主·备下载站链接，§4.20）
+│   ├── update_info.dart        # 更新信息值对象（新版本号/Markdown 更新说明/主·备下载站链接，§4.20）
+│   └── wyzie_models.dart       # Wyzie 字幕 API 数据模型（字幕条目/来源响应/密钥信息/TMDB 命中 + 语言/格式/编码/来源常量表，§4.21）
 ├── services/                  # 业务逻辑 / 数据层（无 UI）
 │   ├── view_settings.dart     # 排序/字段/视图模式设置（ChangeNotifier + 持久化）
 │   ├── video_scanner.dart     # 扫描 + 建树 + 建文件夹列表
@@ -111,7 +112,8 @@ lib/
 │   ├── crash_log_service.dart # 崩溃日志：列表/读取/删除/清空/导出
 │   ├── cache_manager_service.dart # 缓存管理：列表封面磁盘缓存查询/清除（进度条缩略图为纯内存，不占磁盘）
 │   ├── super_resolution_service.dart   # 超分：模式持久化、着色器拷贝、mpv 应用
-│   ├── chapter_tracker.dart   # 章节跟踪器（mpv chapter-list 读取 + 当前位置/片段/胶囊窗口状态）
+│   ├── chapter_tracker.dart   # 章节跟踪器（mpv chapter-list 读取 + 当前位置/片段/胶囊窗口状态 + 章节跳段自动跳过）
+│   ├── chapter_skip_settings.dart # 章节跳段设置（六类片段自动跳过 + 自定义片头/片尾关键词，ChangeNotifier + 持久化）
 │   ├── intro_outro_settings.dart # 片头片尾全局设置（开关/片头秒数/片尾秒数/各自范围，ChangeNotifier + 持久化）
 │   ├── intro_outro_tracker.dart  # 片头片尾跟踪器（就绪/已处理状态 + 恢复点感知 + 动作决策）
 │   ├── media_scan_settings.dart  # 媒体扫描与过滤设置（.nomedia/隐藏文件夹/黑白名单，ChangeNotifier + 持久化）
@@ -166,6 +168,9 @@ lib/
 │   ├── update/                  # 更新域（工作.md：更新功能，§4.20）
 │   │   ├── update_settings.dart #   更新设置（自动检查开关 + 忽略版本，ChangeNotifier + 持久化）
 │   │   └── update_service.dart  #   更新服务（更新源/下载链接常量 + 检查更新，开发阶段写死新版本）
+│   ├── wyzie/                   # 影视字幕下载域（Wyzie 字幕源，§4.21）
+│   │   ├── wyzie_settings.dart  #   字幕下载设置（API 密钥/来源/语言/格式/编码，ChangeNotifier + 持久化）
+│   │   └── wyzie_api.dart       #   Wyzie 字幕 API 客户端（来源/关键词搜索/文件下载，UTF-8 解码 + 错误语义化）
 │   └── ...                    #   ⚠️ 不要在这里加全局 ValueNotifier hack（见 §4.1）
 ├── widgets/                   # 可复用 UI 组件（跨页面）
 │   ├── app_frame.dart         #   ★ 全局框架：安全区 + 播放页全屏检测
@@ -227,7 +232,8 @@ lib/
 │   │       ├── player_bottom_bar.dart     # 底栏：进度条 + 下一集 + 时间 + 弹幕开关/设置 + 右下角按钮簇
 │   │       ├── player_seek_bar.dart       # 自绘进度条（替代 Slider，起点对齐 kPlayerLeftInset；章节圆点 + 跳过色段）
 │   │       ├── player_chapter_bar.dart    # 章节名行（可点击呼出列表）+ 跳过胶囊（5 秒自动消失/控制层可见时常驻）
-│   │       ├── player_chapter_panel.dart  # 章节列表面板（竖向滚动 + 实时高亮当前章节 + 点击跳转）
+│   │       ├── player_chapter_panel.dart  # 章节列表面板（顶部固定「章节跳段」入口 + 竖向滚动实时高亮 + 点击跳转）
+│   │       ├── player_chapter_skip_panel.dart # 章节跳段设置面板（六类自动跳过开关 + 自定义片头/片尾关键词）
 │   │       ├── player_intro_outro_panel.dart # 片头片尾设置面板内容（开关/滑杆/分秒换算/设为当前时间/一键重置）
 │   │       ├── player_loop_panel.dart     # 循环播放面板内容（横竖屏共用）
 │   │       ├── player_right_actions.dart  # 右侧竖排：截图 + 锁定
@@ -256,7 +262,7 @@ lib/
 │   │   ├── network_storage_page.dart  # 网络存储账户列表（增删改入口 + 空态提示）
 │   │   ├── account_edit_page.dart     # 账户新增/编辑（协议切换 + 各协议字段表单）
 │   │   └── network_browser_page.dart  # 网络目录/文件浏览（复用 FolderCard/VideoCard + 面包屑回退 + 系统返回键逐级返回）
-│   └── settings/
+│   ├── settings/
 │       ├── settings_page.dart #   设置主页（分组结构）
 │       ├── appearance_page.dart      # 外观设置子页
 │       ├── playback_history_page.dart # 历史记录页（VideoCard 仅进度字段 + 右侧垃圾桶删除 + 清空二次确认 + 记录开关，§4.17）
@@ -269,6 +275,11 @@ lib/
 │       ├── privacy_policy_page.dart  # 用户协议页（预览用户服务协议与隐私政策正文，可选中复制，§4.19）
 │       ├── error_log_page.dart       # 错误日志页
 │       └── cache_management_page.dart# 缓存管理页
+│   └── subtitle/
+│       ├── subtitle_download_page.dart # 影视字幕下载页（字幕设置入口 + 关键词搜索 + 勾选批量下载，§4.21）
+│       ├── subtitle_settings_page.dart # 字幕设置子页（承载五入口，§4.21）
+│       └── views/
+│           └── subtitle_settings_section.dart # 字幕设置区（API 密钥/来源/语言/格式/编码五入口 + 来源动态拉取）
 ├── theme/                     # 主题
 │   ├── app_theme.dart         #   ThemeData 生成（light/dark/amoled）
 │   └── theme_controller.dart  #   主题控制（模式/色/风格 + 迁移）
@@ -306,7 +317,9 @@ lib/
     ├── bili_short_link.dart   #   b23.tv 分享短链提取+展开（任意分享文本提取，302 命中令牌即停）
     ├── cast_source.dart       #   投屏源分类纯函数（本地/直链/loopback/content + file:// 去前缀，§4.18）
     ├── version_compare.dart   #   版本号比较纯函数（忽略 v 前缀/按 . 逐段整数比较，§4.20）
-    └── network_mime_types.dart # 文件名→MIME 类型映射
+    ├── network_mime_types.dart # 文件名→MIME 类型映射
+    ├── wyzie_query.dart        #   Wyzie 字幕查询纯函数（来源/逗号参数拼接 + 客户端语言过滤）
+    └── wyzie_filename.dart     #   Wyzie 字幕落盘文件名纯函数（非法字符清洗 + 同批消重）
 ```
 
 ---
@@ -336,6 +349,7 @@ models（模型）     → 无依赖（纯数据）
 - 播放页音量/亮度属于**页面局部状态**（进入时从系统同步，退出时按设置写回/恢复，见 §4.8），禁止做成全局服务
 - 音频声道/音频处理（音量标准化/动态范围压缩）为**会话级状态**（随 `AudioController` 生命周期，每次进播放器重置为默认：安全自动/关/关），不持久化
 - 片头片尾跳过设置属 `IntroOutroSettings`（独立单例 ChangeNotifier）：启用开关（默认关闭）、片头/片尾跳过秒数（默认 0）、各自范围上限（10–600 秒，默认 180）；范围收窄时秒数联动收窄；一键重置只清秒数与范围、保留开关；跟踪器 `IntroOutroTracker` 为普通类（随播放页生命周期），就绪门控防 open 期间误触发
+- 章节跳段设置属 `ChapterSkipSettings`（独立单例 ChangeNotifier，区别于按秒数的 `IntroOutroSettings`，专用于**有章节信息**的视频）：六类片段（片头/片尾/前情提要/制作人员/正片前段/下集预告）的自动跳过开关（默认全关）+ 自定义片头/片尾关键词；`ChapterTracker` 构造时订阅、`load`/位置流读取（§4.22）
 - 弹幕服务器设置属 `DanmakuServerSettings`（独立单例 ChangeNotifier，阶段3）：服务器列表（默认弹弹Play 不可删 + 自建增删启停）+ 切集自动匹配开关（**与默认弹弹Play 服务器互斥**，互斥判定与提示文案统一由本服务提供，见 §4.11），启动 `ensureLoaded`（main.dart）
 - 播放页位置/时长属于**页面局部 ValueNotifier + 局部订阅**（risk_audit #1）：位置流几十毫秒一次事件，若整页 `setState` 会重建整棵 Stack（视频层/手势层/控制层），实际只有进度条、时间文本、常驻进度线需要跟随。横竖屏播放页把 `_position`/`_duration`/`_dragPosition` 抽为页面级 `ValueNotifier`，底栏与常驻进度线用 `Listenable.merge` 局部订阅只重建自身；页面级 `setState` 只留给低频状态（播放/暂停、控制层显隐、锁定、切集）。**注意这是页面局部 ValueNotifier**（dispose 时销毁），不属于被禁的「全局 ValueNotifier hack」
 - 超分记忆语义（`SuperResolutionService`，默认关闭）：无论开关状态都记录「最近一次设置的 模式/质量」；开启记忆后 `load()`/`enterPlayer()` 自动恢复该组合应用到所有视频；**未开启记忆时 `enterPlayer()`（播放页 initState）把本次会话重置为关闭/均衡**——退出播放或重启后都回到默认关闭（参考 mpv-android-anime4k）
@@ -864,6 +878,8 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   多分P集展开到每 P）；合集列表链接 `space.bilibili.com/{mid}/lists/{season_id}` 经
   `seasons_archives_list` 取任一成员 bvid 后再借 view 接口拿全量（对齐 Bili23）。
 - **单连接流式 + Range 续传**：未做调研里的 4–8 路分块并发（吞吐受限）。
+- **登录门禁**：「我的」页弹幕下载 / 视频下载入口先校验 `BiliAccount.isLogin`，
+  未登录 toast「需要登录哔哩哔哩账号」不进入（与首页速拨「哔哩番剧」一致）。
 
 ---
 
@@ -1006,6 +1022,71 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 
 ---
 
+### 4.21 影视字幕下载（Wyzie 字幕源）
+
+> 工作.md：我的→下载组→「字幕下载」（副标题「影视字幕下载」）。关键词搜索影视
+> 字幕并批量下载到目录，提供商 Wyzie（sub.wyzie.io，对齐 mpvRx `WyzieSearchRepository.kt`）。
+
+**分层**（自下而上）：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 模型 | `models/wyzie_models.dart` | 字幕条目/来源响应/密钥信息/TMDB 命中（fromJson 容错）+ 语言/格式/编码/来源常量表 |
+| 纯函数 | `utils/wyzie_query.dart` / `wyzie_filename.dart` | 来源/逗号参数拼接 + 客户端语言过滤 / 落盘文件名清洗 + 同批消重 |
+| 设置 | `services/wyzie/wyzie_settings.dart` | API 密钥 + 来源/语言/格式/编码（ChangeNotifier + SharedPreferences，默认 en+zh / srt+ass / utf-8） |
+| API | `services/wyzie/wyzie_api.dart` | `/sources`、`/api/tmdb/search`、`/search`、文件下载；UTF-8 解码 + 400 无字幕特判 + 错误语义化 |
+| UI | `pages/subtitle/subtitle_download_page.dart` + `subtitle_settings_page.dart` + `views/subtitle_settings_section.dart` | 下载页（字幕设置入口 + 关键词「确定」搜索 + 结果勾选批量下载）+ 设置子页五入口；来源弹窗动态拉取（免费/付费分组） |
+
+**关键决策**：
+- **来源免费/付费分组**：`/sources?key=` 返回 `tiered[]`（`tier`=free/paid），弹窗按
+  「全部 / 免费来源 / 付费来源」分组多选；拉取失败回退静态来源表（charlie/lima 免费，其余付费）。
+- **关键词→媒体 ID**：tt 号 / 纯数字 id 直用，否则先 `/api/tmdb/search` 取首个命中再
+  `/search`（对齐 mpvRx）；客户端再按所选语言过滤（接口常无视 language 参数返回全语言）。
+- **下载独立直下**：字幕为通用文件直链且体积小，`fetchBytes` 一次读回内存落盘到下载
+  目录，**不进 B 站 DownloadManager**（`DownloadTask` 为 B 站专用）；文件名
+  「媒体名.语言.格式」+ 同批消重（`uniqueFileName`）。
+- **密钥与获取链接**：密钥存 SharedPreferences（非敏感，明文）；「如何获取密钥」跳
+  `_getKeyUrl`（飞书文档教程：获取 WYZIE API 密钥的步骤说明）。
+- **复用下载目录**：目录沿用 `DownloadSettings`（与视频/弹幕下载共用同一文件夹设置）。
+- **设置收敛到子页**：五项字幕设置从下载主页收敛为单个「字幕下载设置」入口，点击进
+  `SubtitleSettingsPage` 子页；下载目录栏置于输入框下方（对齐视频/弹幕下载页，去掉
+  分组标题），结果条目元数据（语言/来源/格式）以胶囊标签呈现。
+- **密钥门禁**：搜索前校验 `WyzieSettings.apiKey` 非空，未设置则 toast
+  「请先设置 WYZIE API 密钥」并中止（关键词输入后点「确定」即触发）。
+
+---
+
+### 4.22 章节跳段（有章节视频的自动跳过 + 自定义关键词）
+
+> 与「片头片尾按秒跳过」（§4.1 `IntroOutroSettings`，给无章节视频用）是两套机制。
+> 本机制针对**有章节信息**的视频：把章节标题按关键词分类成六类片段，在进度条上
+> 标记色段并支持手动跳过（§4.6 章节圆点/色段/胶囊），本新增补上**自动跳过**与
+> **用户自定义关键词**。
+
+**分层**（自下而上）：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 模型 | `models/chapter_info.dart` | `ChapterSkipType` 六类（intro/recap/outro/credits/coldOpen/preview）+ 片段 |
+| 纯函数 | `utils/chapter_utils.dart` | `parseCustomKeywords` + `classifyChapterTitle`（内置+自定义关键词） + `resolveSkipSegments` |
+| 设置 | `services/chapter_skip_settings.dart` | 六类自动跳过开关 + 自定义片头/片尾关键词（ChangeNotifier + SharedPreferences） |
+| 跟踪 | `services/chapter_tracker.dart` | 订阅设置、`load`/设置变化时按自定义关键词重派生片段、位置流进入片段时自动 seek |
+| UI | `views/player_chapter_panel.dart` + `player_chapter_skip_panel.dart` | 章节列表顶部固定「章节跳段」入口 → 二级面板（六类开关 + 两个关键词输入框） |
+
+**关键决策**：
+- **关键词归属由用户填写位置决定**（回答「AP 属于片头还是片尾」）：填进「片头关键词」
+  即并入片头匹配、填进「片尾关键词」即并入片尾；同一标题命中多类时按固定优先级
+  「前情提要 > 正片前段 > 制作人员 > 下集预告 > 片尾(且非片头) > 片头」取一类。
+- **自动跳过每片段每会话只跳一次**：进入片段若其类型开启自动跳过且未在
+  `_skippedSegments`，则 seek 到片段结束（EOF 保护沿用 `skipSeekTarget`）；回拖进
+  同一片段不再重复跳，改为弹出手动胶囊（用户主动回看不被打断）。
+- **入口不动「更多」**：复用现有「更多 → 章节」面板，在其顶部固定一行「章节跳段」，
+  点入二级面板（面板内 `push` 就地切换，§4.5）。
+- **设置变化即时生效**：`ChapterTracker` 构造订阅 `ChapterSkipSettings`，变化即重派生
+  片段并清空已跳过记录（不改关键词到片段的热更新无需重开播放器）。
+
+---
+
 ## 5. 新增功能指南（按功能类型）
 
 ### 5.1 新增一个页面
@@ -1089,8 +1170,9 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/portrait_player_bottom_bar_test.dart` — 竖屏底栏右侧按钮簇顺序（超分辨率→列表→倍速→选择屏幕，左到右）+ 弹幕按钮（进度条上方右下角、与章节名同行、开关随 danmakuOn 切换）
   - `test/thumbnail_cache_test.dart` — FFmpeg 帧缓存查询（peekFrame 精确秒桶/peekNearestFrame 邻近匹配/跨视频隔离）+ 32MB LRU 超限淘汰
   - `test/watch_state_test.dart` — 观看状态纯函数（未观看/观看中/已看完判定 + 自定义阈值 + 百分比）
-  - `test/chapter_utils_test.dart` — 章节纯函数（标题关键词分类/片段派生过滤/当前章节定位/跳过目标 EOF 保护）
-  - `test/chapter_tracker_test.dart` — 章节跟踪器（位置流驱动的章节推进/胶囊 5 秒窗口/回拖重复触发/跳过与跳转）
+  - `test/chapter_utils_test.dart` — 章节纯函数（标题关键词分类/片段派生过滤/当前章节定位/跳过目标 EOF 保护 + 自定义关键词归属与优先级，§4.22）
+  - `test/chapter_tracker_test.dart` — 章节跟踪器（位置流驱动的章节推进/胶囊 5 秒窗口/回拖重复触发/跳过与跳转 + 章节跳段自动跳过每片段一次/自定义关键词派生，§4.22）
+  - `test/chapter_skip_settings_test.dart` — 章节跳段设置服务（默认值/自动跳过类型增删/自定义关键词/持久化恢复/损坏防御，§4.22）
   - `test/intro_outro_skip_test.dart` — 片头片尾动作决策纯函数（前置守卫/片头触发/片尾触发/整集保护/片头优先）
   - `test/intro_outro_settings_test.dart` — 片头片尾设置服务（默认值/钳制/范围收窄联动/一键重置/持久化恢复）
   - `test/intro_outro_tracker_test.dart` — 片头片尾跟踪器（就绪门控/每集一次/越过即标记/恢复点感知/切集重置）
@@ -1149,6 +1231,13 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/version_compare_test.dart` — 版本号比较纯函数（v 前缀/逐段整数比较/缺段补 0/数字前缀，§4.20）
   - `test/update_settings_test.dart` — 更新设置服务（默认开启/开关持久化/忽略版本持久化，§4.20）
   - `test/update_dialog_test.dart` — 更新弹窗（三按钮齐全/Markdown 无原生符号/忽略落盘/立即更新弹子菜单与 Toast，§4.20）
+  - `test/wyzie_models_test.dart` — Wyzie 字幕数据模型 fromJson（字段映射/容错/常量表，§4.21）
+  - `test/wyzie_query_test.dart` — Wyzie 查询纯函数（来源/逗号参数拼接/语言代码归一化/客户端过滤，§4.21）
+  - `test/wyzie_filename_test.dart` — Wyzie 落盘文件名纯函数（非法字符清洗/拼装/同批消重，§4.21）
+  - `test/wyzie_settings_test.dart` — 字幕下载设置服务（默认值/密钥 trim/空集回退 all/持久化恢复/损坏防御，§4.21）
+  - `test/wyzie_api_test.dart` — Wyzie API 客户端（MockClient：来源/关键词→TMDB→搜索参数/400 无字幕特判/非 2xx/文件字节，§4.21）
+  - `test/subtitle_download_page_test.dart` — 影视字幕下载页（字幕设置入口/子页五入口/语言多选摘要联动/API 密钥弹窗取消·保存回归/未设密钥搜索 toast，§4.21）
+  - `test/settings_page_bili_login_test.dart` — 「我的」页 B 站下载入口登录门禁（未登录点击弹幕/视频下载 toast 提示登录，§4.16）
 - 改以下代码必须跑对应测试：`AppFrame`、`ViewSettings` 排序、权限流程、`CapsuleNavBar`
 
 ---
@@ -1275,3 +1364,6 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | 在线直链的章节信息无需网站接口 | mpv/FFmpeg 解封装远程容器原生读 chapter（MKV 内嵌章节），现有 `ChapterTracker`（mpv chapter-list）天然覆盖 URL 播放（§4.17） |
 | 投屏 LAN 服务器绑 127.0.0.1 → 电视拉不到流 | 绑 `0.0.0.0` + URL 用手机局域网 IPv4（`isSiteLocalIpv4` 挑站点本地地址、排除回环）（§4.18） |
 | 门禁弹窗被点遮罩/系统返回键关闭（用户未同意也能进入） | `showAppDialog(barrierDismissible: false)` + 内容包 `PopScope(canPop: false)`；确认按钮 `enabled = 倒计时归零 && 勾选同意`（§4.19） |
+| 弹窗里 `TextEditingController` 在 `showAppDialog` 返回后立即 dispose → 退出动画期间 TextField 仍 rebuild 引用它 → 红屏崩溃 | 控制器由弹窗 `StatefulWidget` 自持（initState 建 / dispose 释放），随路由完全卸载才释放，勿在 `await` 后手动 dispose（§4.21） |
+| saver_gallery 不传 `albumPath` 时按 MIME 落默认根目录（截图/二维码直落 `Pictures/`，无父级文件夹） | `saveImage` 传 `albumPath: '小喵Player'` → 落 `Pictures/小喵Player/`（§4.8 截图 / §4.13 保存相册） |
+| 章节跳段设置变化 → `ChapterTracker` 用 `resolveSkipSegments` 重派生，把 B 站 `clip_info_list` 的精确 OP/ED 起止覆盖成「下一章起点」（OP 结束错扩到 ED 起点） | 外部精确片段（`setExternalChapters`）打 `_externalSegments` 标记；`_onSettingsChanged` 只在非外部时重派生，外部只清已跳过记录（§4.22） |

@@ -10,6 +10,7 @@ import 'package:moumou/pages/settings/danmaku_server_page.dart';
 import 'package:moumou/pages/settings/media_scan_settings_page.dart';
 import 'package:moumou/pages/settings/playback_history_page.dart';
 import 'package:moumou/pages/settings/player_settings_page.dart';
+import 'package:moumou/pages/subtitle/subtitle_download_page.dart';
 import 'package:moumou/services/bilibili/bili_account.dart';
 import 'package:moumou/theme/theme_controller.dart';
 import 'package:moumou/widgets/settings_ui.dart';
@@ -168,23 +169,26 @@ class SettingsPage extends StatelessWidget {
                       icon: Icons.subtitles_outlined,
                       title: '弹幕下载',
                       subtitle: const Text('B 站弹幕下载'),
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const BiliDanmakuDownloadPage(),
-                          ),
-                        );
-                      },
+                      onTap: () =>
+                          _openBiliDownload(context, const BiliDanmakuDownloadPage()),
                     ),
                     const Divider(height: 1),
                     SettingsTile(
                       icon: Icons.download_outlined,
                       title: '视频下载',
                       subtitle: const Text('B 站视频下载'),
+                      onTap: () =>
+                          _openBiliDownload(context, const BiliVideoDownloadPage()),
+                    ),
+                    const Divider(height: 1),
+                    SettingsTile(
+                      icon: Icons.closed_caption_outlined,
+                      title: '字幕下载',
+                      subtitle: const Text('影视字幕下载'),
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) => const BiliVideoDownloadPage(),
+                            builder: (_) => const SubtitleDownloadPage(),
                           ),
                         );
                       },
@@ -240,6 +244,20 @@ class SettingsPage extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  /// 打开 B 站下载页（弹幕/视频）：未登录哔哩哔哩账号时仅 toast 提示，
+  /// 不进入页面（与首页速拨「哔哩番剧」的登录门禁一致）。
+  void _openBiliDownload(BuildContext context, Widget page) {
+    if (!BiliAccount.instance.isLogin) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(content: Text('需要登录哔哩哔哩账号')));
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => page),
     );
   }
 

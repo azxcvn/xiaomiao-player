@@ -203,4 +203,49 @@ void main() {
       expect(skipSeekTarget(seg, 0), 300);
     });
   });
+
+  group('自定义关键词（章节跳段）', () {
+    test('parseCustomKeywords：逗号/分号/换行分隔、去空白去空项', () {
+      expect(parseCustomKeywords('ap, opening; ed\n'), ['ap', 'opening', 'ed']);
+      expect(parseCustomKeywords('  , ; \n '), isEmpty);
+      expect(parseCustomKeywords(''), isEmpty);
+    });
+
+    test('classifyChapterTitle：自定义关键词按填入类别归属', () {
+      // 无自定义关键词时 AP 不命中内置表
+      expect(classifyChapterTitle('AP'), isNull);
+      // 填入片头关键词 → 片头；填入片尾关键词 → 片尾
+      expect(
+        classifyChapterTitle('AP', customIntro: ['ap']),
+        ChapterSkipType.intro,
+      );
+      expect(
+        classifyChapterTitle('AP', customOutro: ['ap']),
+        ChapterSkipType.outro,
+      );
+    });
+
+    test('classifyChapterTitle：同标题同时命中片头+片尾 → 片头优先', () {
+      // 优先级「片尾（且非片头）> 片头」：两词都命中时片头胜出（对齐 mpvRx）
+      expect(
+        classifyChapterTitle('AP', customIntro: ['ap'], customOutro: ['ap']),
+        ChapterSkipType.intro,
+      );
+    });
+
+    test('resolveSkipSegments：自定义关键词派生片段', () {
+      const customChapters = [
+        ChapterInfo(title: 'AP', startSeconds: 60),
+        ChapterInfo(title: '正片', startSeconds: 300),
+      ];
+      final segments = resolveSkipSegments(
+        customChapters,
+        1500,
+        customIntro: ['ap'],
+      );
+      expect(segments.single.type, ChapterSkipType.intro);
+      expect(segments.single.startSeconds, 60);
+      expect(segments.single.endSeconds, 300);
+    });
+  });
 }
