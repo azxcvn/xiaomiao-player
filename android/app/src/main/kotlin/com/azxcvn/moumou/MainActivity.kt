@@ -911,9 +911,20 @@ class MainActivity : FlutterActivity() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1) return null
         return try {
             val wm = WallpaperManager.getInstance(this)
-            val drawable: Drawable = wm.drawable ?: return null
-            @Suppress("DEPRECATION")
-            val colors = android.app.WallpaperColors.fromDrawable(drawable)
+            // 官方推荐：getWallpaperColors(FLAG_SYSTEM) 直接返回 WallpaperColors，
+            // 不经过 getDrawable() 读壁纸图片。用 getDrawable 在部分 OEM（ColorOS/OPPO）
+            // 会触发 READ_EXTERNAL_STORAGE 权限检查导致取色失败（真机日志已确认）。
+            val colors = try {
+                wm.getWallpaperColors(WallpaperManager.FLAG_SYSTEM)
+            } catch (_: Exception) {
+                null
+            } ?: run {
+                // 兜底：某些壁纸（如第三方动态壁纸）getWallpaperColors 返回 null，
+                // 退回读 drawable 再解析（仅作最后手段，仍可能受权限限制）
+                val drawable: Drawable = wm.drawable ?: return null
+                @Suppress("DEPRECATION")
+                android.app.WallpaperColors.fromDrawable(drawable)
+            }
             val primary = colors.primaryColor
             val secondary = colors.secondaryColor
             val tertiary = colors.tertiaryColor
