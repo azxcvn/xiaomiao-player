@@ -70,6 +70,9 @@ dependencies:
   # 应用内检查更新：GitHub Release 正文为 Markdown，用 flutter_markdown 渲染
   # 更新说明（工作.md：更新功能）。
   flutter_markdown: ^0.7.3
+  # 自定义主题色：色相环 + 饱和度/明度选择器（纯 Dart，无原生依赖）
+  # 用 plus fork：比原版多了 hexInputBar 手输框 + RGB/HSV/HSL 标签切换
+  flutter_color_picker_plus: ^2.2.1
 
 dev_dependencies:
   flutter_test:

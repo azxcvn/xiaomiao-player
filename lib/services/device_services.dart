@@ -84,6 +84,22 @@ class DeviceServices {
     }
   }
 
+  /// 动态色（壁纸取色，Material You）：返回系统壁纸主色 ARGB int。
+  /// 需 Android 12+（但原生侧最小 API 27 也尝试取色）；失败返回 null。
+  static Future<int?> getWallpaperPrimaryColor() async {
+    try {
+      final map = await _channel
+          .invokeMapMethod<String, dynamic>('getWallpaperColors');
+      if (map == null) return null;
+      final v = map['primary'];
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// 读取当前有效亮度（窗口已设亮度优先，否则系统亮度），0 – 1，失败返回 null
   static Future<double?> getBrightness() async {
     try {

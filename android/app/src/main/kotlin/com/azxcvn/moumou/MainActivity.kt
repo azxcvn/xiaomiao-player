@@ -2,11 +2,14 @@ package com.azxcvn.moumou
 
 import android.app.Activity
 import android.app.PictureInPictureParams
+import android.app.WallpaperManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.database.Cursor
 import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.media.AudioManager
 import android.media.MediaMetadataRetriever
 import android.media.MediaScannerConnection
@@ -210,6 +213,13 @@ class MainActivity : FlutterActivity() {
                     "restartApp" -> {
                         restartApp()
                         result.success(null)
+                    }
+                    // 动态色（壁纸取色，Material You）：返回主色 ARGB int 或 null
+                    "getWallpaperColors" -> {
+                        Thread {
+                            val colors = getWallpaperColors()
+                            runOnUiThread { result.success(colors) }
+                        }.start()
                     }
                     "getVideos" -> {
                         val includeNoMedia = call.argument<Boolean>("includeNoMedia") ?: false
@@ -888,6 +898,35 @@ class MainActivity : FlutterActivity() {
         // 结束当前进程（拉起新 Task 后再退出，保证应用确实重启）
         android.os.Process.killProcess(android.os.Process.myPid())
         exitProcess(0)
+    }
+
+    // ── 动态色（壁纸取色，Material You）────────────────
+
+    /**
+     * 动态色（壁纸取色，Material You）：提取系统壁纸的主色/次色/第三色。
+     * 需 API 27+（WallpaperColors）且壁纸可读；失败返回 null（Dart 侧降级）。
+     * 返回 {primary, secondary, tertiary} 三个 ARGB int；任一项缺失都视为失败。
+     */
+    private fun getWallpaperColors(): Map<String, Any>? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1) return null
+        return try {
+            val wm = WallpaperManager.getInstance(this)
+            val drawable: Drawable = wm.drawable ?: return null
+            @Suppress("DEPRECATION")
+            val colors = android.app.WallpaperColors.fromDrawable(drawable)
+            val primary = colors.primaryColor
+            val secondary = colors.secondaryColor
+            val tertiary = colors.tertiaryColor
+            if (primary == null && secondary == null && tertiary == null) return null
+            mapOf(
+                "primary" to (primary?.toArgb() ?: android.graphics.Color.TRANSPARENT),
+                "secondary" to (secondary?.toArgb() ?: android.graphics.Color.TRANSPARENT),
+                "tertiary" to (tertiary?.toArgb() ?: android.graphics.Color.TRANSPARENT),
+            )
+        } catch (e: Exception) {
+            Log.w("MainActivity", "getWallpaperColors failed: ${e.message}")
+            null
+        }
     }
 
     // ── 音量（系统媒体音量，0 – 100 百分比）────────────────

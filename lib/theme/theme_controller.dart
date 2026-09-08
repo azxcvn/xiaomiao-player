@@ -18,14 +18,28 @@ class ThemeController extends ChangeNotifier {
   static const _keyMode = 'theme_mode';
   static const _keySeed = 'theme_seed_color';
   static const _keyVariant = 'theme_variant';
+  static const _keyCustomColor = 'theme_custom_color';
+  static const _keyUsingDynamic = 'theme_using_dynamic_color';
 
   AppThemeMode _mode = AppThemeMode.system;
   Color _seedColor = const Color(0xFF00A1D6);
   FlexSchemeVariant _variant = FlexSchemeVariant.tonalSpot;
 
+  /// 用户自定义的主题色（外观页「自定义」入口选色后持久化）；null = 未设置
+  Color? _customColor;
+
+  /// 当前主题色是否来自「动态色」（壁纸取色）；用于网格选中态
+  bool _usingDynamicColor = false;
+
   AppThemeMode get mode => _mode;
   Color get seedColor => _seedColor;
   FlexSchemeVariant get variant => _variant;
+
+  /// 用户自定义色（未设置返回 null）
+  Color? get customColor => _customColor;
+
+  /// 当前是否正在使用动态色（壁纸取色）
+  bool get usingDynamicColor => _usingDynamicColor;
 
   /// 预设主题色（23 种：默认天蓝置首，其余按色相排列，名称统一 3 字）
   static const List<({Color color, String label})> presetColors = [
@@ -98,6 +112,7 @@ class ThemeController extends ChangeNotifier {
     final modeIndex = prefs.getInt(_keyMode);
     final seedValue = prefs.getInt(_keySeed);
     final variantIndex = prefs.getInt(_keyVariant);
+    final customValue = prefs.getInt(_keyCustomColor);
     if (modeIndex != null &&
         modeIndex >= 0 &&
         modeIndex < AppThemeMode.values.length) {
@@ -106,6 +121,10 @@ class ThemeController extends ChangeNotifier {
     if (seedValue != null) {
       _seedColor = Color(seedValue);
     }
+    if (customValue != null) {
+      _customColor = Color(customValue);
+    }
+    _usingDynamicColor = prefs.getBool(_keyUsingDynamic) ?? false;
     if (variantIndex != null && variantIndex >= 0) {
       if (variantIndex < _legacyVariantMapping.length) {
         // 旧数据：按 DynamicSchemeVariant 顺序映射
@@ -126,11 +145,13 @@ class ThemeController extends ChangeNotifier {
   }
 
   Future<void> setSeedColor(Color color) async {
-    if (_seedColor == color) return;
+    if (_seedColor == color && !_usingDynamicColor) return;
     _seedColor = color;
+    _usingDynamicColor = false;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_keySeed, color.toARGB32());
+    await prefs.setBool(_keyUsingDynamic, false);
   }
 
   Future<void> setVariant(FlexSchemeVariant variant) async {
@@ -139,5 +160,32 @@ class ThemeController extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_keyVariant, variant.index);
+  }
+
+  /// 设置用户自定义主题色（外观页「自定义」入口）：持久化该色并作为当前
+  /// seed 立即生效（复用 [setSeedColor] 的 seed 持久化，主题其余机制不变）。
+  Future<void> setCustomColor(Color color) async {
+    if (_customColor == color && _seedColor == color && !_usingDynamicColor) {
+      return;
+    }
+    _customColor = color;
+    _seedColor = color;
+    _usingDynamicColor = false;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_keyCustomColor, color.toARGB32());
+    await prefs.setInt(_keySeed, color.toARGB32());
+    await prefs.setBool(_keyUsingDynamic, false);
+  }
+
+  /// 设置动态色（壁纸取色）：seed = 取到的颜色，并标记当前使用动态色。
+  Future<void> setDynamicColor(Color color) async {
+    if (_seedColor == color && _usingDynamicColor) return;
+    _seedColor = color;
+    _usingDynamicColor = true;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_keySeed, color.toARGB32());
+    await prefs.setBool(_keyUsingDynamic, true);
   }
 }

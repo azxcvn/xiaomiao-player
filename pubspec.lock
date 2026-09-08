@@ -190,6 +190,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_color_picker_plus:
+    dependency: "direct main"
+    description:
+      name: flutter_color_picker_plus
+      sha256: "0760f42ca70bea3f1a65c85c7037c3dbad8dfcd835b4716bf765e40c2621944e"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.2.1"
   flutter_launcher_icons:
     dependency: "direct dev"
     description:

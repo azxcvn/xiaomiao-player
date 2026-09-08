@@ -47,7 +47,8 @@ Flutter 本地视频播放器（Android），核心能力：
   （文件前 16MB MD5 匹配）、切集自动匹配（缓存番剧集列表按集数自动加载）、
   弹幕服务器管理（默认弹弹Play 不可删 + 自建服务器增删启停，搜索合并展示）；
   密钥存 gitignored 私有文件（§4.11）
-- 外观设置：23 种主题色 + 21 种调色板风格（flex_seed_scheme）
+- 外观设置：23 种主题色 + 21 种调色板风格（flex_seed_scheme）+ 动态色（壁纸取色，Android 12+）
+  + 自定义主题色（色相/SV/hex 手输选色，§4.7）
 - **全局自定义字体**：App 全局字体（设置→外观→App字体设置：预览 + 开关 + 系统选择器导入单字体 +
   字号/字重滑杆，关闭跟随系统）；**弹幕自定义字体**（弹幕设置→弹幕字体：跟随系统/跟随 App/自定义三选一，
   自定义复用字体目录批量导入 + 列表选择），两者走 Flutter 引擎 `loadFontFromList` 注册（§4.12）
@@ -116,7 +117,7 @@ lib/
 │   ├── playback_progress_service.dart  # 播放进度（ChangeNotifier + 持久化 + 串行写盘）
 │   ├── playback_history_service.dart # 播放历史（记录/去重置顶/上限淘汰/删除/清空/开关，ChangeNotifier + 持久化，§4.17）
 │   ├── player_controls_settings.dart   # 播放器控制设置（槽位/手势/倍速/比例/长按/方向/顶部信息等）
-│   ├── device_services.dart   # 设备能力：音量/亮度/画中画/电量/网络类型/后台服务启停/字幕·字体文件与目录操作（MethodChannel）+ 任意时刻抓帧（FFmpeg 引擎 + 秒桶内存 LRU）+ 设备能力检测 + 整应用重启
+│   ├── device_services.dart   # 设备能力：音量/亮度/画中画/电量/网络类型/后台服务启停/字幕·字体文件与目录操作（MethodChannel）+ 任意时刻抓帧（FFmpeg 引擎 + 秒桶内存 LRU）+ 设备能力检测 + 整应用重启 + 动态色壁纸取色
 │   ├── dolby_vision_settings.dart # 杜比视界偏色提示「不再提示」记忆（ChangeNotifier + 持久化，§4.23）
 │   ├── fast_thumbnails.dart   # FFmpeg 快速缩略图引擎（FFI 直连自建 libmpv.so 的 mk_thumbnail_*，单飞+顶旧调度）
 │   ├── crash_log_service.dart # 崩溃日志：列表/读取/删除/清空/导出
@@ -275,7 +276,7 @@ lib/
 │   │   └── network_browser_page.dart  # 网络目录/文件浏览（复用 FolderCard/VideoCard + 面包屑回退 + 系统返回键逐级返回）
 │   ├── settings/
 │       ├── settings_page.dart #   设置主页（分组结构）
-│       ├── appearance_page.dart      # 外观设置子页
+│       ├── appearance_page.dart      # 外观设置子页（模式/主题色网格+动态色+自定义选色/调色板胶囊化）
 │       ├── playback_history_page.dart # 历史记录页（VideoCard 仅进度字段 + 右侧垃圾桶删除 + 清空二次确认 + 记录开关，§4.17）
 │       ├── font_page.dart            # App字体设置页（预览 + 开关 + 导入字体 + 字号/字重滑杆）
 │       ├── player_settings_page.dart # 播放器设置子页（手势/视频方向/顶部信息/播放行为/阈值）
@@ -295,7 +296,7 @@ lib/
 │           └── subtitle_settings_section.dart # 字幕设置区（API 密钥/来源/语言/格式/编码五入口 + 来源动态拉取）
 ├── theme/                     # 主题
 │   ├── app_theme.dart         #   ThemeData 生成（light/dark/amoled）
-│   └── theme_controller.dart  #   主题控制（模式/色/风格 + 迁移）
+│   └── theme_controller.dart  #   主题控制（模式/色/风格/自定义色/动态色标记 + 迁移）
 └── utils/                     # 纯工具函数
     ├── app_dialog.dart        #   （见 widgets/app_dialog.dart 说明）
     ├── formatters.dart        #   大小/日期/时长/倍速/网速格式化 + 截图文件名 + 在线媒体判定
@@ -423,8 +424,19 @@ models（模型）     → 无依赖（纯数据）
 
 - 主题色/风格都在 `theme_controller.dart`（`presetColors` 23 色、`variantLabels` 21 风格）
 - 新增主题色：往 `presetColors` 加 `(color: ..., label: 'XXX色')`（3 字命名，色相排列）
-- 调色板风格来自 flex_seed_scheme 的 `FlexSchemeVariant`（21 种已全量），**勿**改枚举顺序（持久化 index）
+- 调色板风格来自 flex_seed_scheme 的 `FlexSchemeVariant`（21 种已全量），**勿**改枚举顺序（持久化 index）；
+  外观页调色板为**显示层重排**（标准型独占首行 + 其余 20 个 4×5 胶囊化），枚举顺序与 index 不变
 - `app_theme.dart` 统一 `appBarTheme`（`scrolledUnderElevation: 0` + 固定背景色，防止 AppBar 滚动变色）
+- **主题色网格**（`appearance_page.dart`）：23 预设 + 1「动态色」= 4×6 网格 + 下方通栏「自定义」；
+- **动态色（壁纸取色 / Material You）**：原生 `MainActivity.getWallpaperColors`（`WallpaperManager` +
+  `WallpaperColors.fromDrawable`，后台线程）+ `device_services.getWallpaperPrimaryColor`；
+  Android 12 以下点击 toast「安卓版本过低，不支持该功能」；`ThemeController.usingDynamicColor`
+  标记当前是否动态色（选中态，切换预设/自定义时清除）
+- **自定义主题色**：`ThemeController.customColor`（持久化，只存一个）+ `setCustomColor`；
+  选色弹窗 `_CustomColorDialog`（`flutter_color_picker_plus`）：方块 SV 区（`ColorPickerArea` PaletteType.hsv）
+  + 下方横向色相滑条（`ColorPickerSlider` TrackType.hue，需固定高度包装否则 CustomMultiChildLayout
+  无限高度溢出）+ hex 手输框（`ColorPickerInput`）+ RGB/HSV/HSL 切换胶囊（自绘数值文本，
+  不用 ColorPickerLabel 因其 DropdownButton 单值会断言崩溃）；确定用所选色作 seed 立即生效
 
 ### 4.8 播放页手势（新增功能前必读）
 
@@ -1343,6 +1355,8 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/settings_page_bili_login_test.dart` — 「我的」页 B 站下载入口登录门禁（未登录点击弹幕/视频下载 toast 提示登录，§4.16）
   - `test/dolby_vision_settings_test.dart` — 杜比视界「不再提示」记忆（默认未抑制/勾选持久化/取消，§4.23）
   - `test/device_info_page_test.dart` — 设备信息页（设备信息/HDR 能力/关键编码器/解码器清单渲染 + 筛选胶囊（无数字文本/两行布局）+ 失败降级重试 + 点解码器进详情页显示完整能力，§4.24）
+  - `test/theme_controller_test.dart` — 主题控制器（默认值/预设 23 色/调色板 21 标签/自定义色持久化与 seed 生效/动态色标记置位·持久化·切换清除，§4.7）
+  - `test/appearance_page_test.dart` — 外观页（主题色网格 + 动态色 + 自定义入口渲染/调色板胶囊化与标准型独占/动态色 Android<12 toast/自定义选色弹窗，§4.7）
 - 改以下代码必须跑对应测试：`AppFrame`、`ViewSettings` 排序、权限流程、`CapsuleNavBar`
 
 ---
