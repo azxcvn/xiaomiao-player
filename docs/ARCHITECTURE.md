@@ -61,6 +61,14 @@ Flutter 本地视频播放器（Android），核心能力：
 - **应用更新**：我的→关于→更新组（手动检查更新 + 自动检查更新开关）；更新弹窗（Markdown
   渲染更新说明 + 立即更新/稍后提醒/忽略 + 主·备下载站子菜单）；更新源（GitHub API）与
   主·备下载链接已就绪，`checkForUpdate` 仍开发写死（未接入真实抓取，§4.20）
+- **音量增强 (Volume Boost)**：系统音量满 100% 后继续上滑接管 mpv 音量放大（`volume-max=100+cap`），
+  上限 10%~100% 十档、默认 60%（最高 200%）；指示器增强段红色显示 110%/150%/200%（§4.23）
+- **杜比视界偏色检测与引导**：本地视频 OpenMedia 检测杜比视界编码（MediaInfo），未开 gpu-next
+  时弹引导弹窗（可知/不再提示，`DolbyVisionSettings` 记忆）（§4.23）
+- **设备硬件与编解码能力检测**：我的→其他→「设备信息」页，展示屏幕 HDR 能力、关键编码器
+  硬/软解、系统解码器清单（筛选/搜索，点条目进详情页看完整能力）（§4.24）
+- **解码配置修改后一键重启**：解码面板切换解码方式/预设后弹「需重启应用」，立即整应用重启
+  或稍后重启（原生 `restartApp`，§4.24）
 
 技术栈：Flutter 3.44+ / Dart 3.12+，依赖见 `pubspec.yaml`。
 
@@ -99,6 +107,7 @@ lib/
 │   ├── bili_dash.dart          # playurl DASH 模型：流条目/清晰度档/OP-ED clip（baseUrl/baseUrls 双格式兼容，§4.15）
 │   ├── bili_media.dart         # 在线播放值对象：DASH 流 + 弹幕/章节元数据 + 画质切换回调（§4.15）
 │   ├── update_info.dart        # 更新信息值对象（新版本号/Markdown 更新说明/主·备下载站链接，§4.20）
+│   ├── device_decoder.dart     # 设备解码器条目模型（名称/MIME/分辨率/声道/特性/色彩格式/采样率/profile，设备能力检测页 + 详情页）
 │   └── wyzie_models.dart       # Wyzie 字幕 API 数据模型（字幕条目/来源响应/密钥信息/TMDB 命中 + 语言/格式/编码/来源常量表，§4.21）
 ├── services/                  # 业务逻辑 / 数据层（无 UI）
 │   ├── view_settings.dart     # 排序/字段/视图模式设置（ChangeNotifier + 持久化）
@@ -107,7 +116,8 @@ lib/
 │   ├── playback_progress_service.dart  # 播放进度（ChangeNotifier + 持久化 + 串行写盘）
 │   ├── playback_history_service.dart # 播放历史（记录/去重置顶/上限淘汰/删除/清空/开关，ChangeNotifier + 持久化，§4.17）
 │   ├── player_controls_settings.dart   # 播放器控制设置（槽位/手势/倍速/比例/长按/方向/顶部信息等）
-│   ├── device_services.dart   # 设备能力：音量/亮度/画中画/电量/网络类型/后台服务启停/字幕·字体文件与目录操作（MethodChannel）+ 任意时刻抓帧（FFmpeg 引擎 + 秒桶内存 LRU）
+│   ├── device_services.dart   # 设备能力：音量/亮度/画中画/电量/网络类型/后台服务启停/字幕·字体文件与目录操作（MethodChannel）+ 任意时刻抓帧（FFmpeg 引擎 + 秒桶内存 LRU）+ 设备能力检测 + 整应用重启
+│   ├── dolby_vision_settings.dart # 杜比视界偏色提示「不再提示」记忆（ChangeNotifier + 持久化，§4.23）
 │   ├── fast_thumbnails.dart   # FFmpeg 快速缩略图引擎（FFI 直连自建 libmpv.so 的 mk_thumbnail_*，单飞+顶旧调度）
 │   ├── crash_log_service.dart # 崩溃日志：列表/读取/删除/清空/导出
 │   ├── cache_manager_service.dart # 缓存管理：列表封面磁盘缓存查询/清除（进度条缩略图为纯内存，不占磁盘）
@@ -240,6 +250,7 @@ lib/
 │   │       ├── player_fit_panel.dart      # 画面比例面板内容
 │   │       ├── player_speed_panel.dart    # 倍速面板内容（预设/精确调速/临时应用）
 │   │       ├── player_super_resolution_panel.dart  # 超分面板内容
+│   │       ├── player_decode_panel.dart          # 解码面板（解码方式 2×2 胶囊 + 解码预设；改档后弹「需重启应用」确认，立即整应用重启/稍后，§4.24）
 │   │       ├── player_play_pause_button.dart  # 播放/暂停图标形变动画
 │   │       ├── player_gesture_layer.dart      # ★ 手势层（裸识别器方案，见 §4.8）
 │   │       ├── player_gesture_indicator.dart  # 音量/亮度手势指示器
@@ -273,6 +284,8 @@ lib/
 │       ├── about_page.dart           # 关于页（软件信息/工具/信息/用户协议）
 │       ├── license_page.dart         # 许可证书页（列表 + 二级详情页，非折叠式）
 │       ├── privacy_policy_page.dart  # 用户协议页（预览用户服务协议与隐私政策正文，可选中复制，§4.19）
+│       ├── device_info_page.dart     # 设备硬件与编解码能力检测页（屏幕 HDR/关键编码器/解码器清单 + 筛选搜索，§4.24）
+│       ├── decoder_detail_page.dart  # 解码器详情页（点解码器清单项进入，展示完整能力信息，§4.24）
 │       ├── error_log_page.dart       # 错误日志页
 │       └── cache_management_page.dart# 缓存管理页
 │   └── subtitle/
@@ -346,7 +359,7 @@ models（模型）     → 无依赖（纯数据）
 ### 4.1 状态管理
 
 - **约定**：`ChangeNotifier` + `ListenableBuilder`（或 `Listenable.merge`），需要持久化的用 `shared_preferences`
-- 现有控制器：`ViewSettings`（排序/字段/视图模式）、`ThemeController`（外观）、`PlaybackProgressService`（单例，进度）、`PlaybackHistoryService`（单例，播放历史：记录/删除/清空/开关，默认开启，§4.17）、`SuperResolutionService`（单例，超分模式+质量+记忆开关）、`SubtitleSettings`（单例，字幕延迟/大小/位置/对齐/颜色/字体/内嵌样式覆盖，默认关闭）、`EqualizerSettings`（单例，均衡器 5 频段/低音增强/虚拟环绕/预设，默认关闭，全局持久化）、`AppFontSettings`（单例，App 全局字体开关/族名/字号/字重，默认关闭，§4.12）；控制按钮背景（底栏倍速/列表图标/顶栏控制图标，默认关闭）、倍速记忆（默认关闭）、画面比例（默认自动）、**长按倍速（倍率 1–4 步进 0.5/指示器开关/首次提示标记，阶段1 第 4 点）**、音量亮度手势灵敏度（默认 1.0）、保存音量到系统（默认开启）、双指缩小视频（默认开启）、进度条缩略图（默认开启，见 §4.9）、已观看进度阈值（5%–100% 步进 5%，默认 95%）、自动连播（默认开启）、播放完毕自动退出（默认开启）、循环播放模式（off/列表循环/单集循环，默认关闭）、视频方向（自动/锁定竖屏/锁定横屏，默认自动）、播放界面动画（默认开启）、**顶部信息多选（时间/电量/网速/数据类型四项，默认全选，阶段1 第 1 点；旧单选枚举一次性迁移）** 属 `PlayerControlsSettings`
+- 现有控制器：`ViewSettings`（排序/字段/视图模式）、`ThemeController`（外观）、`PlaybackProgressService`（单例，进度）、`PlaybackHistoryService`（单例，播放历史：记录/删除/清空/开关，默认开启，§4.17）、`SuperResolutionService`（单例，超分模式+质量+记忆开关）、`SubtitleSettings`（单例，字幕延迟/大小/位置/对齐/颜色/字体/内嵌样式覆盖，默认关闭）、`EqualizerSettings`（单例，均衡器 5 频段/低音增强/虚拟环绕/预设，默认关闭，全局持久化）、`AppFontSettings`（单例，App 全局字体开关/族名/字号/字重，默认关闭，§4.12）；控制按钮背景（底栏倍速/列表图标/顶栏控制图标，默认关闭）、倍速记忆（默认关闭）、画面比例（默认自动）、**长按倍速（倍率 1–4 步进 0.5/指示器开关/首次提示标记，阶段1 第 4 点）**、音量亮度手势灵敏度（默认 1.0）、保存音量到系统（默认开启）、**音量增强（开关默认关 + 上限百分比 10%~100% 步进 10 默认 60，§4.23）**、双指缩小视频（默认开启）、进度条缩略图（默认开启，见 §4.9）、已观看进度阈值（5%–100% 步进 5%，默认 95%）、自动连播（默认开启）、播放完毕自动退出（默认开启）、循环播放模式（off/列表循环/单集循环，默认关闭）、视频方向（自动/锁定竖屏/锁定横屏，默认自动）、播放界面动画（默认开启）、**顶部信息多选（时间/电量/网速/数据类型四项，默认全选，阶段1 第 1 点；旧单选枚举一次性迁移）** 属 `PlayerControlsSettings`；杜比视界「不再提示」记忆属 `DolbyVisionSettings`（单例，默认未抑制，§4.23）
 - 播放页音量/亮度属于**页面局部状态**（进入时从系统同步，退出时按设置写回/恢复，见 §4.8），禁止做成全局服务
 - 音频声道/音频处理（音量标准化/动态范围压缩）为**会话级状态**（随 `AudioController` 生命周期，每次进播放器重置为默认：安全自动/关/关），不持久化
 - 片头片尾跳过设置属 `IntroOutroSettings`（独立单例 ChangeNotifier）：启用开关（默认关闭）、片头/片尾跳过秒数（默认 0）、各自范围上限（10–600 秒，默认 180）；范围收窄时秒数联动收窄；一键重置只清秒数与范围、保留开关；跟踪器 `IntroOutroTracker` 为普通类（随播放页生命周期），就绪门控防 open 期间误触发
@@ -432,8 +445,12 @@ PiliPlus：裸 `RawGestureDetector` + 自定义识别器组 + `Listener` 兜底�
 音量/亮度与系统交互约定（原生在 `MainActivity.kt`，走 `DeviceServices`）：
 - 进入播放：读系统音量作为播放音量起点（如 20%）；亮度读系统值并**应用到窗口**
   （kt/mpvEx 做法：屏幕显示与指示器一致，播放期间亮度不随自动亮度漂移），**不改系统设置**；
-- 播放中：音量只调 mpv 音量（`player.setVolume` 0–100），亮度只调窗口亮度（`WindowManager` 属性，无需权限）；
-- 退出播放：**亮度恢复 -1（交还系统控制 = 进入前状态）**；音量按设置「保存音量到系统」（默认开）→ 写回系统，关闭 → 恢复进入前系统音量。`dispose` 兜底恢复，防异常路径泄漏；
+- 播放中：音量手势直控**系统**媒体音量（`DeviceServices.setSystemVolume` 0–100，mpv 音量固定
+  100 满增益）；**音量增强开启时**（§4.23），系统音量满 100% 后继续上滑接管 mpv 音量
+  （`player.setVolume` 100~100+cap，`volume-max=100+cap`），指示器红色显示 110%~200%；
+  亮度只调窗口亮度（`WindowManager` 属性，无需权限）；
+- 退出播放：**亮度恢复 -1（交还系统控制 = 进入前状态）**；mpv 增强音量复位 100；音量按设置
+  「保存音量到系统」（默认开）→ 写回系统，关闭 → 恢复进入前系统音量。`dispose` 兜底恢复，防异常路径泄漏；
 - 音量指示器在**屏幕左侧**、亮度指示器在**屏幕右侧**（对称）；kazumi 风格进出场
   （从屏幕边缘滑入滑出 + 淡入淡出 + 轻微缩放），2 秒无操作自动隐藏。
 
@@ -1094,6 +1111,83 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 
 ---
 
+### 4.23 音量增强 (Volume Boost) + 杜比视界偏色检测
+
+> 工作.md 迁移功能：两处从小喵老项目/mpvRx 补齐的能力。音量增强解决「低电平动漫声音小」
+> 痛点；杜比视界检测解决「播放杜比视界未开 gpu-next 画面发绿发紫却不知所措」的痛点。
+
+**音量增强（Volume Boost）**：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 设置 | `services/player_controls_settings.dart` | `volumeBoostEnabled`（默认关）+ `volumeBoostCap`（百分比 10%~100% 步进 10 默认 60，§4.1）；`_roundVolumeBoostCap` 就近对齐 10% 档 |
+| 纯函数 | `utils/player_gestures.dart` | `mpvVolumeMaxForBoost`（=100+cap）、`displayVolumePercent`（110%~200%）、`isVolumeBoosting` |
+| 播放页 | `pages/player/player_page.dart` | `_initDeviceState` 设 `volume-max=100+cap` + `_mpvVolume=100`；`_onVerticalSwipe` 右半屏满 100% 后接管 mpv 音量（上滑续增/下滑回减/触底降系统）；退出复位 mpv 100 |
+| 指示器 | `views/player_gesture_indicator.dart` | `boosting` 态：红色图标/文字 + `graphic_eq` 图标 +「音量增强」标签，显示 110%/150%/200% |
+| 设置页 | `pages/settings/player_settings_page.dart` | 「播放行为」组最后一项（开关 + 可折叠上限滑杆，`AnimatedSize` 收起/展开） |
+
+**杜比视界（Dolby Vision）偏色检测与引导**：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 原生 | `MediaInfoHelper.detectDolbyVision` | MediaInfo 扫视频轨 HDR_Format/CodecID/Format 命中 dovi/dvhe/dvav/Dolby Vision |
+| 服务 | `services/video_info_service.dart` `detectDolbyVision` | MethodChannel 封装，返回 (isDolbyVision, hdrFormat) |
+| 设置 | `services/dolby_vision_settings.dart` | 「不再提示」`suppressed` 记忆（ChangeNotifier + 持久化，§4.1） |
+| 播放页 | `pages/player/player_page.dart` `_checkDolbyVision` | 本地文件 open/切集后测一次：杜比视界且未开 gpu-next 且未抑制 → `showAppDialog` 引导（可知/不再提示），`_dolbyVisionChecked` 防重复 |
+
+**关键决策**：
+- **音量增强语义用百分比而非 dB**：mpv `volume` 属性本就是百分比刻度（`volume-max` 默认 130
+  即最高 130%），mpvRx 把 `volumeBoostCap` 当「dB」是命名误导；本项目直接 `volume-max = 100 + cap`
+  （cap 为百分比），上限 100%（最高 200%），语义与 mpv 刻度一致、对用户直观。
+- **增强接管条件**：系统音量（`setSystemVolume`）到 100 且增强开启时才把超额位移转 mpv 音量；
+  下滑先回退 mpv 增益、触底 100 再降系统音量；退出播放 mpv 音量复位 100 防泄漏（§4.8）。
+- **上限滑杆折叠**：关闭开关时 `AnimatedSize` 收起滑杆，组内更整洁；开启时展开（§4.1 播放行为组）。
+- **杜比视界仅本地文件检测**：MediaInfo 需真实路径，在线直链/B 站跳过；每集只测一次
+  （`_dolbyVisionChecked` 随切集重置）。
+- **引导时机**：已开 `gpuNext` 直接跳过（软解路径无偏色问题）；「不再提示」勾选后持久化，
+  后续相同情况不再弹（除非清除偏好）。
+
+---
+
+### 4.24 设备硬件与编解码能力检测 + 解码一键重启
+
+> 工作.md 迁移功能：设备能力检测页对齐 mpvRx（`CodecCapabilitiesScreen`）与老项目
+> `DeviceInfoScreen`；解码配置修改后一键整应用重启对齐老项目 `PlaybackSettingsScreen`。
+
+**设备能力检测**：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 原生 | `DeviceCapabilities.kt` | `inspect()`：屏幕 HDR（`Display.getHdrCapabilities`）+ 关键编码器（H.264/H.265/AV1/VP9/杜比视界 硬/软解）+ 系统全量解码器清单（name/canonicalName/mimeType/formatName/isHardware/isAlias/媒体类型/最大·最小分辨率/最大声道/最大实例/对齐/码率/色彩格式/特性/采样率/profile(level)/HDR 支持） |
+| 纯数据 | `models/device_decoder.dart` | `DeviceDecoderEntry`（fromMap 容错） |
+| 服务 | `services/device_services.dart` `getDeviceCapabilities` | MethodChannel 封装，失败返回 null |
+| 页面 | `pages/settings/device_info_page.dart` | 设备信息 + 屏幕 HDR 能力 + 关键编码器 + 解码器清单（筛选胶囊两行布局：第一行 音频/硬解/软解/视频 等宽均分，第二行「全部」独占整行对齐；搜索；点条目进详情） |
+| 详情页 | `pages/settings/decoder_detail_page.dart` | 单解码器完整能力分卡片呈现（基本信息/分辨率与能力/音频能力/硬件特性/采样率/色彩格式/Profile Level） |
+| 入口 | `pages/settings/settings_page.dart` | 「我的 → 其他 → 设备信息」 |
+
+**解码一键重启**：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 原生 | `MainActivity.kt` `restartApp` | 拉 `getLaunchIntentForPackage` + `FLAG_ACTIVITY_NEW_TASK|CLEAR_TASK` + `killProcess`（整应用重启） |
+| 服务 | `services/device_services.dart` `restartApp` | MethodChannel 封装 |
+| 解码面板 | `views/player_decode_panel.dart` | `_setMode`/`_setPreset` 改档后 `showAppDialog` 弹「需重启应用」，立即整应用重启 / 稍后重启（改动已持久化） |
+
+**关键决策**：
+- **筛选胶囊两行布局 + 无数字**：胶囊只显示「音频/硬解/软解/视频/全部」纯文本（不显示数量），
+  「全部」用 `double.infinity` 撑满与上一行四个等宽胶囊总长对齐（`StadiumBorder` 胶囊样式）；
+  数量统计保留在清单卡头「硬解 X · 软解 Y · 视频 Z · 音频 W」。
+- **详情用「点进新页面」而非 mpvRx 的就地展开**：用户拍板跳转详情页（`DecoderDetailPage`），
+  每行加 chevron 提示可点；accompanied 字段与 mpvRx `CodecDetailCard` 展开内容对齐（profile/level、
+  色彩格式、特性、采样率、分辨率/位率/对齐/实例等）。
+- **解码重启为整应用重启**：解码方式（hwdec）/预设（profile）在 mpv `open` 前注入、重开视频才生效，
+  但用户要求「整应用重启」，故 `restartApp` 拉新 Task 清栈 + 杀进程；「稍后重启」仅关弹窗
+  （改动已写盘，下次启动/重开视频生效）；`exitProcess` 需 `import kotlin.system.exitProcess`。
+- **原生长时间能力扫描放后台线程**：`getDeviceCapabilities` 在 `Thread` 里跑 `MediaCodecList`
+  遍历 + `getCapabilitiesForType`（厂商解码器可能较慢），结果 `runOnUiThread` 回传，不阻塞 UI。
+
+---
+
 ## 5. 新增功能指南（按功能类型）
 
 ### 5.1 新增一个页面
@@ -1119,7 +1213,7 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 1. 设置主页 `settings_page.dart` 已有分组结构：`SettingsGroupTitle(title: '分组名')` + `SettingsCard(child: SettingsTile(...))`
 2. 新分组直接追加；新设置子页参考 `appearance_page.dart`（`AppBar` + 分组列表）
 3. 设置项 UI 组件复用 `lib/widgets/settings_ui.dart`（`SettingsGroupTitle / SettingsCard / SettingsTile / SettingsRadioTile`）
-4. 播放器设置分组约定（`player_settings_page.dart`）：**手势**组 = 双击手势 + 快进/快退时长 + 音量/亮度灵敏度 + 长按倍速滑杆（**全部归为一张卡片**，项间 `Divider(height:1, indent:16, endIndent:16)` 分隔）；**视频方向**组 = 自动/锁定竖屏/锁定横屏（RadioTile 三选一）；**顶部信息**组 = 时间/电量/网速/数据类型（CheckboxTile 四项多选，默认全选，阶段1 第 1 点）；**播放行为**组 = 常驻进度线/进度条缩略图/记住上次倍速/保存音量到系统/双指缩小视频/按钮背景/自动连播/播放完毕自动退出/循环播放模式（RadioTile 三选一：关闭/列表循环/单集循环）/倍速播放指示器/启用播放界面动画（组内每项之间用 `Divider(height:1, indent:16, endIndent:16)` 分隔）；「已观看进度阈值」独立滑杆组（5% – 100%，步进 5%，默认 95%）
+4. 播放器设置分组约定（`player_settings_page.dart`）：**手势**组 = 双击手势 + 快进/快退时长 + 音量/亮度灵敏度 + 长按倍速滑杆（**全部归为一张卡片**，项间 `Divider(height:1, indent:16, endIndent:16)` 分隔）；**视频方向**组 = 自动/锁定竖屏/锁定横屏（RadioTile 三选一）；**顶部信息**组 = 时间/电量/网速/数据类型（CheckboxTile 四项多选，默认全选，阶段1 第 1 点）；**播放行为**组 = 常驻进度线/进度条缩略图/记住上次倍速/保存音量到系统/双指缩小视频/按钮背景/自动连播/播放完毕自动退出/循环播放模式（RadioTile 三选一：关闭/列表循环/单集循环）/倍速播放指示器/启用播放界面动画/音量增强（组内最后一项：开关 + 可折叠上限百分比滑杆，§4.23）（组内每项之间用 `Divider(height:1, indent:16, endIndent:16)` 分隔）；「已观看进度阈值」独立滑杆组（5% – 100%，步进 5%，默认 95%）
 5. **播放器暗色面板里的强调色/滑杆必须跟随主题**：面板恒为暗色外壳，但强调色不得写死。
    统一用 `settings_ui.dart` 的 `playerPanelAccent(context)`（强调色）与
    `playerPanelSliderTheme(context)`（滑杆主题）——它们以当前 `ColorScheme.primary` 为 seed
@@ -1164,8 +1258,8 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/super_resolution_service_test.dart` — 超分服务状态/持久化（模式、质量、记忆开关的开启/关闭/load 恢复）
   - `test/app_frame_test.dart` — AppFrame 安全区行为 + 播放页路由检测（**安全区/播放页回归测试，改 AppFrame 必须跑**）
   - `test/home_page_permission_test.dart` — 权限流程（未授权 → 授予权限 → 授权扫描）
-  - `test/player_controls_settings_test.dart` — 播放器控制设置（槽位增删/排序/上限/时长档位/倍速预设/按钮背景/进度条样式/长按倍速/灵敏度/保存音量到系统/指示器开关/首次提示/双指缩放/自动连播/自动退出/循环模式/已观看阈值 5% 档位/视频方向/播放界面动画开关/旧数据迁移；倍速不在顶栏动作之列）
-  - `test/player_gestures_test.dart` — 双击手势三模式判定（含边界）+ 滑动手势数学（seek 灵敏度/音量·亮度增量/动态倍速档位与索引/最近档位）
+  - `test/player_controls_settings_test.dart` — 播放器控制设置（槽位增删/排序/上限/时长档位/倍速预设/按钮背景/进度条样式/长按倍速/灵敏度/保存音量到系统/音量增强开关与上限百分比 10% 步进就近对齐/指示器开关/首次提示/双指缩放/自动连播/自动退出/循环模式/已观看阈值 5% 档位/视频方向/播放界面动画开关/旧数据迁移；倍速不在顶栏动作之列）
+  - `test/player_gestures_test.dart` — 双击手势三模式判定（含边界）+ 滑动手势数学（seek 灵敏度/音量·亮度增量/音量增强 mpv volume-max 与展示百分比·增强段判定/动态倍速档位与索引/最近档位）
   - `test/player_panel_test.dart` — 右侧面板打开/面板内导航不崩溃（**改 PlayerPanel 必须跑**）
   - `test/player_bottom_panel_test.dart` — 竖屏底部面板打开/面板内二级导航/返回/关闭不崩溃（**改 PlayerBottomPanel 必须跑**）
   - `test/player_speed_panel_test.dart` — 倍速面板（「我的预设」✕ 删除 / 「添加到预设」随滑杆联动）
@@ -1247,6 +1341,8 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/wyzie_api_test.dart` — Wyzie API 客户端（MockClient：来源/关键词→TMDB→搜索参数/400 无字幕特判/非 2xx/文件字节，§4.21）
   - `test/subtitle_download_page_test.dart` — 影视字幕下载页（字幕设置入口/子页五入口/语言多选摘要联动/API 密钥弹窗取消·保存回归/未设密钥搜索 toast，§4.21）
   - `test/settings_page_bili_login_test.dart` — 「我的」页 B 站下载入口登录门禁（未登录点击弹幕/视频下载 toast 提示登录，§4.16）
+  - `test/dolby_vision_settings_test.dart` — 杜比视界「不再提示」记忆（默认未抑制/勾选持久化/取消，§4.23）
+  - `test/device_info_page_test.dart` — 设备信息页（设备信息/HDR 能力/关键编码器/解码器清单渲染 + 筛选胶囊（无数字文本/两行布局）+ 失败降级重试 + 点解码器进详情页显示完整能力，§4.24）
 - 改以下代码必须跑对应测试：`AppFrame`、`ViewSettings` 排序、权限流程、`CapsuleNavBar`
 
 ---
@@ -1376,3 +1472,5 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | 弹窗里 `TextEditingController` 在 `showAppDialog` 返回后立即 dispose → 退出动画期间 TextField 仍 rebuild 引用它 → 红屏崩溃 | 控制器由弹窗 `StatefulWidget` 自持（initState 建 / dispose 释放），随路由完全卸载才释放，勿在 `await` 后手动 dispose（§4.21） |
 | saver_gallery 不传 `albumPath` 时按 MIME 落默认根目录（截图/二维码直落 `Pictures/`，无父级文件夹） | `saveImage` 传 `albumPath: '小喵Player'` → 落 `Pictures/小喵Player/`（§4.8 截图 / §4.13 保存相册） |
 | 章节跳段设置变化 → `ChapterTracker` 用 `resolveSkipSegments` 重派生，把 B 站 `clip_info_list` 的精确 OP/ED 起止覆盖成「下一章起点」（OP 结束错扩到 ED 起点） | 外部精确片段（`setExternalChapters`）打 `_externalSegments` 标记；`_onSettingsChanged` 只在非外部时重派生，外部只清已跳过记录（§4.22） |
+| 整应用重启 `exitProcess` 编译报 Unresolved reference | `exitProcess` 是 `kotlin.system.exitProcess`，需显式 import（§4.24） |
+| 解码器筛选胶囊文字出现「…」省略号（等宽均分后窄胶囊放不下） | 胶囊文字去掉 `maxLines`/`TextOverflow.ellipsis`，改 `softWrap:false` 单行居中；胶囊只放纯文本「音频/硬解/软解/视频/全部」（不带数字）（§4.24） |

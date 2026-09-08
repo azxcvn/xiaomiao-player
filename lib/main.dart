@@ -14,6 +14,7 @@ import 'package:moumou/services/danmaku_server_settings.dart';
 import 'package:moumou/services/danmaku_settings.dart';
 import 'package:moumou/services/decode_settings.dart';
 import 'package:moumou/services/device_services.dart';
+import 'package:moumou/services/dolby_vision_settings.dart';
 import 'package:moumou/services/download/download_manager.dart';
 import 'package:moumou/services/equalizer_settings.dart';
 import 'package:moumou/services/chapter_skip_settings.dart';
@@ -170,6 +171,9 @@ class _MoumouAppState extends State<MoumouApp> {
     PrivacyPolicySettings.instance.ensureLoaded();
     // 更新设置：main() 已在 runApp 前 await 加载，这里补 ensureLoaded 防竞态。
     UpdateSettings.instance.ensureLoaded();
+    // 杜比视界偏色提示设置（工作.md 迁移功能）：播放页检测杜比视界弹出
+    // 引导前读取「不再提示」状态（setter 与这里共享同一 load Future）
+    DolbyVisionSettings.instance.ensureLoaded();
   }
 
   @override

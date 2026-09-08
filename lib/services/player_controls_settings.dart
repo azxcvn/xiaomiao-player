@@ -5,8 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// 播放器控制设置：右上角「更多」面板的启用动作、双击手势、快进/快退时长、
 /// 常驻进度线、倍速记忆、自定义倍速预设、控制按钮背景、画面比例、
-/// 长按倍速（倍率/指示器开关/首次提示）、音量亮度手势（灵敏度/保存到系统）、
-/// 双指缩放、已观看进度阈值、自动连播/自动退出/循环播放模式。
+/// 长按倍速（倍率/指示器开关/首次提示）、音量亮度手势（灵敏度/保存到系统/
+/// 音量增强）、双指缩放、已观看进度阈值、自动连播/自动退出/循环播放模式。
 ///
 /// 全局单例（同 [PlaybackProgressService] 模式），ChangeNotifier + shared_preferences
 /// 持久化；播放页与「播放器设置」子页共同监听。
@@ -38,6 +38,9 @@ class PlayerControlsSettings extends ChangeNotifier {
   static const _keyShowSpeedIndicator = 'player_controls_show_speed_indicator';
   static const _keySpeedHintShown = 'player_controls_speed_hint_shown';
   static const _keySaveVolumeToSystem = 'player_controls_save_volume_system';
+  // 音量增强（工作.md 迁移功能）：系统音量满 100% 后接管 mpv 音量放大
+  static const _keyVolumeBoostEnabled = 'player_controls_volume_boost_enabled';
+  static const _keyVolumeBoostCap = 'player_controls_volume_boost_cap';
   static const _keyVolumeSensitivity = 'player_controls_volume_sensitivity';
   static const _keyBrightnessSensitivity =
       'player_controls_brightness_sensitivity';
@@ -96,6 +99,19 @@ class PlayerControlsSettings extends ChangeNotifier {
   static const double maxGestureSensitivity = 2.0;
   static const double defaultGestureSensitivity = 1.0;
 
+  /// 音量增强上限范围（百分比，10% – 100%，步进 10%）。
+  /// 对齐 mpv 的 `volume-max`：开启增强且系统音量到 100% 后，
+  /// 超额手势转为 mpv `volume` 的 100 ~ 100+cap（即 110% ~ 200%），
+  /// 内部 `volume-max = 100 + cap` 放大音量（volume 单位本为百分比）。
+  static const int minVolumeBoostCap = 10;
+  static const int maxVolumeBoostCap = 100;
+  static const int volumeBoostCapStep = 10;
+  static const int defaultVolumeBoostCap = 60;
+
+  /// 增强上限档位数（10% 步进，10% ~ 100% 共 10 档）
+  static const int volumeBoostCapDivisions =
+      (maxVolumeBoostCap - minVolumeBoostCap) ~/ volumeBoostCapStep;
+
   /// 「已观看」进度阈值范围与步进（5% – 100%，步进 5%，默认 95%）
   static const double minWatchThreshold = 0.05;
   static const double maxWatchThreshold = 1.0;
@@ -127,6 +143,13 @@ class PlayerControlsSettings extends ChangeNotifier {
 
   /// 播放时调整的音量在退出后是否写回系统（默认开启；关闭则恢复进入前音量）
   bool _saveVolumeToSystem = true;
+
+  /// 音量增强开关（默认关闭）：开启后系统音量到 100% 再上滑，
+  /// 接管 mpv 音量突破 100%（见 [volumeBoostCap]）
+  bool _volumeBoostEnabled = false;
+
+  /// 音量增强上限（百分比，默认 60）：mpv `volume-max` = 100 + 此值
+  int _volumeBoostCap = defaultVolumeBoostCap;
 
   /// 音量手势灵敏度（满屏滑动对应的音量变化倍率，0.5 – 2.0，默认 1.0）
   double _volumeSensitivity = defaultGestureSensitivity;
@@ -185,6 +208,8 @@ class PlayerControlsSettings extends ChangeNotifier {
   bool get showSpeedIndicator => _showSpeedIndicator;
   bool get speedHintShown => _speedHintShown;
   bool get saveVolumeToSystem => _saveVolumeToSystem;
+  bool get volumeBoostEnabled => _volumeBoostEnabled;
+  int get volumeBoostCap => _volumeBoostCap;
   double get volumeSensitivity => _volumeSensitivity;
   double get brightnessSensitivity => _brightnessSensitivity;
   bool get enableShrinkVideo => _enableShrinkVideo;
@@ -243,6 +268,10 @@ class PlayerControlsSettings extends ChangeNotifier {
     _showSpeedIndicator = prefs.getBool(_keyShowSpeedIndicator) ?? true;
     _speedHintShown = prefs.getBool(_keySpeedHintShown) ?? false;
     _saveVolumeToSystem = prefs.getBool(_keySaveVolumeToSystem) ?? true;
+    _volumeBoostEnabled = prefs.getBool(_keyVolumeBoostEnabled) ?? false;
+    _volumeBoostCap = _roundVolumeBoostCap(
+      prefs.getInt(_keyVolumeBoostCap) ?? defaultVolumeBoostCap,
+    ).clamp(minVolumeBoostCap, maxVolumeBoostCap);
     _volumeSensitivity = (prefs.getDouble(_keyVolumeSensitivity) ??
             defaultGestureSensitivity)
         .clamp(minGestureSensitivity, maxGestureSensitivity);
@@ -387,6 +416,11 @@ class PlayerControlsSettings extends ChangeNotifier {
     return (v / longPressSpeedStep).round() * longPressSpeedStep;
   }
 
+  /// 音量增强上限按 10% 步进取整到最近档位（与 load 迁移同一对齐逻辑）
+  static int _roundVolumeBoostCap(int v) {
+    return (v / volumeBoostCapStep).round() * volumeBoostCapStep;
+  }
+
   /// 倍速播放指示器开关（长按倍速时是否显示「正在 X.Xx 倍速播放」）
   Future<void> setShowSpeedIndicator(bool v) async {
     await ensureLoaded();
@@ -415,6 +449,29 @@ class PlayerControlsSettings extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keySaveVolumeToSystem, v);
+  }
+
+  /// 音量增强开关（默认关闭）
+  Future<void> setVolumeBoostEnabled(bool v) async {
+    await ensureLoaded();
+    if (_volumeBoostEnabled == v) return;
+    _volumeBoostEnabled = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyVolumeBoostEnabled, v);
+  }
+
+  /// 音量增强上限（百分比，10 – 100，步进 10，默认 60）。
+  /// 任意输入就近对齐到 10% 档位并钳制范围（与 load 的同一对齐逻辑）。
+  Future<void> setVolumeBoostCap(int v) async {
+    await ensureLoaded();
+    final clamped = _roundVolumeBoostCap(v)
+        .clamp(minVolumeBoostCap, maxVolumeBoostCap);
+    if (_volumeBoostCap == clamped) return;
+    _volumeBoostCap = clamped;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_keyVolumeBoostCap, clamped);
   }
 
   /// 音量手势灵敏度（满屏滑动对应的量程倍率，0.5 – 2.0）
@@ -656,6 +713,8 @@ class PlayerControlsSettings extends ChangeNotifier {
     _showSpeedIndicator = true;
     _speedHintShown = false;
     _saveVolumeToSystem = true;
+    _volumeBoostEnabled = false;
+    _volumeBoostCap = defaultVolumeBoostCap;
     _volumeSensitivity = defaultGestureSensitivity;
     _brightnessSensitivity = defaultGestureSensitivity;
     _enableShrinkVideo = true;

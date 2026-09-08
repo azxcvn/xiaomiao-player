@@ -7,6 +7,7 @@ import 'package:moumou/pages/download/download_manager_page.dart';
 import 'package:moumou/pages/settings/about_page.dart';
 import 'package:moumou/pages/settings/appearance_page.dart';
 import 'package:moumou/pages/settings/danmaku_server_page.dart';
+import 'package:moumou/pages/settings/device_info_page.dart';
 import 'package:moumou/pages/settings/media_scan_settings_page.dart';
 import 'package:moumou/pages/settings/playback_history_page.dart';
 import 'package:moumou/pages/settings/player_settings_page.dart';
@@ -212,15 +213,34 @@ class SettingsPage extends StatelessWidget {
               // ── 其他（后续在此追加更多项）──────────────
               const SettingsGroupTitle(title: '其他'),
               SettingsCard(
-                child: SettingsTile(
-                  icon: Icons.info_outline,
-                  title: '关于',
-                  subtitle: const Text('版本信息与工具'),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const AboutPage()),
-                    );
-                  },
+                child: Column(
+                  children: [
+                    SettingsTile(
+                      icon: Icons.memory_outlined,
+                      title: '设备信息',
+                      subtitle: const Text('硬件与编解码能力检测'),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const DeviceInfoPage(),
+                          ),
+                        );
+                      },
+                    ),
+                    const Divider(height: 1),
+                    SettingsTile(
+                      icon: Icons.info_outline,
+                      title: '关于',
+                      subtitle: const Text('版本信息与工具'),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const AboutPage(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
               // ── 后续新增设置组示例（按需启用）──────────────

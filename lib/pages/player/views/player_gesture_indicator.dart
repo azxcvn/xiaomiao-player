@@ -13,13 +13,17 @@ enum GestureIndicatorKind { volume, brightness }
 class PlayerGestureIndicator extends StatelessWidget {
   final GestureIndicatorKind kind;
 
-  /// 音量 0 – 100；亮度 0 – 1
+  /// 音量 0 – 100+（音量增强时为 mpv 增益，可超过 100）；亮度 0 – 1
   final double value;
+
+  /// 是否为「音量增强」状态（>100%，切换红色警示样式）
+  final bool boosting;
 
   const PlayerGestureIndicator({
     super.key,
     required this.kind,
     required this.value,
+    this.boosting = false,
   });
 
   IconData get _icon {
@@ -29,7 +33,8 @@ class PlayerGestureIndicator extends StatelessWidget {
         if (v <= 0) return Icons.volume_off_rounded;
         if (v <= 33) return Icons.volume_mute_rounded;
         if (v <= 66) return Icons.volume_down_rounded;
-        return Icons.volume_up_rounded;
+        if (v <= 100) return Icons.volume_up_rounded;
+        return Icons.graphic_eq; // 增强：均衡器式图标
       case GestureIndicatorKind.brightness:
         final v = value;
         if (v <= 0.33) return Icons.brightness_5;
@@ -39,7 +44,8 @@ class PlayerGestureIndicator extends StatelessWidget {
   }
 
   Color get _fillColor => switch (kind) {
-        GestureIndicatorKind.volume => const Color(0xFF4FC3F7),
+        GestureIndicatorKind.volume =>
+          boosting ? const Color(0xFFFF5252) : const Color(0xFF4FC3F7),
         GestureIndicatorKind.brightness => const Color(0xFFFFB74D),
       };
 
@@ -49,8 +55,9 @@ class PlayerGestureIndicator extends StatelessWidget {
       };
 
   String get _text => switch (kind) {
-        GestureIndicatorKind.volume =>
-          '${value.round().clamp(0, 100)}%',
+        GestureIndicatorKind.volume => boosting
+            ? '${value.round()}%'
+            : '${value.round().clamp(0, 100)}%',
         GestureIndicatorKind.brightness =>
           '${(value * 100).round().clamp(0, 100)}%',
       };
@@ -82,7 +89,7 @@ class PlayerGestureIndicator extends StatelessWidget {
                 _icon,
                 key: ValueKey(_icon),
                 size: 26,
-                color: Colors.white,
+                color: boosting ? const Color(0xFFFF5252) : Colors.white,
               ),
             ),
             const SizedBox(height: 10),
@@ -122,16 +129,25 @@ class PlayerGestureIndicator extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            // 百分比文字
+            // 百分比文字（增强态显示红色警示）
             Text(
               _text,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: boosting ? const Color(0xFFFF5252) : Colors.white,
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
                 letterSpacing: -0.5,
               ),
             ),
+            if (boosting)
+              Text(
+                '音量增强',
+                style: TextStyle(
+                  color: const Color(0xFFFF5252).withValues(alpha: 0.9),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
           ],
         ),
     );

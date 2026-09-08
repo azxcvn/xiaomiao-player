@@ -646,6 +646,29 @@ class DeviceServices {
   static void clearFrameCache() {
     debugClearFrames();
   }
+
+  // ── 设备硬件与编解码能力检测（工作.md 迁移功能）────────────
+
+  /// 读取设备硬件与编解码能力（屏幕 HDR / 关键编码器 / 解码器清单）。
+  /// 返回原生结构化 Map（见 `DeviceCapabilities.kt`）；失败返回 null。
+  static Future<Map<String, dynamic>?> getDeviceCapabilities() async {
+    try {
+      return await _channel
+          .invokeMapMethod<String, dynamic>('getDeviceCapabilities');
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// 整应用重启（解码配置修改后一键重启，工作.md 迁移功能）。
+  /// 触发原生 `restartApp`（拉新 Task 清栈 + 结束进程）。
+  static Future<void> restartApp() async {
+    try {
+      await _channel.invokeMethod<void>('restartApp');
+    } catch (_) {
+      // 重启失败静默（调用方已弹确认框）
+    }
+  }
 }
 
 /// 目录条目（自建字幕文件选择器用，工作.md 阶段1 第 3 点）

@@ -479,4 +479,42 @@ void main() {
     expect(s.showTopTime, isTrue);
     expect(s.showTopBattery, isTrue);
   });
+
+  test('音量增强：默认关闭、上限默认 60%（百分比）', () {
+    final s = PlayerControlsSettings.instance;
+    expect(s.volumeBoostEnabled, isFalse);
+    expect(s.volumeBoostCap, PlayerControlsSettings.defaultVolumeBoostCap);
+    expect(PlayerControlsSettings.defaultVolumeBoostCap, 60);
+    expect(PlayerControlsSettings.minVolumeBoostCap, 10);
+    expect(PlayerControlsSettings.maxVolumeBoostCap, 100);
+    expect(PlayerControlsSettings.volumeBoostCapStep, 10);
+    // 10% ~ 100% 步进 10 → 9 个跨度（10 档）
+    expect(PlayerControlsSettings.volumeBoostCapDivisions, 9);
+  });
+
+  test('音量增强：开关与上限设置并持久化（10% 步进就近对齐）', () async {
+    final s = PlayerControlsSettings.instance;
+    await s.setVolumeBoostEnabled(true);
+    await s.setVolumeBoostCap(50);
+    expect(s.volumeBoostEnabled, isTrue);
+    expect(s.volumeBoostCap, 50);
+    await s.load(); // 模拟重启
+    expect(s.volumeBoostEnabled, isTrue);
+    expect(s.volumeBoostCap, 50);
+    // 就近对齐：53 → 50，56 → 60
+    await s.setVolumeBoostCap(53);
+    expect(s.volumeBoostCap, 50);
+    await s.setVolumeBoostCap(56);
+    expect(s.volumeBoostCap, 60);
+    await s.setVolumeBoostEnabled(false);
+    expect(s.volumeBoostEnabled, isFalse);
+  });
+
+  test('音量增强上限：范围钳制 10% – 100%（10% 步进）', () async {
+    final s = PlayerControlsSettings.instance;
+    await s.setVolumeBoostCap(-5);
+    expect(s.volumeBoostCap, PlayerControlsSettings.minVolumeBoostCap);
+    await s.setVolumeBoostCap(999);
+    expect(s.volumeBoostCap, PlayerControlsSettings.maxVolumeBoostCap);
+  });
 }

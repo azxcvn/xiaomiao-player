@@ -111,4 +111,23 @@ class VideoInfoService {
       return null;
     }
   }
+
+  /// 检测视频是否包含杜比视界（Dolby Vision）视频轨（MediaInfoLib）。
+  /// 返回 (是否杜比视界, 命中的 HDR 描述)；失败返回 (false, '')。
+  static Future<({bool isDolbyVision, String hdrFormat})> detectDolbyVision(
+    String path,
+  ) async {
+    try {
+      final result = await _channel.invokeMapMethod<String, dynamic>(
+        'detectDolbyVision',
+        {'path': path},
+      );
+      return (
+        isDolbyVision: result?['isDolbyVision'] as bool? ?? false,
+        hdrFormat: result?['hdrFormat'] as String? ?? '',
+      );
+    } catch (_) {
+      return (isDolbyVision: false, hdrFormat: '');
+    }
+  }
 }

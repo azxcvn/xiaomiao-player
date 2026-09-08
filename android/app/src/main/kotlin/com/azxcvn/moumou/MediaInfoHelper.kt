@@ -197,4 +197,59 @@ object MediaInfoHelper {
             )
         }
     }
+
+    /**
+     * 检测视频是否包含杜比视界（Dolby Vision）视频轨。
+     *
+     * 判断依据（任一命中即视为杜比视界）：
+     * 1. 视频轨 HDR_Format 含 "Dolby Vision"；
+     * 2. CodecID 含 dovi/dvhe/dvav；
+     * 3. Format 含 "Dolby Vision"。
+     *
+     * 供播放页在未开 gpu-next / 软解时弹出偏色引导弹窗（对齐老项目
+     * `DolbyVisionHintDialog`：检测 mime/codec 命中 dovi/dvhe）。
+     * 返回 (Boolean, String)：是否杜比视界 + 命中的描述文本（未命中为空串）。
+     */
+    fun detectDolbyVision(context: Context, path: String): Pair<Boolean, String> {
+        val pfd = runCatching {
+            android.os.ParcelFileDescriptor.open(
+                File(path), android.os.ParcelFileDescriptor.MODE_READ_ONLY
+            )
+        }.getOrNull() ?: return Pair(false, "")
+        val fd = pfd.detachFd()
+        val mi = try {
+            MediaInfo()
+        } catch (e: Throwable) {
+            Log.w(TAG, "MediaInfo native lib unavailable: ${e.message}")
+            pfd.close()
+            return Pair(false, "")
+        }
+        return try {
+            mi.Open(fd, File(path).name)
+            val videoCount = mi.Count_Get(MediaInfo.Stream.Video)
+            for (i in 0 until videoCount) {
+                val hdr = mi.getInfo(MediaInfo.Stream.Video, i, "HDR_Format")
+                val codecId = mi.getInfo(MediaInfo.Stream.Video, i, "CodecID")
+                val format = mi.getInfo(MediaInfo.Stream.Video, i, "Format")
+                val combined = "$hdr|$codecId|$format"
+                when {
+                    hdr.contains("Dolby Vision", ignoreCase = true) ->
+                        return Pair(true, "Dolby Vision")
+                    combined.contains("dovi", ignoreCase = true) ||
+                        combined.contains("dvhe", ignoreCase = true) ||
+                        combined.contains("dvav", ignoreCase = true) ->
+                        return Pair(true, "Dolby Vision")
+                    format.contains("Dolby Vision", ignoreCase = true) ->
+                        return Pair(true, "Dolby Vision")
+                }
+            }
+            Pair(false, "")
+        } catch (e: Throwable) {
+            Log.w(TAG, "detectDolbyVision failed: ${e.message}")
+            Pair(false, "")
+        } finally {
+            mi.Close()
+            pfd.close()
+        }
+    }
 }

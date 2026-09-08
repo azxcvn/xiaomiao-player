@@ -46,6 +46,7 @@ import 'package:moumou/services/chapter_tracker.dart';
 import 'package:moumou/services/danmaku_service.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/decode_settings.dart';
+import 'package:moumou/services/dolby_vision_settings.dart';
 import 'package:moumou/services/bilibili/bili_danmaku_service.dart';
 import 'package:moumou/services/bilibili/bili_constants.dart';
 import 'package:moumou/services/bilibili/bili_stream_proxy.dart';
@@ -59,6 +60,7 @@ import 'package:moumou/services/playback_progress_service.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/services/subtitle_service.dart';
 import 'package:moumou/services/subtitle_settings.dart';
+import 'package:moumou/services/video_info_service.dart';
 import 'package:moumou/services/super_resolution_service.dart';
 import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/utils/cast_source.dart';
@@ -222,6 +224,13 @@ class _PlayerPageState extends State<PlayerPage>
   /// 当前应用音量（0 – 100，进入时同步自系统音量）
   double _volume = 50;
 
+  /// 当前 mpv 增益音量（100 = 无增益，100~100+cap 为音量增强段）。
+  /// 系统音量满 100% 后接管 mpv `volume` 突破 100%（最高 200%）。
+  double _mpvVolume = 100;
+
+  /// 音量增强上限（百分比，进入时从设置读取）
+  int _volumeBoostCap = 0;
+
   /// 进入播放前的系统音量（退出时按设置写回或恢复）
   double? _initialSystemVolume;
 
@@ -233,7 +242,7 @@ class _PlayerPageState extends State<PlayerPage>
   double _brightnessAccum = 0;
 
   /// 手势指示器（音量/亮度共用，2 秒无操作自动隐藏）
-  ({GestureIndicatorKind kind, double value})? _indicator;
+  ({GestureIndicatorKind kind, double value, bool boosting})? _indicator;
 
   /// 最近一次显示的指示器类型：退场动画期间 [_indicator] 已置 null，
   /// 但布局位置（左/右）必须沿用旧类型，否则亮度退场会跳到左侧
@@ -347,6 +356,9 @@ class _PlayerPageState extends State<PlayerPage>
 
   /// 正在切换视频（防 EOF 重入：切集期间旧文件可能触发 completed 事件）
   bool _isSwitchingVideo = false;
+
+  /// 本视频已做过一次杜比视界偏色检测（切集时随路径重置）
+  bool _dolbyVisionChecked = false;
 
   /// 正在处理播放完成事件（防 completed 流重复触发）
   bool _isHandlingEndOfFile = false;
@@ -670,6 +682,58 @@ class _PlayerPageState extends State<PlayerPage>
     // 弹幕功能：open 完成后加载同目录同名弹幕（无匹配静默跳过）
     unawaited(_danmakuController.loadForVideo(_path));
     await _applyVideoOrientation();
+    // 杜比视界偏色检测 + 引导（本地文件，工作.md 迁移功能）
+    unawaited(_checkDolbyVision());
+  }
+
+  /// 杜比视界偏色检测与引导（工作.md 迁移功能）：
+  /// 本地文件播放到杜比视界视频、且未开 gpu-next 时，弹窗引导启用
+  /// gpu-next 或切换软解；支持「不再提示」记忆（[DolbyVisionSettings]）。
+  /// 每次进入/切集只检测一次（[_dolbyVisionChecked]）。
+  Future<void> _checkDolbyVision() async {
+    if (_dolbyVisionChecked) return;
+    if (isOnlineMedia(_path)) return; // 只检测本地文件（MediaInfo 需真实路径）
+    _dolbyVisionChecked = true;
+    final decode = DecodeSettings.instance;
+    // 已开 gpu-next 或已软解：无需引导（硬解+ 也可能直通，同样提示）
+    if (decode.gpuNext) return;
+    await DolbyVisionSettings.instance.ensureLoaded();
+    if (DolbyVisionSettings.instance.suppressed) return;
+    final detected = await VideoInfoService.detectDolbyVision(_path);
+    if (_disposed || !mounted) return;
+    if (!detected.isDolbyVision) return;
+    await _showDolbyVisionHint();
+  }
+
+  /// 弹杜比视界偏色引导弹窗（对齐老项目 `DolbyVisionHintDialog`）：
+  /// 「知道了」仅关闭；「不再提示」记忆后续不再弹。
+  Future<void> _showDolbyVisionHint() async {
+    if (_disposed || !mounted) return;
+    final suppressed = await showAppDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('杜比视界视频'),
+        content: const Text(
+          '该视频为杜比视界（Dolby Vision）编码。\n'
+          '若画面发绿/发紫，请在「播放设置 → 解码」启用 GPU-next 渲染并切换软解；\n'
+          '若仍无法解决，则该设备可能不支持杜比视界播放。',
+          style: TextStyle(fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop('dismiss'),
+            child: const Text('不再提示'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(null),
+            child: const Text('知道了'),
+          ),
+        ],
+      ),
+    );
+    if (suppressed == 'dismiss') {
+      await DolbyVisionSettings.instance.setSuppressed(true);
+    }
   }
 
   // ── B 站在线播放（阶段三）──────────────────────────────
@@ -929,12 +993,29 @@ class _PlayerPageState extends State<PlayerPage>
     final vol = await DeviceServices.getSystemVolume();
     _initialSystemVolume = vol;
     _volume = vol ?? 50;
-    // mpv 音量固定满增益；手势改调系统音量（见 _onVerticalSwipe）
+    // 音量增强上限（百分比）：`volume-max = 100 + cap`，系统音量满 100% 后
+    // 手势可把 mpv 音量从 100 提到 100+cap（110% ~ 200%）。
+    _volumeBoostCap = _settings.volumeBoostEnabled
+        ? _settings.volumeBoostCap
+        : 0;
+    _mpvVolume = 100;
+    // mpv 音量固定满增益；手势改调系统音量（见 _onVerticalSwipe）；
+    // 音量增强开启时扩展 volume-max，使 100~200 都可作为 mpv 增益。
     try {
+      final native = _player.platform as NativePlayer;
+      await native.waitForPlayerInitialization;
+      await native.setProperty('volume-max', '${mpvVolumeMaxForBoost(_volumeBoostCap)}');
       await _player.setVolume(100);
     } on AssertionError {
       // 播放器已被销毁（快速退出）：后续操作放弃
       return;
+    } catch (_) {
+      // waitForPlayerInitialization / setProperty 失败不影响音量基准
+      try {
+        await _player.setVolume(100);
+      } on AssertionError {
+        return;
+      }
     }
     if (_disposed || !mounted) return;
     final brightness = await DeviceServices.getBrightness();
@@ -953,6 +1034,12 @@ class _PlayerPageState extends State<PlayerPage>
   ///   关闭 → 恢复进入前的系统音量。
   Future<void> _restoreDeviceState() async {
     await DeviceServices.setWindowBrightness(null);
+    // 音量增强复位：mpv 增益音量回到 100（播放器销毁前尽力复位，防泄漏）
+    if (_mpvVolume > 100) {
+      try {
+        await _player.setVolume(100);
+      } catch (_) {}
+    }
     if (!_settings.saveVolumeToSystem) {
       await DeviceServices.setSystemVolume(_initialSystemVolume ?? _volume);
     }
@@ -1128,12 +1215,16 @@ class _PlayerPageState extends State<PlayerPage>
   // ── 音量 / 亮度手势（左侧亮度，右侧音量）───────────────
 
   /// 指示器显隐：显示 [kind] 对应指示器，2 秒无操作自动隐藏
-  void _showIndicator(GestureIndicatorKind kind, double value) {
+  void _showIndicator(
+    GestureIndicatorKind kind,
+    double value, {
+    bool boosting = false,
+  }) {
     _indicatorHideTimer?.cancel();
     if (mounted) {
       setState(() {
         _indicatorKind = kind;
-        _indicator = (kind: kind, value: value);
+        _indicator = (kind: kind, value: value, boosting: boosting);
       });
     }
     _indicatorHideTimer = Timer(const Duration(seconds: 2), () {
@@ -1165,7 +1256,10 @@ class _PlayerPageState extends State<PlayerPage>
       }
     } else {
       // 右侧：音量（直控系统媒体音量 = 真实响度；退出时按设置写回/恢复，
-      // 见 _restoreDeviceState；v3 用户反馈：只调 mpv 增益受系统音量上限约束）
+      // 见 _restoreDeviceState；v3 用户反馈：只调 mpv 增益受系统音量上限约束）。
+      // 音量增强（工作.md 迁移功能）：系统音量到 100% 且增强开启时，
+      // 继续上滑接管 mpv 音量放大至 100~100+cap（对齐 mpvRx volumeBoost）。
+      final boostOn = _settings.volumeBoostEnabled && _volumeBoostCap > 0;
       _volumeAccum +=
           volumeDeltaForSwipe(
             dyDelta,
@@ -1173,14 +1267,60 @@ class _PlayerPageState extends State<PlayerPage>
             _settings.volumeSensitivity,
           );
       final intDelta = _volumeAccum.truncate();
-      if (intDelta != 0) {
-        _volumeAccum -= intDelta;
-        final newV = (_volume + intDelta).clamp(0.0, 100.0);
-        if ((newV - _volume).abs() > 0.001) {
-          _volume = newV;
-          DeviceServices.setSystemVolume(newV);
+      if (intDelta == 0) return;
+      _volumeAccum -= intDelta;
+
+      // 增强段：系统音量满 100% 且 mpv 已有增益时（上滑续增、下滑回减，触底降系统）
+      if (boostOn && _volume >= 100.0 && _mpvVolume > 100.0) {
+        final newMpv = (_mpvVolume + intDelta)
+            .clamp(100.0, mpvVolumeMaxForBoost(_volumeBoostCap).toDouble());
+        if ((newMpv - _mpvVolume).abs() > 0.001) {
+          _mpvVolume = newMpv;
+          _player.setVolume(newMpv);
+        }
+        if (_mpvVolume > 100.0) {
+          _showIndicator(
+            GestureIndicatorKind.volume,
+            displayVolumePercent(100, _mpvVolume, boostEnabled: true),
+            boosting: true,
+          );
+        } else if (intDelta < 0) {
+          // mpv 增益触底 100，继续下滑 → 转回系统音量段
+          final newV = (_volume + intDelta).clamp(0.0, 100.0);
+          if ((newV - _volume).abs() > 0.001) {
+            _volume = newV;
+            DeviceServices.setSystemVolume(newV);
+            _showIndicator(GestureIndicatorKind.volume, newV);
+          }
+        }
+        return;
+      }
+
+      // 系统音量段：先调系统音量（0-100）
+      final prevVolume = _volume;
+      final newV = (_volume + intDelta).clamp(0.0, 100.0);
+      if ((newV - _volume).abs() > 0.001) {
+        _volume = newV;
+        DeviceServices.setSystemVolume(newV);
+      }
+      // 本帧上滑跨过 100%（从 <100 冲到 100 且仍有溢出）：溢出部分转入 mpv 增益
+      if (boostOn && intDelta > 0 && _volume >= 100.0) {
+        final overflow = prevVolume + intDelta - 100.0;
+        if (overflow > 0) {
+          final newMpv = (_mpvVolume + overflow)
+              .clamp(100.0, mpvVolumeMaxForBoost(_volumeBoostCap).toDouble());
+          _mpvVolume = newMpv;
+          _player.setVolume(newMpv);
+          _showIndicator(
+            GestureIndicatorKind.volume,
+            displayVolumePercent(100, _mpvVolume, boostEnabled: true),
+            boosting: true,
+          );
+        } else {
           _showIndicator(GestureIndicatorKind.volume, newV);
         }
+      } else {
+        _showIndicator(GestureIndicatorKind.volume, newV);
       }
     }
   }
@@ -1599,6 +1739,7 @@ class _PlayerPageState extends State<PlayerPage>
   /// 4. 重置播放页状态与恢复指示器（新视频各自恢复自己的进度）。
   Future<void> _switchTo(String path, String title) async {
     _isSwitchingVideo = true;
+    _dolbyVisionChecked = false; // 新视频重新检测杜比视界
     try {
       // 章节功能：先清空旧媒体的章节标记（防 open 期间旧数据闪现）
       _chapterTracker.clear();
@@ -1672,6 +1813,8 @@ class _PlayerPageState extends State<PlayerPage>
       // 弹幕功能：切集后重新加载新集的同名弹幕（loadForVideo 内部会先
       // 重置调度器并清屏，在途旧集弹幕不会灌入新集）
       unawaited(_danmakuController.loadForVideo(path));
+      // 杜比视界偏色检测 + 引导（切集后新视频重新检测）
+      unawaited(_checkDolbyVision());
     } on AssertionError {
       // 播放器已被销毁（切集过程中退出）：静默返回，不写假崩溃日志
       return;
@@ -3181,6 +3324,7 @@ class _PlayerPageState extends State<PlayerPage>
                                   key: ValueKey(_indicator!.kind),
                                   kind: _indicator!.kind,
                                   value: _indicator!.value,
+                                  boosting: _indicator!.boosting,
                                 ),
                         ),
                       ),

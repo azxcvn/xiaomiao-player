@@ -79,6 +79,36 @@ double volumeDeltaForSwipe(
   return -dyPixels / screenHeight * 100 * sensitivity;
 }
 
+/// 音量增强上限对应的 mpv `volume` 上限：系统音量 100% 后继续放大，
+/// mpv 音量从 100 提到 100 + capPercent（`volume-max = 100 + cap`，
+/// cap 为百分比；volume 单位本为百分比，100 + 100 = 200 即最高 200%）。
+int mpvVolumeMaxForBoost(int capPercent) => 100 + capPercent;
+
+/// 把「系统音量 + mpv 增益」组合换算成对用户展示的百分比（0 – 100+cap）。
+///
+/// 未进入增强段（systemVolume < 100）时显示 = 系统音量；
+/// 系统音量到 100 且 mpv 有增益时，显示 = 100 + (mpvVolume - 100)
+/// （即 120% / 200% / …，且只有增强开启时才可能 > 100）。
+double displayVolumePercent(
+  double systemVolume,
+  double mpvVolume, {
+  bool boostEnabled = false,
+}) {
+  if (!boostEnabled || systemVolume < 100) {
+    return systemVolume.clamp(0.0, 100.0);
+  }
+  return 100.0 + (mpvVolume - 100).clamp(0.0, double.infinity);
+}
+
+/// 是否正处于「音量增强」段（系统音量满 100% 且 mpv 音量超过 100 增益）。
+bool isVolumeBoosting(
+  double systemVolume,
+  double mpvVolume, {
+  bool boostEnabled = false,
+}) {
+  return boostEnabled && systemVolume >= 100.0 && mpvVolume > 100.0;
+}
+
 /// 亮度滑动增量（0 – 1 刻度）：向上滑变亮。
 double brightnessDeltaForSwipe(
   double dyPixels,

@@ -124,6 +124,34 @@ void main() {
     expect(brightnessDeltaForSwipe(-800, 800, 0.5), closeTo(0.5, 0.001));
   });
 
+  // ── 音量增强（工作.md 迁移功能）────────────────────────
+
+  test('音量增强上限：mpv volume-max = 100 + capPercent', () {
+    expect(mpvVolumeMaxForBoost(60), 160);
+    expect(mpvVolumeMaxForBoost(100), 200);
+    expect(mpvVolumeMaxForBoost(10), 110);
+  });
+
+  test('展示音量百分比：未到 100% 显示系统音量，增强段显示 100+增益', () {
+    // 系统音量 60，mpv 无增益 → 60
+    expect(displayVolumePercent(60, 100, boostEnabled: true), 60.0);
+    // 增强关闭时即便 mpv 有增益也只显示 100
+    expect(displayVolumePercent(100, 120, boostEnabled: false), 100.0);
+    // 增强开启 + mpv 120 → 120
+    expect(displayVolumePercent(100, 120, boostEnabled: true), 120.0);
+    // 增强开启 + mpv 200 → 200
+    expect(displayVolumePercent(100, 200, boostEnabled: true), 200.0);
+    // 未满 100 的系统音量不受 mpv 增益影响
+    expect(displayVolumePercent(99, 150, boostEnabled: true), 99.0);
+  });
+
+  test('是否处于增强段：系统满 100% 且 mpv > 100 才成立', () {
+    expect(isVolumeBoosting(100, 120, boostEnabled: true), isTrue);
+    expect(isVolumeBoosting(100, 100, boostEnabled: true), isFalse);
+    expect(isVolumeBoosting(99, 120, boostEnabled: true), isFalse);
+    expect(isVolumeBoosting(100, 120, boostEnabled: false), isFalse);
+  });
+
   // ── 长按动态调速 ───────────────────────────────────────
 
   test('动态倍速档位：1.5 – 4.0 间隔 0.5，共 6 档', () {

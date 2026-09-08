@@ -16,7 +16,7 @@ import 'package:moumou/widgets/settings_ui.dart';
 /// - **视频方向**：自动 / 锁定竖屏 / 锁定横屏（工作.md 第 5 点）；
 /// - **播放行为**：常驻进度线、进度条缩略图、记住上次倍速、保存音量到系统、
 ///   双指缩小视频、按钮背景、自动连播、播放完毕自动退出、倍速播放指示器、
-///   启用播放界面动画（工作.md 第 7 点）；
+///   启用播放界面动画、音量增强（开关 + 可折叠的上限百分比滑杆，组内最后一项）；
 /// - **已观看进度阈值**：滑杆设置（5% – 100%，步进 5%）。
 ///
 /// 循环播放模式（关闭/列表循环/单集循环）已移至播放界面内调整
@@ -273,6 +273,38 @@ class PlayerSettingsPage extends StatelessWidget {
                         value: settings.playerAnimations,
                         onChanged: (v) => settings.setPlayerAnimations(v),
                       ),
+                    ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    // 音量增强（组内最后一项）：开关 + 可折叠的上限滑杆。
+                    SettingsTile(
+                      icon: Icons.volume_up_outlined,
+                      title: '音量增强',
+                      subtitle: const Text('系统音量满后继续放大'),
+                      trailing: Switch(
+                        value: settings.volumeBoostEnabled,
+                        onChanged: (v) => settings.setVolumeBoostEnabled(v),
+                      ),
+                    ),
+                    // 上限滑杆：开启时展开，关闭时折叠（动画收起）
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOutCubic,
+                      alignment: Alignment.topCenter,
+                      child: settings.volumeBoostEnabled
+                          ? Column(
+                              children: [
+                                const Divider(
+                                  height: 1,
+                                  indent: 16,
+                                  endIndent: 16,
+                                ),
+                                _VolumeBoostCapTile(
+                                  value: settings.volumeBoostCap,
+                                  onChanged: settings.setVolumeBoostCap,
+                                ),
+                              ],
+                            )
+                          : const SizedBox(width: double.infinity),
                     ),
                   ],
                 ),
@@ -752,6 +784,86 @@ class _WatchThresholdTile extends StatelessWidget {
           ),
           Text(
             '进度达到该比例即视为已看完',
+            style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 音量增强上限设置项（百分比滑杆，10% – 100%，步进 10%，默认 60%）：
+/// 系统音量满 100% 后继续上滑，接管 mpv 音量放大至 `100 + cap`（最高 200%）。
+class _VolumeBoostCapTile extends StatelessWidget {
+  final int value;
+  final ValueChanged<int> onChanged;
+
+  const _VolumeBoostCapTile({
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.graphic_eq,
+                size: 22,
+                color: scheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  '增强上限',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: scheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '100% → ${100 + value}%',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: scheme.onSecondaryContainer,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          SliderTheme(
+            data: kazumiSliderTheme(scheme).copyWith(
+              tickMarkShape: const DenseSliderTickMarkShape(),
+            ),
+            child: Slider(
+              min: PlayerControlsSettings.minVolumeBoostCap.toDouble(),
+              max: PlayerControlsSettings.maxVolumeBoostCap.toDouble(),
+              divisions: PlayerControlsSettings.volumeBoostCapDivisions,
+              value: value.toDouble(),
+              onChanged: (v) => onChanged(v.round()),
+            ),
+          ),
+          Text(
+            '最高增强至 ${100 + value}%音量',
             style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
           ),
         ],

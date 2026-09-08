@@ -31,6 +31,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.io.FileOutputStream
+import kotlin.system.exitProcess
 
 class MainActivity : FlutterActivity() {
     private val channelName = "moumou/video_info"
@@ -181,6 +182,34 @@ class MainActivity : FlutterActivity() {
                                 runOnUiThread { result.success(info) }
                             }.start()
                         }
+                    }
+                    // 杜比视界偏色检测：返回 {isDolbyVision, hdrFormat}
+                    "detectDolbyVision" -> {
+                        val path = call.argument<String>("path")
+                        if (path == null) {
+                            result.error("INVALID_ARG", "path is null", null)
+                        } else {
+                            Thread {
+                                val (isDv, hdr) = MediaInfoHelper.detectDolbyVision(this, path)
+                                runOnUiThread {
+                                    result.success(
+                                        mapOf("isDolbyVision" to isDv, "hdrFormat" to hdr)
+                                    )
+                                }
+                            }.start()
+                        }
+                    }
+                    // 设备硬件与编解码能力检测（屏幕 HDR / 关键编码器 / 解码器清单）
+                    "getDeviceCapabilities" -> {
+                        Thread {
+                            val caps = DeviceCapabilities.inspect(this)
+                            runOnUiThread { result.success(caps) }
+                        }.start()
+                    }
+                    // 整应用重启（解码配置修改后一键重启，工作.md 迁移功能）
+                    "restartApp" -> {
+                        restartApp()
+                        result.success(null)
                     }
                     "getVideos" -> {
                         val includeNoMedia = call.argument<Boolean>("includeNoMedia") ?: false
@@ -835,6 +864,30 @@ class MainActivity : FlutterActivity() {
                 .build()
             setPictureInPictureParams(params)
         }
+    }
+
+    // ── 整应用重启（解码配置修改后一键重启，工作.md 迁移功能）────────
+
+    /**
+     * 重启整个应用：拉新任务的启动 Intent（清空返回栈）并结束当前进程。
+     * 对齐老项目 `PlaybackSettingsScreen` 的解码配置一键重启机制
+     * （拉新 Task 清栈重启，而非仅重建 Activity）。
+     */
+    private fun restartApp() {
+        try {
+            val launch = packageManager.getLaunchIntentForPackage(packageName)
+                ?: return
+            launch.addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK
+            )
+            startActivity(launch)
+        } catch (e: Exception) {
+            Log.w("MainActivity", "restartApp failed: ${e.message}")
+        }
+        // 结束当前进程（拉起新 Task 后再退出，保证应用确实重启）
+        android.os.Process.killProcess(android.os.Process.myPid())
+        exitProcess(0)
     }
 
     // ── 音量（系统媒体音量，0 – 100 百分比）────────────────
