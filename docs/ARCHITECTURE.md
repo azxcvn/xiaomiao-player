@@ -75,6 +75,11 @@ Flutter 本地视频播放器（Android），核心能力：
   + **播放诊断页**（缓存/丢帧/渲染延迟/硬解/音画同步实时采样，§4.27）
 - **网络可靠性**：统一重试（只重试连接类失败、指数退避、响应中断不重试防重复提交）
   + 超时分级（API 12s / 文本 15s / 下载 30s / 媒体流 30min）+ 文本响应体积上限快速失败（§4.28）
+- **番剧播放列表**：在线播放番剧时整季剧集列表随播放页带入，「下一集」/自动连播/
+  列表循环/播放列表面板全部可用（对齐 PiliPlus 的「播放页持有剧集列表」，§4.15）
+- **并发原语与通用分页**：`AsyncSession`（会话号失效）/ `AsyncSingleFlight`（在飞去重）/
+  `AsyncSerialQueue`（串行队列）+ `LoadingState` 三态 + `CommonListController` 分页
+  控制器（刷新失败保留旧列表）；散落的手写实现已收敛（§4.29）
 
 技术栈：Flutter 3.44+ / Dart 3.12+，依赖见 `pubspec.yaml`。
 
@@ -116,8 +121,10 @@ lib/
 │   ├── device_decoder.dart     # 设备解码器条目模型（名称/MIME/分辨率/声道/特性/色彩格式/采样率/profile，设备能力检测页 + 详情页）
 │   └── wyzie_models.dart       # Wyzie 字幕 API 数据模型（字幕条目/来源响应/密钥信息/TMDB 命中 + 语言/格式/编码/来源常量表，§4.21）
 │   └── player_diagnostics.dart # 播放诊断快照模型（mpv 属性 → 容错解析的运行时统计，§4.27）
+│   └── bili_playlist.dart      # 番剧播放列表模型（整季剧集 + 按 epId 定位当前集，§4.15）
 ├── services/                  # 业务逻辑 / 数据层（无 UI）
 │   ├── view_settings.dart     # 排序/字段/视图模式设置（ChangeNotifier + 持久化）
+│   ├── common_list_controller.dart # 通用分页列表控制器（三态 + 刷新失败保留旧数据 + 加载更多，§4.29）
 │   ├── video_scanner.dart     # 扫描 + 建树 + 建文件夹列表
 │   ├── video_info_service.dart# 列表封面缩略图（磁盘缓存）+ 基本元数据 + 完整媒体信息
 │   ├── playback_progress_service.dart  # 播放进度（ChangeNotifier + 持久化 + 串行写盘）
@@ -246,6 +253,7 @@ lib/
 │   │       ├── player_danmaku_panel.dart  # 弹幕二级界面（本地弹幕=复用字幕选择器面板导入 / 网络弹幕 / 自动匹配 / 弹幕设置；DanmakuFileService）
 │   │       ├── player_danmaku_network_panel.dart # 网络弹幕搜索三级界面（40dp 胶囊搜索框 + 框下关键词历史胶囊 + 命中后折叠为关键词条 + 结果卡自持动画展开集列表，横竖屏共用）
 │   │       ├── player_danmaku_settings_panel.dart # 弹幕设置面板（样式：字号/字重/速度/描边/不透明度滑杆+随机渐变色；配置：区域(10%档位)/行高/三类显隐/海量/去重/屏蔽词；偏移：时间轴偏移；字体：跟随系统/跟随App/自定义三选一+目录导入列表选择；横竖屏外壳共用）
+│   │       ├── player_bili_playlist_panel.dart   # B 站番剧剧集列表面板（集号/集名/角标 + 当前集高亮，§4.15）
 │   │       ├── player_bottom_bar.dart     # 底栏：进度条 + 下一集 + 时间 + 弹幕开关/设置 + 右下角按钮簇
 │   │       ├── player_seek_bar.dart       # 自绘进度条（替代 Slider，起点对齐 kPlayerLeftInset；章节圆点 + 跳过色段）
 │   │       ├── player_chapter_bar.dart    # 章节名行（可点击呼出列表）+ 跳过胶囊（5 秒自动消失/控制层可见时常驻）
@@ -317,6 +325,10 @@ lib/
     ├── player_gestures.dart   #   双击判定 + 滑动手势数学
     ├── player_diagnostics.dart #  播放诊断纯函数（属性清单 + 数值格式化 + 健康提示，§4.27）
     ├── retry_policy.dart      #   统一网络重试/超时分级/体积上限快速失败（§4.28）
+    ├── async_session.dart     #   可替换异步任务的会话号令牌（§4.29 C1）
+    ├── async_single_flight.dart # 在飞去重（同 key 共享 Future，失败不缓存，§4.29 C1）
+    ├── async_serial_queue.dart #  串行异步队列（按序执行、异常不打断队列，§4.29 C1）
+    ├── loading_state.dart     #   异步数据三态 sealed（Loading/Loaded/LoadError）+ PageResult（§4.29 C2）
     ├── chapter_utils.dart     #   章节纯函数（标题分类/片段派生/当前章节/跳过目标）
     ├── intro_outro_skip.dart  #   片头片尾动作决策纯函数（跳过片头/切下一集/无动作）
     ├── mpv_tuning.dart        #   mpv 移动端缓存/网络调参模板（本地/在线两档 + lavf-o 合并，§4.26）
@@ -837,13 +849,15 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 |---|---|---|
 | 模型 | `models/bili_dash.dart` | playurl DASH 结果：`BiliDashStream`（video/audio 流，兼容 `baseUrl`/`base_url`/`baseUrls[]` 双格式）、`BiliQualityOption`（accept_quality + 描述）、`BiliClipInfo`（OP/ED clip）、`BiliUgcVideo`（bvid→cid） |
 | 模型 | `models/bili_media.dart` | 在线播放值对象：当前画质 DASH 流 + cid/aid（弹幕）+ clips（章节）+ `switchQuality(qn)` 回调 |
+| 模型 | `models/bili_playlist.dart` | 番剧播放列表：整季剧集（`BiliPlaylistItem` = 原始 `BiliEpisode` + 集号）+ 按 `epId` 定位当前集 |
 | 解码 | `services/bilibili/pb/pb_reader.dart` | 手写 protobuf wire 解码（varint + length-delimited，跳过未知字段），弹幕两条消息专用 |
-| 服务 | `services/bilibili/bili_video_service.dart` | PGC `/pgc/player/web/v2/playurl`（`result.video_info`）+ UGC `/x/player/wbi/playurl`（`data`）；`fnval=4048/fourk=1` + WBI；bvid→cid |
+| 服务 | `services/bilibili/bili_video_service.dart` | PGC `/pgc/player/web/v2/playurl`（`result.video_info`）+ UGC `/x/player/wbi/playurl`（`data`）；`fnval=4048/fourk=1` + WBI；bvid→cid；`resolvePgcMedia`（解析 + 构造值对象 + 清晰度回调，启动器与切集共用） |
 | 服务 | `services/bilibili/bili_danmaku_service.dart` | 分段弹幕：`/x/v2/dm/web/view`（`dmSge.total` 分段数）→ `/x/v2/dm/web/seg.so`（`elems`）→ `DanmakuEntry`；失败降级 `comment.bilibili.com/{cid}.xml`；XML 缓存 |
 | 服务 | `services/bilibili/bili_stream_proxy.dart` | 本地 HTTP 流代理：Dart `HttpClient`（BoringSSL）拉 B 站 CDN，mpv 从 127.0.0.1 明文播放，绕开 mbedTLS；转发 Range |
-| UI | `pages/player/player_page.dart` | `PlayerPage` 新增 `biliMedia`：双流（video + `audio-add`）、更多面板「清晰度」入口、B 站弹幕装载、OP/ED 章节喂入 |
+| UI | `pages/player/player_page.dart` | `PlayerPage` 新增 `biliMedia`/`biliPlaylist`：双流（video + `audio-add`）、更多面板「清晰度」入口、B 站弹幕装载、OP/ED 章节喂入、**「下一集」/列表循环/播放列表面板走剧集列表**（`_switchToBiliEpisode` 重新解析 playurl → 换 `BiliMedia` → 重开双流） |
 | UI | `pages/player/views/player_quality_panel.dart` | 清晰度面板：列出 `accept_quality` 档、当前档高亮、点击切换（乐观更新 + 失败回退） |
-| 入口 | `pages/bilibili/bili_play_launcher.dart` | 播放启动器：解析 playurl → 构造 `BiliMedia` → push `PlayerPage`（番剧/选集/BV 三处复用） |
+| UI | `pages/player/views/player_bili_playlist_panel.dart` | 番剧剧集列表面板：集号 + 集名 + 角标（会员/限免/预告）+ 当前集高亮「播放中」+ 打开即滚动定位 |
+| 入口 | `pages/bilibili/bili_play_launcher.dart` | 播放启动器：解析 playurl → 构造 `BiliMedia` → push `PlayerPage`（番剧/选集/BV 三处复用）；番剧另带整季剧集列表（详情页/选集页已有则直接传，只有单集信息时并行补拉一次季详情） |
 
 **关键决策**：
 - **双流播放（免合并秒开）**：DASH video 流作主媒体，audio 流经 mpv `audio-add` 外挂；
@@ -863,6 +877,22 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 - **OP/ED 章节**：来自 playurl 响应的 `clip_info_list`（`{start,end,clipType}`，秒，
   `CLIP_TYPE_OP`/`CLIP_TYPE_ED`），映射 `ChapterInfo`（OP/ED）+ `SkipSegment`
   （intro/outro）喂入 `ChapterTracker.setExternalChapters`（精确起止，不走关键词派生）。
+- **番剧播放列表（本轮补齐）**：在线播放此前只传单集，导致「下一集」按钮置灰、
+  播放列表面板显示「当前文件夹没有视频」、EOF 不自动连播。对齐 PiliPlus
+  `PgcIntroController.nextPlay/prevPlay`——**播放页持有整季剧集列表**，按 `epId`
+  定位当前集再前后移动：
+  - 列表来源：番剧详情页/选集页已有 `episodes` 时直接构造传入（零额外请求）；
+    只有单集信息（链接解析/深链）时启动器与 playurl **并行**补拉一次季详情，
+    失败退化为「无列表」（不阻断播放）；
+  - 切集走 `_switchToBiliEpisode`：清旧集轨道/章节/跟踪状态 → `resolvePgcMedia`
+    重解析 playurl → 换 `BiliMedia`/标题/路径 → `_openBiliMedia` 重开双流
+    （代理重新注册 + 弹幕/章节重载）；与本地 `_switchTo` 分开（B 站无本地路径，
+    进度恢复/外挂字幕/同名弹幕均不适用）；
+  - 竖屏页通过 `biliPlaylist` + `onBiliEpisodeSelected` 回调复用横屏页的切集
+    （横屏页持有 `BiliMedia`/流代理/弹幕控制器），回调返回新集 (path,title,epId)
+    供竖屏页同步自身 UI；
+  - 「列表循环」回第一集、「自动连播」按 `hasNext`、EOF 的 `hasPlaylist` 判定
+    均已把剧集列表并入（`_hasAnyPlaylist`）。
 
 **内核重编（OpenSSL 根治 mbedTLS，可选，需在构建机执行）**：
 > 本地代理是运行时绕过；若想根治，在 `libmpv-android-video-build`（mk-thumbnail 分支）
@@ -1336,6 +1366,41 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 
 ---
 
+### 4.29 并发原语与通用分页（C1 / C2）
+
+> 借鉴 Kazumi `async_session.dart` / `AsyncSingleFlight` / `AsyncSerialQueue` 与
+> PiliPlus `CommonController`/`LoadingState`：把散落各处的「异步正确性」套路
+> 抽成可单测的公共件（调研清单 C1/C2，P1）。
+
+**C1 并发原语**（`lib/utils/`，纯 Dart + 单测）：
+
+| 原语 | 语义 | 已收敛的落点 |
+|---|---|---|
+| `AsyncSession` | 会话号令牌：`start()` 开新会话、`isCurrent(token)` 判废、`invalidate()` 主动作废 | `DanmakuController._loadSession`（4 处加载路径）、`DanmakuScheduler._generation` |
+| `AsyncSingleFlight<T>` | 同 key 并发只执行一次、共享 Future；**失败不缓存**、完成后记录清除 | `VideoInfoService`（视频信息 + 基本元数据两条链路） |
+| `AsyncSerialQueue` | 按提交顺序串行执行；**任务异常不打断队列**（错误抛给各自调用方）；`idle` 等排空 | `PlaybackProgressService` 进度写盘串行链 |
+
+**C2 通用分页**：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 三态 | `utils/loading_state.dart` | `sealed LoadingState<T>`（Loading / Loaded / LoadError）+ `PageResult<T>`（一页数据 + hasMore） |
+| 控制器 | `services/common_list_controller.dart` | `CommonListController<T>`（ChangeNotifier）：`refresh` / `loadMore` / `reset` / `state` / `error` / `hasMore` |
+
+**关键决策**：
+- **刷新失败保留旧列表**：已有数据时出错只记录 `error`（页面可 toast），`state` 仍是
+  `Loaded`——用户不会因为一次网络抖动看到「列表清空 + 报错」；换关键词/筛选条件才
+  `reset()`（先清空再 `refresh`）。
+- **成功但结果为空 = Loaded([])**：用 `_hasLoadedOnce` 区分「还没加载」与「加载过但没
+  数据」，否则空结果会永远停在加载中（实测踩到）。
+- **并发防重入**：`refresh`/`loadMore` 相互排斥；出错后阻止 `loadMore`（先重试）。
+- **页面只负责渲染**：控制器是 ChangeNotifier，页面用 `ListenableBuilder` 局部订阅
+  （§4.1），不再手工维护 `_loading/_error/_page/_items` 四件套。
+- **已落地页面**：番剧搜索页、番剧索引页（分页 + 三态 + 空态 + 重试）；番剧首页/历史
+  等列表页后续按需迁移（不强制一次替换到位）。
+
+---
+
 ## 5. 新增功能指南（按功能类型）
 
 ### 5.1 新增一个页面
@@ -1498,6 +1563,11 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/player_diagnostics_test.dart` — 播放诊断纯函数（属性表→快照容错/格式化/健康告警优先级与阈值，§4.27）
   - `test/player_diagnostics_panel_test.dart` — 播放诊断面板（四组数值渲染/缺失占位/丢帧·软解告警卡/读取失败降级/定时刷新取新值，§4.27）
   - `test/retry_policy_test.dart` — 统一网络重试与快速失败（超时分级/可重试判定与响应中断排除/指数退避/withRetry 行为与流式不重试/体积上限 content-length 预判与边读边判/端到端 MockClient，§4.28）
+  - `test/async_primitives_test.dart` — C1 并发原语（会话号递增与作废·旧请求丢弃/在飞去重共享与失败不缓存/串行队列顺序·无重叠·异常不打断·idle，§4.29）
+  - `test/common_list_controller_test.dart` — C2 分页控制器（三态/刷新失败保留旧列表/空结果也是 Loaded/加载更多与 hasMore/并发防重入/reset/describeError/dispose，§4.29）
+  - `test/bili_playlist_test.dart` — 番剧播放列表模型（季详情/剧集数组构造、集号 1 起、按 epId 定位、hasNextAt/itemAt 边界、标题回落与角标透传，§4.15）
+  - `test/player_bili_playlist_panel_test.dart` — 番剧剧集列表面板（头部集数进度/条目集号集名角标/当前集播放中/点击回调并关闭/空态，§4.15）
+  - `test/bili_search_page_test.dart` — 番剧搜索页（未搜索提示/搜索渲染/触底加载更多/失败重试/无结果空态，§4.29 C2）
 - 改以下代码必须跑对应测试：`AppFrame`、`ViewSettings` 排序、权限流程、`CapsuleNavBar`
 
 ---
@@ -1638,3 +1708,7 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | 响应超限时用 `drain()` 丢弃 → 把上游巨量响应全部下载下来 | 超限一律 `stream.listen(null).cancel()` 取消订阅（一个字节都不读）；错误响应的丢弃用 `drainStreamCapped`（带上限）（§4.28） |
 | 想直接用 mpv 内置 stats/console 页（mpvRx 的 7 页统计） | 本项目自编 libmpv **未编译 Lua**，`script-binding stats/...` 静默无反应；改用 Dart 侧读 mpv 属性自建诊断页（§4.27） |
 | 用 PowerShell `Set-Content`/`Get-Content -Raw` 改源码 → UTF-8 被写成 ANSI，中文全乱码 | 源码编辑一律用编辑工具（edit/write）；确需 PowerShell 写文件时用 `[System.IO.File]::WriteAllText` + `UTF8Encoding($false)`（§4.28 排查记录） |
+| 分页控制器「加载成功但结果为空」被当成加载中 → 空列表永远转圈 | `CommonListController` 用 `_hasLoadedOnce` 区分「未加载」与「加载过但无数据」，空结果返回 `Loaded([])`（§4.29 C2） |
+| 分页列表刷新失败直接把旧数据清空 + 报错 | 刷新失败只记 `error`（保留 `Loaded` 与旧数据）；换关键词/筛选条件才 `reset()`（§4.29 C2） |
+| 在飞去重手写 Map + try/finally 分散多处、失败会把错误粘住 | 统一用 `AsyncSingleFlight`（失败不缓存、完成即清记录）；串行写盘用 `AsyncSerialQueue`（§4.29 C1） |
+| 番剧在线播放「下一集」置灰、播放列表显示「当前文件夹没有视频」 | 播放页持有整季剧集列表（`biliPlaylist`）：`_hasNext`/`_playNext`/`_playFirst`/EOF `hasPlaylist`/列表面板全部按 `epId` 定位；启动器缺列表时与 playurl 并行补拉季详情（§4.15） |

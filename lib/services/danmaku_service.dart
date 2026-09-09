@@ -30,6 +30,7 @@ import 'package:moumou/services/danmaku_auto_match_cache_store.dart';
 import 'package:moumou/services/danmaku_memory.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/danmaku_scheduler.dart';
+import 'package:moumou/utils/async_session.dart';
 import 'package:moumou/services/danmaku_server_settings.dart';
 import 'package:moumou/services/danmaku_settings.dart';
 import 'package:moumou/utils/danmaku_blocklist.dart';
@@ -148,9 +149,9 @@ class DanmakuController extends ChangeNotifier {
 
   bool _disposed = false;
 
-  /// 加载会话号：切集/重开时自增，在途的异步加载结果按它判废
-  /// （对齐 Kazumi AsyncSessionOwner 的拉取层失效语义）
-  int _loadSession = 0;
+  /// 加载会话令牌（[AsyncSession]，§4.29）：切集/重开时开新会话，
+  /// 在途的异步加载结果按令牌判废（对齐 Kazumi 的拉取层失效语义）
+  final AsyncSession _loadSession = AsyncSession();
 
   /// 当前播放的视频路径（手动导入记忆的键）
   String? _currentMediaPath;
@@ -316,7 +317,7 @@ class DanmakuController extends ChangeNotifier {
   /// 加载」提示。切集竞态防护：进入即开新会话并重置调度器（清桶 + 清屏），
   /// 异步读取/解析完成后会话号已变则丢弃。
   Future<void> loadForVideo(String mediaPath) async {
-    final session = ++_loadSession;
+    final session = _loadSession.start();
     _currentMediaPath = mediaPath;
     _scheduler.reset();
     _clearLayers();
@@ -327,17 +328,17 @@ class DanmakuController extends ChangeNotifier {
     //    提示（工作.md 第 3 点：手动加载后重启误报自动加载的 bug）。
     final remembered = await _memory.get(mediaPath);
     if (_disposed) return;
-    if (remembered != null && session == _loadSession) {
+    if (remembered != null && _loadSession.isCurrent(session)) {
       final ok = await _tryLoadFile(remembered, session);
       if (ok) return;
-      if (_disposed || session != _loadSession) return;
+      if (_disposed || !_loadSession.isCurrent(session)) return;
       // 记忆的弹幕文件已失效（被删除/不可读/空弹幕）→ 清除记忆，
       // 回落同名自动查找（小喵 player 卡记忆死路径的教训）
       await _memory.remove(mediaPath);
     }
     // 2. 同名自动查找（9 种命名规则，B站 XML）
     final loaded = await _loadLocalDanmaku(mediaPath);
-    if (_disposed || session != _loadSession) return;
+    if (_disposed || !_loadSession.isCurrent(session)) return;
     if (loaded == null) {
       // 3. 本地无匹配：尝试网络自动匹配（切集自动匹配弹幕，工作.md 第 7 点）
       await _tryAutoMatch(session);
@@ -406,7 +407,7 @@ class DanmakuController extends ChangeNotifier {
   /// 自动开启弹幕显示（手动导入即用户想看的意图）；文件不可读 / 无有效
   /// 弹幕条目返回 false（空弹幕文件视为失败，提示检查格式而非看不到弹幕）。
   Future<bool> loadDanmakuFromFile(String path) async {
-    final session = ++_loadSession;
+    final session = _loadSession.start();
     _scheduler.reset();
     _clearLayers();
     _hasDanmaku = false;
@@ -428,11 +429,11 @@ class DanmakuController extends ChangeNotifier {
   Future<bool> _tryLoadFile(String path, int session) async {
     try {
       final content = await File(path).readAsString();
-      if (_disposed || session != _loadSession || content.isEmpty) {
+      if (_disposed || !_loadSession.isCurrent(session) || content.isEmpty) {
         return false;
       }
       final entries = await compute(parseDanmakuXml, content);
-      if (_disposed || session != _loadSession) return false;
+      if (_disposed || !_loadSession.isCurrent(session)) return false;
       if (entries.isEmpty) return false;
       _feedEntries(entries);
       _hasDanmaku = true;
@@ -455,7 +456,7 @@ class DanmakuController extends ChangeNotifier {
     required String episodeTitle,
     String? serverUrl,
   }) async {
-    final session = ++_loadSession;
+    final session = _loadSession.start();
     _scheduler.reset();
     _clearLayers();
     _hasDanmaku = false;
@@ -470,7 +471,7 @@ class DanmakuController extends ChangeNotifier {
     } catch (_) {
       download = (entries: const [], filePathOrNull: null);
     }
-    if (_disposed || session != _loadSession) return false;
+    if (_disposed || !_loadSession.isCurrent(session)) return false;
     if (download.entries.isEmpty) return false;
     _feedEntries(download.entries);
     _hasDanmaku = true;
@@ -490,7 +491,7 @@ class DanmakuController extends ChangeNotifier {
   /// 获取/解码在调用方（`BiliDanmakuService`）完成，这里只负责喂给调度器。
   void loadBiliDanmaku(List<DanmakuEntry> entries) {
     if (_disposed) return;
-    ++_loadSession;
+    _loadSession.invalidate();
     _scheduler.reset();
     _clearLayers();
     _hasDanmaku = false;
@@ -572,7 +573,7 @@ class DanmakuController extends ChangeNotifier {
   Future<void> _tryAutoMatch(int session) async {
     if (!DanmakuServerSettings.instance.autoMatchEnabled) return;
     final cache = await _autoMatchCache.load();
-    if (_disposed || session != _loadSession || cache == null) return;
+    if (_disposed || !_loadSession.isCurrent(session) || cache == null) return;
     final path = _currentMediaPath;
     if (path == null) return;
     final episodeNumber = extractEpisodeNumber(p.basename(path));
@@ -590,7 +591,7 @@ class DanmakuController extends ChangeNotifier {
     } catch (_) {
       download = (entries: const [], filePathOrNull: null);
     }
-    if (_disposed || session != _loadSession) return;
+    if (_disposed || !_loadSession.isCurrent(session)) return;
     if (download.entries.isEmpty) return;
     _feedEntries(download.entries);
     _hasDanmaku = true;

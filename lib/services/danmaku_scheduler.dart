@@ -8,6 +8,7 @@
 library;
 
 import 'package:moumou/models/danmaku_entry.dart';
+import 'package:moumou/utils/async_session.dart';
 
 /// 一次 1s tick 的发射决策结果。
 class DanmakuTickResult {
@@ -54,8 +55,9 @@ class DanmakuScheduler {
 
   final Map<int, List<DanmakuEntry>> _buckets = {};
 
-  /// 代数：reset/invalidate/seek 时自增，使在途的延迟发射回调作废
-  int _generation = 0;
+  /// 代数令牌（[AsyncSession]）：reset/invalidate/seek 时自增，
+  /// 使在途的延迟发射回调作废（§4.29 收敛自原手写 `_generation` 计数）
+  final AsyncSession _session = AsyncSession();
 
   /// 上次 tick 发射到的秒桶（null = 重置后尚未锚定）
   int? _lastEmittedSecond;
@@ -63,7 +65,7 @@ class DanmakuScheduler {
   /// 上次 tick 的位置（seek 检测用）
   Duration? _lastTickPosition;
 
-  int get generation => _generation;
+  int get generation => _session.generation;
 
   /// 是否已装载弹幕数据
   bool get hasDanmaku => _buckets.isNotEmpty;
@@ -80,20 +82,20 @@ class DanmakuScheduler {
   /// 重置：清空秒桶 + 代数失效 + 位置基准重置（切集 / 重新加载）。
   void reset() {
     _buckets.clear();
-    _generation++;
+    _session.invalidate();
     _lastEmittedSecond = null;
     _lastTickPosition = null;
   }
 
   /// 仅代数失效（清空在途延迟回调），保留秒桶（开关弹幕等清屏场景）。
-  void invalidate() => _generation++;
+  void invalidate() => _session.invalidate();
 
   /// 实时 seek 通知（位置流检测到跳变时调用，先于 1s tick）：
   /// 代数失效（在途延迟回调立即作废）+ 秒桶锚点/位置基准对齐到跳变后
   /// 的位置——下一个 tick 补发落点秒起的弹幕（锚点取落点秒 - 1，
   /// 与 Kazumi「清屏后等新弹幕」一致，落点秒内容不丢）。
   void notifySeeked(Duration position) {
-    _generation++;
+    _session.invalidate();
     _lastEmittedSecond = position.inSeconds - 1;
     _lastTickPosition = position;
   }
@@ -129,7 +131,7 @@ class DanmakuScheduler {
     final seeked = deltaMs > expectedMs + _seekThresholdMs ||
         deltaMs < -_seekThresholdMs;
     if (seeked) {
-      _generation++; // 在途延迟回调作废
+      _session.invalidate(); // 在途延迟回调作废
       // 锚点取落点秒 - 1：下一个 tick 补发落点秒的弹幕（内容不丢）
       _lastEmittedSecond = second - 1;
       return const DanmakuTickResult([], true);

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:moumou/models/player_action.dart';
+import 'package:moumou/models/bili_playlist.dart';
 import 'package:moumou/models/playlist_sort.dart';
 import 'package:moumou/models/dandan_models.dart';
 import 'package:moumou/models/video_file.dart';
@@ -13,6 +14,7 @@ import 'package:moumou/pages/player/player_metrics.dart';
 import 'package:moumou/pages/player/views/audio_panel.dart';
 import 'package:moumou/pages/player/views/equalizer_panel.dart';
 import 'package:moumou/pages/player/views/player_center_cluster.dart';
+import 'package:moumou/pages/player/views/player_bili_playlist_panel.dart';
 import 'package:moumou/pages/player/views/player_chapter_bar.dart';
 import 'package:moumou/pages/player/views/player_chapter_panel.dart';
 import 'package:moumou/pages/player/views/player_danmaku_layer.dart';
@@ -101,6 +103,18 @@ class PlayerPortraitPage extends StatefulWidget {
   /// 兄弟视频列表（「下一集」与播放列表用，可空）
   final List<VideoFile>? playlist;
 
+  /// B 站番剧整季剧集列表（B 站在线播放时由横屏页传入，可空）
+  final BiliPlaylist? biliPlaylist;
+
+  /// 进入时的 B 站剧集 epId（剧集列表定位用）
+  final int? initialBiliEpId;
+
+  /// B 站切集回调（横屏页实现：重新解析 playurl + 重开双流 + 代理/弹幕重载）。
+  /// 返回新集的 (path, title, epId)，本页据此同步自身状态；失败返回 null。
+  final Future<({String path, String title, int epId})?> Function(
+    BiliPlaylistItem item,
+  )? onBiliEpisodeSelected;
+
   /// 本页切集后通知横屏页同步最新 path/title
   final void Function(String path, String title)? onVideoChanged;
 
@@ -141,6 +155,9 @@ class PlayerPortraitPage extends StatefulWidget {
     required this.initialPath,
     required this.initialTitle,
     this.playlist,
+    this.biliPlaylist,
+    this.initialBiliEpId,
+    this.onBiliEpisodeSelected,
     this.onVideoChanged,
     this.onExitPlayer,
     this.initialResumeVisible = false,
@@ -164,6 +181,9 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
 
   late String _path;
   late String _title;
+
+  /// 当前 B 站剧集 epId（B 站番剧播放时非空；切集后更新）
+  int? _biliEpId;
   bool _playing = false;
   bool _buffering = false;
 
@@ -313,13 +333,22 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
 
   final List<StreamSubscription<dynamic>> _subs = [];
 
-  /// 是否存在「下一集」（playlist 中当前视频之后还有视频）
+  /// 是否存在「下一集」：
+  /// - B 站番剧（[widget.biliPlaylist] 非空）→ 按当前 epId 定位剧集列表；
+  /// - 本地/网络文件 → 按 [widget.playlist] 当前路径定位。
   bool get _hasNext {
+    final bili = widget.biliPlaylist;
+    if (bili != null) return bili.hasNextAt(bili.indexOfEpId(_biliEpId));
     final list = widget.playlist;
     if (list == null || list.isEmpty) return false;
     final idx = list.indexWhere((v) => v.path == _path);
     return idx >= 0 && idx < list.length - 1;
   }
+
+  /// 是否有可循环的播放列表（EOF「列表循环」判定用，两种来源合并）
+  bool get _hasAnyPlaylist =>
+      (widget.playlist?.isNotEmpty ?? false) ||
+      (widget.biliPlaylist?.isNotEmpty ?? false);
 
   @override
   void initState() {
@@ -363,6 +392,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     }
     _path = widget.initialPath;
     _title = widget.initialTitle;
+    _biliEpId = widget.initialBiliEpId;
 
     // 工作.md 第 7 点：关闭「启用播放界面动画」后，控制层/解锁按钮
     // 的进出场动画时长归零（直接出现/消失）
@@ -757,12 +787,47 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   // ── 下一集 / 播放列表切集 ───────────────────────────────
 
   Future<void> _playNext() async {
+    final bili = widget.biliPlaylist;
+    if (bili != null) {
+      final next = bili.itemAt(bili.indexOfEpId(_biliEpId) + 1);
+      if (next == null) return;
+      await _switchToBiliEpisode(next);
+      return;
+    }
     final list = widget.playlist;
     if (list == null) return;
     final idx = list.indexWhere((v) => v.path == _path);
     if (idx < 0 || idx >= list.length - 1) return;
     final next = list[idx + 1];
     await _switchTo(next.path, next.name);
+  }
+
+  /// B 站切集：实际切换由横屏页执行（它持有 BiliMedia/流代理/弹幕控制器），
+  /// 本页只负责置防重入标志并把返回的新集状态同步到自身 UI。
+  Future<void> _switchToBiliEpisode(BiliPlaylistItem item) async {
+    final select = widget.onBiliEpisodeSelected;
+    if (select == null || item.epId == _biliEpId) return;
+    _isSwitchingVideo = true;
+    try {
+      final result = await select(item);
+      if (!mounted || result == null) return;
+      setState(() {
+        _path = result.path;
+        _title = result.title;
+        _biliEpId = result.epId;
+        _positionNotifier.value = _player.state.position;
+        _durationNotifier.value = _player.state.duration;
+        _dragPositionNotifier.value = null;
+        _clearThumbnail();
+        _indicator = null;
+        _swipeSeekData = null;
+        _resumeVisible = false;
+        _restoring = false;
+      });
+    } finally {
+      _isSwitchingVideo = false;
+    }
+    _resetHideTimer();
   }
 
   /// 切集统一入口（「下一集」/「列表循环回第一集」/播放列表面板点击共用，
@@ -885,8 +950,15 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     setState(() => _resumeVisible = true);
   }
 
-  /// 列表循环：回到播放列表第一集。
+  /// 列表循环：回到播放列表第一集（B 站番剧回到第一集）。
   Future<void> _playFirst() async {
+    final bili = widget.biliPlaylist;
+    if (bili != null) {
+      final first = bili.itemAt(0);
+      if (first == null) return;
+      await _switchToBiliEpisode(first);
+      return;
+    }
     final list = widget.playlist;
     if (list == null || list.isEmpty) return;
     final first = list.first;
@@ -894,8 +966,30 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   }
 
   /// 底栏「列表」按钮：底部弹出播放列表面板（工作.md 第 7 点）。
+  /// B 站番剧展示整季剧集列表（切换由横屏页执行）。
   Future<void> _openPlaylistPanel() async {
     _hideTimer?.cancel();
+    final bili = widget.biliPlaylist;
+    if (bili != null && bili.isNotEmpty) {
+      await showPlayerBottomPanel(
+        context,
+        pages: [
+          PlayerPanelPage(
+            title: '播放列表',
+            body: PlayerBiliPlaylistPanel(
+              playlist: bili,
+              currentIndex: bili.indexOfEpId(_biliEpId),
+              onSelect: (item) {
+                if (item.epId == _biliEpId) return; // 选当前集：不动作
+                _switchToBiliEpisode(item);
+              },
+            ),
+          ),
+        ],
+      );
+      _resetHideTimer();
+      return;
+    }
     final folder = folderOfPath(_path);
     final videos = filterVideosInFolder(widget.playlist ?? const [], folder);
     await showPlayerBottomPanel(
@@ -935,7 +1029,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         loopMode: _settings.loopMode,
         autoNext: _settings.autoNext,
         autoExit: _settings.autoExit,
-        hasPlaylist: widget.playlist?.isNotEmpty ?? false,
+        hasPlaylist: _hasAnyPlaylist,
         hasNext: _hasNext,
       );
       switch (action) {

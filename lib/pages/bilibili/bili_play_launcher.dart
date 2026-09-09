@@ -2,35 +2,55 @@
 ///
 /// 番剧详情、选集页、BV 链接解析三处入口复用，统一「解析中模态进度 →
 /// 解析失败 toast → 成功进入播放页」的交互。
+///
+/// 番剧另传**整季剧集列表**（[BiliPlaylist]）给播放页：详情页/选集页已有
+/// 列表时直接传入（零额外请求）；只有单集信息（链接解析等）时在启动器内
+/// 与 playurl 并行补拉一次季详情，失败则退化为「无列表」（不阻断播放）。
 library;
 
 import 'package:flutter/material.dart';
 import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/models/bili_dash.dart';
 import 'package:moumou/models/bili_media.dart';
+import 'package:moumou/models/bili_playlist.dart';
 import 'package:moumou/pages/player/player_page.dart';
+import 'package:moumou/services/bilibili/bili_bangumi_service.dart';
 import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/services/bilibili/bili_video_service.dart';
 
 /// 播放 B 站 PGC 单集（番剧/影视）。
-Future<void> playBiliEpisode(BuildContext context, BiliEpisode ep) async {
+///
+/// [playlist] 非空时直接作为播放页的剧集列表（详情页/选集页传入）；
+/// 为空时在启动器内补拉季详情构造（拉取失败不阻断播放）。
+Future<void> playBiliEpisode(
+  BuildContext context,
+  BiliEpisode ep, {
+  BiliPlaylist? playlist,
+}) async {
   final service = BiliVideoService();
   if (!context.mounted) return;
   _showLoading(context);
   try {
-    final playUrl = await service.fetchPgcPlayUrl(epId: ep.epId, cid: ep.cid);
+    // playurl 与剧集列表并行请求（列表缺失时才拉，避免多一次往返）
+    final mediaFuture = service.resolvePgcMedia(ep);
+    final playlistFuture = playlist != null
+        ? Future<BiliPlaylist?>.value(playlist)
+        : _fetchPlaylist(ep);
+    final media = await mediaFuture;
+    final resolvedPlaylist = await playlistFuture;
     if (!context.mounted) return;
     _dismissLoading(context);
-    if (playUrl.defaultVideo == null || playUrl.defaultAudio == null) {
+    if (media.playUrl.defaultVideo == null ||
+        media.playUrl.defaultAudio == null) {
       _toast(context, '解析播放地址失败');
       return;
     }
-    final media = _buildPgcMedia(service, ep, playUrl);
     await Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => PlayerPage(
-        path: playUrl.defaultVideo!.baseUrl,
-        title: ep.longTitle.isNotEmpty ? ep.longTitle : ep.title,
+        path: media.videoUrl,
+        title: media.title,
         biliMedia: media,
+        biliPlaylist: resolvedPlaylist,
       ),
     ));
   } catch (e) {
@@ -38,6 +58,17 @@ Future<void> playBiliEpisode(BuildContext context, BiliEpisode ep) async {
       _dismissLoading(context);
       _toast(context, '播放失败：${_errText(e)}');
     }
+  }
+}
+
+/// 补拉季详情构造剧集列表（失败返回 null，播放不受影响）。
+Future<BiliPlaylist?> _fetchPlaylist(BiliEpisode ep) async {
+  try {
+    final detail = await BiliBangumiService().fetchSeasonDetail(epId: ep.epId);
+    final playlist = BiliPlaylist.fromSeasonDetail(detail);
+    return playlist.isEmpty ? null : playlist;
+  } catch (_) {
+    return null;
   }
 }
 
@@ -70,26 +101,6 @@ Future<void> playBiliBvid(BuildContext context, String bvid) async {
       _toast(context, '播放失败：${_errText(e)}');
     }
   }
-}
-
-BiliMedia _buildPgcMedia(
-  BiliVideoService service,
-  BiliEpisode ep,
-  BiliPlayUrlResult playUrl,
-) {
-  final title = ep.longTitle.isNotEmpty ? ep.longTitle : ep.title;
-  return BiliMedia(
-    epId: ep.epId,
-    cid: ep.cid,
-    aid: ep.aid,
-    title: title,
-    playUrl: playUrl,
-    switchQuality: (qn) async => _buildPgcMedia(
-      service,
-      ep,
-      await service.fetchPgcPlayUrl(epId: ep.epId, cid: ep.cid, qn: qn),
-    ),
-  );
 }
 
 BiliMedia _buildUgcMedia(

@@ -3,11 +3,19 @@ import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/pages/bilibili/bili_season_page.dart';
 import 'package:moumou/services/bilibili/bili_bangumi_service.dart';
 import 'package:moumou/services/bilibili/bili_http.dart';
+import 'package:moumou/services/common_list_controller.dart';
+import 'package:moumou/utils/loading_state.dart';
 
 /// 番剧搜索页：顶部搜索框 + 结果列表（media_bangumi 分类，分页加载），
 /// 点击结果进入季详情页。
+///
+/// 列表状态走通用分页控制器 [CommonListController]（§4.29 C2）：三态 +
+/// 「刷新失败保留旧列表」+ 加载更多语义统一，页面只负责渲染。
 class BiliSearchPage extends StatefulWidget {
-  const BiliSearchPage({super.key});
+  const BiliSearchPage({super.key, this.service});
+
+  /// 测试注入用（默认自建，走真实网络）
+  final BiliBangumiService? service;
 
   @override
   State<BiliSearchPage> createState() => _BiliSearchPageState();
@@ -16,19 +24,24 @@ class BiliSearchPage extends StatefulWidget {
 class _BiliSearchPageState extends State<BiliSearchPage> {
   static const int _pageSize = 20;
 
-  final BiliBangumiService _service = BiliBangumiService();
+  late final BiliBangumiService _service = widget.service ?? BiliBangumiService();
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scroll = ScrollController();
 
-  String _keyword = '';
-  int _page = 1;
-  int _numResults = 0;
-  bool _loading = false;
-  bool _searched = false;
-  String? _error;
-  List<BiliSearchItem> _results = [];
+  /// 分页控制器：fetchPage 读取当前关键词（换词时先 reset 再 refresh）
+  late final CommonListController<BiliSearchItem> _results =
+      CommonListController<BiliSearchItem>(
+    fetchPage: (page) async {
+      final result = await _service.searchBangumi(_keyword, page: page);
+      return PageResult(
+        result.list,
+        hasMore: page * _pageSize < result.numResults,
+      );
+    },
+    describeError: _errorText,
+  );
 
-  bool get _hasNext => _page * _pageSize < _numResults;
+  String _keyword = '';
 
   @override
   void initState() {
@@ -40,62 +53,25 @@ class _BiliSearchPageState extends State<BiliSearchPage> {
   void dispose() {
     _scroll.dispose();
     _controller.dispose();
+    _results.dispose();
     super.dispose();
   }
 
   void _onScroll() {
     if (!_scroll.hasClients) return;
     if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 300) {
-      _loadMore();
+      _results.loadMore();
     }
   }
 
+  /// 新关键词搜索：清空旧结果后重新加载第一页
   Future<void> _search() async {
     final kw = _controller.text.trim();
     if (kw.isEmpty) return;
     FocusScope.of(context).unfocus();
-    setState(() {
-      _keyword = kw;
-      _page = 1;
-      _numResults = 0;
-      _results = [];
-      _loading = true;
-      _searched = true;
-      _error = null;
-    });
-    try {
-      final result = await _service.searchBangumi(kw);
-      if (!mounted) return;
-      setState(() {
-        _results = result.list;
-        _numResults = result.numResults;
-        _loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = _errorText(e);
-        _loading = false;
-      });
-    }
-  }
-
-  Future<void> _loadMore() async {
-    if (_loading || !_hasNext) return;
-    setState(() => _loading = true);
-    try {
-      final result = await _service.searchBangumi(_keyword, page: _page + 1);
-      if (!mounted) return;
-      setState(() {
-        _page += 1;
-        _results = [..._results, ...result.list];
-        _numResults = result.numResults;
-        _loading = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-    }
+    _keyword = kw;
+    _results.reset();
+    await _results.refresh();
   }
 
   @override
@@ -120,45 +96,55 @@ class _BiliSearchPageState extends State<BiliSearchPage> {
           ),
         ],
       ),
-      body: _buildBody(),
+      // 控制器是 ChangeNotifier：局部订阅，只重建列表区（§4.1）
+      body: ListenableBuilder(
+        listenable: _results,
+        builder: (context, _) => _buildBody(),
+      ),
     );
   }
 
   Widget _buildBody() {
-    if (!_searched) {
+    if (!_results.started) {
       return const Center(child: Text('输入关键词搜索番剧'));
     }
-    if (_loading && _results.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_error != null && _results.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Text(_error!, textAlign: TextAlign.center),
-            ),
-            const SizedBox(height: 12),
-            FilledButton.icon(
-              onPressed: _search,
-              icon: const Icon(Icons.refresh),
-              label: const Text('重试'),
-            ),
-          ],
-        ),
-      );
-    }
-    if (_results.isEmpty) {
-      return const Center(child: Text('没有找到相关番剧'));
-    }
+    return switch (_results.state) {
+      Loaded<List<BiliSearchItem>>(:final data) => data.isEmpty
+          ? const Center(child: Text('没有找到相关番剧'))
+          : _resultList(data),
+      LoadError<List<BiliSearchItem>>(:final message) => _errorView(message),
+      _ => const Center(child: CircularProgressIndicator()),
+    };
+  }
+
+  Widget _errorView(String message) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(message, textAlign: TextAlign.center),
+          ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: _search,
+            icon: const Icon(Icons.refresh),
+            label: const Text('重试'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _resultList(List<BiliSearchItem> items) {
+    final showFooter = _results.isLoadingMore;
     return ListView.builder(
       controller: _scroll,
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-      itemCount: _results.length + (_loading ? 1 : 0),
+      itemCount: items.length + (showFooter ? 1 : 0),
       itemBuilder: (context, i) {
-        if (i >= _results.length) {
+        if (i >= items.length) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Center(
@@ -170,7 +156,7 @@ class _BiliSearchPageState extends State<BiliSearchPage> {
             ),
           );
         }
-        return _SearchItemCard(item: _results[i]);
+        return _SearchItemCard(item: items[i]);
       },
     );
   }

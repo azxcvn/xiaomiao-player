@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/models/bili_bangumi.dart';
+import 'package:moumou/models/bili_playlist.dart';
 import 'package:moumou/pages/bilibili/bili_episode_picker_page.dart';
 import 'package:moumou/pages/bilibili/bili_play_launcher.dart';
 import 'package:moumou/services/bilibili/bili_bangumi_service.dart';
@@ -62,7 +63,15 @@ class _BiliSeasonPageState extends State<BiliSeasonPage> {
   }
 
   /// 选集点击：解析 playurl 并进入播放页（阶段三在线播放）。
-  void _playEpisode(BiliEpisode ep) => playBiliEpisode(context, ep);
+  /// 整季剧集列表一并交给播放页（「下一集」/播放列表面板用）。
+  void _playEpisode(BiliEpisode ep) {
+    final detail = _detail;
+    playBiliEpisode(
+      context,
+      ep,
+      playlist: detail == null ? null : BiliPlaylist.fromSeasonDetail(detail),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

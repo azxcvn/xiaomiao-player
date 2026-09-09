@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:moumou/utils/async_single_flight.dart';
 
 /// 视频信息：时长 + 缩略图路径
 class VideoInfo {
@@ -35,25 +36,18 @@ class VideoInfoService {
   static final Map<String, VideoBasicMetadata> _metaCache = {};
 
   /// 在飞去重：同 path 的并发请求共享同一个 Future（列表首屏几十张卡片
-  /// 同时发起时只发一次跨进程调用，见 risk_audit #5）
-  static final Map<String, Future<VideoInfo>> _inflight = {};
+  /// 同时发起时只发一次跨进程调用，见 risk_audit #5）。
+  /// 走公共原语 [AsyncSingleFlight]（§4.29）。
+  static final AsyncSingleFlight<VideoInfo> _infoFlight = AsyncSingleFlight();
 
   /// 基本元数据在飞去重（同上）
-  static final Map<String, Future<VideoBasicMetadata>> _metaInflight = {};
+  static final AsyncSingleFlight<VideoBasicMetadata> _metaFlight =
+      AsyncSingleFlight();
 
   static Future<VideoInfo> get(String path) async {
     final cached = _cache[path];
     if (cached != null) return cached;
-    final inflight = _inflight[path];
-    if (inflight != null) return inflight;
-
-    final future = _fetchInfo(path);
-    _inflight[path] = future;
-    try {
-      return await future;
-    } finally {
-      _inflight.remove(path);
-    }
+    return _infoFlight.run(path, () => _fetchInfo(path));
   }
 
   static Future<VideoInfo> _fetchInfo(String path) async {
@@ -72,16 +66,7 @@ class VideoInfoService {
   static Future<VideoBasicMetadata> getBasicMetadata(String path) async {
     final cached = _metaCache[path];
     if (cached != null) return cached;
-    final inflight = _metaInflight[path];
-    if (inflight != null) return inflight;
-
-    final future = _fetchBasicMetadata(path);
-    _metaInflight[path] = future;
-    try {
-      return await future;
-    } finally {
-      _metaInflight.remove(path);
-    }
+    return _metaFlight.run(path, () => _fetchBasicMetadata(path));
   }
 
   static Future<VideoBasicMetadata> _fetchBasicMetadata(String path) async {

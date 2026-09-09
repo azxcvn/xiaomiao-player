@@ -12,7 +12,9 @@ library;
 
 import 'package:flutter/foundation.dart' show debugPrint;
 
+import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/models/bili_dash.dart';
+import 'package:moumou/models/bili_media.dart';
 import 'package:moumou/services/bilibili/bili_account.dart';
 import 'package:moumou/services/bilibili/bili_api.dart';
 import 'package:moumou/services/bilibili/bili_http.dart';
@@ -68,6 +70,26 @@ class BiliVideoService {
     return parsed;
   }
 
+  /// 解析 PGC 单集并构造可播放值对象（含画质切换回调）。
+  ///
+  /// 播放启动器与播放页「切集」共用同一份构造逻辑，避免两处各自拼
+  /// [BiliMedia]（切集时 epId/cid/标题/清晰度回调必须与首次进入一致）。
+  Future<BiliMedia> resolvePgcMedia(
+    BiliEpisode ep, {
+    int qn = defaultQn,
+  }) async {
+    final playUrl = await fetchPgcPlayUrl(epId: ep.epId, cid: ep.cid, qn: qn);
+    final title = ep.longTitle.isNotEmpty ? ep.longTitle : ep.title;
+    return BiliMedia(
+      epId: ep.epId,
+      cid: ep.cid,
+      aid: ep.aid,
+      title: title,
+      playUrl: playUrl,
+      switchQuality: (nextQn) => resolvePgcMedia(ep, qn: nextQn),
+    );
+  }
+
   /// UGC（BV/av 普通视频）播放地址。
   Future<BiliPlayUrlResult> fetchUgcPlayUrl({
     String? bvid,
@@ -92,7 +114,6 @@ class BiliVideoService {
   }
 
   /// bvid（或 av 号）→ 视频标题 + 全部分 P（`/x/web-interface/view`）。
-  ///
   /// 老链接只有 av 号时用 [aid] 走 aid 通道（工作.md 第 8 点）；BV 与 av 二选一，
   /// 两者都传时以 bvid 为准（服务端优先 bvid）。
   Future<BiliUgcVideo> resolveUgcVideo(String bvid, {int? aid}) async {

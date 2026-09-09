@@ -3,12 +3,20 @@ import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/pages/bilibili/bili_season_page.dart';
 import 'package:moumou/services/bilibili/bili_bangumi_service.dart';
 import 'package:moumou/services/bilibili/bili_http.dart';
+import 'package:moumou/services/common_list_controller.dart';
+import 'package:moumou/utils/loading_state.dart';
 import 'package:moumou/widgets/bili_cover_card.dart';
 
 /// 番剧索引页（对齐 PiliPlus `PgcIndexPage`）：顶部多行筛选胶囊（排序 + 各维度），
 /// 底部封面网格 + 滚动分页。
+///
+/// 网格分页走通用分页控制器 [CommonListController]（§4.29 C2）：三态 +
+/// 「刷新失败保留旧列表」+ 加载更多语义统一。
 class BiliBangumiIndexPage extends StatefulWidget {
-  const BiliBangumiIndexPage({super.key});
+  const BiliBangumiIndexPage({super.key, this.service});
+
+  /// 测试注入用（默认自建，走真实网络）
+  final BiliBangumiService? service;
 
   @override
   State<BiliBangumiIndexPage> createState() => _BiliBangumiIndexPageState();
@@ -16,7 +24,8 @@ class BiliBangumiIndexPage extends StatefulWidget {
 
 class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
     with SingleTickerProviderStateMixin {
-  final BiliBangumiService _service = BiliBangumiService();
+  late final BiliBangumiService _service =
+      widget.service ?? BiliBangumiService();
   final ScrollController _scroll = ScrollController();
 
   BiliIndexCondition? _condition;
@@ -28,11 +37,19 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
   late final AnimationController _expandController;
   late final Animation<double> _expandAnimation;
 
-  final List<BiliIndexItem> _items = [];
-  int _page = 1;
-  bool _hasNext = true;
-  bool _loading = false;
-  String? _error;
+  /// 网格分页控制器（读取当前筛选参数）
+  late final CommonListController<BiliIndexItem> _list =
+      CommonListController<BiliIndexItem>(
+    fetchPage: (page) async {
+      final result = await _service.fetchIndex(
+        seasonType: 1,
+        page: page,
+        params: _params,
+      );
+      return PageResult(result.list, hasMore: result.hasNext);
+    },
+    describeError: _errorText,
+  );
 
   @override
   void initState() {
@@ -51,13 +68,14 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
   void dispose() {
     _expandController.dispose();
     _scroll.dispose();
+    _list.dispose();
     super.dispose();
   }
 
   void _onScroll() {
     if (!_scroll.hasClients) return;
     if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 400) {
-      _loadMore();
+      _list.loadMore();
     }
   }
 
@@ -91,55 +109,10 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
     }
   }
 
+  /// 重新加载第一页（换筛选条件 / 错误重试）
   Future<void> _reload() async {
-    setState(() {
-      _page = 1;
-      _hasNext = true;
-      _items.clear();
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final result = await _service.fetchIndex(
-        seasonType: 1,
-        page: 1,
-        params: _params,
-      );
-      if (!mounted) return;
-      setState(() {
-        _items.addAll(result.list);
-        _hasNext = result.hasNext;
-        _loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = _errorText(e);
-        _loading = false;
-      });
-    }
-  }
-
-  Future<void> _loadMore() async {
-    if (_loading || !_hasNext || _error != null) return;
-    setState(() => _loading = true);
-    try {
-      final result = await _service.fetchIndex(
-        seasonType: 1,
-        page: _page + 1,
-        params: _params,
-      );
-      if (!mounted) return;
-      setState(() {
-        _page += 1;
-        _items.addAll(result.list);
-        _hasNext = result.hasNext;
-        _loading = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-    }
+    _list.reset();
+    await _list.refresh();
   }
 
   void _select(String key, String value) {
@@ -224,7 +197,11 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
           ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 100),
-          sliver: _buildGrid(),
+          // 控制器是 ChangeNotifier：局部订阅，只重建网格区（§4.1）
+          sliver: ListenableBuilder(
+            listenable: _list,
+            builder: (context, _) => _buildGrid(),
+          ),
         ),
       ],
     );
@@ -291,35 +268,36 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
   }
 
   Widget _buildGrid() {
-    if (_loading && _items.isEmpty) {
-      return const SliverFillRemaining(
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-    if (_error != null && _items.isEmpty) {
-      return SliverFillRemaining(
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Text(_error!, textAlign: TextAlign.center),
-              ),
-              const SizedBox(height: 12),
-              FilledButton.icon(
-                onPressed: _reload,
-                icon: const Icon(Icons.refresh),
-                label: const Text('重试'),
-              ),
-            ],
+    return switch (_list.state) {
+      Loaded<List<BiliIndexItem>>(:final data) => data.isEmpty
+          ? const SliverFillRemaining(child: Center(child: Text('暂无内容')))
+          : _grid(data),
+      LoadError<List<BiliIndexItem>>(:final message) => SliverFillRemaining(
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Text(message, textAlign: TextAlign.center),
+                ),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: _reload,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('重试'),
+                ),
+              ],
+            ),
           ),
         ),
-      );
-    }
-    if (_items.isEmpty) {
-      return const SliverFillRemaining(child: Center(child: Text('暂无内容')));
-    }
+      _ => const SliverFillRemaining(
+          child: Center(child: CircularProgressIndicator()),
+        ),
+    };
+  }
+
+  Widget _grid(List<BiliIndexItem> items) {
     return SliverGrid(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
@@ -329,7 +307,7 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
       ),
       delegate: SliverChildBuilderDelegate(
         (context, i) {
-          if (i >= _items.length) {
+          if (i >= items.length) {
             return const Center(
               child: SizedBox(
                 width: 22,
@@ -338,7 +316,7 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
               ),
             );
           }
-          final item = _items[i];
+          final item = items[i];
           return BiliCoverCard(
             cover: item.cover,
             title: item.title,
@@ -354,7 +332,7 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
                 : null,
           );
         },
-        childCount: _items.length + (_loading ? 1 : 0),
+        childCount: items.length + (_list.isLoadingMore ? 1 : 0),
       ),
     );
   }

@@ -2,12 +2,13 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:moumou/models/bili_bangumi.dart';
+import 'package:moumou/models/bili_playlist.dart';
 import 'package:moumou/pages/bilibili/bili_play_launcher.dart';
 import 'package:moumou/widgets/bili_episode_tile.dart';
 
 /// 全屏选集页：按 30 集一段分段（「1-30」「31-60」…）+ 2 列网格（集号 + 集名 +
 /// 角标）+ 正序/倒序。切分段时按方向滑入/滑出（向前翻新页从右进、旧页左出，
-/// 向后翻反之）。点击选集提示「播放即将上线」（播放属阶段三）。
+/// 向后翻反之）。点击选集进入播放页（播放属阶段三）。
 class BiliEpisodePickerPage extends StatefulWidget {
   final List<BiliEpisode> episodes;
   final bool initialReverse;
@@ -73,7 +74,12 @@ class _BiliEpisodePickerPageState extends State<BiliEpisodePickerPage>
     _slideController.forward(from: 0);
   }
 
-  void _playEpisode(BiliEpisode ep) => playBiliEpisode(context, ep);
+  /// 播放单集：把本页持有的整季剧集列表一并交给播放页（「下一集」用）
+  void _playEpisode(BiliEpisode ep) => playBiliEpisode(
+        context,
+        ep,
+        playlist: BiliPlaylist.fromEpisodes(widget.episodes),
+      );
 
   @override
   Widget build(BuildContext context) {

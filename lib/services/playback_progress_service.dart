@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:moumou/utils/async_serial_queue.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 播放进度服务：记录每个视频上次播放到的位置（可监听，进度变化自动通知）
@@ -14,10 +15,10 @@ class PlaybackProgressService extends ChangeNotifier {
   bool _loaded = false;
   Future<void>? _loadFuture;
 
-  /// 写入串行链：保证多次 save 的 prefs 写入按调用顺序落盘，
-  /// 避免异步写入乱序导致「最后一次保存」被旧快照覆盖
+  /// 写入串行队列（[AsyncSerialQueue]，§4.29）：保证多次 save 的 prefs 写入
+  /// 按调用顺序落盘，避免异步写入乱序导致「最后一次保存」被旧快照覆盖
   /// （工作.md 第 9 点：快速退出/进入循环 + 重启后恢复百分比失效的根因之一）。
-  Future<void> _writeChain = Future.value();
+  final AsyncSerialQueue _writeQueue = AsyncSerialQueue();
 
   /// 节流（risk_audit #3）：同一视频 [persistInterval] 内只落盘一次，
   /// 内存缓存照常每次更新——避免每次退出/切集都整表 jsonEncode + 全量写盘。
@@ -82,10 +83,11 @@ class PlaybackProgressService extends ChangeNotifier {
     }
     _lastPersistedAt[path] = now;
     final snapshot = jsonEncode(_cache);
-    _writeChain = _writeChain.then((_) async {
+    // 写入走公共串行队列（§4.29）：按提交顺序依次落盘，异常不打断后续写入
+    _writeQueue.add(() async {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_key, snapshot);
     });
-    await _writeChain;
+    await _writeQueue.idle;
   }
 }
