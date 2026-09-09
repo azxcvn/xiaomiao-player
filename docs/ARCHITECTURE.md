@@ -70,6 +70,11 @@ Flutter 本地视频播放器（Android），核心能力：
   硬/软解、系统解码器清单（筛选/搜索，点条目进详情页看完整能力）（§4.24）
 - **解码配置修改后一键重启**：解码面板切换解码方式/预设后弹「需重启应用」，立即整应用重启
   或稍后重启（原生 `restartApp`，§4.24）
+- **播放性能与诊断**：Anime4K 着色器**安装期**优化（显式 mediump/FP16 精度注入 + C.R.E.L.U.
+  采样合并，运行期零成本，§4.25）+ mpv 移动端缓存/网络调参模板（本地/在线两档，§4.26）
+  + **播放诊断页**（缓存/丢帧/渲染延迟/硬解/音画同步实时采样，§4.27）
+- **网络可靠性**：统一重试（只重试连接类失败、指数退避、响应中断不重试防重复提交）
+  + 超时分级（API 12s / 文本 15s / 下载 30s / 媒体流 30min）+ 文本响应体积上限快速失败（§4.28）
 
 技术栈：Flutter 3.44+ / Dart 3.12+，依赖见 `pubspec.yaml`。
 
@@ -110,6 +115,7 @@ lib/
 │   ├── update_info.dart        # 更新信息值对象（新版本号/Markdown 更新说明/主·备下载站链接，§4.20）
 │   ├── device_decoder.dart     # 设备解码器条目模型（名称/MIME/分辨率/声道/特性/色彩格式/采样率/profile，设备能力检测页 + 详情页）
 │   └── wyzie_models.dart       # Wyzie 字幕 API 数据模型（字幕条目/来源响应/密钥信息/TMDB 命中 + 语言/格式/编码/来源常量表，§4.21）
+│   └── player_diagnostics.dart # 播放诊断快照模型（mpv 属性 → 容错解析的运行时统计，§4.27）
 ├── services/                  # 业务逻辑 / 数据层（无 UI）
 │   ├── view_settings.dart     # 排序/字段/视图模式设置（ChangeNotifier + 持久化）
 │   ├── video_scanner.dart     # 扫描 + 建树 + 建文件夹列表
@@ -122,7 +128,7 @@ lib/
 │   ├── fast_thumbnails.dart   # FFmpeg 快速缩略图引擎（FFI 直连自建 libmpv.so 的 mk_thumbnail_*，单飞+顶旧调度）
 │   ├── crash_log_service.dart # 崩溃日志：列表/读取/删除/清空/导出
 │   ├── cache_manager_service.dart # 缓存管理：列表封面磁盘缓存查询/清除（进度条缩略图为纯内存，不占磁盘）
-│   ├── super_resolution_service.dart   # 超分：模式持久化、着色器拷贝、mpv 应用
+│   ├── super_resolution_service.dart   # 超分：模式持久化、着色器**安装期优化**后拷贝、mpv 应用（§4.25）
 │   ├── chapter_tracker.dart   # 章节跟踪器（mpv chapter-list 读取 + 当前位置/片段/胶囊窗口状态 + 章节跳段自动跳过）
 │   ├── chapter_skip_settings.dart # 章节跳段设置（六类片段自动跳过 + 自定义片头/片尾关键词，ChangeNotifier + 持久化）
 │   ├── intro_outro_settings.dart # 片头片尾全局设置（开关/片头秒数/片尾秒数/各自范围，ChangeNotifier + 持久化）
@@ -252,6 +258,7 @@ lib/
 │   │       ├── player_speed_panel.dart    # 倍速面板内容（预设/精确调速/临时应用）
 │   │       ├── player_super_resolution_panel.dart  # 超分面板内容
 │   │       ├── player_decode_panel.dart          # 解码面板（解码方式 2×2 胶囊 + 解码预设；改档后弹「需重启应用」确认，立即整应用重启/稍后，§4.24）
+│   │       ├── player_diagnostics_panel.dart     # 播放诊断面板（每秒采样 mpv 属性：播放/视频/音频/缓存与丢帧四组 + 顶部健康告警，§4.27）
 │   │       ├── player_play_pause_button.dart  # 播放/暂停图标形变动画
 │   │       ├── player_gesture_layer.dart      # ★ 手势层（裸识别器方案，见 §4.8）
 │   │       ├── player_gesture_indicator.dart  # 音量/亮度手势指示器
@@ -299,6 +306,7 @@ lib/
 │   └── theme_controller.dart  #   主题控制（模式/色/风格/自定义色/动态色标记 + 迁移）
 └── utils/                     # 纯工具函数
     ├── app_dialog.dart        #   （见 widgets/app_dialog.dart 说明）
+    ├── anime4k_patch.dart     #   Anime4K 着色器安装期优化纯函数（精度注入 + C.R.E.L.U. 采样合并，§4.25）
     ├── formatters.dart        #   大小/日期/时长/倍速/网速格式化 + 截图文件名 + 在线媒体判定
     ├── url_media.dart         #   在线直链纯函数（规范化补协议/流媒体协议白名单/URL 提取标题，§4.17）
     ├── natural_compare.dart   #   自然序（数字感知）比较
@@ -307,8 +315,11 @@ lib/
     ├── playback_restore.dart  #   恢复进度：openAndRestore（暂停加载→静音激活时间线→seek→确认）
     ├── pip_aspect.dart        #   画中画宽高比纯函数
     ├── player_gestures.dart   #   双击判定 + 滑动手势数学
+    ├── player_diagnostics.dart #  播放诊断纯函数（属性清单 + 数值格式化 + 健康提示，§4.27）
+    ├── retry_policy.dart      #   统一网络重试/超时分级/体积上限快速失败（§4.28）
     ├── chapter_utils.dart     #   章节纯函数（标题分类/片段派生/当前章节/跳过目标）
     ├── intro_outro_skip.dart  #   片头片尾动作决策纯函数（跳过片头/切下一集/无动作）
+    ├── mpv_tuning.dart        #   mpv 移动端缓存/网络调参模板（本地/在线两档 + lavf-o 合并，§4.26）
     ├── audio_shuffle.dart     #   听视频随机播放算法（结合当前时间刻，纯函数）
     ├── subtitle_auto_match.dart # 同名字幕自动匹配纯函数（扩展名优先级 + 同名优先 + 简/繁语言后缀，对齐小喵）
     ├── subtitle_sort.dart     #   自建字幕选择器排序纯函数（目录恒在前）
@@ -1200,6 +1211,131 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 
 ---
 
+### 4.25 Anime4K 着色器安装期优化（mediump 注入 + 采样合并）
+
+> 借鉴 mpvRx `Anime4KManager.optimizeShaderContent`：**运行期零成本**，
+> 只在首次把 `assets/shaders/*.glsl` 拷进沙盒时改写一次源码。
+
+**分层**（自下而上）：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 纯函数 | `utils/anime4k_patch.dart` | `optimizeAnime4kShader(fileName, content)`：pass 切分 + 精度注入 + C.R.E.L.U. 采样合并（可单测） |
+| 服务 | `services/super_resolution_service.dart` | `_ensureShadersCopied()` 改为「读 assets 文本 → 改写 → 写入」，并用 `.patch_version` 记录补丁版本 |
+
+**关键决策**：
+- **为什么要注入精度限定符**：Adreno 等移动驱动在检测到 `mat4` × float 字面量时会把默认
+  mediump **静默提升回 FP32**，忽略文件里的 `precision mediump float;` 头——只有写在
+  每个变量声明上的**显式**限定符拦得住。CNN 卷积/边缘滤镜在 FP16 下数值安全且明显更快。
+- **FSR 类 pass 保持 highp**：依赖位运算（`floatBitsToUint`/`uintBitsToFloat`）与近似
+  倒数/平方根（`APrxLoRcpF1` 等）的 pass 在 FP16 下产生垃圾值，按 `kAnime4kFp32Markers`
+  白名单整块保持 `highp`（含 `precision highp int;`，整数位技巧不能降精度）。
+- **C.R.E.L.U. 采样合并**：只在同一 pass 同时存在 `go_0`（`max(tex)`）与 `go_1`（`max(-tex)`）
+  且引用**同一纹理**时，把 9 次重复采样合并成 3×3 预取；偏移超出 {-1,0,1} 时**整体退回原
+  pass**（否则会引用未声明的 `t_unknown_*`，整个着色器编译失败被 mpv 丢弃）。
+- **幂等 + 版本化**：算法改动必须 bump `kAnime4kPatchVersion`——服务层比对
+  `.patch_version`，不一致才重新拷贝+重写（否则老用户沙盒里仍是旧着色器，改了等于没改）。
+- **与参考实现的差异（有意）**：mpvRx 在 `//!` 头后遇到**空行**即放弃该 pass 的注入，而本
+  项目全部着色器头与正文之间都留空行——照抄会导致一个 pass 都注入不上；这里把空行当作
+  头部间隙继续找首个正文行。pass 边界用 `//!DESC`（缺失时回退 `//!HOOK`），避免把
+  「头 + 正文」拆成两块。
+
+---
+
+### 4.26 mpv 移动端缓存/网络调参模板
+
+> 借鉴 mpvRx `MPVView.initOptions` + Kazumi 的「在线加大缓存」：本地/在线两档，
+> 在 **open 之前**写入（解封装缓存与重连参数只在打开文件时生效）。
+
+**分层**（自下而上）：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 纯函数 | `utils/mpv_tuning.dart` | `buildMpvTuning(isOnline, existingDemuxerLavfO)` + `mergeDemuxerLavfOptions` + `splitLavfOptions`（顶层逗号切分） |
+| 播放页 | `pages/player/player_page.dart` | `_applyPlaybackTuning(path)`：读旧 `demuxer-lavf-o` → 生成调参表 → 逐项 `setProperty`；三处调用（首开/切集/B 站） |
+
+**写入项**（两档共同）：`video-sync=audio`（24fps@60Hz 不再周期性抖动）、`framedrop=vo`
+（只丢已晚于显示窗口的帧，防抖动累积）。
+**仅在线**：`cache=yes` / `cache-pause=yes` / `cache-pause-wait=2`、`network-timeout=15`
+（media_kit 默认 5s 对弱网过于激进）、`demuxer-max-bytes=64MiB` /
+`demuxer-max-back-bytes=32MiB`（本地为 32MiB/32MiB）、`http-allow-redirect=yes`、
+`hls-bitrate=no`（HLS 自适应码率，不强制最高档）、`demuxer-lavf-o` 合并有界重连。
+
+**关键决策**：
+- **`demuxer-lavf-o` 必须合并而不是覆盖**：media_kit 初始化时已写入
+  `protocol_whitelist=[udp,rtp,...]`（值内含逗号），整串覆盖会让 m3u8/自定义协议失效；
+  读不到旧值时**宁可不写该键**（`mergeDemuxerLavfOptions` 返回 null）。
+- **明确不用 `reconnect_at_eof`**：合法 VOD 的 EOF 必须正常结束，否则播完会一直重连、
+  永远不触发「播放完毕」（mpvRx 同款决策）。其余重连参数有界（`reconnect_max_retries=5`、
+  `reconnect_delay_total_max=20`）。
+- **本地/在线分档**：复用 `isOnlineMedia(path)` 判定；切集时来源可能从本地切到在线，
+  所以调参在**每次 open 前**重写，而不是只在 initState 写一次。
+
+---
+
+### 4.27 播放器诊断页（运行时统计）
+
+> 借鉴 mpvRx `Actionable Player Diagnostics`：把「缓存/丢帧/渲染延迟/硬解/音画同步」
+> 直接摆在面板里，排障不再靠猜。
+
+**分层**（自下而上）：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 模型 | `models/player_diagnostics.dart` | `PlayerDiagnosticsSnapshot.fromProperties(Map<String,String?>)`（容错解析，数字兼容字符串） |
+| 纯函数 | `utils/player_diagnostics.dart` | `kPlayerDiagnosticsProperties` 属性清单 + 格式化（字节/码率/网速/秒/毫秒/帧率/分辨率/avsync）+ `diagnosticsWarnings` 健康判定 |
+| 面板 | `pages/player/views/player_diagnostics_panel.dart` | 每秒采样 + 四组卡片（播放/视频/音频/缓存与丢帧）+ 顶部告警卡；属性读取由页面注入（可测） |
+| 入口 | `models/player_action.dart` + 横竖屏播放页 | `PlayerTopAction.diagnostics`（「更多」/顶栏槽位；横屏 `showPlayerPanel`、竖屏 `showPlayerBottomPanel`，§4.5） |
+
+**关键决策**：
+- **为什么不用 mpv 自带的 stats 页**（调研问题）：mpvRx 的「7 页统计」= mpv 内置
+  `stats.lua` 的 1–5 页（`script-binding stats/display-page-N`）+ mpvRx 自己的第 6 页
+  Compose 覆盖层 + 第 7 页 = mpv 内置 `console.lua`（控制台）。**本项目的自编 libmpv
+  没有编译 Lua**（`libmpv.so` 里只有默认 input.conf 引用的 `stats.lua`/`console.lua`
+  字符串，没有任何 Lua 运行时符号），所以 `script-binding stats/...` 会静默无反应。
+  结论：**照搬 mpvRx 的做法不可行**，改为在 Dart 侧读 mpv 属性自建诊断页（这也是调研
+  清单 A5 给出的落点）。若将来要 mpv 原生 stats 页，需在构建机给 libmpv 开
+  `--enable-lua` 并随包分发脚本。
+- **属性读取容错**：逐个属性 try/catch，单个属性不支持只置 null（面板显示 `—`），
+  不影响其余字段；非 `NativePlayer` 平台返回空表。
+- **健康提示只讲结论**：`diagnosticsWarnings` 把「丢帧 / 渲染延迟 >20ms / 软解 /
+  音画不同步 >100ms / 时间戳异常」翻译成人话，顶部红卡直出（排障先看结论再看数字）。
+- **每秒采样 + 防重入**：`Timer.periodic` + `_reading` 标志，避免慢查询叠加；
+  面板 `dispose` 取消定时器。
+
+---
+
+### 4.28 统一网络重试 / 超时分级 / 内容嗅探快速失败
+
+> 借鉴 PiliPlus `retry_interceptor.dart`（只重试连接类失败、流式不重试）+ Kazumi 的
+> 超时分级与「文本响应超 2MB 主动取消」。
+
+**分层**（自下而上）：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 纯工具 | `utils/retry_policy.dart` | `NetworkTimeoutTier` 四档超时、`isRetryableNetworkError`、`retryDelayForAttempt`、`withRetry`、`readBodyCapped`/`drainStreamCapped`、`sendGet`/`fetchTextCapped`/`fetchBytesCapped` |
+| 调用方 | `services/bilibili/bili_http.dart`、`services/dandan_play_api.dart`、`services/wyzie/wyzie_api.dart`、`utils/bili_short_link.dart` | 所有请求入口包一层重试；文本/JSON/下载各自设体积上限 |
+
+**关键决策**：
+- **只重试「连接类」失败**：连接失败（`SocketException`）、建立/发送超时
+  （`TimeoutException`）——请求根本没到服务端，重发安全。**响应中途断开不重试**
+  （`Connection closed before full header was received` 等），因为请求可能已被服务端
+  处理，重发有重复提交风险（对齐 PiliPlus 排除 `TransportConnectionException`）。
+  业务/解析异常一律不重试，`ResponseTooLargeException` 也不重试（重试只会再下载一遍）。
+- **流式一律不重试**：`withRetry(streaming: true)` 直接单次执行；本项目流式路径
+  （`openStream` / 下载 Range / `NetworkStreamingProxy` / `BiliStreamProxy` 转发）
+  **不经过**本工具，也不得自行加重试。
+- **超时分级**：常规 API 12s / 文本 15s / 下载 30s / 媒体流 30min（各调用方按用途选档，
+  不再各客户端写死 30s）。
+- **体积上限快速失败**：先看 `content-length`（声明超限**一个字节都不读**，直接取消
+  订阅），再边读边计数；文本 2MB、JSON 16MB、下载 64MB。⚠️ 超限时**不能 drain**
+  （那会把上游的巨量响应全部下载下来）。
+- **重试必须新建 Request**：`http.Request` 的 body 流只能发送一次，复用同一对象重试会抛
+  「Request has already been sent」——`sendGet` 与短链展开都在重试闭包内新建请求。
+
+---
+
 ## 5. 新增功能指南（按功能类型）
 
 ### 5.1 新增一个页面
@@ -1357,6 +1493,11 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/device_info_page_test.dart` — 设备信息页（设备信息/HDR 能力/关键编码器/解码器清单渲染 + 筛选胶囊（无数字文本/两行布局）+ 失败降级重试 + 点解码器进详情页显示完整能力，§4.24）
   - `test/theme_controller_test.dart` — 主题控制器（默认值/预设 23 色/调色板 21 标签/自定义色持久化与 seed 生效/动态色标记置位·持久化·切换清除，§4.7）
   - `test/appearance_page_test.dart` — 外观页（主题色网格 + 动态色 + 自定义入口渲染/调色板胶囊化与标准型独占/动态色 Android<12 toast/自定义选色弹窗，§4.7）
+  - `test/anime4k_patch_test.dart` — Anime4K 着色器安装期优化（pass 切分/精度注入/FSR highp 白名单/函数签名与已限定符不动/空行不中断注入/C.R.E.L.U. 3×3 合并与越界退回/幂等/全部 assets 烟测，§4.25）
+  - `test/mpv_tuning_test.dart` — mpv 调参模板（顶层逗号切分保留 protocol_whitelist/lavf-o 合并与缺失返回 null/本地与在线两档/不含 reconnect_at_eof，§4.26）
+  - `test/player_diagnostics_test.dart` — 播放诊断纯函数（属性表→快照容错/格式化/健康告警优先级与阈值，§4.27）
+  - `test/player_diagnostics_panel_test.dart` — 播放诊断面板（四组数值渲染/缺失占位/丢帧·软解告警卡/读取失败降级/定时刷新取新值，§4.27）
+  - `test/retry_policy_test.dart` — 统一网络重试与快速失败（超时分级/可重试判定与响应中断排除/指数退避/withRetry 行为与流式不重试/体积上限 content-length 预判与边读边判/端到端 MockClient，§4.28）
 - 改以下代码必须跑对应测试：`AppFrame`、`ViewSettings` 排序、权限流程、`CapsuleNavBar`
 
 ---
@@ -1488,3 +1629,12 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | 章节跳段设置变化 → `ChapterTracker` 用 `resolveSkipSegments` 重派生，把 B 站 `clip_info_list` 的精确 OP/ED 起止覆盖成「下一章起点」（OP 结束错扩到 ED 起点） | 外部精确片段（`setExternalChapters`）打 `_externalSegments` 标记；`_onSettingsChanged` 只在非外部时重派生，外部只清已跳过记录（§4.22） |
 | 整应用重启 `exitProcess` 编译报 Unresolved reference | `exitProcess` 是 `kotlin.system.exitProcess`，需显式 import（§4.24） |
 | 解码器筛选胶囊文字出现「…」省略号（等宽均分后窄胶囊放不下） | 胶囊文字去掉 `maxLines`/`TextOverflow.ellipsis`，改 `softWrap:false` 单行居中；胶囊只放纯文本「音频/硬解/软解/视频/全部」（不带数字）（§4.24） |
+| 着色器优化改了算法但沙盒里还是旧文件（改了等于没改） | 用 `.patch_version` 记录补丁版本，算法改动必须 bump `kAnime4kPatchVersion` 才会重写已拷出的着色器（§4.25） |
+| Anime4K 头与正文之间的空行让精度注入整体失效（mpvRx 原实现遇到空行即放弃该 pass） | 空行视为头部间隙继续找首个正文行；pass 边界用 `//!DESC` 切分（缺失回退 `//!HOOK`），勿按 `//!HOOK` 切（会把一个 pass 拆两块）（§4.25） |
+| C.R.E.L.U. 采样合并遇到 >3×3 偏移会引用未声明的 `t_unknown_*` → 整个着色器编译失败被 mpv 丢弃 | 合并结果含 `_unknown` 时**整体退回原 pass**（正确性不依赖内核是 3×3）（§4.25） |
+| 覆盖 `demuxer-lavf-o` 抹掉 media_kit 的 `protocol_whitelist=[udp,rtp,...]`（值内含逗号）→ m3u8/自定义协议失效 | 按**括号深度**切分后合并再写；读不到旧值就不写该键（§4.26） |
+| 播放调参在 open 之后写入 → 对当前文件无效 | 解封装缓存/重连参数只在 open 前生效：调参放 `_applyPlaybackTuning(path)`，首开/切集/B 站三处 open 前各调一次（§4.26） |
+| 重试时复用同一个 `http.Request` → 「Request has already been sent」 | 重试闭包内**新建** Request（`sendGet`、短链展开每跳都新建）（§4.28） |
+| 响应超限时用 `drain()` 丢弃 → 把上游巨量响应全部下载下来 | 超限一律 `stream.listen(null).cancel()` 取消订阅（一个字节都不读）；错误响应的丢弃用 `drainStreamCapped`（带上限）（§4.28） |
+| 想直接用 mpv 内置 stats/console 页（mpvRx 的 7 页统计） | 本项目自编 libmpv **未编译 Lua**，`script-binding stats/...` 静默无反应；改用 Dart 侧读 mpv 属性自建诊断页（§4.27） |
+| 用 PowerShell `Set-Content`/`Get-Content -Raw` 改源码 → UTF-8 被写成 ANSI，中文全乱码 | 源码编辑一律用编辑工具（edit/write）；确需 PowerShell 写文件时用 `[System.IO.File]::WriteAllText` + `UTF8Encoding($false)`（§4.28 排查记录） |

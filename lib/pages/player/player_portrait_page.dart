@@ -20,6 +20,7 @@ import 'package:moumou/pages/player/views/player_danmaku_network_panel.dart';
 import 'package:moumou/pages/player/views/player_danmaku_panel.dart';
 import 'package:moumou/pages/player/views/player_danmaku_settings_panel.dart';
 import 'package:moumou/pages/player/views/player_decode_panel.dart';
+import 'package:moumou/pages/player/views/player_diagnostics_panel.dart';
 import 'package:moumou/pages/player/views/player_fit_panel.dart';
 import 'package:moumou/pages/player/views/player_gesture_indicator.dart';
 import 'package:moumou/pages/player/views/player_gesture_layer.dart';
@@ -57,6 +58,7 @@ import 'package:moumou/utils/intro_outro_skip.dart';
 import 'package:moumou/utils/playback_completion.dart';
 import 'package:moumou/utils/playback_restore.dart';
 import 'package:moumou/utils/pip_aspect.dart';
+import 'package:moumou/utils/player_diagnostics.dart';
 import 'package:moumou/utils/player_gestures.dart';
 import 'package:moumou/widgets/app_frame.dart';
 import 'package:moumou/widgets/cast_device_dialog.dart';
@@ -1008,6 +1010,27 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         body: const PlayerDecodePanel(),
       );
 
+  /// 播放诊断面板页（顶栏/更多「播放诊断」动作弹出，§4.27）
+  PlayerPanelPage _diagnosticsPanelPage() => PlayerPanelPage(
+        title: '播放诊断',
+        body: PlayerDiagnosticsPanel(readProperties: _readDiagnosticsProperties),
+      );
+
+  /// 读取一组 mpv 运行时属性（诊断面板每秒采样一次；与横屏同款实现）
+  Future<Map<String, String?>> _readDiagnosticsProperties() async {
+    final platform = _player.platform;
+    if (platform is! NativePlayer) return const {};
+    final out = <String, String?>{};
+    for (final key in kPlayerDiagnosticsProperties) {
+      try {
+        out[key] = await platform.getProperty(key);
+      } catch (_) {
+        out[key] = null;
+      }
+    }
+    return out;
+  }
+
   /// 均衡器面板页（底部弹出 [showPlayerBottomPanel]，工作.md 均衡器功能）
   PlayerPanelPage _equalizerPanelPage() =>
       const PlayerPanelPage(title: '音频均衡器', body: PlayerEqualizerPanel());
@@ -1086,6 +1109,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         return _decodePanelPage();
       case PlayerTopAction.equalizer:
         return _equalizerPanelPage();
+      case PlayerTopAction.diagnostics:
+        return _diagnosticsPanelPage();
       default:
         return null;
     }
@@ -1242,6 +1267,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         _enterPip();
       case PlayerTopAction.cast:
         _openCast();
+      case PlayerTopAction.diagnostics:
+        break; // 已在上方 _panelPageFor 分支处理
     }
   }
 
@@ -1275,6 +1302,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         // 先关闭「更多」面板再弹投屏设备选择（与横屏一致，§4.5）
         Navigator.of(panelContext).pop();
         _openCast();
+      case PlayerTopAction.diagnostics:
+        break; // 已在上方 _panelPageFor 分支处理
     }
   }
 

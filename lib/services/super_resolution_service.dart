@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:media_kit/media_kit.dart';
 import 'package:moumou/models/super_resolution_mode.dart';
+import 'package:moumou/utils/anime4k_patch.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,7 +23,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///   供开启记忆时恢复。
 ///
 /// 着色器必须以「文件绝对路径」交给 mpv（libmpv 不支持直接读 assets），
-/// 所以首次使用前把 assets/shaders 下的 .glsl 拷贝到应用支持目录，之后直接复用。
+/// 所以首次使用前把 assets/shaders 下的 .glsl **优化后**拷贝到应用支持目录，
+/// 之后直接复用（优化逻辑见 `utils/anime4k_patch.dart`，§4.25）。
 class SuperResolutionService extends ChangeNotifier {
   static final SuperResolutionService instance = SuperResolutionService._();
 
@@ -171,7 +174,12 @@ class SuperResolutionService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 确保 assets/shaders 下的 .glsl 已拷贝到应用支持目录（已存在则跳过）。
+  /// 确保 assets/shaders 下的 .glsl 已**优化后**拷贝到应用支持目录。
+  ///
+  /// 安装期一次性改写（§4.25）：注入 mediump/highp 精度限定符 + 合并
+  /// C.R.E.L.U. 重复采样，运行期零成本。用 `.patch_version` 记录已写入的
+  /// 补丁版本——算法升级（[kAnime4kPatchVersion] 变化）后旧着色器会被重新
+  /// 拷贝并重写，用户无需清数据。
   Future<Directory> _ensureShadersCopied() async {
     final dir = _shadersDirectory ?? await _createShadersDirectory();
     _shadersDirectory = dir;
@@ -182,20 +190,52 @@ class SuperResolutionService extends ChangeNotifier {
         for (final q in SuperResolutionQuality.values)
           ...buildAnime4KChain(m, q),
     };
+    final versionFile = File(p.join(dir.path, _patchVersionFile));
+    final needsRepatch = await _readPatchVersion(versionFile) !=
+        kAnime4kPatchVersion;
     for (final name in needed) {
       final target = File(p.join(dir.path, name));
-      if (await target.exists()) continue;
+      if (!needsRepatch && await target.exists()) continue;
       try {
         final data = await rootBundle.load('assets/shaders/$name');
-        await target.writeAsBytes(
-          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+        final bytes =
+            data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+        final String? source;
+        try {
+          source = utf8.decode(bytes);
+        } catch (_) {
+          // 非 UTF-8 文本：原样落盘，不冒险改写
+          await target.writeAsBytes(bytes, flush: true);
+          continue;
+        }
+        await target.writeAsString(
+          optimizeAnime4kShader(name, source),
           flush: true,
         );
       } catch (e) {
         debugPrint('SuperResolutionService: copy shader $name failed: $e');
       }
     }
+    if (needsRepatch) {
+      try {
+        await versionFile.writeAsString('$kAnime4kPatchVersion', flush: true);
+      } catch (e) {
+        debugPrint('SuperResolutionService: write patch version failed: $e');
+      }
+    }
     return dir;
+  }
+
+  static const _patchVersionFile = '.patch_version';
+
+  /// 读取已写入的补丁版本（缺失/损坏按 0 处理 → 触发重写）
+  Future<int> _readPatchVersion(File file) async {
+    try {
+      if (!await file.exists()) return 0;
+      return int.tryParse((await file.readAsString()).trim()) ?? 0;
+    } catch (_) {
+      return 0;
+    }
   }
 
   Future<Directory> _createShadersDirectory() async {

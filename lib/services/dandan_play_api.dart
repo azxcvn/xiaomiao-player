@@ -8,14 +8,20 @@
 ///
 /// 自建服务器通过 [baseUrl] 参数指定（默认官方地址）；密钥读取自
 /// `dandan_play_keys.dart`（gitignored 私有文件）。
+///
+/// 可靠性（§4.28）：请求走 `utils/retry_policy.dart` 的统一重试（连接类失败
+/// 指数退避，响应中断不重试防重复提交）+ 12s 常规 API 超时档；响应体额外做
+/// 硬上限检查（弹幕评论可能较大，超限即弃而不是解析垃圾数据）。
 library;
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
 import 'package:moumou/models/dandan_models.dart';
 import 'package:moumou/services/dandan_play_keys.dart';
 import 'package:moumou/utils/dandan_signature.dart';
+import 'package:moumou/utils/retry_policy.dart';
 
 /// API 请求失败异常（网络错误 / 非 200 / 业务错误统一抛出）
 class DandanApiException implements Exception {
@@ -32,6 +38,11 @@ class DandanPlayApi {
   static const String defaultBaseUrl = 'https://api.dandanplay.net';
 
   final http.Client _client;
+
+  /// 重试日志（排障用）
+  void _logRetry(Object error, int nextAttempt) {
+    debugPrint('DandanPlayApi: 第 $nextAttempt 次尝试（$error）');
+  }
 
   /// 解析实际请求地址：自建服务器优先，无 scheme 视为非法回退官方。
   String _resolveBase(String? baseUrl) {
@@ -63,9 +74,15 @@ class DandanPlayApi {
   Future<String> _get(String url, String path) async {
     final http.Response response;
     try {
-      response = await _client
-          .get(Uri.parse(url), headers: {'Accept': 'application/json', ..._authHeaders(path)})
-          .timeout(const Duration(seconds: 30));
+      response = await withRetry(
+        () => _client
+            .get(
+              Uri.parse(url),
+              headers: {'Accept': 'application/json', ..._authHeaders(path)},
+            )
+            .timeout(NetworkTimeoutTier.api.timeout),
+        onRetry: _logRetry,
+      );
     } catch (e) {
       throw DandanApiException('网络请求失败: $e');
     }
@@ -76,17 +93,20 @@ class DandanPlayApi {
   Future<String> _post(String url, String path, Map<String, dynamic> body) async {
     final http.Response response;
     try {
-      response = await _client
-          .post(
-            Uri.parse(url),
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-              ..._authHeaders(path),
-            },
-            body: jsonEncode(body),
-          )
-          .timeout(const Duration(seconds: 30));
+      response = await withRetry(
+        () => _client
+            .post(
+              Uri.parse(url),
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                ..._authHeaders(path),
+              },
+              body: jsonEncode(body),
+            )
+            .timeout(NetworkTimeoutTier.api.timeout),
+        onRetry: _logRetry,
+      );
     } catch (e) {
       throw DandanApiException('网络请求失败: $e');
     }
@@ -95,6 +115,11 @@ class DandanPlayApi {
 
   /// 统一响应解码：非 2xx 或业务 success=false 抛 [DandanApiException]。
   String _decode(http.Response response) {
+    if (response.bodyBytes.length > kMaxJsonResponseBytes) {
+      throw DandanApiException(
+        '响应过大（${response.bodyBytes.length} 字节），已放弃解析',
+      );
+    }
     final text = utf8.decode(response.bodyBytes);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw DandanApiException('请求失败（HTTP ${response.statusCode}）');

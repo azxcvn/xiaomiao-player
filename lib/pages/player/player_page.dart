@@ -24,6 +24,7 @@ import 'package:moumou/pages/player/views/player_danmaku_network_panel.dart';
 import 'package:moumou/pages/player/views/player_danmaku_panel.dart';
 import 'package:moumou/pages/player/views/player_danmaku_settings_panel.dart';
 import 'package:moumou/pages/player/views/player_decode_panel.dart';
+import 'package:moumou/pages/player/views/player_diagnostics_panel.dart';
 import 'package:moumou/pages/player/views/player_fit_panel.dart';
 import 'package:moumou/pages/player/views/player_gesture_indicator.dart';
 import 'package:moumou/pages/player/views/player_gesture_layer.dart';
@@ -66,9 +67,11 @@ import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/utils/cast_source.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/intro_outro_skip.dart';
+import 'package:moumou/utils/mpv_tuning.dart';
 import 'package:moumou/utils/pip_aspect.dart';
 import 'package:moumou/utils/playback_completion.dart';
 import 'package:moumou/utils/playback_restore.dart';
+import 'package:moumou/utils/player_diagnostics.dart';
 import 'package:moumou/utils/player_gestures.dart';
 import 'package:moumou/widgets/app_frame.dart';
 import 'package:moumou/widgets/cast_device_dialog.dart';
@@ -343,6 +346,35 @@ class _PlayerPageState extends State<PlayerPage>
       }
     } catch (_) {
       // 播放器初始化失败时随打开流程报错，此处静默
+    }
+  }
+
+  /// 应用 mpv 移动端缓存/网络调参（§4.26，对齐 mpvRx `initOptions`）。
+  ///
+  /// 必须在 `open` **之前**写入：解封装缓存 / 重连参数只在打开文件时生效。
+  /// `demuxer-lavf-o` 先读旧值再合并（media_kit 在里面放了
+  /// `protocol_whitelist`，整串覆盖会让 m3u8 等协议失效）；读不到旧值则
+  /// 不写该键（[buildMpvTuning] 返回的表里不含它）。
+  Future<void> _applyPlaybackTuning(String path) async {
+    try {
+      final native = _player.platform as NativePlayer;
+      await native.waitForPlayerInitialization;
+      String? lavfO;
+      try {
+        lavfO = await native.getProperty('demuxer-lavf-o');
+      } catch (_) {
+        lavfO = null;
+      }
+      final tuning = buildMpvTuning(
+        isOnline: isOnlineMedia(path),
+        existingDemuxerLavfO: lavfO,
+      );
+      for (final entry in tuning.entries) {
+        await native.setProperty(entry.key, entry.value);
+      }
+    } catch (e) {
+      // 播放器未就绪 / 属性不支持时静默失败，不影响播放
+      debugPrint('PlayerPage: apply mpv tuning failed: $e');
     }
   }
 
@@ -634,6 +666,9 @@ class _PlayerPageState extends State<PlayerPage>
     }
     // 播放历史：记录本次播放（本地路径 / 在线直链；见方法注释的过滤规则）
     _recordPlaybackHistory(_path, _title);
+    // mpv 缓存/网络调参：open 前写入（本地/在线两档，§4.26）
+    await _applyPlaybackTuning(_path);
+    if (_disposed || !mounted) return;
     final start = _resumeStartFor(_path);
     // 片头片尾：新媒体重置跟踪状态（open 期间位置事件不评估）
     _introOutroTracker.reset();
@@ -747,6 +782,8 @@ class _PlayerPageState extends State<PlayerPage>
   Future<void> _openBiliMedia({Duration? restoreTo}) async {
     final m = _biliMedia!;
     final videoPath = await _registerBiliProxy(m);
+    // mpv 缓存/网络调参：B 站为在线来源（open 前写入，§4.26）
+    await _applyPlaybackTuning(videoPath);
     await openAndRestore(
       _player,
       videoPath,
@@ -1753,6 +1790,8 @@ class _PlayerPageState extends State<PlayerPage>
         setState(() => _resumeVisible = false);
       }
       await _saveProgress(forcePersist: true);
+      // mpv 缓存/网络调参：切集同样在 open 前重写（本地↔在线来源可能切换）
+      await _applyPlaybackTuning(path);
       // 新视频的保存进度：open 时恢复（阈值过滤见 [_resumeStartFor]，
       // 防「已看完」定位到结尾触发 EOF 连播）
       final savedForNew = _resumeStartFor(path);
@@ -2091,6 +2130,8 @@ class _PlayerPageState extends State<PlayerPage>
         _openIntroOutroPanel();
       case PlayerTopAction.cast:
         _openCast();
+      case PlayerTopAction.diagnostics:
+        _openDiagnosticsPanel();
     }
   }
 
@@ -2117,6 +2158,8 @@ class _PlayerPageState extends State<PlayerPage>
         return _decodePanelPage();
       case PlayerTopAction.equalizer:
         return _equalizerPanelPage();
+      case PlayerTopAction.diagnostics:
+        return _diagnosticsPanelPage();
       default:
         return null;
     }
@@ -2153,6 +2196,8 @@ class _PlayerPageState extends State<PlayerPage>
         // 动作类：先关「更多」面板再弹投屏设备选择（§4.5 不叠加弹窗）
         Navigator.of(panelContext).pop();
         _openCast();
+      case PlayerTopAction.diagnostics:
+        break; // 已在上方 _panelPageFor 分支处理
     }
   }
 
@@ -2454,6 +2499,37 @@ class _PlayerPageState extends State<PlayerPage>
     _hideTimer?.cancel();
     await showPlayerPanel(context, pages: [_decodePanelPage()]);
     _resetHideTimer();
+  }
+
+  /// 播放诊断面板页（顶栏/更多「播放诊断」动作弹出，§4.27）
+  PlayerPanelPage _diagnosticsPanelPage() => PlayerPanelPage(
+        title: '播放诊断',
+        body: PlayerDiagnosticsPanel(readProperties: _readDiagnosticsProperties),
+      );
+
+  /// 打开播放诊断面板（顶栏「播放诊断」动作）
+  Future<void> _openDiagnosticsPanel() async {
+    _hideTimer?.cancel();
+    await showPlayerPanel(context, pages: [_diagnosticsPanelPage()]);
+    _resetHideTimer();
+  }
+
+  /// 读取一组 mpv 运行时属性（诊断面板每秒采样一次）。
+  ///
+  /// 单个属性读取失败（不支持/未就绪）只把该键置 null，不影响其余字段；
+  /// 非 NativePlayer 平台返回空表（面板显示占位符）。
+  Future<Map<String, String?>> _readDiagnosticsProperties() async {
+    final platform = _player.platform;
+    if (platform is! NativePlayer) return const {};
+    final out = <String, String?>{};
+    for (final key in kPlayerDiagnosticsProperties) {
+      try {
+        out[key] = await platform.getProperty(key);
+      } catch (_) {
+        out[key] = null;
+      }
+    }
+    return out;
   }
 
   /// 均衡器面板页（顶栏/更多「音频均衡器」动作弹出，工作.md 均衡器功能）：

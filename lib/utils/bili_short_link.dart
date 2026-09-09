@@ -4,10 +4,15 @@
 /// 需要先跟随 302 重定向拿到真实 URL 才能被 [parseBiliBangumiUrl] 识别。
 /// 手动逐跳跟随（≤5 跳）而非让 http 客户端自动跟随：命中 [isTarget]
 /// 即提前返回，不发起下一跳请求、不下载整页 body。
+///
+/// 可靠性（§4.28）：每跳走统一重试（连接类失败退避重试）+ 文本档超时；
+/// 重定向响应体用**带上限的丢弃**（`drainStreamCapped`）——302 的 body
+/// 本应极小，上游若塞巨量数据即快速失败，不把整页拉下来。
 library;
 
 import 'package:http/http.dart' as http;
 import 'package:moumou/services/bilibili/bili_constants.dart';
+import 'package:moumou/utils/retry_policy.dart';
 
 /// 带协议的 b23.tv 短链（App 分享格式恒带 https）。
 final RegExp _b23WithScheme = RegExp(
@@ -58,10 +63,15 @@ Future<String?> expandBiliShortLink(
       if (isTarget != null && isTarget(current.toString())) {
         return current.toString();
       }
-      final req = http.Request('GET', current)
-        ..followRedirects = false
-        ..headers['User-Agent'] = BiliConstants.webUserAgent;
-      final resp = await c.send(req).timeout(const Duration(seconds: 10));
+      // 每跳独立重试（连接类失败才重试；文本档超时）。
+      // ⚠️ Request 必须每跳新建：http.Request 的 body 流只能发送一次，
+      // 复用同一个对象重试会抛「Request has already been sent」。
+      final resp = await withRetry(() {
+        final req = http.Request('GET', current)
+          ..followRedirects = false
+          ..headers['User-Agent'] = BiliConstants.webUserAgent;
+        return c.send(req).timeout(NetworkTimeoutTier.text.timeout);
+      });
       final status = resp.statusCode;
       final location = resp.headers['location'];
       final isRedirectStatus = status == 301 ||
@@ -70,8 +80,8 @@ Future<String?> expandBiliShortLink(
           status == 307 ||
           status == 308;
       if (isRedirectStatus && location != null && location.isNotEmpty) {
-        // 302 的 body 极小，drain 掉以便复用连接
-        await resp.stream.drain<void>().catchError((_) {});
+        // 302 的 body 极小：带上限丢弃（超限即弃，防上游塞巨量数据）
+        await drainStreamCapped(resp.stream);
         current = current.resolve(location);
         continue;
       }

@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
 import 'package:moumou/services/bilibili/bili_constants.dart';
+import 'package:moumou/utils/retry_policy.dart';
 
 /// 哔哩哔哩统一请求封装：Cookie / UA / Referer 注入 + UTF-8 解码 + 错误语义化。
 ///
@@ -11,6 +13,11 @@ import 'package:moumou/services/bilibili/bili_constants.dart';
 /// 扫码 poll 的状态码在顶层 `code`）。
 ///
 /// [cookie] 与 [buvid3] 由 [BiliAccount] 在登录/预取后写入，请求时自动带入。
+///
+/// 可靠性（§4.28）：所有请求走 `utils/retry_policy.dart` 的统一重试——
+/// **连接类**失败（连接失败/建立超时）指数退避重试，响应中途断开**不重试**
+/// （请求可能已被服务端接收，重发有重复提交风险），超时统一走 12s 常规 API 档。
+/// 流式接口（`openStream` / 下载 Range / 流代理转发）不走这里，也一律不重试。
 class BiliApiException implements Exception {
   final String message;
   const BiliApiException(this.message);
@@ -23,6 +30,11 @@ class BiliHttp {
   BiliHttp({http.Client? client}) : _client = client ?? http.Client();
 
   final http.Client _client;
+
+  /// 重试日志（排障用；重试不改变对调用方的语义）
+  void _logRetry(Object error, int nextAttempt) {
+    debugPrint('BiliHttp: 第 $nextAttempt 次尝试（$error）');
+  }
 
   /// 当前登录 Cookie 串（`SESSDATA=..; bili_jct=..; DedeUserID=..`）。
   String? cookie;
@@ -61,9 +73,14 @@ class BiliHttp {
     }
     final http.Response response;
     try {
-      response = await _client
-          .get(uri, headers: _headers(withCookie: withCookie, withReferer: withReferer))
-          .timeout(const Duration(seconds: 30));
+      response = await withRetry(
+        () => _client
+            .get(uri,
+                headers:
+                    _headers(withCookie: withCookie, withReferer: withReferer))
+            .timeout(NetworkTimeoutTier.api.timeout),
+        onRetry: _logRetry,
+      );
     } catch (e) {
       throw BiliApiException('网络请求失败: $e');
     }
@@ -83,16 +100,19 @@ class BiliHttp {
     }
     final http.Response response;
     try {
-      response = await _client
-          .get(
-            uri,
-            headers: _headers(
-              withCookie: withCookie,
-              withReferer: withReferer,
-              jsonAccept: false,
-            ),
-          )
-          .timeout(const Duration(seconds: 30));
+      response = await withRetry(
+        () => _client
+            .get(
+              uri,
+              headers: _headers(
+                withCookie: withCookie,
+                withReferer: withReferer,
+                jsonAccept: false,
+              ),
+            )
+            .timeout(NetworkTimeoutTier.api.timeout),
+        onRetry: _logRetry,
+      );
     } catch (e) {
       throw BiliApiException('网络请求失败: $e');
     }
@@ -111,16 +131,20 @@ class BiliHttp {
   }) async {
     final http.Response response;
     try {
-      response = await _client
-          .post(
-            Uri.parse(url),
-            headers: {
-              ..._headers(withCookie: withCookie, withReferer: withReferer),
-              'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
-            },
-            body: body,
-          )
-          .timeout(const Duration(seconds: 30));
+      response = await withRetry(
+        () => _client
+            .post(
+              Uri.parse(url),
+              headers: {
+                ..._headers(withCookie: withCookie, withReferer: withReferer),
+                'Content-Type':
+                    'application/x-www-form-urlencoded; charset=utf-8',
+              },
+              body: body,
+            )
+            .timeout(NetworkTimeoutTier.api.timeout),
+        onRetry: _logRetry,
+      );
     } catch (e) {
       throw BiliApiException('网络请求失败: $e');
     }
@@ -137,16 +161,19 @@ class BiliHttp {
   }) async {
     final http.Response response;
     try {
-      response = await _client
-          .post(
-            Uri.parse(url),
-            headers: {
-              ..._headers(withCookie: withCookie),
-              'Content-Type': 'application/json; charset=utf-8',
-            },
-            body: body,
-          )
-          .timeout(const Duration(seconds: 30));
+      response = await withRetry(
+        () => _client
+            .post(
+              Uri.parse(url),
+              headers: {
+                ..._headers(withCookie: withCookie),
+                'Content-Type': 'application/json; charset=utf-8',
+              },
+              body: body,
+            )
+            .timeout(NetworkTimeoutTier.api.timeout),
+        onRetry: _logRetry,
+      );
     } catch (e) {
       throw BiliApiException('网络请求失败: $e');
     }
@@ -168,9 +195,12 @@ class BiliHttp {
     }
     final http.Response response;
     try {
-      response = await _client
-          .post(uri, headers: _headers(withCookie: withCookie))
-          .timeout(const Duration(seconds: 30));
+      response = await withRetry(
+        () => _client
+            .post(uri, headers: _headers(withCookie: withCookie))
+            .timeout(NetworkTimeoutTier.api.timeout),
+        onRetry: _logRetry,
+      );
     } catch (e) {
       throw BiliApiException('网络请求失败: $e');
     }
@@ -195,17 +225,21 @@ class BiliHttp {
     }
     final http.Response response;
     try {
-      response = await _client
-          .post(
-            uri,
-            headers: {
-              ...?headers,
-              'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
-              if (extraCookies != null && extraCookies!.isNotEmpty)
-                'Cookie': extraCookies!,
-            },
-          )
-          .timeout(const Duration(seconds: 30));
+      response = await withRetry(
+        () => _client
+            .post(
+              uri,
+              headers: {
+                ...?headers,
+                'Content-Type':
+                    'application/x-www-form-urlencoded; charset=utf-8',
+                if (extraCookies != null && extraCookies!.isNotEmpty)
+                  'Cookie': extraCookies!,
+              },
+            )
+            .timeout(NetworkTimeoutTier.api.timeout),
+        onRetry: _logRetry,
+      );
     } catch (e) {
       throw BiliApiException('网络请求失败: $e');
     }
