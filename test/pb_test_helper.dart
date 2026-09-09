@@ -33,13 +33,15 @@ Uint8List pbConcat(List<List<int>> parts) {
   return Uint8List.fromList(all);
 }
 
-/// `DanmakuElem`（字段 1=id、2=progress(ms)、3=mode、5=color、7=content）。
+/// `DanmakuElem`（字段 1=id、2=progress(ms)、3=mode、5=color、7=content、
+/// 24=colorful）。
 Uint8List encodeDanmakuElem({
   int id = 1,
   int progressMs = 1000,
   int mode = 1,
   int color = 0xFFFFFF,
   String content = 'hello',
+  int colorful = 0,
 }) {
   return pbConcat([
     pbFieldVarint(1, id),
@@ -47,6 +49,7 @@ Uint8List encodeDanmakuElem({
     pbFieldVarint(3, mode),
     pbFieldVarint(5, color),
     pbFieldBytes(7, utf8.encode(content)),
+    if (colorful != 0) pbFieldVarint(24, colorful),
   ]);
 }
 

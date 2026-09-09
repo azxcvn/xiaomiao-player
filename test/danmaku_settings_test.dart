@@ -26,6 +26,7 @@ void main() {
     expect(s.showScroll, isTrue);
     expect(s.massiveMode, isFalse);
     expect(s.deduplication, isFalse);
+    expect(s.merge, isFalse);
     expect(s.timeOffsetSeconds, 0);
   });
 
@@ -61,6 +62,36 @@ void main() {
     expect(s.showScroll, isFalse);
     expect(s.massiveMode, isTrue);
     expect(s.deduplication, isTrue);
+    expect(s.merge, isFalse); // 去重开 → 合并保持关
+  });
+
+  test('弹幕去重与弹幕合并互斥：开一个自动关另一个', () async {
+    // 开合并 → 去重被关
+    await s.setDeduplication(true);
+    expect(s.deduplication, isTrue);
+    await s.setMerge(true);
+    expect(s.merge, isTrue);
+    expect(s.deduplication, isFalse);
+
+    // 开去重 → 合并被关
+    await s.setDeduplication(true);
+    expect(s.deduplication, isTrue);
+    expect(s.merge, isFalse);
+
+    // 互斥结果已落盘：重载后仍是「只开去重」
+    await s.load();
+    expect(s.deduplication, isTrue);
+    expect(s.merge, isFalse);
+  });
+
+  test('弹幕合并持久化 + 关闭动作永远允许', () async {
+    await s.setMerge(true);
+    await s.load();
+    expect(s.merge, isTrue);
+    expect(s.deduplication, isFalse);
+    await s.setMerge(false);
+    await s.load();
+    expect(s.merge, isFalse);
   });
 
   test('字号/速度/不透明度/描边钳制到滑杆范围', () async {
@@ -116,17 +147,20 @@ void main() {
     await s.setRandomColor(true);
     await s.setShowTop(false);
     await s.setMassiveMode(true);
+    await s.setMerge(true);
     await s.setTimeOffset(60);
     await s.reset();
     expect(s.fontSize, 16);
     expect(s.randomColor, isFalse);
     expect(s.showTop, isTrue);
     expect(s.massiveMode, isFalse);
+    expect(s.merge, isFalse);
     expect(s.timeOffsetSeconds, 0);
     // 持久化确认：重载后仍是默认值
     await s.load();
     expect(s.fontSize, 16);
     expect(s.randomColor, isFalse);
+    expect(s.merge, isFalse);
     expect(s.timeOffsetSeconds, 0);
   });
 

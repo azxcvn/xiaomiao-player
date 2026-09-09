@@ -35,6 +35,7 @@ import 'package:moumou/services/danmaku_server_settings.dart';
 import 'package:moumou/services/danmaku_settings.dart';
 import 'package:moumou/utils/danmaku_blocklist.dart';
 import 'package:moumou/utils/danmaku_dedup.dart';
+import 'package:moumou/utils/danmaku_merge.dart';
 import 'package:moumou/utils/danmaku_episode.dart';
 import 'package:moumou/utils/danmaku_local_file.dart';
 import 'package:moumou/utils/danmaku_random_color.dart';
@@ -94,6 +95,7 @@ class DanmakuController extends ChangeNotifier {
     // 其余模式解析结果不变，canvas 的 fontFamilyChanged 为 false 不清屏）
     AppFontSettings.instance.addListener(_onSettingsChanged);
     _lastDedup = _settings.deduplication;
+    _lastMerge = _settings.merge;
     _lastRandomColor = _settings.randomColor;
     _lastTimeOffset = _settings.timeOffsetSeconds;
     _lastBlocklist = _settings.blockedKeywords;
@@ -113,9 +115,10 @@ class DanmakuController extends ChangeNotifier {
   /// 随机渐变色推进器（随机色开启期间逐条生成；关闭→开启重建）
   DanmakuColorWheel? _colorWheel;
 
-  /// 上次同步的去重/随机色开关（仅开关变化时才清屏重灌，
+  /// 上次同步的去重/合并/随机色开关（仅开关变化时才清屏重灌，
   /// 避免拖动其他滑杆时在屏弹幕被反复清掉闪屏）
   bool _lastDedup = false;
+  bool _lastMerge = false;
   bool _lastRandomColor = false;
 
   /// 上次同步的时间轴偏移（偏移变化时重锚定秒桶 + 清屏，弹幕按新偏移对齐）
@@ -213,20 +216,22 @@ class DanmakuController extends ChangeNotifier {
   /// 「重栅格化」项（canvas 会全量清屏重绘），由设置面板在**松手时**才提交
   /// （见 player_danmaku_settings_panel.dart 的 _CommitSliderTile），所以这里
   /// 无需再逐帧去抖；其余轻量项（不透明度/区域/行高/速度/显隐）实时下发。
-  /// 仅去重/屏蔽词/随机色开关变化时才重灌秒桶/重建色轮并清屏。
+  /// 仅去重/合并/屏蔽词/随机色开关变化时才重灌秒桶/重建色轮并清屏。
   void _onSettingsChanged() {
     if (_disposed) return;
     _applyOption();
     final dedupChanged = _settings.deduplication != _lastDedup;
+    final mergeChanged = _settings.merge != _lastMerge;
     final randomChanged = _settings.randomColor != _lastRandomColor;
     final offsetChanged = _settings.timeOffsetSeconds != _lastTimeOffset;
     final blocklistChanged =
         !listEquals(_settings.blockedKeywords, _lastBlocklist);
     _lastDedup = _settings.deduplication;
+    _lastMerge = _settings.merge;
     _lastRandomColor = _settings.randomColor;
     _lastTimeOffset = _settings.timeOffsetSeconds;
     _lastBlocklist = _settings.blockedKeywords;
-    if (dedupChanged || blocklistChanged) {
+    if (dedupChanged || mergeChanged || blocklistChanged) {
       _refeedIfLoaded();
     }
     if (randomChanged) {
@@ -241,7 +246,7 @@ class DanmakuController extends ChangeNotifier {
     }
   }
 
-  /// 去重开关变化时重灌秒桶：按原始条目重新合并再喂给调度器，并锚定
+  /// 去重/合并开关变化时重灌秒桶：按原始条目重新合并再喂给调度器，并锚定
   /// 当前位置（下个 tick 从当前秒继续，不倾倒历史弹幕）。
   void _refeedIfLoaded() {
     if (!_hasDanmaku) return;
@@ -270,13 +275,22 @@ class DanmakuController extends ChangeNotifier {
     }
   }
 
-  /// 屏蔽词 + 去重生效后的条目集：先剔除命中屏蔽词的弹幕（屏蔽词为空则
-  /// 原样），再按去重开关合并。原始条目仍保留在 [_rawEntries]，屏蔽词/去重
-  /// 开关变化时按 [_rawEntries] 重灌（见 [_refeedIfLoaded]）。
+  /// 屏蔽词 + 弹幕合并/去重生效后的条目集：先剔除命中屏蔽词的弹幕（屏蔽词
+  /// 为空则原样），再按合并开关做「跨时间窗同内容聚合计次」，最后按去重开关
+  /// 合并短窗重复。
+  ///
+  /// **合并与去重在 `DanmakuSettings` 层互斥**（语义冲突：去重丢弃重复条目、
+  /// 合并要统计重复条目），所以这里最多只会命中一条分支；代码仍按
+  /// 「屏蔽词 → 合并 → 去重」顺序写，保证任何情况下合并都先于去重执行
+  /// （先跑去重会把计数信息吃掉）。合并后的条目文本保持原样（计数走
+  /// [DanmakuEntry.count]），因此去重/屏蔽词的判同不受影响。原始条目仍保留
+  /// 在 [_rawEntries]，开关变化时按 [_rawEntries] 重灌（见 [_refeedIfLoaded]）。
   List<DanmakuEntry> _effectiveEntries(List<DanmakuEntry> entries) {
     final filtered = filterBlockedDanmaku(entries, _settings.blockedKeywords);
-    if (!_settings.deduplication) return filtered;
-    return dedupeDanmakuEntries(filtered);
+    final merged =
+        _settings.merge ? mergeDanmakuByCount(filtered) : filtered;
+    if (!_settings.deduplication) return merged;
+    return dedupeDanmakuEntries(merged);
   }
 
   // ── 渲染层挂载（页面 Stack 内 DanmakuScreen 的 createdController 回调）──
@@ -642,11 +656,16 @@ class DanmakuController extends ChangeNotifier {
 
   void _addEntry(DanmakuEntry entry) {
     if (_layers.isEmpty) return;
+    final randomColor = _colorWheel != null;
     final item = canvas.DanmakuContentItem<void>(
-      entry.text,
+      // 合并条目渲染为「文本 ×N」（count 由合并算法写入；文本本身保持原样）
+      entry.displayText,
       // 随机渐变色开启：忽略文件颜色，逐条生成（关闭 = 文件原色）
       color: Color(0xFF000000 | (_colorWheel?.nextColor() ?? entry.color)),
       type: itemTypeForMode(entry.mode),
+      // 会员渐变彩色弹幕（B站 protobuf colorful 字段）：随机色开启时让位
+      //（随机色本身就是逐条改色，两者叠加只会互相打架）
+      isColorful: entry.isColorful && !randomColor,
     );
     for (final layer in _layers) {
       layer.addDanmaku(item);

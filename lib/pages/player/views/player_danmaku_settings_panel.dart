@@ -7,7 +7,8 @@
 ///
 /// **弹幕配置**：显示区域（10% 固定档位）/ 行高滑杆 + 顶部/底部/滚动弹幕
 /// 显隐开关 + 海量弹幕开关（轨道占满时叠加绘制）+ 弹幕去重开关（时间窗内
-/// 相同内容合并为一条）+ 屏蔽词（输入添加 / 词条删除 / 一键清空）。
+/// 相同内容合并为一条）+ 弹幕合并开关（不同时间内相同弹幕合并且计数）
+/// + 屏蔽词（输入添加 / 词条删除 / 一键清空）。
 ///
 /// **弹幕偏移**：时间轴偏移滑杆（-180~+180 秒，正 = 延后、负 = 提前），
 /// 校准弹幕相对视频画面的显示时间（对齐 Kazumi danmakuTimeOffset）。
@@ -172,9 +173,16 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
                 _groupDivider(),
                 _SwitchTile(
                   label: '弹幕去重',
-                  hint: '时间窗内相同弹幕内容合并为一条',
+                  hint: '相同时间下相同弹幕合并为一条',
                   value: s.deduplication,
                   onChanged: s.setDeduplication,
+                ),
+                _groupDivider(),
+                _SwitchTile(
+                  label: '弹幕合并',
+                  hint: '不同时间内相同弹幕合并且计数',
+                  value: s.merge,
+                  onChanged: s.setMerge,
                 ),
                 _groupDivider(),
                 // 不能加 const：父级 ListenableBuilder 重建时需刷新词条列表

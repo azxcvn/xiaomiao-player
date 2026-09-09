@@ -48,16 +48,25 @@ class _RawElem {
   final int color;
   final String text;
 
+  /// 会员渐变彩色弹幕（字段 24，`DmColorfulType.VipGradualColor = 60001`）
+  final bool isColorful;
+
   const _RawElem({
     required this.id,
     required this.time,
     required this.mode,
     required this.color,
     required this.text,
+    this.isColorful = false,
   });
 
-  DanmakuEntry toEntry() =>
-      DanmakuEntry(time: time, mode: mode, color: color, text: text);
+  DanmakuEntry toEntry() => DanmakuEntry(
+        time: time,
+        mode: mode,
+        color: color,
+        text: text,
+        isColorful: isColorful,
+      );
 }
 
 class BiliDanmakuService {
@@ -223,7 +232,8 @@ class BiliDanmakuService {
     return elems;
   }
 
-  /// `DanmakuElem`：字段 1=id、2=progress(ms)、3=mode、5=color、7=content。
+  /// `DanmakuElem`：字段 1=id、2=progress(ms)、3=mode、5=color、7=content、
+  /// 24=colorful（`DmColorfulType`，60001 = 大会员渐变彩色）。
   _RawElem? _parseElem(Uint8List bytes) {
     final reader = PbReader(bytes);
     var id = 0;
@@ -231,6 +241,7 @@ class BiliDanmakuService {
     var mode = 1;
     var color = 0xFFFFFF;
     var content = '';
+    var isColorful = false;
     for (final f in _fields(reader)) {
       if (f.fieldNumber == 1 && f.isVarint) {
         id = f.varint;
@@ -242,6 +253,8 @@ class BiliDanmakuService {
         color = f.varint;
       } else if (f.fieldNumber == 7 && f.isLengthDelimited) {
         content = PbReader.bytesToString(f.bytes);
+      } else if (f.fieldNumber == 24 && f.isVarint) {
+        isColorful = f.varint == _colorfulVipGradual;
       }
     }
     final text = content.trim();
@@ -252,8 +265,12 @@ class BiliDanmakuService {
       mode: mode,
       color: color & 0xFFFFFF,
       text: text,
+      isColorful: isColorful,
     );
   }
+
+  /// `DmColorfulType.VipGradualColor`（大会员渐变彩色弹幕）
+  static const int _colorfulVipGradual = 60001;
 
   // ── 旧 XML 降级路径 ──────────────────────────────────────────
 

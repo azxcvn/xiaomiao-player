@@ -52,7 +52,16 @@ void main() {
     expect(find.text('滚动弹幕'), findsOneWidget);
     expect(find.text('海量弹幕'), findsOneWidget);
     expect(find.text('弹幕去重'), findsOneWidget);
+    expect(find.text('弹幕合并'), findsOneWidget);
     expect(find.text('屏蔽词'), findsOneWidget);
+    // 位置：弹幕合并夹在「弹幕去重」与「屏蔽词」之间（工作.md 指定）
+    final dedupY = tester.getTopLeft(find.text('弹幕去重')).dy;
+    final mergeY = tester.getTopLeft(find.text('弹幕合并')).dy;
+    final blockY = tester.getTopLeft(find.text('屏蔽词')).dy;
+    expect(dedupY, lessThan(mergeY));
+    expect(mergeY, lessThan(blockY));
+    // 副标题说明语义
+    expect(find.text('不同时间内相同弹幕合并且计数'), findsOneWidget);
     // 弹幕偏移
     expect(find.text('弹幕偏移'), findsOneWidget);
     expect(find.text('时间轴偏移'), findsOneWidget);
@@ -63,21 +72,27 @@ void main() {
     expect(find.text('恢复默认设置'), findsOneWidget);
   });
 
-  testWidgets('开关切换实时写设置（随机渐变色 / 海量弹幕 / 去重）', (tester) async {
+  testWidgets('开关切换实时写设置（随机渐变色 / 海量弹幕 / 去重 / 合并）', (tester) async {
     await pumpPanel(tester);
     final s = DanmakuSettings.instance;
     // Switch 组件定位：按标签找行内的 Switch（value 初始 false → tap 开）
     final switches = find.byType(Switch);
-    expect(switches, findsNWidgets(6)); // 随机色 + 3 显隐 + 海量 + 去重
+    expect(switches, findsNWidgets(7)); // 随机色 + 3 显隐 + 海量 + 去重 + 合并
     // 随机渐变色是样式区第一个 Switch（index 0，首屏可见）
     await tester.tap(switches.first);
     await tester.pumpAndSettle();
     expect(s.randomColor, isTrue);
-    // 去重是最后一个 Switch（视口外，先滚动到可见）
+    // 去重是倒数第二个 Switch、合并是最后一个（都在视口外，先滚动到可见）
+    await ensureVisible(tester, switches.at(5));
+    await tester.tap(switches.at(5));
+    await tester.pumpAndSettle();
+    expect(s.deduplication, isTrue);
     await ensureVisible(tester, switches.last);
     await tester.tap(switches.last);
     await tester.pumpAndSettle();
-    expect(s.deduplication, isTrue);
+    expect(s.merge, isTrue);
+    // 互斥：开合并后去重被自动关闭
+    expect(s.deduplication, isFalse);
   });
 
   testWidgets('滑杆拖动松手后写设置（字号）', (tester) async {

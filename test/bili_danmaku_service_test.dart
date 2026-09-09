@@ -56,8 +56,35 @@ void main() {
     expect(entries[2].color, 0xFF0000);
   });
 
-  test('跨分段按 id 去重', () async {
-    final seg1 = encodeSegMobileReply([
+  test('会员渐变彩色弹幕：字段 24 = 60001 → isColorful', () async {
+    final seg = encodeSegMobileReply([
+      encodeDanmakuElem(
+          id: 1, progressMs: 1000, content: '普通', colorful: 0),
+      encodeDanmakuElem(
+          id: 2,
+          progressMs: 2000,
+          color: 0xFF6699,
+          content: '会员彩色',
+          colorful: 60001),
+      encodeDanmakuElem(
+          id: 3, progressMs: 3000, content: '其它枚举', colorful: 60000),
+    ]);
+    final client = MockClient((req) async {
+      if (req.url.path == '/x/v2/dm/web/view') {
+        return http.Response.bytes(encodeWebViewReply(1), 200);
+      }
+      return http.Response.bytes(seg, 200);
+    });
+    final service = BiliDanmakuService(http: BiliHttp(client: client));
+    final entries = await service.fetchDanmaku(cid: 1);
+    expect(entries.length, 3);
+    expect(entries[0].isColorful, isFalse);
+    expect(entries[1].isColorful, isTrue);
+    expect(entries[1].color, 0xFF6699); // 颜色照常解析
+    expect(entries[2].isColorful, isFalse); // 非 VipGradualColor 不算
+  });
+
+  test('跨分段按 id 去重', () async {    final seg1 = encodeSegMobileReply([
       encodeDanmakuElem(id: 1, progressMs: 1000, content: '重复'),
     ]);
     final seg2 = encodeSegMobileReply([

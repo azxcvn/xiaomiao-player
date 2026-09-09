@@ -98,9 +98,13 @@ class DanmakuSettings extends ChangeNotifier {
   /// 海量弹幕（轨道占满时叠加绘制，默认关闭）
   bool _massiveMode = false;
 
-  /// 弹幕去重（时间窗口内相同内容合并为一条，默认关闭；
+  /// 弹幕去重（时间窗口内相同内容合并为一条，默认关闭；**与 [merge] 互斥**；
   /// 算法见 utils/danmaku_dedup.dart）
   bool _deduplication = false;
+
+  /// 弹幕合并（跨时间窗把同内容弹幕聚成一条并计数，默认关闭；**与
+  /// [deduplication] 互斥**；算法见 utils/danmaku_merge.dart）
+  bool _merge = false;
 
   /// 时间轴偏移（秒，-180~180，默认 0；正 = 延后、负 = 提前）。
   /// 校准弹幕相对视频画面的显示时间（对齐 Kazumi danmakuTimeOffset）。
@@ -132,6 +136,7 @@ class DanmakuSettings extends ChangeNotifier {
   bool get showScroll => _showScroll;
   bool get massiveMode => _massiveMode;
   bool get deduplication => _deduplication;
+  bool get merge => _merge;
   double get timeOffsetSeconds => _timeOffset;
   List<String> get blockedKeywords => List.unmodifiable(_blockedKeywords);
   DanmakuFontMode get fontMode => _fontMode;
@@ -160,6 +165,7 @@ class DanmakuSettings extends ChangeNotifier {
     _showScroll = prefs.getBool(_keyShowScroll) ?? true;
     _massiveMode = prefs.getBool(_keyMassiveMode) ?? false;
     _deduplication = prefs.getBool(_keyDedup) ?? false;
+    _merge = prefs.getBool(_keyMerge) ?? false;
     _timeOffset = (prefs.getDouble(_keyTimeOffset) ?? 0)
         .clamp(minTimeOffsetSeconds, maxTimeOffsetSeconds);
     _blockedKeywords =
@@ -309,13 +315,31 @@ class DanmakuSettings extends ChangeNotifier {
     await prefs.setBool(_keyMassiveMode, v);
   }
 
+  /// 开关弹幕去重。**与弹幕合并互斥**（两者语义冲突：去重丢弃重复条目，
+  /// 合并要统计重复条目，同时开启逻辑上讲不通）——开启去重会自动关闭合并，
+  /// 互斥裁决只在本服务一处，UI 与运行时共用同一份生效值。
   Future<void> setDeduplication(bool v) async {
     await ensureLoaded();
     if (_deduplication == v) return;
     _deduplication = v;
+    if (v) _merge = false; // 互斥：开去重 → 关合并
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyDedup, v);
+    if (v) await prefs.setBool(_keyMerge, false);
+  }
+
+  /// 开关弹幕合并。**与弹幕去重互斥**——开启合并会自动关闭去重（见
+  /// [setDeduplication] 的说明）。
+  Future<void> setMerge(bool v) async {
+    await ensureLoaded();
+    if (_merge == v) return;
+    _merge = v;
+    if (v) _deduplication = false; // 互斥：开合并 → 关去重
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyMerge, v);
+    if (v) await prefs.setBool(_keyDedup, false);
   }
 
   Future<void> setTimeOffset(double v) async {
@@ -407,6 +431,7 @@ class DanmakuSettings extends ChangeNotifier {
     _showScroll = true;
     _massiveMode = false;
     _deduplication = false;
+    _merge = false;
     _timeOffset = 0;
     _blockedKeywords = [];
     _fontMode = DanmakuFontMode.followSystem;
@@ -427,6 +452,7 @@ class DanmakuSettings extends ChangeNotifier {
     await prefs.setBool(_keyShowScroll, true);
     await prefs.setBool(_keyMassiveMode, false);
     await prefs.setBool(_keyDedup, false);
+    await prefs.setBool(_keyMerge, false);
     await prefs.setDouble(_keyTimeOffset, 0);
     await prefs.remove(_keyBlockedKeywords);
     await prefs.setInt(_keyFontMode, DanmakuFontMode.followSystem.index);
@@ -448,6 +474,7 @@ class DanmakuSettings extends ChangeNotifier {
       _showScroll &&
       !_massiveMode &&
       !_deduplication &&
+      !_merge &&
       _timeOffset == 0 &&
       _blockedKeywords.isEmpty &&
       _fontMode == DanmakuFontMode.followSystem &&
@@ -469,6 +496,7 @@ class DanmakuSettings extends ChangeNotifier {
   static const _keyShowScroll = 'danmaku_show_scroll';
   static const _keyMassiveMode = 'danmaku_massive_mode';
   static const _keyDedup = 'danmaku_dedup';
+  static const _keyMerge = 'danmaku_merge';
   static const _keyTimeOffset = 'danmaku_time_offset';
   static const _keyBlockedKeywords = 'danmaku_blocked_keywords';
   static const _keyFontMode = 'danmaku_font_mode';
@@ -492,6 +520,7 @@ class DanmakuSettings extends ChangeNotifier {
     _showScroll = true;
     _massiveMode = false;
     _deduplication = false;
+    _merge = false;
     _timeOffset = 0;
     _blockedKeywords = [];
     _fontMode = DanmakuFontMode.followSystem;
