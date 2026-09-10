@@ -59,6 +59,25 @@ class PinnedFoldersSettings extends ChangeNotifier {
     await _persist();
   }
 
+  /// 批量固定 / 取消固定（多选菜单一次勾选多个文件夹时用）。
+  ///
+  /// 与循环调 [setPinned] 的区别：**只通知、只写盘一次**，
+  /// 避免一次多选触发 N 次列表重建与 N 次持久化。
+  Future<void> setPinnedAll(
+    Iterable<String> paths, {
+    required bool pinned,
+  }) async {
+    var changed = false;
+    for (final p in paths) {
+      if (p.isEmpty) continue;
+      final hit = pinned ? _paths.add(p) : _paths.remove(p);
+      changed = hit || changed;
+    }
+    if (!changed) return;
+    notifyListeners();
+    await _persist();
+  }
+
   /// 批量替换（「固定文件夹」设置页一键清空/批量取消用）
   Future<void> replaceAll(Iterable<String> paths) async {
     final next = paths.where((e) => e.isNotEmpty).toSet();

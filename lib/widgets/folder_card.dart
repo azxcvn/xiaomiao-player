@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:moumou/models/tree_node.dart';
 import 'package:moumou/services/view_settings.dart';
 import 'package:moumou/utils/formatters.dart';
+import 'package:moumou/widgets/file_selection_ui.dart';
 import 'package:moumou/widgets/marquee_text.dart';
 
 /// 文件夹卡片：列表模式与树状模式共用（字段驱动渲染）
@@ -9,16 +10,25 @@ import 'package:moumou/widgets/marquee_text.dart';
 /// 尾部为静态 chevron_right，点击进入下一层（列表=文件夹详情页；树状=目录浏览页）。
 /// **固定的文件夹**在名称左侧显示一枚图钉（纯指示，固定/取消固定走长按菜单，
 /// 见 `folder_actions`）；长按卡片由调用方弹出文件管理菜单。
+///
+/// 多选态（[selectionMode]）下：左侧插入勾选圆点、尾部 chevron 隐藏
+/// （此态点击是「选中」而不是「进入」），选中项换底色 + 主题色描边。
 class FolderCard extends StatelessWidget {
   final TreeNode node;
   final Set<FolderField> fields;
   final VoidCallback onTap;
 
-  /// 长按卡片（弹出文件管理菜单：固定/复制/移动/重命名/删除）；null 时无长按行为
+  /// 长按卡片（弹出文件管理菜单：固定/复制/移动/重命名/删除/多选）；null 时无长按行为
   final VoidCallback? onLongPress;
 
   /// 是否已固定（置顶显示）；固定项始终排在列表最前
   final bool isPinned;
+
+  /// 是否处于多选态
+  final bool selectionMode;
+
+  /// 是否已被选中（仅多选态有意义）
+  final bool selected;
 
   const FolderCard({
     super.key,
@@ -27,6 +37,8 @@ class FolderCard extends StatelessWidget {
     required this.onTap,
     this.onLongPress,
     this.isPinned = false,
+    this.selectionMode = false,
+    this.selected = false,
   });
 
   @override
@@ -34,8 +46,11 @@ class FolderCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
-      color: scheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: selected ? selectedCardColor(scheme) : scheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: selectedCardSide(scheme, selected),
+      ),
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
@@ -45,6 +60,7 @@ class FolderCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              if (selectionMode) SelectionMark(selected: selected),
               Container(
                 width: 48,
                 height: 48,
@@ -86,7 +102,9 @@ class FolderCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+              // 多选态点击是「选中」而不是「进入下一层」，箭头会造成误导 → 隐藏
+              if (!selectionMode)
+                Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
             ],
           ),
         ),

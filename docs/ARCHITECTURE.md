@@ -149,6 +149,7 @@ lib/
 │   ├── media_scan_settings.dart  # 媒体扫描与过滤设置（.nomedia/隐藏文件夹/黑白名单，ChangeNotifier + 持久化）
 │   ├── pinned_folders_settings.dart # 固定文件夹设置（绝对路径集合/固定与取消/批量替换/失效清理，ChangeNotifier + 持久化，§4.30）
 │   ├── file_operations_service.dart # 文件管理服务（复制/移动/重命名/删除 + 进度与协作式取消，dart:io 真实路径，§4.30）
+│   ├── file_selection_controller.dart # 页面级多选状态（进入/退出/切换/全选/剔除失效项，**非单例**，§4.31）
 │   ├── audio_service.dart     # 音频控制器（音轨列表/aid 单选/外部音轨导入·移除（临时）/声道/af 滤镜链应用；声道与处理为会话级，随播放器生命周期重置）
 │   ├── subtitle_settings.dart # 字幕设置（延迟/大小/位置/颜色/描边模式/内嵌样式覆盖/自定义字体/外挂字幕记忆/重置样式，ChangeNotifier + 持久化）
 │   ├── subtitle_service.dart  # 字幕控制器（单选模型：track-list/sid 同步/sub-add/sub-remove + 同名字幕自动加载 + 设置应用 + 切集重应用 + 外挂字幕跨会话恢复）
@@ -211,8 +212,8 @@ lib/
 │   ├── player_bottom_panel.dart # ★ 竖屏底部弹出面板壳 + showPlayerBottomPanel
 │   ├── player_option_chip.dart#   面板选项胶囊（倍速/超分共用）
 │   ├── options_sheet.dart     #   统一排序弹窗（字段胶囊选择）
-│   ├── folder_card.dart       #   文件夹卡片（列表/树状共用）
-│   ├── video_card.dart        #   视频卡片（列表/树状/详情共用）
+│   ├── folder_card.dart       #   文件夹卡片（列表/树状共用，含多选勾选态）
+│   ├── video_card.dart        #   视频卡片（列表/树状/详情共用，含多选勾选态）
 │   ├── settings_ui.dart       #   设置页公共组件（分组/卡片/设置项/滑杆主题 + 播放器暗色面板强调色派生 playerPanelAccent/playerPanelSliderTheme）
 │   ├── raw_thumb_image.dart   #   RGBA 帧直渲组件（FastThumbFrame → ui.Image，帧切换保持上一帧无缝）
 │   ├── capsule_nav_bar.dart   #   悬浮胶囊导航
@@ -224,8 +225,9 @@ lib/
 │   ├── cast_device_dialog.dart # 投屏设备选择弹窗（SSDP 发现列表 + 点选推流，§4.18）
 │   ├── privacy_policy_dialog.dart # 首次启动隐私门禁弹窗（5 秒倒计时 + 勾选同意 + 取消退出，§4.19）
 │   ├── update_dialog.dart       # 更新弹窗（Markdown 更新内容 + 立即更新/稍后提醒/忽略 + 主·备下载站子菜单，§4.20）
-│   ├── file_operations_ui.dart  # 文件管理 UI（长按动作菜单/重命名弹窗/删除确认含整目录勾选/传输进度弹窗，§4.30）
-│   ├── folder_actions.dart      # 文件管理动作编排（菜单→弹窗→服务→本地刷新，四页面共用入口，§4.30）
+│   ├── file_operations_ui.dart  # 文件管理 UI（长按动作菜单含「多选」/重命名弹窗/删除确认含整目录勾选/传输进度弹窗，§4.30）
+│   ├── folder_actions.dart      # 文件管理动作编排（单选 showFileManagementFlow + 多选 showBatchFileManagementFlow，四页面共用，§4.30/§4.31）
+│   ├── file_selection_ui.dart   # 多选顶部上下文工具栏 + 卡片勾选圆点（§4.31）
 │   └── marquee_text.dart      #   无缝循环跑马灯
 ├── pages/                     # 页面（每页一个目录）
 │   ├── bilibili/
@@ -330,6 +332,7 @@ lib/
     ├── natural_compare.dart   #   自然序（数字感知）比较
     ├── folder_pin.dart        #   固定文件夹排序纯函数（稳定前置 + 逐层递归，§4.30）
     ├── file_ops.dart          #   文件管理纯函数（路径细分/目标校验/重命名校验/重名避让/失效固定路径，§4.30）
+    ├── file_selection.dart    #   多选纯函数（目录树/视频索引 + 按点选顺序取值，§4.31）
     ├── watch_state.dart       #   观看状态纯函数（未观看/观看中/已看完）
     ├── playback_completion.dart # EOF 动作解析纯函数（优先级链）
     ├── playback_restore.dart  #   恢复进度：openAndRestore（暂停加载→静音激活时间线→seek→确认）
@@ -404,6 +407,7 @@ models（模型）     → 无依赖（纯数据）
 - 弹幕服务器设置属 `DanmakuServerSettings`（独立单例 ChangeNotifier，阶段3）：服务器列表（默认弹弹Play 不可删 + 自建增删启停）+ 切集自动匹配开关（**与默认弹弹Play 服务器互斥**，互斥判定与提示文案统一由本服务提供，见 §4.11），启动 `ensureLoaded`（main.dart）
 - 播放页位置/时长属于**页面局部 ValueNotifier + 局部订阅**（risk_audit #1）：位置流几十毫秒一次事件，若整页 `setState` 会重建整棵 Stack（视频层/手势层/控制层），实际只有进度条、时间文本、常驻进度线需要跟随。横竖屏播放页把 `_position`/`_duration`/`_dragPosition` 抽为页面级 `ValueNotifier`，底栏与常驻进度线用 `Listenable.merge` 局部订阅只重建自身；页面级 `setState` 只留给低频状态（播放/暂停、控制层显隐、锁定、切集）。**注意这是页面局部 ValueNotifier**（dispose 时销毁），不属于被禁的「全局 ValueNotifier hack」
 - 超分记忆语义（`SuperResolutionService`，默认关闭）：无论开关状态都记录「最近一次设置的 模式/质量」；开启记忆后 `load()`/`enterPlayer()` 自动恢复该组合应用到所有视频；**未开启记忆时 `enterPlayer()`（播放页 initState）把本次会话重置为关闭/均衡**——退出播放或重启后都回到默认关闭（参考 mpv-android-anime4k）
+- **文件管理多选状态**属 `FileSelectionController`（普通 `ChangeNotifier`，**页面 State 里 new 一个、dispose 释放，刻意不做单例、不持久化**）：多选只作用于当前页面的当前列表，做成全局单例会跨页污染（§4.31）
 - **禁止**：新增全局 `ValueNotifier` hack / 全局可变单例来跨页面通信
   - 反例教训：曾经的 `fullscreen_state.dart` 全局 `playerActive`，靠页面手动置位影响全局布局，引发连锁补丁 → 已重构为 `AppFrameObserver`（§4.3）
 - 跨页面状态先想清楚归属：全局设置 → services 里的 ChangeNotifier；页面局部 → 页面 State；路由相关 → 路由机制
@@ -448,8 +452,9 @@ models（模型）     → 无依赖（纯数据）
 
 ### 4.6 卡片复用（树状/列表视觉一致的根基）
 
-- 文件夹 → `FolderCard`（`widgets/folder_card.dart`），参数：`node / fields / onTap`
-- 视频 → `VideoCard`（`widgets/video_card.dart`），参数：`video / fields / onTap / onInfoTap / trailing`（trailing 覆盖最右侧图标，历史记录页放垃圾桶）
+- 文件夹 → `FolderCard`（`widgets/folder_card.dart`），参数：`node / fields / onTap / onLongPress / isPinned / selectionMode / selected`
+- 视频 → `VideoCard`（`widgets/video_card.dart`），参数：`video / fields / onTap / onInfoTap / trailing / onLongPress / selectionMode / selected`（trailing 覆盖最右侧图标，历史记录页放垃圾桶）
+- `selectionMode` 由调用方的多选态驱动：卡片左侧插入勾选圆点、选中项换底色 + 主题色描边（视频卡片「已看完置灰」被选中态覆盖）；`FolderCard` 在多选态隐藏尾部 chevron（此时点击是「选中」而不是「进入」，箭头会误导，§4.31）
 - **任何新视图/新页面显示文件夹或视频时，必须复用这两个卡片**，禁止另写一套样式
 - 字段由 `ViewSettings.fields`（FolderField）和 `viewSettings.videoFields`（VideoField）驱动
 - VideoCard 字段布局：**时长** = 缩略图右下角标签、**大小** = 缩略图左下角标签（两者自动避让底部进度条，有进度条时上移）；其余字段（日期/分辨率/进度/帧率/字幕指示器）为名称下方标签行；最右侧「i」媒体信息入口（`onInfoTap`，点击打开 `MediaInfoPage`）
@@ -1454,7 +1459,7 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 
 | 项 | 定稿 |
 |---|---|
-| 长按菜单 | **固定与四个文件动作在同一个菜单里**：文件夹长按 = 固定/取消固定 + 复制/移动/重命名/删除（五项）；视频长按 = 复制/移动/重命名/删除（四项，视频无「固定」）。固定**只此一个入口**，不做卡片/AppBar 图钉按钮，也不做独立的「固定文件夹」设置页 |
+| 长按菜单 | **固定与四个文件动作在同一个菜单里**：文件夹长按 = 固定/取消固定 + 复制/移动/重命名/删除（五项）；视频长按 = 复制/移动/重命名/删除（四项，视频无「固定」）。菜单最底部再用分隔线单列一项**「多选」**（它是模式切换、不是对本条目的操作）→ 进入批量操作（§4.31）。固定**只此一个入口**，不做卡片/AppBar 图钉按钮，也不做独立的「固定文件夹」设置页 |
 | 重命名 | **视频/文件的扩展名锁死**：输入框只给「扩展名之前的主体」，右侧固定显示 `.mp4`，用户改不出别的格式；用户即便把扩展名一起打进来也不会变成 `456.mp4.mp4`。文件夹不锁（目录名允许带点） |
 | 删除文件夹 | 弹窗**默认只删文件夹内的视频文件**（正文一句话说清），下方一个**默认不勾**的「删除所有文件」——勾上 = 连同其它文件递归删除整个文件夹；不写死偏好 |
 | 复制/移动目标 | 复用 App 内自绘目录选择器 `showDirectoryPickerDialog`（真实路径 + `MANAGE_EXTERNAL_STORAGE`，无需 SAF），带进度弹窗与取消 |
@@ -1468,9 +1473,9 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | 纯函数 | `utils/file_ops.dart` | 路径细分（`baseName`/`parentOf`/`stripTrailingSlash`）、目标校验（含「不能移动到自己子目录」）、重命名合法性、重名避让 `uniqueName`、失效固定路径推导 `stalePinnedPaths` |
 | 设置 | `services/pinned_folders_settings.dart` | 固定集合（**绝对路径** `Set<String>`）单例 + 持久化；`toggle/setPinned/replaceAll/retainExisting(additionalStale:)`；启动 `ensureLoaded`（main.dart） |
 | 服务 | `services/file_operations_service.dart` | `copy/move/rename/deleteFile/deleteFolder`；重名自动避让、同卷 `rename` 原子秒移、跨卷退化「复制+删源」、`FileOpCancelToken` 协作式取消、`FileOpProgress` 进度回调；失败抛 `FileOpException`（文案可直接进 SnackBar） |
-| UI | `widgets/file_operations_ui.dart` | 长按动作菜单（固定/复制/移动/重命名/删除）、重命名弹窗（实时校验）、删除弹窗（默认只删视频 + 默认不勾的「删除所有文件」）、传输进度弹窗 |
-| 编排 | `widgets/folder_actions.dart` | `showFileManagementFlow`：菜单 → 弹窗 → 服务 → `onMutated` 本地刷新 → SnackBar；**首页列表/树状一级/树状目录页/文件夹详情页四页面共用同一入口**，返回 bool 表示「当前页对象已改名或删除」 |
-| 入口 | `widgets/folder_card.dart` / `video_card.dart` | 两卡片新增 `onLongPress`；`FolderCard` 另有 `isPinned`（已固定时名称左侧显示图钉，**纯指示不可点**） |
+| UI | `widgets/file_operations_ui.dart` | 长按动作菜单（固定/复制/移动/重命名/删除/多选）、重命名弹窗（实时校验）、删除弹窗（默认只删视频 + 默认不勾的「删除所有文件」，支持多选 `itemCount`/`folderCount`）、传输进度弹窗 |
+| 编排 | `widgets/folder_actions.dart` | `showFileManagementFlow`：菜单 → 弹窗 → 服务 → `onMutated` 本地刷新 → SnackBar；**首页列表/树状一级/树状目录页/文件夹详情页四页面共用同一入口**，返回 bool 表示「当前页对象已改名或删除」；多选批量走 `showBatchFileManagementFlow`（§4.31） |
+| 入口 | `widgets/folder_card.dart` / `video_card.dart` | 两卡片新增 `onLongPress` 与多选态 `selectionMode`/`selected`；`FolderCard` 另有 `isPinned`（已固定时名称左侧显示图钉，**纯指示不可点**） |
 
 **关键决策**：
 - **固定只有长按菜单一个入口**：卡片图钉、详情页/目录页 AppBar 图钉、设置页「固定文件夹」
@@ -1494,6 +1499,46 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   复制/移动则自动避让 `名字 (1)`（隐式意图，冲突时保留两者）。
 - **写盘前置**：所有操作直接走 `dart:io` 真实路径，依赖首页的
   `MANAGE_EXTERNAL_STORAGE` 门禁；不改用 SAF，避免「写入成功但 MediaStore 扫不到」。
+
+---
+
+### 4.31 文件管理多选（批量操作）
+
+> 需求：文件夹与视频**都能多选**（原先只有单选）；「多选」放进长按菜单；
+> 多选下禁用一部分操作（如重命名）；「选完之后怎么再呼出菜单」经方案评审拍板。
+
+**定稿语义（用户四问四答，勿擅自改）**：
+
+| 问题 | 定稿 |
+|---|---|
+| 多选态怎么再呼出菜单 | **顶部 AppBar 上下文工具栏** `[×] 已选 N 项 [全选] [⋮]`，点 ⋮ 弹出**和长按完全同一个**菜单（`showFileActionMenu(selectionCount: n)`） |
+| 多选态下长按卡片 | 同样呼出该菜单；长按的那张若还没选就**先纳入选择**（否则会对着一个空选择弹出菜单） |
+| 禁用哪些操作 | **撤掉「重命名」**（一次只能改一个名字）与「多选」自身；**「固定」仅在选中项全是文件夹时出现**（混选/纯视频没有固定语义） |
+| 批量删除文件夹 | 沿用同一个确认弹窗：默认只删文件夹内的视频，勾「删除所有文件」对**全部**选中文件夹一次性生效 |
+
+**分层**（自下而上）：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 纯函数 | `utils/file_selection.dart` | `indexTreeSelection`（递归建 path→选中项 索引）/ `indexVideoSelection` / `pickSelection`（按点选先后取值，索引里查不到的自动丢弃）；选中项用记录类型 `FileSelectionItem`，与 `TreeNode`/`VideoFile` 解耦 |
+| 状态 | `services/file_selection_controller.dart` | `selecting/count/paths/isSelected/containsAll/begin/exit/toggle/setAll/retainExisting`；**页面级、非单例、不持久化**（§4.1） |
+| UI | `widgets/file_selection_ui.dart` | `buildFileSelectionAppBar`（顶部工具栏）+ `SelectionMark`（卡片勾选圆点）+ 选中卡片底色/描边派生 |
+| UI | `widgets/file_operations_ui.dart` | 菜单新增 `FileAction.multiSelect`；`selectionCount > 0` 时撤重命名与多选；删除弹窗支持 `itemCount`/`folderCount` |
+| 编排 | `widgets/folder_actions.dart` | `showBatchFileManagementFlow`：批量菜单 → 逐项预校验 → 串行执行 → 汇总提示 |
+| 入口 | `home_page.dart` / `folder_detail_page.dart` / `tree_folder_page.dart` | 各自持有一个 `FileSelectionController`，把 `selectionMode`/`selected` 传给卡片，`PopScope` 拦系统返回 |
+
+**关键决策**：
+- **操作入口放顶部、不放底部**：主 tab 页底部有悬浮胶囊导航（`MainScaffold` 用 `Stack` 叠加在内容之上），底部再放一条操作栏会直接压住导航。多选态顺带收起首页右下角速拨 FAB（它会压住列表末尾几项）。
+- **菜单只有一个真源**：多选态不另写菜单，继续用 `showFileActionMenu`，靠 `selectionCount` 裁剪；将来加操作只改一处。
+- **全选范围 = 当前可见列表**：「可见」= 已排序 + 固定前置 + 搜索过滤后的结果，由各页面 `_visibleNodes` / `_visibleVideos` / `_visibleChildren` 一处裁决（顺带消掉「排序真值两套」的隐患）。
+- **选择不跨页**：控制器由页面 `State` 持有并 `dispose`；树状目录页多选时**收起面包屑**（它是「跳去别的层级」的出口，一跳就连页面带选择一起丢）。
+- **系统返回键先退多选**：三个页面都 `PopScope(canPop: !selecting, onPopInvokedWithResult: ...)`，而不是直接退出页面。
+- **点选顺序即执行顺序**：`pickSelection` 按 `controller.paths`（点选先后）取值而非列表顺序，批量提示里的「第 i/N 项」才符合用户预期。
+- **批量传输先全员预校验**：目标目录选一次，逐项跑 `validateMoveTarget`，**任一项不合法就整体中止**（避免「搬了一半才发现目标非法」）。
+- **单项失败不中断整批**：收集失败原因最后汇总（`已$verb $done/$total 项，失败：…`，超过 3 条折叠）——一把文件里有一个被占用不该连累其它 19 个。
+- **固定不退出多选**：固定只改展示顺序、不动磁盘，连续固定多个更顺手；其余操作执行完自动退出多选（`showBatchFileManagementFlow` 返回 true = 真的做了操作，只是关菜单/取消弹窗不算）。
+- **重扫后剔除失效选中项**：每次 `onMutated` 后调 `retainExisting`，保证批量操作不会打到死路径。
+- **进度弹窗句柄只 pop 一次**、`dismiss`/`dispose` 分离：见 §7 对应两行。
 
 ---
 
@@ -1668,7 +1713,10 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/subtitle_font_injection_test.dart` — 自定义字幕字体注入判定纯函数（auto 或空目录不注入、族名+目录齐备才注入，§4.10）
   - `test/folder_pin_test.dart` — 固定文件夹排序纯函数（稳定前置/固定项之间仍保序/视频不受影响/分组无变化原样返回 + 树状逐层递归/重建保留聚合信息，§4.30）
   - `test/file_ops_test.dart` — 文件管理纯函数（路径细分/目标校验含自己子目录拦截/重命名合法性与非法字符/**扩展名锁定**：预填主体·恒拼原扩展名·重复后缀不叠加·只输扩展名报错/重名避让序号插入位置/失效固定路径推导，§4.30）
-  - `test/pinned_folders_settings_test.dart` — 固定文件夹设置服务（默认空/toggle/setPinned 幂等/replaceAll 通知语义/只读快照/持久化冷启动读回/损坏数据防御，§4.30）
+  - `test/pinned_folders_settings_test.dart` — 固定文件夹设置服务（默认空/toggle/setPinned 幂等/**setPinnedAll 批量只通知一次**/replaceAll 通知语义/只读快照/持久化冷启动读回/损坏数据防御，§4.30）
+  - `test/file_selection_test.dart` — 多选纯函数（目录树递归索引 + 缺 video 字段防御/视频索引/按点选顺序取值/失效路径丢弃，§4.31）
+  - `test/file_selection_controller_test.dart` — 多选状态控制器（begin 立刻选中长按项且清掉上次选择/非多选态 toggle 无效/取消到 0 项仍在多选态/exit 幂等不重复通知/全选/containsAll 空列表不算全选/retainExisting 无变化不通知/只读快照，§4.31）
+  - `test/file_operations_ui_test.dart` — 多选 UI（选择工具栏：数量·全选↔取消全选·0 项时 ⋮ 置灰·× 退出；长按菜单多选态裁剪：撤重命名与多选、固定仅纯文件夹；删除弹窗：单选/多选文案 + 「删除所有文件」勾选框显隐与结果，§4.31）
 - 改以下代码必须跑对应测试：`AppFrame`、`ViewSettings` 排序、权限流程、`CapsuleNavBar`
 
 ---
@@ -1824,3 +1872,7 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | 弹幕合并放在去重之后 → 计数被去重吃掉（去重会丢弃窗口内重复条目） | 流水线固定「屏蔽词 → **合并** → 去重」；合并写 `DanmakuEntry.count`、文本保持原样（§4.11） |
 | canvas_danmaku 的 `count` 只在描边段落里绘制 → 描边宽度设 0 时计数不可见 | 不用 canvas 的 `count`，改为把 `×N` 拼进显示文本 `DanmakuEntry.displayText`（§4.11） |
 | 会员渐变彩色弹幕标记只在 protobuf（`DanmakuElem.colorful` 字段 24）里，XML 缓存不保留 | 在线播放走 protobuf 主路径可拿到；`danmakuEntriesToBiliXml` 落盘回读只剩普通颜色（当前 `loadCachedDanmaku` 无调用方，不影响播放）（§4.11） |
+| 多选操作条放屏幕底部 → 压住主 tab 页的悬浮胶囊导航（`MainScaffold` 用 `Stack` 叠加在内容之上，列表已留 88 padding） | 多选入口放**顶部 AppBar 上下文工具栏**（`[×] 已选 N 项 [全选] [⋮]`），底部不新增任何常驻条（§4.31） |
+| 传输进度弹窗「取消」里 `dialog.pop()`，`finally` 又 pop 一次 → 第二次弹掉的是**页面本身**（详情页被直接退出） | 进度弹窗用只 pop 一次的句柄 `_ProgressHandle`；`dismiss`（关弹窗）与 `dispose`（释放通知器）分离，避免在途进度回调写已释放的 `ValueNotifier`（§4.30） |
+| 删除确认弹窗的「删除所有文件」勾选框只认多选参数 `folderCount` → 单删文件夹时勾选框消失，整目录删除能力静默丢失 | 判据同时认 `isDirectory`（单选入口）与 `folderCount`（多选入口），两条路径都不退化（§4.30/§4.31） |
+| 多选状态做成全局单例 → 跨页 / 跨会话残留选择 | `FileSelectionController` 由页面 `State` 持有并 `dispose`，不单例不持久化（§4.1/§4.31） |

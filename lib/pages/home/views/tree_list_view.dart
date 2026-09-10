@@ -11,6 +11,9 @@ import 'package:moumou/widgets/video_card.dart';
 ///
 /// 文件夹与视频长按由调用方弹出文件管理菜单（文件夹多一项「固定」）；
 /// 固定的文件夹按 [pinnedPaths] 显示图钉并稳定前置在列表最前。
+///
+/// 多选态由 [selectionMode] + [selectedPaths] 驱动渲染；
+/// 「点卡片是选中还是进入/播放」由调用方在 onTap 回调里裁决。
 class TreeListView extends StatelessWidget {
   final List<TreeNode> roots;
   final Set<FolderField> folderFields;
@@ -21,6 +24,8 @@ class TreeListView extends StatelessWidget {
   final void Function(VideoFile)? onVideoInfoTap;
   final void Function(TreeNode)? onFolderLongPress;
   final void Function(VideoFile)? onVideoLongPress;
+  final bool selectionMode;
+  final Set<String> selectedPaths;
 
   const TreeListView({
     super.key,
@@ -33,6 +38,8 @@ class TreeListView extends StatelessWidget {
     this.onVideoInfoTap,
     this.onFolderLongPress,
     this.onVideoLongPress,
+    this.selectionMode = false,
+    this.selectedPaths = const {},
   });
 
   @override
@@ -52,6 +59,8 @@ class TreeListView extends StatelessWidget {
                 ? null
                 : () => onFolderLongPress!(node),
             isPinned: pinnedPaths.contains(node.path),
+            selectionMode: selectionMode,
+            selected: selectedPaths.contains(node.path),
           );
         }
         return VideoCard(
@@ -64,6 +73,8 @@ class TreeListView extends StatelessWidget {
           onLongPress: onVideoLongPress == null
               ? null
               : () => onVideoLongPress!(node.video!),
+          selectionMode: selectionMode,
+          selected: selectedPaths.contains(node.video!.path),
         );
       },
     );

@@ -3,13 +3,16 @@ import 'package:moumou/models/tree_node.dart';
 import 'package:moumou/models/video_file.dart';
 import 'package:moumou/pages/media_info/media_info_page.dart';
 import 'package:moumou/pages/player/player_page.dart';
+import 'package:moumou/services/file_selection_controller.dart';
 import 'package:moumou/services/playback_progress_service.dart';
 import 'package:moumou/services/pinned_folders_settings.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/services/video_scanner.dart';
 import 'package:moumou/services/view_settings.dart';
+import 'package:moumou/utils/file_selection.dart';
 import 'package:moumou/utils/folder_pin.dart';
 import 'package:moumou/widgets/app_frame.dart';
+import 'package:moumou/widgets/file_selection_ui.dart';
 import 'package:moumou/widgets/folder_actions.dart';
 import 'package:moumou/widgets/folder_card.dart';
 import 'package:moumou/widgets/options_sheet.dart';
@@ -24,10 +27,12 @@ import 'package:moumou/widgets/video_card.dart';
 /// [path] 为从顶层到当前节点的完整路径链（不含首页），用于面包屑导航：
 /// 点击任意上级层级可 popUntil 跳回。
 ///
-/// 右上角从左到右：**搜索**（文件夹 + 视频）→ **固定当前文件夹** → 排序与字段。
+/// 右上角从左到右：**搜索**（文件夹 + 视频）→ 排序与字段。
 ///
-/// 文件管理（文件夹与视频长按同一套四功能菜单）改动磁盘后本页会**重扫目录树**
+/// 文件管理（文件夹与视频长按同一套菜单 + 多选批量）改动磁盘后本页会**重扫目录树**
 /// 并重新定位当前路径；当前文件夹被重命名/删除时自动退出本页。
+///
+/// 多选态下 AppBar 换成选择工具栏、面包屑收起（见 `widgets/file_selection_ui.dart`）。
 class TreeFolderPage extends StatefulWidget {
   final TreeNode node;
   final ViewSettings viewSettings;
@@ -57,9 +62,13 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
 
   TreeNode get _node => _path.isEmpty ? widget.node : _path.last;
 
+  /// 多选状态（页面级：退出本页即丢弃）
+  final FileSelectionController _selection = FileSelectionController();
+
   @override
   void dispose() {
     _searchController.dispose();
+    _selection.dispose();
     super.dispose();
   }
 
@@ -105,6 +114,8 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
       return;
     }
     setState(() => _path = located);
+    // 重扫后剔除已被删除的选中项（否则批量操作会打到死路径）
+    _selection.retainExisting(indexTreeSelection(_node.children).keys);
   }
 
   /// 在目录树里按绝对路径深搜出从顶层到目标的路径链
@@ -181,68 +192,156 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
     );
   }
 
+  /// 点卡片：多选态 = 切换选中；否则进入子文件夹 / 播放视频
+  Future<void> _onChildTap(TreeNode child) async {
+    if (_selection.selecting) {
+      _selection.toggle(child.path);
+      return;
+    }
+    if (child.isFolder) {
+      await _openFolder(child);
+    } else {
+      await _openVideo(child.video!);
+    }
+  }
+
+  /// 长按文件夹：多选态 = 对整批呼出菜单（长按项若未选先纳入选择）
   Future<void> _onFolderLongPress(TreeNode node) async {
+    if (_selection.selecting) {
+      await _openSelectionMenu(ensurePath: node.path);
+      return;
+    }
     await showFileManagementFlow(
       context,
       title: node.name,
       isDirectory: true,
       sourcePath: node.path,
       onMutated: _reloadCurrentNode,
+      onMultiSelect: () => _selection.begin(node.path),
     );
   }
 
   Future<void> _onVideoLongPress(VideoFile video) async {
+    if (_selection.selecting) {
+      await _openSelectionMenu(ensurePath: video.path);
+      return;
+    }
     await showFileManagementFlow(
       context,
       title: video.name,
       isDirectory: false,
       sourcePath: video.path,
       onMutated: _reloadCurrentNode,
+      onMultiSelect: () => _selection.begin(video.path),
+    );
+  }
+
+  /// 当前可见（已排序、固定前置、已过滤）的子级；全选范围与渲染共用同一份真值
+  List<TreeNode> _visibleChildren() {
+    final pinnedPaths = PinnedFoldersSettings.instance.paths;
+    // 与首页一致的排序真值：先整体排序，再把固定文件夹稳定前置
+    var children = widget.viewSettings.sortTree(_node.children);
+    children = pinnedFoldersFirst(children, pinnedPaths);
+    if (_query.isNotEmpty) {
+      children = children.where((c) {
+        if (c.isFolder) return c.name.toLowerCase().contains(_query);
+        return c.video!.name.toLowerCase().contains(_query);
+      }).toList();
+    }
+    return children;
+  }
+
+  /// 选中项（按点选先后）；已被删除的路径自动丢弃
+  List<FileSelectionItem> _selectedItems() =>
+      pickSelection(_selection.paths, indexTreeSelection(_node.children));
+
+  /// 多选态呼出批量菜单（顶部 ⋮ 与「多选态下长按卡片」共用）
+  Future<void> _openSelectionMenu({String? ensurePath}) async {
+    if (ensurePath != null && !_selection.isSelected(ensurePath)) {
+      _selection.toggle(ensurePath);
+    }
+    if (_selection.isEmpty) return;
+    final acted = await showBatchFileManagementFlow(
+      context,
+      items: _selectedItems(),
+      onMutated: _reloadCurrentNode,
+    );
+    if (acted && mounted) _selection.exit();
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      title: _searching
+          ? TextField(
+              controller: _searchController,
+              autofocus: true,
+              decoration: const InputDecoration(
+                hintText: '搜索文件夹与视频',
+                border: InputBorder.none,
+              ),
+              onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
+            )
+          : Text(_node.name),
+      actions: [
+        if (_searching)
+          IconButton(
+            icon: const Icon(Icons.close),
+            tooltip: '取消搜索',
+            onPressed: _toggleSearch,
+          )
+        else if (_node.children.isNotEmpty)
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: '搜索',
+            onPressed: _toggleSearch,
+          ),
+        // 目录为空时没有可排序内容，不显示排序入口
+        if (_node.children.isNotEmpty)
+          IconButton(
+            icon: const Icon(Icons.sort),
+            tooltip: '排序与字段',
+            onPressed: _showOptions,
+          ),
+      ],
+    );
+  }
+
+  /// 多选态顶部工具栏；全选范围 = 当前可见子级
+  PreferredSizeWidget _buildSelectionAppBar() {
+    final visible = _visibleChildren().map((c) => c.path).toList();
+    final allSelected = _selection.containsAll(visible);
+    return buildFileSelectionAppBar(
+      count: _selection.count,
+      allSelected: allSelected,
+      onExit: _selection.exit,
+      onToggleAll: () => _selection.setAll(visible, selected: !allSelected),
+      onOpenMenu: () => _openSelectionMenu(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: _searching
-            ? TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: '搜索文件夹与视频',
-                  border: InputBorder.none,
-                ),
-                onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
-              )
-            : Text(_node.name),
-        actions: [
-          if (_searching)
-            IconButton(
-              icon: const Icon(Icons.close),
-              tooltip: '取消搜索',
-              onPressed: _toggleSearch,
-            )
-          else if (_node.children.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.search),
-              tooltip: '搜索',
-              onPressed: _toggleSearch,
-            ),
-          // 目录为空时没有可排序内容，不显示排序入口
-          if (_node.children.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.sort),
-              tooltip: '排序与字段',
-              onPressed: _showOptions,
-            ),
-        ],
-      ),
-      body: Column(
-        children: [
-          _BreadcrumbBar(crumbs: _crumbs, onTap: _jumpTo),
-          Expanded(child: _buildBody()),
-        ],
+    return ListenableBuilder(
+      listenable: _selection,
+      builder: (context, _) => PopScope(
+        // 多选态下系统返回键先退出多选，而不是退出本页
+        canPop: !_selection.selecting,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) _selection.exit();
+        },
+        child: Scaffold(
+          appBar:
+              _selection.selecting ? _buildSelectionAppBar() : _buildAppBar(),
+          body: Column(
+            children: [
+              // 多选态收起面包屑：它是「跳去别的层级」的出口，一跳就会
+              // 连页面一起丢掉当前选择，与多选态冲突
+              if (!_selection.selecting)
+                _BreadcrumbBar(crumbs: _crumbs, onTap: _jumpTo),
+              Expanded(child: _buildBody()),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -260,15 +359,8 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
       ]),
       builder: (context, _) {
         final pinnedPaths = PinnedFoldersSettings.instance.paths;
-        // 与首页一致的排序真值：先整体排序，再把固定文件夹稳定前置
-        var children = widget.viewSettings.sortTree(_node.children);
-        children = pinnedFoldersFirst(children, pinnedPaths);
-        if (_query.isNotEmpty) {
-          children = children.where((c) {
-            if (c.isFolder) return c.name.toLowerCase().contains(_query);
-            return c.video!.name.toLowerCase().contains(_query);
-          }).toList();
-        }
+        final selectedPaths = _selection.paths.toSet();
+        final children = _visibleChildren();
         if (children.isEmpty && _query.isNotEmpty) {
           return const Center(child: Text('没有匹配的内容'));
         }
@@ -282,17 +374,21 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
               return FolderCard(
                 node: child,
                 fields: widget.viewSettings.fields,
-                onTap: () => _openFolder(child),
+                onTap: () => _onChildTap(child),
                 onLongPress: () => _onFolderLongPress(child),
                 isPinned: pinnedPaths.contains(child.path),
+                selectionMode: _selection.selecting,
+                selected: selectedPaths.contains(child.path),
               );
             }
             return VideoCard(
               video: child.video!,
               fields: widget.viewSettings.videoFields,
-              onTap: () => _openVideo(child.video!),
+              onTap: () => _onChildTap(child),
               onInfoTap: () => _openMediaInfo(child.video!),
               onLongPress: () => _onVideoLongPress(child.video!),
+              selectionMode: _selection.selecting,
+              selected: selectedPaths.contains(child.path),
             );
           },
         );

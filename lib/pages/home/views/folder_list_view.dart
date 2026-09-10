@@ -6,14 +6,19 @@ import 'package:moumou/widgets/folder_card.dart';
 /// 列表视图：只列出文件夹（点进去只显示该文件夹内的视频）。
 /// 首页列表模式的专属视图。
 ///
-/// 长按文件夹由调用方弹出文件管理菜单（固定/复制/移动/重命名/删除）；
+/// 长按文件夹由调用方弹出文件管理菜单（固定/复制/移动/重命名/删除/多选）；
 /// 固定的文件夹按 [pinnedPaths] 显示图钉并稳定前置。
+///
+/// 多选态由 [selectionMode] + [selectedPaths] 驱动渲染；
+/// 「点卡片是选中还是进入」由调用方在 [onFolderTap] 里裁决。
 class FolderListView extends StatelessWidget {
   final List<TreeNode> folders;
   final Set<FolderField> fields;
   final Set<String> pinnedPaths;
   final void Function(TreeNode) onFolderTap;
   final void Function(TreeNode)? onFolderLongPress;
+  final bool selectionMode;
+  final Set<String> selectedPaths;
 
   const FolderListView({
     super.key,
@@ -22,6 +27,8 @@ class FolderListView extends StatelessWidget {
     required this.onFolderTap,
     this.pinnedPaths = const {},
     this.onFolderLongPress,
+    this.selectionMode = false,
+    this.selectedPaths = const {},
   });
 
   @override
@@ -40,6 +47,8 @@ class FolderListView extends StatelessWidget {
               ? null
               : () => onFolderLongPress!(node),
           isPinned: pinnedPaths.contains(node.path),
+          selectionMode: selectionMode,
+          selected: selectedPaths.contains(node.path),
         );
       },
     );

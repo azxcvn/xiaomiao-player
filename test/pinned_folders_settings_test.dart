@@ -57,6 +57,43 @@ void main() {
     expect(settings.paths, isEmpty);
   });
 
+  test('setPinnedAll：一次固定多个，只通知一次', () async {
+    var notified = 0;
+    void listener() => notified++;
+    settings.addListener(listener);
+    addTearDown(() => settings.removeListener(listener));
+
+    await settings.setPinnedAll(['/a', '/b', '/c'], pinned: true);
+    expect(settings.count, 3);
+    expect(notified, 1);
+
+    // 全部已经是固定态 → 无变化，不再通知
+    await settings.setPinnedAll(['/a', '/b', '/c'], pinned: true);
+    expect(notified, 1);
+
+    // 取消固定同样只通知一次
+    await settings.setPinnedAll(['/a', '/b', '/c'], pinned: false);
+    expect(settings.paths, isEmpty);
+    expect(notified, 2);
+  });
+
+  test('setPinnedAll：部分已固定时仍按「有变化才通知」处理，空串被忽略', () async {
+    var notified = 0;
+    void listener() => notified++;
+    settings.addListener(listener);
+    addTearDown(() => settings.removeListener(listener));
+
+    await settings.setPinned('/a', true);
+    expect(notified, 1);
+
+    await settings.setPinnedAll(['/a', '/b', ''], pinned: true);
+    expect(settings.paths, {'/a', '/b'});
+    expect(notified, 2);
+
+    await settings.setPinnedAll(const [], pinned: true);
+    expect(notified, 2);
+  });
+
   test('paths 返回只读快照（外部修改会抛错，内部不受影响）', () async {
     await settings.setPinned('/storage/emulated/0/A', true);
     final snapshot = settings.paths;

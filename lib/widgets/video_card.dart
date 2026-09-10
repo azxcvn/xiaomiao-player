@@ -8,6 +8,7 @@ import 'package:moumou/services/video_info_service.dart';
 import 'package:moumou/services/view_settings.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/watch_state.dart';
+import 'package:moumou/widgets/file_selection_ui.dart';
 
 /// 视频卡片：缩略图 + 名称 + 字段（列表视图与目录详情页共用）。
 ///
@@ -30,8 +31,14 @@ class VideoCard extends StatefulWidget {
   /// 历史记录页用它放垃圾桶删除按钮；不传走原有语义。
   final Widget? trailing;
 
-  /// 长按卡片（弹出文件管理菜单：复制/移动/重命名/删除）；null 时无长按行为
+  /// 长按卡片（弹出文件管理菜单：复制/移动/重命名/删除/多选）；null 时无长按行为
   final VoidCallback? onLongPress;
+
+  /// 是否处于多选态（左侧插入勾选圆点，点击语义由调用方改为「选中」）
+  final bool selectionMode;
+
+  /// 是否已被选中（仅多选态有意义）
+  final bool selected;
 
   const VideoCard({
     super.key,
@@ -41,6 +48,8 @@ class VideoCard extends StatefulWidget {
     this.onInfoTap,
     this.trailing,
     this.onLongPress,
+    this.selectionMode = false,
+    this.selected = false,
   });
 
   @override
@@ -191,8 +200,13 @@ class _VideoCardState extends State<VideoCard> {
 
     return Card(
       elevation: 0,
-      color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      // 选中态优先于「已看完置灰」：置灰说的是「看过了」，选中说的是
+      // 「现在要操作它」，后者是当下的意图，必须一眼看得见
+      color: widget.selected ? selectedCardColor(scheme) : cardColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: selectedCardSide(scheme, widget.selected),
+      ),
       child: InkWell(
         onTap: widget.onTap,
         onLongPress: widget.onLongPress,
@@ -202,6 +216,7 @@ class _VideoCardState extends State<VideoCard> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              if (widget.selectionMode) SelectionMark(selected: widget.selected),
               // 缩略图（叠加字段标签 + 进度条）
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
