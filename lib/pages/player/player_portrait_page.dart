@@ -1621,7 +1621,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     // 新拖动开始：终止空闲预取（预取与新请求共享单飞队列，无需其他处理）
     _cancelThumbPrefetch();
     final clamped = ms.clamp(0, _duration.inMilliseconds);
-    final bucket = (clamped ~/ 1000) * 1000;
+    final bucket = DeviceServices.thumbnailBucketMs(clamped);
     if (bucket == _lastThumbBucketMs) return;
     _lastThumbBucketMs = bucket;
     _thumbFraction = _duration.inMilliseconds > 0
@@ -2064,13 +2064,17 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
                                   _resetHideTimer();
                                 },
                                 onSeekEnd: (v) {
-                                  _player.seek(
-                                      Duration(milliseconds: v.round()));
+                                  // 与横屏页同款：落在缩略图那一帧的精确时刻
+                                  // （同一个秒桶 + hr-seek=absolute 帧级精确），
+                                  // 并钳到时长内（桶可能比末尾多出最多 0.5s）
+                                  final bucket = DeviceServices.thumbnailBucketMs(
+                                          v.round())
+                                      .clamp(0, _duration.inMilliseconds);
+                                  _player.seek(Duration(milliseconds: bucket));
                                   _dragPositionNotifier.value = null;
                                   _hideThumbPreview();
                                   // 空闲后预取邻近秒桶，下次拖到附近秒显
-                                  _scheduleThumbPrefetch(
-                                      (v.round() ~/ 1000) * 1000);
+                                  _scheduleThumbPrefetch(bucket);
                                   _resetHideTimer();
                                 },
                                 hasNext: _hasNext,
@@ -2135,6 +2139,9 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
                       time: _thumbPreview!.time,
                       fraction: _thumbFraction,
                       visible: _thumbVisible,
+                      // 拖动位置所属章节（按预览时刻查，不按当前播放位置）
+                      chapterTitle:
+                          _chapterTracker.chapterTitleAt(_thumbPreview!.time),
                     ),
                   ),
                 // 右侧操作（截图 / 锁定，从右侧滑入；与横屏同款灰黑圆角按钮）

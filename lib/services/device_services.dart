@@ -495,6 +495,21 @@ class DeviceServices {
 
   // ── 任意时刻抓帧（FFmpeg 快速引擎，RGBA 直通）────────
 
+  /// 抓帧缓存的时间桶（毫秒）：**四舍五入到整秒**，负值归零。
+  ///
+  /// 这是「缩略图缓存键」与「松手 seek 目标」共用的**唯一真值**——两者必须落在
+  /// 同一时刻，否则「缩略图看到的画面」与「松手后落到的画面」会差最多 1 秒
+  /// （截断分桶时恒定偏后，表现为松手后画面往前跳了一帧以上、再也看不到
+  /// 刚才预览的那一帧）。
+  ///
+  /// 取四舍五入（而非截断）是为了让落点离手指位置最多偏 0.5 秒，手感更准；
+  /// 抓帧走自建内核的 FFmpeg 独立解码实例、时间帧级精确，因此 seek 到这个
+  /// 整数秒后屏幕上出现的正是该桶对应的那一帧。
+  static int thumbnailBucketMs(int timeMs) {
+    if (timeMs <= 0) return 0;
+    return ((timeMs + 500) ~/ 1000) * 1000;
+  }
+
   /// 提取本地视频 [path] 在 [timeMs] 时刻的画面（RGBA 帧，最长边约 [maxWidth]）。
   ///
   /// 按秒分桶 + 内存 LRU + 在飞去重；引擎不可用或被新请求顶掉时返回 null，
@@ -506,7 +521,7 @@ class DeviceServices {
   }) async {
     if (timeMs < 0) return null;
     // 按秒分桶
-    final bucketMs = (timeMs ~/ 1000) * 1000;
+    final bucketMs = thumbnailBucketMs(timeMs);
     final key = '$path|$bucketMs|$maxWidth';
     final cached = _frameCache[key];
     if (cached != null) {
@@ -554,7 +569,7 @@ class DeviceServices {
     int maxWidth = 320,
   }) {
     if (timeMs < 0) return null;
-    final bucketMs = (timeMs ~/ 1000) * 1000;
+    final bucketMs = thumbnailBucketMs(timeMs);
     return _frameCache['$path|$bucketMs|$maxWidth'];
   }
 
@@ -567,7 +582,7 @@ class DeviceServices {
     int maxGapMs = 3000,
   }) {
     if (timeMs < 0) return null;
-    final bucketMs = (timeMs ~/ 1000) * 1000;
+    final bucketMs = thumbnailBucketMs(timeMs);
     final prefix = '$path|';
     final suffix = '|$maxWidth';
     ({FastThumbFrame frame, int bucketMs})? best;
@@ -592,7 +607,7 @@ class DeviceServices {
   /// 测试用：向内存缓存注入一帧（模拟预生成/已解码）
   @visibleForTesting
   static void debugPutFrame(String path, int timeMs, FastThumbFrame frame) {
-    final bucketMs = (timeMs ~/ 1000) * 1000;
+    final bucketMs = thumbnailBucketMs(timeMs);
     final key = '$path|$bucketMs|320';
     _frameCache[key] = frame;
     _frameCacheBytes += frame.rgba.lengthInBytes;

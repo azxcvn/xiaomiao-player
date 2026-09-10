@@ -248,4 +248,64 @@ void main() {
       expect(segments.single.endSeconds, 300);
     });
   });
+
+  group('chapterTitleAt：任意时间点所属章节名（缩略图章节胶囊）', () {
+    const chapters = [
+      ChapterInfo(title: '片头', startSeconds: 0),
+      ChapterInfo(title: '正片', startSeconds: 90),
+      ChapterInfo(title: '片尾', startSeconds: 1300),
+    ];
+
+    test('命中区间：取最后一个 startSeconds <= 位置的章节', () {
+      expect(chapterTitleAt(chapters, 0), '片头');
+      expect(chapterTitleAt(chapters, 89.9), '片头');
+      expect(chapterTitleAt(chapters, 90), '正片');
+      expect(chapterTitleAt(chapters, 1299.9), '正片');
+      expect(chapterTitleAt(chapters, 1300), '片尾');
+      expect(chapterTitleAt(chapters, 9999), '片尾');
+    });
+
+    test('无章节 / 位置在第一章之前 → null（不显示胶囊）', () {
+      expect(chapterTitleAt(const [], 10), isNull);
+      expect(
+        chapterTitleAt(const [ChapterInfo(title: 'A', startSeconds: 60)], 0),
+        isNull,
+      );
+      expect(
+        chapterTitleAt(const [ChapterInfo(title: 'A', startSeconds: 60)], -5),
+        isNull,
+      );
+    });
+
+    test('标题为空白 → 回退「第 N 章」', () {
+      const blank = [
+        ChapterInfo(title: '', startSeconds: 0),
+        ChapterInfo(title: '   ', startSeconds: 100),
+        ChapterInfo(title: '有标题', startSeconds: 200),
+      ];
+      expect(chapterTitleAt(blank, 0), '第 1 章');
+      expect(chapterTitleAt(blank, 150), '第 2 章');
+      expect(chapterTitleAt(blank, 250), '有标题');
+    });
+
+    test('标题两端空白会被去掉', () {
+      expect(
+        chapterTitleAt(
+            const [ChapterInfo(title: '  正片  ', startSeconds: 0)], 5),
+        '正片',
+      );
+    });
+
+    test('与 currentChapterIndex 用同一套查找规则（一致性）', () {
+      for (final pos in [0.0, 89.9, 90.0, 500.0, 1300.0, 2000.0]) {
+        final idx = currentChapterIndex(chapters, pos);
+        expect(chapterTitleAt(chapters, pos), idx == null ? null : chapters[idx].title);
+      }
+    });
+
+    test('chapterNumberFallbackLabel：第 1 章从 1 起算', () {
+      expect(chapterNumberFallbackLabel(0), '第 1 章');
+      expect(chapterNumberFallbackLabel(9), '第 10 章');
+    });
+  });
 }

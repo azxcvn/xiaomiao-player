@@ -31,7 +31,8 @@ Flutter 本地视频播放器（Android），核心能力：
   的 mpv `af` 命名滤镜（`@eq`/`@bass`/`@virt` lavfi 链）；设置全局持久化（`EqualizerSettings`，
   区别于声道/处理的会话级）
 - **进度条缩略图**：自建 libmpv 内核（含 `mk_thumbnail_*` 快速抓帧接口）+ FFmpeg/MediaCodec
-  硬解独立解码实例（~85ms/帧），拖动实时预览、松手精确落帧、空闲预取邻近帧（§4.9）
+  硬解独立解码实例（~85ms/帧），拖动实时预览、**松手落在缩略图那一帧的精确时刻（画面所见即落点）**、
+  预览图上方带**章节名胶囊**（有章节时）、空闲预取邻近帧（§4.9）
 - 超分辨率：Anime4K v4 着色器链（7 档模式：关闭 + A/B/C/A+/B+/C+，× 质量档 流畅/均衡/高清），底栏固定入口
 - 片头片尾自动跳过：全局开关，按秒跳过片头 / 按剩余时间跳过片尾，播放中「设为当前时间」，一键重置
 - **弹幕（阶段1）**：canvas_danmaku 渲染 + 本地弹幕加载（同名 9 种命名规则自动加载
@@ -292,7 +293,7 @@ lib/
 │   │       ├── subtitle_file_picker.dart      # 外挂字幕选择（≤11 系统选择器 / >11 自建选择器+文件夹记忆+文件过滤器+死路径向上回退；音频/弹幕选择器复用同一面板）
 │   │       ├── player_resume_indicator.dart   # 恢复进度指示器（胶囊样式，2.5s 自动隐藏）
 │   │       ├── player_swipe_seek_overlay.dart # 水平滑动 seek 预览浮层
-│   │       ├── player_thumbnail_preview.dart  # 进度条拖动缩略图预览气泡（RGBA 直渲 + 淡入淡出）
+│   │       ├── player_thumbnail_preview.dart  # 进度条拖动缩略图预览气泡（章节名胶囊在上 + RGBA 直渲 + 时间胶囊在下 + 淡入淡出）
 │   │       ├── portrait_player_top_bar.dart   # 竖屏顶栏（两行：返回+标题 / 5 槽位+更多横向均分，与横屏一致支持 5 槽位）
 │   │       ├── portrait_player_bottom_bar.dart # 竖屏底栏（章节名+弹幕开关/设置行 → 进度条 → 操作行：超分→列表→倍速→选择屏幕）
 │   │       └── portrait_edit_panel.dart       # 竖屏「编辑控制栏」页
@@ -515,9 +516,17 @@ PiliPlus：裸 `RawGestureDetector` + 自定义识别器组 + `Listener` 兜底�
 
 **内核来源**：`third_party/media_kit_libs_android_video/`（本地包，pubspec `dependency_overrides` 指向），
 内含 4 个 ABI 的 jar（`android/jars/`，`fileTree` 直接引用，**不走官方下载任务**）。
-jar 构建自 [azxcvn/libmpv-android-video-build](https://github.com/azxcvn/libmpv-android-video-build)
+jar 构建自 [azxcvn/libmpv-android-video-build-thumbnail](https://github.com/azxcvn/libmpv-android-video-build-thumbnail)
 （fork，补丁 `mk_thumbnail.patch` 给 libmpv 增加 `mk_thumbnail_grab/free/clear_cache` 三个导出符号，
-push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码。
+push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码**。
+
+> **2026-09 内核更新（解码器全开）**：该仓 `buildscripts/flavors/default.sh` 已把上游的
+> `--disable-decoders`/`--disable-demuxers`/`--disable-parsers` 改为**全开**并删掉手写白名单
+> （原因：白名单漏项 = 静默失效，已实际踩到漏 `pgssub` → PGS 字幕不显示、漏 `truehd` → TrueHD 无声）。
+> 产物解码器符号 **161 → 523 个**；体积代价 arm64 `libmpv.so` 20.75 → 24.68 MB、jar 8.71 → 10.9 MB。
+> ⚠️ 排查内核能力**只认符号名** `ff_<组件名>_decoder`，且 **configure 组件名 ≠ codec 日志名**
+> （PGS 是 `pgssub` 不是 `hdmv_pgs_subtitle`；TrueHD 是 `truehd` 且**与 `mlp` 各需单独开**）；
+> 别用 `strings | grep truehd`（会命中解封装器名）。详见该仓 `README.md`。
 
 **调用链**（自下而上）：
 
@@ -525,13 +534,24 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 |---|---|---|
 | 内核 | libmpv.so `mk_thumbnail_grab` | 独立 FFmpeg 解码实例：MediaCodec 硬解优先/失败自动软解、硬解 ctx 全局复用、极速探测、**关键帧优先向后 seek + 逐帧解码到目标帧（帧级精确匹配）**；输出 RGBA |
 | 引擎 | `services/fast_thumbnails.dart` | FFI 绑定 + 后台 isolate + **单飞调度**（最多 1 在跑 + 1 待跑，新请求顶掉旧待跑） |
-| 缓存 | `services/device_services.dart` | `getVideoFrameAt`：秒桶 + **32MB 内存 LRU**（RGBA 字节计）+ 在飞去重 + **失败 10s 冷却**（被顶掉 `stale` 不计冷却）；`peekFrame`/`peekNearestFrame`（兜底半径 **±3s**） |
-| UI | `views/player_thumbnail_preview.dart` + `widgets/raw_thumb_image.dart` | 气泡 + RGBA 直渲（`ImageDescriptor.raw`，无 PNG/JPEG 编码往返） |
-| 调度 | `pages/player/player_page.dart` / `player_portrait_page.dart` | 横竖屏两页同款：拖动邻近帧秒显 + 精确帧异步补齐；松手淡出 150ms 后卸载 + **空闲 350ms 预取 ±1/±2/±3 秒桶**（再拖动立即终止，拖动请求绝对优先）；共用同一 FFmpeg 引擎与内存缓存，受同一 `showThumbnailPreview` 开关控制 |
+| 缓存 | `services/device_services.dart` | `thumbnailBucketMs`（**秒桶=四舍五入到整秒**，唯一真值）+ `getVideoFrameAt`：**32MB 内存 LRU**（RGBA 字节计）+ 在飞去重 + **失败 10s 冷却**（被顶掉 `stale` 不计冷却）；`peekFrame`/`peekNearestFrame`（兜底半径 **±3s**） |
+| UI | `views/player_thumbnail_preview.dart` + `widgets/raw_thumb_image.dart` | 气泡（**章节名胶囊在上 + 预览图 + 时间胶囊在下**，章节名超长单行省略且限宽预览图宽）+ RGBA 直渲（`ImageDescriptor.raw`，无 PNG/JPEG 编码往返） |
+| 调度 | `pages/player/player_page.dart` / `player_portrait_page.dart` | 横竖屏两页同款：拖动邻近帧秒显 + 精确帧异步补齐；**松手 seek 到「缩略图那一帧」的精确时刻**；淡出 150ms 后卸载 + **空闲 350ms 预取 ±1/±2/±3 秒桶**（再拖动立即终止，拖动请求绝对优先）；共用同一 FFmpeg 引擎与内存缓存，受同一 `showThumbnailPreview` 开关控制 |
 
 **关键事实**：
 - JavaVM 无需自行注册——media_kit 启动时已通过官方补丁 `mpv_lavc_set_java_vm` 完成，MediaCodec 硬解天然可用
-- 精确落帧：播放器初始化设 mpv `hr-seek=absolute`（`_applyExactSeek`），松手 seek 帧级精确、与预览帧一致
+- **所见即落点（2026-09 修）**：抓帧缓存键与松手 seek 目标共用 `DeviceServices.thumbnailBucketMs`
+  （四舍五入到整秒）。此前抓帧用截断分桶、而 seek 用**原始拖动位置**，两者差最多 1 秒
+  →「缩略图看到的那一帧，松手后落到的却是往前挪了 1 秒的另一帧」。现在两边同桶 + 帧级精确：
+  - 播放器初始化设 mpv `hr-seek=absolute`（`_applyExactSeek`）；
+  - media_kit 初始化已写 `hr-seek-framedrop=no`（`real.dart`），照 mpv 文档这正是「精确 seek
+    不会跳过目标帧」的保证；
+  - 松手目标另做 `.clamp(0, 时长)`（四舍五入后的桶可能比末尾多出最多 0.5 秒）；
+  - 落点离手指位置**最多偏 0.5 秒**（原来最多 1 秒且方向恒定偏后）。
+- **章节名胶囊**：气泡上方按「拖动位置」显示所属章节名（`ChapterTracker.chapterTitleAt(预览时刻)`）。
+  数据来自已有的 `chapter-list`（`ChapterTracker`），**不需要内核支持新接口**；无章节/在第一章之前
+  不显示；章节标题为空白时回退「第 N 章」（`chapterNumberFallbackLabel`）。
+  ⚠️ **不能用 `currentChapterTitle`**——那是按**当前播放位置**算的，而拖动时播放位置仍停在原处。
 - 缩略图**无磁盘缓存**（单帧 ~85ms 无落盘必要）；「缓存管理」页只管列表封面
 - 性能基线（一加 PLR110，1080p H.264）：硬解 63–134ms/帧；logcat `MKThumb` 可查每帧 `hw=` 与耗时
 - 精确匹配耗时随关键帧距离（GOP）增长：短 GOP 基本不变（~85ms）；长 GOP 高码率（4K、10s 一个关键帧）明显变慢（需逐帧桥接解码到目标）
@@ -944,7 +964,7 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
     均已把剧集列表并入（`_hasAnyPlaylist`）。
 
 **内核重编（OpenSSL 根治 mbedTLS，可选，需在构建机执行）**：
-> 本地代理是运行时绕过；若想根治，在 `libmpv-android-video-build`（mk-thumbnail 分支）
+> 本地代理是运行时绕过；若想根治，在 `azxcvn/libmpv-android-video-build-thumbnail`
 > 把 libmpv/FFmpeg 的 TLS 后端从 mbedTLS 换成 OpenSSL 重编 `.so`，替换
 > `third_party/media_kit_libs_android_video/android/jars/*.jar` 内的 `libmpv.so`。
 > 重编后无需再走 `BiliStreamProxy`（`_registerBiliProxy` 代理失败已自动回退直连）。
@@ -1194,9 +1214,9 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | 层 | 文件 | 职责 |
 |---|---|---|
 | 模型 | `models/chapter_info.dart` | `ChapterSkipType` 六类（intro/recap/outro/credits/coldOpen/preview）+ 片段 |
-| 纯函数 | `utils/chapter_utils.dart` | `parseCustomKeywords` + `classifyChapterTitle`（内置+自定义关键词） + `resolveSkipSegments` |
+| 纯函数 | `utils/chapter_utils.dart` | `parseCustomKeywords` + `classifyChapterTitle`（内置+自定义关键词） + `resolveSkipSegments` + `currentChapterIndex` / `chapterTitleAt` / `chapterNumberFallbackLabel` |
 | 设置 | `services/chapter_skip_settings.dart` | 六类自动跳过开关 + 自定义片头/片尾关键词（ChangeNotifier + SharedPreferences） |
-| 跟踪 | `services/chapter_tracker.dart` | 订阅设置、`load`/设置变化时按自定义关键词重派生片段、位置流进入片段时自动 seek |
+| 跟踪 | `services/chapter_tracker.dart` | 订阅设置、`load`/设置变化时按自定义关键词重派生片段、位置流进入片段时自动 seek；对外提供 `currentChapterTitle`（当前播放位置）与 `chapterTitleAt(Duration)`（**任意时间点**，供缩略图气泡用） |
 | UI | `views/player_chapter_panel.dart` + `player_chapter_skip_panel.dart` | 章节列表顶部固定「章节跳段」入口 → 二级面板（六类开关 + 两个关键词输入框） |
 
 **关键决策**：
@@ -1210,6 +1230,12 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   点入二级面板（面板内 `push` 就地切换，§4.5）。
 - **设置变化即时生效**：`ChapterTracker` 构造订阅 `ChapterSkipSettings`，变化即重派生
   片段并清空已跳过记录（不改关键词到片段的热更新无需重开播放器）。
+- **拖动进度条时的章节名胶囊**（2026-09 新增，对齐 mpvRx）：缩略图气泡**上方**显示
+  「拖动位置」所属的章节名。查找规则与 `currentChapterIndex` 同一套，落在
+  `chapterTitleAt`（**纯函数，作用于任意时间点**）。⚠️ 必须用拖动位置查，
+  不能用 `currentChapterTitle`（后者按当前播放位置算，拖动时播放位置还停在原处）。
+  无章节 / 在第一章之前不显示；章节标题为空白时回退「第 N 章」。
+  纯代码功能，**不需要内核提供新接口**（章节数据本来就在 `chapter-list` 里）。
 
 ---
 
@@ -1605,7 +1631,7 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | `lib/services/subtitle_service.dart` | `applyAllSettings()` 只写 `sub-font`（不再写 `sub-fonts-dir`） |
 | `lib/services/audio_service.dart` | `isAudioPlaybackFailureLog` / `pickFallbackAudioTrack` + 换轨后 4 秒窗口内的 `stream.log` 订阅 + `audio-params` 复核 + 回退防重入 |
 | `test/audio_fallback_test.dart` / `test/subtitle_font_injection_test.dart` | 两条链路的回归锁（含「注入目录永不为空」） |
-| **内核仓库** `azxcvn/libmpv-android-video-build-thumbnail`（本地：`桌面/jartest/libmpv-android-video-build-main`） | `buildscripts/flavors/default.sh` 的解码器白名单补 `hdmv_pgs_subtitle` / `mlp` / `truehd`；push 触发 CI 出 4 个 ABI 的 `default-*.jar`，替换 `third_party/media_kit_libs_android_video/android/jars/*.jar` 即可（§4.9）。**该白名单是本项目自有改动，同步上游时勿被覆盖**（README 已记录） |
+| **内核仓库** `azxcvn/libmpv-android-video-build-thumbnail`（本地：`桌面/jartest/libmpv-android-video-build-main`） | `buildscripts/flavors/default.sh` 的**解码器/解封装器/解析器改为全开**（`--enable-decoders`/`--enable-demuxers`/`--enable-parsers`，删掉上游手写白名单）；push 触发 CI 出 4 个 ABI 的 `default-*.jar`，替换 `third_party/media_kit_libs_android_video/android/jars/*.jar` 即可（§4.9）。**这是本项目自有改动，同步上游时勿被覆盖**（该仓 `README.md` 已记录，含「configure 组件名 ≠ codec 日志名」等踩坑） |
 
 ---
 
@@ -1691,8 +1717,10 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/pip_aspect_test.dart` — 画中画宽高比纯函数（gcd 约分/0.5–2.39 钳制/未知尺寸回退 16:9）
   - `test/portrait_player_bottom_bar_test.dart` — 竖屏底栏右侧按钮簇顺序（超分辨率→列表→倍速→选择屏幕，左到右）+ 弹幕按钮（进度条上方右下角、与章节名同行、开关随 danmakuOn 切换）
   - `test/thumbnail_cache_test.dart` — FFmpeg 帧缓存查询（peekFrame 精确秒桶/peekNearestFrame 邻近匹配/跨视频隔离）+ 32MB LRU 超限淘汰
+  - `test/thumbnail_bucket_test.dart` — 缩略图秒桶纯函数 `thumbnailBucketMs`（四舍五入边界 499/500、幂等 → 缓存键稳定、负值归零、**取代截断分桶后落点偏差 ≤ 0.5s 的回归**，§4.9）
+  - `test/player_thumbnail_preview_test.dart` — 缩略图气泡渲染（有/无/空白章节名时胶囊显隐、超长章节名单行省略且不超预览图宽、**章节胶囊在图上方时间胶囊在下方**、不可见时整体透明，§4.9/§4.22）
   - `test/watch_state_test.dart` — 观看状态纯函数（未观看/观看中/已看完判定 + 自定义阈值 + 百分比）
-  - `test/chapter_utils_test.dart` — 章节纯函数（标题关键词分类/片段派生过滤/当前章节定位/跳过目标 EOF 保护 + 自定义关键词归属与优先级，§4.22）
+  - `test/chapter_utils_test.dart` — 章节纯函数（标题关键词分类/片段派生过滤/当前章节定位/跳过目标 EOF 保护 + 自定义关键词归属与优先级 + **`chapterTitleAt` 任意时间点章节名/空白标题回退「第 N 章」/与 `currentChapterIndex` 一致性**，§4.22）
   - `test/chapter_tracker_test.dart` — 章节跟踪器（位置流驱动的章节推进/胶囊 5 秒窗口/回拖重复触发/跳过与跳转 + 章节跳段自动跳过每片段一次/自定义关键词派生，§4.22）
   - `test/chapter_skip_settings_test.dart` — 章节跳段设置服务（默认值/自动跳过类型增删/自定义关键词/持久化恢复/损坏防御，§4.22）
   - `test/intro_outro_skip_test.dart` — 片头片尾动作决策纯函数（前置守卫/片头触发/片尾触发/整集保护/片头优先）
@@ -1831,6 +1859,9 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | MethodChannel 小整数是 Integer 非 Long | 取整型参数一律 `call.argument<Number>()?.toLong()/toInt()` |
 | MediaMetadataRetriever 取帧不可靠 | 仅剩列表封面用（`getVideoInfo`）：SYNC/CLOSEST 独立 try/catch；进度条抓帧已换 FFmpeg 引擎（§4.9） |
 | 缩略图缓存无限增长 / 体积大 | 进度条缩略图=纯内存 LRU 32MB（RGBA 字节计，播放页退出清空，无磁盘）；列表封面 384×216+q70 磁盘缓存由缓存管理页清理 |
+| 「缩略图看到的那一帧，松手后落到的却是另一帧（且恒定偏后）」 | 抓帧缓存键与松手 seek 目标必须共用同一时刻：统一走 `DeviceServices.thumbnailBucketMs`（**四舍五入到整秒**）。此前抓帧用截断分桶、seek 却用**原始拖动位置**，差最多 1 秒（§4.9） |
+| 拖动进度条时章节名不对（或不显示） | 必须用**拖动位置**查章节，不能用 `currentChapterTitle`（它按**当前播放位置**算，拖动时播放位置还停在原处）；统一走纯函数 `chapterTitleAt`（§4.22） |
+| widget 测试用 `pumpAndSettle` 卡死/超时 | 气泡里帧未就绪时是 `CircularProgressIndicator`（**无限动画**），永远 settle 不了 → 改固定 `pump(Duration)`（§6） |
 | libmpv hidden visibility 吞掉新增符号 | 内核新导出函数必须经 `client.h` 的 `MPV_EXPORT` 声明携带可见性（.c 里 include client.h） |
 | `Isolate.run` 闭包捕获 Completer → unsendable 崩 | `Isolate.run` 放**独立静态函数**、只捕获原始值；同作用域兄弟闭包捕获的对象会被编译器合并进上下文一起发送 |
 | Flutter 插件统一构建目录（build/<插件名>）残留旧 jar | 官方下载式 libs 包改本地分发时，`fileTree` 直接指向 `android/jars/` 源目录，勿用「下载→复制到 build/output」模式（assemble 钩子不保证执行 + Gradle 9 隐式依赖校验报错） |

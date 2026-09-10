@@ -21,14 +21,18 @@ void main() {
 
     test('peekFrame：精确秒桶命中', () {
       DeviceServices.debugPutFrame(path, 10500, _frame(1, 2, 1));
-      final frame = DeviceServices.peekFrame(path, 10999); // 同一秒桶
+      final frame = DeviceServices.peekFrame(path, 10999); // 同一秒桶（都四舍五入到 11s）
       expect(frame, isNotNull);
       expect(frame!.rgba.length, 2 * 1 * 4);
     });
 
     test('peekFrame：不同秒桶不命中', () {
+      // 注意：分桶是「四舍五入到整秒」（DeviceServices.thumbnailBucketMs）。
+      // 10500 → 11s 桶；因此相邻桶要用 12s（12000）而不是 11000（11000 与
+      // 10500 同属 11s 桶）。
       DeviceServices.debugPutFrame(path, 10500, _frame(1));
-      expect(DeviceServices.peekFrame(path, 11000), isNull);
+      expect(DeviceServices.peekFrame(path, 12000), isNull);
+      expect(DeviceServices.peekFrame(path, 10000), isNull); // 10s 桶，也不同
     });
 
     test('peekNearestFrame：返回间隔内最近帧', () {

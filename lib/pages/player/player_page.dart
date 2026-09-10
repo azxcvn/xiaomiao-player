@@ -1590,7 +1590,7 @@ class _PlayerPageState extends State<PlayerPage>
     // 新拖动开始：终止空闲预取（预取与新请求共享单飞队列，无需其他处理）
     _cancelThumbPrefetch();
     final clamped = ms.clamp(0, _duration.inMilliseconds);
-    final bucket = (clamped ~/ 1000) * 1000;
+    final bucket = DeviceServices.thumbnailBucketMs(clamped);
     if (bucket == _lastThumbBucketMs) return;
     _lastThumbBucketMs = bucket;
     _thumbFraction = _duration.inMilliseconds > 0
@@ -3320,12 +3320,20 @@ class _PlayerPageState extends State<PlayerPage>
                                   _resetHideTimer();
                                 },
                                 onSeekEnd: (v) {
-                                  _player.seek(Duration(milliseconds: v.round()));
+                                  // 松手落在「缩略图显示的那一帧」的精确时刻：
+                                  // 与 [_requestThumbnail] 用同一个秒桶（四舍五入），
+                                  // 配合 hr-seek=absolute + hr-seek-framedrop=no
+                                  // （media_kit 初始化已设）→ 帧级精确、不丢目标帧，
+                                  // 屏幕上出现的就是刚才预览的那张画面。
+                                  // 钳到时长内：四舍五入后的桶可能比末尾多出最多 0.5s。
+                                  final bucket = DeviceServices.thumbnailBucketMs(
+                                          v.round())
+                                      .clamp(0, _duration.inMilliseconds);
+                                  _player.seek(Duration(milliseconds: bucket));
                                   _dragPositionNotifier.value = null;
                                   _hideThumbPreview();
                                   // 空闲后预取邻近秒桶，下次拖到附近秒显
-                                  _scheduleThumbPrefetch(
-                                      (v.round() ~/ 1000) * 1000);
+                                  _scheduleThumbPrefetch(bucket);
                                   _resetHideTimer();
                                 },
                                 hasNext: _hasNext,
@@ -3568,6 +3576,9 @@ class _PlayerPageState extends State<PlayerPage>
                       time: _thumbPreview!.time,
                       fraction: _thumbFraction,
                       visible: _thumbVisible,
+                      // 拖动位置所属章节（按预览时刻查，不按当前播放位置）
+                      chapterTitle:
+                          _chapterTracker.chapterTitleAt(_thumbPreview!.time),
                     ),
                   ),
                 // 双指缩放后显示「还原画面」入口（播放/暂停按钮下方，
