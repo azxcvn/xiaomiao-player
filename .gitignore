@@ -66,3 +66,6 @@ app.*.map.json
 
 # Trae HTML Share Packages（本地缓存的 HTML 分享包，不提交）
 /.trae-html-share-packages/
+
+# 本机编译脚本（写死了本机绝对路径：flutter SDK / adb / 项目路径，对他人无用，不提交）
+/tools/
