@@ -97,7 +97,8 @@ class NegTokenInit extends SpnegoToken {
     return ev.encode(encodingRule: ASN1EncodingRule.ENCODING_DER);
   }
 
-  @override
+  // 上游此处标有 @override，但 SpnegoToken 基类并未声明 parse，且构造函数不可被
+  // 重写 —— 该注解无效（analyzer: invalid_annotation_target），本地 fork 移除。
   factory NegTokenInit.parse(Uint8List token) {
     var root = ASN1Sequence.fromBytes(token);
     if (((root.tag ?? 0) & ASN1Tags.APPLICATION) != ASN1Tags.APPLICATION ||

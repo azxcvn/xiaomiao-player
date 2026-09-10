@@ -502,8 +502,21 @@ class PlayerConfiguration {
   ///
   /// 与 [libassAndroidFont]（asset 路径）二选一。指定后 media-kit 会把这个目录
   /// 直接作为 libass 的 `sub-fonts-dir`，从而支持"用户从存储导入字体"。
-  /// 该目录内应已由应用层放入 `.ttf`/`.otf`/`.ttc` 文件，并配合
+  /// 该目录内应已由应用层放入 `.ttf`/`.otf`/`.ttc`/`.otc` 文件，并配合
   /// [libassAndroidFontName] 使用。
+  ///
+  /// 生效条件（缺一不可，不满足时不注入、回落到系统字库，并打印带上下文的告警）：
+  /// - 平台为 Android，且 [libass] 为 `true`；
+  /// - [libassAndroidFontName] 非 `null` —— libass 的 `sub-font` 按**字体家族名**
+  ///   匹配（不是文件名），只给目录无法定位到具体字体，因此构造函数中以 `assert`
+  ///   强制该约束；
+  /// - 该目录确实存在且至少含一个 `.ttf`/`.otf`/`.ttc`/`.otc` 文件 —— 空目录会让
+  ///   libass 字体解析全部失败（中文字幕变方块），比不设置 `sub-fonts-dir` 更糟。
+  ///   该扩展名清单必须与宿主应用的 `lib/models/subtitle_track.dart`
+  ///   `kFontExtensions` 保持同步（详见 FORK.md）。
+  ///
+  /// 相关实现见 `lib/src/player/native/player/real.dart` 的 `_create()`，以及本
+  /// 仓库的 `third_party/media_kit/FORK.md`（补丁基线与升级步骤）。
   final String? libassAndroidFontsDir;
 
   /// Sets the log level on native backend.
@@ -548,7 +561,12 @@ class PlayerConfiguration {
       'https',
       'crypto',
     ],
-  });
+  }) : assert(
+          libassAndroidFontsDir == null || libassAndroidFontName != null,
+          'PlayerConfiguration.libassAndroidFontsDir 需要同时提供 '
+          'libassAndroidFontName：libass 的 sub-font 按字体家族名匹配，'
+          '只给目录无法定位到具体字体（详见 FORK.md）。',
+        );
 }
 
 /// {@template mpv_log_level}

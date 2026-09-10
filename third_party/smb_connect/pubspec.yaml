@@ -1,6 +1,8 @@
 name: smb_connect
 description: "Native SMB/CIFS client library written in Dart for Dart. Extremely fast, can be used for streaming music and video. Supported dialects: SMB 1.0, CIFS, SMB 2.0, SMB 2.1."
-version: 0.0.9
+# 本地 fork：基线 0.0.9 + 魔改（补丁清单见同目录 FORK.md）。
+# 后缀 -mk.1 用于区分本地魔改版，便于排查问题时确认跑的是否为 fork。
+version: 0.0.9-mk.1
 repository: https://github.com/vadia/smb_connect
 homepage: https://github.com/vadia/smb_connect
 
@@ -12,7 +14,8 @@ dependencies:
   charset: ^2.0.1
   crypto: ^3.0.3
   cryptography: ^2.7.0
-  mutex: ^3.1.0
+  # 注：上游在此声明 mutex: ^3.1.0。本 fork 已移除全局互斥锁（FORK.md 补丁 1），
+  # 且全包与应用层均不再引用 package:mutex，故移除该依赖。
   pointycastle: ^3.9.1
 
 dev_dependencies:

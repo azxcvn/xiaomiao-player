@@ -53,7 +53,8 @@ class NegTokenTarg extends SpnegoToken {
     return ASN1TaggedObject(fields, tagNo: 1).encode();
   }
 
-  @override
+  // 上游此处标有 @override，但 SpnegoToken 基类并未声明 parse，且构造函数不可被
+  // 重写 —— 该注解无效（analyzer: invalid_annotation_target），本地 fork 移除。
   factory NegTokenTarg.parse(Uint8List token) {
     token.toHexString();
     var root = ASN1Object.fromBytes(token);

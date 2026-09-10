@@ -12,6 +12,7 @@ import 'package:moumou/models/chapter_info.dart';
 import 'package:moumou/models/danmaku_entry.dart';
 import 'package:moumou/models/dandan_models.dart';
 import 'package:moumou/models/video_file.dart';
+import 'package:moumou/models/subtitle_font_injection.dart';
 import 'package:moumou/pages/player/audio_player_page.dart';
 import 'package:moumou/pages/player/player_portrait_page.dart';
 import 'package:moumou/pages/player/views/audio_panel.dart';
@@ -456,7 +457,12 @@ class _PlayerPageState extends State<PlayerPage>
     // （运行时 setProperty 改 sub-fonts-dir 会破坏 libass 字体缓存导致字幕消失）。
     final subFont = SubtitleSettings.instance.font;
     final subFontsDir = SubtitleSettings.instance.fontsDir;
-    final useCustomFont = subFont != 'auto' && subFontsDir.isNotEmpty;
+    // 判断抽到纯函数（lib/models/subtitle_font_injection.dart）以便单测：
+    // 只有「选了具体字体家族名 + 字体目录非空」才注入，否则走 /system/fonts 系统字库。
+    final useCustomFont = shouldInjectCustomSubtitleFont(
+      font: subFont,
+      fontsDir: subFontsDir,
+    );
     _player = Player(
       configuration: PlayerConfiguration(
         libass: true,

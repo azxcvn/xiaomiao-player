@@ -2325,6 +2325,22 @@ class NativePlayer extends PlatformPlayer {
         if (!test) 'vid': 'no',
       };
 
+      // 【魔改】显式提示配置错误：libassAndroidFontsDir 必须配合
+      // libassAndroidFontName（libass 的 sub-font 按字体家族名匹配）。只给目录时
+      // 下面的分支根本不会进入、也不报错，因此在这里补一条日志，避免"字体没生效"
+      // 无从定位。（debug 构建下 PlayerConfiguration 的 assert 会更早拦住这种写法；
+      // release 不会执行 assert，只能靠这条日志。）
+      if (Platform.isAndroid &&
+          configuration.libass &&
+          configuration.libassAndroidFontsDir != null &&
+          configuration.libassAndroidFontName == null) {
+        print(
+          '[media_kit] libassAndroidFontsDir 已设置但缺少 libassAndroidFontName，'
+          '本次不注入自定义字体，回落到系统字库: '
+          '${configuration.libassAndroidFontsDir}',
+        );
+      }
+
       if (Platform.isAndroid &&
           configuration.libass &&
           (configuration.libassAndroidFont != null ||
@@ -2336,8 +2352,21 @@ class NativePlayer extends PlatformPlayer {
               configuration.libassAndroidFontsDir!.isNotEmpty) {
             // 【魔改】运行时用户字体目录：直接用应用传入的绝对路径，
             // 跳过 AndroidAssetLoader（它只能读打包进 APK 的 asset）。
-            // 该目录内应已由应用层放入 .ttf/.otf/.ttc 字体文件。
-            directory = configuration.libassAndroidFontsDir;
+            // 该目录内应已由应用层放入 .ttf/.otf/.ttc/.otc 字体文件。
+            //
+            // 注入前校验目录内容：libass 的 `sub-fonts-dir` 指向「空目录」时
+            // 字体解析会全部失败，效果比完全不设置更糟（中文字幕直接变方块）。
+            // 因此目录不存在或不含字体文件时宁可不注入，交由 libass 走系统
+            // 字库兜底。
+            if (_hasFontFile(configuration.libassAndroidFontsDir!)) {
+              directory = configuration.libassAndroidFontsDir;
+            } else {
+              print(
+                '[media_kit] libassAndroidFontsDir 不可用（目录不存在或不含字体文件），'
+                '未注入 sub-fonts-dir，回落到系统字库: '
+                '${configuration.libassAndroidFontsDir}',
+              );
+            }
           } else {
             // 原逻辑：把打包 asset 拷到应用缓存目录后取所在目录。
             // On Android, the system fonts cannot be picked up by libass/fontconfig.
@@ -2361,6 +2390,14 @@ class NativePlayer extends PlatformPlayer {
             );
           }
         } catch (exception, stacktrace) {
+          // 【魔改】补上下文：字体注入失败时 libass 会静默回落到系统字体，
+          // 对外只表现为「用户选的字体没生效」，裸异常看不出是哪一次注入。
+          print(
+            '[media_kit] libass 字体注入失败，已回落到系统字体: '
+            'dir=${configuration.libassAndroidFontsDir} '
+            'asset=${configuration.libassAndroidFont} '
+            'font=${configuration.libassAndroidFontName}',
+          );
           print(exception);
           print(stacktrace);
         }
@@ -2929,6 +2966,42 @@ _GetPlaylistResult _getPlaylist(_GetPlaylistData data) {
   calloc.free(value.cast());
 
   return _GetPlaylistResult(index, playlist);
+}
+
+/// 判断 [path] 是否为「含至少一个字体文件」的目录。
+///
+/// 【魔改】配合 [PlayerConfiguration.libassAndroidFontsDir] 使用：libass 的
+/// `sub-fonts-dir` 指向空目录时字体解析会全部失败，效果比不设置更差。仅在目录
+/// 确实存在且含 `.ttf`/`.otf`/`.ttc`/`.otc` 时才允许注入。
+///
+/// ⚠️ 扩展名清单必须与宿主应用保持一致：`lib/models/subtitle_track.dart` 的
+/// `kFontExtensions`（应用层用它筛选要拷进字体目录的文件）。若应用层新增/调整
+/// 支持的格式，此处需同步，否则会出现「字体已导入但被判为不可用」的静默失效。
+///
+/// 目录不存在、无读取权限、路径异常等一律视为不可用（返回 `false`），由调用方
+/// 回落到系统字库，避免把「字体没生效」放大成「字幕变方块」。
+bool _hasFontFile(String path) {
+  try {
+    final dir = Directory(path);
+    if (!dir.existsSync()) {
+      return false;
+    }
+    for (final entity in dir.listSync()) {
+      if (entity is! File) {
+        continue;
+      }
+      final lower = entity.path.toLowerCase();
+      if (lower.endsWith('.ttf') ||
+          lower.endsWith('.otf') ||
+          lower.endsWith('.ttc') ||
+          lower.endsWith('.otc')) {
+        return true;
+      }
+    }
+  } catch (_) {
+    // 权限不足 / 路径异常：视为不可用。
+  }
+  return false;
 }
 
 // --------------------------------------------------

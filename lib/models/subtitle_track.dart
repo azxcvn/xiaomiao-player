@@ -79,7 +79,11 @@ bool isSupportedSubtitleFile(String filename) {
   return kSupportedSubtitleExtensions.contains(ext);
 }
 
-/// 支持的自导入字体扩展名（.ttf / .otf / .ttc）。
+/// 支持的自导入字体扩展名（.ttf / .otf / .ttc / .otc）。
+///
+/// ⚠️ 若调整此集合，必须同步更新 `third_party/media_kit` 中
+/// `_hasFontFile()`（lib/src/player/native/player/real.dart）的扩展名判断，
+/// 否则会出现「字体已导入但被判为不可用」的静默失效（详见该包的 FORK.md）。
 const Set<String> kFontExtensions = {'ttf', 'otf', 'ttc', 'otc'};
 
 /// 判断文件名是否为字体文件（自建字体选择器过滤用；大小写不敏感）。

@@ -502,14 +502,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.0.0"
-  mutex:
-    dependency: transitive
-    description:
-      name: mutex
-      sha256: "8827da25de792088eb33e572115a5eb0d61d61a3c01acbc8bcbe76ed78f1a1f2"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "3.1.0"
   objective_c:
     dependency: transitive
     description:
@@ -825,7 +817,7 @@ packages:
       path: "third_party/smb_connect"
       relative: true
     source: path
-    version: "0.0.9"
+    version: "0.0.9-mk.1"
   source_span:
     dependency: transitive
     description:

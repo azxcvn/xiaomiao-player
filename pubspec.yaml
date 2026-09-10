@@ -62,6 +62,7 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   # SMB 网络存储：纯 Dart 客户端，fork 自 smb_connect 0.0.9（去掉全局串行锁，
   # 支持请求在途并发），配合 lib/services/network/smb_client.dart 的并发预读提升吞吐。
+  # 基线版本 0.0.9；补丁清单与升级步骤见 third_party/smb_connect/FORK.md（升级前必读）。
   smb_connect:
     path: third_party/smb_connect
   # 投屏（DLNA/UPnP）：SSDP 发现渲染器 + SetAVTransportURI/Play 推流，
@@ -91,6 +92,7 @@ dev_dependencies:
 dependency_overrides:
   # media_kit 换为本地魔改版：新增 libassAndroidFontsDir 字段，支持 Android
   # 运行时用户字体目录（libass 在 mpv_initialize 前注入 sub-fonts-dir）。
+  # 基线版本 1.2.6；补丁清单与升级步骤见 third_party/media_kit/FORK.md（升级前必读）。
   media_kit:
     path: third_party/media_kit
   # Android 视频内核换为自建版本（内含 mk_thumbnail_* 快速缩略图接口）。

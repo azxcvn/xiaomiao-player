@@ -12,7 +12,11 @@ topics:
   - cross-platform
 
 environment:
-  sdk: ">=3.1.0 <4.0.0"
+  # 本地 fork：上游写作 ">=3.1.0 <4.0.0"，但代码里使用了 SDK 3.10 才有的 Web API
+  # （lib/src/player/web/player/real.dart 的 web.URL.createObjectURL），
+  # 导致 analyzer 报 `sdk_version_since`。此处把下界提到 3.10.0，使声明与代码一致。
+  # 本应用 Dart SDK 为 3.12+，对依赖解析无影响。详见 FORK.md 补丁 4。
+  sdk: ">=3.10.0 <4.0.0"
 
 dependencies:
   collection: ^1.17.0

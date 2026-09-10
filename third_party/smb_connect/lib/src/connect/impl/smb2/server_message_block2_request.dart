@@ -49,7 +49,7 @@ abstract class ServerMessageBlock2Request<T extends ServerMessageBlock2Response>
 
   @override
   int? getOverrideTimeout() {
-    return this.overrideTimeout;
+    return overrideTimeout;
   }
 
   void setOverrideTimeout(int? overrideTimeout) {
@@ -98,6 +98,6 @@ abstract class ServerMessageBlock2Request<T extends ServerMessageBlock2Response>
     if (msg != null && msg is! ServerMessageBlock2) {
       throw SmbIllegalArgumentException("Incompatible response");
     }
-    this.response = msg as T?;
+    response = msg as T?;
   }
 }

@@ -119,8 +119,9 @@ lib/
 │   ├── bili_media.dart         # 在线播放值对象：DASH 流 + 弹幕/章节元数据 + 画质切换回调（§4.15）
 │   ├── update_info.dart        # 更新信息值对象（新版本号/Markdown 更新说明/主·备下载站链接，§4.20）
 │   ├── device_decoder.dart     # 设备解码器条目模型（名称/MIME/分辨率/声道/特性/色彩格式/采样率/profile，设备能力检测页 + 详情页）
-│   └── wyzie_models.dart       # Wyzie 字幕 API 数据模型（字幕条目/来源响应/密钥信息/TMDB 命中 + 语言/格式/编码/来源常量表，§4.21）
-│   └── player_diagnostics.dart # 播放诊断快照模型（mpv 属性 → 容错解析的运行时统计，§4.27）
+│   ├── wyzie_models.dart       # Wyzie 字幕 API 数据模型（字幕条目/来源响应/密钥信息/TMDB 命中 + 语言/格式/编码/来源常量表，§4.21）
+│   ├── player_diagnostics.dart # 播放诊断快照模型（mpv 属性 → 容错解析的运行时统计，§4.27）
+│   └── subtitle_font_injection.dart # 自定义字幕字体注入判定纯函数（是否把用户字体目录注入 Player，§4.10）
 │   └── bili_playlist.dart      # 番剧播放列表模型（整季剧集 + 按 epId 定位当前集，§4.15）
 ├── services/                  # 业务逻辑 / 数据层（无 UI）
 │   ├── view_settings.dart     # 排序/字段/视图模式设置（ChangeNotifier + 持久化）
@@ -529,10 +530,10 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 
 | 层 | 文件 | 职责 |
 |---|---|---|
-| media_kit 魔改 | `third_party/media_kit/`（本地 fork，`platform_player.dart` + `real.dart`） | 新增 `libassAndroidFontsDir` 字段，在 `mpv_initialize()` 前把目录注入 `sub-fonts-dir`（绕过只支持 asset 的 `AndroidAssetLoader`） |
+| media_kit 魔改 | `third_party/media_kit/`（本地 fork：`platform_player.dart`、`real.dart`、`pubspec.yaml`） | 新增 `libassAndroidFontsDir` 字段，在 `mpv_initialize()` 前把目录注入 `sub-fonts-dir`（绕过只支持 asset 的 `AndroidAssetLoader`）；注入前校验目录含字体文件、并 `assert` 要求同时给族名。**4 处补丁清单见 `third_party/media_kit/FORK.md`** |
 | 原生层 | `MainActivity.kt` | `openFontDirectoryPicker`（`ACTION_OPEN_DOCUMENT_TREE` + `takePersistableUriPermission`）、`copyFontsFromDirectory`（`DocumentFile` 遍历顶层文件 + 批量拷贝 + 兜底字库）、`listFontEntries`（扫描私有目录 + truetypeparser 解析族名去重、隐藏兜底字库）、`clearFontsDirectory`；`ensureFallbackFont`/`getFontFamilyName` 沿用 |
 | 服务层 | `subtitle_settings.dart` / `device_services.dart` | 字体族名 + 私有目录 + **源目录 tree uri** 三者持久化（`setFontSourceDir`）；`openFontDirectoryPicker`/`copyFontsFromDirectory`/`listFontEntries`/`clearFontsDirectory` 封装 |
-| 播放器 | `player_page.dart` / `subtitle_service.dart` | Player 构造读字体设置注入配置；有自定义字体时不再运行时 `setProperty('sub-fonts-dir')` |
+| 播放器 | `player_page.dart` / `subtitle_service.dart` / `models/subtitle_font_injection.dart` | Player 构造经纯函数 `shouldInjectCustomSubtitleFont()` 判定后注入配置；有自定义字体时不再运行时 `setProperty('sub-fonts-dir')` |
 | UI | `subtitle_panel.dart` | 「字幕字体」入口 + `SubtitleFontPanel`（目录选择/刷新/清除 + 字体列表单选 + 重启提示） |
 
 **关键约束（勿违反）**：
@@ -542,8 +543,10 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 - **目录授权需持久化**：`takePersistableUriPermission` + `FLAG_GRANT_PERSISTABLE_URI_PERMISSION`/`FLAG_GRANT_PREFIX_URI_PERMISSION`，否则重启后 tree uri 失效、无法刷新。
 - **族名解析用 truetypeparser**（`TTFFile.open(...).families.values.firstOrNull()`），手写 sfnt name 表解析器有偏移 bug（曾把 table offset 读成 0x1700583C）。
 - **兜底字库用复制、普通文件名**，不用 symlink + 隐藏文件名（fontconfig 跳过 `.` 开头文件且不 follow symlink）。
+- **目录必须存在且含字体文件才注入**（fork 侧 `_hasFontFile()` 校验 `.ttf/.otf/.ttc/.otc`）——libass 拿到**空目录**会让字体解析全部失败，比不设置 `sub-fonts-dir` 更糟（中文字幕变方块）。该扩展名清单必须与 `models/subtitle_track.dart` 的 `kFontExtensions` **保持同步**。
+- **`libassAndroidFontsDir` 必须与 `libassAndroidFontName` 同时提供**——libass 的 `sub-font` 按**族名**匹配，只给目录无法定位到具体字体；构造函数 `assert` 在 debug 拦截，release 走 `real.dart` 的告警分支。
 
-**维护**：`third_party/media_kit` 是本地 fork（`pubspec.yaml` `dependency_overrides` 指向），升级 media_kit 时需手动把 `libassAndroidFontsDir` 这处魔改 merge 进新版本，禁止直接 `pub upgrade` 覆盖。依赖 `io.github.yubyf:truetypeparser-light:2.1.4` 与 `androidx.documentfile:documentfile:1.0.1`（`android/app/build.gradle.kts`）。
+**维护**：`third_party/media_kit` 是本地 fork（`pubspec.yaml` `dependency_overrides` 指向），当前基线 **1.2.6**、共 **4 处补丁**（3 处在 `lib/`，1 处在 `pubspec.yaml` 的 SDK 约束）——**补丁清单、升级步骤与验证方法统一记在 `third_party/media_kit/FORK.md`，升级前必读**，禁止直接 `pub upgrade` 覆盖。依赖 `io.github.yubyf:truetypeparser-light:2.1.4` 与 `androidx.documentfile:documentfile:1.0.1`（`android/app/build.gradle.kts`）。
 
 ### 4.11 弹幕 —— canvas_danmaku 渲染 + 本地同名加载 + 设置面板
 
@@ -1598,6 +1601,7 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/bili_playlist_test.dart` — 番剧播放列表模型（季详情/剧集数组构造、集号 1 起、按 epId 定位、hasNextAt/itemAt 边界、标题回落与角标透传，§4.15）
   - `test/player_bili_playlist_panel_test.dart` — 番剧剧集列表面板（头部集数进度/条目集号集名角标/当前集播放中/点击回调并关闭/空态，§4.15）
   - `test/bili_search_page_test.dart` — 番剧搜索页（未搜索提示/搜索渲染/触底加载更多/失败重试/无结果空态，§4.29 C2）
+  - `test/subtitle_font_injection_test.dart` — 自定义字幕字体注入判定纯函数（auto 或空目录不注入、族名+目录齐备才注入，§4.10）
 - 改以下代码必须跑对应测试：`AppFrame`、`ViewSettings` 排序、权限流程、`CapsuleNavBar`
 
 ---
@@ -1615,6 +1619,7 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | 面板内 `Navigator.of` 断言 scope==null | 内容先包 `Builder` 取面板树内 context 再调 `of`（§4.5） |
 | 全局 ValueNotifier hack 引发连锁补丁 | 禁止；跨页面用 ChangeNotifier / 路由机制（§4.1） |
 | DSH 沙箱卡住 flutter/dart 子进程 | `flutter analyze/test` 必须 danger-full-access 执行；勿用 `flutter --version` 探路 |
+| `flutter analyze` 的 `--fatal-infos`/`--fatal-warnings` **默认均为 on** → 只剩 info 也 exit 1，CI 门禁误判失败 | 需要放行时两个 flag 都要加：`--no-fatal-infos --no-fatal-warnings`；否则先把问题清干净 |
 | mpv 着色器要绝对路径 / 切集后失效 | 拷贝 assets 到应用目录拼绝对路径；open 后与切集后都 `apply(player)` |
 | 均衡器与声道/处理共享同一 `af` 属性 | 均衡器命名滤镜（`@eq/@bass/@virt`）统一由 `buildAudioFilterChain` 拼进 `af` 属性串、由 `applyAudioOptions` 一次性 `setProperty('af')`，勿另用 `af add`（会被整体覆盖）；「启用均衡器」开关同时门控低音增强与虚拟环绕（关时传 0，但存储值保留） |
 | EOF 防重入（切集瞬间残留事件） | `_isSwitchingVideo` + `_isHandlingEndOfFile` 双标志 + 位置到结尾校验 + 纯函数 `resolveEndOfFileAction` |
@@ -1682,8 +1687,11 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | 自定义字体运行时 `setProperty('sub-fonts-dir')` → libass 字体缓存打坏、字幕消失 | `sub-fonts-dir` 只在 mpv_initialize 前注入（media_kit 魔改字段）；运行时只允许改 `sub-font`/`sub-ass-override`（§4.10） |
 | 手写 sfnt name 表解析器读到错误 offset（族名解析成文件名） | 族名解析用 `truetypeparser` 库，勿手写 name 表字节解析（§4.10） |
 | 系统字库兜底用 symlink+隐藏文件名 → fontconfig 不识别 → 缺字空白 | 兜底字库直接复制成普通文件名（§4.10） |
-| media_kit 本地 fork 被 `pub upgrade` 覆盖 | `third_party/media_kit` 的魔改需手动 merge；升级前先备份 diff（§4.10） |
+| media_kit 本地 fork 被 `pub upgrade` 覆盖 | `third_party/media_kit` 共 4 处补丁需手动 merge；**升级前先读该目录 `FORK.md`**（基线/清单/步骤/验证，§4.10） |
 | SAF 目录选择器重启后 tree uri 失效、无法刷新字体 | `takePersistableUriPermission` + `FLAG_GRANT_PERSISTABLE_URI_PERMISSION`/`FLAG_GRANT_PREFIX_URI_PERMISSION`（§4.10） |
+| 注入**空**字体目录（或只含非字体文件）→ libass 字体解析全失败，中文字幕变**方块**（比不设置更糟） | fork 注入前用 `_hasFontFile()` 校验目录含 `.ttf/.otf/.ttc/.otc`，不合格则不注入并告警（§4.10） |
+| 只设 `libassAndroidFontsDir` 不设 `libassAndroidFontName` → **静默不注入**，用户选的字体不生效 | `PlayerConfiguration` 构造函数 `assert`（debug 拦截）+ `real.dart` 告警分支（release 可见）（§4.10） |
+| 字体扩展名清单两处漂移（应用层 `kFontExtensions` / fork `_hasFontFile`）→「字体已导入但被判不可用」静默失效 | 改任一处必须同步另一处（§4.10） |
 | 反向立体声直接写 `audio-channels` 无效（mpv 无该布局值） | 反向立体声改走 `af` 滤镜 `pan=[stereo|c0=c1|c1=c0]`，并把 `audio-channels` 重置为 `auto-safe`（`buildAudioFilterChain`/`audioChannelsPropertyValue`） |
 | 外部音轨/字幕 content:// 无法直接给 libmpv | `audio-add`/`sub-add` 前由原生侧拷贝到 `filesDir/audio|subtitles/`（`copyAudioFromUri`/`copySubtitleFromUri`）；自建选择器直接返回真实路径 |
 | 横竖屏页各挂一个 DanmakuScreen，只保存单个渲染层引用会在返回横屏时失联（`createdController` 仅在挂载时回调一次，pop 不重触发） | 业务层用渲染层 registry 同步驱动全部已挂载层，挂载/卸载走 `attachLayer`/`detachLayer`（§4.11） |
@@ -1700,7 +1708,7 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | 手动导入/网络弹幕重启后被当「自动加载」重复弹 toast | 「已自动加载」toast 只挂在同名自动查找路径（且每视频仅第一次）；记忆恢复一律静默（§4.11） |
 | 面板内搜索框被撑到 60dp+（`IconButton` suffix 的 48dp 最小点击区 + `OutlineInputBorder` 内边距） | 自绘 40dp 定高胶囊 + `InputDecoration.collapsed` + 28dp 迷你按钮（§4.11 搜索 UI 规范） |
 | `AnimatedAlign(heightFactor)` 展开动画生硬（内容被裁边挤压、长列表反复布局） | 卡片自持 `AnimationController`：高度与内容淡入淡出 `Interval` 错峰 + 收起态不构建子树 + 超 6 集用定高滚动容器（§4.11） |
-| SMB smb_connect 全局互斥锁串行化读请求 → 吞吐被压到 ~1.5MB/s | fork 到 `third_party/smb_connect` 去掉全局锁、改 messageId 并发响应匹配；`smb_client` 用 4 个独立句柄并发预读（64KB 块）按块序号合并 |
+| SMB smb_connect 全局互斥锁串行化读请求 → 吞吐被压到 ~1.5MB/s | fork 到 `third_party/smb_connect` 去掉全局锁、改 messageId 并发响应匹配；`smb_client` 用 4 个独立句柄并发预读（64KB 块）按块序号合并（补丁与升级步骤见该目录 `FORK.md`） |
 | SMB 并发读去锁后写 socket 竞态（`StreamSink is bound to a stream`，流中断画面永远转圈） | `smb_transport` 加发送队列 `_sendQueue` 串行化「编码+写+flush」，响应等待仍走并发 sendrecv（吞吐不受影响） |
 | SMB 根目录列出 ADMIN$/C$/D$/IPC$ 等管理/隐藏共享 | `smb_client.listFiles` 根路径过滤 `name.endsWith('$')`，只保留普通共享 |
 | Windows 拒绝枚举共享列表却允许直连具体共享 | 路径字段留空/`/` 才 `listShares` 列共享；被拒时就填 `/共享名` 跳过枚举直连 |
