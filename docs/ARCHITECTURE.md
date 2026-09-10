@@ -80,6 +80,11 @@ Flutter 本地视频播放器（Android），核心能力：
 - **并发原语与通用分页**：`AsyncSession`（会话号失效）/ `AsyncSingleFlight`（在飞去重）/
   `AsyncSerialQueue`（串行队列）+ `LoadingState` 三态 + `CommonListController` 分页
   控制器（刷新失败保留旧列表）；散落的手写实现已收敛（§4.29）
+- **App 内文件管理**：文件夹与视频长按弹出文件动作菜单（复制 / 移动 / 重命名 / 删除），
+  文件夹多一项**固定/取消固定**（固定 = 始终稳定前置在列表最前）；对齐 mpvRx 的动作集，
+  去掉其分享/播放/压缩/加入播放列表等；目标目录复用 App 内目录选择器，同卷 `rename` 秒移、
+  跨卷自动退化为「复制 + 删源」并显示进度与取消；删除文件夹默认只删其中的视频文件
+  （勾「删除所有文件」才递归整个文件夹）（§4.30）
 
 技术栈：Flutter 3.44+ / Dart 3.12+，依赖见 `pubspec.yaml`。
 
@@ -142,6 +147,8 @@ lib/
 │   ├── intro_outro_settings.dart # 片头片尾全局设置（开关/片头秒数/片尾秒数/各自范围，ChangeNotifier + 持久化）
 │   ├── intro_outro_tracker.dart  # 片头片尾跟踪器（就绪/已处理状态 + 恢复点感知 + 动作决策）
 │   ├── media_scan_settings.dart  # 媒体扫描与过滤设置（.nomedia/隐藏文件夹/黑白名单，ChangeNotifier + 持久化）
+│   ├── pinned_folders_settings.dart # 固定文件夹设置（绝对路径集合/固定与取消/批量替换/失效清理，ChangeNotifier + 持久化，§4.30）
+│   ├── file_operations_service.dart # 文件管理服务（复制/移动/重命名/删除 + 进度与协作式取消，dart:io 真实路径，§4.30）
 │   ├── audio_service.dart     # 音频控制器（音轨列表/aid 单选/外部音轨导入·移除（临时）/声道/af 滤镜链应用；声道与处理为会话级，随播放器生命周期重置）
 │   ├── subtitle_settings.dart # 字幕设置（延迟/大小/位置/颜色/描边模式/内嵌样式覆盖/自定义字体/外挂字幕记忆/重置样式，ChangeNotifier + 持久化）
 │   ├── subtitle_service.dart  # 字幕控制器（单选模型：track-list/sid 同步/sub-add/sub-remove + 同名字幕自动加载 + 设置应用 + 切集重应用 + 外挂字幕跨会话恢复）
@@ -217,6 +224,8 @@ lib/
 │   ├── cast_device_dialog.dart # 投屏设备选择弹窗（SSDP 发现列表 + 点选推流，§4.18）
 │   ├── privacy_policy_dialog.dart # 首次启动隐私门禁弹窗（5 秒倒计时 + 勾选同意 + 取消退出，§4.19）
 │   ├── update_dialog.dart       # 更新弹窗（Markdown 更新内容 + 立即更新/稍后提醒/忽略 + 主·备下载站子菜单，§4.20）
+│   ├── file_operations_ui.dart  # 文件管理 UI（长按动作菜单/重命名弹窗/删除确认含整目录勾选/传输进度弹窗，§4.30）
+│   ├── folder_actions.dart      # 文件管理动作编排（菜单→弹窗→服务→本地刷新，四页面共用入口，§4.30）
 │   └── marquee_text.dart      #   无缝循环跑马灯
 ├── pages/                     # 页面（每页一个目录）
 │   ├── bilibili/
@@ -319,6 +328,8 @@ lib/
     ├── formatters.dart        #   大小/日期/时长/倍速/网速格式化 + 截图文件名 + 在线媒体判定
     ├── url_media.dart         #   在线直链纯函数（规范化补协议/流媒体协议白名单/URL 提取标题，§4.17）
     ├── natural_compare.dart   #   自然序（数字感知）比较
+    ├── folder_pin.dart        #   固定文件夹排序纯函数（稳定前置 + 逐层递归，§4.30）
+    ├── file_ops.dart          #   文件管理纯函数（路径细分/目标校验/重命名校验/重名避让/失效固定路径，§4.30）
     ├── watch_state.dart       #   观看状态纯函数（未观看/观看中/已看完）
     ├── playback_completion.dart # EOF 动作解析纯函数（优先级链）
     ├── playback_restore.dart  #   恢复进度：openAndRestore（暂停加载→静音激活时间线→seek→确认）
@@ -1433,6 +1444,59 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 
 ---
 
+### 4.30 App 内文件管理（复制/移动/重命名/删除）+ 固定文件夹（工作.md）
+
+> 参考 mpvRx `ui/browser/**`（`BrowserBottomBar` + `dialogs/{CopyPasteDialog,RenameDialog,
+> DeleteConfirmationDialog,FolderPickerDialog}` + `FolderListScreen` 的固定/排序）。
+> **只借鉴四个动作与固定语义**，参考项目的分享/播放/黑名单/压缩/加入播放列表一律不要。
+
+**定稿语义（用户拍板，勿擅自改）**：
+
+| 项 | 定稿 |
+|---|---|
+| 长按菜单 | **固定与四个文件动作在同一个菜单里**：文件夹长按 = 固定/取消固定 + 复制/移动/重命名/删除（五项）；视频长按 = 复制/移动/重命名/删除（四项，视频无「固定」）。固定**只此一个入口**，不做卡片/AppBar 图钉按钮，也不做独立的「固定文件夹」设置页 |
+| 重命名 | **视频/文件的扩展名锁死**：输入框只给「扩展名之前的主体」，右侧固定显示 `.mp4`，用户改不出别的格式；用户即便把扩展名一起打进来也不会变成 `456.mp4.mp4`。文件夹不锁（目录名允许带点） |
+| 删除文件夹 | 弹窗**默认只删文件夹内的视频文件**（正文一句话说清），下方一个**默认不勾**的「删除所有文件」——勾上 = 连同其它文件递归删除整个文件夹；不写死偏好 |
+| 复制/移动目标 | 复用 App 内自绘目录选择器 `showDirectoryPickerDialog`（真实路径 + `MANAGE_EXTERNAL_STORAGE`，无需 SAF），带进度弹窗与取消 |
+| 固定排序 | **先按当前排序规则整体排，再把固定的文件夹稳定前置**（`partition` 语义）：固定项之间仍参与排序，未固定项之间也照常排 |
+
+**分层**（自下而上）：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 纯函数 | `utils/folder_pin.dart` | `pinnedFoldersFirst`（扁平列表稳定前置）+ `mapTreeWithPinnedFirst`（逐层递归，树状模式用）；分组无变化时**原样返回同一实例**，避免无谓重建 |
+| 纯函数 | `utils/file_ops.dart` | 路径细分（`baseName`/`parentOf`/`stripTrailingSlash`）、目标校验（含「不能移动到自己子目录」）、重命名合法性、重名避让 `uniqueName`、失效固定路径推导 `stalePinnedPaths` |
+| 设置 | `services/pinned_folders_settings.dart` | 固定集合（**绝对路径** `Set<String>`）单例 + 持久化；`toggle/setPinned/replaceAll/retainExisting(additionalStale:)`；启动 `ensureLoaded`（main.dart） |
+| 服务 | `services/file_operations_service.dart` | `copy/move/rename/deleteFile/deleteFolder`；重名自动避让、同卷 `rename` 原子秒移、跨卷退化「复制+删源」、`FileOpCancelToken` 协作式取消、`FileOpProgress` 进度回调；失败抛 `FileOpException`（文案可直接进 SnackBar） |
+| UI | `widgets/file_operations_ui.dart` | 长按动作菜单（固定/复制/移动/重命名/删除）、重命名弹窗（实时校验）、删除弹窗（默认只删视频 + 默认不勾的「删除所有文件」）、传输进度弹窗 |
+| 编排 | `widgets/folder_actions.dart` | `showFileManagementFlow`：菜单 → 弹窗 → 服务 → `onMutated` 本地刷新 → SnackBar；**首页列表/树状一级/树状目录页/文件夹详情页四页面共用同一入口**，返回 bool 表示「当前页对象已改名或删除」 |
+| 入口 | `widgets/folder_card.dart` / `video_card.dart` | 两卡片新增 `onLongPress`；`FolderCard` 另有 `isPinned`（已固定时名称左侧显示图钉，**纯指示不可点**） |
+
+**关键决策**：
+- **固定只有长按菜单一个入口**：卡片图钉、详情页/目录页 AppBar 图钉、设置页「固定文件夹」
+  **全部不做**（用户明确要求）；卡片上的图钉仅是「已固定」的视觉指示。取消固定 = 再次长按 → 「取消固定」。
+- **菜单不带标题行**：长按的卡片就在用户眼前，标题属冗余且会挤掉菜单高度；
+  菜单内容用 `ListView` + `isScrollControlled`，矮屏/大字号下可滚动，不会 RenderFlex 溢出
+  （曾因「标题行 + 五项」超出底部外壳可用高度而溢出 25px）。
+- **排序真值只有一份**：各页面先 `viewSettings.sortFolders/sortTree`，再套 `folder_pin.dart`；
+  固定函数**不做比较**，因此不会出现第二套排序逻辑（与 `ViewSettings` 冲突时以后者为准）。
+- **固定按绝对路径存储**，文件夹改名/移动/删除后必须清理：成功路径统一调
+  `retainExisting(additionalStale: stalePinnedPaths(...))`；**改名时若原来已固定则把新路径继续固定**
+  （`wasPinned` 必须在清理前读取，否则会被 `retainExisting` 摘掉）。
+- **文件操作后必须重扫**：`VideoScanner.clearCache()` + `scanVideos()` 再重建树/列表
+  （首页 `_load`、详情页按 `folderPath` 过滤、树状页 `_locateByPath` 按绝对路径重新定位当前节点；
+  当前文件夹路径已不存在 → `maybePop` 退出该页）。
+- **重命名锁扩展名（用户报的真实 bug）**：早期版本输入框预填完整文件名，用户全选删掉
+  输 `456` → 文件变成没有扩展名的 `456`，**播放器列表里直接消失**（MediaStore 不认）。
+  现在 `renameInitialInput` 只预填主体、`renameTargetName` 恒拼回原扩展名、
+  `validateRenameInput(originalExtension:)` 拦「只输 `.mp4`」，双保险，扩展开关不可能被改掉。
+- **重命名不做静默避让**：同目录已有同名直接报错（显式意图不该被改成 `xxx (1)`）；
+  复制/移动则自动避让 `名字 (1)`（隐式意图，冲突时保留两者）。
+- **写盘前置**：所有操作直接走 `dart:io` 真实路径，依赖首页的
+  `MANAGE_EXTERNAL_STORAGE` 门禁；不改用 SAF，避免「写入成功但 MediaStore 扫不到」。
+
+---
+
 ## 5. 新增功能指南（按功能类型）
 
 ### 5.1 新增一个页面
@@ -1602,6 +1666,9 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/player_bili_playlist_panel_test.dart` — 番剧剧集列表面板（头部集数进度/条目集号集名角标/当前集播放中/点击回调并关闭/空态，§4.15）
   - `test/bili_search_page_test.dart` — 番剧搜索页（未搜索提示/搜索渲染/触底加载更多/失败重试/无结果空态，§4.29 C2）
   - `test/subtitle_font_injection_test.dart` — 自定义字幕字体注入判定纯函数（auto 或空目录不注入、族名+目录齐备才注入，§4.10）
+  - `test/folder_pin_test.dart` — 固定文件夹排序纯函数（稳定前置/固定项之间仍保序/视频不受影响/分组无变化原样返回 + 树状逐层递归/重建保留聚合信息，§4.30）
+  - `test/file_ops_test.dart` — 文件管理纯函数（路径细分/目标校验含自己子目录拦截/重命名合法性与非法字符/**扩展名锁定**：预填主体·恒拼原扩展名·重复后缀不叠加·只输扩展名报错/重名避让序号插入位置/失效固定路径推导，§4.30）
+  - `test/pinned_folders_settings_test.dart` — 固定文件夹设置服务（默认空/toggle/setPinned 幂等/replaceAll 通知语义/只读快照/持久化冷启动读回/损坏数据防御，§4.30）
 - 改以下代码必须跑对应测试：`AppFrame`、`ViewSettings` 排序、权限流程、`CapsuleNavBar`
 
 ---
@@ -1613,6 +1680,9 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 
 | 坑 | 防护 |
 |---|---|
+| 固定按绝对路径存储后路径变更失效 | 重命名/移动/删除后统一 `retainExisting(additionalStale: stalePinnedPaths(...))` 清理；改名时 `wasPinned` 必须在清理前读（§4.30） |
+| 长按菜单 RenderFlex 溢出（标题行 + 五项超出外壳可用高度） | 菜单不带标题行 + `ListView(shrinkWrap)` + `isScrollControlled`，矮屏可滚动（§4.30） |
+| 重命名把扩展名改掉 → 文件从播放列表消失 | 锁扩展名：预填主体 + 右侧固定后缀 + 恒拼回原扩展名（§4.30） |
 | 挖孔屏横屏白条 / 系统栏露浅色背景 | AppFrame `left/right` 恒 false + 播放页豁免 bottom + ColoredBox 铺色（§4.2） |
 | 播放页退出闪烁/黑屏（错向界面 ~1s 或退出黑一下） | 退出**同一帧 `pause()` 冻结末帧**（不再先 dispose 黑屏渐隐）+ IO `unawaited` + 无动画瞬时 pop；竖屏退出下层 `_exitBlackout` 黑化（§4.4） |
 | 面板红底黄字崩溃（No Material） | PlayerPanel / PlayerBottomPanel 外壳必须用 `Material`，勿换 Container；拖拽 `proxyDecorator` 也用 `Material`（`ColoredBox` 非 Material，拖拽时 proxy 被放 overlay 脱离外壳会崩）（§4.5） |

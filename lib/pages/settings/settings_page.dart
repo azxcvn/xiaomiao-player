@@ -129,7 +129,7 @@ class SettingsPage extends StatelessWidget {
                   ],
                 ),
               ),
-              // ── 媒体扫描与过滤 ────────────────────────────
+              // ── 媒体扫描与过滤（工作.md：App 内文件管理；固定文件夹走长按菜单，无独立设置页）──
               const SettingsGroupTitle(title: '媒体库'),
               SettingsCard(
                 child: SettingsTile(

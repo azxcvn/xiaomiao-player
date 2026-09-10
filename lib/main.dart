@@ -23,6 +23,7 @@ import 'package:moumou/services/media_scan_settings.dart';
 import 'package:moumou/services/network/network_connection_settings.dart';
 import 'package:moumou/services/playback_history_service.dart';
 import 'package:moumou/services/playback_progress_service.dart';
+import 'package:moumou/services/pinned_folders_settings.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/services/privacy_policy_settings.dart';
 import 'package:moumou/services/subtitle_settings.dart';
@@ -174,6 +175,9 @@ class _MoumouAppState extends State<MoumouApp> {
     // 杜比视界偏色提示设置（工作.md 迁移功能）：播放页检测杜比视界弹出
     // 引导前读取「不再提示」状态（setter 与这里共享同一 load Future）
     DolbyVisionSettings.instance.ensureLoaded();
+    // 固定文件夹（工作.md：App 内文件管理）：首页/目录页排序前需读到固定集合，
+    // 同 ensureLoaded 模式（点图钉与这里共享同一 load Future，防竞态）
+    PinnedFoldersSettings.instance.ensureLoaded();
   }
 
   @override

@@ -7,16 +7,26 @@ import 'package:moumou/widgets/marquee_text.dart';
 /// 文件夹卡片：列表模式与树状模式共用（字段驱动渲染）
 ///
 /// 尾部为静态 chevron_right，点击进入下一层（列表=文件夹详情页；树状=目录浏览页）。
+/// **固定的文件夹**在名称左侧显示一枚图钉（纯指示，固定/取消固定走长按菜单，
+/// 见 `folder_actions`）；长按卡片由调用方弹出文件管理菜单。
 class FolderCard extends StatelessWidget {
   final TreeNode node;
   final Set<FolderField> fields;
   final VoidCallback onTap;
+
+  /// 长按卡片（弹出文件管理菜单：固定/复制/移动/重命名/删除）；null 时无长按行为
+  final VoidCallback? onLongPress;
+
+  /// 是否已固定（置顶显示）；固定项始终排在列表最前
+  final bool isPinned;
 
   const FolderCard({
     super.key,
     required this.node,
     required this.fields,
     required this.onTap,
+    this.onLongPress,
+    this.isPinned = false,
   });
 
   @override
@@ -28,6 +38,7 @@ class FolderCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -48,12 +59,27 @@ class FolderCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    MarqueeText(
-                      text: node.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: [
+                        if (isPinned)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: Icon(
+                              Icons.push_pin,
+                              size: 15,
+                              color: scheme.primary,
+                            ),
+                          ),
+                        Expanded(
+                          child: MarqueeText(
+                            text: node.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 6),
                     ..._buildFields(scheme),

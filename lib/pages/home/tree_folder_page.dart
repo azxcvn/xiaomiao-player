@@ -4,9 +4,13 @@ import 'package:moumou/models/video_file.dart';
 import 'package:moumou/pages/media_info/media_info_page.dart';
 import 'package:moumou/pages/player/player_page.dart';
 import 'package:moumou/services/playback_progress_service.dart';
+import 'package:moumou/services/pinned_folders_settings.dart';
 import 'package:moumou/services/player_controls_settings.dart';
+import 'package:moumou/services/video_scanner.dart';
 import 'package:moumou/services/view_settings.dart';
+import 'package:moumou/utils/folder_pin.dart';
 import 'package:moumou/widgets/app_frame.dart';
+import 'package:moumou/widgets/folder_actions.dart';
 import 'package:moumou/widgets/folder_card.dart';
 import 'package:moumou/widgets/options_sheet.dart';
 import 'package:moumou/widgets/video_card.dart';
@@ -20,7 +24,10 @@ import 'package:moumou/widgets/video_card.dart';
 /// [path] 为从顶层到当前节点的完整路径链（不含首页），用于面包屑导航：
 /// 点击任意上级层级可 popUntil 跳回。
 ///
-/// 右上角从左到右：**搜索**（文件夹 + 视频）→ 排序与字段。
+/// 右上角从左到右：**搜索**（文件夹 + 视频）→ **固定当前文件夹** → 排序与字段。
+///
+/// 文件管理（文件夹与视频长按同一套四功能菜单）改动磁盘后本页会**重扫目录树**
+/// 并重新定位当前路径；当前文件夹被重命名/删除时自动退出本页。
 class TreeFolderPage extends StatefulWidget {
   final TreeNode node;
   final ViewSettings viewSettings;
@@ -42,6 +49,14 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
 
+  /// 从顶层到当前节点的完整路径链（含当前节点）。首次进入取 push 时的值；
+  /// 文件操作后由 [_reloadCurrentNode] 按真实路径重新定位刷新。
+  late List<TreeNode> _path = widget.path.isNotEmpty
+      ? [...widget.path]
+      : [widget.node];
+
+  TreeNode get _node => _path.isEmpty ? widget.node : _path.last;
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -50,16 +65,15 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
 
   /// 面包屑项：targetIndex 表示要跳回的路径层级（-1 = 首页）
   List<({String label, int targetIndex})> get _crumbs {
-    final path = widget.path;
     return [
       (label: '小喵Player', targetIndex: -1),
-      for (var i = 0; i < path.length; i++)
-        (label: path[i].name, targetIndex: i),
+      for (var i = 0; i < _path.length; i++)
+        (label: _path[i].name, targetIndex: i),
     ];
   }
 
   void _jumpTo(int targetIndex) {
-    if (targetIndex == widget.path.length - 1) return; // 当前页
+    if (targetIndex == _path.length - 1) return; // 当前页
     final nav = Navigator.of(context);
     if (targetIndex < 0) {
       // 回到首页（树状一级界面）
@@ -67,7 +81,7 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
       return;
     }
     // 从当前层 pop 到目标层
-    var count = widget.path.length - 1 - targetIndex;
+    var count = _path.length - 1 - targetIndex;
     nav.popUntil((route) {
       if (count == 0) return true;
       count--;
@@ -75,9 +89,38 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
     });
   }
 
+  /// 重扫目录树并按真实路径重新定位当前节点。
+  ///
+  /// 路径已不存在（当前文件夹被重命名或删除）时退出本页。
+  Future<void> _reloadCurrentNode() async {
+    final currentPath = _node.path;
+    VideoScanner.clearCache();
+    final videos = await VideoScanner.scanVideos();
+    if (!mounted) return;
+
+    final roots = VideoScanner.buildTree(videos);
+    final located = _locateByPath(roots, currentPath);
+    if (located == null) {
+      Navigator.of(context).maybePop();
+      return;
+    }
+    setState(() => _path = located);
+  }
+
+  /// 在目录树里按绝对路径深搜出从顶层到目标的路径链
+  List<TreeNode>? _locateByPath(List<TreeNode> nodes, String path) {
+    for (final n in nodes) {
+      if (!n.isFolder) continue;
+      if (n.path == path) return [n];
+      final deeper = _locateByPath(n.children, path);
+      if (deeper != null) return [n, ...deeper];
+    }
+    return null;
+  }
+
   void _showOptions() {
     // 根据页面实际内容动态检测：纯文件夹 / 纯视频 / 混合
-    final children = widget.node.children;
+    final children = _node.children;
     final hasFolders = children.any((c) => c.isFolder);
     final hasVideos = children.any((c) => !c.isFolder);
     showSortOptionsSheet(
@@ -104,17 +147,17 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
         builder: (_) => TreeFolderPage(
           node: node,
           viewSettings: widget.viewSettings,
-          path: [...widget.path, node],
+          path: [..._path, node],
         ),
       ),
     );
-    // 返回后刷新，进度条立即更新
-    if (mounted) setState(() {});
+    // 返回后重扫，进度条/磁盘变更立即更新
+    if (mounted) await _reloadCurrentNode();
   }
 
   Future<void> _openVideo(VideoFile video) async {
     // 传当前目录的排序视频列表，作为播放页「下一集」的兄弟列表
-    final children = widget.viewSettings.sortTree(widget.node.children);
+    final children = widget.viewSettings.sortTree(_node.children);
     final playlist = [
       for (final c in children)
         if (!c.isFolder) c.video!,
@@ -138,6 +181,26 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
     );
   }
 
+  Future<void> _onFolderLongPress(TreeNode node) async {
+    await showFileManagementFlow(
+      context,
+      title: node.name,
+      isDirectory: true,
+      sourcePath: node.path,
+      onMutated: _reloadCurrentNode,
+    );
+  }
+
+  Future<void> _onVideoLongPress(VideoFile video) async {
+    await showFileManagementFlow(
+      context,
+      title: video.name,
+      isDirectory: false,
+      sourcePath: video.path,
+      onMutated: _reloadCurrentNode,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -152,7 +215,7 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
                 ),
                 onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
               )
-            : Text(widget.node.name),
+            : Text(_node.name),
         actions: [
           if (_searching)
             IconButton(
@@ -160,14 +223,14 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
               tooltip: '取消搜索',
               onPressed: _toggleSearch,
             )
-          else if (widget.node.children.isNotEmpty)
+          else if (_node.children.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.search),
               tooltip: '搜索',
               onPressed: _toggleSearch,
             ),
           // 目录为空时没有可排序内容，不显示排序入口
-          if (widget.node.children.isNotEmpty)
+          if (_node.children.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.sort),
               tooltip: '排序与字段',
@@ -185,7 +248,7 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
   }
 
   Widget _buildBody() {
-    if (widget.node.children.isEmpty) {
+    if (_node.children.isEmpty) {
       return const Center(child: Text('该文件夹没有视频'));
     }
     return ListenableBuilder(
@@ -193,9 +256,13 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
         widget.viewSettings,
         PlaybackProgressService.instance,
         PlayerControlsSettings.instance,
+        PinnedFoldersSettings.instance,
       ]),
       builder: (context, _) {
-        var children = widget.viewSettings.sortTree(widget.node.children);
+        final pinnedPaths = PinnedFoldersSettings.instance.paths;
+        // 与首页一致的排序真值：先整体排序，再把固定文件夹稳定前置
+        var children = widget.viewSettings.sortTree(_node.children);
+        children = pinnedFoldersFirst(children, pinnedPaths);
         if (_query.isNotEmpty) {
           children = children.where((c) {
             if (c.isFolder) return c.name.toLowerCase().contains(_query);
@@ -216,6 +283,8 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
                 node: child,
                 fields: widget.viewSettings.fields,
                 onTap: () => _openFolder(child),
+                onLongPress: () => _onFolderLongPress(child),
+                isPinned: pinnedPaths.contains(child.path),
               );
             }
             return VideoCard(
@@ -223,6 +292,7 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
               fields: widget.viewSettings.videoFields,
               onTap: () => _openVideo(child.video!),
               onInfoTap: () => _openMediaInfo(child.video!),
+              onLongPress: () => _onVideoLongPress(child.video!),
             );
           },
         );

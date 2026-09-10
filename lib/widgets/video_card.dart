@@ -30,6 +30,9 @@ class VideoCard extends StatefulWidget {
   /// 历史记录页用它放垃圾桶删除按钮；不传走原有语义。
   final Widget? trailing;
 
+  /// 长按卡片（弹出文件管理菜单：复制/移动/重命名/删除）；null 时无长按行为
+  final VoidCallback? onLongPress;
+
   const VideoCard({
     super.key,
     required this.video,
@@ -37,6 +40,7 @@ class VideoCard extends StatefulWidget {
     required this.onTap,
     this.onInfoTap,
     this.trailing,
+    this.onLongPress,
   });
 
   @override
@@ -191,6 +195,7 @@ class _VideoCardState extends State<VideoCard> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: widget.onTap,
+        onLongPress: widget.onLongPress,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(10),

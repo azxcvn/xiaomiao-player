@@ -16,11 +16,14 @@ import 'package:moumou/pages/network/network_storage_page.dart';
 import 'package:moumou/pages/player/player_page.dart';
 import 'package:moumou/services/playback_history_service.dart';
 import 'package:moumou/services/playback_progress_service.dart';
+import 'package:moumou/services/pinned_folders_settings.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/services/video_scanner.dart';
 import 'package:moumou/services/view_settings.dart';
+import 'package:moumou/utils/folder_pin.dart';
 import 'package:moumou/utils/url_media.dart';
 import 'package:moumou/widgets/app_frame.dart';
+import 'package:moumou/widgets/folder_actions.dart';
 import 'package:moumou/widgets/options_sheet.dart';
 import 'package:moumou/widgets/speed_dial_fab.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -372,10 +375,13 @@ class _HomePageState extends State<HomePage>
         widget.viewSettings,
         PlaybackProgressService.instance,
         PlayerControlsSettings.instance,
+        PinnedFoldersSettings.instance,
       ]),
       builder: (context, _) {
+        final pinnedPaths = PinnedFoldersSettings.instance.paths;
         if (widget.viewSettings.viewMode == ViewMode.tree) {
           var roots = widget.viewSettings.sortTree(_roots);
+          roots = mapTreeWithPinnedFirst(roots, pinnedPaths);
           if (_query.isNotEmpty) roots = _filterTree(roots);
           if (roots.isEmpty && _query.isNotEmpty) {
             return const Center(child: Text('没有匹配的内容'));
@@ -386,13 +392,19 @@ class _HomePageState extends State<HomePage>
               roots: roots,
               folderFields: widget.viewSettings.fields,
               videoFields: widget.viewSettings.videoFields,
+              pinnedPaths: pinnedPaths,
               onFolderTap: _openTreeFolder,
               onVideoTap: _openVideo,
               onVideoInfoTap: _openMediaInfo,
+              onFolderLongPress: _onFolderLongPress,
+              onVideoLongPress: _onVideoLongPress,
             ),
           );
         }
+        // 文件夹排序：先按用户排序规则整体排，再把固定的文件夹稳定前置
+        // （固定项之间仍参与排序，对齐 mpvRx 的 partition 语义，见 utils/folder_pin.dart）
         var folders = widget.viewSettings.sortFolders(_folders);
+        folders = pinnedFoldersFirst(folders, pinnedPaths);
         if (_query.isNotEmpty) {
           folders = folders.where((n) => _matchName(n.name)).toList();
           if (folders.isEmpty) {
@@ -404,12 +416,42 @@ class _HomePageState extends State<HomePage>
           child: FolderListView(
             folders: folders,
             fields: widget.viewSettings.fields,
+            pinnedPaths: pinnedPaths,
             onFolderTap: _openFolder,
+            onFolderLongPress: _onFolderLongPress,
           ),
         );
       },
     );
   }
+
+  // ── 文件管理（复制/移动/重命名/删除）与固定文件夹 ──────────────
+
+  /// 长按文件夹：弹出统一菜单（固定/复制/移动/重命名/删除）；
+  /// 重命名/删除后该文件夹已不是原路径，首页列表会重扫，无需额外处理。
+  Future<void> _onFolderLongPress(TreeNode node) async {
+    await showFileManagementFlow(
+      context,
+      title: node.name,
+      isDirectory: true,
+      sourcePath: node.path,
+      onMutated: _refreshAfterMutation,
+    );
+  }
+
+  /// 长按视频：与文件夹同一套菜单（视频没有「固定」项）
+  Future<void> _onVideoLongPress(VideoFile video) async {
+    await showFileManagementFlow(
+      context,
+      title: video.name,
+      isDirectory: false,
+      sourcePath: video.path,
+      onMutated: _refreshAfterMutation,
+    );
+  }
+
+  /// 文件操作完成后的本地刷新：清缓存重扫 MediaStore + 重建目录树/文件夹列表
+  Future<void> _refreshAfterMutation() => _load();
 
   /// 树状模式：进入目录浏览页（显示子文件夹 + 视频，可逐级下钻）
   Future<void> _openTreeFolder(TreeNode node) async {
@@ -431,6 +473,7 @@ class _HomePageState extends State<HomePage>
       MaterialPageRoute(
         builder: (_) => FolderDetailPage(
           title: node.name,
+          folderPath: node.path,
           videos: node.children.map((c) => c.video!).toList(),
           viewSettings: widget.viewSettings,
         ),
