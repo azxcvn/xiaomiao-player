@@ -23,7 +23,8 @@ Flutter 本地视频播放器（Android），核心能力：
   自定义字体走 libass 原生渲染 + 运行时选择字体目录批量导入（§4.10）
 - **音频**：内嵌音轨切换 + 外部音轨导入/移除（外部音轨临时，退出播放后不保留）；
   音频声道（自动/安全自动/单声道/立体声/反向立体声）+ 音频处理（音量标准化/动态范围压缩），
-  对齐 mpvRx 的 `audio-channels` 与 `af` 滤镜链；声道/处理为会话级状态（每次进播放器重置）
+  对齐 mpvRx 的 `audio-channels` 与 `af` 滤镜链；声道/处理为会话级状态（每次进播放器重置）；
+  **不可播放音轨自动回退**（如 TrueHD 8 声道在 Android opensles 上放不出来 → 退回 AC-3 并提示，§4.32）
 - **音频均衡器**：5 频段（60/230/910/3.6k/14k Hz，±15dB，1dB 步进）+ 低音增强（0-100）
   + 虚拟环绕（0-100），内置 6 个影视向预设（平直/对白增强/电影/低音震撼/高音清晰/柔和夜间，
   关键频段 ±6~8dB）；入口在播放器「更多 → 音频均衡器」（可加至顶栏槽位）；对齐小喵 player
@@ -126,7 +127,7 @@ lib/
 │   ├── device_decoder.dart     # 设备解码器条目模型（名称/MIME/分辨率/声道/特性/色彩格式/采样率/profile，设备能力检测页 + 详情页）
 │   ├── wyzie_models.dart       # Wyzie 字幕 API 数据模型（字幕条目/来源响应/密钥信息/TMDB 命中 + 语言/格式/编码/来源常量表，§4.21）
 │   ├── player_diagnostics.dart # 播放诊断快照模型（mpv 属性 → 容错解析的运行时统计，§4.27）
-│   └── subtitle_font_injection.dart # 自定义字幕字体注入判定纯函数（是否把用户字体目录注入 Player，§4.10）
+│   └── subtitle_font_injection.dart # 字幕字体注入判定纯函数（`resolveSubtitleFontInjection` 永不返回 null：用户字体目录或 /system/fonts，§4.10/§4.32）
 │   └── bili_playlist.dart      # 番剧播放列表模型（整季剧集 + 按 epId 定位当前集，§4.15）
 ├── services/                  # 业务逻辑 / 数据层（无 UI）
 │   ├── view_settings.dart     # 排序/字段/视图模式设置（ChangeNotifier + 持久化）
@@ -150,9 +151,9 @@ lib/
 │   ├── pinned_folders_settings.dart # 固定文件夹设置（绝对路径集合/固定与取消/批量替换/失效清理，ChangeNotifier + 持久化，§4.30）
 │   ├── file_operations_service.dart # 文件管理服务（复制/移动/重命名/删除 + 进度与协作式取消，dart:io 真实路径，§4.30）
 │   ├── file_selection_controller.dart # 页面级多选状态（进入/退出/切换/全选/剔除失效项，**非单例**，§4.31）
-│   ├── audio_service.dart     # 音频控制器（音轨列表/aid 单选/外部音轨导入·移除（临时）/声道/af 滤镜链应用；声道与处理为会话级，随播放器生命周期重置）
+│   ├── audio_service.dart     # 音频控制器（音轨列表/aid 单选/外部音轨导入·移除（临时）/声道/af 滤镜链应用；声道与处理为会话级，随播放器生命周期重置；不可播放音轨经 stream.log 判定后自动回退，§4.32）
 │   ├── subtitle_settings.dart # 字幕设置（延迟/大小/位置/颜色/描边模式/内嵌样式覆盖/自定义字体/外挂字幕记忆/重置样式，ChangeNotifier + 持久化）
-│   ├── subtitle_service.dart  # 字幕控制器（单选模型：track-list/sid 同步/sub-add/sub-remove + 同名字幕自动加载 + 设置应用 + 切集重应用 + 外挂字幕跨会话恢复）
+│   ├── subtitle_service.dart  # 字幕控制器（单选模型：track-list/sid 同步/sub-add/sub-remove + 同名字幕自动加载 + 设置应用（字体目录构造期注入，运行期只写 sub-font）+ 切集重应用 + 外挂字幕跨会话恢复，§4.32）
 │   ├── app_font_settings.dart # App 全局字体设置（开关/族名/字号/字重 + loadFontFromList 注册，ChangeNotifier + 持久化，§4.12）
 │   ├── equalizer_settings.dart # 音频均衡器设置（5 频段/低音增强/虚拟环绕/预设，ChangeNotifier + 持久化，AudioController 订阅重应用 af 链）
 │   ├── danmaku_service.dart    # 弹幕控制器（业务层：本地同名/手动导入/网络弹幕装载 + 1s tick 秒桶发射 + canvas 渲染层显隐/暂停/倍速同步 + 设置订阅应用 + 切集自动匹配，横竖屏共享）
@@ -549,7 +550,7 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | media_kit 魔改 | `third_party/media_kit/`（本地 fork：`platform_player.dart`、`real.dart`、`pubspec.yaml`） | 新增 `libassAndroidFontsDir` 字段，在 `mpv_initialize()` 前把目录注入 `sub-fonts-dir`（绕过只支持 asset 的 `AndroidAssetLoader`）；注入前校验目录含字体文件、并 `assert` 要求同时给族名。**4 处补丁清单见 `third_party/media_kit/FORK.md`** |
 | 原生层 | `MainActivity.kt` | `openFontDirectoryPicker`（`ACTION_OPEN_DOCUMENT_TREE` + `takePersistableUriPermission`）、`copyFontsFromDirectory`（`DocumentFile` 遍历顶层文件 + 批量拷贝 + 兜底字库）、`listFontEntries`（扫描私有目录 + truetypeparser 解析族名去重、隐藏兜底字库）、`clearFontsDirectory`；`ensureFallbackFont`/`getFontFamilyName` 沿用 |
 | 服务层 | `subtitle_settings.dart` / `device_services.dart` | 字体族名 + 私有目录 + **源目录 tree uri** 三者持久化（`setFontSourceDir`）；`openFontDirectoryPicker`/`copyFontsFromDirectory`/`listFontEntries`/`clearFontsDirectory` 封装 |
-| 播放器 | `player_page.dart` / `subtitle_service.dart` / `models/subtitle_font_injection.dart` | Player 构造经纯函数 `shouldInjectCustomSubtitleFont()` 判定后注入配置；有自定义字体时不再运行时 `setProperty('sub-fonts-dir')` |
+| 播放器 | `player_page.dart` / `subtitle_service.dart` / `models/subtitle_font_injection.dart` | Player 构造经纯函数 `resolveSubtitleFontInjection()` 注入配置（**默认也注入 `/system/fonts`**）；**任何**运行时 `setProperty('sub-fonts-dir')` 都是回归（§4.32） |
 | UI | `subtitle_panel.dart` | 「字幕字体」入口 + `SubtitleFontPanel`（目录选择/刷新/清除 + 字体列表单选 + 重启提示） |
 
 **关键约束（勿违反）**：
@@ -1542,6 +1543,72 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 
 ---
 
+### 4.32 音轨不可播放自动回退 + 字幕字体目录构造期注入（真机 bug 修复）
+
+> 来源：真机播放一部内置「Dolby TrueHD 英语轨 + AC-3 国语轨 + 4 条 PGS 中文字幕」的
+> MKV 时发现的两个用户可感知缺陷：①切到 TrueHD 音轨后**完全无声**；②四条 PGS
+> 字幕**一条都不显示**。两条都是「mpv 已经报错/已经按规矩办事，应用侧没接住」。
+
+**为什么 TrueHD 轨会无声（真因：自编内核的 ffmpeg 解码器白名单漏了 TrueHD）**：
+- 内核 `flavors/default.sh` 的白名单里有 `dca`（DTS）、`ac3`、`eac3`…，**没有 `mlp`/`truehd`**
+  → TrueHD 轨没有任何解码器，音频链直接建不起来，mpv 只在错误日志里报 `ad`/`ao` 错误。
+- 附带限制（即使解码器到位也要知道）：Android 上 media_kit 写死 `ao=opensles`
+  （`real.dart` 按 `AndroidHelper.isPhysicalDevice`），而 **OpenSL ES 输出只支持双声道**
+  （`ao_opensles.c`：`mp_chmap_from_channels(&ao->channels, 2)`），所以 TrueHD 会被
+  mpv 下混成 stereo 播放——**能出声，但不是多声道**。要真多声道需换 AO（`audiotrack`/
+  `aaudio`）并重编内核，属后续独立项（OpenSL ES 在 mpv 0.42 已被移除）。
+- 应用侧此前**完全没有消费** `Player.stream.log`（`logLevel` 默认已是 `error`），
+  于是表现为「点了切换、面板显示已选中、就是没声音、也没有任何提示」。
+
+**修法（应用层能做到的全部）**：`AudioController` 在**用户显式换轨后的 4 秒窗口**内订阅
+`Player.stream.log`（窗口限制避免播放中途的瞬时音频日志误触发换轨），命中纯函数
+`isAudioPlaybackFailureLog(prefix, text)`（只认音频相关前缀 + 失败特征词）后，
+延时 600ms 读 `audio-params` **复核**（`no`/空 = 音频链真的没建起来；读属性异常一律
+判为「没失败」以免误切），确认失败则用 `pickFallbackAudioTrack` 选一条**不同编码**的
+轨道（TrueHD → AC-3）自动切过去，并通过 `onAudioFallback` 让播放页 toast 说明原因；
+无路可退时也只 toast，不再静默无声。`clear()`/`selectTrack()` 复位防重入与探测窗口。
+
+**字幕为什么整条不显示（真因：自编内核的 ffmpeg 解码器白名单漏了 PGS）**：
+- `libmpv-android-video-build-thumbnail`（内核仓库）的 `buildscripts/flavors/default.sh`
+  用 `--disable-decoders` + 逐个白名单开解码器；**字幕段开了
+  `dvbsub`/`dvdsub`/`ass`/`subrip`/`webvtt`…，唯独没有 `hdmv_pgs_subtitle`** →
+  PGS 轨能列出、能选中，但没有任何解码器可解，**完全不渲染**（文本字幕不受影响）。
+  同一份白名单也漏了 `mlp`/`truehd`（见上一条）。
+- ⚠️ **不要用 `strings libmpv.so | grep truehd` 下结论**：`--enable-demuxer=truehd`
+  只是**解封装器**的名字，解封装器在、解码器不在时照样完全无声；且 `--enable-small`
+  会把 codec 的 `long_name` 编掉，用长名（`HDMV Presentation Graphic Stream subtitles`）
+  检索同样会误判成"已编入"。正确判据是解码器**短名**各出现 1 次：
+  `hdmv_pgs_subtitle` / `truehd` / `mlp`。
+- **修法**：内核 `flavors/default.sh` 补
+  `--enable-decoder=hdmv_pgs_subtitle` + `--enable-decoder=mlp` + `--enable-decoder=truehd`
+  （`mlp` 是 `truehd` 的依赖，缺了 configure 会硬失败），push 触发 CI 重出 4 个 ABI 的
+  jar，再替换 `third_party/media_kit_libs_android_video/android/jars/*.jar`
+  （无需改任何 Dart 代码，§4.9）。
+
+**运行期写 `sub-fonts-dir`（本节同批修掉的另一处真实缺陷）**：
+- `applyAllSettings()` 的默认字体分支曾在**运行期**写
+  `setProperty('sub-fonts-dir', '/system/fonts')` —— 直接违反 §4.10 与 §7 已写明的
+  铁律（运行期写 `sub-fonts-dir` 会重载 libass 的 fontconfig 缓存，字幕整条消失）。
+- 位图字幕（PGS/DVD/DVB）也走 libass（mpv 只对 ASS 原生直通，其余先由 ffmpeg 转成
+  ASS 的 `DRAWING` 指令，见 `sub/sd_ass.c` 的 `lavc_conv` 分支），所以这条路径打坏的是
+  **全部内嵌字幕**。真机上 PGS 仍然不显示说明**它当时不是（唯一）根因**——真因是上面
+  那条内核缺解码器；但这处写入仍是必须收口的违规（否则修好内核后仍会被它打坏）。
+- **修法**：字体目录一律**构造期注入**。`resolveSubtitleFontInjection()`
+  （`lib/models/subtitle_font_injection.dart`，纯函数）**永不返回 null**：用户字体齐备 →
+  注入用户目录；否则注入 `kSystemFontsDir='/system/fonts'` + `kSystemFontName`。
+  运行期只允许写 `sub-font`（族名）与样式属性，**任何** `sub-fonts-dir` 写入都是回归。
+
+| 位置 | 作用 |
+|---|---|
+| `lib/models/subtitle_font_injection.dart` | `resolveSubtitleFontInjection` / `shouldInjectCustomSubtitleFont` / `kSystemFontsDir` / `kSystemFontName`（纯函数，可单测） |
+| `lib/pages/player/player_page.dart` | 构造 `PlayerConfiguration(libass: true, libassAndroidFontsDir: …, libassAndroidFontName: …)`；注册 `onAudioFallback` toast |
+| `lib/services/subtitle_service.dart` | `applyAllSettings()` 只写 `sub-font`（不再写 `sub-fonts-dir`） |
+| `lib/services/audio_service.dart` | `isAudioPlaybackFailureLog` / `pickFallbackAudioTrack` + 换轨后 4 秒窗口内的 `stream.log` 订阅 + `audio-params` 复核 + 回退防重入 |
+| `test/audio_fallback_test.dart` / `test/subtitle_font_injection_test.dart` | 两条链路的回归锁（含「注入目录永不为空」） |
+| **内核仓库** `azxcvn/libmpv-android-video-build-thumbnail`（本地：`桌面/jartest/libmpv-android-video-build-main`） | `buildscripts/flavors/default.sh` 的解码器白名单补 `hdmv_pgs_subtitle` / `mlp` / `truehd`；push 触发 CI 出 4 个 ABI 的 `default-*.jar`，替换 `third_party/media_kit_libs_android_video/android/jars/*.jar` 即可（§4.9）。**该白名单是本项目自有改动，同步上游时勿被覆盖**（README 已记录） |
+
+---
+
 ## 5. 新增功能指南（按功能类型）
 
 ### 5.1 新增一个页面
@@ -1639,6 +1706,7 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/subtitle_auto_match_test.dart` — 同名字幕自动匹配纯函数（同名候选/扩展名优先级/完全同名优先/简繁语言后缀/短名优先/无匹配）
   - `test/subtitle_sort_test.dart` — 自建字幕选择器排序纯函数（目录恒在前/大小日期升降序）
   - `test/audio_track_test.dart` — 音轨纯函数（展示名/声道枚举/格式过滤/audio-channels 映射/af 滤镜链组装，工作.md 音频功能）
+  - `test/audio_fallback_test.dart` — 音轨不可播放自动回退纯函数（mpv 日志判定只认音频前缀+失败特征、视频/网络错误不误触发；回退目标优先不同编码、内置优先于外部、无路可退返回 null，§4.32）
   - `test/danmaku_timeline_test.dart` — 弹幕时间轴错峰纯函数（同秒多条 1 秒内均分、<1000ms 上界）
   - `test/danmaku_local_file_test.dart` — 同名弹幕查找纯函数（9 种命名规则优先级/排除视频自身/无匹配）+ 选择器文件过滤
   - `test/danmaku_xml_test.dart` — B站 XML 弹幕解析（基础字段/实体反转义/坏条目跳过/排序）
@@ -1710,7 +1778,7 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
   - `test/bili_playlist_test.dart` — 番剧播放列表模型（季详情/剧集数组构造、集号 1 起、按 epId 定位、hasNextAt/itemAt 边界、标题回落与角标透传，§4.15）
   - `test/player_bili_playlist_panel_test.dart` — 番剧剧集列表面板（头部集数进度/条目集号集名角标/当前集播放中/点击回调并关闭/空态，§4.15）
   - `test/bili_search_page_test.dart` — 番剧搜索页（未搜索提示/搜索渲染/触底加载更多/失败重试/无结果空态，§4.29 C2）
-  - `test/subtitle_font_injection_test.dart` — 自定义字幕字体注入判定纯函数（auto 或空目录不注入、族名+目录齐备才注入，§4.10）
+  - `test/subtitle_font_injection_test.dart` — 字幕字体注入判定纯函数（`resolveSubtitleFontInjection` **永不返回 null**：默认/空目录回落 `/system/fonts`；族名+目录齐备才注入用户字体；空族名也回落，§4.10/§4.32）
   - `test/folder_pin_test.dart` — 固定文件夹排序纯函数（稳定前置/固定项之间仍保序/视频不受影响/分组无变化原样返回 + 树状逐层递归/重建保留聚合信息，§4.30）
   - `test/file_ops_test.dart` — 文件管理纯函数（路径细分/目标校验含自己子目录拦截/重命名合法性与非法字符/**扩展名锁定**：预填主体·恒拼原扩展名·重复后缀不叠加·只输扩展名报错/重名避让序号插入位置/失效固定路径推导，§4.30）
   - `test/pinned_folders_settings_test.dart` — 固定文件夹设置服务（默认空/toggle/setPinned 幂等/**setPinnedAll 批量只通知一次**/replaceAll 通知语义/只读快照/持久化冷启动读回/损坏数据防御，§4.30）
@@ -1876,3 +1944,7 @@ push 即 CI 出包）。升级内核：换 jar → 无需改任何 Dart 代码�
 | 传输进度弹窗「取消」里 `dialog.pop()`，`finally` 又 pop 一次 → 第二次弹掉的是**页面本身**（详情页被直接退出） | 进度弹窗用只 pop 一次的句柄 `_ProgressHandle`；`dismiss`（关弹窗）与 `dispose`（释放通知器）分离，避免在途进度回调写已释放的 `ValueNotifier`（§4.30） |
 | 删除确认弹窗的「删除所有文件」勾选框只认多选参数 `folderCount` → 单删文件夹时勾选框消失，整目录删除能力静默丢失 | 判据同时认 `isDirectory`（单选入口）与 `folderCount`（多选入口），两条路径都不退化（§4.30/§4.31） |
 | 多选状态做成全局单例 → 跨页 / 跨会话残留选择 | `FileSelectionController` 由页面 `State` 持有并 `dispose`，不单例不持久化（§4.1/§4.31） |
+| 运行期写 `sub-fonts-dir`（含「默认字体」分支写 `/system/fonts`）→ 重载 libass fontconfig 缓存，**位图字幕（PGS/DVD/DVB）与文本字幕一起不渲染**（真机：四条 PGS 选哪条都不显示） | 字体目录只在 `PlayerConfiguration` 构造期注入，且**默认也必须注入**（`resolveSubtitleFontInjection` 永不返回 null，注入 `/system/fonts`）；运行期只写 `sub-font`（§4.10/§4.32） |
+| 切到 Dolby TrueHD（MLP FBA / `A_TRUEHD` / 8 channels）音轨后完全无声且无任何提示 | 真因是自编内核 ffmpeg 白名单漏了 `mlp`/`truehd` 解码器（`--enable-demuxer=truehd` 只是解封装器！）；内核已补该两条并重出 jar。应用侧同时兜底：换轨后 4 秒窗口内消费 `Player.stream.log`，`isAudioPlaybackFailureLog` 命中后读 `audio-params` 复核，再自动回退到不同编码的音轨并 toast（§4.32） |
+| 内嵌 PGS（蓝光位图）字幕能列出、选中却不显示 | 真因是自编内核 ffmpeg 白名单漏了 `hdmv_pgs_subtitle` 解码器（同段已开 `dvbsub`/`dvdsub`/`ass`，唯独漏 PGS）；已在内核补齐。排查时**勿用长名字符串**判断解码器是否存在（`--enable-small` 会把 `long_name` 编掉），用解码器短名 `strings libmpv.so \| grep -c '^hdmv_pgs_subtitle$'`（§4.9/§4.32） |
+| mpv 报错只进 `Player.stream.log`，应用侧不消费 → 用户看到「点了没反应」的静默失效 | 需要感知播放故障时订阅 `stream.log`（`logLevel` 默认已是 `error`，`PlayerLog.prefix` 区分 `ad`/`ao`/`vd`/`stream`）并**先复核再动作**，且尽量限定在「刚发生的操作」窗口内，不要仅凭一条日志改状态（§4.32） |

@@ -2,14 +2,12 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart' hide SubtitleTrack;
+import 'package:moumou/models/subtitle_font_injection.dart';
 import 'package:moumou/models/subtitle_track.dart';
 import 'package:moumou/services/device_services.dart';
 import 'package:moumou/services/subtitle_settings.dart';
 import 'package:moumou/utils/subtitle_auto_match.dart';
 import 'package:path/path.dart' as p;
-
-/// 默认内置思源黑体家族名（Android libass 兜底中文字体）
-const String kDefaultFontName = 'Noto Sans CJK SC';
 
 /// 字幕控制器：绑定单个播放器（横竖屏共享同一实例），
 /// 维护「轨道列表 / 当前字幕轨道 / 外挂字幕路径」状态并直接驱动 mpv。
@@ -418,15 +416,22 @@ class SubtitleController extends ChangeNotifier {
       await native.setProperty('sub-italic', s.italic ? 'yes' : 'no');
       await native.setProperty('sub-spacing', _fmtDouble(s.spacing));
       await native.setProperty('sub-blur', _fmtDouble(s.blur));
-      // 字体设置：自定义字体已在 Player 构造时通过 libassAndroidFontsDir 注入
-      // （mpv_initialize 前）。这里只处理默认系统字库场景，避免运行时
-      // setProperty('sub-fonts-dir') 覆盖构造注入、破坏 libass 字体缓存。
+      // 字体设置：字体**目录**已在 Player 构造时通过 libassAndroidFontsDir 注入
+      // （mpv_initialize 之前），这里**绝不**再写 `sub-fonts-dir`。
+      //
+      // 历史 bug（P1-10）：默认字体分支曾在运行期写
+      // `sub-fonts-dir='/system/fonts'`，会重载 libass 的 fontconfig 缓存；
+      // 缓存被打坏后 libass 连**位图字幕**（PGS/DVD/DVB，靠 DRAWING 指令渲染）
+      // 一起不渲染 —— 表现为「内嵌字幕无论选哪条都不显示」。因此运行期只允许
+      // 写 `sub-font`（族名）与字体无关的样式属性，目录一律构造期注入。
       await native.setProperty('sub-font-provider', 'auto');
       await native.setProperty('embeddedfonts', 'yes');
-      if (s.font == 'auto' || s.fontsDir.isEmpty) {
-        // 默认：直通系统字库 /system/fonts（零 APK 开销）
-        await native.setProperty('sub-fonts-dir', '/system/fonts');
-        await native.setProperty('sub-font', kDefaultFontName);
+      if (s.font == kAutoSubtitleFont) {
+        // 「跟随系统字库」= 构造期注入的 /system/fonts + 默认族名
+        await native.setProperty('sub-font', kSystemFontName);
+      } else if (s.font.trim().isNotEmpty) {
+        // 用户字体：目录由构造期注入，这里只切换族名即可生效
+        await native.setProperty('sub-font', s.font);
       }
       // 只写 override 值，不 sub-reload：颜色/缩放/位置等 sub-* 属性即时生效，
       // 每次拖动都 sub-reload 会重新读盘解析外部字幕，导致卡顿。

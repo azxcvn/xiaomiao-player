@@ -453,21 +453,21 @@ class _PlayerPageState extends State<PlayerPage>
     _biliMedia = widget.biliMedia;
     // 开启 libass：走 mpv 原生字幕渲染（sub-visibility=yes），而非 Flutter
     // SubtitleView。这也是内嵌字幕原生样式 / 各种 sub-* 样式属性生效的前提。
-    // 自定义字体必须在 mpv_initialize 前通过 libassAndroidFontsDir/Name 注入
-    // （运行时 setProperty 改 sub-fonts-dir 会破坏 libass 字体缓存导致字幕消失）。
-    final subFont = SubtitleSettings.instance.font;
-    final subFontsDir = SubtitleSettings.instance.fontsDir;
-    // 判断抽到纯函数（lib/models/subtitle_font_injection.dart）以便单测：
-    // 只有「选了具体字体家族名 + 字体目录非空」才注入，否则走 /system/fonts 系统字库。
-    final useCustomFont = shouldInjectCustomSubtitleFont(
-      font: subFont,
-      fontsDir: subFontsDir,
+    //
+    // ⚠️ 字体目录**必须**在 mpv_initialize 前通过 libassAndroidFontsDir/Name 注入，
+    // 且「跟随系统字库」也要注入（注入的是 /system/fonts）——运行时
+    // setProperty('sub-fonts-dir') 会破坏 libass 字体缓存，导致内嵌字幕（含 PGS
+    // 等位图字幕）整条不渲染（§4.10，历史 bug）。
+    // 判定抽到纯函数（lib/models/subtitle_font_injection.dart）以便单测。
+    final fontInjection = resolveSubtitleFontInjection(
+      font: SubtitleSettings.instance.font,
+      fontsDir: SubtitleSettings.instance.fontsDir,
     );
     _player = Player(
       configuration: PlayerConfiguration(
         libass: true,
-        libassAndroidFontsDir: useCustomFont ? subFontsDir : null,
-        libassAndroidFontName: useCustomFont ? subFont : null,
+        libassAndroidFontsDir: fontInjection.fontsDir,
+        libassAndroidFontName: fontInjection.fontName,
       ),
     );
     // 解码档位注入（方案 A）：创建时传入 hwdec/vo，换档后下次打开视频生效
@@ -493,6 +493,11 @@ class _PlayerPageState extends State<PlayerPage>
     unawaited(_subtitleController.applyOnInit());
     // 音频控制器：绑定同一播放器（track-list / aid / audio-add / 声道 / af）
     _audioController = AudioController(_player);
+    // 音轨无法播放时自动回退（mpv 日志判定 + audio-params 复核）后提示用户：
+    // 例如 TrueHD 8 声道轨在 Android opensles 上初始化失败 → 退回 AC-3。
+    _audioController.onAudioFallback = (fallback, failed, reason) {
+      if (mounted) _toast(reason);
+    };
     unawaited(_audioController.applyOnInit());
     // 弹幕控制器：绑定同一播放器（本地同名弹幕加载 + 1s 秒桶发射 +
     // 渲染层暂停/倍速同步；首开加载在 _openAndSetRate 的 open 完成后）
@@ -3060,6 +3065,8 @@ class _PlayerPageState extends State<PlayerPage>
     _dragPositionNotifier.dispose();
     _chapterTracker.dispose();
     _subtitleController.dispose();
+    // 断开页面回调，避免控制器（可能被竖屏页/听视频页短暂共享）持有页面引用
+    _audioController.onAudioFallback = null;
     _audioController.dispose();
     _danmakuController.dispose();
     _audioActive.dispose();
