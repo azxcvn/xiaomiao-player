@@ -333,7 +333,7 @@ lib/
     ├── url_media.dart         #   在线直链纯函数（规范化补协议/流媒体协议白名单/URL 提取标题，§4.17）
     ├── natural_compare.dart   #   自然序（数字感知）比较
     ├── folder_pin.dart        #   固定文件夹排序纯函数（稳定前置 + 逐层递归，§4.30）
-    ├── file_ops.dart          #   文件管理纯函数（路径细分/目标校验/重命名校验/重名避让/失效固定路径，§4.30）
+    ├── file_ops.dart          #   文件管理纯函数（路径细分/目标校验/重命名校验/重名避让/失效固定路径/**视频扩展名唯一真值**，§4.30）
     ├── file_selection.dart    #   多选纯函数（目录树/视频索引 + 按点选顺序取值，§4.31）
     ├── watch_state.dart       #   观看状态纯函数（未观看/观看中/已看完）
     ├── playback_completion.dart # EOF 动作解析纯函数（优先级链）
@@ -469,6 +469,9 @@ models（模型）     → 无依赖（纯数据）
 - 新增主题色：往 `presetColors` 加 `(color: ..., label: 'XXX色')`（3 字命名，色相排列）
 - 调色板风格来自 flex_seed_scheme 的 `FlexSchemeVariant`（21 种已全量），**勿**改枚举顺序（持久化 index）；
   外观页调色板为**显示层重排**（标准型独占首行 + 其余 20 个 4×5 胶囊化），枚举顺序与 index 不变
+- **调色板风格持久化键为 `theme_variant_scheme_v2`，旧键 `theme_variant` 只作一次性迁移来源**：
+  旧键 0–7 是旧 `DynamicSchemeVariant` 序号、与新枚举 index 语义冲突（存「保真型 1」读回「中性型 3」），
+  `setVariant` 写新键、`load` **仅在新键缺失时**读旧键并按旧映射迁移一次、迁完写回新键（门控只跑一次，§7）
 - `app_theme.dart` 统一 `appBarTheme`（`scrolledUnderElevation: 0` + 固定背景色，防止 AppBar 滚动变色）
 - **主题色网格**（`appearance_page.dart`）：23 预设 + 1「动态色」= 4×6 网格 + 下方通栏「自定义」；
 - **动态色（壁纸取色 / Material You）**：原生 `MainActivity.getWallpaperColors`（`WallpaperManager` +
@@ -1488,7 +1491,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 |---|---|
 | 长按菜单 | **固定与四个文件动作在同一个菜单里**：文件夹长按 = 固定/取消固定 + 复制/移动/重命名/删除（五项）；视频长按 = 复制/移动/重命名/删除（四项，视频无「固定」）。菜单最底部再用分隔线单列一项**「多选」**（它是模式切换、不是对本条目的操作）→ 进入批量操作（§4.31）。固定**只此一个入口**，不做卡片/AppBar 图钉按钮，也不做独立的「固定文件夹」设置页 |
 | 重命名 | **视频/文件的扩展名锁死**：输入框只给「扩展名之前的主体」，右侧固定显示 `.mp4`，用户改不出别的格式；用户即便把扩展名一起打进来也不会变成 `456.mp4.mp4`。文件夹不锁（目录名允许带点） |
-| 删除文件夹 | 弹窗**默认只删文件夹内的视频文件**（正文一句话说清），下方一个**默认不勾**的「删除所有文件」——勾上 = 连同其它文件递归删除整个文件夹；不写死偏好 |
+| 删除文件夹 | 弹窗**默认只删文件夹内的视频文件**（正文一句话说清），下方一个**默认不勾**的「删除所有文件」——勾上 = 连同其它文件递归删除整个文件夹；不写死偏好。⚠️「视频」的唯一真值是 `FileOps.videoExtensions`：**不含任何音频扩展名**，与扫描器 `VideoScanner.videoExt` 同源（曾因删除集合另存一份且多含 7 个音频扩展名而永久删掉用户音频，§7） |
 | 复制/移动目标 | 复用 App 内自绘目录选择器 `showDirectoryPickerDialog`（真实路径 + `MANAGE_EXTERNAL_STORAGE`，无需 SAF），带进度弹窗与取消 |
 | 固定排序 | **先按当前排序规则整体排，再把固定的文件夹稳定前置**（`partition` 语义）：固定项之间仍参与排序，未固定项之间也照常排 |
 
@@ -1497,9 +1500,9 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 层 | 文件 | 职责 |
 |---|---|---|
 | 纯函数 | `utils/folder_pin.dart` | `pinnedFoldersFirst`（扁平列表稳定前置）+ `mapTreeWithPinnedFirst`（逐层递归，树状模式用）；分组无变化时**原样返回同一实例**，避免无谓重建 |
-| 纯函数 | `utils/file_ops.dart` | 路径细分（`baseName`/`parentOf`/`stripTrailingSlash`）、目标校验（含「不能移动到自己子目录」）、重命名合法性、重名避让 `uniqueName`、失效固定路径推导 `stalePinnedPaths` |
+| 纯函数 | `utils/file_ops.dart` | 路径细分（`baseName`/`parentOf`/`stripTrailingSlash`）、目标校验（含「不能移动到自己子目录」）、重命名合法性、重名避让 `uniqueName`、失效固定路径推导 `stalePinnedPaths`、**视频扩展名唯一真值 `videoExtensions` + 判定 `isVideoFileName`**（扫描器与「只删视频」共用，§7） |
 | 设置 | `services/pinned_folders_settings.dart` | 固定集合（**绝对路径** `Set<String>`）单例 + 持久化；`toggle/setPinned/replaceAll/retainExisting(additionalStale:)`；启动 `ensureLoaded`（main.dart） |
-| 服务 | `services/file_operations_service.dart` | `copy/move/rename/deleteFile/deleteFolder`；重名自动避让、同卷 `rename` 原子秒移、跨卷退化「复制+删源」、`FileOpCancelToken` 协作式取消、`FileOpProgress` 进度回调；失败抛 `FileOpException`（文案可直接进 SnackBar） |
+| 服务 | `services/file_operations_service.dart` | `copy/move/rename/deleteFile/deleteFolder`；重名自动避让、同卷 `rename` 原子秒移、跨卷退化「复制+删源」、`FileOpCancelToken` 协作式取消、`FileOpProgress` 进度回调、**目录源进循环前先无条件建目标根目录**（空目录不建 → 移动会删源却不建目标）；失败抛 `FileOpException`（文案可直接进 SnackBar） |
 | UI | `widgets/file_operations_ui.dart` | 长按动作菜单（固定/复制/移动/重命名/删除/多选）、重命名弹窗（实时校验）、删除弹窗（默认只删视频 + 默认不勾的「删除所有文件」，支持多选 `itemCount`/`folderCount`）、传输进度弹窗 |
 | 编排 | `widgets/folder_actions.dart` | `showFileManagementFlow`：菜单 → 弹窗 → 服务 → `onMutated` 本地刷新 → SnackBar；**首页列表/树状一级/树状目录页/文件夹详情页四页面共用同一入口**，返回 bool 表示「当前页对象已改名或删除」；多选批量走 `showBatchFileManagementFlow`（§4.31） |
 | 入口 | `widgets/folder_card.dart` / `video_card.dart` | 两卡片新增 `onLongPress` 与多选态 `selectionMode`/`selected`；`FolderCard` 另有 `isPinned`（已固定时名称左侧显示图钉，**纯指示不可点**） |
@@ -1524,6 +1527,15 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   `validateRenameInput(originalExtension:)` 拦「只输 `.mp4`」，双保险，扩展开关不可能被改掉。
 - **重命名不做静默避让**：同目录已有同名直接报错（显式意图不该被改成 `xxx (1)`）；
   复制/移动则自动避让 `名字 (1)`（隐式意图，冲突时保留两者）。
+- **「只删视频」的扩展名真值只有一份**：`FileOps.videoExtensions`（扫描器 `VideoScanner.videoExt`
+  与删除集合都引用它）。历史 bug：删除集合另存一份且多含 7 个音频扩展名，弹窗承诺
+  「其它文件不会被删除」却把 `.mp3/.flac` 永久删掉；判定也改为**精确扩展名匹配**
+  （`extensionOf`），不再对整条路径 `endsWith`（`a.mp4.bak` 不算视频）。
+- **目录源的根目录必须在传输循环之前创建**：`_collect` 刻意不把源根目录放进条目列表，
+  空目录（或只含符号链接的目录）会让循环体一次都不执行 → 移动删掉源却不创建目标、
+  文件夹凭空消失还提示成功；空目录的「复制」同理（什么都不发生却报成功）。⚠️ 该状态在 App
+  内不可达（列表/树都由扫描到的视频反推，卡片不会指向空目录），回归由
+  `test/file_operations_service_test.dart` 用真实临时目录守住（§6）。
 - **写盘前置**：所有操作直接走 `dart:io` 真实路径，依赖首页的
   `MANAGE_EXTERNAL_STORAGE` 门禁；不改用 SAF，避免「写入成功但 MediaStore 扫不到」。
 
@@ -1808,7 +1820,8 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   - `test/bili_search_page_test.dart` — 番剧搜索页（未搜索提示/搜索渲染/触底加载更多/失败重试/无结果空态，§4.29 C2）
   - `test/subtitle_font_injection_test.dart` — 字幕字体注入判定纯函数（`resolveSubtitleFontInjection` **永不返回 null**：默认/空目录回落 `/system/fonts`；族名+目录齐备才注入用户字体；空族名也回落，§4.10/§4.32）
   - `test/folder_pin_test.dart` — 固定文件夹排序纯函数（稳定前置/固定项之间仍保序/视频不受影响/分组无变化原样返回 + 树状逐层递归/重建保留聚合信息，§4.30）
-  - `test/file_ops_test.dart` — 文件管理纯函数（路径细分/目标校验含自己子目录拦截/重命名合法性与非法字符/**扩展名锁定**：预填主体·恒拼原扩展名·重复后缀不叠加·只输扩展名报错/重名避让序号插入位置/失效固定路径推导，§4.30）
+  - `test/file_ops_test.dart` — 文件管理纯函数（路径细分/目标校验含自己子目录拦截/重命名合法性与非法字符/**扩展名锁定**：预填主体·恒拼原扩展名·重复后缀不叠加·只输扩展名报错/重名避让序号插入位置/失效固定路径推导/**视频扩展名判定**：`.mp3·.flac·.ass·.nomedia` 不算视频、`.mp4.bak` 不算视频、与 `VideoScanner.videoExt` 同源且不含音频，§4.30）
+  - `test/file_operations_service_test.dart` — 文件管理服务**真实文件系统**回归（空文件夹移动/复制必须建出目标根目录、非空目录移动内容完整且源消失、只删视频时音频·字幕·`.mp4.bak`·子目录全保留、只有音频时只报错一个都不删、`deleteWholeFolder` 递归语义，§4.30）
   - `test/pinned_folders_settings_test.dart` — 固定文件夹设置服务（默认空/toggle/setPinned 幂等/**setPinnedAll 批量只通知一次**/replaceAll 通知语义/只读快照/持久化冷启动读回/损坏数据防御，§4.30）
   - `test/file_selection_test.dart` — 多选纯函数（目录树递归索引 + 缺 video 字段防御/视频索引/按点选顺序取值/失效路径丢弃，§4.31）
   - `test/file_selection_controller_test.dart` — 多选状态控制器（begin 立刻选中长按项且清掉上次选择/非多选态 toggle 无效/取消到 0 项仍在多选态/exit 幂等不重复通知/全选/containsAll 空列表不算全选/retainExisting 无变化不通知/只读快照，§4.31）
@@ -1979,3 +1992,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 切到 Dolby TrueHD（MLP FBA / `A_TRUEHD` / 8 channels）音轨后完全无声且无任何提示 | 真因是自编内核 ffmpeg 白名单漏了 `mlp`/`truehd` 解码器（`--enable-demuxer=truehd` 只是解封装器！）；内核已补该两条并重出 jar。应用侧同时兜底：换轨后 4 秒窗口内消费 `Player.stream.log`，`isAudioPlaybackFailureLog` 命中后读 `audio-params` 复核，再自动回退到不同编码的音轨并 toast（§4.32） |
 | 内嵌 PGS（蓝光位图）字幕能列出、选中却不显示 | 真因是自编内核 ffmpeg 白名单漏了 `hdmv_pgs_subtitle` 解码器（同段已开 `dvbsub`/`dvdsub`/`ass`，唯独漏 PGS）；已在内核补齐。排查时**勿用长名字符串**判断解码器是否存在（`--enable-small` 会把 `long_name` 编掉），用解码器短名 `strings libmpv.so \| grep -c '^hdmv_pgs_subtitle$'`（§4.9/§4.32） |
 | mpv 报错只进 `Player.stream.log`，应用侧不消费 → 用户看到「点了没反应」的静默失效 | 需要感知播放故障时订阅 `stream.log`（`logLevel` 默认已是 `error`，`PlayerLog.prefix` 区分 `ad`/`ao`/`vd`/`stream`）并**先复核再动作**，且尽量限定在「刚发生的操作」窗口内，不要仅凭一条日志改状态（§4.32） |
+| 弹窗承诺「只删文件夹内的视频文件，其它文件不会被删除」，实际连 `.mp3/.flac` 一起永久删除 | 删除集合与扫描器共用唯一真值 `FileOps.videoExtensions`（**不含音频扩展名**）+ 精确扩展名匹配 `isVideoFileName`；禁止在删除侧另存一份扩展名清单（§4.30） |
+| 移动/复制**空文件夹**：源被物理删除、目标不存在，还提示「成功」（复制则什么都不发生但报成功） | 目录源在传输循环**之前**无条件 `Directory(target).create(recursive: true)`——`_collect` 不把源根目录放进条目列表，空目录时循环体一次都不执行（§4.30） |
+| 调色板风格选「保真型」重启后变成「中性型」（前 8 个风格全中招） | 一次性迁移必须门控：旧键 `theme_variant` 只在**新键 `theme_variant_scheme_v2` 缺失**时迁移一次并写回新键；新旧 index 语义冲突时不能靠 index 范围猜新旧（§4.7） |
+| 听视频从「打开链接/最近播放/历史记录/网络存储/B站」等**不传 playlist** 的入口进入即崩（`ArgumentError`） | `num.clamp` 要求 `lower ≤ upper`：空列表 `(-1).clamp(0, -1)` 必抛错；空表一律 `_videos.isEmpty ? 0 : index.clamp(0, len-1)`（§4.30） |

@@ -186,6 +186,18 @@ class FileOperationsService {
 
     var bytesDone = 0;
     var itemsDone = 0;
+
+    // 目录源必须在循环**之前**建出目标根目录：空目录（或只含符号链接的目录）
+    // 的 entries 为空，循环体一次都不执行 → 「移动」会删掉源却不创建目标，
+    // 文件夹凭空消失还提示成功（见体检报告 P0-2）。
+    if (isDir) {
+      try {
+        await Directory(target).create(recursive: true);
+      } catch (e) {
+        throw FileOpException('写入失败：$name（$e）');
+      }
+    }
+
     for (final entry in entries) {
       if (cancelToken?.isCancelled ?? false) {
         throw const FileOpException('已取消');
@@ -420,21 +432,11 @@ class FileOperationsService {
     return deleted;
   }
 
-  /// 视频/音频扩展名判定（与 `VideoScanner.videoExt` 语义一致，
-  /// 另加常见音频扩展名，保证「只删视频」语义下不会误删字幕/弹幕）
-  static bool _isVideoFile(String path) {
-    final lower = path.toLowerCase();
-    for (final ext in _deletableExt) {
-      if (lower.endsWith(ext)) return true;
-    }
-    return false;
-  }
-
-  static const List<String> _deletableExt = [
-    '.mp4', '.mkv', '.avi', '.mov', '.wmv', '.flv', '.ts', '.m4v',
-    '.webm', '.3gp', '.mpg', '.mpeg',
-    '.mp3', '.m4a', '.aac', '.flac', '.wav', '.ogg', '.opus',
-  ];
+  /// 「只删视频」语义下的判定：与扫描器共用 [FileOps.videoExtensions] 这一份
+  /// 唯一真值（此前的删除集合额外含 7 个音频扩展名，导致弹窗承诺的「其它文件
+  /// 不会被删除」被违背、音频被永久删除，见体检报告 P0-1）。
+  static bool _isVideoFile(String path) =>
+      FileOps.isVideoFileName(FileOps.baseName(path));
 }
 
 /// 待传输条目（相对源根目录的路径；文件条目 relPath 为空表示源本身是文件）

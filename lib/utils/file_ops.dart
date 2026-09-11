@@ -1,7 +1,8 @@
 import 'dart:io';
 
 /// 应用内文件管理（复制 / 移动 / 重命名 / 删除）的**纯函数**部分：
-/// 路径细分、目标校验、重命名校验、重名避让、失效固定路径推导。
+/// 路径细分、目标校验、重命名校验、重名避让、失效固定路径推导、
+/// 视频扩展名判定（扫描与删除共用同一份唯一真值）。
 ///
 /// 真正的磁盘读写（含进度与取消）在 `services/file_operations_service.dart`；
 /// 本文件不碰磁盘（[directoryContains] 除外，用于防「移动到自己内部」）。
@@ -98,6 +99,21 @@ class FileOps {
     final ext = extensionOf(name);
     return ext.isEmpty ? name : name.substring(0, name.length - ext.length);
   }
+
+  /// 视频扩展名**唯一真值**（含点、小写）。
+  ///
+  /// 扫描器（`VideoScanner.videoExt`）与「只删文件夹内的视频文件」的删除集合
+  /// 必须共用这一份：两处各存一份时曾出现「扫描器不认为音频是视频、删除器却
+  /// 按音频扩展名删除」，用户在弹窗读到「其它文件不会被删除」后音频仍被永久
+  /// 删除（体检报告 P0-1）。
+  static const List<String> videoExtensions = [
+    '.mp4', '.mkv', '.avi', '.mov', '.wmv', '.flv', '.ts', '.m4v',
+    '.webm', '.3gp', '.mpg', '.mpeg',
+  ];
+
+  /// 是否为视频文件名（只看扩展名、大小写不敏感；传路径请先取 [baseName]）。
+  static bool isVideoFileName(String fileName) =>
+      videoExtensions.contains(extensionOf(fileName));
 
   /// 重命名输入框的初始文本：文件给「主体」（扩展名锁死在输入框右侧），
   /// 文件夹给完整名字（文件夹允许改名带点，不锁扩展名）。

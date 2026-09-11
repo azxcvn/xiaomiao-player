@@ -144,8 +144,11 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     final folder = folderOfPath(_path);
     final filtered = filterVideosInFolder(widget.playlist ?? const [], folder);
     _videos = filtered.isEmpty ? (widget.playlist ?? const []) : filtered;
-    _currentIndex =
-        _videos.indexWhere((v) => v.path == _path).clamp(0, _videos.length - 1);
+    // 空表时 indexWhere 返回 -1，`(-1).clamp(0, -1)` 因 lowerLimit > upperLimit
+    // 抛 ArgumentError → initState 直接崩（任一不传 playlist 的入口都必崩）；
+    // 空表用 0 占位，切歌入口本身已有 isEmpty 守卫（体检报告 P0-4）。
+    final index = _videos.indexWhere((v) => v.path == _path);
+    _currentIndex = _videos.isEmpty ? 0 : index.clamp(0, _videos.length - 1);
 
     // 竖屏 + 沉浸式全屏（状态栏/导航栏隐藏）
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moumou/services/video_scanner.dart';
 import 'package:moumou/utils/file_ops.dart';
 
 /// 文件管理纯函数测试（路径细分 / 目标校验 / 重命名校验 / 重名避让 / 失效固定路径）
@@ -162,6 +163,32 @@ void main() {
       expect(FileOps.stemOf('剧集.S01E01.mkv'), '剧集.S01E01');
       expect(FileOps.stemOf('无扩展名'), '无扩展名');
       expect(FileOps.stemOf('.nomedia'), '.nomedia');
+    });
+
+    test('isVideoFileName：视频命中 / 大小写不敏感 / 非视频不命中', () {
+      expect(FileOps.isVideoFileName('a.mp4'), isTrue);
+      expect(FileOps.isVideoFileName('剧集.S01E01.MKV'), isTrue);
+      expect(FileOps.isVideoFileName('a.webm'), isTrue);
+      // 音频/字幕/弹幕/无扩展名一律不算视频（P0-1：只删视频不能删音频）
+      for (final name in [
+        'a.mp3', 'a.m4a', 'a.aac', 'a.flac', 'a.wav', 'a.ogg', 'a.opus',
+        'a.ass', 'a.srt', 'a.xml', '无扩展名', '.nomedia',
+      ]) {
+        expect(FileOps.isVideoFileName(name), isFalse, reason: name);
+      }
+      // 扩展名必须精确匹配（不能靠整条路径 endsWith 命中）
+      expect(FileOps.isVideoFileName('a.mp4.bak'), isFalse);
+      expect(FileOps.isVideoFileName('a.mp'), isFalse);
+    });
+
+    test('videoExtensions：与扫描器共用同一份唯一真值、不含音频', () {
+      expect(FileOps.videoExtensions, VideoScanner.videoExt);
+      expect(FileOps.videoExtensions.contains('.mp4'), isTrue);
+      for (final ext in [
+        '.mp3', '.flac', '.wav', '.aac', '.m4a', '.ogg', '.opus',
+      ]) {
+        expect(FileOps.videoExtensions.contains(ext), isFalse, reason: ext);
+      }
     });
 
     test('renameInitialInput：文件只给主体，文件夹给完整名字', () {

@@ -18,6 +18,13 @@ class ThemeController extends ChangeNotifier {
   static const _keyMode = 'theme_mode';
   static const _keySeed = 'theme_seed_color';
   static const _keyVariant = 'theme_variant';
+
+  /// 调色板风格的新持久化键（v2）。
+  ///
+  /// 旧键 `theme_variant` 的 0~7 是**旧** `DynamicSchemeVariant` 序号，与
+  /// `FlexSchemeVariant.index` 语义冲突，无法区分「旧值」与「用户新选的
+  /// index<8」；换新键后旧键只在**从未写过新键**时被读取并迁移一次（体检 P0-3）。
+  static const _keyVariantV2 = 'theme_variant_scheme_v2';
   static const _keyCustomColor = 'theme_custom_color';
   static const _keyUsingDynamic = 'theme_using_dynamic_color';
 
@@ -106,12 +113,39 @@ class ThemeController extends ChangeNotifier {
     FlexSchemeVariant.fruitSalad, // 7 fruitSalad
   ];
 
+  /// 恢复调色板风格：**新键优先**，只有新键缺失时才读旧键并迁移一次。
+  ///
+  /// 没有这层门控时，`setVariant` 写的是新枚举 index、`load` 却对 index<8
+  /// 无条件走旧映射，两者只在 0 与 ≥8 上一致 → 用户选「保真型(1)」重启后
+  /// 变成「中性型(3)」，选择被静默改写（体检 P0-3）。迁移结果立即写回新键，
+  /// 旧键此后再不参与读取，因此只会迁移一次、不会二次改写。
+  Future<void> _restoreVariant(SharedPreferences prefs) async {
+    final current = prefs.getInt(_keyVariantV2);
+    if (current != null &&
+        current >= 0 &&
+        current < FlexSchemeVariant.values.length) {
+      _variant = FlexSchemeVariant.values[current];
+      return;
+    }
+
+    final legacy = prefs.getInt(_keyVariant);
+    if (legacy == null || legacy < 0) return;
+    if (legacy < _legacyVariantMapping.length) {
+      // 旧数据：按 DynamicSchemeVariant 顺序映射
+      _variant = _legacyVariantMapping[legacy];
+    } else if (legacy < FlexSchemeVariant.values.length) {
+      _variant = FlexSchemeVariant.values[legacy];
+    } else {
+      return; // 越界脏数据：保留默认风格，不写回
+    }
+    await prefs.setInt(_keyVariantV2, _variant.index);
+  }
+
   /// 启动时从本地恢复
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
     final modeIndex = prefs.getInt(_keyMode);
     final seedValue = prefs.getInt(_keySeed);
-    final variantIndex = prefs.getInt(_keyVariant);
     final customValue = prefs.getInt(_keyCustomColor);
     if (modeIndex != null &&
         modeIndex >= 0 &&
@@ -125,14 +159,7 @@ class ThemeController extends ChangeNotifier {
       _customColor = Color(customValue);
     }
     _usingDynamicColor = prefs.getBool(_keyUsingDynamic) ?? false;
-    if (variantIndex != null && variantIndex >= 0) {
-      if (variantIndex < _legacyVariantMapping.length) {
-        // 旧数据：按 DynamicSchemeVariant 顺序映射
-        _variant = _legacyVariantMapping[variantIndex];
-      } else if (variantIndex < FlexSchemeVariant.values.length) {
-        _variant = FlexSchemeVariant.values[variantIndex];
-      }
-    }
+    await _restoreVariant(prefs);
     notifyListeners();
   }
 
@@ -159,7 +186,7 @@ class ThemeController extends ChangeNotifier {
     _variant = variant;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_keyVariant, variant.index);
+    await prefs.setInt(_keyVariantV2, variant.index);
   }
 
   /// 设置用户自定义主题色（外观页「自定义」入口）：持久化该色并作为当前

@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:moumou/models/tree_node.dart';
 import 'package:moumou/models/video_file.dart';
 import 'package:moumou/services/media_scan_settings.dart';
+import 'package:moumou/utils/file_ops.dart';
 
 /// 视频扫描器：通过原生 MediaStore 查询视频，并构建完整目录树
 class VideoScanner {
@@ -10,20 +11,10 @@ class VideoScanner {
   /// 内存缓存：避免首页和详情页重复查询 MediaStore
   static List<VideoFile>? _cachedVideos;
 
-  static const List<String> videoExt = [
-    '.mp4',
-    '.mkv',
-    '.avi',
-    '.mov',
-    '.wmv',
-    '.flv',
-    '.ts',
-    '.m4v',
-    '.webm',
-    '.3gp',
-    '.mpg',
-    '.mpeg',
-  ];
+  /// 视频扩展名：唯一真值是 [FileOps.videoExtensions]（「只删文件夹内的视频
+  /// 文件」的删除集合与此处必须同源，否则会出现「扫描器不算视频、删除器却删」
+  /// 的错位，见体检报告 P0-1）。
+  static const List<String> videoExt = FileOps.videoExtensions;
 
   /// 清除内存缓存（下拉刷新时调用）
   static void clearCache() {
