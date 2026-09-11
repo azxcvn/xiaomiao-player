@@ -154,7 +154,7 @@ lib/
 │   ├── file_selection_controller.dart # 页面级多选状态（进入/退出/切换/全选/剔除失效项，**非单例**，§4.31）
 │   ├── audio_service.dart     # 音频控制器（音轨列表/aid 单选/外部音轨导入·移除（临时）/声道/af 滤镜链应用；声道与处理为会话级，随播放器生命周期重置；不可播放音轨经 stream.log 判定后自动回退，§4.32）
 │   ├── subtitle_settings.dart # 字幕设置（延迟/大小/位置/颜色/描边模式/内嵌样式覆盖/自定义字体/外挂字幕记忆/重置样式，ChangeNotifier + 持久化）
-│   ├── subtitle_service.dart  # 字幕控制器（单选模型：track-list/sid 同步/sub-add/sub-remove + 同名字幕自动加载 + 设置应用（字体目录构造期注入，运行期只写 sub-font）+ 切集重应用 + 外挂字幕跨会话恢复，§4.32）
+│   ├── subtitle_service.dart  # 字幕控制器（单选模型：track-list/sid 同步/sub-add/sub-remove + 同名字幕自动加载（**外挂字幕来源唯一**：初始化 `sub-auto=no`，同名加载只由 App 负责）+ 设置应用（字体目录构造期注入，运行期只写 sub-font）+ 切集重应用 + 外挂字幕跨会话恢复，§4.32）
 │   ├── app_font_settings.dart # App 全局字体设置（开关/族名/字号/字重 + loadFontFromList 注册，ChangeNotifier + 持久化，§4.12）
 │   ├── equalizer_settings.dart # 音频均衡器设置（5 频段/低音增强/虚拟环绕/预设，ChangeNotifier + 持久化，AudioController 订阅重应用 af 链）
 │   ├── danmaku_service.dart    # 弹幕控制器（业务层：本地同名/手动导入/网络弹幕装载 + 1s tick 秒桶发射 + canvas 渲染层显隐/暂停/倍速同步 + 设置订阅应用 + 切集自动匹配，横竖屏共享）
@@ -1996,3 +1996,5 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 移动/复制**空文件夹**：源被物理删除、目标不存在，还提示「成功」（复制则什么都不发生但报成功） | 目录源在传输循环**之前**无条件 `Directory(target).create(recursive: true)`——`_collect` 不把源根目录放进条目列表，空目录时循环体一次都不执行（§4.30） |
 | 调色板风格选「保真型」重启后变成「中性型」（前 8 个风格全中招） | 一次性迁移必须门控：旧键 `theme_variant` 只在**新键 `theme_variant_scheme_v2` 缺失**时迁移一次并写回新键；新旧 index 语义冲突时不能靠 index 范围猜新旧（§4.7） |
 | 听视频从「打开链接/最近播放/历史记录/网络存储/B站」等**不传 playlist** 的入口进入即崩（`ArgumentError`） | `num.clamp` 要求 `lower ≤ upper`：空列表 `(-1).clamp(0, -1)` 必抛错；空表一律 `_videos.isEmpty ? 0 : index.clamp(0, len-1)`（§4.30） |
+| 同一外挂字幕被挂**两次**（面板出现两条一模一样的 `ass · 外挂 · ASS`）→ 点轨道高亮乱跳、界面闪烁；字幕名与视频名完全相同时必现，加 `-SC`/`-TC` 后缀则不复现 | 外挂字幕**来源唯一化**：`SubtitleController.applyOnInit()` **首行**（任何 `await` 之前）`setProperty('sub-auto','no')` —— mpv 默认会按同名自动挂一条，而 `_autoLoadSameNameSubtitle` 又 `sub-add` 同一条；⚠️ 代价是失去 mpv 原生匹配（字幕放 `sub/` 子目录不再自动加载） |
+| 字幕面板「关闭字幕」是**条件行**（`if (hasSelection)`），随选中态插入/移出 → 下方「导入外部字幕」上下跳动一格，快速点外挂轨时肉眼可见闪烁 | **待修（B5）**：根因是切轨 `sub-reload` 让外挂轨 id 变化、`reload()`（丢弃式）与 `_syncActiveFromMpv` 覆盖用户选择造成 `_primary` 抖动；修法为服务侧治本（按用户意图重设 sid + 等待式 reload/会话号）+ UI 侧常驻化或固定高度。**仅把该行改成常驻属遮住症状，不作最终方案** |

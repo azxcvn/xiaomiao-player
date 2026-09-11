@@ -477,6 +477,21 @@ class SubtitleController extends ChangeNotifier {
 
   /// 播放器初始就绪时应用一次设置（初始化越早越好，避免首帧无字幕样式）
   Future<void> applyOnInit() async {
+    // ⚠️ 这一条必须在**任何 await 之前**发出去：`sub-auto` 只在文件加载时生效，
+    // 首次 open 之后才写就无效（本方法后面的 ensureLoaded / 字体拷贝可能很慢）。
+    //
+    // 禁用 mpv 自带的「同名外挂字幕自动加载」：mpv 默认会为与视频同名的外挂字幕
+    // 自动挂一条，而本控制器的 [_autoLoadSameNameSubtitle] 又会 `sub-add` 同一条
+    // → 同一个外挂文件出现**两条完全相同的轨道**（都带「外挂」与删除按钮）；
+    // 切轨时 [applyStyleOverride] 的 `sub-reload` 会重挂轨道、改变轨道 id，
+    // [reload]/[_syncActiveFromMpv] 随即用 mpv 的 sid 覆盖用户刚点的选择
+    // → 点轨道不亮、高亮乱跳、界面闪烁（真机 2026-09 复现；字幕名与视频名完全
+    // 相同时必现，加 `-SC`/`-TC` 后缀后 mpv 的同名匹配失效故不复现）。
+    // 同名字幕统一由 App 负责（匹配更准：简繁 -sc/-tc 优先 + 记忆 + 只认字幕扩展名）。
+    final native = _native;
+    if (native != null) {
+      unawaited(native.setProperty('sub-auto', 'no').catchError((_) {}));
+    }
     await _settings.ensureLoaded();
     await DeviceServices.ensureDefaultFontCopied();
     await applyAllSettings();
