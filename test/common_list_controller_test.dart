@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/services/common_list_controller.dart';
 import 'package:moumou/utils/loading_state.dart';
@@ -229,6 +231,59 @@ void main() {
       c.dispose();
       await future; // 不应抛「已 dispose 还 notify」异常
       expect(c.items, isEmpty);
+    });
+  });
+
+  group('换条件作废在飞请求（P1-37）', () {
+    test('reset 后旧关键词的响应不得覆盖新关键词的列表', () async {
+      final pending = <Completer<PageResult<int>>>[];
+      final c = CommonListController<int>(
+        fetchPage: (page) {
+          final cc = Completer<PageResult<int>>();
+          pending.add(cc);
+          return cc.future;
+        },
+      );
+
+      final first = c.refresh(); // 旧关键词的请求在飞
+      c.reset(); // 换关键词：作废在飞请求
+      final second = c.refresh(); // 新关键词的请求
+
+      // 新请求先回来
+      pending[1].complete(PageResult([100, 101], hasMore: false));
+      await second;
+      expect(c.items, [100, 101]);
+      expect(c.isLoading, isFalse);
+
+      // 旧请求后回来：令牌已失效 → 结果被丢弃
+      pending[0].complete(PageResult([1, 2], hasMore: true));
+      await first;
+      expect(c.items, [100, 101], reason: '旧关键词的响应不能覆盖新列表');
+      expect(c.page, 1);
+      expect(c.hasMore, isFalse);
+      c.dispose();
+    });
+
+    test('reset 后不新发起请求：旧响应既不写入也不改加载态', () async {
+      final pending = <Completer<PageResult<int>>>[];
+      final c = CommonListController<int>(
+        fetchPage: (page) {
+          final cc = Completer<PageResult<int>>();
+          pending.add(cc);
+          return cc.future;
+        },
+      );
+
+      final first = c.refresh();
+      c.reset();
+      expect(c.isLoading, isFalse, reason: 'reset 立即回到未加载态');
+
+      pending[0].complete(PageResult([7], hasMore: true));
+      await first;
+      expect(c.items, isEmpty, reason: '在飞请求已被作废，不得写回');
+      expect(c.isLoading, isFalse);
+      expect(c.started, isFalse);
+      c.dispose();
     });
   });
 }

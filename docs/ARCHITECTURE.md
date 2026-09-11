@@ -1711,10 +1711,10 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 - 框架：`flutter_test`；权限 mock 用 `permission_handler_platform_interface` 的 `PermissionHandlerPlatform.instance` 替换（参考 `test/home_page_permission_test.dart`）
 - 现有测试（`flutter test` 全绿）：
   - `test/widget_test.dart` — 胶囊导航渲染（**注意**：胶囊设计上所有标签都显示，勿改成 findsNothing）
-  - `test/view_settings_test.dart` — sortTree / sortFolders / sortVideos 排序逻辑（含名称自然序：2 < 12 < 112）
+  - `test/view_settings_test.dart` — sortTree / sortFolders / sortVideos 排序逻辑（含名称自然序：2 < 12 < 112）+ **加载纪律**（setter 同步段不得改内存、`ensureLoaded` 复用同一 load Future、读盘完成后不二次回读覆盖用户设置，§7）
   - `test/natural_compare_test.dart` — 自然序比较纯函数（数字段/字母段/前缀）
   - `test/super_resolution_mode_test.dart` — 超分模型（7 模式 + 质量枚举 + buildAnime4KChain 链构建纯函数 + 着色器文件完整性）
-  - `test/super_resolution_service_test.dart` — 超分服务状态/持久化（模式、质量、记忆开关的开启/关闭/load 恢复）
+  - `test/super_resolution_service_test.dart` — 超分服务状态/持久化（模式、质量、记忆开关的开启/关闭/load 恢复）+ **加载纪律**（setter 首行 await 读盘、`ensureLoaded` 共享同一 Future、读盘完成后不回退）
   - `test/app_frame_test.dart` — AppFrame 安全区行为 + 播放页路由检测（**安全区/播放页回归测试，改 AppFrame 必须跑**）
   - `test/home_page_permission_test.dart` — 权限流程（未授权 → 授予权限 → 授权扫描）
   - `test/player_controls_settings_test.dart` — 播放器控制设置（槽位增删/排序/上限/时长档位/倍速预设/按钮背景/进度条样式/长按倍速/灵敏度/保存音量到系统/音量增强开关与上限百分比 10% 步进就近对齐/指示器开关/首次提示/双指缩放/自动连播/自动退出/循环模式/已观看阈值 5% 档位/视频方向/播放界面动画开关/旧数据迁移；倍速不在顶栏动作之列）
@@ -1814,7 +1814,8 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   - `test/player_diagnostics_panel_test.dart` — 播放诊断面板（四组数值渲染/缺失占位/丢帧·软解告警卡/读取失败降级/定时刷新取新值，§4.27）
   - `test/retry_policy_test.dart` — 统一网络重试与快速失败（超时分级/可重试判定与响应中断排除/指数退避/withRetry 行为与流式不重试/体积上限 content-length 预判与边读边判/端到端 MockClient，§4.28）
   - `test/async_primitives_test.dart` — C1 并发原语（会话号递增与作废·旧请求丢弃/在飞去重共享与失败不缓存/串行队列顺序·无重叠·异常不打断·idle，§4.29）
-  - `test/common_list_controller_test.dart` — C2 分页控制器（三态/刷新失败保留旧列表/空结果也是 Loaded/加载更多与 hasMore/并发防重入/reset/describeError/dispose，§4.29）
+  - `test/common_list_controller_test.dart` — C2 分页控制器（三态/刷新失败保留旧列表/空结果也是 Loaded/加载更多与 hasMore/并发防重入/reset/describeError/dispose + **reset 作废在飞请求**：旧关键词响应不得覆盖新列表、reset 后旧响应既不写入也不改加载态，§4.29）
+  - `test/playback_progress_service_test.dart` — 播放进度服务加载健壮性（脏 JSON → `load` 不抛错、回落空表、`_loadFuture` 不变成 rejected、后续 `save` 仍能落盘，§7）
   - `test/bili_playlist_test.dart` — 番剧播放列表模型（季详情/剧集数组构造、集号 1 起、按 epId 定位、hasNextAt/itemAt 边界、标题回落与角标透传，§4.15）
   - `test/player_bili_playlist_panel_test.dart` — 番剧剧集列表面板（头部集数进度/条目集号集名角标/当前集播放中/点击回调并关闭/空态，§4.15）
   - `test/bili_search_page_test.dart` — 番剧搜索页（未搜索提示/搜索渲染/触底加载更多/失败重试/无结果空态，§4.29 C2）
@@ -1867,7 +1868,10 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 播放页整页随位置流高频重建 | 位置/时长抽页面级 `ValueNotifier`，底栏/进度线 `Listenable.merge` 局部订阅（§4.1） |
 | 快速退出→进入刷假崩溃日志 | `_disposed` 标志 + 每个 await 后查 disposed/mounted + `openAndRestore`/`_openAndSetRate` 等 `on AssertionError` 兜底静默返回 |
 | 播放进度表每次全量序列化 | `save` 30s 节流 + `_writeChain` 串行化 |
-| 设置单例 load 竞态 | `ensureLoaded()` + 全部 setter 首行 await（risk_audit #9） |
+| 设置单例 load 竞态 | `ensureLoaded()` + 全部 setter 首行 await（risk_audit #9）；⚠️ 曾漏 `SuperResolutionService` / `ViewSettings`（其 `load()` 会在启动读盘完成时把用户刚改的值写回），已补 |
+| 脏 JSON 让 `ensureLoaded()` 缓存一个 **rejected Future** | `PlaybackProgressService.load()` 全程 try/catch/**finally**：读盘或解码失败回落空表并照常置 `_loaded`（否则该 Future 一直缓存下去 → 本次进程内进度**恢复与保存全部失效**）+ 逐条容错解码 `_decode` |
+| `AsyncSerialQueue.add` 的返回 Future 被丢弃 → 串行写盘失败静默（用户以为已保存） | 调用方**必须**接收该 Future 的错误：`unawaited(queue.add(...).catchError(记日志))`；`idle` 只等排空、**从不抛错**，靠它发现不了失败（§4.29） |
+| 分页控制器 `reset()` 只清在飞标志 → 旧关键词的响应回来照样写回，覆盖新列表 | `CommonListController` 用 `AsyncSession`：`refresh` 新开会话、`loadMore` 沿用、`reset` 作废在飞请求；收尾（清 loading / notify）也只认最新会话（§4.29） |
 | 播放界面动画无法关闭 | 「启用播放界面动画」设置：动画控制器时长归零 / `animate=false` 零时长转场 |
 | MethodChannel 小整数是 Integer 非 Long | 取整型参数一律 `call.argument<Number>()?.toLong()/toInt()` |
 | MediaMetadataRetriever 取帧不可靠 | 仅剩列表封面用（`getVideoInfo`）：SYNC/CLOSEST 独立 try/catch；进度条抓帧已换 FFmpeg 引擎（§4.9） |
@@ -1896,7 +1900,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 全面屏手势误触 / 双指捏合误触发滑动 | 手势层死区（垂直上下 8%、水平右 8%）+ 方向确认延迟 80ms + `onSwipeCancel` 撤销 |
 | 滑杆刻度过密被跳过 | `DenseSliderTickMarkShape` 声明极小宽度通过密度检查 |
 | 播放器面板滑杆/强调色写死 `Color(0xFF4FC3F7)`（模块级 `ColorScheme.fromSeed` 常量），换主题色不跟随 | 改用 `playerPanelSliderTheme(context)` / `playerPanelAccent(context)`；模块级 `final` 派生的方案在首次加载时即固化，**不会**随主题重建（§5.3 第 5 条） |
-| 暗色面板直接用 `Theme.of(context).colorScheme.primary` 作强调色 | 浅色主题下该色在暗底上偏暗、对比不足；必须以它为 seed 派生 `Brightness.dark` 方案后再取 primary |
+| 暗色面板直接用 `Theme.of(context).colorScheme.primary` 作强调色 | 浅色主题下该色（tone 40，如 `#65558F`）在暗底上偏暗、对比不足（≈2.6:1，低于 3:1 门槛；派生暗色方案后 ≈10:1）。**所有**面板强调色都必须以它 seed 派生 `Brightness.dark` 方案后再取 primary：滑杆走 `playerPanelSliderTheme`、强调色走 `playerPanelAccent`/`playerPanelScheme`；⚠️ 被 8 个面板复用的 `PlayerOptionChip` 曾漏（直接用 theme primary），已改 |
 | 自动亮度读不到实时亮度 | 进入播放把系统值应用到窗口，退出恢复 -1 |
 | 崩溃日志无限累积 | 上限 50 条 / 10MB，读写后裁剪 |
 | 关于页跳转邮件/GitHub | AndroidManifest 声明 `mailto`/`https` `<queries>` |

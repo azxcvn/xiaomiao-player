@@ -91,6 +91,9 @@ class ViewSettings extends ChangeNotifier {
 
   ViewMode _viewMode = ViewMode.list;
 
+  /// 读盘 Future（[ensureLoaded] 缓存；null = 尚未开始加载）
+  Future<void>? _loadFuture;
+
   SortField get sortField => _sortField;
   SortOrder get sortOrder => _sortOrder;
   Set<FolderField> get fields => _fields;
@@ -98,6 +101,13 @@ class ViewSettings extends ChangeNotifier {
   SortOrder get videoSortOrder => _videoSortOrder;
   Set<VideoField> get videoFields => _videoFields;
   ViewMode get viewMode => _viewMode;
+
+  /// 确保已从磁盘加载。
+  ///
+  /// 全部 setter 首行 await 本方法，且与 `main.dart` 共享同一 load Future：
+  /// 防止「启动读盘尚未完成、用户刚改的排序/字段/视图模式被 [load] 尾部覆盖」
+  /// （§4.1/§7「设置单例 load 竞态 → ensureLoaded + setter 首行 await」约定）。
+  Future<void> ensureLoaded() => _loadFuture ??= load();
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -138,6 +148,7 @@ class ViewSettings extends ChangeNotifier {
   }
 
   Future<void> setSortField(SortField v) async {
+    await ensureLoaded();
     if (_sortField == v) return;
     _sortField = v;
     notifyListeners();
@@ -146,6 +157,7 @@ class ViewSettings extends ChangeNotifier {
   }
 
   Future<void> setSortOrder(SortOrder v) async {
+    await ensureLoaded();
     if (_sortOrder == v) return;
     _sortOrder = v;
     notifyListeners();
@@ -155,6 +167,7 @@ class ViewSettings extends ChangeNotifier {
 
   /// 切换某个字段的显示/隐藏
   Future<void> toggleField(FolderField f) async {
+    await ensureLoaded();
     if (_fields.contains(f)) {
       _fields.remove(f);
     } else {
@@ -169,6 +182,7 @@ class ViewSettings extends ChangeNotifier {
   }
 
   Future<void> setVideoSortField(VideoSortField v) async {
+    await ensureLoaded();
     if (_videoSortField == v) return;
     _videoSortField = v;
     notifyListeners();
@@ -177,6 +191,7 @@ class ViewSettings extends ChangeNotifier {
   }
 
   Future<void> setVideoSortOrder(SortOrder v) async {
+    await ensureLoaded();
     if (_videoSortOrder == v) return;
     _videoSortOrder = v;
     notifyListeners();
@@ -186,6 +201,7 @@ class ViewSettings extends ChangeNotifier {
 
   /// 切换视频列表某个字段的显示/隐藏
   Future<void> toggleVideoField(VideoField f) async {
+    await ensureLoaded();
     if (_videoFields.contains(f)) {
       _videoFields.remove(f);
     } else {
@@ -201,6 +217,7 @@ class ViewSettings extends ChangeNotifier {
 
   /// 设置显示模式（树状/列表）
   Future<void> setViewMode(ViewMode v) async {
+    await ensureLoaded();
     if (_viewMode == v) return;
     _viewMode = v;
     notifyListeners();

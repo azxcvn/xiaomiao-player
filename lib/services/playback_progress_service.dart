@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -45,15 +46,43 @@ class PlaybackProgressService extends ChangeNotifier {
   /// 才置 [_loaded] = true。旧实现先置位再 await 读盘——main.dart 调 [load] 后
   /// 播放页调 [ensureLoaded]（`_loadFuture ??= load()`）会再走一次 [load]，
   /// 此时 [_loaded] 已是 true 直接返回空缓存，恢复逻辑读到 null 不恢复。
+  ///
+  /// ⚠️ 防御（P1-33）：读盘/解码失败**必须**回落空表并照常置 [_loaded]。
+  /// 若放任 [load] 抛错，[ensureLoaded] 缓存的就是一个 **rejected Future** ——
+  /// 此后每次 `ensureLoaded` 立即失败、[_loaded] 恒 false，本次进程内的
+  /// **进度恢复与保存全部失效**（对照 `PlaybackHistoryService._decode` 的防御）。
   Future<void> load() async {
     if (_loaded) return;
-    final prefs = await SharedPreferences.getInstance();
-    final json = prefs.getString(_key);
-    if (json != null) {
-      _cache = Map<String, int>.from(jsonDecode(json) as Map);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _cache = _decode(prefs.getString(_key));
+    } catch (_) {
+      _cache = {};
+    } finally {
+      _loaded = true; // 读盘完成（或失败回落）后再置位
+      notifyListeners();
     }
-    _loaded = true; // 读盘完成后再置位
-    notifyListeners();
+  }
+
+  /// 防御性解码：坏 JSON / 非数值条目一律丢弃，可继续写入新数据
+  Map<String, int> _decode(String? raw) {
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return {};
+      final out = <String, int>{};
+      decoded.forEach((key, value) {
+        final int? ms = switch (value) {
+          final int v => v,
+          final num v => v.toInt(),
+          _ => int.tryParse('$value'),
+        };
+        if (ms != null) out['$key'] = ms;
+      });
+      return out;
+    } catch (_) {
+      return {};
+    }
   }
 
   /// 保存进度并通知监听者。
@@ -83,11 +112,21 @@ class PlaybackProgressService extends ChangeNotifier {
     }
     _lastPersistedAt[path] = now;
     final snapshot = jsonEncode(_cache);
-    // 写入走公共串行队列（§4.29）：按提交顺序依次落盘，异常不打断后续写入
-    _writeQueue.add(() async {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_key, snapshot);
-    });
+    // 写入走公共串行队列（§4.29）：按提交顺序依次落盘，异常不打断后续写入。
+    //
+    // ⚠️ 任务的错误**必须在这里接收**（P1-34）：`AsyncSerialQueue.add` 把异常交给
+    // 返回的 Future，丢弃它就等于未处理异步错误 + 写盘失败静默（用户以为已保存、
+    // 重启丢进度）。[AsyncSerialQueue.idle] 只负责等排空、从不抛错，靠它发现不了失败。
+    unawaited(
+      _writeQueue
+          .add(() async {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString(_key, snapshot);
+          })
+          .catchError((Object error, StackTrace stack) {
+        debugPrint('PlaybackProgressService: 进度写盘失败：$error');
+      }),
+    );
     await _writeQueue.idle;
   }
 }

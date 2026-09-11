@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/widgets/settings_ui.dart';
 
 /// 播放器右侧面板中的选项胶囊（倍速预设 / 超分模式共用）。
 ///
 /// 点击生效并高亮：选中态以主题色填充、白字加粗；未选中为半透明白底。
 /// 倍速面板与超分面板共用此组件，保证两处交互与视觉完全一致。
+///
+/// ⚠️ 强调色走 [playerPanelScheme]（由主题 primary 派生的**暗色**方案），
+/// 不能用 `Theme.of(context).colorScheme.primary` —— 浅色主题下该色在暗底面板上
+/// 偏暗、对比不足（§7 记录过的坑；本组件是被 11 个面板复用的漏网点，P1-32）。
 class PlayerOptionChip extends StatelessWidget {
   final String label;
   final bool selected;
@@ -31,7 +36,7 @@ class PlayerOptionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = playerPanelScheme(context);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(

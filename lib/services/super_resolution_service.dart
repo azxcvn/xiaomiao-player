@@ -41,6 +41,9 @@ class SuperResolutionService extends ChangeNotifier {
   bool _remember = false;
   Directory? _shadersDirectory;
 
+  /// 读盘 Future（[ensureLoaded] 缓存；null = 尚未开始加载）
+  Future<void>? _loadFuture;
+
   /// 当前超分模式
   SuperResolutionMode get mode => _mode;
 
@@ -52,6 +55,14 @@ class SuperResolutionService extends ChangeNotifier {
 
   /// 着色器所在目录（[apply] 内部保证已就绪；拷贝失败时为 null）
   Directory? get shadersDirectory => _shadersDirectory;
+
+  /// 确保已从磁盘加载。
+  ///
+  /// setter 首行与 `main.dart` 共享同一 load Future：防止「启动读盘尚未完成、
+  /// 用户刚在超分面板选的档位被 [load] 覆盖」（§4.1/§7「设置单例 load 竞态 →
+  /// `ensureLoaded()` + 全部 setter 首行 await」约定；本服务此前是全仓唯一
+  /// 绕过该约定的单例）。
+  Future<void> ensureLoaded() => _loadFuture ??= load();
 
   /// 启动时加载（main.dart 调用）。
   /// 记忆开启 → 恢复上次的模式+质量；关闭 → 回到关闭/均衡。
@@ -73,6 +84,7 @@ class SuperResolutionService extends ChangeNotifier {
   /// 切换模式；总是记录为「上次设置」（供记忆开启时恢复），
   /// [player] 非空时立即应用到播放器。
   Future<void> setMode(SuperResolutionMode mode, {Player? player}) async {
+    await ensureLoaded();
     _mode = mode;
     _lastMode = mode;
     notifyListeners();
@@ -87,6 +99,7 @@ class SuperResolutionService extends ChangeNotifier {
   /// 非关闭且 [player] 非空时用新质量重建着色器链并重新应用。
   Future<void> setQuality(SuperResolutionQuality quality,
       {Player? player}) async {
+    await ensureLoaded();
     _quality = quality;
     _lastQuality = quality;
     notifyListeners();
@@ -101,6 +114,7 @@ class SuperResolutionService extends ChangeNotifier {
   /// 开启：立即恢复上次的模式+质量；关闭：当前会话回到关闭/均衡。
   /// [player] 非空时把变化立即应用到播放器（关闭记忆 → 清除着色器）。
   Future<void> setRemember(bool remember, {Player? player}) async {
+    await ensureLoaded();
     if (_remember == remember) return;
     _remember = remember;
     if (remember) {
@@ -171,6 +185,7 @@ class SuperResolutionService extends ChangeNotifier {
     _lastMode = SuperResolutionMode.off;
     _lastQuality = SuperResolutionQuality.balanced;
     _remember = false;
+    _loadFuture = null; // 让下一个用例重新走一次 load
     notifyListeners();
   }
 

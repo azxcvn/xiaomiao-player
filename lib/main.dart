@@ -111,7 +111,10 @@ class _MoumouAppState extends State<MoumouApp> {
   void initState() {
     super.initState();
     _themeController.load();
-    _viewSettings.load();
+    // 用 ensureLoaded 而非 load：setter 侧的 ensureLoaded 与这里共享同一
+    // load Future，防止「启动读盘未完成、用户已改排序/字段/视图模式被覆盖」
+    // （P1-31，§4.1/§7 的设置加载纪律）
+    _viewSettings.ensureLoaded();
     // 外部打开视频（注册为系统播放器，工作.md）：
     // - 热启动（onNewIntent）：原生推送 onExternalVideo → 取走并播放；
     // - 冷启动（onCreate intent 暂存原生侧）：首帧后取走并播放。
@@ -139,7 +142,9 @@ class _MoumouAppState extends State<MoumouApp> {
     SubtitleSettings.instance.ensureLoaded();
     // 媒体扫描设置：同 ensureLoaded 模式
     MediaScanSettings.instance.ensureLoaded();
-    SuperResolutionService.instance.load();
+    // 超分：同 ensureLoaded 模式（面板 setter 与这里共享同一 load Future，
+    // 防止「启动 `load()` 的成员写回把用户刚选的档位覆盖」，P1-30）
+    SuperResolutionService.instance.ensureLoaded();
     // 解码设置（硬解/软解档位）：同 ensureLoaded 模式，播放页创建
     // VideoController 时同步读取（防竞态）
     DecodeSettings.instance.ensureLoaded();

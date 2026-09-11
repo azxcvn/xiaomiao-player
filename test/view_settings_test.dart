@@ -179,4 +179,57 @@ void main() {
       expect(result.map((v) => v.name).toList(), ['2.mp4', '12.mp4', '112.mp4']);
     });
   });
+
+  group('加载纪律（P1-31：setter 首行 await ensureLoaded）', () {
+    test('setter 必须先 await 读盘再改内存（冷启动竞态）', () async {
+      // 磁盘值 = 默认值 list，用户要改成 tree：这样才能区分「改内存」发生在
+      // 读盘之前还是之后（修复前 setter 同步段就写内存 → 被 load 覆盖回 list）
+      SharedPreferences.setMockInitialValues({
+        'view_mode': ViewMode.list.index,
+      });
+      final c = ViewSettings();
+      // 不 await：调用后 setter 应停在 ensureLoaded 的 await 上，尚未改内存
+      final pending = c.setViewMode(ViewMode.tree);
+      expect(
+        c.viewMode,
+        ViewMode.list,
+        reason: 'setter 同步段不得改内存，否则读盘结果稍后会把用户选择覆盖回旧值',
+      );
+      await pending;
+      expect(c.viewMode, ViewMode.tree);
+    });
+
+    test('ensureLoaded 复用同一 load Future（与 main.dart 共享）', () async {
+      SharedPreferences.setMockInitialValues({
+        'view_mode': ViewMode.tree.index,
+      });
+      final c = ViewSettings();
+      final f1 = c.ensureLoaded();
+      final f2 = c.ensureLoaded();
+      expect(identical(f1, f2), isTrue, reason: '启动加载与 setter 必须共享同一 Future');
+      await f1;
+      expect(c.viewMode, ViewMode.tree);
+    });
+
+    test('读盘完成后再改设置：ensureLoaded 不二次回读、不回退', () async {
+      SharedPreferences.setMockInitialValues({
+        'view_mode': ViewMode.tree.index,
+        'view_sort_field': SortField.date.index,
+      });
+      final c = ViewSettings();
+      await c.ensureLoaded();
+      expect(c.viewMode, ViewMode.tree);
+      expect(c.sortField, SortField.date);
+
+      await c.setViewMode(ViewMode.list);
+      await c.setSortField(SortField.name);
+      await c.ensureLoaded();
+
+      expect(c.viewMode, ViewMode.list, reason: '一次性加载，用户选择优先');
+      expect(c.sortField, SortField.name);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getInt('view_mode'), ViewMode.list.index);
+      expect(prefs.getInt('view_sort_field'), SortField.name.index);
+    });
+  });
 }

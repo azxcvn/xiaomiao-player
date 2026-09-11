@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/pages/player/views/player_danmaku_settings_panel.dart';
+import 'package:moumou/widgets/player_option_chip.dart';
 import 'package:moumou/widgets/settings_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -119,5 +120,56 @@ void main() {
       ),
     );
     expect(identical(first, second), isTrue);
+  });
+
+  testWidgets('PlayerOptionChip 选中态用面板暗色方案强调色（浅色主题下也可读，P1-32）', (
+    tester,
+  ) async {
+    const seed = Color(0xFF6750A4);
+    final lightPrimary = ColorScheme.fromSeed(
+      seedColor: seed,
+      brightness: Brightness.light,
+    ).primary;
+
+    late Color expectedAccent;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: seed,
+            brightness: Brightness.light,
+          ),
+        ),
+        home: Builder(
+          builder: (context) {
+            expectedAccent = playerPanelScheme(context).primary;
+            return Scaffold(
+              body: Center(
+                child: PlayerOptionChip(
+                  label: '2.0x',
+                  selected: true,
+                  onTap: () {},
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    final box = tester.widget<AnimatedContainer>(
+      find.descendant(
+        of: find.byType(PlayerOptionChip),
+        matching: find.byType(AnimatedContainer),
+      ),
+    );
+    final color = (box.decoration as BoxDecoration).color;
+    expect(color, expectedAccent, reason: '胶囊强调色必须来自面板暗色方案');
+    expect(
+      color,
+      isNot(lightPrimary),
+      reason: '浅色主题的 primary 在暗底面板上偏暗、对比不足（§7 历史坑）',
+    );
   });
 }

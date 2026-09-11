@@ -111,4 +111,44 @@ void main() {
     expect(s.mode, SuperResolutionMode.off);
     expect(s.quality, SuperResolutionQuality.balanced);
   });
+
+  test('setter 必须先 await 读盘再改内存（P1-30 冷启动竞态）', () async {
+    final s = SuperResolutionService.instance;
+    // 不 await：调用后 setter 应停在 ensureLoaded 的 await 上，尚未改内存
+    final pending = s.setMode(SuperResolutionMode.aPlus);
+    expect(
+      s.mode,
+      SuperResolutionMode.off,
+      reason: 'setter 同步段不得改内存，否则读盘（记忆开启时恢复上次档位）会覆盖用户刚选的档位',
+    );
+    await pending;
+    expect(s.mode, SuperResolutionMode.aPlus);
+  });
+
+  test('ensureLoaded 复用同一 load Future（与 main.dart 共享）', () async {
+    final s = SuperResolutionService.instance;
+    final f1 = s.ensureLoaded();
+    final f2 = s.ensureLoaded();
+    expect(identical(f1, f2), isTrue, reason: '启动加载与 setter 必须共享同一 Future');
+    await f1;
+  });
+
+  test('读盘完成后再改档：ensureLoaded 不二次回读、不回退', () async {
+    SharedPreferences.setMockInitialValues({
+      'super_resolution_remember': true,
+      'super_resolution_last_mode': SuperResolutionMode.c.id,
+      'super_resolution_last_quality': SuperResolutionQuality.fast.index,
+    });
+    final s = SuperResolutionService.instance..reset();
+    await s.ensureLoaded();
+    expect(s.mode, SuperResolutionMode.c);
+    expect(s.quality, SuperResolutionQuality.fast);
+
+    await s.setMode(SuperResolutionMode.aPlus);
+    await s.setQuality(SuperResolutionQuality.high);
+    await s.ensureLoaded();
+
+    expect(s.mode, SuperResolutionMode.aPlus, reason: '一次性加载，用户选择优先');
+    expect(s.quality, SuperResolutionQuality.high);
+  });
 }
