@@ -110,7 +110,11 @@ class _MoumouAppState extends State<MoumouApp> {
   @override
   void initState() {
     super.initState();
-    _themeController.load();
+    // 用 ensureLoaded 而非 load：外观页的 setMode/setSeedColor/setVariant/
+    // setCustomColor/setDynamicColor 首行也 await ensureLoaded，与这里共享同一
+    // load Future，防止「启动读盘未完成、用户刚选的主题/风格被 load 写回覆盖」
+    // （§4.1/§7 的设置加载纪律；调色板风格迁移门控要求读到的启动期值可信）
+    _themeController.ensureLoaded();
     // 用 ensureLoaded 而非 load：setter 侧的 ensureLoaded 与这里共享同一
     // load Future，防止「启动读盘未完成、用户已改排序/字段/视图模式被覆盖」
     // （P1-31，§4.1/§7 的设置加载纪律）

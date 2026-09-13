@@ -472,6 +472,10 @@ models（模型）     → 无依赖（纯数据）
 - **调色板风格持久化键为 `theme_variant_scheme_v2`，旧键 `theme_variant` 只作一次性迁移来源**：
   旧键 0–7 是旧 `DynamicSchemeVariant` 序号、与新枚举 index 语义冲突（存「保真型 1」读回「中性型 3」），
   `setVariant` 写新键、`load` **仅在新键缺失时**读旧键并按旧映射迁移一次、迁完写回新键（门控只跑一次，§7）
+- **`ThemeController` 同其他设置单例走加载纪律**（§4.1/§7）：`ensureLoaded() => _loadFuture ??= load()` +
+  5 个 setter（模式/预设色/调色板风格/自定义色/动态色）首行 `await ensureLoaded()`，`main.dart` 启动用
+  `ensureLoaded` 而非 `load`；`load()` 全程 try/catch/**finally**，脏数据只回落默认外观、**不**把缓存的
+  Future 钉成 rejected（否则本次进程内改主题/风格全部失效）
 - `app_theme.dart` 统一 `appBarTheme`（`scrolledUnderElevation: 0` + 固定背景色，防止 AppBar 滚动变色）
 - **主题色网格**（`appearance_page.dart`）：23 预设 + 1「动态色」= 4×6 网格 + 下方通栏「自定义」；
 - **动态色（壁纸取色 / Material You）**：原生 `MainActivity.getWallpaperColors`（`WallpaperManager` +
@@ -1806,7 +1810,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   - `test/settings_page_bili_login_test.dart` — 「我的」页 B 站下载入口登录门禁（未登录点击弹幕/视频下载 toast 提示登录，§4.16）
   - `test/dolby_vision_settings_test.dart` — 杜比视界「不再提示」记忆（默认未抑制/勾选持久化/取消，§4.23）
   - `test/device_info_page_test.dart` — 设备信息页（设备信息/HDR 能力/关键编码器/解码器清单渲染 + 筛选胶囊（无数字文本/两行布局）+ 失败降级重试 + 点解码器进详情页显示完整能力，§4.24）
-  - `test/theme_controller_test.dart` — 主题控制器（默认值/预设 23 色/调色板 21 标签/自定义色持久化与 seed 生效/动态色标记置位·持久化·切换清除，§4.7）
+  - `test/theme_controller_test.dart` — 主题控制器（默认值/预设 23 色/调色板 21 标签/自定义色持久化与 seed 生效/动态色标记置位·持久化·切换清除，§4.7）+ **风格持久化收口**（21 个风格 set→load 往返、新键里 index<8 按新枚举读回即「保真型不再变中性型」、旧键只迁移一次并写回新键）+ **加载纪律**（`ensureLoaded` 共享同一 Future、setter 首行 await 读盘且不回退、脏数据回落默认不钉死 Future）
   - `test/appearance_page_test.dart` — 外观页（主题色网格 + 动态色 + 自定义入口渲染/调色板胶囊化与标准型独占/动态色 Android<12 toast/自定义选色弹窗，§4.7）
   - `test/anime4k_patch_test.dart` — Anime4K 着色器安装期优化（pass 切分/精度注入/FSR highp 白名单/函数签名与已限定符不动/空行不中断注入/C.R.E.L.U. 3×3 合并与越界退回/幂等/全部 assets 烟测，§4.25）
   - `test/mpv_tuning_test.dart` — mpv 调参模板（顶层逗号切分保留 protocol_whitelist/lavf-o 合并与缺失返回 null/本地与在线两档/不含 reconnect_at_eof，§4.26）
@@ -1868,7 +1872,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 播放页整页随位置流高频重建 | 位置/时长抽页面级 `ValueNotifier`，底栏/进度线 `Listenable.merge` 局部订阅（§4.1） |
 | 快速退出→进入刷假崩溃日志 | `_disposed` 标志 + 每个 await 后查 disposed/mounted + `openAndRestore`/`_openAndSetRate` 等 `on AssertionError` 兜底静默返回 |
 | 播放进度表每次全量序列化 | `save` 30s 节流 + `_writeChain` 串行化 |
-| 设置单例 load 竞态 | `ensureLoaded()` + 全部 setter 首行 await（risk_audit #9）；⚠️ 曾漏 `SuperResolutionService` / `ViewSettings`（其 `load()` 会在启动读盘完成时把用户刚改的值写回），已补 |
+| 设置单例 load 竞态 | `ensureLoaded()` + 全部 setter 首行 await（risk_audit #9）；⚠️ 曾漏 `SuperResolutionService` / `ViewSettings` / `ThemeController`（其 `load()` 会在启动读盘完成时把用户刚改的值写回，最后一个由 B2 收口），均已补；`ThemeController.load()` 另加全程 try/catch，脏数据回落默认值、不把缓存的 Future 钉成 rejected |
 | 脏 JSON 让 `ensureLoaded()` 缓存一个 **rejected Future** | `PlaybackProgressService.load()` 全程 try/catch/**finally**：读盘或解码失败回落空表并照常置 `_loaded`（否则该 Future 一直缓存下去 → 本次进程内进度**恢复与保存全部失效**）+ 逐条容错解码 `_decode` |
 | `AsyncSerialQueue.add` 的返回 Future 被丢弃 → 串行写盘失败静默（用户以为已保存） | 调用方**必须**接收该 Future 的错误：`unawaited(queue.add(...).catchError(记日志))`；`idle` 只等排空、**从不抛错**，靠它发现不了失败（§4.29） |
 | 分页控制器 `reset()` 只清在飞标志 → 旧关键词的响应回来照样写回，覆盖新列表 | `CommonListController` 用 `AsyncSession`：`refresh` 新开会话、`loadMore` 沿用、`reset` 作废在飞请求；收尾（清 loading / notify）也只认最新会话（§4.29） |

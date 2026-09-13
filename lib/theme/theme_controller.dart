@@ -38,6 +38,9 @@ class ThemeController extends ChangeNotifier {
   /// 当前主题色是否来自「动态色」（壁纸取色）；用于网格选中态
   bool _usingDynamicColor = false;
 
+  /// 读盘 Future（[ensureLoaded] 缓存；null = 尚未开始加载）
+  Future<void>? _loadFuture;
+
   AppThemeMode get mode => _mode;
   Color get seedColor => _seedColor;
   FlexSchemeVariant get variant => _variant;
@@ -142,28 +145,48 @@ class ThemeController extends ChangeNotifier {
   }
 
   /// 启动时从本地恢复
+  ///
+  /// 全程 try/catch：任何一步读盘失败只回落默认外观，**绝不**让本 Future 变成
+  /// rejected —— [ensureLoaded] 会把它缓存下来，一旦失败每次 setter 首行的
+  /// await 都会立刻抛，本次进程内改主题/风格/自定义色全部失效（同类修法见
+  /// `PlaybackProgressService.load`，§7）。
   Future<void> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final modeIndex = prefs.getInt(_keyMode);
-    final seedValue = prefs.getInt(_keySeed);
-    final customValue = prefs.getInt(_keyCustomColor);
-    if (modeIndex != null &&
-        modeIndex >= 0 &&
-        modeIndex < AppThemeMode.values.length) {
-      _mode = AppThemeMode.values[modeIndex];
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final modeIndex = prefs.getInt(_keyMode);
+      final seedValue = prefs.getInt(_keySeed);
+      final customValue = prefs.getInt(_keyCustomColor);
+      if (modeIndex != null &&
+          modeIndex >= 0 &&
+          modeIndex < AppThemeMode.values.length) {
+        _mode = AppThemeMode.values[modeIndex];
+      }
+      if (seedValue != null) {
+        _seedColor = Color(seedValue);
+      }
+      if (customValue != null) {
+        _customColor = Color(customValue);
+      }
+      _usingDynamicColor = prefs.getBool(_keyUsingDynamic) ?? false;
+      await _restoreVariant(prefs);
+    } catch (e) {
+      debugPrint('ThemeController: 外观读盘失败，沿用默认值：$e');
+    } finally {
+      notifyListeners();
     }
-    if (seedValue != null) {
-      _seedColor = Color(seedValue);
-    }
-    if (customValue != null) {
-      _customColor = Color(customValue);
-    }
-    _usingDynamicColor = prefs.getBool(_keyUsingDynamic) ?? false;
-    await _restoreVariant(prefs);
-    notifyListeners();
   }
 
+  /// 确保已从磁盘加载。
+  ///
+  /// setter 首行与 `main.dart` 共享同一 load Future：防止「启动读盘尚未完成、
+  /// 用户刚在外观页选的主题/风格/自定义色被 [load] 的成员写回覆盖」
+  /// （§4.1/§7「设置单例 load 竞态 → `ensureLoaded()` + 全部 setter 首行 await」
+  /// 约定）。本服务此前是全仓最后一个遗漏点；按 C2 必须先于调色板迁移门控
+  /// 落地，否则迁移读到的启动期持久化值不可信（体检 D10 / P1-30·P1-31 同类）。
+  Future<void> ensureLoaded() => _loadFuture ??= load();
+
   Future<void> setMode(AppThemeMode mode) async {
+    await ensureLoaded();
     if (_mode == mode) return;
     _mode = mode;
     notifyListeners();
@@ -172,6 +195,7 @@ class ThemeController extends ChangeNotifier {
   }
 
   Future<void> setSeedColor(Color color) async {
+    await ensureLoaded();
     if (_seedColor == color && !_usingDynamicColor) return;
     _seedColor = color;
     _usingDynamicColor = false;
@@ -182,6 +206,7 @@ class ThemeController extends ChangeNotifier {
   }
 
   Future<void> setVariant(FlexSchemeVariant variant) async {
+    await ensureLoaded();
     if (_variant == variant) return;
     _variant = variant;
     notifyListeners();
@@ -192,6 +217,7 @@ class ThemeController extends ChangeNotifier {
   /// 设置用户自定义主题色（外观页「自定义」入口）：持久化该色并作为当前
   /// seed 立即生效（复用 [setSeedColor] 的 seed 持久化，主题其余机制不变）。
   Future<void> setCustomColor(Color color) async {
+    await ensureLoaded();
     if (_customColor == color && _seedColor == color && !_usingDynamicColor) {
       return;
     }
@@ -207,6 +233,7 @@ class ThemeController extends ChangeNotifier {
 
   /// 设置动态色（壁纸取色）：seed = 取到的颜色，并标记当前使用动态色。
   Future<void> setDynamicColor(Color color) async {
+    await ensureLoaded();
     if (_seedColor == color && _usingDynamicColor) return;
     _seedColor = color;
     _usingDynamicColor = true;
