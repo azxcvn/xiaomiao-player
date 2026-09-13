@@ -807,6 +807,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   Future<void> _switchToBiliEpisode(BiliPlaylistItem item) async {
     final select = widget.onBiliEpisodeSelected;
     if (select == null || item.epId == _biliEpId) return;
+    // 并发互斥（B3/P2-2）：与 [_switchTo] 同一守卫（连点两次剧集时挡住第二次）
+    if (_isSwitchingVideo) return;
     _isSwitchingVideo = true;
     try {
       final result = await select(item);
@@ -835,6 +837,9 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   /// 保存当前进度 → open（恢复时暂停加载 + 封层 + seek，见 [openAndRestore]）
   /// → 倍速/超分 → 确认新集恢复（v5 确定性恢复，无跳转）。
   Future<void> _switchTo(String path, String name) async {
+    // 并发互斥（B3/P2-2）：[_isSwitchingVideo] 此前只抑制 EOF，不拦第二次切集；
+    // 连点两次「下一集」会让两个 `openAndRestore` 并发操作同一 Player。
+    if (_isSwitchingVideo) return;
     _isSwitchingVideo = true;
     try {
       // 章节功能：先清空旧媒体的章节标记（防 open 期间旧数据闪现）
@@ -849,6 +854,10 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       // 新集保存进度：open 时恢复（阈值过滤见 [_resumeStartFor]，
       // 防「已看完」定位到结尾触发 EOF 连播）
       final savedForNew = _resumeStartFor(path);
+      // 新集从头播 = 用户重新看它：解除「已看完」粘性（B3，与横屏页同款）
+      if (savedForNew == null) {
+        PlaybackProgressService.instance.releaseCompleted(path);
+      }
       // 恢复时先盖住视频（暂停加载 + seek 都在封层下）
       if (savedForNew != null && mounted) setState(() => _restoring = true);
       final restored = await openAndRestore(
@@ -909,6 +918,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       // 共享播放器已被销毁（横屏页已退出）：静默返回，不写假崩溃日志
       return;
     } finally {
+      // 切集中途放弃时同样要揭掉恢复封层（B3/P1-12），否则黑屏盖层卡住
+      if (mounted && _restoring) setState(() => _restoring = false);
       _isSwitchingVideo = false;
     }
     _resetHideTimer();
@@ -962,6 +973,13 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     final list = widget.playlist;
     if (list == null || list.isEmpty) return;
     final first = list.first;
+    // 同一路径不重播（B3/P1-8 根因，与横屏页同款）：重新 open 会让 mpv 丢弃
+    // 全部 `sub-add` 的外挂轨道 → 单视频列表循环播到片尾即「外挂字幕消失」。
+    if (first.path == _path) {
+      _player.seek(Duration.zero);
+      _player.play();
+      return;
+    }
     await _switchTo(first.path, first.name);
   }
 
@@ -1057,9 +1075,26 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   }
 
   /// 播放到结尾：把进度记为「已看完」（= 时长），视频列表据此显示已看完。
+  ///
+  /// 写入值取「mpv 时长」与「列表登记时长」的较大者（B3：卡片按
+  /// `VideoFile.durationMs` 判定，二者差毫秒级时会判不出「已看完」）。
   void _markCompleted() {
-    if (_duration <= Duration.zero) return;
-    PlaybackProgressService.instance.save(_path, _duration);
+    final mark = completedMarkDuration(
+      _duration,
+      listDurationMs: _listDurationMsFor(_path),
+    );
+    if (mark <= Duration.zero) return;
+    PlaybackProgressService.instance.markCompleted(_path, mark);
+  }
+
+  /// 播放列表里该视频登记的时长（毫秒；0 = 未知/不在列表内）
+  int _listDurationMsFor(String path) {
+    final list = widget.playlist;
+    if (list == null) return 0;
+    for (final v in list) {
+      if (v.path == path) return v.durationMs;
+    }
+    return 0;
   }
 
   // ── 倍速 ────────────────────────────────────────────────
@@ -1726,6 +1761,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   /// 听视频（工作.md 第 10 点）：竖屏页「更多 → 听视频」进入。
   /// 共享同一 Player（音频零中断），听视频页是竖屏界面；返回后本页继续。
   Future<void> _openAudioPlayer() async {
+    // 重入守卫（B3/P2-1）：连点「听视频」会 push 两个听视频页，共享同一 Player
+    if (_audioActive.value) return;
     _hideTimer?.cancel();
     _audioActive.value = true;
     if (mounted) setState(() {});
@@ -1780,6 +1817,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     if (_position.inMilliseconds > 0 &&
         _duration.inMilliseconds > 0 &&
         _position < _duration) {
+      // 「已看完」保护由 [PlaybackProgressService.save] 内部一次性完成
+      //（与横屏页同款，B3）
       await PlaybackProgressService.instance.save(
         _path,
         _position,

@@ -116,6 +116,27 @@ bool shouldRestorePosition(
   return ratio >= minRestoreRatio && ratio < maxRestoreRatio;
 }
 
+/// 「已看完」标记应写入的时长 = 「播放器时长」与「列表登记时长」的**较大者**
+/// （纯函数，可单测）。
+///
+/// 背景（B3 真机实测，同一阈值下**不同文件夹表现不同**）：视频卡片用
+/// `VideoFile.durationMs`（扫描器 / MediaStore，毫秒精度）判定
+/// `progress / durationMs >= 阈值`，而 EOF 标记原先只写 mpv 的时长 —— 两者
+/// 并不总相等（实测紫罗兰那批 mpv 时长 ≥ MediaStore，其他文件反之）。
+/// 差一毫秒就表现为：百分比四舍五入仍显示「100%」，却**不是**「已看完」，
+/// 而且够格触发恢复 → 重进定位到片尾直接 EOF 退出。
+///
+/// 取较大者，让卡片判定（`progress >= durationMs`）与恢复判定
+/// （[shouldRestorePosition] 的 `saved >= duration` → 不恢复、从头播）同时成立。
+Duration completedMarkDuration(
+  Duration playerDuration, {
+  int listDurationMs = 0,
+}) {
+  if (listDurationMs <= 0) return playerDuration;
+  final list = Duration(milliseconds: listDurationMs);
+  return list > playerDuration ? list : playerDuration;
+}
+
 /// 完整恢复流程（open 完成后调用）：
 /// 1. 等待时长就绪（最多 [durationWaitTimeout]，冷启动初始化可能较慢）；
 /// 2. 等待播放稳定开始（时间线激活后 mpv 才接受 seek）；

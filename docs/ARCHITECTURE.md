@@ -1062,6 +1062,19 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 - 时长记录两段式：open 时能从播放列表 MediaStore 拿到就先记，否则退出时
   `_saveProgress` 回填（历史条目显示时长徽标与进度条的依据）。
 
+**进度与「已看完」标记**（`PlaybackProgressService`，§7 有两条相关坑）：
+
+- 「已看完」用 `markCompleted(path, duration)` 写入，**不是** `save`：**同步**写内存
+  （EOF 之后紧接着的退出/切集保存必须立刻看到它）+ 强制落盘（低频关键事件，不得被
+  30s 节流吞掉）+ **会话内粘性**（此后任何更小的位置都不覆盖它——退出路径会连续保存
+  两次：`_exitPlayer` + `dispose`，每次位置都比时长小一点）。
+- `releaseCompleted(path)`：用户从头重看该视频时解除粘性。播放页在「未恢复进度」
+  （从头播）的打开/切集路径调用，否则重看中途的进度永远存不下来。
+- 标记值 = `completedMarkDuration(playerDuration, listDurationMs:)`
+  （`utils/playback_restore.dart`）取「mpv 时长」与「播放列表登记的
+  `VideoFile.durationMs`」**较大者**：卡片判定（`classifyWatchState`）用的是后者，
+  差 1 毫秒就会「显示 100% 却不是已看完」，且该值够格触发恢复 → 重进定位片尾。
+
 **外部打开视频（注册系统播放器）**：
 
 | 层 | 文件 | 职责 |
@@ -1727,7 +1740,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   - `test/player_bottom_panel_test.dart` — 竖屏底部面板打开/面板内二级导航/返回/关闭不崩溃（**改 PlayerBottomPanel 必须跑**）
   - `test/player_speed_panel_test.dart` — 倍速面板（「我的预设」✕ 删除 / 「添加到预设」随滑杆联动）
   - `test/playback_completion_test.dart` — 播放完成 EOF 动作解析纯函数（单集循环→自动连播→列表循环→自动退出→自动暂停优先级链，含边界）
-  - `test/playback_restore_test.dart` — 恢复进度阈值判定纯函数（<5% / ≥已观看阈值不恢复，边界与自定义阈值）
+  - `test/playback_restore_test.dart` — 恢复进度阈值判定纯函数（<5% / ≥已观看阈值不恢复，边界与自定义阈值）+ **「已看完」标记写入时长**（`completedMarkDuration` 取 mpv 时长与列表登记时长的较大者：列表更大 / mpv 更大 / 相等 / 列表未知 / mpv 未知）
   - `test/audio_shuffle_test.dart` — 听视频随机播放算法（时间刻种子：结果范围/不重复当前曲目/同刻可复现/不同刻不同）
   - `test/playlist_sort_test.dart` — 播放列表 4 排序纯函数（名称/日期 × 升/降序，自然序/无日期垫底）+ 目录过滤（folderOfPath/filterVideosInFolder）
   - `test/pip_aspect_test.dart` — 画中画宽高比纯函数（gcd 约分/0.5–2.39 钳制/未知尺寸回退 16:9）
@@ -1737,7 +1750,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   - `test/player_thumbnail_preview_test.dart` — 缩略图气泡渲染（有/无/空白章节名时胶囊显隐、超长章节名单行省略且不超预览图宽、**章节胶囊在图上方时间胶囊在下方**、不可见时整体透明，§4.9/§4.22）
   - `test/watch_state_test.dart` — 观看状态纯函数（未观看/观看中/已看完判定 + 自定义阈值 + 百分比）
   - `test/chapter_utils_test.dart` — 章节纯函数（标题关键词分类/片段派生过滤/当前章节定位/跳过目标 EOF 保护 + 自定义关键词归属与优先级 + **`chapterTitleAt` 任意时间点章节名/空白标题回退「第 N 章」/与 `currentChapterIndex` 一致性**，§4.22）
-  - `test/chapter_tracker_test.dart` — 章节跟踪器（位置流驱动的章节推进/胶囊 5 秒窗口/回拖重复触发/跳过与跳转 + 章节跳段自动跳过每片段一次/自定义关键词派生，§4.22）
+  - `test/chapter_tracker_test.dart` — 章节跟踪器（位置流驱动的章节推进/胶囊 5 秒窗口/回拖重复触发/跳过与跳转 + 章节跳段自动跳过每片段一次/自定义关键词派生 + **load 会话号与 dispose 防御**：先发起的 load 后到被作废、`clear()` 作废在途、dispose 后完成不写回不 notify，§4.22）
   - `test/chapter_skip_settings_test.dart` — 章节跳段设置服务（默认值/自动跳过类型增删/自定义关键词/持久化恢复/损坏防御，§4.22）
   - `test/intro_outro_skip_test.dart` — 片头片尾动作决策纯函数（前置守卫/片头触发/片尾触发/整集保护/片头优先）
   - `test/intro_outro_settings_test.dart` — 片头片尾设置服务（默认值/钳制/范围收窄联动/一键重置/持久化恢复）
@@ -1819,7 +1832,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   - `test/retry_policy_test.dart` — 统一网络重试与快速失败（超时分级/可重试判定与响应中断排除/指数退避/withRetry 行为与流式不重试/体积上限 content-length 预判与边读边判/端到端 MockClient，§4.28）
   - `test/async_primitives_test.dart` — C1 并发原语（会话号递增与作废·旧请求丢弃/在飞去重共享与失败不缓存/串行队列顺序·无重叠·异常不打断·idle，§4.29）
   - `test/common_list_controller_test.dart` — C2 分页控制器（三态/刷新失败保留旧列表/空结果也是 Loaded/加载更多与 hasMore/并发防重入/reset/describeError/dispose + **reset 作废在飞请求**：旧关键词响应不得覆盖新列表、reset 后旧响应既不写入也不改加载态，§4.29）
-  - `test/playback_progress_service_test.dart` — 播放进度服务加载健壮性（脏 JSON → `load` 不抛错、回落空表、`_loadFuture` 不变成 rejected、后续 `save` 仍能落盘，§7）
+  - `test/playback_progress_service_test.dart` — 播放进度服务（脏 JSON → `load` 不抛错、回落空表、`_loadFuture` 不变成 rejected、后续 `save` 仍能落盘；+ **`markCompleted` 粘性保护**：连续的更小位置保存都被丢弃、`releaseCompleted` 后中途进度照常写入、强制落盘不被节流吞掉、不降级、无标记时保存照常，§4.17/§7）
   - `test/bili_playlist_test.dart` — 番剧播放列表模型（季详情/剧集数组构造、集号 1 起、按 epId 定位、hasNextAt/itemAt 边界、标题回落与角标透传，§4.15）
   - `test/player_bili_playlist_panel_test.dart` — 番剧剧集列表面板（头部集数进度/条目集号集名角标/当前集播放中/点击回调并关闭/空态，§4.15）
   - `test/bili_search_page_test.dart` — 番剧搜索页（未搜索提示/搜索渲染/触底加载更多/失败重试/无结果空态，§4.29 C2）
@@ -1861,6 +1874,12 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 恢复进度指示器残留/不显示 | 只有 `openAndRestore` 返回 true 才显示；2.5s 自隐藏；竖屏/锁定竖屏由 `initialResumeVisible` 接住 |
 | 已看完视频恢复后立即 EOF 连播 | `_resumeStartFor` 阈值过滤（<5% 或 ≥已观看阈值 → 不恢复从头播） |
 | 循环播放无限恢复已看完视频 | `shouldRestorePosition`：<5% 或 ≥已观看阈值不恢复 |
+| 「已看完」判不出来：卡片显示 100% 却**不是**已看完、重进从片尾恢复（**同阈值下不同文件夹表现不同**） | 两条都得满足：①标记值取「mpv 时长」与「`VideoFile.durationMs`（卡片判定用的扫描器/MediaStore 时长）」的**较大者**（`completedMarkDuration`；差 1ms 就 `ratio < 阈值(100%)`）；②`markCompleted` 同步可见 + 强制落盘 + **会话内粘性** —— EOF 后退出路径连续保存两次（`_exitPlayer` + `dispose`，位置都比时长小一点），一次性拦截挡不住第二次；从头重看时 `releaseCompleted` 解除（§4.17） |
+| 列表循环重播同一集 → 外挂字幕消失 | `_playFirst` 判定 `first.path == _path` 时**不重新 open**（原地 `seek(0)+play`）：重新 open 会让 mpv 丢弃全部 `sub-add` 外挂轨；同时 `SubtitleController.clear()` 必须复位 `_appliedMedia`，否则 `reapplyForMedia` 的「同一媒体」早退不补挂（§4.10） |
+| 连点两次「下一集」切了两集（或「切到 A 视频却放 B 音频」） | `_switchTo` / `_switchToBiliEpisode` 入口 `if (_isSwitchingVideo) return;`：该标志此前只抑制切集瞬间的 EOF，**不**拦第二次切集 → 两个 `openAndRestore` 并发操作同一 Player；横竖两页同款 |
+| 快速退出→进入后黑屏盖层卡住 | 恢复封层 `_restoring` 必须在 `finally` 里揭掉（三处：横屏 open、横屏切集、竖屏切集）；旧实现只在成功路径清它，`on AssertionError` 分支直接 return → 封层永久为真 |
+| 连点「选择屏幕」/「听视频」叠出两层页面 | `_openPortraitPlayer` / `_openAudioPlayer` 入口互斥（`_portraitActive` / `_audioActive`）：横屏页、竖屏页、听视频页共享同一 Player 与方向/系统 UI 状态 |
+| 快速切集后章节名/进度条圆点错配（旧集章节覆盖新集） | `ChapterTracker.load()` 走 `AsyncSession`：只有最新会话可写回；`clear()` 作废在途 `load`、`dispose()` 置 `_disposed` 防已销毁的 `notifyListeners`（§4.22/§4.29） |
 | 横竖屏切换卡顿/黑屏/音频断 | v3：共享同一 Player/VideoController，竖屏页只换布局不重开；EOF 由当前栈顶页处理 |
 | 竖屏返回不能直接退出 / 退出露横屏页 | 竖屏返回走 `_backExit` → `_exitWithPortrait`（先 `_exitBlackout` 黑化下层 → `pause()` → IO unawaited → 连 pop 竖屏页 + 横屏页，下层纯黑防「两个竖屏界面」复现）；「选择屏幕」仍仅回横屏 |
 | 竖屏锁定不生效 | 手势层传 `locked`，各手势回调补 `if (_locked) return` |

@@ -388,6 +388,11 @@ class SubtitleController extends ChangeNotifier {
     _primary = null;
     _primarySourcePath = null;
     _externalPaths.clear();
+    // 「已应用媒体」标记必须一起复位（B3/P1-8 根因）：[reapplyForMedia] 首行
+    // `if (_appliedMedia == mediaPath) return;` 是「同一媒体不重复挂载」的早退，
+    // 而 clear() 之后媒体已被重新 open（mpv 丢弃全部 sub-add 的外挂轨道）——
+    // 不复位就会早退不补挂：单视频列表循环重播即「外挂字幕消失」。
+    _appliedMedia = null;
     notifyListeners();
   }
 

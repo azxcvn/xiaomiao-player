@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:moumou/models/chapter_info.dart';
 import 'package:moumou/services/chapter_skip_settings.dart';
+import 'package:moumou/utils/async_session.dart';
 import 'package:moumou/utils/chapter_utils.dart' as chapter_utils;
 
 /// 章节数据来源抽象（测试注入假实现；生产实现见 [MpvChapterSource]）。
@@ -81,6 +82,13 @@ class ChapterTracker extends ChangeNotifier {
   bool _autoChipVisible = false;
   Timer? _chipTimer;
 
+  /// 加载会话号（B3/P1-13）：快速切集时旧集的 [load] 可能后到，只有**最新**
+  /// 会话允许写回，否则旧集章节覆盖新集（进度条圆点/章节名错配、点击跳错位置）。
+  final AsyncSession _session = AsyncSession();
+
+  /// 已销毁（dispose 后 load 在途完成时不得 notifyListeners，否则 debug 断言）
+  bool _disposed = false;
+
   /// 本会话已自动跳过的片段（每片段只自动跳一次，回拖进去不再重复跳）。
   final Set<SkipSegment> _skippedSegments = {};
 
@@ -126,12 +134,16 @@ class ChapterTracker extends ChangeNotifier {
     _currentChapterIndex = null;
     _activeSegment = null;
     _skippedSegments.clear();
+    final token = _session.start();
     List<ChapterInfo> chapters;
     try {
       chapters = await _source.loadChapters();
     } catch (_) {
       chapters = const [];
     }
+    // 在途期间被 clear()（切集）/新的 load()（再次切集）取代，或已 dispose：
+    // 丢弃这次结果——既不写回也不通知（B3/P1-13）。
+    if (_disposed || !_session.isCurrent(token)) return;
     _chapters = chapters;
     _externalSegments = false;
     _rebuildSegments();
@@ -170,6 +182,8 @@ class ChapterTracker extends ChangeNotifier {
 
   /// 切集前调用：立即清空状态（不等 load 完成，避免旧媒体数据闪现）
   void clear() {
+    // 作废在途 load（B3/P1-13）：旧集章节即便后到也不得写回新集
+    _session.invalidate();
     _chipTimer?.cancel();
     _autoChipVisible = false;
     _chapters = const [];
@@ -267,6 +281,8 @@ class ChapterTracker extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
+    _session.invalidate();
     _chipTimer?.cancel();
     _settings.removeListener(_onSettingsChanged);
     super.dispose();

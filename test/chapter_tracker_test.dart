@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/models/chapter_info.dart';
 import 'package:moumou/services/chapter_skip_settings.dart';
@@ -23,6 +25,24 @@ class FakeChapterSource implements ChapterSource {
 
   @override
   Future<void> seek(Duration target) async => seeks.add(target);
+}
+
+/// 可控延迟数据源：由测试决定 [loadChapters] 何时完成（会话号用例用）
+class DeferredChapterSource implements ChapterSource {
+  final List<Completer<List<ChapterInfo>>> pending = [];
+
+  @override
+  Future<List<ChapterInfo>> loadChapters() {
+    final c = Completer<List<ChapterInfo>>();
+    pending.add(c);
+    return c.future;
+  }
+
+  @override
+  Duration get duration => const Duration(seconds: 1500);
+
+  @override
+  Future<void> seek(Duration target) async {}
 }
 
 /// 标准番剧章节：OP(60-300) / 正片 / ED(1200-1500)
@@ -73,6 +93,58 @@ void main() {
       expect(tracker.activeSegment, isNull);
       expect(tracker.autoChipVisible, isFalse);
       tracker.dispose();
+    });
+  });
+
+  // ── B3/P1-13：load 会话号（快速切集时旧集章节不得覆盖新集）────────────
+  group('load 会话号与 dispose 防御', () {
+    test('快速切集：先发起的 load 后到时被作废，不覆盖新集章节', () async {
+      final source = DeferredChapterSource();
+      final tracker = ChapterTracker(source);
+      final oldLoad = tracker.load(); // 旧集
+      final newLoad = tracker.load(); // 新集（后发起）
+
+      source.pending[1].complete(const [
+        ChapterInfo(title: '新集', startSeconds: 0),
+      ]);
+      await newLoad;
+      expect(tracker.chapters.single.title, '新集');
+
+      // 旧集结果姗姗来迟：必须丢弃，否则进度条圆点/章节名错配
+      source.pending[0].complete(const [
+        ChapterInfo(title: '旧集', startSeconds: 0),
+      ]);
+      await oldLoad;
+      expect(tracker.chapters.single.title, '新集');
+      tracker.dispose();
+    });
+
+    test('clear 作废在途 load：切集后旧集章节不写回（不闪现旧数据）', () async {
+      final source = DeferredChapterSource();
+      final tracker = ChapterTracker(source);
+      final pending = tracker.load();
+      tracker.clear(); // 切集前清空
+      expect(tracker.chapters, isEmpty);
+
+      source.pending.single.complete(chapters);
+      await pending;
+      expect(tracker.chapters, isEmpty);
+      expect(tracker.skipSegments, isEmpty);
+      tracker.dispose();
+    });
+
+    test('dispose 后 load 在途完成：不写回、不 notify、不抛断言', () async {
+      final source = DeferredChapterSource();
+      final tracker = ChapterTracker(source);
+      final pending = tracker.load();
+      var notified = 0;
+      tracker.addListener(() => notified++);
+      tracker.dispose();
+
+      source.pending.single.complete(chapters);
+      await pending; // 旧实现会在已销毁的 ChangeNotifier 上 notifyListeners
+      expect(tracker.chapters, isEmpty);
+      expect(notified, 0);
     });
   });
 

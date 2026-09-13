@@ -33,4 +33,63 @@ void main() {
       reason: '加载失败后写盘链路必须仍然可用',
     );
   });
+
+  // ── B3：「已看完」标记（EOF 写 100%，随后的退出/切集保存不得覆盖）──────
+  group('markCompleted：粘性保护 + 强制落盘', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+      PlaybackProgressService.instance.resetForTest();
+    });
+
+    test('标记后连续的更小位置保存都被丢弃（退出 + dispose 两次保存）', () async {
+      final s = PlaybackProgressService.instance;
+      await s.ensureLoaded();
+      const duration = Duration(milliseconds: 1421052);
+      const lower = Duration(milliseconds: 1420352); // 时长 −700ms
+
+      s.markCompleted('/v.mp4', duration);
+      expect(s.getProgress('/v.mp4'), duration, reason: '同步写内存，立刻可见');
+
+      // EOF 后退出路径会连续保存两次（`_exitPlayer` + `dispose`）：都不能覆盖
+      await s.save('/v.mp4', lower, forcePersist: true);
+      expect(s.getProgress('/v.mp4'), duration,
+          reason: '否则百分比显示 100% 却判不出已看完，重进还会从片尾恢复');
+      await s.save('/v.mp4', lower);
+      expect(s.getProgress('/v.mp4'), duration,
+          reason: '粘性：第二次保存同样不得覆盖（一次性拦截挡不住这个）');
+
+      // 用户从头重看（releaseCompleted）后，中途进度照常写入
+      s.releaseCompleted('/v.mp4');
+      await s.save('/v.mp4', const Duration(minutes: 5), forcePersist: true);
+      expect(s.getProgress('/v.mp4'), const Duration(minutes: 5));
+    });
+
+    test('标记强制落盘：不被 30 秒节流吞掉', () async {
+      final s = PlaybackProgressService.instance;
+      await s.ensureLoaded();
+      s.markCompleted('/short.mp4', const Duration(milliseconds: 16148));
+      // 等写队列排空（另一次保存会 await idle）
+      await s.save('/other.mp4', const Duration(seconds: 3),
+          forcePersist: true);
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('playback_progress'), contains('16148'));
+    });
+
+    test('标记不降级：已有更大值时保留更大者', () async {
+      final s = PlaybackProgressService.instance;
+      await s.ensureLoaded();
+      await s.save('/v.mp4', const Duration(minutes: 10), forcePersist: true);
+      s.markCompleted('/v.mp4', const Duration(minutes: 9));
+      expect(s.getProgress('/v.mp4'), const Duration(minutes: 10));
+    });
+
+    test('无标记时保存照常写入（保护不误伤普通进度）', () async {
+      final s = PlaybackProgressService.instance;
+      await s.ensureLoaded();
+      await s.save('/plain.mp4', const Duration(minutes: 3),
+          forcePersist: true);
+      expect(s.getProgress('/plain.mp4'), const Duration(minutes: 3));
+    });
+  });
 }

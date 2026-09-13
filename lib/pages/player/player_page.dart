@@ -703,6 +703,11 @@ class _PlayerPageState extends State<PlayerPage>
     await _applyPlaybackTuning(_path);
     if (_disposed || !mounted) return;
     final start = _resumeStartFor(_path);
+    // 从头播（无进度 / 已看完 / 进度过少）＝ 用户重新看这个视频：解除「已看完」
+    // 粘性，让这次重看中途退出也能记录进度（B3，见 markCompleted/releaseCompleted）
+    if (start == null) {
+      PlaybackProgressService.instance.releaseCompleted(_path);
+    }
     // 片头片尾：新媒体重置跟踪状态（open 期间位置事件不评估）
     _introOutroTracker.reset();
     // 恢复时先盖住视频：暂停加载 + seek 期间用户看不到 0 时刻海报
@@ -733,6 +738,10 @@ class _PlayerPageState extends State<PlayerPage>
     } on AssertionError {
       // 播放器已在打开过程中被销毁（快速退出→进入循环）：静默返回
       return;
+    } finally {
+      // 恢复封层必须无条件揭掉（B3/P1-12）：旧实现只有成功路径清 `_restoring`，
+      // AssertionError 分支直接 return → 黑屏盖层永久卡住（要退出重进才好）。
+      if (mounted && _restoring) setState(() => _restoring = false);
     }
     if (_disposed || !mounted) return;
     // 片头片尾：恢复点感知后标记就绪，位置事件开始评估
@@ -1809,6 +1818,15 @@ class _PlayerPageState extends State<PlayerPage>
     final list = widget.playlist;
     if (list == null || list.isEmpty) return;
     final first = list.first;
+    // 同一路径不重播（B3/P1-8 根因）：重新 open 会让 mpv 丢弃全部 `sub-add`
+    // 的外挂轨道，而字幕侧 `reapplyForMedia` 的「同一媒体」早退又不会补挂
+    // → 单视频列表循环播到片尾即「外挂字幕消失」。原地回到开头，媒体状态
+    // （章节/弹幕/进度/音频处理）一律不动，与单集循环同一手法。
+    if (first.path == _path) {
+      _player.seek(Duration.zero);
+      _player.play();
+      return;
+    }
     await _switchTo(first.path, first.name);
   }
 
@@ -1825,6 +1843,9 @@ class _PlayerPageState extends State<PlayerPage>
     final playlist = widget.biliPlaylist;
     if (playlist == null) return null;
     if (item.epId == _biliMedia?.epId) return null;
+    // 并发互斥（B3/P2-2）：与 [_switchTo] 同一守卫，防止两次解析/重开并发
+    // 操作同一 Player（连点两次剧集、或自动连播与手动点按重叠）。
+    if (_isSwitchingVideo) return null;
     _isSwitchingVideo = true;
     try {
       _chapterTracker.clear();
@@ -1864,6 +1885,10 @@ class _PlayerPageState extends State<PlayerPage>
   ///    重设倍速、超分着色器（mpv 打开新文件时 glsl-shaders 需重确认）；
   /// 4. 重置播放页状态与恢复指示器（新视频各自恢复自己的进度）。
   Future<void> _switchTo(String path, String title) async {
+    // 并发互斥（B3/P2-2）：[_isSwitchingVideo] 此前只用于抑制切集瞬间的 EOF，
+    // **不拦第二次切集** —— 连点两次「下一集」（间隔 <1 秒）会让两个
+    // `openAndRestore` 并发操作同一 Player（「切到 A 视频却放 B 音频」）。
+    if (_isSwitchingVideo) return;
     _isSwitchingVideo = true;
     _dolbyVisionChecked = false; // 新视频重新检测杜比视界
     try {
@@ -1884,6 +1909,10 @@ class _PlayerPageState extends State<PlayerPage>
       // 新视频的保存进度：open 时恢复（阈值过滤见 [_resumeStartFor]，
       // 防「已看完」定位到结尾触发 EOF 连播）
       final savedForNew = _resumeStartFor(path);
+      // 新集从头播 = 用户重新看它：解除「已看完」粘性（B3）
+      if (savedForNew == null) {
+        PlaybackProgressService.instance.releaseCompleted(path);
+      }
       // 恢复时先盖住视频（暂停加载 + seek 都在封层下）
       if (savedForNew != null && mounted) setState(() => _restoring = true);
       final restored = await openAndRestore(
@@ -1947,6 +1976,8 @@ class _PlayerPageState extends State<PlayerPage>
       // 播放器已被销毁（切集过程中退出）：静默返回，不写假崩溃日志
       return;
     } finally {
+      // 切集中途放弃时同样要揭掉恢复封层（B3/P1-12），否则黑屏盖层卡住
+      if (mounted && _restoring) setState(() => _restoring = false);
       _isSwitchingVideo = false;
     }
     _resetHideTimer();
@@ -2670,6 +2701,10 @@ class _PlayerPageState extends State<PlayerPage>
   /// [onVideoChanged]：竖屏页切集后同步最新 path/title 给本页；
   /// [onExitPlayer]：竖屏页 EOF「自动退出」时先关竖屏页再退出本页（回到列表）。
   Future<void> _openPortraitPlayer() async {
+    // 重入 / 互斥守卫（B3/P2-1）：连点切屏按钮会 push 两个竖屏页；听视频页
+    // 打开期间也不允许再叠一层竖屏页（三者共享同一 Player，会互相抢方向、
+    // 系统 UI 与 `_portraitActive`/`_audioActive` 标志）。
+    if (_portraitActive || _audioActive.value) return;
     _hideTimer?.cancel();
     _portraitActive = true;
     // 工作.md 第 3 点：恢复进度指示器状态传给竖屏页（锁定竖屏时横屏页
@@ -2788,6 +2823,9 @@ class _PlayerPageState extends State<PlayerPage>
   /// 本页打开期间 EOF 让位给听视频页（[_audioActive]），返回后恢复横屏
   /// 方向与沉浸式全屏。
   Future<void> _openAudioPlayer() async {
+    // 重入 / 互斥守卫（B3/P2-1）：连点「听视频」会 push 两个听视频页；竖屏页
+    // 打开期间同样不允许（三者共享同一 Player 与方向/系统 UI 状态）。
+    if (_audioActive.value || _portraitActive) return;
     _hideTimer?.cancel();
     _audioActive.value = true;
     if (mounted) setState(() {});
@@ -2968,9 +3006,28 @@ class _PlayerPageState extends State<PlayerPage>
 
   /// 播放到结尾：把进度记为「已看完」（= 时长），视频列表据此显示已看完。
   /// 在切集/退出前调用（对应 src 的 `savePlaybackStateAsCompleted`）。
+  ///
+  /// 写入值取「mpv 时长」与「列表登记时长（`VideoFile.durationMs`）」的较大者
+  /// （B3 真机实测：二者差毫秒级时，阈值 100% 的卡片判不出「已看完」——卡片
+  /// 用的正是 `VideoFile.durationMs`）。落盘与「不得被后续保存覆盖」由
+  /// [PlaybackProgressService.markCompleted] 负责。
   void _markCompleted() {
-    if (_duration <= Duration.zero) return;
-    PlaybackProgressService.instance.save(_path, _duration);
+    final mark = completedMarkDuration(
+      _duration,
+      listDurationMs: _listDurationMsFor(_path),
+    );
+    if (mark <= Duration.zero) return;
+    PlaybackProgressService.instance.markCompleted(_path, mark);
+  }
+
+  /// 播放列表里该视频登记的时长（毫秒；0 = 未知/不在列表内）
+  int _listDurationMsFor(String path) {
+    final list = widget.playlist;
+    if (list == null) return 0;
+    for (final v in list) {
+      if (v.path == path) return v.durationMs;
+    }
+    return 0;
   }
 
   // ── 退出与进度 ──────────────────────────────────────────
@@ -3035,6 +3092,8 @@ class _PlayerPageState extends State<PlayerPage>
     if (_position.inMilliseconds > 0 &&
         _duration.inMilliseconds > 0 &&
         _position < _duration) {
+      // 「已看完」保护由 [PlaybackProgressService.save] 内部一次性完成
+      //（EOF 的 markCompleted 刚写的 100% 不得被本次 ~99% 覆盖，B3）
       await PlaybackProgressService.instance.save(
         _path,
         _position,

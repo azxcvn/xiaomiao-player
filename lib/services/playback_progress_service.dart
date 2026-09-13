@@ -29,6 +29,14 @@ class PlaybackProgressService extends ChangeNotifier {
   /// 每个 path 最近一次落盘时间（节流判定用）
   final Map<String, DateTime> _lastPersistedAt = {};
 
+  /// 已判定「已看完」的路径（[markCompleted] 同步登记；见 [save] 的粘性保护）
+  ///
+  /// **会话内粘性**：EOF 之后退出/切集/dispose 会**连续**来好几次保存（实测
+  /// `_exitPlayer` + `dispose` 两次），每次位置都比时长小一点 —— 只拦一次挡不住
+  /// 后面那次（B3 真机现象：自动暂停停在末尾后退出，卡片显示 100% 却不是
+  /// 「已看完」）。用户从头重看该视频时由 [releaseCompleted] 解除。
+  final Set<String> _completed = {};
+
   /// 确保已从磁盘加载（首次 get/save 前调用；main.dart 的 load 为异步，
   /// 播放页可能在加载完成前就读进度——必须等待，否则读到空缓存不恢复）。
   Future<void> ensureLoaded() => _loadFuture ??= load();
@@ -101,8 +109,64 @@ class PlaybackProgressService extends ChangeNotifier {
   Future<void> save(String path, Duration position,
       {bool forcePersist = false}) async {
     await ensureLoaded();
+    // 「已看完」粘性保护（B3）：[markCompleted] 已把进度写成时长，此后**任何**
+    // 更小的位置都不得覆盖它 —— EOF 之后退出/切集/dispose 会连续来好几次保存
+    //（实测 `_exitPlayer` + `dispose` 两次），每次位置都比时长小一点：只拦一次
+    // 挡不住后面那次，卡片就会「显示 100% 却不是已看完」，且够格触发恢复
+    //（重进直接 EOF 退出）。
+    //
+    // 解除点：用户从头重看该视频（未恢复进度）时由 [releaseCompleted] 解除，
+    // 这次重看留下的中途进度照常写入 —— 不会「看过一次就再也存不住进度」。
+    if (_completed.contains(path) &&
+        (_cache[path] ?? -1) > position.inMilliseconds) {
+      debugPrint(
+        'PlaybackProgressService: 保留已看完标记，丢弃本次进度写入 '
+        'path=$path pos=${position.inMilliseconds}ms mark=${_cache[path]}ms',
+      );
+      return;
+    }
     _cache[path] = position.inMilliseconds;
     notifyListeners();
+    await _persist(path, forcePersist: forcePersist);
+  }
+
+  /// 解除「已看完」粘性（用户从头重看该视频时调用）。
+  ///
+  /// 不解除的话，本次会话内该视频的进度会一直被粘在 100%（重看中途退出也
+  /// 存不下来）。调用点：播放页打开/切到某媒体且**未恢复进度**（从头播）时。
+  void releaseCompleted(String path) => _completed.remove(path);
+
+  /// 同步标记「已看完」（= 时长），并强制落盘。
+  ///
+  /// ⚠️ **同步写内存**（不经过 [save] 的异步首行 await）：EOF 处理链上紧接着
+  /// 就发生退出/切集的保存，标记与一次性保护必须**立刻**可见，否则会被那一次
+  /// 保存覆盖（B3 真机验证：阈值 100% 时卡片显示 100% 却不是「已看完」）。
+  /// 强制落盘的理由：已看完是低频关键事件，不能被 30 秒节流吞掉。
+  void markCompleted(String path, Duration duration) {
+    if (duration <= Duration.zero) return;
+    if (!_loaded) {
+      // 理论不可达（EOF 必然远晚于启动读盘）：仍补一道，避免 load() 的
+      // `_cache = decode(...)` 把刚写的标记抹掉。
+      unawaited(ensureLoaded().then((_) => _markCompletedNow(path, duration)));
+      return;
+    }
+    _markCompletedNow(path, duration);
+  }
+
+  void _markCompletedNow(String path, Duration duration) {
+    final ms = duration.inMilliseconds;
+    final existing = _cache[path] ?? 0;
+    _cache[path] = ms > existing ? ms : existing;
+    _completed.add(path);
+    notifyListeners();
+    debugPrint(
+      'PlaybackProgressService: 已看完 path=$path mark=${_cache[path]}ms',
+    );
+    unawaited(_persist(path, forcePersist: true));
+  }
+
+  /// 落盘（调用方已完成内存更新）：节流 + [AsyncSerialQueue] 串行写。
+  Future<void> _persist(String path, {required bool forcePersist}) async {
     final last = _lastPersistedAt[path];
     final now = DateTime.now();
     if (!forcePersist &&
@@ -128,5 +192,15 @@ class PlaybackProgressService extends ChangeNotifier {
       }),
     );
     await _writeQueue.idle;
+  }
+
+  /// 测试用：把单例恢复成「未加载」状态（对齐 `ChapterSkipSettings.resetForTest`）
+  @visibleForTesting
+  void resetForTest() {
+    _cache = {};
+    _loaded = false;
+    _loadFuture = null;
+    _lastPersistedAt.clear();
+    _completed.clear();
   }
 }
