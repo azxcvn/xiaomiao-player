@@ -40,32 +40,53 @@ class _RawThumbImageState extends State<RawThumbImage> {
 
   void _decode(FastThumbFrame frame) {
     final frameId = frame;
-    _decodeInto(frame).then((image) {
-      if (!mounted || frameId != widget.frame) {
-        image?.dispose();
-        return;
-      }
-      final old = _image;
-      _image = image;
-      setState(() {});
-      old?.dispose();
-    });
+    _decodeInto(frame)
+        .then((image) {
+          if (!mounted || frameId != widget.frame) {
+            image?.dispose();
+            return;
+          }
+          final old = _image;
+          _image = image;
+          setState(() {});
+          old?.dispose();
+        })
+        // 兜底（P2-41）：`_decodeInto` 内部已 try/catch，但这条链若在更外层出错
+        // （未来改动/换实现），错误会变成**未处理异步异常**——这里保证它永不逃逸。
+        .catchError((Object error, StackTrace stack) {
+          debugPrint('RawThumbImage: 帧解码失败：$error');
+          return null;
+        });
   }
 
+  /// 解码一帧 RGBA 为 [ui.Image]。
+  ///
+  /// P2-41：`ImmutableBuffer` / `ImageDescriptor` / `Codec` 都是**原生资源**，
+  /// 用完必须 dispose（`getNextFrame()` 拿到的 `ui.Image` 由调用方持有并负责
+  /// dispose，不在此处释放）。原来只 dispose 了 image，descriptor/codec/buffer
+  /// 每次解码都漏一份 → 缩略图气泡反复拖动时原生内存持续增长。
   static Future<ui.Image?> _decodeInto(FastThumbFrame frame) async {
+    ui.ImmutableBuffer? buffer;
+    ui.ImageDescriptor? descriptor;
+    ui.Codec? codec;
     try {
-      final buffer = await ui.ImmutableBuffer.fromUint8List(frame.rgba);
-      final descriptor = ui.ImageDescriptor.raw(
+      buffer = await ui.ImmutableBuffer.fromUint8List(frame.rgba);
+      descriptor = ui.ImageDescriptor.raw(
         buffer,
         width: frame.width,
         height: frame.height,
         pixelFormat: ui.PixelFormat.rgba8888,
       );
-      final codec = await descriptor.instantiateCodec();
+      codec = await descriptor.instantiateCodec();
       final info = await codec.getNextFrame();
       return info.image;
     } catch (_) {
       return null;
+    } finally {
+      // 关掉 codec 不会释放已经交给我们的 image（image 的生命周期独立）
+      codec?.dispose();
+      descriptor?.dispose();
+      buffer?.dispose();
     }
   }
 

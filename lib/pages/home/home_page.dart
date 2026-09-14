@@ -53,6 +53,10 @@ class _HomePageState extends State<HomePage>
   List<TreeNode> _folders = []; // 列表模式：含直接视频的文件夹
   bool _loading = true;
   bool _permissionDenied = false;
+
+  /// 权限被**永久拒绝**（再点 request 也不会弹系统弹窗）→ 权限页改给「去系统设置」出口
+  /// （P1-35）
+  bool _permissionBlocked = false;
   int _loadSession = 0;
 
   /// 搜索状态：false = 正常标题栏；true = 显示搜索输入框
@@ -152,17 +156,41 @@ class _HomePageState extends State<HomePage>
   /// 授权后自动扫描视频；未授权则停留在提示界面可再次点击
   Future<void> _grantPermission() async {
     bool granted;
+    bool blocked = false;
     try {
-      granted = await Permission.manageExternalStorage
-          .request()
-          .then((s) => s.isGranted);
+      final status = await Permission.manageExternalStorage.request();
+      granted = status.isGranted;
+      // 「永久拒绝」时 request 会直接返回 denied 而**不再弹系统弹窗**：
+      // 此时唯一出路是去系统设置页（P1-35，否则本地播放器等于不可用）
+      blocked = !granted && status.isPermanentlyDenied;
     } catch (_) {
-      granted = await Permission.storage.request().then((s) => s.isGranted);
+      try {
+        final status = await Permission.storage.request();
+        granted = status.isGranted;
+        blocked = !granted && status.isPermanentlyDenied;
+      } catch (_) {
+        granted = false;
+      }
     }
     if (granted) {
+      if (mounted) setState(() => _permissionBlocked = false);
       await _load();
     } else if (mounted) {
-      setState(() {});
+      setState(() => _permissionBlocked = blocked);
+    }
+  }
+
+  /// 跳系统设置页（权限被永久拒绝后的唯一补救路径，P1-35）
+  Future<void> _openAppSettings() async {
+    try {
+      await openAppSettings();
+    } catch (_) {
+      // 个别 ROM 无此入口：静默降级为 toast 提示
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('请在系统设置中手动开启存储权限')));
+      }
     }
   }
 
@@ -429,12 +457,15 @@ class _HomePageState extends State<HomePage>
       return const Center(child: CircularProgressIndicator());
     }
     if (_permissionDenied) {
+      // 永久拒绝时主按钮也直接去系统设置（此时 request 已经弹不出系统弹窗了，P1-35）
       return _buildMessage(
         icon: Icons.folder_open,
-        message: '需要授予存储权限才能扫描视频',
-        buttonText: '授予权限',
-        buttonIcon: Icons.lock_open,
-        onPressed: _grantPermission,
+        message: _permissionBlocked
+            ? '存储权限已被拒绝，需要到系统设置里手动开启'
+            : '需要授予存储权限才能扫描视频',
+        buttonText: _permissionBlocked ? '去系统设置开启' : '授予权限',
+        buttonIcon: _permissionBlocked ? Icons.settings : Icons.lock_open,
+        onPressed: _permissionBlocked ? _openAppSettings : _grantPermission,
       );
     }
     if (_roots.isEmpty) {
@@ -660,6 +691,15 @@ class _HomePageState extends State<HomePage>
             icon: Icon(buttonIcon),
             label: Text(buttonText),
           ),
+          // 权限被永久拒绝时给第二条出路（P1-35）：主按钮是「去系统设置开启」，
+          // 这里再留一个「重新检查」——用户从设置页回来后不必等下次冷启动
+          if (_permissionDenied && _permissionBlocked) ...[
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: _load,
+              child: const Text('我已开启，重新检查'),
+            ),
+          ],
         ],
       ),
     );

@@ -76,21 +76,38 @@ class _LicensePageState extends State<LicensePage> {
           // 按包名排序（忽略大小写），保持列表稳定有序
           final packages = map.keys.toList()
             ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-            children: [
-              _LicenseHeaderCard(
-                version: _version,
-                licenseCount: packages.length,
-              ),
-              const SizedBox(height: 20),
-              const SettingsGroupTitle(title: '开源许可'),
-              for (final package in packages)
-                _LicenseEntryTile(
-                  package: package,
-                  entry: map[package]!,
-                  onTap: () => _openDetail(package, map[package]!),
+          // 许可条目数百条：表头固定，条目走 SliverList 懒构建（P2-38 同族收口，
+          // 与 device_info_page 一致，不再一次性 `for` 全量构建）
+          return CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                sliver: SliverList.list(
+                  children: [
+                    _LicenseHeaderCard(
+                      version: _version,
+                      licenseCount: packages.length,
+                    ),
+                    const SizedBox(height: 20),
+                    const SettingsGroupTitle(title: '开源许可'),
+                    const SizedBox(height: 8),
+                  ],
                 ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+                sliver: SliverList.builder(
+                  itemCount: packages.length,
+                  itemBuilder: (context, i) {
+                    final package = packages[i];
+                    return _LicenseEntryTile(
+                      package: package,
+                      entry: map[package]!,
+                      onTap: () => _openDetail(package, map[package]!),
+                    );
+                  },
+                ),
+              ),
             ],
           );
         },

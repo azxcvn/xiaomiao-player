@@ -12,10 +12,12 @@
 ///   （需登录态重新解析 playurl）由调用方过滤，不写入历史。
 library;
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:moumou/models/playback_history_entry.dart';
+import 'package:moumou/utils/async_serial_queue.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PlaybackHistoryService extends ChangeNotifier {
@@ -27,6 +29,10 @@ class PlaybackHistoryService extends ChangeNotifier {
   /// 加载去重（risk_audit #9 同款防护）：setter 先 await [ensureLoaded]，
   /// 防启动 load 未完成时用户改动被覆盖。
   Future<void>? _loadFuture;
+
+  /// 写入串行队列（[AsyncSerialQueue]，§4.29）：保证 record/remove/clearAll 的
+  /// prefs 写入按提交顺序执行，磁盘上永远是最后一次调用的完整快照（P2-40）。
+  final AsyncSerialQueue _writeQueue = AsyncSerialQueue();
 
   Future<void> ensureLoaded() => _loadFuture ??= load();
 
@@ -146,12 +152,34 @@ class PlaybackHistoryService extends ChangeNotifier {
   }
 
   Future<void> _persist() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _keyEntries,
-      jsonEncode([for (final e in _entries) e.toJson()]),
+    // P2-40：并发落盘顺序不定会让磁盘上留着**较早**的快照（record/remove/clearAll
+    // 可能被几乎同时触发）。对齐 `PlaybackProgressService._persist` 的 §4.29 写法：
+    // ① 快照在**调用时同步生成**（等到排队执行再编码就晚了）；
+    // ② 写入走 [AsyncSerialQueue] 串行，按提交顺序落盘、异常不打断后续写入；
+    // ③ 任务的错误必须在这里接收——`AsyncSerialQueue.add` 把异常交给返回的 Future，
+    //    丢弃它等于未处理异步错误 + 写盘失败静默（§4.29/P1-34 同一个坑）。
+    final snapshot = jsonEncode([for (final e in _entries) e.toJson()]);
+    unawaited(
+      _writeQueue
+          .add(() async {
+            final prefs = await SharedPreferences.getInstance();
+            // await 掉 bool 返回值：让任务类型是 Future<void>，与 catchError 的
+            // 处理器签名一致（同 PlaybackProgressService 的写法）
+            await prefs.setString(_keyEntries, snapshot);
+          })
+          .catchError((Object error, StackTrace stack) {
+            debugPrint('PlaybackHistoryService: 播放历史写盘失败：$error');
+          }),
     );
+    await _writeQueue.idle;
   }
+
+  /// 等待在途的历史写盘完成（P2-40 的串行队列排空）。
+  ///
+  /// 用途：退出前落盘、以及**测试**里「触发 UI 动作后断言磁盘内容」——widget 测试的
+  /// `pumpAndSettle` 只保证帧与定时器排空，不保证这条 microtask 链跑完，直接读
+  /// SharedPreferences 会看到上一份快照。
+  Future<void> flushPendingWrites() => _writeQueue.idle;
 
   /// 防御性解码：损坏 JSON / 非法条目一律丢弃，可继续写入新数据
   List<PlaybackHistoryEntry> _decode(String? raw) {

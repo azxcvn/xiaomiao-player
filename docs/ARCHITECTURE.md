@@ -1577,7 +1577,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 |---|---|---|
 | `AsyncSession` | 会话号令牌：`start()` 开新会话、`isCurrent(token)` 判废、`invalidate()` 主动作废 | `DanmakuController._loadSession`（4 处加载路径）、`DanmakuScheduler._generation`、`PlayerDanmakuNetworkPanel._searchSession`（P2-10：网络弹幕搜索取最后一次输入） |
 | `AsyncSingleFlight<T>` | 同 key 并发只执行一次、共享 Future；**失败不缓存**、完成后记录清除 | `VideoInfoService`（视频信息 + 基本元数据两条链路） |
-| `AsyncSerialQueue` | 按提交顺序串行执行；**任务异常不打断队列**（错误抛给各自调用方）；`idle` 等排空 | `PlaybackProgressService` 进度写盘串行链 |
+| `AsyncSerialQueue` | 按提交顺序串行执行；**任务异常不打断队列**（错误抛给各自调用方）；`idle` 等排空 | `PlaybackProgressService` 进度写盘串行链、`PlaybackHistoryService` 历史写盘（P2-40，§4.42——两者都配 `unawaited(queue.add(...).catchError(记日志))` + `await idle`） |
 | `AsyncCoalescedReload` | 串行合并重跑：在跑时只登记一次「待补跑」，等待者拿到的是**不早于自己请求**开跑的那一轮（不是"已经开跑的那一轮"） | `SubtitleController.reload()`（轨道刷新，§4.34）、`DanmakuController` 生效集重算（流式追加 + 开关变化，§4.11）。⚠️ 这里**不能**用 `AsyncSingleFlight`：single-flight 让后来者 join 早已开跑的旧轮，`sub-add`/新弹幕批次之后照样拿到旧结果 |
 
 **C2 通用分页**：
@@ -2184,6 +2184,25 @@ return try {
 
 ---
 
+### 4.42 零散性能与健壮性收口（主题缓存 / 列表懒构建 / 权限出口 / 写盘队列 / 原生资源，B14）
+
+> 来源：体检报告 §2.6 的 P1-35/P1-36 与 §3 的第 38~41 条（P2-38/39/40/41）。都是「独立小项」，
+> 但各有明确的**防回归写法**；改动零散、落点不一，照下面做即可。
+
+| 坑 | 防护（落点） |
+|---|---|
+| 每次 build 都跑一遍 `flex_seed_scheme` 的 HCT 色板派生（拖字号滑杆 → 上百次整 App 重建 × 2~3 套 ThemeData） | `main.dart` 按 **seed / mode / variant / fontFamily / fontWeight 五元组判等**缓存 light+dark（`_themeInputsChanged` + `_cachedLight/_cachedDark`）；⚠️ 五个输入**缺一不可**——少一个就会出现「改了字号/主题不生效」。P2-39 |
+| 设备信息页筛选用 `for` 全量构建 + 搜索框每击键整页 rebuild（解码器清单几百条） | ①筛选结果按「查询词 + 筛选档」缓存（`_decoders` 变化时作废）；②清单本体改 `CustomScrollView` + `SliverList.builder` **懒构建**（只建可见项）。`license_page` 同族一并收口。P2-38 ⚠️ 副作用：屏幕外条目不在 widget 树上，**测试断言前必须先 `scrollUntilVisible`** |
+| 权限被**永久拒绝**后再点「授予权限」毫无反应（`request` 不再弹系统弹窗）→ 本地播放器等于不可用 | `home_page` 判 `status.isPermanentlyDenied` → 主按钮换成「去系统设置开启」（`openAppSettings`），并留一个「我已开启，重新检查」。P1-35 |
+| 播放历史并发落盘顺序不定 → 磁盘上可能留**较早**快照 | `_persist` 对齐 §4.29：快照**调用时同步生成** + `AsyncSerialQueue` 串行 + `catchError` 接收错误；另暴露 `flushPendingWrites()`（§4.29 的 `idle`），供退出前落盘与**测试**等待。P2-40 |
+| `RawThumbImage` 只 dispose 了 `ui.Image`，`ImmutableBuffer`/`ImageDescriptor`/`Codec` 每次解码漏一份 | 三个原生资源在 `finally` 里逐个 `dispose()`（`ui.Image` 归调用方）；解码链末尾再挂 `catchError` 防未处理异步异常。P2-41 |
+
+**已查清（体检报告误报，勿再当缺陷修）**：`DeviceServices.requestLocalNetworkPermission()` **并非零调用**——
+`services/network/network_repository.dart`（连接前）、`services/danmaku_network_service.dart`（自建弹幕服务器，2 处）
+共 3 处真实调用，由特性提交 `13757e0` 落地；报告 P1-36 与 §7.1 的对应记录作废。
+
+---
+
 ## 5. 新增功能指南（按功能类型）
 
 ### 5.1 新增一个页面
@@ -2549,6 +2568,8 @@ return try {
 | saver_gallery 不传 `albumPath` 时按 MIME 落默认根目录（截图/二维码直落 `Pictures/`，无父级文件夹） | `saveImage` 传 `albumPath: '小喵Player'` → 落 `Pictures/小喵Player/`（§4.8 截图 / §4.13 保存相册） |
 | 章节跳段设置变化 → `ChapterTracker` 用 `resolveSkipSegments` 重派生，把 B 站 `clip_info_list` 的精确 OP/ED 起止覆盖成「下一章起点」（OP 结束错扩到 ED 起点） | 外部精确片段（`setExternalChapters`）打 `_externalSegments` 标记；`_onSettingsChanged` 只在非外部时重派生，外部只清已跳过记录（§4.22） |
 | 整应用重启 `exitProcess` 编译报 Unresolved reference | `exitProcess` 是 `kotlin.system.exitProcess`，需显式 import（§4.24） |
+| 列表改成 `SliverList` 懒构建后，原来的 widget 测试直接断言屏幕外条目 → 断言失败（不是功能坏） | 懒列表的测试断言前先 `scrollUntilVisible`（`device_info_page_test`）；判定依据：条目在真机上滚动后确实出现（§4.42/P2-38） |
+| 写盘改走 `AsyncSerialQueue` 后，widget 测试「点一下就断言持久化」读到上一份快照（`pumpAndSettle` 只排空帧与定时器，不保证 microtask 链跑完） | 测试先 `await service.flushPendingWrites()` 再读；**产品侧不需要改**（实测 `remove()` 返回时磁盘已是新快照，§4.42/P2-40） |
 | **`detachFd()` 之后 `pfd.close()` 是空操作 → fd 永久泄漏；而「不 detach、把 `pfd.fd` 交给 MediaInfo 再用 `pfd.close()` 关」会双关同一个 fd → 真机进播放页/媒体信息页必闪退**（B13 第一版就这么崩的） | 唯一正确写法：**先构造 `MediaInfo()`、再 `detachFd()`**，此后只由 `mi.Close()` 关（`MediaInfoHelper.withMediaInfo`，§4.41） |
 | 想在 Kotlin 里「从 `FileDescriptor` 取 raw fd」→ 编译期 `Unresolved reference 'fd'`（`Os.dup` 返回 `FileDescriptor` 而非 `int`） | raw fd 只能经 `ParcelFileDescriptor.detachFd()` 拿（返回 `int`）；`MediaInfo.Open(int, String)` 要的就是它（§4.41） |
 | 解码器筛选胶囊文字出现「…」省略号（等宽均分后窄胶囊放不下） | 胶囊文字去掉 `maxLines`/`TextOverflow.ellipsis`，改 `softWrap:false` 单行居中；胶囊只放纯文本「音频/硬解/软解/视频/全部」（不带数字）（§4.24） |
@@ -2646,3 +2667,4 @@ return try {
 | FTP 目录列表的 **Windows/IIS 风格行**（`parseUnixListLine` 只认 `d`/`-`/`l` 开头） | **先不做**（D22，2026-09 用户拍板）：文档声明「只支持 MLSD 与 Unix LIST」，代码不改，真需要再单独立项（§4.35） |
 | `services/bilibili/dandan_play_keys.dart:7` 注释里残留的备用 AppSecret 文本 | **不管**（D23③）：该文件已被 `.gitignore` 正确排除、`git ls-files` 无记录，真实密钥未入库 |
 | `AppFrameObserver` 栈漂移（报告 §3-43） | **不验证也不修**（D23④）：报告本身只是「待验证」推演，无复现 |
+| 报告 P1-36「`requestLocalNetworkPermission()` 全仓零调用」 | **误报，不做**（B14 核实）：实际有 3 处生产调用（网络存储连接前 + 自建弹幕服务器 2 处），见 §4.42 |

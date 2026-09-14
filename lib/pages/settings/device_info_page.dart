@@ -38,6 +38,14 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
   _DecoderFilter _filter = _DecoderFilter.all;
   String _query = '';
 
+  // ── 筛选结果缓存（P2-38）──────────────────────────────────────────
+  // 原来 `_filtered` 每次调用都 `where().toList()` 全量过一遍，而它一帧内会被调用
+  // 两次（清单 + 空态判断），搜索框每击键又整页 rebuild → O(n) × 每击键。
+  // 这里按「查询词 + 筛选档」缓存：输入没变直接复用（解码器清单几百条）。
+  List<DeviceDecoderEntry>? _filteredCache;
+  String? _filteredCacheQuery;
+  _DecoderFilter? _filteredCacheFilter;
+
   @override
   void initState() {
     super.initState();
@@ -90,12 +98,21 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
           if (d is Map) _decoders.add(DeviceDecoderEntry.fromMap(d));
         }
       }
+      // 数据源变了：作废筛选缓存（键只覆盖 query/filter，覆盖不到 _decoders 内容）
+      _filteredCache = null;
     });
   }
 
   List<DeviceDecoderEntry> get _filtered {
+    // P2-38：缓存命中直接复用（同一查询词一帧内会被问两次；击键重建也不重复全量过滤）
+    final cached = _filteredCache;
+    if (cached != null &&
+        _filteredCacheQuery == _query &&
+        _filteredCacheFilter == _filter) {
+      return cached;
+    }
     final q = _query.trim().toLowerCase();
-    return _decoders.where((d) {
+    final result = _decoders.where((d) {
       final matchFilter = switch (_filter) {
         _DecoderFilter.all => true,
         _DecoderFilter.hardware => d.isHardware,
@@ -110,6 +127,10 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
           d.formatName.toLowerCase().contains(q) ||
           d.profiles.any((p) => p.toLowerCase().contains(q));
     }).toList();
+    _filteredCache = result;
+    _filteredCacheQuery = _query;
+    _filteredCacheFilter = _filter;
+    return result;
   }
 
   @override
@@ -121,16 +142,29 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
           ? const Center(child: CircularProgressIndicator())
           : _error != null
           ? _errorView(scheme)
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-              children: [
-                _deviceCard(scheme),
-                const SizedBox(height: 16),
-                _hdrCard(scheme),
-                const SizedBox(height: 16),
-                _keyCodecCard(scheme),
-                const SizedBox(height: 16),
-                _decoderListCard(scheme),
+          // CustomScrollView：卡片区 + 解码器清单表头是固定几块，清单本体走
+          // SliverList 懒构建（P2-38）
+          : CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                  sliver: SliverList.list(
+                    children: [
+                      _deviceCard(scheme),
+                      const SizedBox(height: 16),
+                      _hdrCard(scheme),
+                      const SizedBox(height: 16),
+                      _keyCodecCard(scheme),
+                      const SizedBox(height: 16),
+                      _decoderListBody(scheme),
+                    ],
+                  ),
+                ),
+                // 清单本体：懒构建（只 build 可见项），左右内边距沿用页面 12
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+                  sliver: _decoderListSliver(scheme),
+                ),
               ],
             ),
     );
@@ -302,12 +336,13 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
     );
   }
 
-  Widget _decoderListCard(ColorScheme scheme) {
+  /// 解码器清单**表头**（标题徽标 + 搜索框 + 筛选胶囊）：固定几行，随页面
+  /// `SliverList.list` 的常规 children 一起构建（P2-38）。
+  Widget _decoderListBody(ColorScheme scheme) {
     final hwCount = _decoders.where((d) => d.isHardware).length;
     final swCount = _decoders.length - hwCount;
     final videoCount = _decoders.where((d) => d.mediaType == 'video').length;
     final audioCount = _decoders.where((d) => d.mediaType == 'audio').length;
-    final filtered = _filtered;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -387,26 +422,35 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                if (filtered.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 32),
-                    child: Center(
-                      child: Text(
-                        '无匹配的解码器',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  )
-                else
-                  for (final d in filtered) _decoderTile(scheme, d),
               ],
             ),
           ),
         ),
       ],
+    );
+  }
+
+  /// 解码器清单**本体**（懒构建 sliver，P2-38）：空态用 `SliverToBoxAdapter`，
+  /// 有数据走 [SliverList.builder]——只构建可见项，不再一次性 `for` 全量构建
+  /// （解码器清单几百条，原来是整页每击键都重建全部 tile）。
+  Widget _decoderListSliver(ColorScheme scheme) {
+    final filtered = _filtered;
+    if (filtered.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32),
+          child: Center(
+            child: Text(
+              '无匹配的解码器',
+              style: TextStyle(fontSize: 14, color: scheme.onSurfaceVariant),
+            ),
+          ),
+        ),
+      );
+    }
+    return SliverList.builder(
+      itemCount: filtered.length,
+      itemBuilder: (context, i) => _decoderTile(scheme, filtered[i]),
     );
   }
 

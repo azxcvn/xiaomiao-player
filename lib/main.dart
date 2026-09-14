@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:moumou/models/danmaku_font_mode.dart';
 import 'package:moumou/pages/home/home_page.dart';
@@ -106,6 +107,35 @@ class _MoumouAppState extends State<MoumouApp> {
   /// 根 Navigator key：外部打开视频（系统「打开方式」）从 App 顶层 push
   /// 播放页用（widgets/ 层不 import pages/，故挂在这里，见 §3 分层）
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
+  // ── 主题构建缓存（P2-39）─────────────────────────────────────────
+  // `AppTheme.light/dark/amoled` 每次都跑一遍 `flex_seed_scheme` 的 HCT 色板派生；
+  // 这个 build 会被**任何**主题/字体监听者触发（拖字号滑杆时每帧一次）——不缓存就是
+  // 每帧重算 2~3 套完整 ThemeData。这里按「输入判等」缓存：输入没变直接复用上次结果。
+  // 缓存字段挂在 State 上而非包成服务：它只服务于这一个 build，无需全局可见（§4.1）。
+  bool _hasThemeCache = false;
+  ThemeData? _cachedLight;
+  ThemeData? _cachedDark;
+  Color? _cacheSeed;
+  AppThemeMode? _cacheMode;
+  FlexSchemeVariant? _cacheVariant;
+  String? _cacheFontFamily;
+  FontWeight? _cacheFontWeight;
+
+  /// 缓存键是否仍然有效（任一输入变化 → 需要重建 ThemeData）
+  bool _themeInputsChanged(
+    Color seed,
+    AppThemeMode mode,
+    FlexSchemeVariant variant,
+    String? fontFamily,
+    FontWeight? fontWeight,
+  ) =>
+      !_hasThemeCache ||
+      _cacheSeed != seed ||
+      _cacheMode != mode ||
+      _cacheVariant != variant ||
+      _cacheFontFamily != fontFamily ||
+      _cacheFontWeight != fontWeight;
 
   @override
   void initState() {
@@ -295,26 +325,38 @@ class _MoumouAppState extends State<MoumouApp> {
         final fontFamily = AppFontSettings.instance.effectiveFamily;
         final fontWeight = AppFontSettings.instance.effectiveFontWeight;
 
-        final light = AppTheme.light(
-          seed,
-          variant,
-          fontFamily: fontFamily,
-          fontWeight: fontWeight,
-        );
-        // AMOLED 模式下深色主题换成纯黑版本
-        final dark = mode == AppThemeMode.amoled
-            ? AppTheme.amoled(
-                seed,
-                variant,
-                fontFamily: fontFamily,
-                fontWeight: fontWeight,
-              )
-            : AppTheme.dark(
-                seed,
-                variant,
-                fontFamily: fontFamily,
-                fontWeight: fontWeight,
-              );
+        // P2-39：输入未变则复用上次构建的 ThemeData（拖字号滑杆这类高频
+        // rebuild 不再每帧重跑 flex_seed_scheme 的 HCT 派生）
+        if (_themeInputsChanged(seed, mode, variant, fontFamily, fontWeight)) {
+          _cachedLight = AppTheme.light(
+            seed,
+            variant,
+            fontFamily: fontFamily,
+            fontWeight: fontWeight,
+          );
+          // AMOLED 模式下深色主题换成纯黑版本
+          _cachedDark = mode == AppThemeMode.amoled
+              ? AppTheme.amoled(
+                  seed,
+                  variant,
+                  fontFamily: fontFamily,
+                  fontWeight: fontWeight,
+                )
+              : AppTheme.dark(
+                  seed,
+                  variant,
+                  fontFamily: fontFamily,
+                  fontWeight: fontWeight,
+                );
+          _cacheSeed = seed;
+          _cacheMode = mode;
+          _cacheVariant = variant;
+          _cacheFontFamily = fontFamily;
+          _cacheFontWeight = fontWeight;
+          _hasThemeCache = true;
+        }
+        final light = _cachedLight!;
+        final dark = _cachedDark!;
         final themeMode = switch (mode) {
           AppThemeMode.light => ThemeMode.light,
           AppThemeMode.dark => ThemeMode.dark,
