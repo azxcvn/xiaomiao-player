@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -10,7 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// 网络弹幕搜索面板 UI 测试（工作.md 第 4 点重设计）：
 /// 紧凑胶囊搜索框（40dp 定高）、搜索框下方关键词历史胶囊 + 「清除」胶囊、
 /// 命中后自动折叠搜索框（点折叠条重新展开）、结果卡展开/收起动画
-/// （AnimationController 驱动，收起态不构建子树）、选集回调 + 关闭面板。
+/// （AnimationController 驱动，收起态不构建子树）、选集回调 + 关闭面板；
+/// 以及 P2-10 的搜索并发语义（最后一次输入生效、旧响应丢弃）。
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -39,6 +41,14 @@ void main() {
     // 用键盘搜索动作触发 onSubmitted（比点击 suffix 图标更稳定）
     await tester.testTextInput.receiveAction(TextInputAction.search);
     await tester.pumpAndSettle();
+  }
+
+  /// 只发一次搜索、**不**等结果（可控服务挂起时 loading 转圈会让
+  /// `pumpAndSettle` 超时）
+  Future<void> submit(WidgetTester tester, String keyword) async {
+    await tester.enterText(find.byType(TextField), keyword);
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pump();
   }
 
   testWidgets('无历史无结果：显示空态提示', (tester) async {
@@ -217,6 +227,87 @@ void main() {
     await search(tester, '错');
     expect(find.textContaining('搜索失败'), findsOneWidget);
   });
+
+  // ── P2-10：搜索并发语义（会话号 + 不再静默吞掉 loading 期间的新搜索）──
+
+  testWidgets('搜索中再搜不被吞：loading 期间仍能发起，最终取最后一次输入', (tester) async {
+    final service = _ControlledNetworkService();
+    await pumpPanel(tester, service: service);
+
+    await submit(tester, 'A');
+    expect(service.keywords, ['A']);
+
+    // loading 期间：搜索按钮仍在位（不静默无反应），再搜照常发起
+    expect(find.byTooltip('搜索'), findsOneWidget);
+    await submit(tester, 'B');
+    expect(service.keywords, ['A', 'B']);
+
+    // 最后一次（B）先返回 → 显示 B
+    service.complete(1, 'B 番剧');
+    await tester.pumpAndSettle();
+    expect(find.text('B 番剧'), findsOneWidget);
+
+    // 旧响应（A）后到 → 丢弃，不覆盖新结果
+    service.complete(0, 'A 番剧');
+    await tester.pumpAndSettle();
+    expect(find.text('B 番剧'), findsOneWidget);
+    expect(find.text('A 番剧'), findsNothing);
+  });
+
+  testWidgets('点搜索按钮也能在 loading 期间重新发起搜索', (tester) async {
+    final service = _ControlledNetworkService();
+    await pumpPanel(tester, service: service);
+
+    await submit(tester, 'A');
+    expect(service.keywords, ['A']);
+    await tester.enterText(find.byType(TextField), 'C');
+    await tester.tap(find.byTooltip('搜索'));
+    await tester.pump();
+    expect(service.keywords, ['A', 'C']);
+
+    service.complete(1, 'C 番剧');
+    await tester.pumpAndSettle();
+    expect(find.text('C 番剧'), findsOneWidget);
+    service.complete(0, 'A 番剧');
+    await tester.pumpAndSettle();
+    expect(find.text('C 番剧'), findsOneWidget);
+  });
+}
+
+/// 可控网络服务：search 挂起由测试决定何时返回（验证会话号丢弃旧响应）。
+class _ControlledNetworkService extends DanmakuNetworkService {
+  final List<String> keywords = [];
+  final List<Completer<DanmakuSearchResult>> pending = [];
+
+  @override
+  Future<DanmakuSearchResult> search(String keyword) {
+    keywords.add(keyword);
+    final completer = Completer<DanmakuSearchResult>();
+    pending.add(completer);
+    return completer.future;
+  }
+
+  /// 让第 [index] 次搜索返回一部标题为 [title] 的番剧
+  void complete(int index, String title) {
+    pending[index].complete(DanmakuSearchResult(
+      items: [
+        DanmakuSearchItem(
+          anime: DandanAnime(
+            animeId: index + 1,
+            animeTitle: title,
+            type: 'tv',
+            typeDescription: 'TV',
+            episodes: const [
+              DandanEpisode(episodeId: 1, episodeTitle: '第01话'),
+            ],
+          ),
+          serverUrl: null,
+          serverName: '弹弹Play（默认）',
+        ),
+      ],
+      errors: const [],
+    ));
+  }
 }
 
 /// 测试假网络服务（真实 [DanmakuNetworkService] 会发起 HTTP 请求，

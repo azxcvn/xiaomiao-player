@@ -30,14 +30,13 @@ import 'package:moumou/services/danmaku_auto_match_cache_store.dart';
 import 'package:moumou/services/danmaku_memory.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/danmaku_scheduler.dart';
+import 'package:moumou/utils/async_coalesced_reload.dart';
 import 'package:moumou/utils/async_session.dart';
 import 'package:moumou/services/danmaku_server_settings.dart';
 import 'package:moumou/services/danmaku_settings.dart';
-import 'package:moumou/utils/danmaku_blocklist.dart';
-import 'package:moumou/utils/danmaku_dedup.dart';
-import 'package:moumou/utils/danmaku_merge.dart';
 import 'package:moumou/utils/danmaku_episode.dart';
 import 'package:moumou/utils/danmaku_local_file.dart';
+import 'package:moumou/utils/danmaku_pipeline.dart';
 import 'package:moumou/utils/danmaku_random_color.dart';
 import 'package:moumou/utils/danmaku_timeline.dart';
 import 'package:moumou/utils/danmaku_xml.dart';
@@ -160,6 +159,15 @@ class DanmakuController extends ChangeNotifier {
   /// 在途的异步加载结果按令牌判废（对齐 Kazumi 的拉取层失效语义）
   final AsyncSession _loadSession = AsyncSession();
 
+  /// 生效集流水线重跑器（P1-15 / P1-16）：把「屏蔽词 → 合并 → 去重」对
+  /// **全量原始条目**求值，整体丢进后台 isolate。
+  ///
+  /// 用 [AsyncCoalescedReload] 而非 [AsyncSingleFlight]：并发请求必须合并成
+  /// 「当前轮 + 一轮补跑」，否则后到的请求会 join 早已开跑的旧轮，拿到的仍是
+  /// 「自己那批数据之前」的结果（§4.29 同 `SubtitleController.reload` 的取舍）。
+  late final AsyncCoalescedReload _bucketReload =
+      AsyncCoalescedReload(_rebuildBuckets);
+
   /// 当前播放的视频路径（手动导入记忆的键）
   String? _currentMediaPath;
 
@@ -250,15 +258,65 @@ class DanmakuController extends ChangeNotifier {
     }
   }
 
-  /// 去重/合并开关变化时重灌秒桶：按原始条目重新合并再喂给调度器，并锚定
-  /// 当前位置（下个 tick 从当前秒继续，不倾倒历史弹幕）。
+  /// 去重/合并/屏蔽词开关变化时重灌秒桶：按**全量**原始条目重算生效集再整体
+  /// 替换（见 [_rebuildBuckets]），并锚定当前位置（下个 tick 从当前秒继续，
+  /// 不倾倒历史弹幕）+ 清屏（在屏弹幕的计数可能已变，清掉避免旧计数残留）。
   void _refeedIfLoaded() {
     if (!_hasDanmaku) return;
-    final entries = _effectiveEntries(_rawEntries);
-    _scheduler.reset();
-    _scheduler.feed(entries);
     _scheduler.notifySeeked(_sourcePosition(_position));
     _clearLayers();
+    _requestBucketReloadInBackground();
+  }
+
+  /// 请求重算秒桶（可等待）：不早于本次请求开跑的那一轮完成后完结。
+  Future<void> _requestBucketReload() => _bucketReload.run();
+
+  /// 后台重算（流式追加 / 开关变化用）：不阻塞调用方；任务内部已对 isolate
+  /// 失败兜底，这里再兜一层，避免任何意外变成「未处理异步异常」。
+  void _requestBucketReloadInBackground() {
+    _bucketReload.run().catchError((Object error) {
+      debugPrint('弹幕生效集重算失败：$error');
+    });
+  }
+
+  /// 对**全量原始条目**求生效集并整体替换秒桶（P1-15 / P1-16）。
+  ///
+  /// - 设置值在**本轮开跑时**快照（设置单例是 ChangeNotifier，不能跨 isolate
+  ///   读取）；重跑器保证同一时刻只有一轮在跑，所以在跑期间的新请求会以
+  ///   「补跑一轮」的方式带上最新设置与最新原始条目。
+  /// - 流水线整体走 `compute`（后台 isolate）：10 万条量级的两次全量排序 +
+  ///   逐条文本归一化不再卡 UI 线程。isolate 不可用（平台受限/被系统回收）时
+  ///   回落主 isolate 同步算；流水线本身再失败（脏文本等）就原样装载——
+  ///   宁可漏掉屏蔽词/合并，也不能一条弹幕都不显示。
+  /// - isolate 往返期间切了集（会话号变了）→ 结果判废，不污染新视频的秒桶。
+  Future<void> _rebuildBuckets() async {
+    if (_disposed) return;
+    final session = _loadSession.generation;
+    final request = (
+      entries: _rawEntries,
+      blockedKeywords: _settings.blockedKeywords,
+      merge: _settings.merge,
+      dedupe: _settings.deduplication,
+    );
+    List<DanmakuEntry> effective;
+    try {
+      effective = await compute(runDanmakuPipeline, request);
+    } catch (_) {
+      try {
+        effective = effectiveDanmakuEntries(
+          entries: request.entries,
+          blockedKeywords: request.blockedKeywords,
+          merge: request.merge,
+          dedupe: request.dedupe,
+        );
+      } catch (error) {
+        debugPrint('弹幕生效集重算失败，回退原样装载：$error');
+        effective = request.entries;
+      }
+    }
+    if (_disposed || !_loadSession.isCurrent(session)) return;
+    // 只换秒桶数据，不动代数与锚点：不清屏、不重放（跨批次修正的关键）
+    _scheduler.replaceAll(effective);
   }
 
   /// 时间轴偏移后的源时间位置（对齐 Kazumi：source = playback − offset；
@@ -279,23 +337,10 @@ class DanmakuController extends ChangeNotifier {
     }
   }
 
-  /// 屏蔽词 + 弹幕合并/去重生效后的条目集：先剔除命中屏蔽词的弹幕（屏蔽词
-  /// 为空则原样），再按合并开关做「跨时间窗同内容聚合计次」，最后按去重开关
-  /// 合并短窗重复。
-  ///
-  /// **合并与去重在 `DanmakuSettings` 层互斥**（语义冲突：去重丢弃重复条目、
-  /// 合并要统计重复条目），所以这里最多只会命中一条分支；代码仍按
-  /// 「屏蔽词 → 合并 → 去重」顺序写，保证任何情况下合并都先于去重执行
-  /// （先跑去重会把计数信息吃掉）。合并后的条目文本保持原样（计数走
-  /// [DanmakuEntry.count]），因此去重/屏蔽词的判同不受影响。原始条目仍保留
-  /// 在 [_rawEntries]，开关变化时按 [_rawEntries] 重灌（见 [_refeedIfLoaded]）。
-  List<DanmakuEntry> _effectiveEntries(List<DanmakuEntry> entries) {
-    final filtered = filterBlockedDanmaku(entries, _settings.blockedKeywords);
-    final merged =
-        _settings.merge ? mergeDanmakuByCount(filtered) : filtered;
-    if (!_settings.deduplication) return merged;
-    return dedupeDanmakuEntries(merged);
-  }
+  // 生效集流水线（屏蔽词 → 合并 → 去重）在 `utils/danmaku_pipeline.dart`
+  // （纯函数，P1-15/P1-16 抽件）：这里只负责快照设置 + 走后台 isolate +
+  // 把结果整体替换进秒桶，见 [_rebuildBuckets]。原始条目保留在 [_rawEntries]，
+  // 任何一次装载/追加/开关变化都对**全量**原始条目求值。
 
   // ── 渲染层挂载（页面 Stack 内 DanmakuScreen 的 createdController 回调）──
 
@@ -368,20 +413,24 @@ class DanmakuController extends ChangeNotifier {
       await _tryAutoMatch(session);
       return;
     }
-    _feedEntries(loaded.entries);
+    await _feedEntries(loaded.entries);
+    if (_disposed || !_loadSession.isCurrent(session)) return;
     _hasDanmaku = loaded.entries.isNotEmpty;
     if (loaded.entries.isNotEmpty) {
       await _notifyAutoLoaded(loaded.fileName);
     }
   }
 
-  /// 装载弹幕数据：保留原始条目（去重开/关重灌用）+ 按当前设置合并后
-  /// 喂给调度器 + 重置随机色轮（同文件每次加载重新随机起点）
-  void _feedEntries(List<DanmakuEntry> entries) {
+  /// 装载弹幕数据：保留原始条目（开关变化/跨批次重算用）+ 重置随机色轮
+  /// （同文件每次加载重新随机起点）+ 对**全量**原始条目重算生效集。
+  ///
+  /// 返回的 Future 在秒桶就绪后完结（调用方据此保证「已加载 N 条」的条数
+  /// 与画面一致，见 `player_danmaku_panel.dart`）。
+  Future<void> _feedEntries(List<DanmakuEntry> entries) async {
     _rawEntries = List.of(entries);
     // 随机色开启时每次装载重建色轮：新随机起点，同内容不重样
     _colorWheel = _settings.randomColor ? DanmakuColorWheel() : null;
-    _scheduler.feed(_effectiveEntries(entries));
+    await _requestBucketReload();
   }
 
   /// 同名自动加载成功通知（**仅同名自动查找路径**；记忆恢复/手动导入
@@ -459,7 +508,8 @@ class DanmakuController extends ChangeNotifier {
       final entries = await compute(parseDanmakuXml, content);
       if (_disposed || !_loadSession.isCurrent(session)) return false;
       if (entries.isEmpty) return false;
-      _feedEntries(entries);
+      await _feedEntries(entries);
+      if (_disposed || !_loadSession.isCurrent(session)) return false;
       _hasDanmaku = true;
       return true;
     } catch (_) {
@@ -497,7 +547,8 @@ class DanmakuController extends ChangeNotifier {
     }
     if (_disposed || !_loadSession.isCurrent(session)) return false;
     if (download.entries.isEmpty) return false;
-    _feedEntries(download.entries);
+    await _feedEntries(download.entries);
+    if (_disposed || !_loadSession.isCurrent(session)) return false;
     _hasDanmaku = true;
     if (!_danmakuOn) {
       _danmakuOn = true;
@@ -513,27 +564,46 @@ class DanmakuController extends ChangeNotifier {
 
   /// 装载 B 站原声弹幕（在线播放）：清屏重灌 + 自动开启弹幕显示。
   /// 获取/解码在调用方（`BiliDanmakuService`）完成，这里只负责喂给调度器。
+  ///
+  /// 分段流式加载的**第一批**走这里（清屏重建原始集合），后续批次走
+  /// [appendBiliDanmaku]。原始集合的赋值在首个 await 之前完成，所以随后的
+  /// 追加一定接在第一批之后（不会误接到上一部视频的原始集合上）。
   void loadBiliDanmaku(List<DanmakuEntry> entries) {
     if (_disposed) return;
     _loadSession.invalidate();
+    final session = _loadSession.generation;
     _scheduler.reset();
     _clearLayers();
     _hasDanmaku = false;
     if (entries.isEmpty) return;
-    _feedEntries(entries);
-    _hasDanmaku = true;
+    unawaited(_feedBiliFirstBatch(entries, session));
     if (!_danmakuOn) {
       _danmakuOn = true;
       notifyListeners();
     }
   }
 
+  /// 流式路径的首批装载（不阻塞 `onBatch` 回调）：秒桶就绪后**才**置
+  /// [_hasDanmaku]——否则 1s tick 会在空桶上把秒桶锚点推到当前秒，
+  /// 等首批数据落地时当前秒的弹幕已经错过（前向补发只补锚点之后的桶）。
+  /// 期间又切了集（会话号变了）则不再回写，避免旧装载改写新集的显示态。
+  Future<void> _feedBiliFirstBatch(List<DanmakuEntry> entries, int session) async {
+    await _feedEntries(entries);
+    if (_disposed || !_loadSession.isCurrent(session)) return;
+    _hasDanmaku = true;
+  }
+
   /// 追加 B 站弹幕批次（分段流式 feed，先到先显）：不清屏、不重建随机色轮，
-  /// 只把新条目追加进调度器（[loadBiliDanmaku] 之后按批调用）。
+  /// 只把新条目并进原始集合并按**全量**重算生效集（P1-15）。
+  ///
+  /// 旧实现只对**当前批次**跑合并/去重，于是跨批次的同内容聚合不成簇，同一句
+  /// 被拆成 `×3`＋`×2`（切一次合并开关又按全量重算，同一份数据两种呈现）。
+  /// 重算走 [_bucketReload]（合并重跑 + 后台 isolate），结果整体替换秒桶：
+  /// 不动锚点，因此不清屏、不重放，先到先显的体验不变。
   void appendBiliDanmaku(List<DanmakuEntry> entries) {
     if (_disposed || entries.isEmpty) return;
     _rawEntries = [..._rawEntries, ...entries];
-    _scheduler.feed(_effectiveEntries(entries));
+    _requestBucketReloadInBackground();
   }
 
   /// 对当前视频发起自动匹配（「自动匹配」按钮）：计算文件哈希 + 向所有
@@ -617,7 +687,8 @@ class DanmakuController extends ChangeNotifier {
     }
     if (_disposed || !_loadSession.isCurrent(session)) return;
     if (download.entries.isEmpty) return;
-    _feedEntries(download.entries);
+    await _feedEntries(download.entries);
+    if (_disposed || !_loadSession.isCurrent(session)) return;
     _hasDanmaku = true;
     if (!_danmakuOn) {
       _danmakuOn = true;
@@ -637,8 +708,8 @@ class DanmakuController extends ChangeNotifier {
     await _memory.set(mediaPath, filePath);
   }
 
-  // ── 1s tick 发射（守卫链对齐 Kazumi 六守卫；屏蔽词已在装载/重灌时经
-  //    _effectiveEntries 过滤，发射侧无需再判）──
+  // ── 1s tick 发射（守卫链对齐 Kazumi 六守卫；屏蔽词已在装载/重算时经
+  //    danmaku_pipeline 过滤，发射侧无需再判）──
 
   void _onTick() {
     if (_disposed) return;
@@ -750,6 +821,9 @@ class DanmakuController extends ChangeNotifier {
     }
     _layers.clear();
     _scheduler.reset();
+    // P2-11：弹幕网络服务持有一个 http.Client（连接池 + 后台 keep-alive
+    // socket），不关就是每进一次播放器泄漏一个——随控制器一起释放。
+    _network.dispose();
     super.dispose();
   }
 }

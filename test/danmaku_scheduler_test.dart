@@ -18,6 +18,42 @@ void main() {
     });
   });
 
+  group('replaceAll（全量重算整体替换，P1-15）', () {
+    test('整体替换秒桶：旧数据不残留，计数等于新集合', () {
+      final s = DanmakuScheduler();
+      s.feed([_e(1.0, '旧1'), _e(2.0, '旧2'), _e(3.0, '旧3')]);
+      s.replaceAll([_e(1.0, '新1'), _e(2.0, '新2')]);
+      expect(s.danmakuCount, 2);
+      expect(s.hasDanmaku, isTrue);
+      final r = s.onTick(const Duration(milliseconds: 1500), 1.0);
+      expect(r.entries.map((e) => e.text).toList(), ['新1']);
+    });
+
+    test('保留锚点：已发射过的秒桶不重放（只进不退）', () {
+      final s = DanmakuScheduler();
+      s.feed([_e(1.0, 'a'), _e(5.0, 'b')]);
+      expect(s.onTick(const Duration(milliseconds: 1500), 1.0).entries.single.text,
+          'a');
+      // 全量重算后第 1 秒桶内容变了，但锚点已到第 1 秒 → 不重发
+      s.replaceAll([_e(1.0, 'a ×5'), _e(5.0, 'b')]);
+      expect(s.onTick(const Duration(milliseconds: 2500), 1.0).entries, isEmpty);
+      // 后续桶照常发射
+      expect(s.onTick(const Duration(milliseconds: 5500), 1.0).entries.single.text,
+          'b');
+    });
+
+    test('保留代数：替换不作废在途 stagger 回调（generation 不变）', () {
+      final s = DanmakuScheduler();
+      s.feed([_e(1.0, 'a')]);
+      final before = s.generation;
+      s.replaceAll([_e(1.0, 'a')]);
+      expect(s.generation, before);
+      // 对比：reset/notifySeeked 会作废代数
+      s.reset();
+      expect(s.generation, isNot(before));
+    });
+  });
+
   group('onTick（1x 正常推进）', () {
     test('首个 tick 只发当前桶并锚定（恢复到中途不倾倒历史）', () {
       final s = DanmakuScheduler();

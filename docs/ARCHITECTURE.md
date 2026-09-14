@@ -113,8 +113,8 @@ lib/
 │   ├── super_resolution_mode.dart  # 超分模式/质量枚举 + 着色器链构建纯函数
 │   ├── equalizer_preset.dart  # 音频均衡器预设模型（14 预设 + 频段标签 + 反查/相等纯函数）
 │   ├── danmaku_entry.dart     # 弹幕条目纯数据模型（时间/模式/颜色/文本 + 合并计数 + 会员彩色标记）
-│   ├── danmaku_server.dart    # 弹幕服务器配置模型（默认弹弹Play + 自建服务器，toJson/fromJson）
-│   ├── dandan_models.dart     # 弹弹Play API 数据模型（番剧/集/评论/匹配候选，fromJson 容错）
+│   ├── danmaku_server.dart    # 弹幕服务器配置模型（默认弹弹Play + 自建服务器，toJson/fromJson；**布尔字段容错解析**，单个坏字段不得毁掉整份配置）
+│   ├── dandan_models.dart     # 弹弹Play API 数据模型（番剧/集/评论/匹配候选，fromJson 容错：类型不符回退默认值，不抛 TypeError）
 │   ├── network_connection.dart # 网络存储账户模型 + 协议枚举（WebDAV/SMB/FTP）+ 校验纯函数
 │   ├── network_file.dart      # 远程目录/文件条目模型（供网络浏览 UI 展示）
 │   ├── danmaku_auto_match_cache.dart # 弹幕自动匹配缓存模型（番剧 + 集列表，供切集自动匹配）
@@ -157,16 +157,16 @@ lib/
 │   ├── subtitle_service.dart  # 字幕控制器（单选模型：track-list/sid 同步/sub-add/sub-remove + 同名字幕自动加载（**外挂字幕来源唯一**：初始化 `sub-auto=no`，同名加载只由 App 负责）+ 按字段样式写入 + 等待式轨道刷新 + 切轨「用户意图钉回」+ 记忆路径失效清理 + 切集重应用，§4.32/§4.34）
 │   ├── app_font_settings.dart # App 全局字体设置（开关/族名/字号/字重 + loadFontFromList 注册，ChangeNotifier + 持久化，§4.12）
 │   ├── equalizer_settings.dart # 音频均衡器设置（5 频段/低音增强/虚拟环绕/预设，ChangeNotifier + 持久化，AudioController 订阅重应用 af 链）
-│   ├── danmaku_service.dart    # 弹幕控制器（业务层：本地同名/手动导入/网络弹幕装载 + 1s tick 秒桶发射 + canvas 渲染层显隐/暂停/倍速同步 + 设置订阅应用 + 切集自动匹配，横竖屏共享）
-│   ├── danmaku_scheduler.dart  # 弹幕调度器（纯逻辑：秒桶 + 前向补发 + seek 跳变检测 + 代数失效）
+│   ├── danmaku_service.dart    # 弹幕控制器（业务层：本地同名/手动导入/网络弹幕装载 + **生效集全量重算（后台 isolate + 合并重跑，跨批次聚合）** + 1s tick 秒桶发射 + canvas 渲染层显隐/暂停/倍速同步 + 设置订阅应用 + 切集自动匹配，横竖屏共享，§4.11）
+│   ├── danmaku_scheduler.dart  # 弹幕调度器（纯逻辑：秒桶 + 前向补发 + seek 跳变检测 + 代数失效 + **全量重算的整体替换 `replaceAll`（不动锚点/代数）**）
 │   ├── danmaku_memory.dart     # 弹幕手动导入记忆（视频路径→弹幕文件路径，SharedPreferences JSON 持久化）
 │   ├── danmaku_settings.dart   # 弹幕设置（样式：字号/字重/速度/描边/不透明度/随机色 + 配置：区域(10%档位)/行高/三类显隐/海量/去重/屏蔽词 + 偏移：时间轴偏移 + 字体：三态/自定义族名·文件名，ChangeNotifier + 持久化）
 │   ├── dandan_play_keys.dart   # 弹弹Play API 密钥（私有，gitignored，禁止上传 GitHub）
-│   ├── dandan_play_api.dart    # 弹弹Play 开放弹幕网络 API 客户端（签名验证模式：搜索/拉取弹幕/文件匹配）
+│   ├── dandan_play_api.dart    # 弹弹Play 开放弹幕网络 API 客户端（签名验证模式：搜索/拉取弹幕/文件匹配；**成对 close 自建 http.Client**，§4.11）
 │   ├── danmaku_server_settings.dart # 弹幕服务器设置（默认+自建服务器增删启停 + 切集自动匹配开关及其与默认服务器的互斥裁决，ChangeNotifier + 持久化）
 │   ├── danmaku_search_history.dart  # 网络弹幕搜索历史（关键词去重/上限淘汰最旧/一键清除，持久化）
 │   ├── danmaku_auto_match_cache_store.dart # 弹幕自动匹配缓存存储（番剧+集列表，切集自动匹配用）
-│   ├── danmaku_network_service.dart # 弹幕网络服务（搜索合并/文件匹配/下载落盘 filesDir/danmaku/network + 文件前16MB MD5，无 UI）
+│   ├── danmaku_network_service.dart # 弹幕网络服务（搜索合并/文件匹配/下载落盘 filesDir/danmaku/network + 文件前16MB MD5，无 UI；持有 API 客户端 → 必须 dispose）
 │   ├── privacy_policy_settings.dart # 隐私政策同意状态（首次启动门禁，ChangeNotifier + 持久化，§4.19）
 │   ├── privacy_policy_content.dart # 用户隐私政策与用户服务协议正文（纯常量文本，唯一文案来源，§4.19）
 │   ├── network/                    # 网络存储（WebDAV/SMB/FTP）抽象层
@@ -266,7 +266,7 @@ lib/
 │   │       ├── player_danmaku_layer.dart  # 弹幕渲染层（canvas_danmaku DanmakuScreen 封装，视频层与手势层之间，挂载/卸载即 rebind；`visible` 上报可见性 → 只有可见层收弹幕，§4.33）
 │   │       ├── player_danmaku_buttons.dart# 弹幕开关/设置按钮组（Kazumi 图标：开=内联 SVG 主题色对勾，关/设置=资源 SVG）
 │   │       ├── player_danmaku_panel.dart  # 弹幕二级界面（本地弹幕=复用字幕选择器面板导入 / 网络弹幕 / 自动匹配 / 弹幕设置；DanmakuFileService）
-│   │       ├── player_danmaku_network_panel.dart # 网络弹幕搜索三级界面（40dp 胶囊搜索框 + 框下关键词历史胶囊 + 命中后折叠为关键词条 + 结果卡自持动画展开集列表，横竖屏共用）
+│   │       ├── player_danmaku_network_panel.dart # 网络弹幕搜索三级界面（40dp 胶囊搜索框 + 框下关键词历史胶囊 + 命中后折叠为关键词条 + 结果卡自持动画展开集列表，横竖屏共用；**搜索会话号：最后一次输入生效**）
 │   │       ├── player_danmaku_settings_panel.dart # 弹幕设置面板（样式：字号/字重/速度/描边/不透明度滑杆+随机渐变色；配置：区域(10%档位)/行高/三类显隐/海量/去重/屏蔽词；偏移：时间轴偏移；字体：跟随系统/跟随App/自定义三选一+目录导入列表选择；横竖屏外壳共用）
 │   │       ├── player_bili_playlist_panel.dart   # B 站番剧剧集列表面板（集号/集名/角标 + 当前集高亮，§4.15）
 │   │       ├── player_bottom_bar.dart     # 底栏：进度条 + 下一集 + 时间 + 弹幕开关/设置 + 右下角按钮簇
@@ -362,9 +362,10 @@ lib/
     ├── danmaku_timeline.dart  #   弹幕时间轴纯函数（同秒多条 1 秒内错峰延迟 + 时间轴偏移）
     ├── danmaku_local_file.dart #  同名弹幕文件查找纯函数（9 种命名规则，只查同目录）
     ├── danmaku_random_color.dart # 随机渐变色纯函数（HSV 色轮黄金角步进推进器，忽略文件颜色）
-    ├── danmaku_dedup.dart     #   弹幕去重纯函数（文本归一化判同 + 时间窗合并）
+    ├── danmaku_dedup.dart     #   弹幕去重纯函数（文本归一化判同 + 时间窗合并；三条归一化正则提升为文件级 final）
     ├── danmaku_merge.dart     #   弹幕合并纯函数（跨时间窗同内容聚合 + 计数，一次线性扫描，§4.11）
-    ├── danmaku_blocklist.dart #  弹幕屏蔽词纯函数（子串命中过滤，忽略大小写/空白）
+    ├── danmaku_blocklist.dart #  弹幕屏蔽词纯函数（子串命中过滤，忽略大小写/空白；关键词表每次过滤只归一化一次）
+    ├── danmaku_pipeline.dart  #   弹幕生效集流水线纯函数（屏蔽词→合并→去重，对**全量**原始条目求值 + `compute` isolate 入口，§4.11）
     ├── danmaku_episode.dart   #   弹幕集数提取/匹配纯函数（文件名→集数 + 缓存集列表定位，切集自动匹配）
     ├── dandan_signature.dart  #   弹弹Play 签名纯函数（base64(sha256(AppId+Timestamp+Path+AppSecret))）
     ├── dandan_comment.dart    #   弹弹Play 评论→弹幕条目/B站 XML 纯函数（p 字段解析 + 排序 + 落盘 XML 生成）
@@ -622,14 +623,26 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 |---|---|---|
 | 数据模型 | `models/danmaku_entry.dart` | 单条弹幕（time/mode/color/text，纯数据可跨 isolate） |
 | 纯函数 | `utils/danmaku_local_file.dart` / `danmaku_xml.dart` / `danmaku_timeline.dart` | 9 种同名命名规则查找 / B站 XML 解析（`compute` 后台 isolate）/ 同秒错峰延迟 + 时间轴偏移 |
-| 调度 | `services/danmaku_scheduler.dart` | 秒桶索引 + 1s tick 前向补发 + seek 跳变检测（±阈值）+ 代数失效（纯逻辑可单测） |
-| 业务 | `services/danmaku_service.dart` | `DanmakuController`：自订阅 `stream.position/playing/rate/buffering` + 1s Timer 发射（守卫链）+ 渲染层 registry + 倍速跟随 |
+| 纯函数 | `utils/danmaku_pipeline.dart` | **生效集流水线**（屏蔽词 → 合并 → 去重）对**全量**原始条目求值 + `compute` isolate 入口（§4.11「生效集流水线」） |
+| 调度 | `services/danmaku_scheduler.dart` | 秒桶索引 + 1s tick 前向补发 + seek 跳变检测（±阈值）+ 代数失效 + **`replaceAll` 全量替换（不动锚点/代数）**（纯逻辑可单测） |
+| 业务 | `services/danmaku_service.dart` | `DanmakuController`：自订阅 `stream.position/playing/rate/buffering` + 1s Timer 发射（守卫链）+ 渲染层 registry + 倍速跟随 + **装载/追加/开关变化统一走「合并且全量重算」**（§4.11） |
 | 渲染 | `pages/player/views/player_danmaku_layer.dart` | `DanmakuScreen` 封装，挂载/卸载即 attach/detach 到业务控制器；初始 option 从设置单例构建 |
 | UI | `pages/player/views/player_danmaku_buttons.dart` | 开关/设置按钮组（Kazumi 图标：开=内联 `kDanmakuOnSvg` 主题色对勾；关/设置=资源 SVG，`assets/icons/`） |
 | 面板 | `pages/player/views/player_danmaku_panel.dart` | 弹幕二级界面（更多→弹幕/顶栏槽位共用）：本地弹幕=复用 `SubtitleFilePickerPanel`（只换过滤器/图标/记忆键，content:// 走原生 `copyDanmakuFromUri` → `filesDir/danmaku/`）；网络弹幕/自动匹配 toast 待上线；弹幕设置与底栏按钮同一回调 |
 | 设置面板 | `pages/player/views/player_danmaku_settings_panel.dart` | 弹幕设置面板（横竖屏外壳共用）：三段式布局（样式 5 滑杆 + 随机渐变色 / 配置 2 滑杆 + 5 开关 + 屏蔽词 / 偏移 1 滑杆）+ 恢复默认；字号/字重/描边/偏移松手提交，其余实时写 `DanmakuSettings` |
 | 设置 | `services/danmaku_settings.dart` | 弹幕设置单例（`ChangeNotifier` + SharedPreferences 持久化）：字号/字重/速度/描边/不透明度/随机色 + 区域/行高/三类显隐/海量/去重/屏蔽词 + 时间轴偏移；启动 `ensureLoaded`（main.dart） |
-| 纯函数 | `utils/danmaku_random_color.dart` / `danmaku_dedup.dart` / `danmaku_blocklist.dart` | 随机渐变色（HSV 色轮黄金角步进 + 随机漂移，种子可复现）/ 去重（文本归一化判同 + 时间窗合并，对齐 Kazumi）/ 屏蔽词（子串命中过滤，忽略大小写/空白） |
+| 纯函数 | `utils/danmaku_random_color.dart` / `danmaku_dedup.dart` / `danmaku_blocklist.dart` | 随机渐变色（HSV 色轮黄金角步进 + 随机漂移，种子可复现）/ 去重（文本归一化判同 + 时间窗合并，对齐 Kazumi；归一化用的 3 条正则提升为**文件级 final**，不再每条弹幕重建）/ 屏蔽词（子串命中过滤，忽略大小写/空白；关键词表**每次过滤只归一化一次**） |
+| 纯函数 | `utils/danmaku_pipeline.dart` | 生效集流水线 `effectiveDanmakuEntries`（屏蔽词 → 合并 → 去重）+ `runDanmakuPipeline`（`compute` 顶层入口，入参是一条 record）——**全量求值的唯一出处** |
+
+**生效集流水线（B6 / P1-15 + P1-16）**：
+
+| 纪律 | 为什么 |
+|---|---|
+| **一律对「全量原始条目」求值**（`_rawEntries` 是唯一数据源） | 合并/去重是**跨时间窗**算法：只对增量批次求值会让跨批次边界的同内容裂成两个簇（同一句呈现为 `×3` + `×2`），而切一次开关又按全量重算 → 同一份数据两种呈现 |
+| 重算结果用 **`_scheduler.replaceAll()`** 整体替换秒桶 | `reset() + feed()` 会**作废代数**（在途 stagger 回调被丢）并可能重放历史桶；`replaceAll` 只换数据、不动锚点与代数 → 不清屏、不重放，流式「先到先显」不变 |
+| 重算走 **`AsyncCoalescedReload` + `compute`（后台 isolate）** | 合并/去重各含一次全量排序 + 逐条文本归一化，10 万条量级跑在 UI 线程会卡；并发请求必须合并为「当前轮 + 一轮补跑」（`AsyncSingleFlight` 会让后来者 join 旧轮）；isolate 失败回落主 isolate，再失败原样装载（宁可漏过滤也不能没弹幕） |
+| 重算结果落地前**不置 `_hasDanmaku`** | 秒桶空着时 1s tick 会把锚点推到当前秒，等数据落地时当前秒的弹幕已错过（前向补发只补锚点之后的桶） |
+| 会话号（`_loadSession`）在 isolate 往返前后各判一次 | 重算期间切了集 → 结果判废，不污染新视频的秒桶 |
 
 **关键决策**：
 - **渲染层 registry（横竖屏双挂）**：横竖屏两个页面各挂一个 `DanmakuScreen`，业务层
@@ -672,7 +685,8 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 **设置应用（阶段2）**：控制器订阅 `DanmakuSettings`（构造时 addListener，dispose 退订）。
 样式/配置（字号/字重/速度/描边/不透明度/区域/行高/三类显隐/海量）经 `updateOption`
 热更新下发渲染层（速度 = 横穿耗时 `scrollSeconds / rate`，静置弹幕取其一半）；
-**去重**开/关变化时按原始条目重灌秒桶（`_rawEntries` 保留原始数据）并锚定当前位置；
+**去重/合并/屏蔽词**变化时按**全量**原始条目重算生效集（`_rawEntries` 保留原始数据）、
+整体替换秒桶并锚定当前位置 + 清屏（在屏弹幕的计数可能已变，见上方「生效集流水线」）；
 **随机渐变色**开启时重建色轮（新随机起点）并清屏，发射时逐条覆盖文件颜色。新挂载
 渲染层的初始 `DanmakuOption` 由 `danmakuOptionFromSettings` 从设置单例构建（首帧即
 用户样式）。设置全量持久化（重启视频/播放/软件均保留，工作.md 弹幕第 6 点）；
@@ -687,8 +701,9 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 
 **屏蔽词（阶段3 补，已实现）**：`DanmakuSettings` 维护屏蔽词列表（添加/移除/清空/持久化，
 启动 load 归一化去重去空白）；纯函数 `utils/danmaku_blocklist.dart` 做子串命中判定
-（忽略大小写/空白）；`DanmakuController._effectiveEntries` 在装载/重灌时先过滤屏蔽词再按
-去重开关合并，屏蔽词变化重灌秒桶（`_refeedIfLoaded`）；面板「弹幕配置 → 屏蔽词」折叠行
+（忽略大小写/空白，关键词表每次过滤只归一化一次）；屏蔽词在**生效集流水线**里是第一道
+（`utils/danmaku_pipeline.dart`，见上方「生效集流水线」），屏蔽词变化触发全量重算
+（`_refeedIfLoaded` → `replaceAll`）；面板「弹幕配置 → 屏蔽词」折叠行
 输入添加/词条删除/一键清空。
 
 **弹幕合并 + 彩色弹幕（本轮补，E4 的 4.2/4.3 两小项）**：
@@ -727,11 +742,12 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 层 | 文件 | 职责 |
 |---|---|---|
 | 数据模型 | `models/danmaku_server.dart` / `dandan_models.dart` / `danmaku_auto_match_cache.dart` | 服务器配置 / API DTO（番剧·集·评论·匹配）/ 切集自动匹配缓存 |
+| 数据模型 | `models/danmaku_server.dart` / `dandan_models.dart` / `danmaku_auto_match_cache.dart` | 服务器配置 / API DTO（番剧·集·评论·匹配）/ 切集自动匹配缓存（**fromJson 容错：类型不符回退默认值**，绝不因一个坏字段抛 `TypeError`） |
 | 纯函数 | `utils/dandan_signature.dart` / `dandan_comment.dart` / `danmaku_episode.dart` | 签名 `base64(sha256(AppId+Timestamp+Path+AppSecret))` / 评论→条目 / 文件名集数提取+匹配 |
-| API | `services/dandan_play_api.dart` | 签名验证模式：`/api/v2/search/episodes`、`/api/v2/comment/{id}?withRelated=true`、`/api/v2/match`（响应按 UTF-8 解码，非 200/业务错误抛 `DandanApiException`） |
-| 网络业务 | `services/danmaku_network_service.dart` | 搜索合并（按 animeId 去重 + 记录来源服务器）、文件匹配合并、下载落盘 `filesDir/danmaku/network/`、文件前 16MB MD5 |
+| API | `services/dandan_play_api.dart` | 签名验证模式：`/api/v2/search/episodes`、`/api/v2/comment/{id}?withRelated=true`、`/api/v2/match`（响应按 UTF-8 解码，非 200/业务错误抛 `DandanApiException`）；**自建 `http.Client` → 必须成对 `close()`** |
+| 网络业务 | `services/danmaku_network_service.dart` | 搜索合并（按 animeId 去重 + 记录来源服务器）、文件匹配合并、下载落盘 `filesDir/danmaku/network/`、文件前 16MB MD5；**`dispose()` 释放底层客户端** |
 | 设置 | `services/danmaku_server_settings.dart` / `danmaku_search_history.dart` / `danmaku_auto_match_cache_store.dart` | 服务器增删启停 + 切集自动匹配开关（含与默认服务器的互斥裁决与提示文案）/ 搜索历史（上限淘汰最旧）/ 匹配缓存 |
-| UI | `views/player_danmaku_network_panel.dart` | 网络弹幕三级界面：40dp 胶囊搜索框 + 框下关键词历史胶囊 + 命中后折叠搜索条 + 结果卡自持动画展开集列表 |
+| UI | `views/player_danmaku_network_panel.dart` | 网络弹幕三级界面：40dp 胶囊搜索框 + 框下关键词历史胶囊 + 命中后折叠搜索条 + 结果卡自持动画展开集列表；**搜索并发＝会话号裁决（最后一次输入生效）** |
 | 设置页 | `pages/settings/danmaku_server_page.dart` | 设置 → 弹幕 → 弹幕服务器（默认不可删 + 自建增删启停 + FAB 添加） |
 
 **关键决策**：
@@ -754,6 +770,20 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   完整集列表再存）；装载成功同样落盘记忆，该视频之后再进直接走记忆恢复。
 - **自动匹配按钮**：`matchCurrentVideo` 算前 16MB MD5 + 文件名 + 大小 → 合并启用服务器
   候选；单候选直接加载，多候选 `showAppDialog` 弹「选择匹配结果」列表。
+- **搜索并发语义（P2-10）**：搜索**不再**在 `_loading` 期间静默吞掉新请求（键盘搜索键 /
+  历史胶囊 / 连按搜索按钮都照常发起），并用 `AsyncSession` 丢弃**后到的旧响应**——
+  结果永远属于最后一次输入的关键词。配套：loading 期间搜索按钮**仍在位**（只多一个转圈），
+  否则「弱网再按一次」这个最常见的动作没有任何反馈（用户以为搜索坏了）。
+- **客户端生命周期（P2-11）**：`DandanPlayApi` 自建一个 `http.Client`（连接池 +
+  keep-alive socket），**必须成对释放**：`DanmakuNetworkService.dispose()` →
+  `DandanApi.close()`；调用方是 `DanmakuController.dispose()`（每进一次播放器一个实例）
+  与网络弹幕面板 dispose（每开一次面板一个实例）。`close()` 只关**自建**的 client，
+  注入的（测试 / 共享池）由调用方负责，否则会把别人的连接池关掉。
+- **解析容错（P2-12）**：自建弹幕服务器/历史数据常把字段类型写错（`"type": 1`、
+  `"isEnabled": 1`）。`fromJson` 一律走宽松读取（`_asString`/`_asDouble`/`_asBool`，
+  类型不符回退默认值）而**不是裸 `as` 强转**——裸强转抛的 `TypeError` 会被
+  `DanmakuServerSettings` 解码处的大 `catch` 兜住 → **整份服务器列表被丢弃**（用户自建
+  服务器全消失）。单个坏字段只影响它自己那个字段。
 - **搜索 UI 设计规范（本轮重设计，工作.md 网络弹幕 4 点）**：
   - **紧凑搜索框**：自绘 40dp 定高胶囊 + `InputDecoration.collapsed` + 28dp 迷你按钮
     （清空/搜索）。**禁止**回到 `TextField` 默认 `OutlineInputBorder` + `IconButton` suffix
@@ -1495,10 +1525,10 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 
 | 原语 | 语义 | 已收敛的落点 |
 |---|---|---|
-| `AsyncSession` | 会话号令牌：`start()` 开新会话、`isCurrent(token)` 判废、`invalidate()` 主动作废 | `DanmakuController._loadSession`（4 处加载路径）、`DanmakuScheduler._generation` |
+| `AsyncSession` | 会话号令牌：`start()` 开新会话、`isCurrent(token)` 判废、`invalidate()` 主动作废 | `DanmakuController._loadSession`（4 处加载路径）、`DanmakuScheduler._generation`、`PlayerDanmakuNetworkPanel._searchSession`（P2-10：网络弹幕搜索取最后一次输入） |
 | `AsyncSingleFlight<T>` | 同 key 并发只执行一次、共享 Future；**失败不缓存**、完成后记录清除 | `VideoInfoService`（视频信息 + 基本元数据两条链路） |
 | `AsyncSerialQueue` | 按提交顺序串行执行；**任务异常不打断队列**（错误抛给各自调用方）；`idle` 等排空 | `PlaybackProgressService` 进度写盘串行链 |
-| `AsyncCoalescedReload` | 串行合并重跑：在跑时只登记一次「待补跑」，等待者拿到的是**不早于自己请求**开跑的那一轮（不是"已经开跑的那一轮"） | `SubtitleController.reload()`（轨道刷新，§4.34）。⚠️ 这里**不能**用 `AsyncSingleFlight`：single-flight 让后来者 join 早已开跑的旧轮，`sub-add` 之后照样拿到旧快照 |
+| `AsyncCoalescedReload` | 串行合并重跑：在跑时只登记一次「待补跑」，等待者拿到的是**不早于自己请求**开跑的那一轮（不是"已经开跑的那一轮"） | `SubtitleController.reload()`（轨道刷新，§4.34）、`DanmakuController` 生效集重算（流式追加 + 开关变化，§4.11）。⚠️ 这里**不能**用 `AsyncSingleFlight`：single-flight 让后来者 join 早已开跑的旧轮，`sub-add`/新弹幕批次之后照样拿到旧结果 |
 
 **C2 通用分页**：
 
@@ -1908,7 +1938,7 @@ ASS 限制提示（`_AssLimitNote`：小标题 + 三条分点）/ 重置所有�
   - `test/danmaku_timeline_test.dart` — 弹幕时间轴错峰纯函数（同秒多条 1 秒内均分、<1000ms 上界）
   - `test/danmaku_local_file_test.dart` — 同名弹幕查找纯函数（9 种命名规则优先级/排除视频自身/无匹配）+ 选择器文件过滤
   - `test/danmaku_xml_test.dart` — B站 XML 弹幕解析（基础字段/实体反转义/坏条目跳过/排序）
-  - `test/danmaku_scheduler_test.dart` — 弹幕调度器（秒桶前向补发/首 tick 锚定/seek 检测/代数失效/微幅回抖）
+  - `test/danmaku_scheduler_test.dart` — 弹幕调度器（秒桶前向补发/首 tick 锚定/seek 检测/代数失效/微幅回抖 + **`replaceAll` 全量替换**：旧数据不残留、保留锚点不重放已发秒桶、保留代数不作废在途 stagger 回调，§4.11）
   - `test/player_danmaku_panel_test.dart` — 弹幕二级界面（四入口齐全/网络·自动匹配回调注入/设置回调注入/无平台通道不崩溃）
   - `test/danmaku_memory_test.dart` — 弹幕手动导入记忆（set/get/remove/持久化恢复/损坏数据防御）
   - `test/danmaku_settings_test.dart` — 弹幕设置服务（默认值/钳制/持久化恢复/越界收窄/恢复默认/通知 + 字体三态/自定义字体持久化 + 屏蔽词增删清/显示区域档位吸附 + **弹幕合并开关默认关与持久化**）
@@ -1917,18 +1947,19 @@ ASS 限制提示（`_AssLimitNote`：小标题 + 三条分点）/ 重置所有�
   - `test/danmaku_random_color_test.dart` — 随机渐变色纯函数（HSV 转换/色相环绕/种子可复现/色轮均匀分布/高明度约束）
   - `test/danmaku_dedup_test.dart` — 弹幕去重纯函数（归一化判同/时间窗合并/链式推进/无序输入/原文保留）
   - `test/danmaku_merge_test.dart` — 弹幕合并纯函数（窗口内聚合计次/超窗分簇/簇锚定首条/归一化判同/输出升序/minCount 与 windowSeconds/展示文本 `×N`/isColorful 透传，§4.11）
-  - `test/danmaku_blocklist_test.dart` — 弹幕屏蔽词纯函数（子串命中/忽略大小写·空白/列表过滤）
+  - `test/danmaku_pipeline_test.dart` — 弹幕生效集流水线（顺序「屏蔽词→合并→去重」/合并先于去重/**跨批次全量重算聚成同一个簇 ×5**（逐批求值会裂成 ×3+×2 的反证）/追加=全量重算+`replaceAll` 与一次性装载一致/开关来回切换幂等 + `compute` 顶层入口可跨 isolate 调用，§4.11）
+  - `test/danmaku_blocklist_test.dart` — 弹幕屏蔽词纯函数（子串命中/忽略大小写·空白/列表过滤 + **关键词表归一化复用**（去空白/小写/去重保序）与逐条判定等价，§4.11）
   - `test/danmaku_episode_test.dart` — 弹幕集数提取/匹配纯函数（文件名各规则 + 集列表定位，切集自动匹配）
   - `test/dandan_signature_test.dart` — 弹弹Play 签名纯函数（官方示例 + 三条真实路径的**合成密钥**已知向量；⚠️ 禁止写入真实 AppId/AppSecret）
   - `test/dandan_comment_test.dart` — 弹弹Play 评论→弹幕条目/B站 XML（p 字段解析/容错/排序/XML 往返转义）
-  - `test/dandan_models_test.dart` — 弹弹Play API 数据模型 fromJson（字段映射/容错）
-  - `test/danmaku_server_test.dart` — 弹幕服务器模型（默认服务器/toJson/fromJson/copyWith）
-  - `test/danmaku_server_settings_test.dart` — 弹幕服务器设置服务（默认/增删启停/自动匹配开关/**与默认服务器互斥**：拒绝开启+偏好保留+停用后恢复+关闭永远允许/持久化/损坏防御）
+  - `test/dandan_models_test.dart` — 弹弹Play API 数据模型 fromJson（字段映射/容错 + **类型随意的 `type`/`typeDescription`/`shift` 回退默认值不抛异常**，P2-12）
+  - `test/danmaku_server_test.dart` — 弹幕服务器模型（默认服务器/toJson/fromJson/copyWith + **布尔字段类型随意（1/'true'/'yes'）回退默认值不抛异常**，P2-12）
+  - `test/danmaku_server_settings_test.dart` — 弹幕服务器设置服务（默认/增删启停/自动匹配开关/**与默认服务器互斥**：拒绝开启+偏好保留+停用后恢复+关闭永远允许/持久化/损坏防御 + **字段类型随意的自建服务器仍被保留、不整份丢弃**，P2-12）
   - `test/danmaku_server_page_test.dart` — 弹幕服务器设置页（默认服务器启用时自动匹配开关变灰+副标题短原因+点击弹完整说明 toast；副标题显著短于 toast；停用后恢复可用；启用默认服务器即回落变灰）
   - `test/danmaku_search_history_test.dart` — 搜索历史（去重/上限淘汰最旧/清除/持久化/损坏防御）
   - `test/danmaku_auto_match_cache_test.dart` — 自动匹配缓存存储（保存/读回/清空/持久化/损坏防御）
-  - `test/danmaku_network_service_test.dart` — 弹幕网络服务（文件名清洗/搜索合并去重来源/下载落盘可回读/落盘失败降级）
-  - `test/player_danmaku_network_panel_test.dart` — 网络弹幕搜索面板（40dp 搜索框定高/框下历史胶囊+清除/命中折叠与重新展开/结果卡收起态不构建子树+手风琴/选集回调+关闭面板）
+  - `test/danmaku_network_service_test.dart` — 弹幕网络服务（文件名清洗/搜索合并去重来源/下载落盘可回读/落盘失败降级 + **客户端生命周期**：`close` 幂等 / 不关注入的 client / `dispose()` 释放底层 API，P2-11）
+  - `test/player_danmaku_network_panel_test.dart` — 网络弹幕搜索面板（40dp 搜索框定高/框下历史胶囊+清除/命中折叠与重新展开/结果卡收起态不构建子树+手风琴/选集回调+关闭面板 + **搜索并发**：loading 期间再搜不被吞、按钮仍在位、旧响应后到被丢弃、最后一次输入生效，P2-10）
   - `test/player_danmaku_settings_panel_test.dart` — 弹幕设置面板（两段式布局/开关滑杆实时写设置/恢复默认/读数联动/屏蔽词增删 + **「弹幕合并」开关位于去重与屏蔽词之间**）
   - `test/player_panel_theme_test.dart` — 播放器暗色面板强调色跟随主题（换主题色滑杆轨道/拇指随之改变且不等于旧写死蓝 0xFF4FC3F7；保留无气泡外观；浅色主题下派生色更亮；同 seed 复用缓存实例）
   - `test/subtitle_file_picker_panel_test.dart` — 自建选择器面板（记忆文件夹被删向上回退/空目录正常落地/导航失败维持原状/选择回调+文件夹记忆）  - `test/bili_bangumi_test.dart` — 番剧模型 fromJson（索引/条件/搜索/季详情/选集/时间表 + 数字字段字符串兼容）+ 链接解析纯函数（ss/ep/BV）
@@ -2187,3 +2218,11 @@ ASS 限制提示（`_AssLimitNote`：小标题 + 三条分点）/ 重置所有�
 | 切轨瞬间高亮乱跳、`_primary` 短时变 null、面板行上下闪 | `sub-reload` 会把外挂轨删掉重挂（**轨道 id 变化**），期间 mpv 连发轨道事件，事件驱动的 `reload`/`_syncActiveFromMpv` 用临时 sid 覆盖用户刚点的选择。切轨期间锁住事件驱动刷新（嵌套计数）+ 自己刷新一次 + 按**外挂源路径**把 `sid` 钉回去（§4.34） |
 | 用户删掉/改名前次自动加载的外挂字幕后，该视频**永久**没有字幕（`sub-add` 静默失败且同名扫描被跳过） | 挂载前逐个校验记忆路径存在性（`partitionSubtitleMemoryPaths`），失效项从设置里删除、全部失效时回落同名扫描。同类「记忆死路径」教训在 §4.11（弹幕记忆）与 §7（选择器死路径）都记过，字幕侧此前没有清理（§4.34） |
 | 开关副标题写「已开启：…」/「已关闭：…」；多件事的说明挤成一段长句 | 开关本身就是状态，前缀是废话；副标题只描述**当前状态的含义**且不要不准确地限定范围（「内嵌字幕」→「字幕」）。多件事**分点列**（小标题 + 每点一行 + 悬挂缩进），别挤成一段（§4.34，真机反馈） |
+| **B 站分段流式加载下同一句弹幕被拆成两条**（应 `×5` 却呈 `×3`＋`×2`），切一次合并开关计数又变 | 合并/去重是**跨时间窗**算法：`appendBiliDanmaku` 旧实现只对**增量批次**求值，批次边界的同内容裂成两个簇，而开关变化按**全量**重算 → 同一份数据两种呈现。修法：任何一次装载/追加/开关变化都对**全量** `_rawEntries` 求值（`utils/danmaku_pipeline.dart`），**禁止按增量分片求值**（§4.11） |
+| 全量重算后用 `reset() + feed()` 重灌秒桶 → 在途 stagger 回调被作废（当 tick 漏弹幕）、切集/回拖时整段历史弹幕重放 | 重算只该换**数据**、不该动**发射进度**：用 `DanmakuScheduler.replaceAll()`（清桶重灌但保留锚点与代数）——锚点只进不退，已发过的秒桶不会重发；流式「先到先显」也因此不需要清屏（§4.11） |
+| 弹幕/字幕秒桶在**数据落地之前**就被 1s tick 锚定 → 当前秒的弹幕永久错过 | 异步装载（isolate/网络）期间不要置 `_hasDanmaku`：秒桶空着时首个 tick 会把锚点推到当前秒，而前向补发只补锚点**之后**的桶。等重算结果 `replaceAll` 落地后再置位（§4.11） |
+| `compute` 里读设置单例 → 崩/读到脏值 | `DanmakuSettings` 等是 `ChangeNotifier`（不可跨 isolate 发送）：调用前必须在主 isolate **快照**成纯值（本项目打成一条 record），isolate 只算纯函数（§4.11/§7 闭包捕获坑同源） |
+| 10 万条弹幕「切屏蔽词/开合并」卡住 UI | 瓶颈不在解析：合并/去重各含一次全量 `sort` + 逐条文本归一化 → 整条流水线走 `compute`；另外两条固定浪费必须清掉：**归一化正则提升为文件级 `final`**（原先每条弹幕重建 3 个 `RegExp`）、**屏蔽词表每次过滤只归一化一次**（原先每条弹幕 × 每个词重复 `trim/toLowerCase`）（§4.11） |
+| 自建弹幕服务器加进去后**整份服务器列表被清空**（只剩默认服务器） | `DanmakuServer.fromJson` 的裸 `as bool?` 遇到类型不符（`1`/`"true"`）抛 `TypeError`，而解码处只有一个大 `catch` → 回退「仅默认服务器」。类型不符只能回退**那一个字段**的默认值（`_asBool`/`_asString`/`_asDouble` 宽松读取）；同理 `dandan_models.dart` 的 `type`/`shift` 裸强转会打断**整条响应解析**（搜索结果全空）（§4.11，P2-12） |
+| 每进一次播放器 / 每开一次网络弹幕面板泄漏一个 `http.Client`（连接池 + keep-alive socket） | `DandanPlayApi` 不传 `client` 时自建，必须成对释放：`DanmakuNetworkService.dispose()` → `DanmakuApi.close()`，由 `DanmakuController.dispose()` / 面板 dispose 调用。`close()` **只关自建的**，注入的 client 归调用方（§4.11，P2-11） |
+| 弱网下「连按两次搜索」毫无反馈 / 最终结果属于先输入的那个关键词 | 旧实现在 `_loading` 期间直接 `return`（静默吞掉新搜索），且没有会话号 → 旧响应后到会覆盖新结果。修法：不吞（照常发起）+ `AsyncSession` 判废旧响应 + loading 期间**搜索按钮仍在位**（只多一个转圈）。通用教训：**任何「加载中」入口的静默 return 都会让用户以为功能坏了**（§4.11，P2-10） |

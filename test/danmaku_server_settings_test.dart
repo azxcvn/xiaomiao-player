@@ -152,4 +152,21 @@ void main() {
     expect(s.servers.first.isDefault, isTrue);
     expect(s.servers.length, 2);
   });
+
+  // P2-12：字段类型随意（自建服务器/历史数据/手改 prefs）不能让**整份列表**
+  // 被丢弃——这正是「自建服务器配置被静默清空」的根因。
+  test('字段类型随意的自建服务器仍被保留（不整份丢弃）', () async {
+    SharedPreferences.setMockInitialValues({
+      'dandanplay_servers':
+          '[{"id":"c","name":"我的服务器","url":"https://self.com",'
+              '"isEnabled":1,"isDefault":0}]',
+    });
+    DanmakuServerSettings.instance.resetForTest();
+    await s.ensureLoaded();
+    expect(s.servers.length, 2);
+    final custom = s.servers.firstWhere((x) => !x.isDefault);
+    expect(custom.name, '我的服务器');
+    expect(custom.isEnabled, isTrue);
+    expect(s.enabledServers.length, 2);
+  });
 }

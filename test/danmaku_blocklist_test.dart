@@ -52,5 +52,39 @@ void main() {
       final out = filterBlockedDanmaku(entries, ['666', '哈']);
       expect(out.map((e) => e.text).toList(), ['前方高能']);
     });
+
+    test('全部为空白词 → 视为不过滤（与 matchesBlockedKeyword 一致）', () {
+      final out = filterBlockedDanmaku(entries, ['  ', '']);
+      expect(out.length, 3);
+    });
+  });
+
+  // P1-16：批量过滤前把关键词表归一化一次，避免「逐条弹幕 × 逐个关键词」
+  // 重复 trim/toLowerCase。归一化语义必须与逐条判定完全一致。
+  group('normalizeBlockedKeywords / matchesNormalizedKeyword', () {
+    test('去首尾空白 + 转小写 + 丢弃空词 + 去重（保序）', () {
+      expect(
+        normalizeBlockedKeywords([' 高能 ', 'ABC', 'abc', '', '   ', '哈']),
+        ['高能', 'abc', '哈'],
+      );
+    });
+
+    test('归一化表可直接复用判定（等价于逐条 matchesBlockedKeyword）', () {
+      final normalized = normalizeBlockedKeywords([' 高能 ', 'ABC']);
+      const texts = ['前方高能', 'abc 弹幕', '普通弹幕', '   '];
+      for (final text in texts) {
+        expect(
+          matchesNormalizedKeyword(text, normalized),
+          matchesBlockedKeyword(text, [' 高能 ', 'ABC']),
+          reason: text,
+        );
+      }
+    });
+
+    test('空白文本不命中', () {
+      expect(matchesNormalizedKeyword('   ', normalizeBlockedKeywords(['x'])),
+          isFalse);
+      expect(matchesNormalizedKeyword('x', const []), isFalse);
+    });
   });
 }

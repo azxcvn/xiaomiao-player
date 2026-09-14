@@ -45,6 +45,25 @@ void main() {
       expect(DandanAnime.fromJson({'animeTitle': 'x'}), isNull);
       expect(DandanAnime.fromJson({'animeId': 1}), isNull);
     });
+
+    // P2-12：自建服务器常把字段类型写错，裸 `as String?` 会抛 TypeError
+    // → 整条响应解析失败（搜索结果全空）。这里必须「回退默认值」而不是抛。
+    test('类型随意的 type/typeDescription → 回退空串，不抛异常', () {
+      final anime = DandanAnime.fromJson({
+        'animeId': 1,
+        'animeTitle': '某番剧',
+        'type': 1,
+        'typeDescription': {'x': 1},
+        'episodes': [
+          {'episodeId': 1, 'episodeTitle': '第01话'},
+        ],
+      });
+      expect(anime, isNotNull);
+      expect(anime!.animeTitle, '某番剧');
+      expect(anime.type, '');
+      expect(anime.typeDescription, '');
+      expect(anime.episodes.length, 1);
+    });
   });
 
   group('DandanMatchInfo.fromJson', () {
@@ -75,6 +94,34 @@ void main() {
 
     test('缺关键字段 → null', () {
       expect(DandanMatchInfo.fromJson({'episodeId': 7}), isNull);
+    });
+
+    // P2-12：shift 为字符串/布尔等类型不符时不抛异常（回退 0）
+    test('类型随意的 type/shift → 回退默认值，不抛异常', () {
+      final m = DandanMatchInfo.fromJson({
+        'episodeId': 7,
+        'animeId': 8,
+        'animeTitle': '番剧',
+        'episodeTitle': '第07话',
+        'type': 1,
+        'typeDescription': 2,
+        'shift': '1.5',
+      });
+      expect(m, isNotNull);
+      expect(m!.type, '');
+      expect(m.typeDescription, '');
+      expect(m.shift, 1.5);
+      expect(
+        DandanMatchInfo.fromJson({
+          'episodeId': 7,
+          'animeId': 8,
+          'animeTitle': 'a',
+          'episodeTitle': 'b',
+          'shift': true,
+        })!
+            .shift,
+        0,
+      );
     });
   });
 }

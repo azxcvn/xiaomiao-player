@@ -41,6 +41,31 @@ void main() {
     expect(DanmakuServer.fromJson({'id': 'a', 'name': 'n'}), isNull);
   });
 
+  // P2-12：裸 `as bool?` 抛 TypeError 会被 DanmakuServerSettings 的大 catch
+  // 兜住 → **整份服务器列表被丢弃**（用户自建服务器全消失）。类型不符只能
+  // 回退默认值。
+  test('fromJson 布尔字段类型随意 → 回退默认值，不抛异常', () {
+    final enabled = DanmakuServer.fromJson(
+        {'id': 'a', 'name': 'n', 'url': 'u', 'isEnabled': 1, 'isDefault': 0});
+    expect(enabled, isNotNull);
+    expect(enabled!.isEnabled, isTrue);
+    expect(enabled.isDefault, isFalse);
+
+    final stringBool = DanmakuServer.fromJson(
+        {'id': 'a', 'name': 'n', 'url': 'u', 'isEnabled': 'true'});
+    expect(stringBool!.isEnabled, isTrue);
+
+    final weird = DanmakuServer.fromJson({
+      'id': 'a',
+      'name': 'n',
+      'url': 'u',
+      'isEnabled': 'yes',
+      'isDefault': {'x': 1},
+    });
+    expect(weird!.isEnabled, isTrue, reason: '类型不符回退默认 true');
+    expect(weird.isDefault, isFalse);
+  });
+
   test('copyWith 只改指定字段，id/isDefault 不变', () {
     const s = DanmakuServer(
       id: 'default',

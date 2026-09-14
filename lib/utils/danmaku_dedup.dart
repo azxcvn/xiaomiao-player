@@ -17,6 +17,17 @@ import 'package:moumou/models/danmaku_entry.dart';
 /// 默认合并时间窗（秒）：同内容弹幕 5 秒内只显示一条（Kazumi 同款）
 const double kDanmakuDedupWindowSeconds = 5;
 
+// 归一化用的三条正则**提升为文件级 final**（P1-16）：它们原先写在
+// [normalizeDanmakuText] 内部，于是**每条弹幕**都要重新构造 3 个 RegExp 对象
+// （10 万条 = 30 万次构造，是合并/去重流水线里最大的固定开销）。
+// RegExp 自身无状态（`replaceAll`/`replaceAllMapped` 不改实例字段），可安全共享。
+final RegExp _danmakuWhitespace = RegExp(r'\s+');
+final RegExp _danmakuPunctuation = RegExp(
+  r'[^\w\u4e00-\u9fff\u3040-\u309F\u30A0-\u30FF\u31F0-\u31FF\uFF65-\uFF9F]',
+  unicode: true,
+);
+final RegExp _danmakuRepeatedChar = RegExp(r'(.)\1{3,}');
+
 /// 内容归一化（判同键）
 String normalizeDanmakuText(String raw) {
   final lower = raw.trim().toLowerCase();
@@ -35,17 +46,11 @@ String normalizeDanmakuText(String raw) {
   }
   var text = buffer.toString();
   // 去空白（含普通空格/制表/换行）
-  text = text.replaceAll(RegExp(r'\s+'), '');
+  text = text.replaceAll(_danmakuWhitespace, '');
   // 去标点（保留 \w / 中文 / 日文假名 / 日文与韩文区块）
-  text = text.replaceAll(
-    RegExp(
-      r'[^\w\u4e00-\u9fff\u3040-\u309F\u30A0-\u30FF\u31F0-\u31FF\uFF65-\uFF9F]',
-      unicode: true,
-    ),
-    '',
-  );
+  text = text.replaceAll(_danmakuPunctuation, '');
   // 连续相同字符收敛为 3 个（66666 → 666）
-  text = text.replaceAllMapped(RegExp(r'(.)\1{3,}'), (m) => m.group(1)! * 3);
+  text = text.replaceAllMapped(_danmakuRepeatedChar, (m) => m.group(1)! * 3);
   return text;
 }
 

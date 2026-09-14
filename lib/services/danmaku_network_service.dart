@@ -7,6 +7,9 @@
 ///   B站 XML 落盘到 `filesDir/danmaku/network/`（持久化记忆用，重启播放/
 ///   软件后与本地弹幕同一恢复路径）；
 /// - 文件哈希：计算文件前 16MB 的 MD5（弹弹Play 匹配接口的约定）。
+///
+/// **生命周期（P2-11）**：服务持有 [DandanPlayApi]（内含一个 `http.Client`），
+/// 使用者用完必须 [dispose]（控制器与网络弹幕面板都会调用）。
 library;
 
 import 'dart:io';
@@ -81,6 +84,13 @@ class DanmakuNetworkService {
   final DandanPlayApi _api;
   final DanmakuServerSettings _serverSettings =
       DanmakuServerSettings.instance;
+
+  /// 释放底层 API 客户端的连接池（P2-11，幂等）。
+  ///
+  /// 调用方：`DanmakuController.dispose`（每进一次播放器一个实例）与网络弹幕
+  /// 面板 dispose（每开一次面板一个实例）。注入的 [DandanPlayApi] 只会关闭
+  /// 「它自己创建」的 client，不动调用方传入的那个。
+  void dispose() => _api.close();
 
   /// 测试用：覆盖落盘目录解析（默认 `getApplicationSupportDirectory` 在
   /// 单元测试环境无平台通道会失败，注入临时目录即可验证落盘逻辑）。

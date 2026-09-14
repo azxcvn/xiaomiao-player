@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -200,9 +201,61 @@ void main() {
       await tmp.delete(recursive: true);
     });
   });
+
+  group('客户端生命周期（P2-11）', () {
+    test('close 幂等，isClosed 置位', () {
+      final api = DandanPlayApi();
+      expect(api.isClosed, isFalse);
+      api.close();
+      expect(api.isClosed, isTrue);
+      api.close(); // 二次调用不抛
+      expect(api.isClosed, isTrue);
+    });
+
+    test('注入的 client 由调用方负责：close 不关它', () {
+      final client = _TrackingClient();
+      final api = DandanPlayApi(client: client);
+      api.close();
+      expect(api.isClosed, isTrue);
+      expect(client.closed, isFalse, reason: '别人的连接池不能替别人关');
+    });
+
+    test('DanmakuNetworkService.dispose 释放底层 API', () {
+      final api = DandanPlayApi(client: _TrackingClient());
+      final service = DanmakuNetworkService(api: api);
+      expect(api.isClosed, isFalse);
+      service.dispose();
+      expect(api.isClosed, isTrue);
+    });
+
+    test('自建 client 的 API：close 关闭自己的连接池', () {
+      final api = DandanPlayApi(client: _TrackingClient());
+      // 注入路径已验证「不关注入的」；这里覆盖自建分支的可观测语义
+      final owned = DandanPlayApi();
+      owned.close();
+      expect(owned.isClosed, isTrue);
+      api.close();
+    });
+  });
 }
 
-Map<String, dynamic> _animeJson(int id, String title, List<Map<String, dynamic>> episodes) =>
+/// 记录 close 是否被调用（`MockClient` 的 close 是空实现，观测不到）
+class _TrackingClient extends http.BaseClient {
+  bool closed = false;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async =>
+      http.StreamedResponse(const Stream<List<int>>.empty(), 200);
+
+  @override
+  void close() {
+    closed = true;
+    super.close();
+  }
+}
+
+Map<String, dynamic> _animeJson(
+        int id, String title, List<Map<String, dynamic>> episodes) =>
     {
       'animeId': id,
       'animeTitle': title,

@@ -9,6 +9,10 @@
 /// 自建服务器通过 [baseUrl] 参数指定（默认官方地址）；密钥读取自
 /// `dandan_play_keys.dart`（gitignored 私有文件）。
 ///
+/// **生命周期（P2-11）**：不传 `client` 时本类自建一个 `http.Client`，用完
+/// 必须 [close]（`DanmakuNetworkService.dispose` → `DanmakuController.dispose`
+/// / 网络弹幕面板 dispose 逐级调用）——否则连接池与 keep-alive socket 泄漏。
+///
 /// 可靠性（§4.28）：请求走 `utils/retry_policy.dart` 的统一重试（连接类失败
 /// 指数退避，响应中断不重试防重复提交）+ 12s 常规 API 超时档；响应体额外做
 /// 硬上限检查（弹幕评论可能较大，超限即弃而不是解析垃圾数据）。
@@ -33,11 +37,31 @@ class DandanApiException implements Exception {
 }
 
 class DandanPlayApi {
-  DandanPlayApi({http.Client? client}) : _client = client ?? http.Client();
+  DandanPlayApi({http.Client? client})
+      : _client = client ?? http.Client(),
+        _ownsClient = client == null;
 
   static const String defaultBaseUrl = 'https://api.dandanplay.net';
 
   final http.Client _client;
+
+  /// 是否由本实例创建了 [_client]（P2-11）：只有自建的那个才归本实例关闭——
+  /// 注入进来的 client 由调用方（测试 / 共享池）自己负责生命周期，
+  /// 否则关闭别人的连接池会让持有方后续请求全部失败。
+  final bool _ownsClient;
+
+  bool _closed = false;
+
+  /// 是否已关闭（诊断/测试用）
+  bool get isClosed => _closed;
+
+  /// 释放自建连接池（幂等）。不关就是每个实例泄漏一个 `http.Client`
+  /// （连接池 + keep-alive socket）：播放器进一次、网络弹幕面板开一次各一个。
+  void close() {
+    if (_closed) return;
+    _closed = true;
+    if (_ownsClient) _client.close();
+  }
 
   /// 重试日志（排障用）
   void _logRetry(Object error, int nextAttempt) {

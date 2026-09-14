@@ -3,6 +3,22 @@
 /// [DanmakuServerSettings] 持久化使用。
 library;
 
+/// 宽松取布尔：`1`/`"true"` 之类也算真，无法判定的值回退 [fallback]（P2-12）。
+///
+/// 裸 `as bool?` 遇到类型不符会抛 `TypeError`；它在 `DanmakuServerSettings`
+/// 的解码里被一个大 `catch` 兜住 → **整份服务器列表被丢弃**（用户自建服务器
+/// 全部消失，只剩默认服务器）。类型不符只是回退默认值的事，不该毁掉整个列表。
+bool _asBool(Object? v, [bool fallback = false]) {
+  if (v is bool) return v;
+  if (v is num) return v != 0;
+  if (v is String) {
+    final s = v.trim().toLowerCase();
+    if (s == 'true' || s == '1') return true;
+    if (s == 'false' || s == '0') return false;
+  }
+  return fallback;
+}
+
 /// 单个弹幕服务器：名称 + 地址 + 启停开关 + 是否内置默认（不可删除）。
 class DanmakuServer {
   /// 唯一 id（默认服务器用固定 'default'，自建用随机 UUID）
@@ -67,8 +83,8 @@ class DanmakuServer {
       id: id,
       name: name,
       url: url,
-      isEnabled: json['isEnabled'] as bool? ?? true,
-      isDefault: json['isDefault'] as bool? ?? false,
+      isEnabled: _asBool(json['isEnabled'], true),
+      isDefault: _asBool(json['isDefault']),
     );
   }
 }

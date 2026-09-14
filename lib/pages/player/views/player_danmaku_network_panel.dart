@@ -16,6 +16,9 @@
 ///    错峰（收起时内容先淡出再收高），箭头旋转与高度同一条曲线；收起态
 ///    子树不构建（零布局开销），展开时把卡头 `ensureVisible` 顶到可视区。
 ///    集数多于 6 集时集列表落在定高滚动容器里，避免动画期间反复布局长列表。
+/// 5. **搜索并发语义（P2-10）**：搜索中再搜不再被静默吞掉（键盘搜索键 /
+///    历史胶囊 / 连按搜索都照常发起），并用会话号丢弃旧响应——
+///    结果永远属于**最后一次**输入的关键词。
 ///
 /// 横屏在 [showPlayerPanel] 右侧外壳、竖屏在 [showPlayerBottomPanel] 底部
 /// 外壳共用本内容（§4.5 约定）；选集中后经 [onEpisodeSelected] 交由播放页
@@ -26,6 +29,7 @@ import 'package:flutter/material.dart';
 import 'package:moumou/models/dandan_models.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/danmaku_search_history.dart';
+import 'package:moumou/utils/async_session.dart';
 import 'package:moumou/widgets/settings_ui.dart';
 
 /// 面板内统一强调色（**跟随主题**，对齐弹幕设置面板的派生方式）：
@@ -70,10 +74,16 @@ class PlayerDanmakuNetworkPanel extends StatefulWidget {
 }
 
 class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
-  late final DanmakuNetworkService _network =
-      widget.networkService ?? DanmakuNetworkService();
+  late final DanmakuNetworkService _network;
   final DanmakuSearchHistory _history = DanmakuSearchHistory();
   final TextEditingController _searchController = TextEditingController();
+
+  /// 搜索会话令牌（[AsyncSession]，§4.29）：后发起的搜索会作废在途的那次，
+  /// 旧响应后到一律丢弃（P2-10：结果必须属于**最后一次**输入的关键词）。
+  final AsyncSession _searchSession = AsyncSession();
+
+  /// 本页是否自建网络服务（注入的不归本页释放，P2-11）
+  late final bool _ownsNetwork;
 
   List<String> _historyItems = const [];
   List<DanmakuSearchItem> _results = const [];
@@ -92,12 +102,16 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
   @override
   void initState() {
     super.initState();
+    _network = widget.networkService ?? DanmakuNetworkService();
+    _ownsNetwork = widget.networkService == null;
     _reloadHistory();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    // P2-11：自建的服务持有 http.Client，页面关闭即释放（注入的由调用方管）
+    if (_ownsNetwork) _network.dispose();
     super.dispose();
   }
 
@@ -110,9 +124,16 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
     }
   }
 
+  /// 发起搜索（P2-10）。
+  ///
+  /// - **搜索中不再吞掉新搜索**：旧实现 `if (trimmed.isEmpty || _loading) return;`
+  ///   在 loading 期间静默忽略（键盘搜索键 / 历史胶囊 / 再按搜索都没反应），
+  ///   用户以为「搜索坏了」；现在照常发起，用会话号保证**最后一次**输入生效。
+  /// - 旧响应后到（弱网下常见）一律丢弃，不会覆盖新关键词的结果。
   Future<void> _doSearch(String keyword) async {
     final trimmed = keyword.trim();
-    if (trimmed.isEmpty || _loading) return;
+    if (trimmed.isEmpty) return;
+    final session = _searchSession.start();
     FocusScope.of(context).unfocus();
     setState(() {
       _loading = true;
@@ -123,7 +144,7 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
     });
     await _history.add(trimmed);
     final result = await _network.search(trimmed);
-    if (!mounted) return;
+    if (!mounted || !_searchSession.isCurrent(session)) return;
     setState(() {
       _loading = false;
       _results = result.items;
@@ -244,6 +265,8 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
               ),
             ),
           ),
+          // 搜索中转圈，但**搜索按钮始终在位**（P2-10）：不然用户在 loading
+          // 期间连按搜索没有任何反应，而「再按一次」恰恰是弱网下最常见的操作。
           if (_loading)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -255,22 +278,20 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
                   color: _accentOf(context),
                 ),
               ),
-            )
-          else ...[
-            if (_searchController.text.isNotEmpty)
-              _MiniIconButton(
-                icon: Icons.close_rounded,
-                tooltip: '清空',
-                color: Colors.white54,
-                onTap: () => setState(_searchController.clear),
-              ),
-            _MiniIconButton(
-              icon: Icons.arrow_forward_rounded,
-              tooltip: '搜索',
-              color: _accentOf(context),
-              onTap: () => _doSearch(_searchController.text),
             ),
-          ],
+          if (!_loading && _searchController.text.isNotEmpty)
+            _MiniIconButton(
+              icon: Icons.close_rounded,
+              tooltip: '清空',
+              color: Colors.white54,
+              onTap: () => setState(_searchController.clear),
+            ),
+          _MiniIconButton(
+            icon: Icons.arrow_forward_rounded,
+            tooltip: '搜索',
+            color: _accentOf(context),
+            onTap: () => _doSearch(_searchController.text),
+          ),
         ],
       ),
     );
