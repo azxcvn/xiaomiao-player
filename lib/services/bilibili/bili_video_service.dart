@@ -5,9 +5,13 @@
 /// - 两者统一带 `fnval=4048`（DASH + flac + 杜比 + 4K/8K 位）、`fourk=1`，
 ///   并按 PiliPlus 惯例对参数做 WBI 签名（PGC 多签无害、UGC 必须）。
 ///
-/// 画质默认请求最高档（qn=127），服务端按账户权限回落；`accept_quality` +
-/// `accept_description` 供「更多 → 清晰度」列出可选档，切换档位时以目标 qn
-/// 重新请求 playurl（重开播放器 + seek 保持进度）。
+/// 画质默认请求 **1080P**（[defaultQn] = 80），服务端按账号权限**向下取最接近的
+/// 可用档**（用户拍板口径）；`accept_quality` + `accept_description` 供
+/// 「更多 → 清晰度」列出可选档，切换档位时以目标 qn 重新请求 playurl
+/// （重开播放器 + seek 保持进度）。
+///
+/// ⚠️ 返回的 `BiliPlayUrlResult.quality` 是**服务端实际给的档位**（可能低于请求的
+/// qn）——清晰度面板的高亮必须以它为准，不能停在用户点的那一档（§4.36）。
 library;
 
 import 'package:flutter/foundation.dart' show debugPrint;
@@ -61,6 +65,7 @@ class BiliVideoService {
     final result = _mapOf(resp['result']);
     final videoInfo = _mapOf(result['video_info']);
     final parsed = BiliPlayUrlResult.fromJson(videoInfo);
+    _ensurePlayable(parsed);
     debugPrint(
       '[BILI-VIDEO] pgc playurl: qn=$qn quality=${parsed.quality} '
       'videos=${parsed.videos.map((v) => v.id).join(',')} '
@@ -110,7 +115,9 @@ class BiliVideoService {
     };
     final resp = await _getSigned(BiliApi.ugcPlayUrl, params);
     _ensureCode(resp);
-    return BiliPlayUrlResult.fromJson(_data(resp));
+    final parsed = BiliPlayUrlResult.fromJson(_data(resp));
+    _ensurePlayable(parsed);
+    return parsed;
   }
 
   /// bvid（或 av 号）→ 视频标题 + 全部分 P（`/x/web-interface/view`）。
@@ -199,6 +206,15 @@ class BiliVideoService {
     final message =
         (response['message'] ?? response['msg'])?.toString() ?? '';
     throw BiliApiException(_errorMessage(code, message));
+  }
+
+  /// `code == 0` 也可能是**风控**：服务端只回 `v_voucher`（人机验证凭证）、
+  /// 一个流都不给。这种情况必须报「风控」而不是让调用方去报
+  /// 「解析播放地址失败」——后者把「稍后重试/换个网络」这种可行动作全丢掉了。
+  void _ensurePlayable(BiliPlayUrlResult parsed) {
+    if (parsed.isRiskControlled) {
+      throw const BiliApiException('触发风控验证（v_voucher），请稍后重试或切换网络');
+    }
   }
 
   /// 常见错误码 → 友好提示（合并 PiliPlus 与小喵两套）。

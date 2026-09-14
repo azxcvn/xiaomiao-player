@@ -125,6 +125,24 @@ void main() {
     expect(expanded, 'https://b23.tv/xyz');
   });
 
+  test('isTarget 不作用于短链本身（否则短链永远不展开）', () async {
+    var requests = 0;
+    final client = MockClient((req) async {
+      requests++;
+      return http.Response('', 302, headers: {
+        'location': 'https://www.bilibili.com/video/BV1GJ411x7h7',
+      });
+    });
+    final expanded = await expandBiliShortLink(
+      // 短链码恰好长得像 av 令牌：若对短链本身判 isTarget，会立刻返回短链
+      'https://b23.tv/av1234567',
+      client: client,
+      isTarget: (_) => true,
+    );
+    expect(requests, 1);
+    expect(expanded, 'https://www.bilibili.com/video/BV1GJ411x7h7');
+  });
+
   test('请求抛异常 → 返回 null', () async {
     final client = MockClient((req) async => throw Exception('network down'));
     expect(await expandBiliShortLink('https://b23.tv/xyz', client: client), isNull);
@@ -189,5 +207,64 @@ void main() {
       expect(await service.resolveRef('https://b23.tv/xyz'), isNull);
       expect(await service.resolveRef('hello world'), isNull);
     });
+
+    test('短链码恰好长得像令牌（b23.tv/av1234567）→ 仍然展开，不短路', () async {
+      var requests = 0;
+      final client = MockClient((req) async {
+        requests++;
+        return http.Response('', 302, headers: {
+          'location': 'https://www.bilibili.com/video/BV1GJ411x7h7',
+        });
+      });
+      final service = BiliDownloadService(linkClient: client);
+      final ref = await service.resolveRef('https://b23.tv/av1234567');
+      expect(requests, 1, reason: '含短链就必须展开，不能拿短链里的字样当令牌');
+      expect(ref?.bvid, 'BV1GJ411x7h7');
+    });
+
+    test('普通文本（含 ep12 字样）不算链接 → null', () async {
+      var requests = 0;
+      final client = MockClient((req) async {
+        requests++;
+        return http.Response('', 200);
+      });
+      final service = BiliDownloadService(linkClient: client);
+      expect(await service.resolveRef('第12集 ep12 更新'), isNull);
+      expect(requests, 0);
+    });
   });
+
+  group('BiliDownloadService 短链 client 生命周期', () {
+    test('自建的 client 由 close() 关闭（幂等）', () {
+      final tracking = _TrackingClient();
+      final service = BiliDownloadService(linkClientFactory: () => tracking);
+      expect(tracking.closed, isFalse);
+      service.close();
+      expect(tracking.closed, isTrue);
+      service.close(); // 幂等
+      expect(tracking.closed, isTrue);
+    });
+
+    test('注入的 client 不代关（归调用方）', () {
+      final tracking = _TrackingClient();
+      final service = BiliDownloadService(linkClient: tracking);
+      service.close();
+      expect(tracking.closed, isFalse, reason: '注入的 client 生命周期由调用方管');
+    });
+  });
+}
+
+/// 记录 [close] 是否被调用的假 client。
+class _TrackingClient extends http.BaseClient {
+  bool closed = false;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    return http.StreamedResponse(const Stream<List<int>>.empty(), 200);
+  }
+
+  @override
+  void close() {
+    closed = true;
+  }
 }

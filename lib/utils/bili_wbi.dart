@@ -53,3 +53,29 @@ void biliEncWbi(Map<String, Object> params, String mixinKey) {
       .join('&');
   params['w_rid'] = md5.convert(utf8.encode(queryStr + mixinKey)).toString();
 }
+
+/// WBI 密钥（`wbi_img` 的 img_key + sub_key）**官方每日更换**（北京时间 0 点前后），
+/// 缓存一份用到底的症状是「昨天还能搜、今天集体签名失败」——番剧页搜不出结果、
+/// playurl 解析失败（用户只会说「B 站功能坏了」）。
+///
+/// 判定「该重新取密钥」的纯函数（[now] 由调用方注入，便于单测）：
+/// - 从未取过 → 需要；
+/// - 已跨过 **UTC+8 自然日** → 需要（官方按北京时间的日切换 key）；
+/// - 距上次获取超过 [maxAge] → 需要（兜底：跨日判断受设备时区/时钟影响）；
+/// - 时钟回拨（[now] 早于 [fetchedAt]）→ 需要（新鲜度无法判断时宁可重取）。
+bool isBiliMixinKeyStale(
+  DateTime? fetchedAt,
+  DateTime now, {
+  Duration maxAge = const Duration(hours: 6),
+}) {
+  if (fetchedAt == null) return true;
+  if (now.isBefore(fetchedAt)) return true;
+  if (now.difference(fetchedAt) >= maxAge) return true;
+  return _biliDayIndex(fetchedAt) != _biliDayIndex(now);
+}
+
+/// UTC+8（北京时间）自然日序号。
+int _biliDayIndex(DateTime t) {
+  final cst = t.toUtc().add(const Duration(hours: 8));
+  return cst.year * 10000 + cst.month * 100 + cst.day;
+}

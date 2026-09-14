@@ -220,5 +220,48 @@ void main() {
       expect(parseBiliBangumiUrl('hello world'), isNull);
       expect(parseBiliBangumiUrl(''), isNull);
     });
+
+    test('裸令牌（整串就是号）也认', () {
+      expect(parseBiliBangumiUrl('ss12345')?.seasonId, 12345);
+      expect(parseBiliBangumiUrl('ep123456')?.epId, 123456);
+      expect(parseBiliBangumiUrl('av170001')?.aid, 170001);
+      expect(parseBiliBangumiUrl('BV1xx411c7mD')?.bvid, 'BV1xx411c7mD');
+    });
+
+    test('URL 路径里的短号也认（/ep12 属于链接）', () {
+      expect(
+        parseBiliBangumiUrl('https://www.bilibili.com/bangumi/play/ep12')?.epId,
+        12,
+      );
+    });
+
+    test('普通文本里的字母组合**不算**链接（正则边界，§7）', () {
+      // 旧实现是裸 ep(\d+)/ss(\d+)/av(\d+)，这些全被误判成链接
+      expect(parseBiliBangumiUrl('第12集 ep12 更新'), isNull);
+      expect(parseBiliBangumiUrl('step2 安装教程'), isNull);
+      expect(parseBiliBangumiUrl('SS2 第二季'), isNull);
+      expect(parseBiliBangumiUrl('AV1 编码对比'), isNull);
+      expect(parseBiliBangumiUrl('ep12'), isNull); // 整串但只有 2 位数字
+      expect(parseBiliBangumiUrl('av1'), isNull);
+      expect(parseBiliBangumiUrl('ss2'), isNull);
+    });
+
+    test('BV 号两侧不得粘字母数字（不许截出假 BV）', () {
+      expect(parseBiliBangumiUrl('xxBV1xx411c7mDyy')?.bvid, isNot('BV1xx411c7mD'));
+      expect(parseBiliBangumiUrl('BV1xx411c7mDyy'), isNull);
+    });
+
+    test('超长数字串不抛 FormatException（位数上限）', () {
+      expect(
+        () => parseBiliBangumiUrl(
+            'https://www.bilibili.com/bangumi/play/ep${'9' * 40}'),
+        returnsNormally,
+      );
+      expect(
+        () => parseBiliSeasonListUrl(
+            'space.bilibili.com/${'9' * 40}/lists/${'9' * 40}'),
+        returnsNormally,
+      );
+    });
   });
 }

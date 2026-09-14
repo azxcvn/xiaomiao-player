@@ -121,4 +121,80 @@ void main() {
       throwsA(isA<BiliApiException>()),
     );
   });
+
+  test('v_voucher（风控人机验证）不再当成功 → 抛可诊断错误', () async {
+    final client = MockClient((req) async => http.Response(
+          jsonEncode({
+            'code': 0,
+            'data': {
+              'v_voucher': 'voucher_xxx',
+              'quality': 80,
+              // 命中风控时没有任何 dash 流
+            },
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        ));
+    expect(
+      () => serviceWith(client).fetchUgcPlayUrl(bvid: 'BV1xx', cid: 200),
+      throwsA(isA<BiliApiException>()
+          .having((e) => e.message, 'message', contains('风控'))),
+    );
+  });
+
+  test('PGC v_voucher 同样抛风控错误', () async {
+    final client = MockClient((req) async => http.Response(
+          jsonEncode({
+            'code': 0,
+            'result': {
+              'video_info': {'v_voucher': 12345, 'quality': 80},
+            },
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        ));
+    expect(
+      () => serviceWith(client).fetchPgcPlayUrl(epId: 1, cid: 2),
+      throwsA(isA<BiliApiException>()
+          .having((e) => e.message, 'message', contains('风控'))),
+    );
+  });
+
+  test('av 号（avid）走 aid 通道：view 与 playurl 都带 avid', () async {
+    final seen = <String>[];
+    final client = MockClient((req) async {
+      seen.add('${req.url.path}?${req.url.query}');
+      if (req.url.path == '/x/web-interface/view') {
+        return http.Response(
+          jsonEncode({
+            'code': 0,
+            'data': {
+              'aid': 170001,
+              'bvid': 'BV1xx411c7mD',
+              'title': '老视频',
+              'pages': [
+                {'cid': 999},
+              ],
+            },
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }
+      return http.Response(jsonEncode(ugcResp()), 200,
+          headers: {'content-type': 'application/json'});
+    });
+    final service = serviceWith(client);
+    final v = await service.resolveUgcVideo('', aid: 170001);
+    expect(v.cid, 999);
+    expect(seen.first, contains('aid=170001'));
+    // 解析出真实 bvid 后，playurl 用 bvid（服务端优先 bvid）
+    await service.fetchUgcPlayUrl(
+      bvid: v.bvid.isEmpty ? null : v.bvid,
+      avid: v.bvid.isEmpty ? v.aid : null,
+      cid: v.cid,
+    );
+    expect(seen.last, contains('bvid=BV1xx411c7mD'));
+    expect(seen.last, isNot(contains('avid=')));
+  });
 }

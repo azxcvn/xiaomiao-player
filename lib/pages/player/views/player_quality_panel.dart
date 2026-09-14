@@ -5,7 +5,10 @@ import 'package:moumou/widgets/player_option_chip.dart';
 /// 清晰度面板：列出当前账号可选的画质档（`accept_quality`），当前档高亮，
 /// 点击切换画质（切换由父级重新解析 playurl 并重开播放保持进度）。
 ///
-/// 点击后乐观更新高亮，切换失败回退高亮（父级 [onSelect] 返回是否成功）。
+/// 点击后先乐观更新高亮，**再按父级返回的真实档位收口**（[onSelect] 返回
+/// 切换后的真实 qn，失败返回 null）：
+/// - 成功但服务端因权限回落到别的档 → 高亮钉到**实际**那一档；
+/// - 失败 → 回到**切换前**那一档，而不是「开面板时」那一档（§4.15/§7）。
 class PlayerQualityPanel extends StatefulWidget {
   const PlayerQualityPanel({
     super.key,
@@ -16,7 +19,9 @@ class PlayerQualityPanel extends StatefulWidget {
 
   final List<BiliQualityOption> qualities;
   final int currentQn;
-  final Future<bool> Function(int qn) onSelect;
+
+  /// 切换画质：返回**切换后的真实 qn**，失败返回 null。
+  final Future<int?> Function(int qn) onSelect;
 
   @override
   State<PlayerQualityPanel> createState() => _PlayerQualityPanelState();
@@ -26,16 +31,28 @@ class _PlayerQualityPanelState extends State<PlayerQualityPanel> {
   late int _currentQn = widget.currentQn;
   bool _switching = false;
 
+  @override
+  void didUpdateWidget(covariant PlayerQualityPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 面板打开期间父级换过档（例如外层重建）→ 以真实档位为准
+    if (!_switching && widget.currentQn != oldWidget.currentQn) {
+      _currentQn = widget.currentQn;
+    }
+  }
+
   Future<void> _select(int qn) async {
     if (_switching || qn == _currentQn) return;
+    // 切换前的**真实**高亮：失败时回到它，而不是 widget.currentQn
+    // （后者是开面板那一刻的快照，连切两档时已经过时）
+    final before = _currentQn;
     setState(() {
       _switching = true;
       _currentQn = qn;
     });
-    final ok = await widget.onSelect(qn);
+    final actual = await widget.onSelect(qn);
     if (!mounted) return;
     setState(() {
-      if (!ok) _currentQn = widget.currentQn; // 失败回退高亮
+      _currentQn = actual ?? before;
       _switching = false;
     });
   }

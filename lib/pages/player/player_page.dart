@@ -872,22 +872,34 @@ class _PlayerPageState extends State<PlayerPage>
   }
 
   /// 切换清晰度：重新解析 playurl → 重开流（保持进度）→ 更新章节。
-  /// 返回是否切换成功。
-  Future<bool> _switchQuality(int qn) async {
+  ///
+  /// 返回**切换后的真实档位**（服务端按账号权限回落，`playUrl.quality` 是服务端
+  /// 实际给的），失败返回 null——面板据此收口高亮（§4.15/§7）。
+  ///
+  /// 两条回落纪律（用户拍板 2026-09）：
+  /// - 请求的档位没给到（如没 4K 权限却点 4K）→ toast 说明**已切到哪一档**，
+  ///   不让用户以为自己点了个寂寞；
+  /// - 回落到的档位**恰好就是当前在播的档位** → 流没变，**不重开**（重开会黑
+  ///   一下 + 进度回跳），只把面板高亮纠正到真实档位。
+  Future<int?> _switchQuality(int qn) async {
     final m = _biliMedia;
-    if (m == null || m.currentQn == qn) return false;
+    if (m == null || m.currentQn == qn) return null;
     final position = _position;
     try {
       final next = await m.switchQuality(qn);
-      if (_disposed || !mounted) return false;
+      if (_disposed || !mounted) return null;
+      if (next.currentQn != qn) {
+        _toast('该清晰度不可用，已切换到 ${_currentQualityDescription(next)}');
+      }
+      if (next.currentQn == m.currentQn) return next.currentQn;
       setState(() => _biliMedia = next);
       await _openBiliMedia(
         restoreTo: position > Duration.zero ? position : null,
       );
-      return true;
+      return next.currentQn;
     } catch (e) {
       if (mounted) _toast('切换画质失败：$e');
-      return false;
+      return null;
     }
   }
 

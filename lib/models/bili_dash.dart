@@ -148,6 +148,10 @@ class BiliPlayUrlResult {
   final List<BiliDashStream> audios;
   final List<BiliClipInfo> clips;
 
+  /// 风控人机验证凭证（`v_voucher`）：命中风控时服务端仍回 `code=0`，
+  /// 但只给这一个凭证、**不给任何可播流**（§4.15/§7）。
+  final String vVoucher;
+
   const BiliPlayUrlResult({
     required this.quality,
     this.format = '',
@@ -157,7 +161,14 @@ class BiliPlayUrlResult {
     this.videos = const [],
     this.audios = const [],
     this.clips = const [],
+    this.vVoucher = '',
   });
+
+  /// 是否命中风控：有 `v_voucher` 且没有任何视频流。
+  ///
+  /// `code == 0` **不代表拿到了可播地址**——旧实现把它当成功，用户只看到
+  /// 「解析播放地址失败」，完全不知道是风控（重试也不会好）。
+  bool get isRiskControlled => vVoucher.isNotEmpty && videos.isEmpty;
 
   /// 当前账号可选的画质档（供「更多 → 清晰度」面板展示）。
   List<BiliQualityOption> get qualityOptions {
@@ -239,6 +250,7 @@ class BiliPlayUrlResult {
           .whereType<Map>()
           .map((e) => BiliClipInfo.fromJson(e.cast<String, dynamic>()))
           .toList(),
+      vVoucher: json['v_voucher']?.toString() ?? '',
     );
   }
 }

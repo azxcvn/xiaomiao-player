@@ -44,6 +44,8 @@ class _BiliVideoDownloadPageState extends State<BiliVideoDownloadPage> {
   @override
   void dispose() {
     _urlCtrl.dispose();
+    // 短链展开 client 由本页自建 → 必须随页面释放（§4.36）
+    _service.close();
     super.dispose();
   }
 

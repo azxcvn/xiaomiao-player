@@ -112,7 +112,8 @@ class _BiliIndexPageState extends State<BiliIndexPage> {
     );
     if (ref == null || !mounted || !ref.isValid) return;
     if (ref.isUgc) {
-      await playBiliBvid(context, ref.bvid);
+      // av 号（老链接/短链）没有 bvid，必须把 aid 一起传下去（§4.16/§7）
+      await playBiliUgc(context, bvid: ref.bvid, aid: ref.aid);
       return;
     }
     Navigator.of(context).push(
@@ -424,8 +425,9 @@ class _LinkParseDialogState extends State<_LinkParseDialog> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     var ref = parseBiliBangumiUrl(text);
-    if (ref == null) {
-      // b23.tv 等分享短链不含令牌，先展开再解析
+    // 含 b23.tv 短链时**必须展开**：短链码是随机串，可能恰好长得像令牌
+    // （`b23.tv/av1234567`），只看「直接解析是否为空」会短路在不存在的视频上。
+    if (extractBiliShortLink(text) != null) {
       setState(() {
         _resolving = true;
         _error = null;

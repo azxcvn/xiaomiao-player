@@ -27,9 +27,27 @@ class BiliApiException implements Exception {
 }
 
 class BiliHttp {
-  BiliHttp({http.Client? client}) : _client = client ?? http.Client();
+  /// [client] 注入的 client 归调用方（[close] 不关它）；[clientFactory] 用于
+  /// 测试观察「自建 client 是否被关掉」——生产代码不传，走默认 `http.Client()`。
+  BiliHttp({http.Client? client, http.Client Function()? clientFactory})
+      : _client = client ?? (clientFactory ?? http.Client.new)(),
+        _ownsClient = client == null;
 
   final http.Client _client;
+
+  /// 自建的 client 才由本对象负责关闭（注入的归调用方，与 §4.11 的
+  /// `DandanPlayApi.close()` 同一约定）。
+  final bool _ownsClient;
+  bool _closed = false;
+
+  /// 释放自建的 `http.Client`（幂等）。⚠️ 只有**把它关掉**才算不泄漏：
+  /// 每次进页面 new 一个 `BiliHttp` 而不 close，连接池 + keep-alive socket
+  /// 会跟着页面一起漏（§4.14/§7）。
+  void close() {
+    if (_closed) return;
+    _closed = true;
+    if (_ownsClient) _client.close();
+  }
 
   /// 重试日志（排障用；重试不改变对调用方的语义）
   void _logRetry(Object error, int nextAttempt) {

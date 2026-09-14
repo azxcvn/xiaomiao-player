@@ -4,6 +4,7 @@ import 'package:moumou/services/bilibili/bili_auth_service.dart';
 import 'package:moumou/services/bilibili/bili_credential_store.dart';
 import 'package:moumou/services/bilibili/bili_fingerprint.dart';
 import 'package:moumou/services/bilibili/bili_http.dart';
+import 'package:moumou/utils/bili_wbi.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 哔哩哔哩账号状态（ChangeNotifier 单例）：登录态 / 用户信息 / WBI 密钥 /
@@ -36,6 +37,15 @@ class BiliAccount extends ChangeNotifier {
   String _buvid3 = '';
   String _buvid4 = '';
   String _mixinKey = '';
+
+  /// WBI 密钥的获取时刻（判新鲜度用，见 [isBiliMixinKeyStale]）。
+  DateTime? _mixinKeyFetchedAt;
+
+  /// 写入新密钥并记下获取时刻（所有赋值点都走它，避免漏记时间导致永不刷新）。
+  void _applyMixinKey(String key) {
+    _mixinKey = key;
+    _mixinKeyFetchedAt = DateTime.now();
+  }
 
   BiliUser get user => _user;
   bool get isLogin => _user.isLogin;
@@ -77,7 +87,7 @@ class BiliAccount extends ChangeNotifier {
       if (cred.isValid) {
         final nav = await auth.nav();
         _user = nav.user;
-        if (nav.mixinKey.isNotEmpty) _mixinKey = nav.mixinKey;
+        if (nav.mixinKey.isNotEmpty) _applyMixinKey(nav.mixinKey);
         if (!nav.user.isLogin) {
           // Cookie 过期（nav 静默降级）：清凭证回到游客态，引导重新扫码
           await _clearCredential();
@@ -124,13 +134,19 @@ class BiliAccount extends ChangeNotifier {
     return _applyCredential(cred);
   }
 
-  /// 确保 WBI 密钥可用：已缓存直接返回，否则调 nav 取回（游客态 nav 也返回
-  /// wbi_img）。失败返回空串（调用方据空串放弃签名请求）。
+  /// 确保 WBI 密钥**仍新鲜**：新鲜直接返回，否则（从未取过 / 已跨 UTC+8 自然日 /
+  /// 超过兜底时长）重新调 nav 取回。失败返回手上这份（宁可拿旧密钥试一次，
+  /// 也不能因为一次网络抖动就让签名请求全线失败）。
   Future<String> ensureMixinKey() async {
-    if (_mixinKey.isNotEmpty) return _mixinKey;
+    if (_mixinKey.isNotEmpty &&
+        !isBiliMixinKeyStale(_mixinKeyFetchedAt, DateTime.now())) {
+      return _mixinKey;
+    }
     try {
       final nav = await auth.nav();
-      if (nav.mixinKey.isNotEmpty) _mixinKey = nav.mixinKey;
+      if (nav.mixinKey.isNotEmpty) {
+        _applyMixinKey(nav.mixinKey);
+      }
     } on BiliApiException {
       // 静默：无密钥时调用方自行降级
     }
@@ -142,7 +158,7 @@ class BiliAccount extends ChangeNotifier {
     try {
       final nav = await auth.nav();
       _user = nav.user;
-      if (nav.mixinKey.isNotEmpty) _mixinKey = nav.mixinKey;
+      if (nav.mixinKey.isNotEmpty) _applyMixinKey(nav.mixinKey);
       if (!nav.user.isLogin && _credential != null) {
         await _clearCredential();
       }
@@ -201,7 +217,7 @@ class BiliAccount extends ChangeNotifier {
       throw const BiliApiException('登录失败：Cookie 无效或已过期');
     }
     _user = nav.user;
-    if (nav.mixinKey.isNotEmpty) _mixinKey = nav.mixinKey;
+    if (nav.mixinKey.isNotEmpty) _applyMixinKey(nav.mixinKey);
     notifyListeners();
     return nav.user;
   }
@@ -211,6 +227,7 @@ class BiliAccount extends ChangeNotifier {
     _http.cookie = null;
     _user = const BiliUser.guest();
     _mixinKey = '';
+    _mixinKeyFetchedAt = null;
     await _credStore.clear();
   }
 
@@ -246,6 +263,7 @@ class BiliAccount extends ChangeNotifier {
     _buvid3 = '';
     _buvid4 = '';
     _mixinKey = '';
+    _mixinKeyFetchedAt = null;
     _http.cookie = null;
     _http.extraCookies = null;
     _fingerprint.resetForTest();

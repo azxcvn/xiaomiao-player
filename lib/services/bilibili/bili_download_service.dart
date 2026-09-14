@@ -44,9 +44,18 @@ class BiliDownloadTarget {
 ///
 /// 番剧（`ss`/`ep`）→ 季详情全部集数；UGC（`BV`/`av`）→ 全部分 P（老项目只取
 /// `pages[0]`，多 P 视频只能下到第一段，这里补全）；b23.tv 等分享短链先展开再解析。
+///
+/// ⚠️ **生命周期**：短链展开用的 client 由本服务自建时必须 [close]（调用方在
+/// 页面 `dispose` 里调）——沿用「注入的归调用方、自建的自己关」这条约定，
+/// 与 `BiliHttp`/`DandanPlayApi` 同源（§4.36）。
 class BiliDownloadService {
-  BiliDownloadService({http.Client? linkClient})
-      : _linkClient = linkClient ?? http.Client();
+  /// [linkClient] 注入的 client 归调用方（[close] 不关它）；[linkClientFactory]
+  /// 用于测试观察「自建 client 是否被关掉」——生产代码不传，走默认 `http.Client()`。
+  BiliDownloadService({
+    http.Client? linkClient,
+    http.Client Function()? linkClientFactory,
+  })  : _linkClient = linkClient ?? (linkClientFactory ?? http.Client.new)(),
+        _ownsLinkClient = linkClient == null;
 
   final BiliBangumiService _bangumi = BiliBangumiService();
   final BiliVideoService _video = BiliVideoService();
@@ -54,20 +63,24 @@ class BiliDownloadService {
   /// 短链展开专用 client（测试注入 MockClient，避免真实网络请求）。
   final http.Client _linkClient;
 
-  /// 解析输入文本为 B 站引用：直接解析失败时展开 b23.tv 等分享短链再解析。
+  /// 自建的 client 才由本服务负责关闭。
+  final bool _ownsLinkClient;
+  bool _closed = false;
+
+  /// 释放自建的短链 client（幂等；注入的归调用方）。
+  void close() {
+    if (_closed) return;
+    _closed = true;
+    if (_ownsLinkClient) _linkClient.close();
+  }
+
+  /// 解析输入文本为 B 站引用：文本含 b23.tv 短链时**先展开再解析**。
   ///
   /// 短链（如 `https://b23.tv/NkRjTgm`）本身不含 BV/av/ss/ep 令牌，须跟随
   /// 302 拿到真实 URL；命中令牌即停（不下载整页）。仍无法识别返回 null。
   Future<BiliBangumiRef?> resolveRef(String input) async {
-    final ref = parseBiliBangumiUrl(input);
-    if (ref != null) return ref;
-    final expanded = await expandBiliShortLink(
-      input,
-      client: _linkClient,
-      isTarget: (url) => parseBiliBangumiUrl(url) != null,
-    );
-    if (expanded == null) return null;
-    return parseBiliBangumiUrl(expanded);
+    final text = await _maybeExpand(input) ?? input;
+    return parseBiliBangumiUrl(text);
   }
 
   /// 解析链接为可下载目标。
@@ -91,12 +104,13 @@ class BiliDownloadService {
     throw const BiliApiException('无法识别 B 站链接（支持 BV / av / ss / ep / 合集链接 / b23.tv 短链）');
   }
 
-  /// 若输入不是可直接识别的令牌/合集链接，则尝试展开 b23.tv 短链。
+  /// 文本含 b23.tv 短链时展开成真实 URL；不含短链返回 null（调用方用原文解析）。
+  ///
+  /// ⚠️ **判据只能是「有没有短链」，不能是「直接解析是否为空」**：短链码是随机串，
+  /// 可能恰好长得像令牌（`b23.tv/av1234567`），旧实现因此短路、链接永远不展开，
+  /// 用户看到的是「解析出错的视频」而不是短链指向的那个（§7）。
   Future<String?> _maybeExpand(String input) async {
-    if (parseBiliBangumiUrl(input) != null ||
-        parseBiliSeasonListUrl(input) != null) {
-      return null;
-    }
+    if (extractBiliShortLink(input) == null) return null;
     return expandBiliShortLink(
       input,
       client: _linkClient,

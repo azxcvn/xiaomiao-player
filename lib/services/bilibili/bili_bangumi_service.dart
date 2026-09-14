@@ -10,10 +10,16 @@ import 'package:moumou/utils/bili_wbi.dart';
 /// - 推荐：固定 `order=3`（最常追番）+ 全 `-1` 筛选 + `type=1` + `pagesize=20`；
 /// - 搜索：`/x/web-interface/wbi/search/type`（`search_type=media_bangumi`，WBI 签名）。
 class BiliBangumiService {
+  /// [http] 缺省复用 [BiliAccount] 的共享实例（带登录 Cookie + 设备指纹，
+  /// 且**不额外新建 client**）。
+  ///
+  /// ⚠️ 旧实现缺省 `BiliHttp()` 自建一个**无 Cookie/无指纹**的 client：番剧页
+  /// 反复进出时每个页面各漏一个连接池（内存/句柄双双累积），而且请求不带登录态
+  /// 与指纹，更容易被风控（§4.14/§7）。
   BiliBangumiService({
     BiliHttp? http,
     Future<String> Function()? mixinKeyProvider,
-  })  : _http = http ?? BiliHttp(),
+  })  : _http = http ?? BiliAccount.instance.http,
         _mixinKeyProvider = mixinKeyProvider ?? _defaultMixinKey;
 
   final BiliHttp _http;

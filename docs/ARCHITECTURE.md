@@ -183,15 +183,15 @@ lib/
 │   │   ├── bili_constants.dart    #   域名 / UA / Referer / TV appkey·appsec / 扫码状态码
 │   │   ├── bili_api.dart          #   端点常量（集中式，对齐 PiliPlus api.dart）
 │   │   ├── bili_credential_store.dart # 凭证加密存储（SESSDATA/bili_jct/DedeUserID + Cookie 解析纯函数）
-│   │   ├── bili_http.dart         #   统一请求：Cookie/UA/Referer/指纹注入 + 错误语义化
+│   │   ├── bili_http.dart         #   统一请求：Cookie/UA/Referer/指纹注入 + 错误语义化 + `close()`（只关自建 client）
 │   │   ├── bili_auth_service.dart #   扫码生成/轮询/Cookie导入/nav自检/buvid预取/退出登录
 │   │   ├── bili_account.dart      #   登录态/用户信息/WBI密钥/buvid（ChangeNotifier 单例）
 │   │   ├── bili_fingerprint.dart  #   反爬指纹：uuid/b_lsid/buvid_fp/bili_ticket + ExClimbWuzhi 激活（§4.13）
-│   │   ├── bili_bangumi_service.dart # 番剧索引条件/分页/搜索(WBI)/季详情/时间表（§4.14）
+│   │   ├── bili_bangumi_service.dart # 番剧索引条件/分页/搜索(WBI)/季详情/时间表（§4.14）；**缺省共用账号 client**
 │   │   ├── bili_video_service.dart   # PGC/UGC playurl（DASH选流+清晰度+WBI签名，§4.15）
 │   │   ├── bili_danmaku_service.dart # B站原声弹幕（seg.so protobuf 解码 + XML 缓存，§4.15）
 │   │   ├── bili_stream_proxy.dart    # 本地 HTTP 代理（绕过 libmpv mbedTLS + 滑动窗口网速统计，§4.15）
-│   │   ├── bili_download_service.dart # 下载解析：链接 → 可下载条目（番剧多集 / UGC BV·av·合集，§4.16）
+│   │   ├── bili_download_service.dart # 下载解析：链接 → 可下载条目（番剧多集 / UGC BV·av·合集，§4.16）；短链 client 需 `close()`
 │   │   └── pb/
 │   │       └── pb_reader.dart        # 手写 protobuf wire 解码器（varint+length-delimited，§4.15）
 │   ├── download/                 # 下载域（哔哩生态阶段四，B站是首个用户，§4.16）
@@ -375,11 +375,11 @@ lib/
     ├── ftp_parser.dart        #   FTP 目录列表解析（RFC3659 MLSD + Unix LIST 回退）
     ├── http_byte_range.dart   #   HTTP Range 头解析（bytes=start-end / start- / -suffix）
     ├── network_path.dart      #   网络路径规范化/校验/子路径拼接（**值相等** `==`/`hashCode`：代理按路径缓存的前提，§4.35）
-    ├── bili_wbi.dart          #   WBI 签名纯函数（getMixinKey/encWbi，混淆表 64 项）
+    ├── bili_wbi.dart          #   WBI 签名纯函数（getMixinKey/encWbi，混淆表 64 项 + 密钥新鲜度判定，§4.13）
     ├── bili_app_sign.dart     #   TV 端 appSign 纯函数（appkey/appsec MD5 签名）
     ├── bili_fingerprint_utils.dart # 反爬指纹纯函数（murmur3×64_128/uuid/b_lsid/bili_ticket hexsign/dm_img）
-    ├── bili_bangumi_url.dart  #   番剧/视频链接解析纯函数（提取 ss/ep/BV/av 令牌 + 合集列表链接）
-    ├── bili_short_link.dart   #   b23.tv 分享短链提取+展开（任意分享文本提取，302 命中令牌即停）
+    ├── bili_bangumi_url.dart  #   番剧/视频链接解析纯函数（ss/ep/BV/av 令牌 + 合集列表链接；**令牌边界纪律**，§4.36）
+    ├── bili_short_link.dart   #   b23.tv 分享短链提取+展开（302 命中令牌即停；命中判定不作用于短链本身，§4.36）
     ├── cast_source.dart       #   投屏源分类纯函数（本地/直链/loopback/content + file:// 去前缀，§4.18）
     ├── version_compare.dart   #   版本号比较纯函数（忽略 v 前缀/按 . 逐段整数比较，§4.20）
     ├── network_mime_types.dart # 文件名→MIME 类型映射
@@ -902,6 +902,18 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   永不明文落盘、不打日志；buvid3（设备指纹，非敏感）存 `shared_preferences`。
 - **登录态自检 + WBI 密钥**都来自 `GET /x/web-interface/nav` 一次请求；Cookie 过期时 nav
   返回 `isLogin=false`（不报错），据此**静默清凭证回游客态**。
+- **WBI 密钥有有效期（每周期的日切都会换）**：官方**每日更换** `wbi_img` 的
+  img_key/sub_key，**不能取一次用到底**——旧实现缓存到进程结束，症状是「昨天还能搜、
+  今天番剧搜索没结果 / playurl 解析失败」。`utils/bili_wbi.dart` 的
+  `isBiliMixinKeyStale(fetchedAt, now)` 给出四条重取判据：从未取过 / **跨 UTC+8 自然日** /
+  距上次超过 6h（兜底，防设备时区时钟影响跨日判断）/ 时钟回拨；`BiliAccount.ensureMixinKey()`
+  据此重取，**重取失败时返回手上那份旧密钥**（宁可拿旧密钥试一次，也不能因一次网络抖动
+  让所有签名请求全线失败）。所有赋值点走 `_applyMixinKey`，避免漏记时间导致永不刷新（§4.36）。
+- **`BiliHttp` 只关自建的 client**：`BiliHttp.close()` 幂等，注入的 client 归调用方
+  （与 §4.11 的 `DandanPlayApi.close()` 同一约定）。⚠️ **不要在页面里 `new BiliHttp()`**：
+  `BiliBangumiService` / `BiliVideoService` 缺省都复用 `BiliAccount.instance.http`
+  （带 Cookie + 设备指纹，且不额外新建连接池）——旧实现每次进番剧页都自建一个无
+  Cookie/无指纹的 client 且从不释放（§4.36）。
 - **扫码轮询**：1 秒轮询，180 秒倒计时自动刷新（服务端 86038 双保险）；
   「打开哔哩哔哩」用 `bilibili://browser?url=…` 深链直接 `startActivity`（未装/无处理者抛
   ActivityNotFoundException → 提示未安装）；「保存相册」用 RepaintBoundary 截图 + `saver_gallery`。
@@ -927,7 +939,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 层 | 文件 | 职责 |
 |---|---|---|
 | 模型 | `models/bili_bangumi.dart` | 索引筛选（filter/value/order）、索引条目/结果、搜索条目/结果、季详情/选集/多季、时间表；`fromJson` 容错（数字字段兼容字符串） |
-| 纯函数 | `utils/bili_bangumi_url.dart` | 链接解析：从粘贴文本提取 `ss(\d+)` / `ep(\d+)` / `BV[0-9A-Za-z]{10}` 令牌 |
+| 纯函数 | `utils/bili_bangumi_url.dart` | 链接解析：从粘贴文本提取 ss/ep/BV/av 令牌 + 合集列表链接；**令牌出现形态有边界**（路径 `/ep123` 或整串 `ep123456`，见 §4.36） |
 | 组件 | `widgets/bili_cover_card.dart` | 番剧封面卡片（竖版封面 + 右上角标 + 左下角灰标 + 标题/副标题），索引/推荐/时间表共用 |
 | 组件 | `widgets/bili_episode_tile.dart` | 番剧单集磁贴（集号 + 集名 + 胶囊角标），内联选集/全屏选集页共用 |
 | 服务 | `services/bilibili/bili_bangumi_service.dart` | condition（type=0）→ 索引 result（type=0）/ 推荐（type=1, order=3）→ season 详情；搜索（WBI）；时间表（番剧+国创合并） |
@@ -961,7 +973,10 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 - **搜索走 WBI 签名**：`search_type=media_bangumi`；mixinKey 复用 `BiliAccount.ensureMixinKey()`
   （游客态 nav 也返回 wbi_img）。签名查询串与 `biliEncWbi` 同一套编码，拼接后直接给 URL。
 - **链接解析直达详情**：`ep_id`/`season_id` 都可喂 `/pgc/view/web/season`，`BiliSeasonPage`
-  同时接受 `seasonId`/`epId`；BV 号（UGC）走阶段三 UGC 播放（§4.15）。
+  同时接受 `seasonId`/`epId`；BV/av 号（UGC）走阶段三 UGC 播放（§4.15）。
+  ⚠️ **令牌必须有边界**（`/ep123` 或整串 `ep123456`，数字 ≥3 位）：裸 `ep(\d+)` 会把
+  `step2`/`SS2`/`AV1`/`第12集 ep12 更新` 这类普通文本当链接；**文本含 b23.tv 短链时先展开
+  再解析**（短链码可能恰好长得像令牌）——细则见 §4.36。
 - **数字字段防崩**：B 站部分端点数字字段以字符串下发，`fromJson` 一律走 `_asInt`/`_asDouble`
   （兼容 num/String），不用裸 `as num?`（历史「type String is not a subtype of type num」崩溃）。
 - **选集点击**：解析 playurl 进入播放页（阶段三在线播放，§4.15）。
@@ -977,7 +992,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 
 | 层 | 文件 | 职责 |
 |---|---|---|
-| 模型 | `models/bili_dash.dart` | playurl DASH 结果：`BiliDashStream`（video/audio 流，兼容 `baseUrl`/`base_url`/`baseUrls[]` 双格式）、`BiliQualityOption`（accept_quality + 描述）、`BiliClipInfo`（OP/ED clip）、`BiliUgcVideo`（bvid→cid） |
+| 模型 | `models/bili_dash.dart` | playurl DASH 结果：`BiliDashStream`（video/audio 流，兼容 `baseUrl`/`base_url`/`baseUrls[]` 双格式）、`BiliQualityOption`（accept_quality + 描述）、`BiliClipInfo`（OP/ED clip）、`BiliUgcVideo`（bvid/aid→cid）、`vVoucher` + `isRiskControlled`（风控凭证，§4.36） |
 | 模型 | `models/bili_media.dart` | 在线播放值对象：当前画质 DASH 流 + cid/aid（弹幕）+ clips（章节）+ `switchQuality(qn)` 回调 |
 | 模型 | `models/bili_playlist.dart` | 番剧播放列表：整季剧集（`BiliPlaylistItem` = 原始 `BiliEpisode` + 集号）+ 按 `epId` 定位当前集 |
 | 解码 | `services/bilibili/pb/pb_reader.dart` | 手写 protobuf wire 解码（varint + length-delimited，跳过未知字段），弹幕两条消息专用 |
@@ -985,9 +1000,9 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 服务 | `services/bilibili/bili_danmaku_service.dart` | 分段弹幕：`/x/v2/dm/web/view`（`dmSge.total` 分段数）→ `/x/v2/dm/web/seg.so`（`elems`）→ `DanmakuEntry`；失败降级 `comment.bilibili.com/{cid}.xml`；XML 缓存 |
 | 服务 | `services/bilibili/bili_stream_proxy.dart` | 本地 HTTP 流代理：Dart `HttpClient`（BoringSSL）拉 B 站 CDN，mpv 从 127.0.0.1 明文播放，绕开 mbedTLS；转发 Range |
 | UI | `pages/player/player_page.dart` | `PlayerPage` 新增 `biliMedia`/`biliPlaylist`：双流（video + `audio-add`）、更多面板「清晰度」入口、B 站弹幕装载、OP/ED 章节喂入、**「下一集」/列表循环/播放列表面板走剧集列表**（`_switchToBiliEpisode` 重新解析 playurl → 换 `BiliMedia` → 重开双流） |
-| UI | `pages/player/views/player_quality_panel.dart` | 清晰度面板：列出 `accept_quality` 档、当前档高亮、点击切换（乐观更新 + 失败回退） |
+| UI | `pages/player/views/player_quality_panel.dart` | 清晰度面板：列出 `accept_quality` 档、当前档高亮、点击切换（**先乐观高亮，再按父级返回的真实 qn 收口**：成功回落如实显示、失败回到切换前那一档，§4.36） |
 | UI | `pages/player/views/player_bili_playlist_panel.dart` | 番剧剧集列表面板：集号 + 集名 + 角标（会员/限免/预告）+ 当前集高亮「播放中」+ 打开即滚动定位 |
-| 入口 | `pages/bilibili/bili_play_launcher.dart` | 播放启动器：解析 playurl → 构造 `BiliMedia` → push `PlayerPage`（番剧/选集/BV 三处复用）；番剧另带整季剧集列表（详情页/选集页已有则直接传，只有单集信息时并行补拉一次季详情） |
+| 入口 | `pages/bilibili/bili_play_launcher.dart` | 播放启动器：解析 playurl → 构造 `BiliMedia` → push `PlayerPage`（番剧/选集/**BV 或 av** 三处复用）；番剧另带整季剧集列表（详情页/选集页已有则直接传，只有单集信息时并行补拉一次季详情）；**av 链接走 aid 通道**（§4.36） |
 
 **关键决策**：
 - **双流播放（免合并秒开）**：DASH video 流作主媒体，audio 流经 mpv `audio-add` 外挂；
@@ -997,9 +1012,12 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   纯 Dart 复刻为 `BiliStreamProxy`：`HttpClient`（BoringSSL）出站拉流 + `HttpServer`
   监听 127.0.0.1 明文喂 mpv；转发 `Range`/`content-range`/`accept-ranges` 支持拖动；
   播放结束 `dispose` 时 `stop()` 释放端口。**根治方案**见下方「内核重编」。
-- **清晰度**：默认请求最高档（`qn=127`，服务端按账户权限回落），可选档来自
-  `accept_quality` + `accept_description`；切换档位重新请求 playurl（换 URL 重开 +
-  `seek` 保持进度），不做 DASH 动态自适应。
+- **清晰度**：默认请求 **1080P**（`defaultQn = 80`，服务端按账户权限**向下取最接近的可用档**
+  ——用户设计口径，2026-09 拍板），可选档来自 `accept_quality` + `accept_description`；
+  切换档位重新请求 playurl（换 URL 重开 + `seek` 保持进度），不做 DASH 动态自适应。
+  ⚠️ **面板高亮以「服务端实际给的档位」为准**（`playUrl.quality`）：点一个没权限的更高档时
+  高亮**不会**停在用户点的那一档上，而是如实显示回落到的那一档；回落到的档**恰好就是当前在播
+  的档**时只纠正高亮 + toast 说明，**不重开流**（重开会黑一下 + 进度回跳）。细则见 §4.36。
 - **弹幕**：REST 分段 protobuf（无需 gRPC/WBI），`progress`(毫秒)→秒、`color`(十进制)→RGB、
   mode 4/5 映射底部/顶部其余滚动；跨分段按 id 去重、按时间升序；落盘 `filesDir/danmaku/
   bilibili/{cid}.xml`（标准 B 站 XML，复用 `parseDanmakuXml`，下载场景可进同名弹幕链路）。
@@ -1892,6 +1910,46 @@ fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError
 
 ---
 
+### 4.36 B 站链路纪律（链接解析 / WBI / 风控 / 清晰度 / client，B11）
+
+> 来源：体检报告 §4（P3 输入与边界）+ 计划书 B11 点名的 P2-5 / P2-13，
+> 以及 2026-09 真机复验时用户对「清晰度回落口径」的拍板。改 `utils/bili_*`、
+> `services/bilibili/**`、`pages/bilibili/**` 前必读。
+
+**六条纪律（都有反例）**
+
+| 纪律 | 落点 | 反例（都踩过） |
+|---|---|---|
+| **令牌必须有边界** | `parseBiliBangumiUrl`：ss/ep/av 只认「URL 路径里」(`/ep123`) 或「整串就是令牌」(`ep123456`，数字 ≥3 位)；BV 两侧不得再粘字母数字 | 裸 `ep(\d+)`/`ss(\d+)`/`av(\d+)` → `step2`（教程）、`SS2 第二季`、`AV1 编码`、`第12集 ep12 更新` 全被当成链接，点「解析链接」跳进不存在的番剧 |
+| **含短链就必须先展开** | `BiliDownloadService._maybeExpand` / `BiliIndexPage._submit`：判据是 `extractBiliShortLink(text) != null`，**不是**「直接解析是否为空」 | 短链码是随机串，可能恰好长得像令牌（`b23.tv/av1234567`）→ 旧实现短路在一个不存在的 av 号上，短链永远不展开 |
+| **命中判定不作用于短链本身** | `expandBiliShortLink` 的 `isTarget` 在**解析出真实 URL 之后**判 | 在每跳开头判 → `isTarget` 一说真就立刻返回短链，等于永不展开 |
+| **av 号不能丢 aid** | `playBiliUgc(context, bvid:, aid:)`：view 用 aid 通道，拿到真实 bvid 后 playurl/切清晰度优先用它；拿不到才继续用 avid | 播放链路只传 `ref.bvid`（av 链接是空串）→ §4.16 宣称的 av 支持实际不可用，解析必失败 |
+| **WBI 密钥有日切有效期** | `isBiliMixinKeyStale` + `BiliAccount.ensureMixinKey()`：跨 UTC+8 自然日 / 超 6h / 时钟回拨 / 从未取过 → 重取；**重取失败返回旧密钥** | 取一次缓存到进程结束 → 「昨天还能搜、今天搜索无结果 / playurl 解析失败」 |
+| **`v_voucher` 不等于成功** | `BiliPlayUrlResult.isRiskControlled`（有凭证**且无任何流**）+ `BiliVideoService._ensurePlayable`：报「触发风控验证」 | 命中风控时 `code=0` 但只给 `v_voucher`，旧实现当成功 → 用户只看到「解析播放地址失败」，完全不知道该稍后重试 |
+
+**清晰度面板的高亮仲裁（用户拍板 2026-09）**
+
+- **基准口径**：默认请求 **1080P**（`defaultQn = 80`），服务端按账号权限**向下取最接近的
+  可用档**——所以「点 4K 却停在 1080P」是**设计内**行为，不是 bug。
+- **高亮以真实档位为准**：`onSelect` 返回切换后的**真实 qn**（`BiliMedia.currentQn` =
+  `playUrl.quality`，服务端实际给的）。成功 → 钉到真实档；**失败 → 回到切换前那一档**，
+  不是「开面板那一刻」的快照（连切两档时后者已过时，会让高亮莫名跳回旧档）。
+- **回落不重开流**：请求的档位没给到但**恰好等于当前在播的档**时，只纠正高亮 + 一条
+  toast（「该清晰度不可用，已切换到 X」），**不**重开播放（重开会黑一下 + 进度回跳）。
+- ⚠️ 面板的 `_switching` 守卫保证在途点击不排队；`didUpdateWidget` 在外层重建时同步真实档位。
+
+**client 生命周期（同 §4.11 / §4.35 的约定）**：`BiliHttp.close()` / `BiliDownloadService.close()`
+均幂等且**只关自建的 client**；`BiliVideoService` / `BiliBangumiService` 缺省都复用
+`BiliAccount.instance.http`（Cookie + 指纹一体，且不新建连接池）。
+**不要在页面里 `new BiliHttp()`**——那会每次进页漏一个连接池，而且请求不带登录态与指纹，
+更容易被风控；**自建了 client 的页面必须在 `dispose` 里 `close()`**（视频下载页 / 弹幕下载页
+持有的 `BiliDownloadService` 就是这么做的）。
+
+**真机验收（2026-09，用户实测通过）**：普通文本不再被当链接、分享短链能展开 / av 链接能播 /
+番剧搜索正常 / 点没权限的更高档高亮如实回落且不再无谓重开 / 反复进出番剧页不累积。
+
+---
+
 ## 5. 新增功能指南（按功能类型）
 
 ### 5.1 新增一个页面
@@ -2025,12 +2083,17 @@ fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError
   - `test/player_danmaku_network_panel_test.dart` — 网络弹幕搜索面板（40dp 搜索框定高/框下历史胶囊+清除/命中折叠与重新展开/结果卡收起态不构建子树+手风琴/选集回调+关闭面板 + **搜索并发**：loading 期间再搜不被吞、按钮仍在位、旧响应后到被丢弃、最后一次输入生效，P2-10）
   - `test/player_danmaku_settings_panel_test.dart` — 弹幕设置面板（两段式布局/开关滑杆实时写设置/恢复默认/读数联动/屏蔽词增删 + **「弹幕合并」开关位于去重与屏蔽词之间**）
   - `test/player_panel_theme_test.dart` — 播放器暗色面板强调色跟随主题（换主题色滑杆轨道/拇指随之改变且不等于旧写死蓝 0xFF4FC3F7；保留无气泡外观；浅色主题下派生色更亮；同 seed 复用缓存实例）
-  - `test/subtitle_file_picker_panel_test.dart` — 自建选择器面板（记忆文件夹被删向上回退/空目录正常落地/导航失败维持原状/选择回调+文件夹记忆）  - `test/bili_bangumi_test.dart` — 番剧模型 fromJson（索引/条件/搜索/季详情/选集/时间表 + 数字字段字符串兼容）+ 链接解析纯函数（ss/ep/BV）
+  - `test/subtitle_file_picker_panel_test.dart` — 自建选择器面板（记忆文件夹被删向上回退/空目录正常落地/导航失败维持原状/选择回调+文件夹记忆）
+  - `test/bili_bangumi_test.dart` — 番剧模型 fromJson（索引/条件/搜索/季详情/选集/时间表 + 数字字段字符串兼容）+ 链接解析纯函数（ss/ep/BV/**av**/合集列表 + **令牌边界**：`step2`/`第12集 ep12`/`SS2`/`AV1` 不算链接、裸令牌与 URL 路径两种形态、BV 不许截出假号、超长数字不抛异常，§4.36）
   - `test/bili_bangumi_service_test.dart` — 番剧服务（MockClient：条件/索引分页/推荐/搜索 WBI 签名/季详情 season_id·ep_id/时间表合并 + 业务错误语义化）
-  - `test/bili_dash_test.dart` — playurl DASH 模型（DASH 解析/baseUrl·baseUrls 双格式/清晰度档/clips/dolby·flac 合并/数字字符串兼容/默认选流优先 30280）
+  - `test/bili_dash_test.dart` — playurl DASH 模型（DASH 解析/baseUrl·baseUrls 双格式/清晰度档/clips/dolby·flac 合并/数字字符串兼容/默认选流优先 30280 + **`v_voucher` 风控判定**：有凭证无流才算风控、有流照常播、数字型凭证也认，§4.36）
   - `test/bili_pb_test.dart` — protobuf wire 解码器（varint/length-delimited/未知字段跳过）+ 弹幕消息字段号解析（DmWebViewReply.dmSge.total / DanmakuElem）
   - `test/bili_danmaku_service_test.dart` — B 站弹幕服务（MockClient：分段 protobuf 抓取解码/跨分段去重/state==1 关闭/降级旧 XML deflate/XML 缓存回读往返）
-  - `test/bili_video_service_test.dart` — 视频服务（MockClient：PGC result.video_info/UGC data/resolveUgcVideo/WBI 签名/错误码友好提示/密钥缺失）
+  - `test/bili_video_service_test.dart` — 视频服务（MockClient：PGC result.video_info/UGC data/resolveUgcVideo/WBI 签名/错误码友好提示/密钥缺失 + **风控 `v_voucher` 两条 playurl 路径都报可诊断错误** + **av 号走 aid 通道**（view 带 aid、拿到真实 bvid 后 playurl 改用 bvid），§4.36）
+  - `test/bili_wbi_test.dart` — WBI 签名纯函数（getMixinKey 官方示例向量/从 wbi_img URL 推导/encWbi 的 wts·w_rid 与剔除 `!'()*`）+ **密钥新鲜度**（从未取过/同一天不重取/**跨 UTC+8 自然日**/超 6h 兜底/时钟回拨，§4.13）
+  - `test/bili_short_link_test.dart` — b23.tv 短链（任意分享文本提取/裸短链补协议/逐跳跟随 302/命中令牌即停/非重定向返回当前 URL/异常返回 null + **`isTarget` 不作用于短链本身** + **含短链就必须展开**（`b23.tv/av1234567` 不短路）+ 普通文本不触发请求 + **短链 client 生命周期**（自建的关、注入的不代关、幂等），§4.36）
+  - `test/bili_http_test.dart` — `BiliHttp` 的 client 生命周期（自建的由 `close()` 关闭且幂等 / 注入的不代关 / close 后注入的 client 仍可用，§4.13/§4.36）
+  - `test/player_quality_panel_test.dart` — 清晰度面板高亮仲裁（打开高亮当前档 / 成功钉到**父级返回的真实档位**（回落场景）/ **A→B 成功、B→C 失败回到 B 而不是开面板时的 A** / 在途连点只发一次 / 空列表占位，§4.36）
   - `test/bili_stream_proxy_test.dart` — 本地流代理（转发字节/Range 与响应头透传/未注册 404/start·stop 生命周期/网速 recentSpeedBytesPerSec）
   - `test/bili_auth_service_test.dart` — Web 扫码登录服务（generate 解析 url+qrcode_key / poll 成功从 data.url query 解析 Cookie+refresh_token / 86101·86090 状态）
   - `test/download_manager_test.dart` — 下载记录持久化（DownloadTask toJson/fromJson 往返 / 重启恢复未完成归位暂停·已完成保留 / 损坏数据防御）
@@ -2085,7 +2148,7 @@ fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError
   - `test/network_path_test.dart` — 网络路径规范化/校验 + **值相等与 `hashCode`**（代理按路径缓存的前提，P2-18）
   - `test/network_streaming_proxy_test.dart` — 回环流代理（无凭据 URL/GET/HEAD/Range/未注册 404 + **按路径缓存**：注册的 `fileSize` 生效后不再问远端大小、注册的 `mimeType` 生效，P2-18）
   - `test/network_connection_test.dart` — 网络账户模型（协议解析/默认端口/JSON 往返/字段缺失容错/copyWith/toString 不泄露凭据 + `toJson(includePassword: false)` 不写密码字段且其余字段一个不少）
-- 改以下代码必须跑对应测试：`AppFrame`、`ViewSettings` 排序、权限流程、`CapsuleNavBar`、**`services/network/**`（含 `third_party/smb_connect`）**
+- 改以下代码必须跑对应测试：`AppFrame`、`ViewSettings` 排序、权限流程、`CapsuleNavBar`、**`services/network/**`（含 `third_party/smb_connect`）**、**`utils/bili_*` 与 `services/bilibili/**`**
 
 ---
 
@@ -2305,3 +2368,11 @@ fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError
 | 网络代理「按路径缓存远端大小」永不命中（每个 HTTP 请求都重查远端、`registerStream` 的 `fileSize`/`mimeType` 形同虚设） | `NetworkPath` 必须**值相等**：代理注册时存对象 A、请求路径由 URL 段重新 `NetworkPath.from` 构造对象 B，缺 `==`/`hashCode` 时标识比较永不相等（§4.35，P2-18） |
 | FTP 中文文件名在 GBK 服务器（IIS / 老 Serv-U）上彻底不可用 | 登录探测 `OPTS UTF8 ON`：回 200 → UTF-8；不认该命令 → **先按严格 UTF-8 试解列表**，解不通才判定 GBK。⚠️ 必须「列表与命令同一套编码」——只列表按 GBK 解、命令仍发 UTF-8 会永远 `550`；控制连接按**整行**解码（GBK 多字节，不能流式逐 chunk 凑）；媒体流**不能套空闲超时**（mpv 暂停时本来就没数据）（§4.35，D7） |
 | 网络存储链路「重试」把流式请求重发（重复拉流） | `openStream` 一律单次尝试、只加超时（等响应头）；`withRetry(streaming: true)` 只用于此语义。⚠️ 但**超时不能省**：不加超时的流式请求在黑洞地址上同样永久挂起（§4.28/§4.35） |
+| 粘贴「`第12集 ep12 更新`」「`step2 教程`」「`SS2 第二季`」「`AV1 编码`」被当成 B 站链接（跳进不存在的番剧/视频） | 链接令牌必须有边界：ss/ep/av 只认**URL 路径里**（`/ep123`）或**整串就是令牌**（`ep123456`，数字 ≥3 位），BV 两侧不得再粘字母数字。裸 `ep(\d+)` 会把普通文本里的字母组合全吃进来（§4.36） |
+| b23.tv 短链**永远不展开**（解析出的是短链码里那段巧合数字） | 判据只能是「文本里有没有短链」（`extractBiliShortLink != null`），**不能**是「直接解析是否为空」；并且 `expandBiliShortLink` 的命中判定要在**解析出真实 URL 之后**做，不能对短链本身判（否则一说真就立刻返回短链）（§4.36） |
+| 粘贴 av 号链接解析必失败（文档却宣称支持 av） | 播放链路不能只传 `bvid`：av 链接的 bvid 是空串 → view/playurl 必须能走 **aid 通道**，且拿到真实 bvid 后优先用它（`playBiliUgc(context, bvid:, aid:)`）（§4.36，§4.16） |
+| 「昨天还能搜，今天番剧搜索没结果 / playurl 解析失败」 | WBI 密钥**官方每日更换**，不能取一次用到进程结束：`isBiliMixinKeyStale` 按「跨 UTC+8 自然日 / 超 6h / 时钟回拨 / 从未取过」判重取；**重取失败要退回旧密钥**（别让一次网络抖动导致所有签名请求失败）（§4.13/§4.36） |
+| playurl `code=0` 却播不出来，用户只看到「解析播放地址失败」 | 命中风控时服务端回 `v_voucher` 但**不给任何流** → 必须单独判定并报「触发风控验证（v_voucher），请稍后重试或切换网络」；判定条件是「有凭证**且无流**」，有流时照常播（§4.36） |
+| 点 4K 没权限 → 面板高亮停在 4K/跳回更早的档位，与实际在播的不一致；档位没变却重开一次流 | 高亮以**服务端实际给的档位**（`playUrl.quality`）为准：成功钉真实档、失败回到**切换前**那一档（不是开面板时的快照）；回落到的档恰好等于当前档时只纠正高亮 + toast，**不重开流**。基准口径是「请求 1080P，服务端向下取最接近的可用档」（用户拍板，§4.36） |
+| 反复进出番剧详情/索引/搜索页，内存与 client 数累积 | `BiliBangumiService` 缺省**复用** `BiliAccount.instance.http`（Cookie+指纹一体、不新建连接池），不要 `http ?? BiliHttp()` 自建；`BiliHttp.close()` 幂等且只关自建的 client（§4.13/§4.36，P2-13） |
+| 反复进出**视频下载页/弹幕下载页**同样漏 client | 页面持有的 `BiliDownloadService` 自建了短链展开用的 `http.Client` → 必须在页面 `dispose` 里 `_service.close()`；`close()` 幂等且只关自建的（§4.36） |

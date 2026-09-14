@@ -193,4 +193,44 @@ void main() {
     // 向后兼容：cid 仍取首分 P
     expect(v.cid, 456);
   });
+
+  group('v_voucher（风控凭证）', () {
+    test('只有 v_voucher、没有流 → isRiskControlled', () {
+      final r = BiliPlayUrlResult.fromJson(const {
+        'quality': 80,
+        'v_voucher': 'voucher_abc',
+      });
+      expect(r.vVoucher, 'voucher_abc');
+      expect(r.isRiskControlled, isTrue);
+      expect(r.defaultVideo, isNull);
+    });
+
+    test('数字型 v_voucher 也认（服务端字段类型不定）', () {
+      final r = BiliPlayUrlResult.fromJson(const {'v_voucher': 12345});
+      expect(r.vVoucher, '12345');
+      expect(r.isRiskControlled, isTrue);
+    });
+
+    test('有流时即便带 v_voucher 也不算风控（不缺流就照常播）', () {
+      final r = BiliPlayUrlResult.fromJson(const {
+        'quality': 80,
+        'v_voucher': 'voucher_abc',
+        'dash': {
+          'video': [
+            {'id': 80, 'baseUrl': 'https://v80/'},
+          ],
+          'audio': [
+            {'id': 30280, 'baseUrl': 'https://a/'},
+          ],
+        },
+      });
+      expect(r.isRiskControlled, isFalse);
+      expect(r.defaultVideo!.baseUrl, 'https://v80/');
+    });
+
+    test('无 v_voucher 无流 → 不是风控（走原有「解析播放地址失败」）', () {
+      final r = BiliPlayUrlResult.fromJson(const {'quality': 80});
+      expect(r.isRiskControlled, isFalse);
+    });
+  });
 }

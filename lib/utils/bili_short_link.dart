@@ -42,9 +42,11 @@ String? extractBiliShortLink(String input) {
 /// 展开分享短链，返回跳转后的真实 URL。
 ///
 /// - 输入文本中提取不到 b23.tv 短链、请求失败或超过跳数上限时返回 null；
-/// - [isTarget] 每跳解析出新的 URL 后先判定，命中即不再请求（避免下载页面体），
-///   未命中继续跟随重定向；非重定向响应（200 等）直接返回当前 URL；
-/// - 重定向响应的 body 极小，drain 掉以便复用连接；最终响应不读 body。
+/// - [isTarget] 在**每跳解析出新的 URL 之后**判定，命中即不再请求（避免下载页面体）——
+///   ⚠️ 判定**不针对短链本身**：短链码是随机串，可能恰好长得像令牌
+///   （`b23.tv/av1234567`），对它判定会直接返回短链、链接永远不展开；
+/// - 非重定向响应（200 等）直接返回当前 URL；
+/// - 重定向响应的 body 极小，带上限丢弃以便复用连接；最终响应不读 body。
 Future<String?> expandBiliShortLink(
   String input, {
   http.Client? client,
@@ -60,9 +62,6 @@ Future<String?> expandBiliShortLink(
   try {
     var current = uri;
     for (var hop = 0; hop < 5; hop++) {
-      if (isTarget != null && isTarget(current.toString())) {
-        return current.toString();
-      }
       // 每跳独立重试（连接类失败才重试；文本档超时）。
       // ⚠️ Request 必须每跳新建：http.Request 的 body 流只能发送一次，
       // 复用同一个对象重试会抛「Request has already been sent」。
@@ -83,6 +82,10 @@ Future<String?> expandBiliShortLink(
         // 302 的 body 极小：带上限丢弃（超限即弃，防上游塞巨量数据）
         await drainStreamCapped(resp.stream);
         current = current.resolve(location);
+        // 已拿到真实 URL：命中令牌就停在这里，不再多请求一次
+        if (isTarget != null && isTarget(current.toString())) {
+          return current.toString();
+        }
         continue;
       }
       // 非重定向：已到达真实页面，返回当前 URL（不读 body）

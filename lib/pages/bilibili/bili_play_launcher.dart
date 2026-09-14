@@ -72,21 +72,37 @@ Future<BiliPlaylist?> _fetchPlaylist(BiliEpisode ep) async {
   }
 }
 
-/// 播放 B 站 UGC（BV 号）。
-Future<void> playBiliBvid(BuildContext context, String bvid) async {
+/// 播放 B 站 UGC（BV 号或 av 号）。
+///
+/// [aid] 用于老链接（`/video/av170001`）与只解出 av 号的短链：view/playurl 都走
+/// aid 通道；两者都非空时以 [bvid] 为准（服务端优先 bvid）。链路里任何一环丢掉
+/// aid 都会让 av 链接「解析失败」，所以 [BiliUgcVideo.aid] 解析出来后，
+/// 后续请求一律优先用它换回的 bvid（§4.16/§7）。
+Future<void> playBiliUgc(
+  BuildContext context, {
+  String bvid = '',
+  int aid = 0,
+}) async {
   final service = BiliVideoService();
   if (!context.mounted) return;
   _showLoading(context);
   try {
-    final video = await service.resolveUgcVideo(bvid);
-    final playUrl = await service.fetchUgcPlayUrl(bvid: bvid, cid: video.cid);
+    final video = await service.resolveUgcVideo(
+      bvid,
+      aid: aid > 0 ? aid : null,
+    );
+    final playUrl = await service.fetchUgcPlayUrl(
+      bvid: _bvidFor(video, fallback: bvid),
+      avid: _aidFor(video, fallback: aid),
+      cid: video.cid,
+    );
     if (!context.mounted) return;
     _dismissLoading(context);
     if (playUrl.defaultVideo == null || playUrl.defaultAudio == null) {
       _toast(context, '解析播放地址失败');
       return;
     }
-    final title = video.title.isEmpty ? bvid : video.title;
+    final title = _ugcTitle(video);
     final media = _buildUgcMedia(service, video, playUrl);
     await Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => PlayerPage(
@@ -103,21 +119,45 @@ Future<void> playBiliBvid(BuildContext context, String bvid) async {
   }
 }
 
+/// playurl 用的 bvid：优先 view 接口回填的真实 bvid，其次调用方传来的。
+String? _bvidFor(BiliUgcVideo video, {required String fallback}) {
+  final resolved = video.bvid.isNotEmpty ? video.bvid : fallback;
+  return resolved.isEmpty ? null : resolved;
+}
+
+/// playurl 用的 avid：只在没有 bvid 时用（服务端优先 bvid）。
+int? _aidFor(BiliUgcVideo video, {required int fallback}) {
+  final aid = video.aid > 0 ? video.aid : fallback;
+  if (aid <= 0) return null;
+  return _bvidFor(video, fallback: '') == null ? aid : null;
+}
+
+/// 播放页标题：真实标题优先，其次 BV 号，最后 av 号。
+String _ugcTitle(BiliUgcVideo video) {
+  if (video.title.isNotEmpty) return video.title;
+  if (video.bvid.isNotEmpty) return video.bvid;
+  return video.aid > 0 ? 'av${video.aid}' : 'B 站视频';
+}
+
 BiliMedia _buildUgcMedia(
   BiliVideoService service,
   BiliUgcVideo video,
   BiliPlayUrlResult playUrl,
 ) {
-  final title = video.title.isEmpty ? video.bvid : video.title;
   return BiliMedia(
     cid: video.cid,
     aid: video.aid,
-    title: title,
+    title: _ugcTitle(video),
     playUrl: playUrl,
     switchQuality: (qn) async => _buildUgcMedia(
       service,
       video,
-      await service.fetchUgcPlayUrl(bvid: video.bvid, cid: video.cid, qn: qn),
+      await service.fetchUgcPlayUrl(
+        bvid: _bvidFor(video, fallback: ''),
+        avid: _aidFor(video, fallback: 0),
+        cid: video.cid,
+        qn: qn,
+      ),
     ),
   );
 }
