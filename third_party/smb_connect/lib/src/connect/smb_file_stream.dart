@@ -12,6 +12,8 @@ import 'package:smb_connect/src/connect/impl/smb2/create/smb2_close_request.dart
 import 'package:smb_connect/src/connect/impl/smb2/create/smb2_close_response.dart';
 import 'package:smb_connect/src/connect/impl/smb2/io/smb2_read_request.dart';
 import 'package:smb_connect/src/connect/impl/smb2/io/smb2_read_response.dart';
+import 'package:smb_connect/src/exceptions.dart';
+import 'package:smb_connect/src/smb/nt_status.dart';
 import 'package:smb_connect/src/smb/request_param.dart';
 import 'package:smb_connect/src/smb_constants.dart';
 
@@ -22,46 +24,76 @@ Stream<Uint8List> smbOpenRead(
     [int? length]) async* {
   // int openReadNum = openReadNextNum++;
   length = length ?? (file.size - start);
+  if (length <= 0) {
+    // 起点已在文件末尾：直接结束，绝不发 0 长度读请求（服务器回 0 字节后
+    // 旧实现返回 -1，调用方 `position += -1` → 无限重发同一个 SMB READ）
+    await _closeQuietly(file, tree, fileId, fid);
+    return;
+  }
   var buffSize = min(length, 0xFFF);
   var position = 0;
   Uint8List buff = Uint8List(buffSize);
-  do {
-    var remain = length - position;
-    var readLen = min(buff.length, remain);
-    var res = await smbReadFromFile(
-        file, tree, fileId, fid, buff, position + start, 0, readLen);
-    if (readLen == buff.length) {
-      yield buff;
-    } else {
-      yield Uint8List.view(buff.buffer, 0, readLen);
-    }
-    position += res;
-  } while (position < length);
-  await smbCloseFile(file, tree, fileId, fid);
+  try {
+    do {
+      var remain = length - position;
+      var readLen = min(buff.length, remain);
+      var res = await smbReadFromFile(
+          file, tree, fileId, fid, buff, position + start, 0, readLen);
+      if (readLen == buff.length) {
+        yield buff;
+      } else {
+        yield Uint8List.view(buff.buffer, 0, readLen);
+      }
+      if (res <= 0) return; // 已到末尾 / 已报错：不再重发同一块
+      position += res;
+    } while (position < length);
+  } finally {
+    await _closeQuietly(file, tree, fileId, fid);
+  }
 }
 
 void readAsync(SmbFile file, SmbTree tree, Uint8List? fileId, int fid,
     int start, int? length, StreamController<Uint8List> controller) async {
-  length ??= (file.size - start);
-  var buffSize = min(length, 0xFFF);
-  // int index = 0;
-  var position = 0;
-  Uint8List buff = Uint8List(buffSize);
-  do {
-    var remain = length - position;
-    var readLen = min(buff.length, remain);
-    var res = await smbReadFromFile(
-        file, tree, fileId, fid, buff, start + position, 0, readLen);
-    if (readLen == buff.length) {
-      controller.add(buff);
-    } else {
-      var lastBuff = Uint8List.view(buff.buffer, 0, readLen);
-      controller.add(lastBuff);
+  length = length ?? (file.size - start);
+  try {
+    if (length > 0) {
+      var buffSize = min(length, 0xFFF);
+      // int index = 0;
+      var position = 0;
+      Uint8List buff = Uint8List(buffSize);
+      do {
+        var remain = length - position;
+        var readLen = min(buff.length, remain);
+        var res = await smbReadFromFile(
+            file, tree, fileId, fid, buff, start + position, 0, readLen);
+        if (readLen == buff.length) {
+          controller.add(buff);
+        } else {
+          var lastBuff = Uint8List.view(buff.buffer, 0, readLen);
+          controller.add(lastBuff);
+        }
+        if (res <= 0) break; // 已到末尾 / 已报错：不再重发同一块
+        position += res;
+      } while (position < length);
     }
-    position += res;
-  } while (position < length);
-  await smbCloseFile(file, tree, fileId, fid);
-  await controller.close();
+  } catch (error, stack) {
+    // 读失败必须交给消费者（旧实现返回 -1 让 position 倒退 → 无限重发 +
+    // 消费者永远收不到数据也收不到错误）
+    if (!controller.isClosed) controller.addError(error, stack);
+  } finally {
+    await _closeQuietly(file, tree, fileId, fid);
+    if (!controller.isClosed) await controller.close();
+  }
+}
+
+/// 关闭远端文件句柄；失败不抛（避免覆盖真正的读错误）。
+Future<void> _closeQuietly(
+    SmbFile file, SmbTree tree, Uint8List? fileId, int fid) async {
+  try {
+    await smbCloseFile(file, tree, fileId, fid);
+  } catch (_) {
+    // ignore
+  }
 }
 
 Stream<Uint8List> smbOpenRead2(
@@ -134,7 +166,17 @@ Future<int> smbReadFromFile(SmbFile file, SmbTree tree, Uint8List? fileId,
       //   }
       // }
       if (n <= 0) {
-        return ((fp - start) > 0 ? fp - start : -1);
+        // 有进展就返回已读字节（短读是正常的）；一点没读到要看状态：
+        //  · 错误状态 → 报错（旧实现返回 -1，调用方 `position += -1` 位置倒退、
+        //    无限重发同一个 SMB READ、消费者永远没有数据也没有错误）；
+        //  · OK / EOF → 返回 0，调用方据此结束，不再空转。
+        if (fp > start) return fp - start;
+        final int status = resp.getErrorCode();
+        if (status != NtStatus.NT_STATUS_OK &&
+            status != NtStatus.NT_STATUS_END_OF_FILE) {
+          throw SmbException(SmbException.getMessageByCode(status));
+        }
+        return 0;
       }
       fp += n;
       off += n;
@@ -166,7 +208,14 @@ Future<int> smbReadFromFile(SmbFile file, SmbTree tree, Uint8List? fileId,
     //   throw seToIoe(se);
     // }
     if (n <= 0) {
-      return ((fp - start) > 0 ? fp - start : -1);
+      // 同上（SMB1 分支）：错误状态报错，OK/EOF 返回 0
+      if (fp > start) return fp - start;
+      final int status = response.getErrorCode();
+      if (status != NtStatus.NT_STATUS_OK &&
+          status != NtStatus.NT_STATUS_END_OF_FILE) {
+        throw SmbException(SmbException.getMessageByCode(status));
+      }
+      return 0;
     }
     fp += n;
     len -= n;

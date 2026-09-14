@@ -30,6 +30,19 @@ class NetworkPath {
   @override
   String toString() => value;
 
+  /// **值相等**：代理的 `knownSizes` / `registerStream` 判断都以值为准。
+  ///
+  /// 曾因缺 `==` 而按**标识**比较：代理里 `entry.primaryPath` 是注册时那个对象，
+  /// 而请求路径由 URL 段重新 `NetworkPath.from` 构造 → 永远不相等，
+  /// 「按路径缓存远端大小」永不命中（每个 HTTP 请求都重新查一次远端大小，
+  /// `registerStream` 传入的 `fileSize`/`mimeType` 形同虚设）。
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is NetworkPath && other.value == value);
+
+  @override
+  int get hashCode => value.hashCode;
+
   /// 规范化 + 校验用户/客户端提供的原始路径（不做 URL 解码）。
   static NetworkPath from(String raw) {
     if (raw.contains('://')) {

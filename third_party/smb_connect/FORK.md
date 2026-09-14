@@ -29,9 +29,9 @@
 |---|---|
 | 上游包 | `smb_connect` |
 | 基线版本 | **0.0.9**（pub.dev 发布版） |
-| 本地版本 | **0.0.9-mk.1**（`pubspec.yaml`，后缀用于区分本地魔改版） |
+| 本地版本 | **0.0.9-mk.2**（`pubspec.yaml`，后缀用于区分本地魔改版） |
 | 校验方式 | 与 pub 缓存中的 `smb_connect-0.0.9` 逐文件 diff |
-| 差异规模 | **6 个文件**（`lib/` 下）+ `pubspec.yaml`，约 +71 / −114 行 |
+| 差异规模 | **8 个文件**（`lib/` 下）+ `pubspec.yaml`，约 +120 / −276 行 |
 | 依赖差异 | 上游声明 `mutex: ^3.1.0`，本 fork **已移除**（补丁 1 后不再引用） |
 
 对照物（本机路径，升级时换成本机 pub 缓存里的目标版本）：
@@ -122,11 +122,53 @@
 - 两者作用域内**均无同名局部变量/参数遮蔽**，去掉限定后语义完全相同
   （`setResponse` 的参数名是 `msg` 而非 `response`）
 
+### 补丁 6：响应分发不再被单帧异常毒化（`smb_transport.dart`）
+
+> 应用层症状：**SMB 播放永久转圈**、`SmbClient.isConnected()` 恒 true 导致代理
+> 长期复用死连接。三个独立缺陷叠在同一条读链路上。
+
+- **(a) `_readQueue` 末尾挂 `catchError`**：`_readQueue = _readQueue.then(...)`
+  一旦因某帧解码异常变成失败 Future，后续 `_drainResponses` 会被**永久跳过** →
+  此后所有响应都不再分发，直到全部超时。
+- **(b) 未知 mid 的帧必须把 body 读走**：原实现只 `print("Error complete response")`
+  就继续下一帧，socket 流因此错位，之后每一帧的 body 都被当成 header 解析。
+  新增 `_skipFramePayload()`（`_peekKey()` 已消费 4 字节 NetBIOS 头 + 32 字节 SMB 头，
+  故按 `size - header` 跳过剩余部分）。迟到响应（请求早已超时/作废）正走这条路。
+- **(c) 解码失败不再"忍着"**：`_dispatchResponse()` 把异常交给**该帧**的等待者
+  （`completeError`），同时 `_failAllInFlight()` 让其它在途请求立刻失败
+  （否则它们要各自等满 3 秒 × 5 次重试才报错），随后 `disconnect(true)`——
+  帧内游标位置已不可知，继续复用只会得到错位的流。**宁可让上层重连，也不静默错位。**
+
+### 补丁 7：读失败不再静默返回 `-1`（`smb_file_stream.dart`）
+
+- `smbReadFromFile()` 在 `n <= 0` 时：**有进展就返回已读字节**（短读是正常的）；
+  一点没读到则看状态——**错误状态抛 `SmbException`**，`NT_STATUS_OK` /
+  `NT_STATUS_END_OF_FILE` 返回 0 表示正常结束。
+  原实现无条件 `return -1`，而所有调用方都是 `position += res`：位置倒退 →
+  **无限重发同一个 SMB READ**（表现就是永久转圈），消费者既拿不到数据也拿不到错误。
+  这就是体检报告说的「恢复 checkStatus」——**只恢复到读路径**，不做整份
+  `_checkStatus`（那段在 0.0.9 里已被上游整段注释，全量恢复会改变所有命令的
+  错误语义，风险远超本补丁的必要范围）。
+- `readAsync()` 的读错误改为 `controller.addError` + `close()`（原来返回 `void`、
+  异常直接逃成 Zone 级）；`smbOpenRead()` / `readAsync()` 在 `length <= 0`
+  （起点已在文件末尾）时**不发 0 长度读请求**；两条路径都在 `finally` 里关句柄
+  （`_closeQuietly`，关失败不覆盖真正的读错误）。
+
+### 补丁 8：`RandomAccessFile` 不再死循环 / 不再交出错数据（`smb_random_access_file.dart`）
+
+- `_readToBuff()`：`length <= 0`（已在末尾 / 文件变短）返回 0，
+  不再 `throw "Empty read to buffer"`（抛的是 **String**，既拦不住也不好定位）。
+- `readInto()`：`res <= 0` 立即 `break`。原实现既不推进 `_position` 也不报错 →
+  外层 `while (length > 0)` **无限重发同一个 SMB READ**（与补丁 7 是同一症状的另一半）。
+- `read()`：只返回真正读到的字节（`Uint8List.sublistView`）。原实现无论读到多少
+  都返回整个 `count` 长度的缓冲区，到末尾会把**一整块零字节**当数据交出去。
+- `readByte()`：读到末尾返回 `-1`（对齐 `dart:io` 语义），不再恒返回 `0`。
+
 ## 4. 应用层配套（不在本 fork 内，但依赖本 fork）
 
 | 位置 | 作用 |
 |---|---|
-| `lib/services/network/smb_client.dart` | 并发预读管线：`const workers = 4`，用 4 个独立文件句柄并发读取不同块、按块序号合并输出。**依赖本 fork 的并发在途能力**——若退回上游的全局锁，多句柄也只是排队，吞吐不会提升 |
+| `lib/services/network/smb_pipeline.dart` | 并发预读管线（`workers = 4`、`blockSize = 64000`、窗口 `maxBlocksAhead = 8`）：用 4 个独立句柄并发读取不同块、按块序号合并输出，并在**取消 / 出错 / 消费者暂停**时立刻停手、清缓存、关句柄。**依赖本 fork 的并发在途能力**——若退回上游的全局锁，多句柄也只是排队，吞吐不会提升。管线的取消/背压语义有单测（`test/smb_pipeline_test.dart`），fork 侧只负责「不毒化、不死循环」 |
 | `lib/services/network/network_streaming_proxy.dart` | 本地 HTTP 流代理（Range 转发） |
 
 ## 5. 升级步骤
@@ -152,7 +194,9 @@
 | 功能正确 | SMB 浏览目录、播放视频正常；并发预读时**不应**出现 `SmbTransport cant send request`、`TimeoutException` 或响应错位 |
 | 吞吐确实提升 | 对比「并发读」与「单请求串行」的读取速度：若退回 ≈1.5 MB/s 量级，说明并发在途没生效 |
 | 无刷屏异常 | socket 关闭/网络中断时，不应出现 Zone 级 Unhandled Exception 刷屏（补丁 4 的验证点） |
-| analyzer 无残留 | `flutter analyze` 中本包不应出现 `invalid_annotation_target` / `unnecessary_this` / `unnecessary_library_name`（补丁 5 的验证点） |
+| analyzer 无残留 | `flutter analyze` 中本包不应出现 `invalid_annotation_target` / `unnecessary_this` / `unnecessary_library_name`（补丁 5 的验证点）；本包自身用 `dart analyze third_party/smb_connect` 应为 **No issues found** |
+| 读队列不毒化 | 播放中反复 seek / 拔插网线后：不应出现「所有请求都超时且永不恢复」；日志里的 `Error complete response` 之后仍能继续收到正常响应（补丁 6 的验证点） |
+| 无死循环重发 | 网络中断/服务端半开时：日志不应出现同一个 SMB READ 被无限重发（补丁 7/8 的验证点）；应当报错或重连，而不是永久转圈 |
 
 ## 7. 已知遗留与版本约定
 
@@ -162,9 +206,13 @@
   的用处，且全包（含 `example/`）与应用层 `lib/` 均不再引用 `package:mutex`，已从
   `pubspec.yaml` 删除。`pubspec.lock` 需 `flutter pub get` 后同步（若没有其它包依赖
   `mutex`，它会从 lock 中消失）。
-- ✅ **本地版本号加后缀**：`0.0.9` → **`0.0.9-mk.1`**，与
-  `third_party/media_kit_libs_android_video` 的 `1.3.8-mk.1` 命名风格统一，便于
-  排查问题时一眼确认跑的是本地魔改版。
+- ✅ **本地版本号加后缀**：`0.0.9` → **`0.0.9-mk.1`**（补丁 1~5）→ **`0.0.9-mk.2`**
+  （补丁 6~8），与 `third_party/media_kit_libs_android_video` 的 `1.3.8-mk.1` 命名风格
+  统一，便于排查问题时一眼确认跑的是本地魔改版。
+- ⚠️ **有意不做的两件事（勿当遗漏）**：①**不恢复整份 `_checkStatus`**（0.0.9 里已被
+  上游整段注释；全量恢复会改变所有命令的错误语义，本 fork 只把「读路径」的错误暴露出来，
+  见补丁 7）；②**解码失败即断开连接**（补丁 6c）而不是尝试重新对齐帧——帧内游标位置
+  不可知，静默错位比断连危险得多。
 
 > **版本号约定**：本地 fork 建议采用 `<上游版本>-mk.<本地修订号>`，便于在日志/崩溃
 > 上报中区分「上游原版」与「本地魔改版」。当前 `third_party/` 下三个 path 依赖的
@@ -173,7 +221,7 @@
 > | 本地包 | 版本 | 是否采用后缀 |
 > |---|---|---|
 > | `media_kit_libs_android_video` | `1.3.8-mk.1` | ✅ 已采用 |
-> | `smb_connect` | `0.0.9-mk.1` | ✅ 已采用（本次） |
+> | `smb_connect` | `0.0.9-mk.2` | ✅ 已采用（本次） |
 > | `media_kit` | `1.2.6` | ❌ 未加后缀（如需统一可改为 `1.2.6-mk.1`） |
 >
 > ⚠️ 修改任何 `third_party/` 下 path 依赖的版本号后，需跑一次 `flutter pub get`

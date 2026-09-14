@@ -4,13 +4,13 @@
 /// `/share/...` 的第一段为共享名。`openRead(file, start, end)` 原生支持 offset 分段读取。
 library;
 
-import 'dart:async';
 import 'dart:io';
 
 import 'package:smb_connect/smb_connect.dart';
 import 'package:moumou/models/network_connection.dart';
 import 'package:moumou/models/network_file.dart';
 import 'package:moumou/services/network/network_client.dart';
+import 'package:moumou/services/network/smb_pipeline.dart';
 import 'package:moumou/utils/network_mime_types.dart';
 
 class SmbClient implements NetworkClient {
@@ -90,80 +90,19 @@ class SmbClient implements NetworkClient {
     try {
       final f = await c.file(path);
       if (f.size > 0) {
-        return _pipelinedStream(c, f, f.size, offset);
+        // 并发预读管线：取消/背压/出错停止都在 `smb_pipeline.dart` 里（P1-22），
+        // 每次 `open` 都取一个**独立句柄**，让多个读请求同时在途。
+        return pipelinedSmbStream(
+          open: () => c.open(f, mode: FileMode.read),
+          size: f.size,
+          offset: offset,
+        );
       }
       return await c.openRead(f, offset);
     } catch (e) {
       print('[SMB] openStream($path, $offset) 失败: $e');
       throw NetworkClientException(_friendly(e));
     }
-  }
-
-  /// 并发预读管线：用多个独立文件句柄并发读取、按序输出。
-  ///
-  /// smb_connect 底层读取是“发一个 64KB 读请求 → 等响应 → 再发下一个”，全串行，
-  /// 吞吐上限被压在 64KB ÷ 往返延迟。配合 fork 库里移除的全局锁，这里用 [workers]
-  /// 个句柄各自读不同块并按块序号合并，让多个读请求同时在途，吞吐随并发数提升。
-  Stream<List<int>> _pipelinedStream(SmbConnect c, SmbFile f, int size, int offset) {
-    const workers = 4;
-    const block = 64000; // 略小于底层单次 SMB2 读上限(64936)，保证一次往返读满一块
-    final total = size - offset;
-    final totalBlocks = total <= 0 ? 0 : (total + block - 1) ~/ block;
-
-    final controller = StreamController<List<int>>();
-    final completed = <int, List<int>>{};
-    var nextToYield = 0;
-    var failed = false;
-
-    void deliver() {
-      if (controller.isClosed) return;
-      while (completed.containsKey(nextToYield)) {
-        controller.add(completed.remove(nextToYield)!);
-        nextToYield++;
-      }
-      if (nextToYield >= totalBlocks) {
-        controller.close();
-      }
-    }
-
-    Future<void> worker(int seed) async {
-      RandomAccessFile? raf;
-      try {
-        raf = await c.open(f, mode: FileMode.read);
-        for (var i = seed; i < totalBlocks; i += workers) {
-          final start = offset + i * block;
-          final want = (i == totalBlocks - 1) ? total - i * block : block;
-          await raf.setPosition(start);
-          final data = await raf.read(want);
-          completed[i] = data;
-          deliver();
-        }
-      } catch (e) {
-        if (!failed) {
-          failed = true;
-          print('[SMB] 预读失败: $e');
-          controller.addError(e);
-          controller.close();
-        }
-      } finally {
-        if (raf != null) {
-          try {
-            await raf.close();
-          } catch (_) {
-            // 忽略关闭异常
-          }
-        }
-      }
-    }
-
-    for (var i = 0; i < workers && i < totalBlocks; i++) {
-      worker(i);
-    }
-    if (totalBlocks == 0) {
-      controller.close();
-    }
-
-    return controller.stream;
   }
 
   SmbConnect _requireConnect() {

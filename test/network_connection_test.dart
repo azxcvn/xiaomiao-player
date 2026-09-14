@@ -74,4 +74,21 @@ void main() {
     expect(c.toString(), isNot(contains('topsecret')));
     expect(c.toString(), contains('credentials=<redacted>'));
   });
+
+  test('toJson(includePassword: false) 不写密码字段', () {
+    const c = NetworkConnection(
+      name: 'a',
+      protocol: NetworkProtocol.smb,
+      host: 'h',
+      port: 445,
+      password: 'topsecret',
+    );
+    expect(c.toJson(includePassword: false).containsKey('password'), isFalse);
+    expect(c.toJson().containsKey('password'), isTrue);
+    // 其余字段一个不少（否则恢复出来的连接会缺字段）
+    expect(
+      c.toJson(includePassword: false).keys.toSet(),
+      c.toJson().keys.toSet().difference({'password'}),
+    );
+  });
 }

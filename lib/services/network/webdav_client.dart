@@ -7,14 +7,17 @@
 ///    服务器忽略 Range（返回 200）时直接报错而非返回损坏的偏移流。
 library;
 
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:moumou/models/network_connection.dart';
 import 'package:moumou/models/network_file.dart';
 import 'package:moumou/services/network/network_client.dart';
 import 'package:moumou/utils/network_mime_types.dart';
 import 'package:moumou/utils/network_path.dart';
+import 'package:moumou/utils/retry_policy.dart';
 import 'package:moumou/utils/webdav_xml.dart';
 
 class WebDavClient implements NetworkClient {
@@ -24,6 +27,9 @@ class WebDavClient implements NetworkClient {
 
   http.Client? _client;
   bool _connected = false;
+
+  /// 黑洞地址 / 服务器半开时的统一提示（12 秒 = 分级超时的常规 API 档）。
+  static const _timeoutMessage = '连接超时：服务器无响应，请检查地址与端口';
 
   static const _propfindBody =
       '<?xml version="1.0" encoding="utf-8"?>'
@@ -55,7 +61,13 @@ class WebDavClient implements NetworkClient {
   Future<void> connect() async {
     _client ??= http.Client();
     // Depth 0 自检：能拿到 2xx 即视为可达且凭据有效。
-    await _propfind(_uri('/', trailingSlash: true), depth: 0);
+    // **单次尝试（不重试）**：这是「测试连接」走的路径，黑洞地址下重试只会把
+    // 一次 12 秒超时拖成三次（~37 秒）——分级超时的意义就是让用户尽快看到结论。
+    await _propfind(
+      _uri('/', trailingSlash: true),
+      depth: 0,
+      policy: RetryPolicy.none,
+    );
     _connected = true;
   }
 
@@ -121,10 +133,12 @@ class WebDavClient implements NetworkClient {
     request.headers['Authorization'] = _authHeader();
     if (offset > 0) request.headers['Range'] = 'bytes=$offset-';
 
-    final response = await client.send(request);
+    final response = await client
+        .send(request)
+        .timeout(NetworkTimeoutTier.api.timeout);
     if (offset > 0) {
       if (response.statusCode != 206) {
-        await _drain(response);
+        await _discard(response);
         throw NetworkClientException(
           response.statusCode == 200
               ? '服务器忽略了分段请求，无法精确跳转'
@@ -136,11 +150,11 @@ class WebDavClient implements NetworkClient {
           .firstMatch(contentRange)
           ?.group(1);
       if (start == null || int.parse(start) != offset) {
-        await _drain(response);
+        await _discard(response);
         throw const NetworkClientException('服务器返回的分段起点与请求不一致');
       }
     } else if (response.statusCode < 200 || response.statusCode >= 300) {
-      await _drain(response);
+      await _discard(response);
       throw NetworkClientException(
         '下载失败（HTTP ${response.statusCode}'
         '${response.statusCode == 401 ? '，认证失败' : ''}）',
@@ -167,16 +181,33 @@ class WebDavClient implements NetworkClient {
   String _authHeader() =>
       'Basic ${base64Encode(utf8.encode('${connection.username}:${connection.password}'))}';
 
-  Future<String> _propfind(Uri uri, {required int depth}) async {
+  Future<String> _propfind(
+    Uri uri, {
+    required int depth,
+    RetryPolicy policy = const RetryPolicy(),
+  }) async {
     final client = _client ??= http.Client();
-    final request = http.Request('PROPFIND', uri);
-    request.headers['Authorization'] = _authHeader();
-    request.headers['Depth'] = '$depth';
-    request.headers['Content-Type'] = 'application/xml; charset="utf-8"';
-    request.body = _propfindBody;
-
-    final response = await client.send(request);
-    final body = await response.stream.bytesToString();
+    // 每次尝试都**新建 Request**：`http.Request` 的 body 流只能发送一次，
+    // 复用同一对象重试会抛「Request has already been sent」（§4.28）。
+    final http.StreamedResponse response;
+    try {
+      response = await withRetry(
+        () => client
+            .send(_propfindRequest(uri, depth))
+            .timeout(NetworkTimeoutTier.api.timeout),
+        policy: policy,
+        onRetry: (error, nextAttempt) => debugPrint(
+          '[WebDAV] PROPFIND 第 $nextAttempt 次尝试（$error）',
+        ),
+      );
+    } on TimeoutException {
+      // 黑洞地址 / 半开连接：分级超时到点就报错，不重试到天荒地老。
+      throw const NetworkClientException(_timeoutMessage);
+    }
+    // 响应体也要有超时：连上了但服务端不回 body 时不能永久挂起。
+    final body = await response.stream
+        .bytesToString()
+        .timeout(NetworkTimeoutTier.api.timeout);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw NetworkClientException(
         'WebDAV 请求失败（HTTP ${response.statusCode}'
@@ -186,11 +217,25 @@ class WebDavClient implements NetworkClient {
     return body;
   }
 
-  static Future<void> _drain(http.StreamedResponse response) async {
+  http.Request _propfindRequest(Uri uri, int depth) {
+    final request = http.Request('PROPFIND', uri);
+    request.headers['Authorization'] = _authHeader();
+    request.headers['Depth'] = '$depth';
+    request.headers['Content-Type'] = 'application/xml; charset="utf-8"';
+    request.body = _propfindBody;
+    return request;
+  }
+
+  /// 丢弃一个不再使用的响应体。
+  ///
+  /// ⚠️ **禁止**用无上限的 `drain()`：服务器忽略 `Range` 时响应体就是**整个文件**，
+  /// `drain()` 会把 GB 级数据全部下载下来再丢弃（§4.28 / §7 铁律）。
+  /// 这里用带上限的 [drainStreamCapped]，超限即抛并取消上游订阅。
+  static Future<void> _discard(http.StreamedResponse response) async {
     try {
-      await response.stream.drain<void>();
+      await drainStreamCapped(response.stream);
     } catch (_) {
-      // 忽略丢弃过程中的异常。
+      // 丢弃过程中的异常（含超限快速失败）一律忽略：调用方马上要抛自己的错误。
     }
   }
 

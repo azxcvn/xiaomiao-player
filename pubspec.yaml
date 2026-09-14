@@ -74,6 +74,9 @@ dependencies:
   # 自定义主题色：色相环 + 饱和度/明度选择器（纯 Dart，无原生依赖）
   # 用 plus fork：比原版多了 hexInputBar 手输框 + RGB/HSV/HSL 标签切换
   flutter_color_picker_plus: ^2.2.1
+  # FTP 中文文件名：IIS / 老 Serv-U 等服务器用 GBK（而非 UTF-8）编解码目录列表
+  # 与命令，按 `OPTS UTF8 ON` 的应答选编码（纯 Dart，无原生依赖）。
+  charset: ^2.0.1
 
 dev_dependencies:
   flutter_test:

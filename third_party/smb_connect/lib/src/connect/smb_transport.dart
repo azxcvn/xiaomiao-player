@@ -148,6 +148,9 @@ class SmbTransport {
   /// （多 worker 并发预读）时，会同时有多条响应，若允许 onListenReader 重入，
   /// _peekKey/_doRecv 会并发读写共享的 _sbuf 与 _inp 游标，导致响应错位、匹配失败、
   /// completer 超时。这里把所有处理串成队列逐个执行。
+  ///
+  /// ⚠️ 队列末尾必须挂 `catchError`（见 [onListenReader]）：否则单帧解码异常会让
+  /// 这条链变成永久失败的 Future，此后所有响应都不再分发。
   Future<void> _readQueue = Future<void>.value();
 
   /// 发送队列：把「编码 + 写 socket + flush」串行化。
@@ -160,7 +163,13 @@ class SmbTransport {
   Future<void> _sendQueue = Future<void>.value();
 
   void onListenReader() {
-    _readQueue = _readQueue.then((_) => _drainResponses());
+    _readQueue = _readQueue.then((_) => _drainResponses()).catchError((Object e) {
+      // 单帧异常**不得毒化整条读队列**：`then` 链一旦变成失败 Future，后续
+      // `_drainResponses` 会被永久跳过 → 此后所有响应都不再分发、直至全部超时
+      // （症状是「SMB 播放永久转圈」）。这里兜底，正常路径由 _dispatchResponse
+      // 把异常交给对应的等待者。
+      print("[smb] 响应分发异常（读队列继续）：$e");
+    });
   }
 
   Future<void> _drainResponses() async {
@@ -169,24 +178,69 @@ class SmbTransport {
     while (key != null) {
       var completer = responses.remove(key);
       if (completer != null) {
-        await _doRecv(completer.response);
-        completer.response.setReceived();
-        // bool isAsync = completer.response is ServerMessageBlock2 &&
-        //     (completer.response as ServerMessageBlock2).async;
-        if (completer.response.isReceived()) {
-          // print("Success complete response $key");
-          completer.completer.complete(completer.response);
-        } else {
-          responses[key] = completer;
-          // print("Recvd async");
-        }
+        await _dispatchResponse(key, completer);
       } else {
+        // mid 不匹配：多半是「早已超时/作废的请求」的迟到响应。
+        // **必须把这一帧的 body 读走**，否则 socket 流错位，之后每一帧的 body
+        // 都会被当成 header 解析（原库只 print 不读 → 永久错位）。
         print("Error complete response $key");
+        await _skipFramePayload();
       }
       key = null;
       if (responses.isNotEmpty && _inp.available() > 0) {
         key = await _peekKey();
       }
+    }
+  }
+
+  /// 分发一帧响应。**解码失败只影响这一帧**：异常交给它的等待者，同时让其它
+  /// 在途请求立刻失败（否则它们要各自等满超时并重试 5 次才报错），随后断开这条
+  /// 连接——帧内游标位置不可知，继续复用只会得到错位的流。
+  Future<void> _dispatchResponse(int key, CompleteResponse completer) async {
+    try {
+      await _doRecv(completer.response);
+      completer.response.setReceived();
+      // bool isAsync = completer.response is ServerMessageBlock2 &&
+      //     (completer.response as ServerMessageBlock2).async;
+      if (completer.response.isReceived()) {
+        // print("Success complete response $key");
+        completer.completer.complete(completer.response);
+      } else {
+        responses[key] = completer;
+        // print("Recvd async");
+      }
+    } catch (error, stack) {
+      if (!completer.completer.isCompleted) {
+        completer.completer.completeError(error, stack);
+      }
+      _failAllInFlight(error, stack);
+      print("[smb] 响应解码失败，断开本次连接：$error");
+      await disconnect(true);
+    }
+  }
+
+  /// 让所有在途请求立刻拿到异常（而不是各自等满超时）。
+  void _failAllInFlight(Object error, StackTrace stack) {
+    final pending = responses.values.toList();
+    responses.clear();
+    for (final entry in pending) {
+      if (!entry.completer.isCompleted) {
+        entry.completer.completeError(error, stack);
+      }
+    }
+  }
+
+  /// 丢弃当前帧的 body：`_peekKey()` 已消费 4 字节 NetBIOS 头 + 32 字节 SMB 头。
+  Future<void> _skipFramePayload() async {
+    final int size = isSMB2()
+        ? ((Encdec.decUint16BE(_sbuf, 2) & 0xFFFF) | (_sbuf[1] & 0xFF) << 16)
+        : (Encdec.decUint16BE(_sbuf, 2) & 0xFFFF);
+    final int header = isSMB2()
+        ? Smb2Constants.SMB2_HEADER_LENGTH
+        : SmbConstants.SMB1_HEADER_LENGTH;
+    final int remaining = size - header;
+    if (remaining > 0) {
+      await _inp.skip(remaining);
     }
   }
 

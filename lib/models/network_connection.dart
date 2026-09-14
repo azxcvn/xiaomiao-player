@@ -76,14 +76,19 @@ class NetworkConnection {
     );
   }
 
-  Map<String, dynamic> toJson() => {
+  /// JSON 序列化。
+  ///
+  /// [includePassword] = false 时**不写密码**：密码只进加密存储
+  /// （`NetworkConnectionSettings` 的 secure storage），SharedPreferences 里
+  /// 不留明文（§4.11）。只有加密写入失败时才会退回 `true` 兜底。
+  Map<String, dynamic> toJson({bool includePassword = true}) => {
         'id': id,
         'name': name,
         'protocol': protocol.name,
         'host': host,
         'port': port,
         'username': username,
-        'password': password,
+        if (includePassword) 'password': password,
         'path': path,
         'isAnonymous': isAnonymous,
         'useHttps': useHttps,

@@ -34,6 +34,38 @@ class _FakeClient implements NetworkClient {
   }
 }
 
+/// 记录「问远端文件大小」次数，用于验证代理的按路径缓存是否命中。
+class _CountingClient implements NetworkClient {
+  final List<int> data;
+  int sizeQueries = 0;
+  bool _connected = false;
+
+  _CountingClient(this.data);
+
+  @override
+  Future<void> connect() async => _connected = true;
+
+  @override
+  Future<void> disconnect() async => _connected = false;
+
+  @override
+  bool isConnected() => _connected;
+
+  @override
+  Future<List<NetworkFile>> listFiles(String path) async => [];
+
+  @override
+  Future<int> getFileSize(String path) async {
+    sizeQueries++;
+    return data.length;
+  }
+
+  @override
+  Future<Stream<List<int>>> openStream(String path, {int offset = 0}) async {
+    return Stream.value(data.sublist(offset));
+  }
+}
+
 const _connection = NetworkConnection(
   name: 'test',
   protocol: NetworkProtocol.webdav,
@@ -144,5 +176,40 @@ void main() {
     final res = await req.close();
     expect(res.statusCode, HttpStatus.notFound);
     await res.drain<void>();
+  });
+
+  group('按路径缓存（NetworkPath 值相等）', () {
+    test('registerStream 传入的 fileSize 生效 → 不再问远端大小', () async {
+      final client = _CountingClient(bytes);
+      final p = NetworkStreamingProxy(clientFactory: (_) => client);
+      addTearDown(p.stop);
+      final url = await p.registerStream(
+        _connection,
+        '/video.mp4',
+        fileSize: bytes.length,
+      );
+      final req = await http.getUrl(Uri.parse(url));
+      final res = await req.close();
+      expect(res.statusCode, HttpStatus.ok);
+      expect(await _readBody(res), bytes);
+      expect(client.sizeQueries, 0);
+    });
+
+    test('registerStream 传入的 mimeType 生效（主路径）', () async {
+      final p = NetworkStreamingProxy(
+        clientFactory: (_) => _CountingClient(bytes),
+      );
+      addTearDown(p.stop);
+      final url = await p.registerStream(
+        _connection,
+        '/video.unknown-ext',
+        fileSize: bytes.length,
+        mimeType: 'video/x-matroska',
+      );
+      final req = await http.getUrl(Uri.parse(url));
+      final res = await req.close();
+      expect(res.headers.contentType?.mimeType, 'video/x-matroska');
+      await res.drain<void>();
+    });
   });
 }

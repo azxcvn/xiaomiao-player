@@ -172,12 +172,13 @@ lib/
 │   ├── network/                    # 网络存储（WebDAV/SMB/FTP）抽象层
 │   │   ├── network_client.dart     #   NetworkClient 抽象接口（connect/listFiles/getFileSize/openStream/disconnect）
 │   │   ├── network_client_factory.dart # 按协议创建客户端（连接配置 → 具体客户端实例）
-│   │   ├── network_connection_settings.dart # 账户增删改查 + 密码加密 + SharedPreferences 持久化（ChangeNotifier）
+│   │   ├── network_connection_settings.dart # 账户增删改查 + **密码只进加密存储**（secure storage，含老明文迁移）+ SharedPreferences 持久化（ChangeNotifier，§4.35）
 │   │   ├── network_repository.dart #   高层 API（浏览目录/解析播放流，统一异常）
 │   │   ├── network_streaming_proxy.dart # 本地回环流代理（dart:io HttpServer，Range/HEAD，供 mpv 拉流播放 + 最近 1 秒滑动窗口网速统计）
-│   │   ├── webdav_client.dart      #   WebDAV 客户端（纯 Dart http：PROPFIND Depth:1 列表 / Range 流式读取 + 自检）
-│   │   ├── ftp_client.dart         #   FTP 客户端（纯 Dart Socket 双连接被动模式 / MLSD→LIST 回退 / REST 偏移）
-│   │   └── smb_client.dart         #   SMB 客户端（纯 Dart smb_connect：4 路并发预读管线 + 管理共享过滤）
+│   │   ├── smb_pipeline.dart       #   SMB 并发预读管线（多句柄并发 + 取消/背压/出错即停，纯逻辑可单测，§4.35）
+│   │   ├── webdav_client.dart      #   WebDAV 客户端（纯 Dart http：PROPFIND Depth:1 列表 / Range 流式读取 + 自检；分级超时与重试，§4.28）
+│   │   ├── ftp_client.dart         #   FTP 客户端（纯 Dart Socket 双连接被动模式 / MLSD→LIST 回退 / REST 偏移 / `OPTS UTF8 ON` 探测决定 GBK 编解码，§4.35）
+│   │   └── smb_client.dart         #   SMB 客户端（纯 Dart smb_connect：管理共享过滤 + 交给 smb_pipeline 并发预读）
 │   ├── bilibili/                  # 哔哩哔哩协议域（§4.13）
 │   │   ├── bili_constants.dart    #   域名 / UA / Referer / TV appkey·appsec / 扫码状态码
 │   │   ├── bili_api.dart          #   端点常量（集中式，对齐 PiliPlus api.dart）
@@ -373,7 +374,7 @@ lib/
     ├── webdav_xml.dart        #   WebDAV PROPFIND 多状态 XML 解析（命名空间剥离 + 百分号/UTF-8 解码 + HTTP 日期）
     ├── ftp_parser.dart        #   FTP 目录列表解析（RFC3659 MLSD + Unix LIST 回退）
     ├── http_byte_range.dart   #   HTTP Range 头解析（bytes=start-end / start- / -suffix）
-    ├── network_path.dart      #   网络路径规范化/校验/子路径拼接
+    ├── network_path.dart      #   网络路径规范化/校验/子路径拼接（**值相等** `==`/`hashCode`：代理按路径缓存的前提，§4.35）
     ├── bili_wbi.dart          #   WBI 签名纯函数（getMixinKey/encWbi，混淆表 64 项）
     ├── bili_app_sign.dart     #   TV 端 appSign 纯函数（appkey/appsec MD5 签名）
     ├── bili_fingerprint_utils.dart # 反爬指纹纯函数（murmur3×64_128/uuid/b_lsid/bili_ticket hexsign/dm_img）
@@ -1495,6 +1496,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 |---|---|---|
 | 纯工具 | `utils/retry_policy.dart` | `NetworkTimeoutTier` 四档超时、`isRetryableNetworkError`、`retryDelayForAttempt`、`withRetry`、`readBodyCapped`/`drainStreamCapped`、`sendGet`/`fetchTextCapped`/`fetchBytesCapped` |
 | 调用方 | `services/bilibili/bili_http.dart`、`services/dandan_play_api.dart`、`services/wyzie/wyzie_api.dart`、`utils/bili_short_link.dart` | 所有请求入口包一层重试；文本/JSON/下载各自设体积上限 |
+| 调用方 | `services/network/webdav_client.dart`、`services/network/ftp_client.dart` | **网络存储子系统**（B10 接入，§4.35）：分级超时 + 只对连接类失败重试；FTP 是裸 Socket，超时落在「控制连接每条应答 / 被动数据建连 / 列表读取」三处 |
 
 **关键决策**：
 - **只重试「连接类」失败**：连接失败（`SocketException`）、建立/发送超时
@@ -1504,14 +1506,23 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   业务/解析异常一律不重试，`ResponseTooLargeException` 也不重试（重试只会再下载一遍）。
 - **流式一律不重试**：`withRetry(streaming: true)` 直接单次执行；本项目流式路径
   （`openStream` / 下载 Range / `NetworkStreamingProxy` / `BiliStreamProxy` 转发）
-  **不经过**本工具，也不得自行加重试。
+  **不经过**本工具，也不得自行加重试。⚠️ 流式路径仍**必须有超时**（等响应头），
+  只是不重发——重发会重复拉流。
 - **超时分级**：常规 API 12s / 文本 15s / 下载 30s / 媒体流 30min（各调用方按用途选档，
-  不再各客户端写死 30s）。
+  不再各客户端写死 30s）。⚠️ **用户发起的「测试连接」单次尝试**（`RetryPolicy.none`）：
+  黑洞地址下重试会把一次 12 秒超时拖成 ~37 秒，用户只会认为「卡死了」。
+  超时到点要转成用户看得懂的 `NetworkClientException`，别把
+  `TimeoutException after 0:00:12.000000` 直接甩到界面上。
 - **体积上限快速失败**：先看 `content-length`（声明超限**一个字节都不读**，直接取消
   订阅），再边读边计数；文本 2MB、JSON 16MB、下载 64MB。⚠️ 超限时**不能 drain**
   （那会把上游的巨量响应全部下载下来）。
+- **丢弃响应一律带上限**：错误响应 / 分段被拒的响应体用 `drainStreamCapped`
+  （WebDAV 的 3 处丢弃点曾经是无上限 `drain()`：服务器忽略 `Range` 时响应体就是**整个
+  文件**，seek 一次就静默下载 GB 级数据再丢掉，§7）。
 - **重试必须新建 Request**：`http.Request` 的 body 流只能发送一次，复用同一对象重试会抛
   「Request has already been sent」——`sendGet` 与短链展开都在重试闭包内新建请求。
+- **SMB 不走本工具**：`smb_connect` 自带 `waitResponseTimeout`(3s) + 5 次重试 + socket
+  `soTimeout`，应用层只在 `smb_pipeline` 里给**每块读取**加 30s 上限（§4.35）。
 
 ---
 
@@ -1831,7 +1842,58 @@ ASS 限制提示（`_AssLimitNote`：小标题 + 三条分点）/ 重置所有�
 
 ---
 
+### 4.35 网络存储链路（WebDAV / SMB / FTP）纪律（B10）
+
+> 来源：体检报告 P1-20 / P1-21 / P1-22 / P1-23 / P2-17 / P2-18 与决策 D4（密码加密）、
+> D7（FTP 中文文件名）。改 `services/network/**` 或 `third_party/smb_connect` 前必读。
+
+**分层**
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 抽象 | `network_client.dart` / `network_client_factory.dart` / `network_repository.dart` | 三种协议统一接口（connect / listFiles / getFileSize / openStream / disconnect），失败一律 `NetworkClientException` 且 message 面向用户、不含凭据 |
+| 值类型 | `utils/network_path.dart` | 路径规范化 + 校验（禁 scheme / `.` `..` / 控制字符 / 超长），**必须值相等** |
+| 账号 | `network_connection_settings.dart` | 单例 ChangeNotifier；密码进加密存储、清单不含密码字段；老明文一次性迁移 |
+| 协议 | `webdav_client.dart` / `ftp_client.dart` / `smb_client.dart` | 各协议实现；超时/重试按 §4.28 分级 |
+| 管线 | `services/network/smb_pipeline.dart` | SMB 并发预读的**取消 / 背压 / 出错即停**（纯逻辑，可单测） |
+| 代理 | `network_streaming_proxy.dart` | 把远端文件转成 `127.0.0.1` 无凭据 loopback URL 喂 mpv（Range 转发 + 网速滑动窗口） |
+
+**七条纪律（都有反例，别退回去）**
+
+| 纪律 | 落点 | 反例（都踩过） |
+|---|---|---|
+| **丢弃响应体必带上限** | `webdav_client._discard` → `drainStreamCapped`（Range 被忽略 / 分段起点不一致 / 非 2xx 三处） | 旧实现 `_drain` 是无上限 `drain()`：服务器忽略 `Range` 时 body 就是整个文件 → seek 一次静默下载 GB 级数据 |
+| **连接自检单次尝试、浏览操作才重试** | `connect()` 用 `RetryPolicy.none`；`listFiles`/`getFileSize` 用默认策略 | 重试用在「测试连接」上 → 一次 12 秒超时被拖成 ~37 秒，用户当成卡死 |
+| **重试必须配「连接可用性」** | FTP `_withControlRetry`：控制连接超时/断开即作废并重连 | 光重试不重连 = 在死连接上再等一次超时（`isOpen` 只在 `close()` 置位，分辨不出死连接） |
+| **密码不落明文** | `NetworkConnectionSettings`：密码 → `flutter_secure_storage`（Keystore），SharedPreferences 只存元数据（`toJson(includePassword: false)`） | 旧实现整份 JSON（含 password）进 SharedPreferences；文档却写着「密码加密」（§4.11 同级：B 站凭据早就走加密） |
+| **迁移失败宁可留明文，也不能丢密码** | 读到旧明文 → 加密写回 → 重写清单元数据；写失败记 `_plaintextFallback` 并**保留明文**；读失败不假定「没有密码」 | 「迁移时先清明文再加密」/「读失败当空密码」= 用户的密码凭空消失 |
+| **路径类型必须值相等** | `NetworkPath` 的 `==` / `hashCode`（按 `value`） | 代理注册时存的是对象 A、请求路径是 URL 段重新构造的对象 B → 标识比较永不相等 → 远端大小每次重查、`registerStream` 的 `fileSize`/`mimeType` 形同虚设 |
+| **SMB 预读必须可取消、有背压** | `smb_pipeline.pipelinedSmbStream`：`onCancel` 停手清缓存、出错停其它 worker、窗口 `maxBlocksAhead` 限在途、`onPause` 一块不读 | 旧实现无 `onCancel`：mpv seek/退出后 4 个 worker 仍读到文件末尾；出错后 `completed[i] = data` 照旧执行 → 整文件堆内存（OOM） |
+
+**FTP 编码决策（D7）**：登录时发 `OPTS UTF8 ON`——
+①应答 200 → 该连接一律 UTF-8；②不认这个命令（500/501/502/504）→ **不写死结论**，
+先按**严格 UTF-8** 试解目录列表，解不通才判定 GBK 并记住；此后该连接的**列表与命令**
+共用同一套编码（只列表按 GBK 解、命令仍发 UTF-8 的话中文路径永远 `550`）。
+⚠️ 服务器不认 `OPTS` 但实际是 UTF-8 的情况很常见（很多服务器只是没实现该命令），
+所以第②步必须有「先试 UTF-8」，否则会把现在好用的服务器改成乱码。
+控制连接按**整行**解码（GBK 是多字节，不能拿流式 decoder 逐 chunk 凑），目录列表先读满再解码。
+代价：列表读取要带 15s **空闲**超时（`Stream.timeout`）；⚠️ **媒体流不能套空闲超时**
+（mpv 暂停时数据连接本来就长时间无数据），它只受「建连/等应答头」的分级超时约束。
+
+**SMB fork（`third_party/smb_connect`，0.0.9-mk.2）**：应用层只负责「并发 + 取消 + 背压」，
+fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError`（单帧解码异常不得让整条队列
+变永久失败）、未知 mid 的迟到响应必须读走 body（否则 socket 流错位）、解码失败把异常交给
+等待者并**断开连接**（不尝试静默重对齐）、读失败按状态抛错而不是 `-1`（`-1` 会让
+`position += res` 倒退 → 无限重发同一个 SMB READ）。补丁清单与验证步骤见该目录 `FORK.md`。
+
+**真机验收（2026-09，用户实测通过）**：不支持 Range 的 WebDAV 拖动不再整文件下载 /
+黑洞地址 12 秒内报超时 / SMB 反复 seek 不出 OOM / SMB 拔网线再插回不永久转圈 /
+重复进同一网络目录不再重查远端大小 / 老账户密码免重输且重启后仍能连。
+
+---
+
 ## 5. 新增功能指南（按功能类型）
+
 ### 5.1 新增一个页面
 
 1. 建目录 `lib/pages/<name>/`，页面文件 `xxx_page.dart`（StatefulWidget）
@@ -2016,7 +2078,14 @@ ASS 限制提示（`_AssLimitNote`：小标题 + 三条分点）/ 重置所有�
   - `test/file_selection_test.dart` — 多选纯函数（目录树递归索引 + 缺 video 字段防御/视频索引/按点选顺序取值/失效路径丢弃，§4.31）
   - `test/file_selection_controller_test.dart` — 多选状态控制器（begin 立刻选中长按项且清掉上次选择/非多选态 toggle 无效/取消到 0 项仍在多选态/exit 幂等不重复通知/全选/containsAll 空列表不算全选/retainExisting 无变化不通知/只读快照，§4.31）
   - `test/file_operations_ui_test.dart` — 多选 UI（选择工具栏：数量·全选↔取消全选·0 项时 ⋮ 置灰·× 退出；长按菜单多选态裁剪：撤重命名与多选、固定仅纯文件夹；删除弹窗：单选/多选文案 + 「删除所有文件」勾选框显隐与结果，§4.31）
-- 改以下代码必须跑对应测试：`AppFrame`、`ViewSettings` 排序、权限流程、`CapsuleNavBar`
+  - `test/smb_pipeline_test.dart` — **SMB 并发预读管线**（P1-22，§4.35；用假 `RandomAccessFile`，不连真 SMB）：多句柄并发的内容与顺序（含非整除尾块）/offset 起读/零长度区间不开句柄 + **取消后 worker 停手·读请求数不再增长·句柄全关** + **某块读失败 → 流报错且其它 worker 停手·句柄全关** + **背压**（消费者暂停时读请求数 ≤ 窗口 8 + 在途 4、恢复后必须读完——同时验证窗口算法不死锁）+ 单块读超时
+  - `test/webdav_client_test.dart` — **WebDAV 客户端**（P1-20/P1-21，§4.28/§4.35；本地 `HttpServer`）：connect 2xx 自检/**服务器忽略 Range → 丢弃响应带 2MB 上限**（断言服务端真正推出去的字节数 < 8MB，旧的无上限 `drain()` 会推完 32MB）/非 2xx 丢弃同样带上限/分段起点与请求不一致报错/**服务器只连不回话 → 12 秒内报超时**
+  - `test/ftp_client_test.dart` — **FTP 客户端**（P1-21/D7，§4.35；本地假服务器）：`OPTS UTF8 ON` 应答 200 → 列表按 UTF-8 解**且命令按 UTF-8 发**/不支持且列表是 GBK → 判定 GBK 且**命令也按 GBK 发**（断言控制连接收到的原始字节）/不支持但服务器实际是 UTF-8 → 不回归/**控制连接不回话 → 12 秒内报超时且不重试成三次**
+  - `test/network_connection_settings_test.dart` — 网络账户设置（自增 id/替换/删除/损坏单条防御 + **密码加密存储**：清单里没有 `password` 字段与明文、重启后从加密存储恢复、**老明文一次性迁移并清除明文**、**加密不可用时迁移失败回退且密码不丢**、update 覆盖与 remove 清除，P2-17/D4）
+  - `test/network_path_test.dart` — 网络路径规范化/校验 + **值相等与 `hashCode`**（代理按路径缓存的前提，P2-18）
+  - `test/network_streaming_proxy_test.dart` — 回环流代理（无凭据 URL/GET/HEAD/Range/未注册 404 + **按路径缓存**：注册的 `fileSize` 生效后不再问远端大小、注册的 `mimeType` 生效，P2-18）
+  - `test/network_connection_test.dart` — 网络账户模型（协议解析/默认端口/JSON 往返/字段缺失容错/copyWith/toString 不泄露凭据 + `toJson(includePassword: false)` 不写密码字段且其余字段一个不少）
+- 改以下代码必须跑对应测试：`AppFrame`、`ViewSettings` 排序、权限流程、`CapsuleNavBar`、**`services/network/**`（含 `third_party/smb_connect`）**
 
 ---
 
@@ -2227,3 +2296,12 @@ ASS 限制提示（`_AssLimitNote`：小标题 + 三条分点）/ 重置所有�
 | 自建弹幕服务器加进去后**整份服务器列表被清空**（只剩默认服务器） | `DanmakuServer.fromJson` 的裸 `as bool?` 遇到类型不符（`1`/`"true"`）抛 `TypeError`，而解码处只有一个大 `catch` → 回退「仅默认服务器」。类型不符只能回退**那一个字段**的默认值（`_asBool`/`_asString`/`_asDouble` 宽松读取）；同理 `dandan_models.dart` 的 `type`/`shift` 裸强转会打断**整条响应解析**（搜索结果全空）（§4.11，P2-12） |
 | 每进一次播放器 / 每开一次网络弹幕面板泄漏一个 `http.Client`（连接池 + keep-alive socket） | `DandanPlayApi` 不传 `client` 时自建，必须成对释放：`DanmakuNetworkService.dispose()` → `DanmakuApi.close()`，由 `DanmakuController.dispose()` / 面板 dispose 调用。`close()` **只关自建的**，注入的 client 归调用方（§4.11，P2-11） |
 | 弱网下「连按两次搜索」毫无反馈 / 最终结果属于先输入的那个关键词 | 旧实现在 `_loading` 期间直接 `return`（静默吞掉新搜索），且没有会话号 → 旧响应后到会覆盖新结果。修法：不吞（照常发起）+ `AsyncSession` 判废旧响应 + loading 期间**搜索按钮仍在位**（只多一个转圈）。通用教训：**任何「加载中」入口的静默 return 都会让用户以为功能坏了**（§4.11，P2-10） |
+| **WebDAV 拖动进度就静默下载整个文件**（不支持 `Range` 的服务器上 seek 一次即中招） | 丢弃错误/被拒响应一律 `drainStreamCapped`（带上限），**禁止无上限 `drain()`**：`Range` 被忽略时响应体就是整个文件，`drain()` 会把 GB 级数据全下载下来再丢掉（§4.28/§4.35，P1-20） |
+| 黑洞地址点「测试连接」永久转圈 / 浏览永久 loading / 代理响应永久挂起（mpv 无限缓冲） | 网络存储子系统此前**完全没接** `retry_policy`：WebDAV 无任何超时、FTP 只有 `Socket.connect` 超时（控制应答与数据读取没有）。现在控制连接每条应答、被动数据建连、列表读取都有分级超时；⚠️ **「测试连接」必须单次尝试**，重试会把 12 秒拖成 ~37 秒（§4.28/§4.35，P1-21） |
+| FTP 上「重试」等于再等一次超时（死连接被反复复用） | 控制连接超时/断开后必须**作废并重连**：`_FtpControl.isOpen` 只在 `close()` 里置位，分辨不出死连接；`_withControlRetry` 在 `isRetryableNetworkError(e) \|\| !ctrl.isOpen` 时 `_discardControl`（§4.35，P1-21） |
+| SMB 播放中 seek/退出后内存持续增长直至 OOM | 预读管线**必须可取消、有背压**：`onCancel` 停手 + 清 `completed`、出错停其它 worker、窗口 `maxBlocksAhead` 限在途、`onPause` 一块不读。旧实现 `deliver()` 因 `isClosed` 直接返回但 `completed[i] = data` 照旧执行 → 出错后整文件堆内存（§4.35，P1-22） |
+| SMB 播放永久转圈（一帧解码异常后所有请求都超时、`isConnected()` 还恒 true） | fork 侧三条一起修：读队列末尾挂 `catchError`（失败 Future 会让后续 `_drainResponses` 被永久跳过）、未知 mid 的迟到响应**必须读走 body**（否则之后每帧 body 都被当 header）、解码失败把异常交给等待者并断开连接。⚠️ 这些是 fork 改动，改完要同步 `FORK.md` 并让用户验 SMB 播放（§4.35，P1-23） |
+| 网络存储密码明文进 SharedPreferences（文档却写着「密码加密」） | 密码只进 `flutter_secure_storage`（Keystore/EncryptedSharedPreferences，与 B 站凭据同源），清单 JSON 用 `toJson(includePassword: false)`；**老明文一次性迁移**（加密写回 → 重写清单去明文），迁移/读取失败一律**保留明文不丢密码**（§4.35，P2-17/D4） |
+| 网络代理「按路径缓存远端大小」永不命中（每个 HTTP 请求都重查远端、`registerStream` 的 `fileSize`/`mimeType` 形同虚设） | `NetworkPath` 必须**值相等**：代理注册时存对象 A、请求路径由 URL 段重新 `NetworkPath.from` 构造对象 B，缺 `==`/`hashCode` 时标识比较永不相等（§4.35，P2-18） |
+| FTP 中文文件名在 GBK 服务器（IIS / 老 Serv-U）上彻底不可用 | 登录探测 `OPTS UTF8 ON`：回 200 → UTF-8；不认该命令 → **先按严格 UTF-8 试解列表**，解不通才判定 GBK。⚠️ 必须「列表与命令同一套编码」——只列表按 GBK 解、命令仍发 UTF-8 会永远 `550`；控制连接按**整行**解码（GBK 多字节，不能流式逐 chunk 凑）；媒体流**不能套空闲超时**（mpv 暂停时本来就没数据）（§4.35，D7） |
+| 网络存储链路「重试」把流式请求重发（重复拉流） | `openStream` 一律单次尝试、只加超时（等响应头）；`withRetry(streaming: true)` 只用于此语义。⚠️ 但**超时不能省**：不加超时的流式请求在黑洞地址上同样永久挂起（§4.28/§4.35） |

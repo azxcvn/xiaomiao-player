@@ -104,9 +104,12 @@ class SmbRandomAccessFile implements RandomAccessFile {
     await _init();
     int remainSize = _fileSize - offset;
     int length = min(remainSize, _buffer.length);
-    if (length == 0) {
-      throw "Empty read to buffer";
-      // return 0;
+    if (length <= 0) {
+      // 已在文件末尾 / 文件变短：返回 0 让调用方收工。
+      // （旧实现 `throw "Empty read to buffer"` 抛的是 **String**，既不是异常
+      //   类型也拦不住，还会被上层当作未知错误）
+      _clearReadBuffer();
+      return 0;
     }
     int res = await controller.read(_buffer, offset, length);
     _bufferFilePosition = offset;
@@ -134,8 +137,11 @@ class SmbRandomAccessFile implements RandomAccessFile {
   @override
   Future<Uint8List> read(int count) async {
     Uint8List buff = Uint8List(count);
-    await readInto(buff);
-    return buff;
+    final int read = await readInto(buff);
+    // 只返回真正读到的字节：旧实现无论读到多少都返回整个 count 长度的缓冲区，
+    // 到末尾时会把一整块**零字节**当数据交出去（上层拿到静默损坏的数据）
+    if (read == count) return buff;
+    return Uint8List.sublistView(buff, 0, read);
   }
 
   @override
@@ -146,13 +152,6 @@ class SmbRandomAccessFile implements RandomAccessFile {
   }
 
   final Uint8List _byteBuff = Uint8List(1);
-
-  @override
-  Future<int> readByte() async {
-    await _init();
-    await readInto(_byteBuff);
-    return _byteBuff[0];
-  }
 
   @override
   int readByteSync() {
@@ -168,15 +167,26 @@ class SmbRandomAccessFile implements RandomAccessFile {
 
     while (length > 0) {
       if (!_positionInBuffer(_position)) {
-        await _readToBuff(_position);
+        final int filled = await _readToBuff(_position);
+        // 无进展（到末尾 / 读失败）必须跳出：旧实现在 `res <= 0` 时既不推进
+        // 位置也不报错 → 无限重发同一个 SMB READ（表现为 SMB 播放永久转圈）
+        if (filled <= 0) break;
       }
       var n = readFromBuffer(buff, start, length);
+      if (n <= 0) break;
       length -= n;
       start += n;
       res += n;
       _position += n;
     }
     return res;
+  }
+
+  @override
+  Future<int> readByte() async {
+    await _init();
+    final int read = await readInto(_byteBuff);
+    return read > 0 ? _byteBuff[0] : -1;
   }
 
   @override
