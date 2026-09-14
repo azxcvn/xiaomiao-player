@@ -196,8 +196,8 @@ lib/
 │   │       └── pb_reader.dart        # 手写 protobuf wire 解码器（varint+length-delimited，§4.15）
 │   ├── download/                 # 下载域（哔哩生态阶段四，B站是首个用户，§4.16）
 │   │   ├── download_settings.dart # 下载目录设置（ChangeNotifier + 持久化）
-│   │   ├── download_task.dart     # 下载任务状态机 + Range 流式下载 + 合并
-│   │   └── download_manager.dart  # 任务队列 + 并发槽调度 + 跨重启持久化（ChangeNotifier）
+│   │   ├── download_task.dart     # 下载任务状态机 + Range 流式下载 + 合并到临时文件再改名（§4.37）
+│   │   └── download_manager.dart  # 任务队列 + 并发槽调度 + 跨重启持久化 + 删除/清除时清临时文件（ChangeNotifier，§4.37）
 │   ├── cast/                    # 投屏域（DLNA/UPnP，P0 仅本地文件推流，§4.18）
 │   │   ├── cast_service.dart    #   投屏服务（SSDP 发现渲染器 + 源分流 + SetAVTransportURI/Play 推流）
 │   │   └── lan_media_server.dart #  局域网媒体服务器（本地文件 → http://LAN:port/token，Range/CORS）
@@ -206,7 +206,7 @@ lib/
 │   │   └── update_service.dart  #   更新服务（更新源/下载链接常量 + 检查更新，开发阶段写死新版本）
 │   ├── wyzie/                   # 影视字幕下载域（Wyzie 字幕源，§4.21）
 │   │   ├── wyzie_settings.dart  #   字幕下载设置（API 密钥/来源/语言/格式/编码，ChangeNotifier + 持久化）
-│   │   └── wyzie_api.dart       #   Wyzie 字幕 API 客户端（来源/关键词搜索/文件下载，UTF-8 解码 + 错误语义化）
+│   │   └── wyzie_api.dart       #   Wyzie 字幕 API 客户端（来源/关键词搜索/文件下载，UTF-8 解码 + 错误语义化 + `close()`）
 │   └── ...                    #   ⚠️ 不要在这里加全局 ValueNotifier hack（见 §4.1）
 ├── widgets/                   # 可复用 UI 组件（跨页面）
 │   ├── app_frame.dart         #   ★ 全局框架：安全区 + 播放页全屏检测
@@ -322,7 +322,7 @@ lib/
 │       ├── error_log_page.dart       # 错误日志页
 │       └── cache_management_page.dart# 缓存管理页
 │   └── subtitle/
-│       ├── subtitle_download_page.dart # 影视字幕下载页（字幕设置入口 + 关键词搜索 + 勾选批量下载，§4.21）
+│       ├── subtitle_download_page.dart # 影视字幕下载页（字幕设置入口 + 关键词搜索 + 勾选批量下载；搜索会话号 + 下载快照，§4.21/§4.37）
 │       ├── subtitle_settings_page.dart # 字幕设置子页（承载五入口，§4.21）
 │       └── views/
 │           └── subtitle_settings_section.dart # 字幕设置区（API 密钥/来源/语言/格式/编码五入口 + 来源动态拉取）
@@ -1063,8 +1063,8 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 模型 | `models/bili_dash.dart`（`BiliUgcPage`） | UGC 全部分 P（`pages[]`），老项目只取 `pages[0]`、多 P 视频只下到第一段 |
 | 服务 | `services/bilibili/bili_download_service.dart` | 链接 → 可下载条目（番剧 `fetchSeasonDetail` 全集 / UGC `resolveUgcVideo` 全分 P）+ 画质档 |
 | 服务 | `services/download/download_settings.dart` | 下载目录单例（ChangeNotifier + SharedPreferences） |
-| 服务 | `services/download/download_task.dart` | 任务状态机 + Range 流式下载（进度/速度/续传）+ 弹幕/视频两类执行 |
-| 服务 | `services/download/download_manager.dart` | 任务队列 + 并发上限 1（串行防风控）+ 暂停/恢复/重试/删除 + 跨重启持久化 |
+| 服务 | `services/download/download_task.dart` | 任务状态机 + Range 流式下载（进度/速度/续传）+ 弹幕/视频两类执行；**临时文件与「合并到中间文件再改名」**（§4.37） |
+| 服务 | `services/download/download_manager.dart` | 任务队列 + 并发上限 1（串行防风控）+ 暂停/恢复/重试/删除 + 跨重启持久化 + **删除/清除时清临时文件**（§4.37） |
 | 原生 | `MainActivity.kt` `mergeM4s` + `services/device_services.dart` | MediaExtractor + MediaMuxer 流直拷合并 video.m4s + audio.m4s → mp4 |
 | UI | `pages/bilibili/bili_danmaku_download_page.dart` | 弹幕下载：链接输入 + 解析 + 集数/分 P 勾选 + 全选 |
 | UI | `pages/bilibili/bili_video_download_page.dart` | 视频下载：清晰度选择 + 同步弹幕开关 + 集数/分 P 勾选 |
@@ -1092,6 +1092,10 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 - **下载产物媒体扫描（工作.md 第 5 点）**：合并/改名落盘后调用原生 `scanMediaFile`
   （`MediaScannerConnection.scanFile`），让 MediaStore 立即抽取时长/分辨率；`getVideos` 另对
   duration==0 的文件用 `MediaMetadataRetriever` 兜底抽时长——否则下载视频在列表里显示「未观看」。
+- **临时文件与「合并中」语义（B12，§4.37）**：先下 `{id}.video.m4s`/`{id}.audio.m4s`，**合并到
+  `{id}.merge.mp4` 中间文件、成功后才改名到「不与已有文件重名的成品名」**；失败删中间产物、
+  保留两个 m4s（重试走 Range 续传）；暂停保留 m4s（续传用），**删除/清除任务**才清临时文件。
+  「合并中」是一次原生调用、**中途停不了**：`canPause` 为 false，管理页把暂停按钮置灰。
 - **UGC 支持 BV / av / b23.tv 短链（工作.md 第 8 点）**：`parseBiliBangumiUrl` 识别
   `av(\d+)`，`resolveUgcVideo` 支持 aid 通道（`/x/web-interface/view?aid=`）；分享短链
   不含令牌，`utils/bili_short_link.dart` 从**任意分享文本**正则提取（App 复制出来是
@@ -1273,8 +1277,8 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 模型 | `models/wyzie_models.dart` | 字幕条目/来源响应/密钥信息/TMDB 命中（fromJson 容错）+ 语言/格式/编码/来源常量表 |
 | 纯函数 | `utils/wyzie_query.dart` / `wyzie_filename.dart` | 来源/逗号参数拼接 + 客户端语言过滤 / 落盘文件名清洗 + 同批消重 |
 | 设置 | `services/wyzie/wyzie_settings.dart` | API 密钥 + 来源/语言/格式/编码（ChangeNotifier + SharedPreferences，默认 en+zh / srt+ass / utf-8） |
-| API | `services/wyzie/wyzie_api.dart` | `/sources`、`/api/tmdb/search`、`/search`、文件下载；UTF-8 解码 + 400 无字幕特判 + 错误语义化 |
-| UI | `pages/subtitle/subtitle_download_page.dart` + `subtitle_settings_page.dart` + `views/subtitle_settings_section.dart` | 下载页（字幕设置入口 + 关键词「确定」搜索 + 结果勾选批量下载）+ 设置子页五入口；来源弹窗动态拉取（免费/付费分组） |
+| API | `services/wyzie/wyzie_api.dart` | `/sources`、`/api/tmdb/search`、`/search`、文件下载；UTF-8 解码 + 400 无字幕特判 + 错误语义化 + `close()`（只关自建 client） |
+| UI | `pages/subtitle/subtitle_download_page.dart` + `subtitle_settings_page.dart` + `views/subtitle_settings_section.dart` | 下载页（字幕设置入口 + 关键词「确定」搜索 + 结果勾选批量下载；**搜索以会话号裁决 + 下载对选中项快照**，§4.37）+ 设置子页五入口；来源弹窗动态拉取（免费/付费分组） |
 
 **关键决策**：
 - **来源免费/付费分组**：`/sources?key=` 返回 `tiered[]`（`tier`=free/paid），弹窗按
@@ -1950,6 +1954,44 @@ fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError
 
 ---
 
+### 4.37 下载链路纪律（临时文件 / 合并 / 进度 / 状态机 / 字幕页并发，B12）
+
+> 来源：体检报告 §3 第 30~33、35、36 条（P2-30/31/32/33/35/36）。改
+> `services/download/**`、`pages/download/**`、`pages/subtitle/subtitle_download_page.dart`
+> 前必读。⚠️ 这条链路会在**真实下载目录**里创建文件，验证时先指定测试目录。
+
+**六条纪律（都有反例）**
+
+| 纪律 | 落点 | 反例（都踩过） |
+|---|---|---|
+| **client 一定被关、sink 只关一次** | `DownloadTask._downloadToFile`：`client.close()` 放 `finally`；sink 也在 `finally` 里**安静关闭**（吞掉二次关闭/写盘异常，不覆盖真正的失败原因） | 旧实现把 `client.close()` 写在 catch 里，而 catch 中的 `await sink.close()` 一旦抛错，client 就被永久跳过（HttpClient + keep-alive socket 泄漏） |
+| **写盘错误立刻暴露** | 监听 `sink.done`，下一块到达即抛「写入文件失败（磁盘空间或权限）」；循环后 `flush()` 兜底 | 旧实现只在 `close()` 时才暴露写盘失败，磁盘满时会把整段响应先读完 |
+| **合并先写中间文件、成功才改名** | 合并到 `{id}.merge.mp4` → 成功 → `rename` 到「不与已有文件重名的成品名」（`FileOps.uniqueName`，`X (1).mp4`）；失败删中间产物、**原成品一个字节都不碰** | 旧实现让原生侧直接写 `$title.mp4`：合并失败把已有同名成品**截断成半截 mp4**；同名标题的不同集互相覆盖 |
+| **临时文件按语义清理** | 暂停 → **保留** m4s（Range 续传）；失败 → 保留 m4s（重试便宜）+ 删中间产物；成功 → 全清；**删除/清除任务** → `deleteTempFiles()`，且**等这次 `run()` 停手再删**（`awaitStopped()`） | 旧实现删除/清除只从列表里移除，`.m4s` 与半截 mp4 永远留在用户目录里；在途循环还持有 sink 时先删会 unlink 后继续写 |
+| **总量未知就不按比例算进度** | `downloadTotalBytes(resp, startBytes)`：`Content-Length` → `Content-Range` 的 `/total` → -1；-1 时进度停在**阶段起点**（UI 显示不确定条） | 旧实现拿「已存在字节数」当总量：新下载恒 0%、续传第一块就跳到阶段末 |
+| **「合并中」不可暂停** | `DownloadTask.canPause`（只认 pending/downloading）+ 管理页把暂停按钮**置灰**并提示「合并中，无法暂停」；等待中任务暂停要真的写 `paused` | 旧实现 merging 时也置成 paused，随后合并完成又自己变「完成」→ 用户看到「按了没反应」；等待中任务置 paused 被跳过 → 队列仍会把它启动 |
+
+**字幕下载页的两条并发纪律（P2-35/P2-36）**
+
+- **搜索以会话号裁决**：`AsyncSession` 判废旧响应；Enter 与按钮都**不吞**新搜索（静默 return
+  才是「功能坏了」）；**只有最新会话**能写结果 / 复位转圈；「重新搜索」主动 `invalidate`。
+- **下载对选中项做快照**：先按选中下标取出条目列表再开下（列表可能被新搜索整表替换，
+  按下标直取会 `RangeError`），`_downloading` 复位移进 `finally`——否则按钮永久卡死。
+  ⚠️ 页面为可测性留了 `api` / `writeBytes` 两个注入口（`testWidgets` 的假时钟不推进真实 `dart:io` 写盘）。
+
+**UI 细节：按钮内转圈必须显式给色**。字幕页「确定」在搜索中**仍在位可点**（底色 = `primary`），
+而 `CircularProgressIndicator` 默认色也是 `primary` → 圈与底色同色，看上去像「圈消失了」（真机反馈）。
+一律显式写 `color: colorScheme.onPrimary`（按钮自己的前景色：当前主题下即白色，深色主题下自动换成
+对应的高对比色；**写死白色会在深色主题里重新变成看不见**）。
+
+> ⚠️ **原生侧一半留给 B13**：`MainActivity.kt` 的 `mergeM4s` 失败分支仍不 `release()`
+> muxer/extractor（Dart 侧已改成中间文件，原生泄漏会让那个中间产物暂时删不掉）。
+
+**真机验收（2026-09，用户实测通过）**：删除任务不留 `.m4s` / 重下不覆盖同名成品 / 目录不可写有
+明确失败提示 / 合并中暂停按钮置灰 / 字幕下载中改关键词不卡死且仍下完勾选项 / 连按两次回车取最后一次。
+
+---
+
 ## 5. 新增功能指南（按功能类型）
 
 ### 5.1 新增一个页面
@@ -2097,6 +2139,7 @@ fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError
   - `test/bili_stream_proxy_test.dart` — 本地流代理（转发字节/Range 与响应头透传/未注册 404/start·stop 生命周期/网速 recentSpeedBytesPerSec）
   - `test/bili_auth_service_test.dart` — Web 扫码登录服务（generate 解析 url+qrcode_key / poll 成功从 data.url query 解析 Cookie+refresh_token / 86101·86090 状态）
   - `test/download_manager_test.dart` — 下载记录持久化（DownloadTask toJson/fromJson 往返 / 重启恢复未完成归位暂停·已完成保留 / 损坏数据防御）
+  - `test/download_task_test.dart` — **下载链路 B12**（§4.37；注入假视频服务 + 假 client + 假合并器，不碰真实网络与原生通道）：`downloadTotalBytes` 四种来源组合 / **续传只有 Content-Range 时进度逐步推进不跳阶段末** / **目录不可写 → 明确失败且 client 一定被关** / **合并失败不截断已有同名成品、不留中间产物** / 成品名重名自动避让且不留临时文件 / `deleteTempFiles` 幂等 / **删除任务等在途停手后清掉 `.m4s`** / **merging 不可暂停（`canPause`）** 与等待中任务暂停真的置 paused
   - `test/playback_history_test.dart` — 播放历史服务（记录去重置顶/上限淘汰/删除单条/清空/关闭记录保留已存/时长回填/持久化恢复/损坏数据防御 + 条目模型往返，§4.17）+ **播放页写入入口**（`utils/playback_history.dart`：回环代理 URL 过滤/本地与直链写入并标 isUrl/时长回填与非法值忽略，§4.33）
   - `test/playback_history_page_test.dart` — 历史记录页（空态/条目渲染/垃圾桶按钮删除单条落盘/清空二次确认取消与确认/无历史禁用清空/记录开关持久化）
   - `test/url_media_test.dart` — 在线直链纯函数（规范化补协议/内部空白拒绝/scheme 形态不补/协议白名单/标题提取解码与兜底，§4.17）
@@ -2115,8 +2158,8 @@ fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError
   - `test/wyzie_query_test.dart` — Wyzie 查询纯函数（来源/逗号参数拼接/语言代码归一化/客户端过滤，§4.21）
   - `test/wyzie_filename_test.dart` — Wyzie 落盘文件名纯函数（非法字符清洗/拼装/同批消重，§4.21）
   - `test/wyzie_settings_test.dart` — 字幕下载设置服务（默认值/密钥 trim/空集回退 all/持久化恢复/损坏防御，§4.21）
-  - `test/wyzie_api_test.dart` — Wyzie API 客户端（MockClient：来源/关键词→TMDB→搜索参数/400 无字幕特判/非 2xx/文件字节，§4.21）
-  - `test/subtitle_download_page_test.dart` — 影视字幕下载页（字幕设置入口/子页五入口/语言多选摘要联动/API 密钥弹窗取消·保存回归/未设密钥搜索 toast，§4.21）
+  - `test/wyzie_api_test.dart` — Wyzie API 客户端（MockClient：来源/关键词→TMDB→搜索参数/400 无字幕特判/非 2xx/文件字节 + **client 生命周期**：自建的关、注入的不代关、幂等，§4.21/§4.37）
+  - `test/subtitle_download_page_test.dart` — 影视字幕下载页（字幕设置入口/子页五入口/语言多选摘要联动/API 密钥弹窗取消·保存回归/未设密钥搜索 toast + **B12 并发两条**：连按两次回车结果属于最后一次关键词、旧响应不写结果也不提前关转圈、**下载中改关键词重新搜索不卡死且仍下完勾选项**、**按钮内转圈用显式前景色**，§4.21/§4.37）
   - `test/settings_page_bili_login_test.dart` — 「我的」页 B 站下载入口登录门禁（未登录点击弹幕/视频下载 toast 提示登录，§4.16）
   - `test/dolby_vision_settings_test.dart` — 杜比视界「不再提示」记忆（默认未抑制/勾选持久化/取消，§4.23）
   - `test/device_info_page_test.dart` — 设备信息页（设备信息/HDR 能力/关键编码器/解码器清单渲染 + 筛选胶囊（无数字文本/两行布局）+ 失败降级重试 + 点解码器进详情页显示完整能力，§4.24）
@@ -2376,3 +2419,11 @@ fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError
 | 点 4K 没权限 → 面板高亮停在 4K/跳回更早的档位，与实际在播的不一致；档位没变却重开一次流 | 高亮以**服务端实际给的档位**（`playUrl.quality`）为准：成功钉真实档、失败回到**切换前**那一档（不是开面板时的快照）；回落到的档恰好等于当前档时只纠正高亮 + toast，**不重开流**。基准口径是「请求 1080P，服务端向下取最接近的可用档」（用户拍板，§4.36） |
 | 反复进出番剧详情/索引/搜索页，内存与 client 数累积 | `BiliBangumiService` 缺省**复用** `BiliAccount.instance.http`（Cookie+指纹一体、不新建连接池），不要 `http ?? BiliHttp()` 自建；`BiliHttp.close()` 幂等且只关自建的 client（§4.13/§4.36，P2-13） |
 | 反复进出**视频下载页/弹幕下载页**同样漏 client | 页面持有的 `BiliDownloadService` 自建了短链展开用的 `http.Client` → 必须在页面 `dispose` 里 `_service.close()`；`close()` 幂等且只关自建的（§4.36） |
+| 下载失败后**整个 HttpClient 泄漏**（连接池 + keep-alive socket） | `client.close()` 必须在 `finally` 里、sink 也在 `finally` 里**安静关闭**：旧实现把 client 关闭写在 catch，而 catch 里的 `await sink.close()` 一抛错就把它跳过了（§4.37，P2-30） |
+| 磁盘满/目录不可写时**静默卡住**（或把整段响应白读完才失败） | 监听 `sink.done`，写盘一失败下一块就抛「写入文件失败（磁盘空间或权限）」；错误要进 `_error` 给用户看（§4.37，P2-30） |
+| **重下一个同名视频把已有成品截断成半截 mp4** / 同名不同集互相覆盖 | 合并写 `{id}.merge.mp4` 中间文件、成功才改名到成品名；成品名用 `FileOps.uniqueName` 避让（`X (1).mp4`）；合并失败删中间产物（§4.37，P2-31） |
+| 删除/清除下载任务后**用户目录里永远留着 `.m4s` 与半截 mp4** | `deleteTempFiles()` 覆盖 `.video.m4s`/`.audio.m4s`/`.merge.mp4`，`remove()` 与 `clearFinished()` 都调；且**等这次 `run()` 停手再删**（在途循环还持有 sink 时先删会被 unlink 后继续写）（§4.37，P2-31） |
+| 下载进度**新下载恒 0% / 续传一上来跳到阶段末** | 总量来源只能是 `Content-Length` 或 `Content-Range` 的 `/total`；两者都没有时**不按比例算**（进度停在阶段起点、UI 走不确定条），绝不能拿「已存在字节数」当总量（§4.37，P2-32） |
+| 「合并中」点暂停**按了没反应、随后自己变完成** | 合并是一次原生调用、中途停不了：`canPause` 只认 pending/downloading，管理页把暂停按钮**置灰**并给 tooltip 原因；等待中任务的暂停要真的写 `paused`（否则队列 `_pump` 仍会启动它）（§4.37，P2-33） |
+| 字幕搜索**连按两次回车结果属于先输入的关键词** / 下载中改关键词 → `RangeError` + 按钮永久卡死 | 搜索用 `AsyncSession` 裁决（Enter 与按钮都不吞）；下载**先对选中项做快照**再循环，`_downloading` 复位移进 `finally`（§4.37，P2-35/P2-36） |
+| **按钮里的转圈看不见**（圈与按钮底色同色） | `CircularProgressIndicator` 默认取主题 `primary`，而「仍在位可点」的 `FilledButton` 底色也是 `primary` → 显式 `color: colorScheme.onPrimary`。⚠️ 别写死白色：深色主题下 primary 是浅色，白色反而看不见（§4.37） |

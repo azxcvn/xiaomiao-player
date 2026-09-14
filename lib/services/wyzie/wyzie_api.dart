@@ -30,13 +30,29 @@ class WyzieApiException implements Exception {
 }
 
 class WyzieApi {
-  WyzieApi({http.Client? client}) : _client = client ?? http.Client();
+  /// [client] 注入的 client 归调用方（[close] 不关它）；[clientFactory] 用于测试
+  /// 观察「自建 client 是否被关掉」——生产代码不传，走默认 `http.Client()`。
+  WyzieApi({http.Client? client, http.Client Function()? clientFactory})
+      : _client = client ?? (clientFactory ?? http.Client.new)(),
+        _ownsClient = client == null;
 
   static const String baseUrl = 'https://sub.wyzie.io';
 
   static const String _userAgent = 'Mozilla/5.0 (Linux; Android 14)';
 
   final http.Client _client;
+
+  /// 自建的 client 才由本对象负责关闭（与 `BiliHttp`/`DandanPlayApi` 同一约定）。
+  final bool _ownsClient;
+  bool _closed = false;
+
+  /// 释放自建的 `http.Client`（幂等）。字幕下载页每次进入都会 new 一个本对象，
+  /// 不在页面 `dispose` 里调用就是「每次进页漏一个连接池」（§4.21/§7）。
+  void close() {
+    if (_closed) return;
+    _closed = true;
+    if (_ownsClient) _client.close();
+  }
 
   /// 重试日志（重试不改变用户可见语义，但排障需要知道发生过）
   void _logRetry(Object error, int nextAttempt) {

@@ -191,12 +191,17 @@ class _TaskCard extends StatelessWidget {
     );
   }
 
-  /// 紧凑操作按钮（32×32，避免默认 48×48 把卡片撑高）。
-  Widget _iconBtn(IconData icon, Color color, String tooltip, VoidCallback onTap) {
+  /// 紧凑操作按钮（32×32，避免默认 48×48 把卡片撑高）；[onTap] 为 null 即置灰不可点。
+  Widget _iconBtn(
+    IconData icon,
+    Color color,
+    String tooltip,
+    VoidCallback? onTap,
+  ) {
     return IconButton(
       onPressed: onTap,
       icon: Icon(icon, size: 18),
-      color: color,
+      color: onTap == null ? color.withValues(alpha: 0.4) : color,
       tooltip: tooltip,
       visualDensity: VisualDensity.compact,
       padding: EdgeInsets.zero,
@@ -208,13 +213,16 @@ class _TaskCard extends StatelessWidget {
     final muted = scheme.onSurfaceVariant;
     switch (task.status) {
       case DownloadStatus.downloading:
-      case DownloadStatus.merging:
         return _iconBtn(
           Icons.pause,
           muted,
           '暂停',
           () => DownloadManager.instance.pause(task.id),
         );
+      case DownloadStatus.merging:
+        // 合并是一次原生调用、中途停不了：按钮置灰并说明原因，
+        // 不给「按了没反应、随后自己变完成」的错觉（P2-33）
+        return _iconBtn(Icons.pause, muted, '合并中，无法暂停', null);
       case DownloadStatus.paused:
         return Row(
           mainAxisSize: MainAxisSize.min,

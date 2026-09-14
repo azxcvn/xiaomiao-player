@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -132,6 +133,7 @@ class DownloadManager extends ChangeNotifier {
     _persistedStatus.remove(id);
     notifyListeners();
     _persist();
+    _cleanupTempFiles(t);
   }
 
   /// 清除已完成/失败的任务。
@@ -146,6 +148,7 @@ class DownloadManager extends ChangeNotifier {
     for (final t in removed) {
       _detach(t);
       _persistedStatus.remove(t.id);
+      _cleanupTempFiles(t);
     }
     _tasks.removeWhere(
       (t) =>
@@ -154,6 +157,14 @@ class DownloadManager extends ChangeNotifier {
     );
     notifyListeners();
     if (removed.isNotEmpty) _persist();
+  }
+
+  /// 清理任务留下的临时/半成品文件（`.m4s` 与合并中间产物）。
+  ///
+  /// **必须等这次 `run()` 停手再删**：在途循环还持有 sink，先删会被 unlink 后继续
+  /// 写、也可能撞上正在读临时文件的原生合并（P2-31）。
+  void _cleanupTempFiles(DownloadTask task) {
+    unawaited(task.awaitStopped().then((_) => task.deleteTempFiles()));
   }
 
   DownloadTask? _taskById(String id) {

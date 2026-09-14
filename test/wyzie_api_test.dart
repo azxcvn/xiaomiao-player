@@ -161,4 +161,37 @@ void main() {
       throwsA(isA<WyzieApiException>()),
     );
   });
+
+  group('client 生命周期（字幕下载页每次进页 new 一个）', () {
+    test('自建的 client 由 close() 关闭（幂等）', () {
+      final tracking = _TrackingClient();
+      final api = WyzieApi(clientFactory: () => tracking);
+      expect(tracking.closed, isFalse);
+      api.close();
+      expect(tracking.closed, isTrue);
+      api.close(); // 幂等
+      expect(tracking.closed, isTrue);
+    });
+
+    test('注入的 client 不代关（归调用方）', () {
+      final tracking = _TrackingClient();
+      final api = WyzieApi(client: tracking);
+      api.close();
+      expect(tracking.closed, isFalse);
+    });
+  });
+}
+
+/// 记录 [close] 是否被调用的假 client。
+class _TrackingClient extends http.BaseClient {
+  bool closed = false;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async =>
+      http.StreamedResponse(const Stream<List<int>>.empty(), 200);
+
+  @override
+  void close() {
+    closed = true;
+  }
 }
