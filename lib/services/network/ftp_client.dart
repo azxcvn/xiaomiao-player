@@ -52,7 +52,7 @@ class FtpClient implements NetworkClient {
   Encoding? _encoding;
 
   @override
-  bool isConnected() => _control?.isOpen ?? false;
+  bool isConnected() => _control?.isAlive ?? false;
 
   @override
   Future<void> connect() async {
@@ -195,13 +195,13 @@ class FtpClient implements NetworkClient {
     return withRetry(
       () async {
         final existing = _control;
-        final ctrl = (existing != null && existing.isOpen)
+        final ctrl = (existing != null && existing.isAlive)
             ? existing
             : await _openControl();
         try {
           return await run(ctrl);
         } catch (error) {
-          if (isRetryableNetworkError(error) || !ctrl.isOpen) {
+          if (isRetryableNetworkError(error) || !ctrl.isAlive) {
             _discardControl(ctrl);
           }
           rethrow;
@@ -364,11 +364,18 @@ class FtpClient implements NetworkClient {
 class _FtpControl {
   final Socket _socket;
   final String host;
-  final StreamIterator<List<int>> _chunks;
+
+  /// 已到达但还没被 [_readLine] 取走的原始分片。
+  final List<List<int>> _chunks = <List<int>>[];
 
   /// 尚未切分成行的字节（GBK 是多字节编码，必须**整行**解码，
   /// 不能拿 `utf8.decoder` 那种按 chunk 流式解码去凑）。
   final List<int> _pending = <int>[];
+
+  late final StreamSubscription<List<int>> _sub;
+
+  /// 等待「下一片数据 / 连接结束」的信号。
+  Completer<void>? _chunkArrived;
 
   /// 控制连接的编解码：登录时确定（ASCII 命令与中文路径共用同一套）。
   Encoding encoding = utf8;
@@ -377,17 +384,48 @@ class _FtpControl {
   String replyText = '';
   bool _closed = false;
 
+  /// 远端已断开 / socket 出错。
+  bool _dead = false;
+
   /// 等待一条应答的超时（分级超时里的常规 API 档）。
   static final replyTimeout = NetworkTimeoutTier.api.timeout;
 
-  _FtpControl(this._socket, this.host)
-      : _chunks = StreamIterator<List<int>>(_socket);
+  _FtpControl(this._socket, this.host) {
+    // **自己持有 socket 订阅**（不用 `StreamIterator`）：只有这样才能在远端
+    // 断开（FIN）/ 出错时**立刻**知道 → `isConnected()` 不再恒真、代理也不会
+    // 一直复用死连接（P2-20）。实测 `socket.done` 只在**我们自己**关闭时完成，
+    // 远端 FIN 不会触发它，所以不能用它当断线信号。
+    _sub = _socket.listen(
+      (chunk) {
+        _chunks.add(chunk);
+        _wake();
+      },
+      onError: (Object _) => _markDead(),
+      onDone: _markDead,
+      cancelOnError: false,
+    );
+  }
+
+  void _wake() {
+    final waiter = _chunkArrived;
+    _chunkArrived = null;
+    if (waiter != null && !waiter.isCompleted) waiter.complete();
+  }
+
+  void _markDead() {
+    _dead = true;
+    _wake();
+  }
 
   bool get isOpen => !_closed;
+
+  /// 连接是否**真的**还活着（我们没关 + 远端也没断）。
+  bool get isAlive => !_closed && !_dead;
 
   void close() {
     if (_closed) return;
     _closed = true;
+    unawaited(_sub.cancel());
     try {
       _socket.destroy();
     } catch (_) {
@@ -434,9 +472,15 @@ class _FtpControl {
         _pending.removeRange(0, newline + 1);
         return line;
       }
-      final hasNext = await _chunks.moveNext().timeout(replyTimeout);
-      if (!hasNext) return null;
-      _pending.addAll(_chunks.current);
+      if (_chunks.isEmpty) {
+        // 已经没有待处理数据：远端已断开就到此为止（不再等超时）
+        if (_dead) return null;
+        final waiter = Completer<void>();
+        _chunkArrived = waiter;
+        await waiter.future.timeout(replyTimeout);
+        continue;
+      }
+      _pending.addAll(_chunks.removeAt(0));
     }
   }
 

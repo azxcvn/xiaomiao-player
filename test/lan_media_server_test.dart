@@ -15,6 +15,22 @@ void main() {
     expect(isSiteLocalIpv4('not-an-ip'), isFalse);
   });
 
+  test('lanInterfaceScore：Wi-Fi 优先、热点次之、VPN 判为不可用（P2-29）', () {
+    expect(lanInterfaceScore('wlan0'), 0);
+    expect(lanInterfaceScore('ap0'), 1);
+    expect(lanInterfaceScore('swlan0'), 1);
+    expect(lanInterfaceScore('eth0'), 2);
+    expect(lanInterfaceScore('rmnet_data0'), 5);
+    // VPN / 点对点：电视路由不到，一律排除
+    for (final name in ['tun0', 'tap0', 'ppp0', 'p2p0']) {
+      expect(lanInterfaceScore(name), greaterThanOrEqualTo(100), reason: name);
+    }
+    // 优先级严格：Wi-Fi 好过热点，热点好过有线，有线好过移动数据
+    expect(lanInterfaceScore('wlan0'), lessThan(lanInterfaceScore('ap0')));
+    expect(lanInterfaceScore('ap0'), lessThan(lanInterfaceScore('eth0')));
+    expect(lanInterfaceScore('eth0'), lessThan(lanInterfaceScore('rmnet0')));
+  });
+
   test('expose 返回 LAN URL，全量/Range 拉流正确', () async {
     final dir = await Directory.systemTemp.createTemp('lan_media_server_test');
     addTearDown(() => dir.delete(recursive: true));

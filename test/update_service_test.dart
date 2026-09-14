@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -114,6 +115,25 @@ void main() {
         UpdateService.checkForUpdate(client: client, localVersion: '1.3.3'),
         throwsA(isA<UpdateCheckException>()),
       );
+    });
+
+    test('连接类失败会重试（接入统一重试，P2-37）', () async {
+      var attempts = 0;
+      final client = MockClient((_) async {
+        attempts++;
+        if (attempts == 1) {
+          throw const SocketException('network unreachable');
+        }
+        return http.Response(jsonEncode({'tag_name': 'v1.9.0'}), 200);
+      });
+
+      final info = await UpdateService.checkForUpdate(
+        client: client,
+        localVersion: '1.3.3',
+      );
+
+      expect(attempts, 2, reason: '连接类失败应退避重试一次以上');
+      expect(info?.version, '1.9.0');
     });
   });
 }

@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:moumou/utils/http_byte_range.dart';
 import 'package:moumou/utils/network_mime_types.dart';
 
@@ -25,17 +26,46 @@ bool isSiteLocalIpv4(String address) {
   return false;
 }
 
-/// 从网卡列表挑选站点本地 IPv4（排除回环）；找不到返回 null。
+/// 网卡优先级评分（越小越可能被电视路由到）；VPN / 点对点直接判为不可用。
+///
+/// 旧实现取「第一个站点本地地址」：手机同时开着 VPN（`tun*`）或处于热点模式
+/// （`ap*` / `swlan*`）时，可能把电视根本路由不到的地址写进投屏 URL，电视那边
+/// 一直转圈（P2-29）。
+@visibleForTesting
+int lanInterfaceScore(String name) {
+  final n = name.toLowerCase();
+  if (n.startsWith('tun') ||
+      n.startsWith('tap') ||
+      n.startsWith('ppp') ||
+      n.startsWith('p2p')) {
+    return 100; // VPN / 点对点：局域网设备路由不到
+  }
+  if (n.startsWith('wlan')) return 0; // Wi-Fi：投屏最常见的场景
+  if (n.startsWith('ap') || n.startsWith('swlan')) return 1; // 本机热点
+  if (n.startsWith('eth')) return 2; // 有线
+  if (n.startsWith('rmnet')) return 5; // 移动数据：电视不可达，但好过没有
+  return 3;
+}
+
+/// 从网卡列表挑选**电视可达**的站点本地 IPv4（排除回环与 VPN）；找不到抛错。
 Future<String> discoverLanIp() async {
   final interfaces = await NetworkInterface.list(
     type: InternetAddressType.IPv4,
     includeLoopback: false,
   );
+  String? best;
+  var bestScore = 1 << 30;
   for (final iface in interfaces) {
+    final score = lanInterfaceScore(iface.name);
+    if (score >= 100 || score >= bestScore) continue;
     for (final addr in iface.addresses) {
-      if (isSiteLocalIpv4(addr.address)) return addr.address;
+      if (!isSiteLocalIpv4(addr.address)) continue;
+      best = addr.address;
+      bestScore = score;
+      break;
     }
   }
+  if (best != null) return best;
   throw StateError('未找到局域网 IPv4 地址');
 }
 
@@ -167,8 +197,13 @@ class LanMediaServer {
       await response.addStream(file.openRead(start, end));
       await response.close();
     } catch (_) {
-      // 客户端中止（电视断开）时写入会抛，忽略。
-      await response.close();
+      // 客户端中止（电视断开）时写入会抛：此时响应多半已经关闭，
+      // 再 close 一次本身也会抛（旧实现让它逃逸成未处理的异步异常，P2-29）。
+      try {
+        await response.close();
+      } catch (_) {
+        // 已经关了就算了
+      }
     }
   }
 

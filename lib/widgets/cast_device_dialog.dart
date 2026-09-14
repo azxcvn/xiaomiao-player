@@ -53,6 +53,13 @@ class _CastDeviceDialogState extends State<CastDeviceDialog> {
   Future<void> _start() async {
     try {
       final stream = await CastService.instance.startDiscovery();
+      // 弹窗可能在 await 期间被关掉：那时 `_sub` 还没赋值 → dispose 里的
+      // `_sub?.cancel()` 被跳过，而刚注册的新 manager 也无人 stop（UDP/定时器
+      // 进程级泄漏，P2-28）。这里补一次「已经不在树上就立刻收摊」。
+      if (!mounted) {
+        CastService.instance.stopDiscovery();
+        return;
+      }
       _sub = stream.listen(_onDevices);
     } catch (e) {
       if (mounted) {

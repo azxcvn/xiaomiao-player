@@ -224,6 +224,29 @@ void main() {
       reason: '一次尝试就报错（不重试成三次）',
     );
   });
+
+  test('远端断开后 isConnected() 不再报 true（P2-20）', () async {
+    final server = _FakeFtpServer();
+    await server.start();
+    addTearDown(server.stop);
+
+    final client = FtpClient(_connection(server.control.port));
+    await client.connect();
+    expect(client.isConnected(), isTrue);
+
+    // 服务端销毁连接（相当于拔网线 / 服务端踢连接）
+    await server.stop();
+    await _waitUntil(() => !client.isConnected());
+    expect(client.isConnected(), isFalse, reason: '远端已断，不能继续谎报已连接');
+  });
+}
+
+/// 轮询等待条件成立（socket 的 done 事件在下一次事件循环才到）。
+Future<void> _waitUntil(bool Function() condition) async {
+  for (var i = 0; i < 100; i++) {
+    if (condition()) return;
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+  }
 }
 
 bool _contains(List<int> haystack, List<int> needle) {

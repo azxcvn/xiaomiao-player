@@ -204,10 +204,22 @@ class WebDavClient implements NetworkClient {
       // 黑洞地址 / 半开连接：分级超时到点就报错，不重试到天荒地老。
       throw const NetworkClientException(_timeoutMessage);
     }
-    // 响应体也要有超时：连上了但服务端不回 body 时不能永久挂起。
-    final body = await response.stream
-        .bytesToString()
-        .timeout(NetworkTimeoutTier.api.timeout);
+    // 响应体：**体积上限 + 超时**——超大目录的 PROPFIND 响应可以到几十 MB，
+    // 无上限会把内存吃满（P2-21：旧实现 `bytesToString()` 只加了超时）。
+    final String body;
+    try {
+      final bytes = await readBodyCapped(
+        response,
+        maxBytes: kMaxJsonResponseBytes,
+      ).timeout(NetworkTimeoutTier.api.timeout);
+      body = utf8.decode(bytes, allowMalformed: true);
+    } on ResponseTooLargeException catch (error) {
+      throw NetworkClientException(
+        '目录过大：响应超过 ${error.maxBytes ~/ (1024 * 1024)}MB',
+      );
+    } on TimeoutException {
+      throw const NetworkClientException(_timeoutMessage);
+    }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw NetworkClientException(
         'WebDAV 请求失败（HTTP ${response.statusCode}'

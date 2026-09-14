@@ -7,6 +7,7 @@ import 'package:moumou/pages/player/player_page.dart';
 import 'package:moumou/services/network/network_client.dart';
 import 'package:moumou/services/network/network_repository.dart';
 import 'package:moumou/services/view_settings.dart';
+import 'package:moumou/utils/async_session.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/natural_compare.dart';
 import 'package:moumou/utils/network_mime_types.dart';
@@ -21,7 +22,10 @@ import 'package:moumou/widgets/video_card.dart';
 class NetworkBrowserPage extends StatefulWidget {
   final NetworkConnection connection;
 
-  const NetworkBrowserPage({super.key, required this.connection});
+  /// 浏览回调（默认走 [NetworkRepository.instance.browse]；测试注入用）。
+  final Future<List<NetworkFile>> Function(NetworkConnection, String)? browse;
+
+  const NetworkBrowserPage({super.key, required this.connection, this.browse});
 
   @override
   State<NetworkBrowserPage> createState() => _NetworkBrowserPageState();
@@ -32,6 +36,10 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
   List<NetworkFile> _entries = [];
   bool _loading = true;
   String? _error;
+
+  /// 加载会话号：快速连点进目录 / 点返回时，旧请求的响应回来不能再覆盖新列表
+  /// （否则会出现「父目录标题 + 子目录内容」的错位，P2-22）。
+  final AsyncSession _loadSession = AsyncSession();
 
   String get _path => _stack.last;
 
@@ -52,20 +60,23 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
   }
 
   Future<void> _load() async {
+    final session = _loadSession.start();
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      final entries = await NetworkRepository.instance
-          .browse(widget.connection, _path);
-      if (!mounted) return;
+      final entries = await (widget.browse ?? NetworkRepository.instance.browse)(
+        widget.connection,
+        _path,
+      );
+      if (!mounted || !_loadSession.isCurrent(session)) return;
       setState(() {
         _entries = entries;
         _loading = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || !_loadSession.isCurrent(session)) return;
       setState(() {
         _error = e is NetworkClientException ? e.message : '连接失败：$e';
         _loading = false;
@@ -105,6 +116,13 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
       playerPageRoute(PlayerPage(path: url, title: video.name)),
     );
     await NetworkRepository.instance.releasePlayback(url);
+  }
+
+  @override
+  void dispose() {
+    // 作废在途加载：本页已销毁，旧响应不该再写状态
+    _loadSession.invalidate();
+    super.dispose();
   }
 
   @override

@@ -178,4 +178,41 @@ void main() {
     );
     expect(DateTime.now().difference(started).inSeconds, lessThan(14));
   });
+
+  test('PROPFIND 响应体超上限 → 报「目录过大」且不把整个目录拉下来（P2-21）', () async {
+    var sent = 0;
+    const chunk = 64 * 1024;
+    const totalChunks = 512; // 32MB，远大于 JSON 上限 16MB
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    addTearDown(() => server.close(force: true));
+    server.listen((request) async {
+      final response = request.response;
+      response.statusCode = 207;
+      response.headers.contentType = ContentType.parse('application/xml');
+      response.headers.set('Content-Length', '${chunk * totalChunks}');
+      try {
+        for (var i = 0; i < totalChunks; i++) {
+          response.add(List<int>.filled(chunk, 0));
+          await response.flush();
+          sent += chunk;
+        }
+        await response.close();
+      } catch (_) {
+        // 客户端按声明长度直接放弃：正常路径
+      }
+    });
+
+    final client = WebDavClient(_connection(server.port));
+    await expectLater(
+      client.connect(),
+      throwsA(
+        isA<NetworkClientException>().having(
+          (e) => e.message,
+          'message',
+          contains('目录过大'),
+        ),
+      ),
+    );
+    expect(sent, 0, reason: '声明就超限时一个字节都不该读');
+  });
 }

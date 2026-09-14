@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:moumou/models/update_info.dart';
+import 'package:moumou/utils/retry_policy.dart';
 import 'package:moumou/utils/version_compare.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -90,42 +91,30 @@ class UpdateService {
     http.Client? client,
   ) async {
     if (githubLatestUrl.isEmpty) return null;
-    try {
-      final response = await _get(Uri.parse(githubLatestUrl), client);
-      if (response.statusCode < 200 || response.statusCode >= 300) return null;
-      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-      if (decoded is! Map) return null;
-      final tag = decoded['tag_name'];
-      if (tag is! String || tag.trim().isEmpty) return null;
-      final rawBody = decoded['body'];
-      return (
-        version: _normalizeVersion(tag),
-        body: rawBody is String && rawBody.trim().isNotEmpty ? rawBody : '暂无更新说明',
-      );
-    } catch (_) {
-      return null;
-    }
+    final json = await _getJson(Uri.parse(githubLatestUrl), client);
+    if (json == null) return null;
+    final tag = json['tag_name'];
+    if (tag is! String || tag.trim().isEmpty) return null;
+    final rawBody = json['body'];
+    return (
+      version: _normalizeVersion(tag),
+      body: rawBody is String && rawBody.trim().isNotEmpty ? rawBody : '暂无更新说明',
+    );
   }
 
   /// 抓取 CDN 上的 version.json（结构：{ "version": "1.3.3", "body": "..." }）。
   static Future<({String version, String body})?> _fetchMirrorVersion(
     http.Client? client,
   ) async {
-    try {
-      final response = await _get(Uri.parse(mirrorVersionUrl), client);
-      if (response.statusCode < 200 || response.statusCode >= 300) return null;
-      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-      if (decoded is! Map) return null;
-      final version = decoded['version'];
-      if (version is! String || version.trim().isEmpty) return null;
-      final rawBody = decoded['body'];
-      return (
-        version: _normalizeVersion(version),
-        body: rawBody is String && rawBody.trim().isNotEmpty ? rawBody : '暂无更新说明',
-      );
-    } catch (_) {
-      return null;
-    }
+    final json = await _getJson(Uri.parse(mirrorVersionUrl), client);
+    if (json == null) return null;
+    final version = json['version'];
+    if (version is! String || version.trim().isEmpty) return null;
+    final rawBody = json['body'];
+    return (
+      version: _normalizeVersion(version),
+      body: rawBody is String && rawBody.trim().isNotEmpty ? rawBody : '暂无更新说明',
+    );
   }
 
   static const Map<String, String> _headers = {
@@ -133,14 +122,33 @@ class UpdateService {
     'Accept': 'application/vnd.github+json',
   };
 
-  /// GET 请求；client 未注入时自建并用完即关（测试注入 MockClient 则不关）。
-  static Future<http.Response> _get(Uri uri, http.Client? client) async {
+  /// GET 一个 JSON 对象：**分级超时 + 只重试连接类失败 + 体积上限**（§4.28）。
+  ///
+  /// ⚠️ 旧实现是裸 `http.Client().get().timeout(30s)`：更新检查恰恰发生在弱网 /
+  /// 被墙环境，没有重试与体积上限（P2-37）。client 未注入时自建并**读完 body 后**
+  /// 才关（注入的归调用方）。
+  static Future<Map<String, dynamic>?> _getJson(
+    Uri uri,
+    http.Client? client, {
+    NetworkTimeoutTier tier = NetworkTimeoutTier.api,
+    int maxBytes = kMaxJsonResponseBytes,
+  }) async {
     final ownsClient = client == null;
     final c = client ?? http.Client();
     try {
-      return await c
-          .get(uri, headers: _headers)
-          .timeout(const Duration(seconds: 30));
+      final response = await sendGet(c, uri, headers: _headers, tier: tier);
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        await drainStreamCapped(response.stream).catchError((Object _) {});
+        return null;
+      }
+      final bytes = await readBodyCapped(response, maxBytes: maxBytes);
+      final decoded = jsonDecode(utf8.decode(bytes, allowMalformed: true));
+      if (decoded is Map<String, dynamic>) return decoded;
+      if (decoded is Map) return decoded.cast<String, dynamic>();
+      return null;
+    } catch (_) {
+      // 调用方语义不变：拿不到就当这条通道失败（再走兜底 / 抛 UpdateCheckException）
+      return null;
     } finally {
       if (ownsClient) c.close();
     }

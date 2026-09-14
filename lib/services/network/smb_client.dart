@@ -27,13 +27,19 @@ class SmbClient implements NetworkClient {
   Future<void> connect() async {
     await disconnect();
     try {
-      final c = await SmbConnect.connectAuth(
+      SmbConnect? created;
+      created = await SmbConnect.connectAuth(
         host: connection.host,
         username: connection.isAnonymous ? '' : connection.username,
         password: connection.isAnonymous ? '' : connection.password,
         domain: '',
+        // socket 真正断开（拔网线 / 服务端踢连接）时清掉引用：否则
+        // `isConnected()` 会一直报 true，代理据此复用死连接（P2-20）。
+        onDisconnect: (_) {
+          if (identical(_connect, created)) _connect = null;
+        },
       );
-      _connect = c;
+      _connect = created;
     } catch (e) {
       throw NetworkClientException(_friendly(e));
     }

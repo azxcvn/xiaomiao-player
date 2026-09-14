@@ -28,6 +28,10 @@ class NetworkStreamingProxy {
   static final NetworkStreamingProxy instance = NetworkStreamingProxy();
 
   HttpServer? _server;
+
+  /// 在飞的服务端 bind（并发注册共用，避免 bind 出两个 HttpServer，P2-23）。
+  Future<HttpServer>? _bindFuture;
+
   final Map<String, _StreamEntry> _entries = {};
   final Random _random = Random.secure();
 
@@ -96,13 +100,24 @@ class NetworkStreamingProxy {
     await server?.close(force: true);
   }
 
-  Future<HttpServer> _ensureServer() async {
+  Future<HttpServer> _ensureServer() {
     final existing = _server;
-    if (existing != null) return existing;
-    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
-    server.listen(_handle);
-    _server = server;
-    return server;
+    if (existing != null) return Future.value(existing);
+    // 并发注册**共用同一个在飞 bind**：旧实现两次并发调用会各 bind 一个
+    // HttpServer，前一个的端口与 listen 订阅无人释放（进程级泄漏，P2-23）。
+    return _bindFuture ??= _bindServer();
+  }
+
+  Future<HttpServer> _bindServer() async {
+    try {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      server.listen(_handle);
+      _server = server;
+      return server;
+    } finally {
+      // 成功后由 `_server` 兜底；失败也允许下次重试
+      _bindFuture = null;
+    }
   }
 
   String _generateToken() {
@@ -266,32 +281,72 @@ class NetworkStreamingProxy {
     final known = entry.knownSizes[path];
     if (known != null) return known;
     final size = await _locked(entry, () async {
-      try {
-        final client = await _connectedClient(entry);
-        return await client.getFileSize(path.value);
-      } catch (e) {
-        print('[NetProxy] getFileSize 失败: $e');
-        return -1;
+      // 复用到的死连接先丢弃重连一次（见 [_withReconnect]）
+      final hadClient = entry.client != null;
+      var value = await _probeSize(entry, path);
+      if (value < 0 && hadClient) {
+        await _dropClient(entry);
+        value = await _probeSize(entry, path);
       }
+      return value;
     });
     if (size >= 0) entry.knownSizes[path] = size;
     return size;
+  }
+
+  Future<int> _probeSize(_StreamEntry entry, NetworkPath path) async {
+    try {
+      final client = await _connectedClient(entry);
+      return await client.getFileSize(path.value);
+    } catch (e) {
+      print('[NetProxy] getFileSize 失败: $e');
+      return -1;
+    }
   }
 
   Future<Stream<List<int>>?> _openOrNull(
     _StreamEntry entry,
     NetworkPath path,
     int offset,
-  ) async {
+  ) {
     return _locked(entry, () async {
-      try {
-        final client = await _connectedClient(entry);
-        return await client.openStream(path.value, offset: offset);
-      } catch (e) {
-        print('[NetProxy] openStream 失败: $e');
-        return null;
+      final hadClient = entry.client != null;
+      var stream = await _openOnce(entry, path, offset);
+      if (stream == null && hadClient) {
+        // `isConnected()` 只说明「客户端对象还在」，真断线要等第一次 I/O 才暴露
+        // （FTP/SMB 都是如此）→ 复用到的死连接自动丢弃重连一次，而不是把失败
+        // 直接甩给 mpv（那会表现为「播着播着永远转圈，退出重进才好」，P2-20）。
+        await _dropClient(entry);
+        stream = await _openOnce(entry, path, offset);
       }
+      return stream;
     });
+  }
+
+  Future<Stream<List<int>>?> _openOnce(
+    _StreamEntry entry,
+    NetworkPath path,
+    int offset,
+  ) async {
+    try {
+      final client = await _connectedClient(entry);
+      return await client.openStream(path.value, offset: offset);
+    } catch (e) {
+      print('[NetProxy] openStream 失败: $e');
+      return null;
+    }
+  }
+
+  /// 丢弃当前远端连接（下次请求会重新建连）。
+  Future<void> _dropClient(_StreamEntry entry) async {
+    final client = entry.client;
+    entry.client = null;
+    if (client == null) return;
+    try {
+      await client.disconnect();
+    } catch (_) {
+      // 断开失败不影响重连
+    }
   }
 
   Future<T> _locked<T>(_StreamEntry entry, Future<T> Function() action) async {
