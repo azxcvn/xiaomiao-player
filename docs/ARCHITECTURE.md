@@ -137,12 +137,13 @@ lib/
 │   ├── video_info_service.dart# 列表封面缩略图（磁盘缓存）+ 基本元数据 + 完整媒体信息
 │   ├── playback_progress_service.dart  # 播放进度（ChangeNotifier + 持久化 + 串行写盘）
 │   ├── playback_history_service.dart # 播放历史（记录/去重置顶/上限淘汰/删除/清空/开关，ChangeNotifier + 持久化，§4.17）
+│   ├── playback_tuning.dart   # 每次 open 前的 mpv 缓存/网络调参（本地/在线两档 + lavf-o 合并；播放页与听视频切歌共用，§4.26/§4.38）
 │   ├── player_controls_settings.dart   # 播放器控制设置（槽位/手势/倍速/比例/长按/方向/顶部信息等）
 │   ├── device_services.dart   # 设备能力：音量/亮度/画中画/电量/网络类型/后台服务启停/字幕·字体文件与目录操作（MethodChannel）+ 任意时刻抓帧（FFmpeg 引擎 + 秒桶内存 LRU）+ 设备能力检测 + 整应用重启 + 动态色壁纸取色
 │   ├── dolby_vision_settings.dart # 杜比视界偏色提示「不再提示」记忆（ChangeNotifier + 持久化，§4.23）
 │   ├── fast_thumbnails.dart   # FFmpeg 快速缩略图引擎（FFI 直连自建 libmpv.so 的 mk_thumbnail_*，长驻 worker+单飞顶旧调度，P1-14）
 │   ├── crash_log_service.dart # 崩溃日志：列表/读取/删除/清空/导出
-│   ├── cache_manager_service.dart # 缓存管理：列表封面磁盘缓存查询/清除（进度条缩略图为纯内存，不占磁盘）
+│   ├── cache_manager_service.dart # 缓存管理：列表封面磁盘缓存查询/清除 + **网络弹幕缓存类别**（Dart 侧删文件保目录，§4.39）
 │   ├── super_resolution_service.dart   # 超分：模式持久化、着色器**安装期优化**后拷贝、mpv 应用（§4.25）
 │   ├── chapter_tracker.dart   # 章节跟踪器（mpv chapter-list 读取 + 当前位置/片段/胶囊窗口状态 + 章节跳段自动跳过）
 │   ├── chapter_skip_settings.dart # 章节跳段设置（六类片段自动跳过 + 自定义片头/片尾关键词，ChangeNotifier + 持久化）
@@ -153,13 +154,13 @@ lib/
 │   ├── file_operations_service.dart # 文件管理服务（复制/移动/重命名/删除 + 进度与协作式取消，dart:io 真实路径，§4.30）
 │   ├── file_selection_controller.dart # 页面级多选状态（进入/退出/切换/全选/剔除失效项，**非单例**，§4.31）
 │   ├── audio_service.dart     # 音频控制器（音轨列表/aid 单选/外部音轨导入·移除（临时）/声道/af 滤镜链应用；声道与处理为会话级，随播放器生命周期重置；不可播放音轨经 stream.log 判定后自动回退，§4.32）
-│   ├── subtitle_settings.dart # 字幕设置（延迟/大小/位置/颜色/描边模式/背景色→模式隐式联动/「背景框大小」/内嵌样式覆盖/自定义字体/外挂字幕记忆/重置样式，ChangeNotifier + 持久化，§4.34）
+│   ├── subtitle_settings.dart # 字幕设置（延迟/大小/位置/颜色/描边模式/背景色→模式隐式联动/「背景框大小」/内嵌样式覆盖/自定义字体/外挂字幕记忆（**100 条上限按最久未用淘汰**）/重置样式，ChangeNotifier + 持久化，§4.34/§4.39）
 │   ├── subtitle_service.dart  # 字幕控制器（单选模型：track-list/sid 同步/sub-add/sub-remove + 同名字幕自动加载（**外挂字幕来源唯一**：初始化 `sub-auto=no`，同名加载只由 App 负责）+ 按字段样式写入 + 等待式轨道刷新 + 切轨「用户意图钉回」+ 记忆路径失效清理 + 切集重应用，§4.32/§4.34）
 │   ├── app_font_settings.dart # App 全局字体设置（开关/族名/字号/字重 + loadFontFromList 注册，ChangeNotifier + 持久化，§4.12）
 │   ├── equalizer_settings.dart # 音频均衡器设置（5 频段/低音增强/虚拟环绕/预设，ChangeNotifier + 持久化，AudioController 订阅重应用 af 链）
 │   ├── danmaku_service.dart    # 弹幕控制器（业务层：本地同名/手动导入/网络弹幕装载 + **生效集全量重算（后台 isolate + 合并重跑，跨批次聚合）** + 1s tick 秒桶发射 + canvas 渲染层显隐/暂停/倍速同步 + 设置订阅应用 + 切集自动匹配，横竖屏共享，§4.11）
 │   ├── danmaku_scheduler.dart  # 弹幕调度器（纯逻辑：秒桶 + 前向补发 + seek 跳变检测 + 代数失效 + **全量重算的整体替换 `replaceAll`（不动锚点/代数）**）
-│   ├── danmaku_memory.dart     # 弹幕手动导入记忆（视频路径→弹幕文件路径，SharedPreferences JSON 持久化）
+│   ├── danmaku_memory.dart     # 弹幕手动导入记忆（视频路径→弹幕文件路径，SharedPreferences JSON + **200 条上限按最久未用淘汰**，§4.39）
 │   ├── danmaku_settings.dart   # 弹幕设置（样式：字号/字重/速度/描边/不透明度/随机色 + 配置：区域(10%档位)/行高/三类显隐/海量/去重/屏蔽词 + 偏移：时间轴偏移 + 字体：三态/自定义族名·文件名，ChangeNotifier + 持久化）
 │   ├── dandan_play_keys.dart   # 弹弹Play API 密钥（私有，gitignored，禁止上传 GitHub）
 │   ├── dandan_play_api.dart    # 弹弹Play 开放弹幕网络 API 客户端（签名验证模式：搜索/拉取弹幕/文件匹配；**成对 close 自建 http.Client**，§4.11）
@@ -1085,8 +1086,13 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 - **同步下载弹幕开关**：视频下载页让用户自选是否顺带抓同名 XML 弹幕（默认开）。
 - **下载记录跨重启持久化（工作.md 第 2 点）**：`DownloadManager` 把任务列表（状态/进度/产物路径）
   序列化到 SharedPreferences，`ensureLoaded`（main.dart 启动调用）恢复；重启前 pending/downloading/
-  merging 的任务归位为 paused（不自动续跑），completed/failed 记录保留。进度每 500ms 刷新但只在
-  「状态变化」时落盘（避免高频全量序列化）。
+  merging 的任务归位为 paused（不自动续跑），completed/failed 记录保留。**进度与速度都按 500ms
+  节流通知**（分块进度在阶段收尾补发一次，B17/§4.40；旧实现只有速度节流、进度按块通知 →
+  整个任务列表按块重建），落盘只在「状态变化」时（避免高频全量序列化）。
+- **落盘文件名按 UTF-8 字节上限截断（B17）**：标题先清洗非法字符，再按 **255 字节**
+  （ext4/f2fs 的 `NAME_MAX`）截断且**不切坏多字节字符**，并预留扩展名（`.mp4`/`.xml`）与
+  重名后缀 ` (9999)` 的字节数；旧实现按 **120 字符**截断——纯英文长标题照样超限、中文长标题
+  又被砍得过狠（§4.40）。
 - **下载前路径校验（工作.md 第 3 点）**：`DownloadSettings.directoryExists` 检查真实路径是否仍在
   磁盘；弹幕/视频下载页点「下载」时若目录被删，toast 提示并弹出目录选择器，避免「开始下载才失败」。
 - **下载产物媒体扫描（工作.md 第 5 点）**：合并/改名落盘后调用原生 `scanMediaFile`
@@ -1180,7 +1186,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 层 | 文件 | 职责 |
 |---|---|---|
 | 纯函数 | `utils/cast_source.dart` | 源分类（本地/直链/loopback/content）+ `file://` 去前缀 + loopback 主机判定 |
-| 服务 | `services/cast/lan_media_server.dart` | 本地文件 → `http://<LAN_IP>:<port>/<token>`（绑 0.0.0.0 + Range + CORS + token），复用 `HttpByteRange`/`networkMimeTypeForFileName`；`isSiteLocalIpv4` 挑站点本地 IPv4 |
+| 服务 | `services/cast/lan_media_server.dart` | 本地文件 → `http://<LAN_IP>:<port>/<token>`（绑 0.0.0.0 + Range + CORS + token），复用 `HttpByteRange`/`networkMimeTypeForFileName`；`isSiteLocalIpv4` 挑站点本地 IPv4，**多网卡按接口名打分**（`lanInterfaceScore`，B14.5/§4.38） |
 | 服务 | `services/cast/cast_service.dart` | SSDP 发现（dlna_dart `DLNAManager`）+ 按 `deviceType` 过滤 MediaRenderer + `setUrl/play` 推流；`resolveUrl` 仅本地文件 |
 | 模型 | `models/cast_device.dart` | 渲染器设备模型（id/设备名/设备类型） |
 | UI | `widgets/cast_device_dialog.dart` | 设备选择弹窗（进入即发现，列表点选推流，关闭停发现） |
@@ -1196,6 +1202,13 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   由横屏播放页 `dispose` 统一 `LanMediaServer.instance.stop()` 释放端口。
 - **权限**：AndroidManifest 补 `ACCESS_WIFI_STATE` / `CHANGE_WIFI_MULTICAST_STATE`
   （SSDP 多播发现，normal 权限）。
+- **LAN IP 要按接口挑，不能取「第一个站点本地地址」（B14.5）**：开了热点/VPN 时第一个地址
+  往往是 `tun*`/`ap*`，投出来的 URL 电视根本连不上。`lanInterfaceScore` 按接口名前缀打分
+  （`tun`/`tap`/`ppp`/`p2p` 最差 100、`wlan` 最好 0、`ap`/`swlan` 1、`eth` 2、`rmnet` 5、其余 3），
+  取分最低者。
+- **发现弹窗的 await 之后必须查 `mounted`（B14.5）**：`CastDeviceDialog._start()` 在
+  `await` 发现结果之后若已 dispose，要**主动 `CastService.instance.stopDiscovery()` 再返回**
+  ——否则弹窗关掉后订阅与 UDP/定时器永不释放（§3 第 28 条）。
 
 ---
 
@@ -1243,7 +1256,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 模型 | `models/update_info.dart` | `UpdateInfo`（version / Markdown body / 主·备下载站链接） |
 | 纯函数 | `utils/version_compare.dart` | `needUpdate(local, remote)`：忽略 v 前缀、按 `.` 逐段整数比较 |
 | 设置 | `services/update/update_settings.dart` | `autoUpdateEnabled`（默认开）+ `ignoredVersion`，ChangeNotifier + 持久化 |
-| 服务 | `services/update/update_service.dart` | 更新源/下载链接常量 + `checkForUpdate()`（抓 GitHub API → `needUpdate` 比较，失败抛 `UpdateCheckException`） |
+| 服务 | `services/update/update_service.dart` | 更新源/下载链接常量 + `checkForUpdate()`（抓 GitHub API → `needUpdate` 比较，失败抛 `UpdateCheckException`）；抓取走 §4.28 的有界响应（B14.5/§4.38） |
 | 弹窗 | `widgets/update_dialog.dart` | 固定尺寸 + 可滚动 Markdown + 三按钮 + 下载站子菜单 |
 | 入口 | `pages/settings/about_page.dart` | 「更新」组（手动检查更新 / 自动检查更新开关） |
 | 装配 | `main.dart` | runApp 前 await `ensureLoaded`；隐私同意后 2 秒自动检查（开关开启且未忽略才弹） |
@@ -1257,6 +1270,8 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   `UpdateCheckException`；手动检查失败 Toast、自动检查失败静默。`tag_name` 前导 `v` 归一化去掉。
 - **Markdown 渲染**：`flutter_markdown`（`MarkdownBody`）+ `MarkdownStyleSheet.fromTheme`
   定制字号/引用块样式，消除原生 `##`/`**`/`-` 符号。
+  ⚠️ **必须传 `onTapLink`**（B17）：不传时正文里的链接只是「看着像链接」的高亮文本，点上去
+  毫无反应（§4.40）。
 - **三按钮语义**：立即更新 → 子菜单（主/备用下载站，链接待接入时 Toast）；稍后提醒 → 仅关闭；
   忽略 → 写 `ignoredVersion`，自动检查不再弹该版本（手动检查不受影响，保证开发期可反复验收）。
   三按钮文本包 `FittedBox(scaleDown)`，防窄屏「立即更新」换行。
@@ -1912,6 +1927,27 @@ fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError
 黑洞地址 12 秒内报超时 / SMB 反复 seek 不出 OOM / SMB 拔网线再插回不永久转圈 /
 重复进同一网络目录不再重查远端大小 / 老账户密码免重输且重启后仍能连。
 
+**B14.5 收尾（协议侧四条，体检报告 §3 第 20~23 条）**
+
+| 纪律 | 落点 | 反例 |
+|---|---|---|
+| **控制连接要能看出「远端已断开」** | `_FtpControl` 自己 `listen` socket：`onDone`/`onError` → `_markDead` + 唤醒等待者；`isAlive` 取代 `isOpen`，`isConnected()` / `_withControlRetry` 都按它决策；`close()` 里 `unawaited(_sub.cancel())` | ⚠️ **`Socket.done` 只在我们自己 close 时完成，远端单方面 FIN 不会触发** → 拿它判断掉线会一直以为连接还好（此条第一次就是这么写错的，单测直接抓出来） |
+| **整行读取要容得下分片 + 空闲超时** | `_readLine` 用 `List<List<int>> _chunks` 累积到整行；等待走 `replyTimeout`（只连不回话也能报错） | 旧实现按「一次 read 就是一行」处理：控制连接被 TCP 分片时把半行当整行解析 |
+| **断开回调要认自己的连接** | `SmbConnect.connectAuth(..., onDisconnect:)` 里 `identical(_connect, created)` 才置空 | 旧连接迟到的断开回调会把**新**连接抹掉 → 后续请求全部「未连接」 |
+| **代理绑定去重 + 复用客户端失败可重试** | `_bindFuture` 在途去重（并发 `ensureServer` 只 bind 一次）；`_openOnce`/`_probeSize` 只在**复用**的 client 失败时 `_dropClient` 重试一次（新建的失败不重试，别掩盖真实错误） | 并发进入时 bind 两次（端口互相顶掉）；长连 client 被对端关掉后一直失败，只能重启 App |
+| **PROPFIND 响应带上限** | `webdav_client._propfind`：`readBodyCapped(maxBytes: kMaxJsonResponseBytes)` + `utf8.decode(allowMalformed: true)`；超限转 `NetworkClientException('目录过大：响应超过 16MB')` | 旧实现 `response.body` 无上限：超大目录把整段响应读进内存 |
+
+**FTP 目录列表的支持范围（决策 D22，2026-09 用户拍板）**：只支持 RFC 3659 **`MLSD`** 与
+**Unix 风格 `LIST`**；**Windows/IIS 风格的行会被跳过**（`parseUnixListLine` 只认 `d`/`-`/`l`
+开头的行），表现是「目录显示为空」。这是**明确不做**的范围（真需要再单独立项），不是缺陷。
+Unix 软链行 `link -> /target` 只取箭头左侧的名字（`stripSymlinkTarget`，B17）——否则会拿
+目标路径当文件名去拼远端路径（既拼不出合法路径，也永远 404）。
+
+**XML 实体先反转义、再百分号解码（B17）**：WebDAV `href` 里的 `&` 按 XML 规范写作 `&amp;`，
+不解开就会拿字面量 `a&amp;b` 去请求 → 服务器 404。`unescapeXmlEntities` 处理五个内置实体与
+十进制/十六进制数字实体（认不出的原样保留），顺序固定为
+`percentDecode(unescapeXmlEntities(href))`——先做百分号解码会把 `&amp;` 变成另一串东西。
+
 ---
 
 ### 4.36 B 站链路纪律（链接解析 / WBI / 风控 / 清晰度 / client，B11）
@@ -1992,6 +2028,90 @@ fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError
 
 ---
 
+### 4.38 投屏 LAN 选路 / 更新抓取 / 听视频纪律（B14.5 + B17）
+
+> 来源：体检报告 §3 第 28/29/37 条与 §4 的「听视频」六条（B17）。改
+> `services/cast/**`、`widgets/cast_device_dialog.dart`、`services/update/**`、
+> `pages/player/audio_player_page.dart` 前必读。
+
+**投屏 / 更新（B14.5）**
+
+- **LAN IP 按接口打分挑**：见 §4.18（`lanInterfaceScore`：热点/VPN 接口排最后，`wlan` 优先）。
+- **发现弹窗 await 后查 `mounted` 并停发现**：见 §4.18（否则订阅与 UDP/定时器泄漏）。
+- **更新抓取接 §4.28**：`_getJson(uri, client, {tier, maxBytes})` 统一走 `sendGet` +
+  `readBodyCapped` + `drainStreamCapped`，读完 body **关掉自建的 client**；GitHub 与
+  version.json 两条路径共用，裸 `http.Client().get().timeout(30s)` 不再出现。
+- **更新弹窗正文链接可点**：`MarkdownBody` 必须传 `onTapLink`（§4.20/§4.40）。
+
+**听视频页六条纪律（B17）**
+
+| 纪律 | 落点 | 反例 |
+|---|---|---|
+| **倍速吸附不许成为持久副作用** | `initState` 把播放器当前倍速吸附到本页档位（0.5–4.0 步进 0.5）并记下原值；`dispose` 时**用户没改过就写回原值**（`_entryRate`/`_speedTouched`） | 旧实现只吸附不还原：播放页 1.25x 只是进一趟听视频就永久变成 1.5x |
+| **封面取帧要防跨曲竞态** | 位置取「时长一半」，但**时长未知（刚置 0）时不取**，等 duration 流回来再补；用 `_coverSession` 代数丢弃过期结果，同一首在途不重复取帧 | 旧实现直接 `_durationNotifier.value ~/ 2`：切歌瞬间取到首帧；上一首的异步取帧回来还把新封面覆盖掉 |
+| **定时剩余时间必须订阅而不是快照** | 剩余时长收在 `ValueNotifier`，`showAudioSpeedSheet(sleepRemaining: listenable)` 用 `ValueListenableBuilder` 渲染；倒计时只写 notifier（不再每秒 `setState` 整页重建） | 旧实现把 `Duration` 快照传给面板：面板打开期间剩余时间定住不动 |
+| **切歌必须先调参再 `open`** | `_switchTo` 里 `await applyPlaybackTuning(_player, video.path)`（`services/playback_tuning.dart`）再 `_player.open(...)` | 旧实现只有播放页调参，听视频切歌沿用上一首的缓存/重连参数（本地↔在线切换尤其明显，§4.26） |
+| **返回要 pop-once 守卫** | `_exit()` 首行 `if (_exiting) return;`（里面有 `await _saveProgress()`） | 快速连按两次返回 / 返回手势 + 按钮：await 窗口内重入两次 `pop()`，把下层播放页一起弹掉（报告 §3 第 34 条） |
+| **档位范围与注释一致** | 本页档位是 0.5–4.0（含 3.5/4.0），文件头注释同步为 0.5–4.0 | 注释写「0.5–3.0」而代码有 3.5/4.0（用户拍板：改注释对齐档位，不改档位） |
+
+**`playback_tuning.dart` 是「open 前调参」的唯一出处**：播放页的 `_applyPlaybackTuning`
+现在只是薄委托，任何新增的「打开媒体」入口都必须调它（§4.26 的「每次 open 前重写」不是
+播放页专属纪律）。
+
+**真机验收（2026-09，用户实测通过）**：热点/VPN 下投屏地址电视可达 / 关闭发现弹窗后不再
+有残留订阅 / 断网时更新检查按分级超时失败 / 听视频切歌不残留调参 / 没动过倍速时退出还原 /
+定时关闭剩余时间会跳 / 快速返回两次不弹掉下层播放页 / 更新弹窗链接点了有反应。
+
+---
+
+### 4.39 弹幕与记忆资源纪律（B14.6）
+
+> 来源：体检报告 §3 第 12/14/15 条与决策 D20（记忆上限与清理入口）、D21（本地弹幕装载范围）。
+> 改 `dandan_play_api.dart`、`danmaku_memory.dart`、`subtitle_settings.dart`、
+> `danmaku_network_service.dart`、`cache_manager_service.dart`、`danmaku_service.dart` 前必读。
+
+| 纪律 | 落点 | 反例 |
+|---|---|---|
+| **接口异常不许漏出类契约** | `DandanPlayApi`：`_get`/`_post` 的响应统一经 `_decode`（`utf8.decode(allowMalformed: true)` 包在 try 内）→ 再用 **`_parseJson`** 解析；任何解码/解析失败都转 `DandanApiException` | 旧实现只护住 `_decode` 自己的 `jsonDecode`，`searchAnime`/`getComments`/`matchDanmaku` 三处仍是**裸 `jsonDecode`**：畸形 UTF-8 → 裸 `FormatException` 逃出去，调用方只 catch `DandanApiException` → 弹幕面板整块静默失效 |
+| **记忆映射必须有上限 + 最久未用淘汰** | 弹幕记忆 **200 条**（`DanmakuMemory.maxEntries`）、外挂字幕记忆 **100 条**（`SubtitleSettings.maxRememberedVideos`）；`get()` 命中即刷新 LRU（先删再插），写入后 `trimToLimit`；上限内每次仍全量序列化（量级已可控） | 旧实现无上限：换视频几十次后记忆 JSON 无限增长，读盘/解析越来越慢 |
+| **落盘缓存要有清理入口** | `DanmakuNetworkService.cacheDirectory()` / `cacheSizeBytes()` / `clearCache()`（**只删文件、保目录**）；缓存管理页新增类别 `CacheCategory.networkDanmaku`（「网络弹幕缓存」），`getCacheSizes()` 合并原生清单与 Dart 侧大小，清理与「清空全部」都走同一条 Dart 侧路径 | 旧实现网络弹幕 XML 只进不出：缓存管理页看不到、也清不掉 |
+| **本地弹幕装载：按名直读优先、列举兜底** | `_loadLocalDanmaku` 先按 `danmakuCandidateNames(videoBase)` 逐个 `File(...).existsSync()` 直读，**只有直读全落空才列举整目录**（D21） | 旧实现每次列举整目录 + 逐个整文件读 + 新建 isolate：命中率不升反降，还白扫一遍目录 |
+
+**为什么「先直读后列举」而不是「只列举」**：直读是 O(命名候选数) 次 `existsSync`，绝大多数
+视频在第一次或第二次就命中；列举整目录在几千个文件的目录里是稳定可见的卡顿，且它并没有
+覆盖更多命名变体——候选名列表本身才是「兼容各种命名变体」的那一半（D21 的完整口径）。
+
+**真机验收（2026-09，用户实测通过）**：连续换视频用弹幕/字幕几十次后记忆文件不再无限增长 /
+缓存管理页能清网络弹幕缓存且清理后目录变小 / 带同名 XML 的视频仍能自动加载 / 弹幕接口返回
+畸形内容时报可读错误而不是静默失效。
+
+---
+
+### 4.40 P3 池收尾（B17）
+
+> 来源：体检报告 §4「P3 —— 优化 / 一致性 / 死代码」中未被任何批次认领的条目，用户 2026-09
+> 拍板并入本批（含两条「明确不做」，见 §7）。以下每条都给了落点与「旧实现为什么会坑」。
+
+- **下载进度通知节流**（§4.16/§4.37）：`DownloadTask._updateProgressThrottled` 按
+  `progressNotifyInterval`（默认 500ms）节流，**阶段收尾用 `_flushProgress()` 补发一次**——
+  被节流吞掉的最终值（整段只发一块时就是 100%）不能丢给 UI。测试注入极大窗口即可确定性断言
+  「只通知阶段切换与收尾那几次」（旧实现每 chunk `notifyListeners`，任务列表按块整表重建）。
+- **下载文件名按 UTF-8 字节截断**（§4.16）：`_sanitizeFileName(name, maxBytes:)` +
+  `truncateUtf8Bytes`（255 字节减去扩展名与 ` (9999)` 后缀的预留），**不切坏多字节字符**。
+- **超分 `apply` 的整个函数体都在 try 内**：`player.platform as NativePlayer` 一并收进 try——
+  非原生平台抛 `TypeError` 时若落在 try 外，就逃出「失败即静默」的契约，把调用方（打开媒体 /
+  切歌）的后续流程一起打断。
+- **解码面板点「当前已选档位/预设」不弹「需重启应用」**：`_setMode`/`_setPreset` 首行判等直接
+  返回——没有改动就没有需要重启的东西（旧实现照弹，用户会以为点一下就把配置改了）。
+- **隐私文案不再承诺「通知推送」**：正文改为「通知权限仅用于听视频后台播放的播放状态通知
+  （前台服务保活）」，与实现一致（全仓没有 `Permission.notification.request()`，原生只在启动
+  后台播放时请求 `POST_NOTIFICATIONS`，D23②）。
+
+**真机验收（2026-09，用户实测通过）**：下载中任务列表不再整表重建 / 超长标题下载的文件名按
+255 字节截断且扩展名完整 / 解码面板点当前档位不再提示需重启 / 隐私政策正文不再承诺通知推送。
+
+---
+
 ## 5. 新增功能指南（按功能类型）
 
 ### 5.1 新增一个页面
@@ -2069,6 +2189,7 @@ fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError
   - `test/player_panel_test.dart` — 右侧面板打开/面板内导航不崩溃（**改 PlayerPanel 必须跑**）
   - `test/player_bottom_panel_test.dart` — 竖屏底部面板打开/面板内二级导航/返回/关闭不崩溃（**改 PlayerBottomPanel 必须跑**）
   - `test/player_speed_panel_test.dart` — 倍速面板（「我的预设」✕ 删除 / 「添加到预设」随滑杆联动）
+  - `test/player_decode_panel_test.dart` — 解码面板（B17/§4.40）：点**当前已选**档位/预设不弹「需重启应用」、点其它档位写入设置并弹窗（⚠️ `setUp` 不得预热 `DecodeSettings.ensureLoaded()`，否则设置写入排在 `pump` 驱动不到的微任务队列里，见 §7「fake-async 作用域」）
   - `test/playback_completion_test.dart` — 播放完成 EOF 动作解析纯函数（单集循环→自动连播→列表循环→自动退出→自动暂停优先级链，含边界）
   - `test/playback_restore_test.dart` — 恢复进度阈值判定纯函数（<5% / ≥已观看阈值不恢复，边界与自定义阈值）+ **「已看完」标记写入时长**（`completedMarkDuration` 取 mpv 时长与列表登记时长的较大者：列表更大 / mpv 更大 / 相等 / 列表未知 / mpv 未知）
   - `test/audio_shuffle_test.dart` — 听视频随机播放算法（时间刻种子：结果范围/不重复当前曲目/同刻可复现/不同刻不同）
@@ -2090,7 +2211,7 @@ fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError
   - `test/formatters_network_test.dart` — 网速格式化（KB/MB 自动切换两位小数）与在线媒体判定纯函数（阶段1 第 1 点）
   - `test/formatters_test.dart` — 截图文件名纯函数（app名称 + 日期 + 到秒时间，避免同日覆盖）+ **底栏时间文本**（`formatPlaybackTimeText`：已播/总、已播/剩余、**剩余为负清零不出现 `-59:55`**、时长未知退化、跨小时，§4.33）
   - `test/subtitle_track_test.dart` — 字幕轨道纯函数（展示名/ASS 样式判定/格式过滤/对齐/颜色 + RGBA↔mpv 颜色转换，阶段1 第 3 点）
-  - `test/subtitle_settings_test.dart` — 字幕设置服务（默认值/延迟叠加与钳制/描边模式与外挂字幕记忆/字体源目录记忆/重置样式持久化 + **背景颜色隐式驱动描边模式**（有背景色→背景框、选「无」→描边、载入自洽纠正）+ **旧值 `flat`/`outline`/`box` 兼容映射** + 「背景框大小」持久化与 0–20 钳制，§4.34）
+  - `test/subtitle_settings_test.dart` — 字幕设置服务（默认值/延迟叠加与钳制/描边模式与外挂字幕记忆/字体源目录记忆/重置样式持久化 + **背景颜色隐式驱动描边模式**（有背景色→背景框、选「无」→描边、载入自洽纠正）+ **旧值 `flat`/`outline`/`box` 兼容映射** + 「背景框大小」持久化与 0–20 钳制 + **外挂字幕记忆 100 条上限按最久未用淘汰**，§4.34/§4.39）
   - `test/subtitle_style_properties_test.dart` — 字幕样式「字段 → mpv 属性」写入表（数值格式化/族名解析/**每字段只写自己那几条**（`backColor` 连 `sub-border-style`、`font` 三条常量开关）/全量写入顺序回归锁/颜色 null 回落/**绝不写 `sub-fonts-dir`** · **绝不写 `sub-shadow-color`**，§4.34）
   - `test/subtitle_memory_test.dart` — 外挂字幕记忆路径失效分流（全部/部分/全部失效、去重保序、空串忽略、失效路径绝不出现在有效集，§4.34）
   - `test/async_coalesced_reload_test.dart` — 等待式串行重跑器（空闲即跑、并发合并为一轮补跑、等待者等到补跑结束、补跑期间新请求再补一轮、绝不并发、抛错交给等待者且随后仍可用，§4.29/§4.34）
@@ -2103,7 +2224,7 @@ fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError
   - `test/danmaku_xml_test.dart` — B站 XML 弹幕解析（基础字段/实体反转义/坏条目跳过/排序）
   - `test/danmaku_scheduler_test.dart` — 弹幕调度器（秒桶前向补发/首 tick 锚定/seek 检测/代数失效/微幅回抖 + **`replaceAll` 全量替换**：旧数据不残留、保留锚点不重放已发秒桶、保留代数不作废在途 stagger 回调，§4.11）
   - `test/player_danmaku_panel_test.dart` — 弹幕二级界面（四入口齐全/网络·自动匹配回调注入/设置回调注入/无平台通道不崩溃）
-  - `test/danmaku_memory_test.dart` — 弹幕手动导入记忆（set/get/remove/持久化恢复/损坏数据防御）
+  - `test/danmaku_memory_test.dart` — 弹幕手动导入记忆（set/get/remove/持久化恢复/损坏数据防御 + **200 条上限与最久未用淘汰**：超限挤掉最旧、命中即刷新 LRU、上限内不误删，§4.39）
   - `test/danmaku_settings_test.dart` — 弹幕设置服务（默认值/钳制/持久化恢复/越界收窄/恢复默认/通知 + 字体三态/自定义字体持久化 + 屏蔽词增删清/显示区域档位吸附 + **弹幕合并开关默认关与持久化**）
   - `test/danmaku_font_mode_test.dart` — 弹幕字体三态解析纯函数（跟随系统/跟随 App/自定义）
   - `test/app_font_settings_test.dart` — App 全局字体设置服务（默认值/开关·字体·缩放·字重持久化/钳制/effective 生效条件/通知）
@@ -2121,7 +2242,7 @@ fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError
   - `test/danmaku_server_page_test.dart` — 弹幕服务器设置页（默认服务器启用时自动匹配开关变灰+副标题短原因+点击弹完整说明 toast；副标题显著短于 toast；停用后恢复可用；启用默认服务器即回落变灰）
   - `test/danmaku_search_history_test.dart` — 搜索历史（去重/上限淘汰最旧/清除/持久化/损坏防御）
   - `test/danmaku_auto_match_cache_test.dart` — 自动匹配缓存存储（保存/读回/清空/持久化/损坏防御）
-  - `test/danmaku_network_service_test.dart` — 弹幕网络服务（文件名清洗/搜索合并去重来源/下载落盘可回读/落盘失败降级 + **客户端生命周期**：`close` 幂等 / 不关注入的 client / `dispose()` 释放底层 API，P2-11）
+  - `test/danmaku_network_service_test.dart` — 弹幕网络服务（文件名清洗/搜索合并去重来源/下载落盘可回读/落盘失败降级 + **客户端生命周期**：`close` 幂等 / 不关注入的 client / `dispose()` 释放底层 API，P2-11 + **响应解码容错**：畸形 UTF-8 只抛 `DandanApiException`（裸 `FormatException` 不许逃出类契约）/ **网络弹幕缓存** `cacheSizeBytes`·`clearCache` 只删文件保目录 + 缓存管理类别走 Dart 侧，§4.39）
   - `test/player_danmaku_network_panel_test.dart` — 网络弹幕搜索面板（40dp 搜索框定高/框下历史胶囊+清除/命中折叠与重新展开/结果卡收起态不构建子树+手风琴/选集回调+关闭面板 + **搜索并发**：loading 期间再搜不被吞、按钮仍在位、旧响应后到被丢弃、最后一次输入生效，P2-10）
   - `test/player_danmaku_settings_panel_test.dart` — 弹幕设置面板（两段式布局/开关滑杆实时写设置/恢复默认/读数联动/屏蔽词增删 + **「弹幕合并」开关位于去重与屏蔽词之间**）
   - `test/player_panel_theme_test.dart` — 播放器暗色面板强调色跟随主题（换主题色滑杆轨道/拇指随之改变且不等于旧写死蓝 0xFF4FC3F7；保留无气泡外观；浅色主题下派生色更亮；同 seed 复用缓存实例）
@@ -2139,7 +2260,7 @@ fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError
   - `test/bili_stream_proxy_test.dart` — 本地流代理（转发字节/Range 与响应头透传/未注册 404/start·stop 生命周期/网速 recentSpeedBytesPerSec）
   - `test/bili_auth_service_test.dart` — Web 扫码登录服务（generate 解析 url+qrcode_key / poll 成功从 data.url query 解析 Cookie+refresh_token / 86101·86090 状态）
   - `test/download_manager_test.dart` — 下载记录持久化（DownloadTask toJson/fromJson 往返 / 重启恢复未完成归位暂停·已完成保留 / 损坏数据防御）
-  - `test/download_task_test.dart` — **下载链路 B12**（§4.37；注入假视频服务 + 假 client + 假合并器，不碰真实网络与原生通道）：`downloadTotalBytes` 四种来源组合 / **续传只有 Content-Range 时进度逐步推进不跳阶段末** / **目录不可写 → 明确失败且 client 一定被关** / **合并失败不截断已有同名成品、不留中间产物** / 成品名重名自动避让且不留临时文件 / `deleteTempFiles` 幂等 / **删除任务等在途停手后清掉 `.m4s`** / **merging 不可暂停（`canPause`）** 与等待中任务暂停真的置 paused
+  - `test/download_task_test.dart` — **下载链路 B12 + B17**（§4.37/§4.40；注入假视频服务 + 假 client + 假合并器，不碰真实网络与原生通道）：`downloadTotalBytes` 四种来源组合 / **续传只有 Content-Range 时进度逐步推进不跳阶段末** / **目录不可写 → 明确失败且 client 一定被关** / **合并失败不截断已有同名成品、不留中间产物** / 成品名重名自动避让且不留临时文件 / `deleteTempFiles` 幂等 / **删除任务等在途停手后清掉 `.m4s`** / **merging 不可暂停（`canPause`）** 与等待中任务暂停真的置 paused / **进度通知节流**（注入极大窗口：200 块只通知个位数次，但阶段收尾必须补发最终值）/ **文件名按 UTF-8 255 字节截断**（`truncateUtf8Bytes` 不切坏多字节字符、超长标题成品名不超限且扩展名完整）
   - `test/playback_history_test.dart` — 播放历史服务（记录去重置顶/上限淘汰/删除单条/清空/关闭记录保留已存/时长回填/持久化恢复/损坏数据防御 + 条目模型往返，§4.17）+ **播放页写入入口**（`utils/playback_history.dart`：回环代理 URL 过滤/本地与直链写入并标 isUrl/时长回填与非法值忽略，§4.33）
   - `test/playback_history_page_test.dart` — 历史记录页（空态/条目渲染/垃圾桶按钮删除单条落盘/清空二次确认取消与确认/无历史禁用清空/记录开关持久化）
   - `test/url_media_test.dart` — 在线直链纯函数（规范化补协议/内部空白拒绝/scheme 形态不补/协议白名单/标题提取解码与兜底，§4.17）
@@ -2147,13 +2268,14 @@ fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError
   - `test/device_services_external_video_test.dart` — 外部打开视频通道封装（takeExternalVideo/resolveVideoUri 返回解析/空值降级/通道异常静默，§4.17）
   - `test/player_status_bar_net_speed_test.dart` — 顶部信息行网速来源分流（直连播放走 directNetSpeedReader/B 站代理命中不走 reader/reader 返回 null 不崩/本地播放隐藏胶囊，§4.17）+ **可见性门控**（`active=false` 时网速定时器停跑、`false→true` 立刻刷新并重启，B4/P2-6）
   - `test/cast_source_test.dart` — 投屏源分类纯函数（本地/直链/loopback/content + file:// 去前缀 + loopback 判定，§4.18）
-  - `test/lan_media_server_test.dart` — 局域网媒体服务器（LAN URL 格式/全量+Range 拉流/错误 token 404/stop 释放/文件不存在抛错 + isSiteLocalIpv4，§4.18）
+  - `test/lan_media_server_test.dart` — 局域网媒体服务器（LAN URL 格式/全量+Range 拉流/错误 token 404/stop 释放/文件不存在抛错 + isSiteLocalIpv4 + **多网卡按接口名打分挑地址**（热点/VPN 接口排最后），§4.18/§4.38）
   - `test/cast_service_test.dart` — 投屏服务（isMediaRenderer 过滤 + CastDevice.kind，§4.18）
   - `test/privacy_policy_settings_test.dart` — 隐私政策同意状态服务（默认未同意/同意持久化/load 恢复，§4.19）
   - `test/privacy_policy_dialog_test.dart` — 隐私弹窗（5 秒倒计时门禁/勾选同意才可确认/取消返回 false 同意返回 true，§4.19）
   - `test/version_compare_test.dart` — 版本号比较纯函数（v 前缀/逐段整数比较/缺段补 0/数字前缀，§4.20）
   - `test/update_settings_test.dart` — 更新设置服务（默认开启/开关持久化/忽略版本持久化，§4.20）
-  - `test/update_dialog_test.dart` — 更新弹窗（三按钮齐全/Markdown 无原生符号/忽略落盘/立即更新弹子菜单与 Toast，§4.20）
+  - `test/update_dialog_test.dart` — 更新弹窗（三按钮齐全/Markdown 无原生符号/忽略落盘/立即更新弹子菜单与 Toast + **正文链接可点**：`onTapLink` 把解析后的 URI 交给打开回调，B17/§4.20/§4.40）
+  - `test/update_service_test.dart` — 更新服务（版本比较接入 `checkForUpdate`/忽略版本/失败抛 `UpdateCheckException` + **抓取走上限与分级超时**：超 16MB 响应不解析、超时按 tier 收口，B14.5/§4.38）
   - `test/wyzie_models_test.dart` — Wyzie 字幕数据模型 fromJson（字段映射/容错/常量表，§4.21）
   - `test/wyzie_query_test.dart` — Wyzie 查询纯函数（来源/逗号参数拼接/语言代码归一化/客户端过滤，§4.21）
   - `test/wyzie_filename_test.dart` — Wyzie 落盘文件名纯函数（非法字符清洗/拼装/同批消重，§4.21）
@@ -2185,11 +2307,14 @@ fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError
   - `test/file_selection_controller_test.dart` — 多选状态控制器（begin 立刻选中长按项且清掉上次选择/非多选态 toggle 无效/取消到 0 项仍在多选态/exit 幂等不重复通知/全选/containsAll 空列表不算全选/retainExisting 无变化不通知/只读快照，§4.31）
   - `test/file_operations_ui_test.dart` — 多选 UI（选择工具栏：数量·全选↔取消全选·0 项时 ⋮ 置灰·× 退出；长按菜单多选态裁剪：撤重命名与多选、固定仅纯文件夹；删除弹窗：单选/多选文案 + 「删除所有文件」勾选框显隐与结果，§4.31）
   - `test/smb_pipeline_test.dart` — **SMB 并发预读管线**（P1-22，§4.35；用假 `RandomAccessFile`，不连真 SMB）：多句柄并发的内容与顺序（含非整除尾块）/offset 起读/零长度区间不开句柄 + **取消后 worker 停手·读请求数不再增长·句柄全关** + **某块读失败 → 流报错且其它 worker 停手·句柄全关** + **背压**（消费者暂停时读请求数 ≤ 窗口 8 + 在途 4、恢复后必须读完——同时验证窗口算法不死锁）+ 单块读超时
-  - `test/webdav_client_test.dart` — **WebDAV 客户端**（P1-20/P1-21，§4.28/§4.35；本地 `HttpServer`）：connect 2xx 自检/**服务器忽略 Range → 丢弃响应带 2MB 上限**（断言服务端真正推出去的字节数 < 8MB，旧的无上限 `drain()` 会推完 32MB）/非 2xx 丢弃同样带上限/分段起点与请求不一致报错/**服务器只连不回话 → 12 秒内报超时**
-  - `test/ftp_client_test.dart` — **FTP 客户端**（P1-21/D7，§4.35；本地假服务器）：`OPTS UTF8 ON` 应答 200 → 列表按 UTF-8 解**且命令按 UTF-8 发**/不支持且列表是 GBK → 判定 GBK 且**命令也按 GBK 发**（断言控制连接收到的原始字节）/不支持但服务器实际是 UTF-8 → 不回归/**控制连接不回话 → 12 秒内报超时且不重试成三次**
+  - `test/webdav_client_test.dart` — **WebDAV 客户端**（P1-20/P1-21，§4.28/§4.35；本地 `HttpServer`）：connect 2xx 自检/**服务器忽略 Range → 丢弃响应带 2MB 上限**（断言服务端真正推出去的字节数 < 8MB，旧的无上限 `drain()` 会推完 32MB）/非 2xx 丢弃同样带上限/分段起点与请求不一致报错/**服务器只连不回话 → 12 秒内报超时** /**PROPFIND 响应超 16MB → 明确报「目录过大」**（B14.5）
+  - `test/ftp_client_test.dart` — **FTP 客户端**（P1-21/D7，§4.35；本地假服务器）：`OPTS UTF8 ON` 应答 200 → 列表按 UTF-8 解**且命令按 UTF-8 发**/不支持且列表是 GBK → 判定 GBK 且**命令也按 GBK 发**（断言控制连接收到的原始字节）/不支持但服务器实际是 UTF-8 → 不回归/**控制连接不回话 → 12 秒内报超时且不重试成三次** /**远端单方面断开后 `isConnected()` 不再报 true**（`Socket.done` 对远端 FIN 不触发，B14.5）
   - `test/network_connection_settings_test.dart` — 网络账户设置（自增 id/替换/删除/损坏单条防御 + **密码加密存储**：清单里没有 `password` 字段与明文、重启后从加密存储恢复、**老明文一次性迁移并清除明文**、**加密不可用时迁移失败回退且密码不丢**、update 覆盖与 remove 清除，P2-17/D4）
   - `test/network_path_test.dart` — 网络路径规范化/校验 + **值相等与 `hashCode`**（代理按路径缓存的前提，P2-18）
-  - `test/network_streaming_proxy_test.dart` — 回环流代理（无凭据 URL/GET/HEAD/Range/未注册 404 + **按路径缓存**：注册的 `fileSize` 生效后不再问远端大小、注册的 `mimeType` 生效，P2-18）
+  - `test/network_streaming_proxy_test.dart` — 回环流代理（无凭据 URL/GET/HEAD/Range/未注册 404 + **按路径缓存**：注册的 `fileSize` 生效后不再问远端大小、注册的 `mimeType` 生效，P2-18 + **并发 `ensureServer` 只 bind 一次**、**复用客户端失败自动丢弃重连一次**，B14.5）
+  - `test/network_browser_page_test.dart` — 网络浏览页（注入假 `browse` 仓储：加载态/失败可重试/目录切换与返回，§4.35）
+  - `test/ftp_parser_test.dart` — FTP 列表解析纯函数（MLSD 事实解析与时间边界/Unix LIST 文件与目录/**软链行剥掉 ` -> target`**、`stripSymlinkTarget` 边界、非列表行跳过，§4.35）
+  - `test/webdav_xml_test.dart` — WebDAV multistatus 解析（前缀剥离/href 与末端段/propfind 字段/无 href 块跳过 + **XML 实体先反转义再百分号解码**与 `unescapeXmlEntities` 内置·数字实体边界，§4.35）
   - `test/network_connection_test.dart` — 网络账户模型（协议解析/默认端口/JSON 往返/字段缺失容错/copyWith/toString 不泄露凭据 + `toJson(includePassword: false)` 不写密码字段且其余字段一个不少）
 - 改以下代码必须跑对应测试：`AppFrame`、`ViewSettings` 排序、权限流程、`CapsuleNavBar`、**`services/network/**`（含 `third_party/smb_connect`）**、**`utils/bili_*` 与 `services/bilibili/**`**
 
@@ -2427,3 +2552,23 @@ fork 侧负责「不毒化、不死循环」——读队列末尾挂 `catchError
 | 「合并中」点暂停**按了没反应、随后自己变完成** | 合并是一次原生调用、中途停不了：`canPause` 只认 pending/downloading，管理页把暂停按钮**置灰**并给 tooltip 原因；等待中任务的暂停要真的写 `paused`（否则队列 `_pump` 仍会启动它）（§4.37，P2-33） |
 | 字幕搜索**连按两次回车结果属于先输入的关键词** / 下载中改关键词 → `RangeError` + 按钮永久卡死 | 搜索用 `AsyncSession` 裁决（Enter 与按钮都不吞）；下载**先对选中项做快照**再循环，`_downloading` 复位移进 `finally`（§4.37，P2-35/P2-36） |
 | **按钮里的转圈看不见**（圈与按钮底色同色） | `CircularProgressIndicator` 默认取主题 `primary`，而「仍在位可点」的 `FilledButton` 底色也是 `primary` → 显式 `color: colorScheme.onPrimary`。⚠️ 别写死白色：深色主题下 primary 是浅色，白色反而看不见（§4.37） |
+| **远端单方面断开连接，FTP 却一直以为它还活着**（后续请求全在死连接上等超时） | `Socket.done` **只在我们自己 `close()` 时完成，远端发 FIN 不会触发它** → 必须自己 `listen` socket，用 `onDone`/`onError` 置死并唤醒等待者，`isAlive` 取代 `isOpen`（§4.35，B14.5） |
+| 弹幕接口返回畸形 UTF-8 / 非 JSON → **裸 `FormatException` 逃出异常契约**，调用方（只 catch `DandanApiException`）整块静默失效 | 解码与解析都收口到类内：`utf8.decode(allowMalformed: true)` 包 try + **所有** `jsonDecode` 走 `_parseJson`；⚠️ 只护住「统一解码函数」那一处不够——`searchAnime`/`getComments`/`matchDanmaku` 曾是三处裸 `jsonDecode`（§4.39，B14.6） |
+| 弹幕/字幕记忆映射无上限 → 换视频几十次后 JSON 无限增长 | 写入后 `trimToLimit`（弹幕 200 / 字幕 100）+ 命中即刷新 LRU（先删再插，否则「最久未用」永远淘汰不到常用项）（§4.39，B14.6） |
+| 网络弹幕 XML 只进不出（缓存管理页看不到也清不掉） | 缓存目录/大小/清理收口到 `DanmakuNetworkService.cacheDirectory/cacheSizeBytes/clearCache`，并在 `CacheCategory` 里**新增一类**；`clearCache` 只删文件、保留目录（§4.39，B14.6） |
+| 听视频只是「进去看一眼」就把播放页倍速永久改掉（1.25x → 1.5x） | 吸附只服务于本页显示：记下 `_entryRate`，`dispose` 时**用户没改过就写回原值**（§4.38，B17） |
+| 听视频切歌后封面变首帧 / 旧封面覆盖新封面 | 时长未知（切歌刚置 0）时**先不取帧**，等 duration 流回来再补；取帧结果按 `_coverSession` 代数丢弃过期项（§4.38，B17） |
+| 听视频切歌沿用上一首的缓存/重连参数（本地↔在线切换尤甚） | 「open 前调参」不是播放页专属：统一走 `services/playback_tuning.dart`，任何打开媒体的入口都要先调它（§4.26/§4.38，B17） |
+| 听视频快速返回两次把**下层播放页**一起弹掉 | `_exit()` 首行 pop-once 守卫（里面有 `await`，await 窗口内会重入第二次 `pop()`）（§4.38，B17） |
+| 下载进度每块 `notifyListeners` → 任务列表按块整表重建 | 进度按 500ms 节流，但**阶段收尾必须 `_flushProgress()` 补发一次**：节流窗口内的最终值（整段只发一块时就是 100%）不能丢给 UI（§4.40，B17） |
+| 文件名按「120 **字符**」截断 → 纯英文长标题照样超 255 **字节**上限、中文又被砍得过狠 | 按 UTF-8 字节截断且**不切坏多字节字符**（退到字符边界），并预留扩展名与 ` (9999)` 重名后缀的字节数；上限是文件系统的 `NAME_MAX = 255` 字节（§4.40，B17） |
+| 更新弹窗正文里的链接「点了没反应」 | `MarkdownBody` **必须传 `onTapLink`**：不传时链接只是看着像链接的高亮文本（§4.20/§4.40，B17） |
+| widget 测试里「点一下就写设置」永远不生效（命令式断言读到旧值） | **`setUp` 里别 `await` 预热设置单例的 `ensureLoaded()`**：预热出来的 Future 属于真实事件循环的 zone，测试体内的续体被排进 `pump` 驱动不到的微任务队列（fake-async 作用域，与 §4.37 的「假时钟不推进真实写盘」同源）（§6，B17） |
+
+### 7.1 明确不做（用户拍板，别再当缺陷反复改）
+
+| 项 | 口径 |
+|---|---|
+| FTP 目录列表的 **Windows/IIS 风格行**（`parseUnixListLine` 只认 `d`/`-`/`l` 开头） | **先不做**（D22，2026-09 用户拍板）：文档声明「只支持 MLSD 与 Unix LIST」，代码不改，真需要再单独立项（§4.35） |
+| `services/bilibili/dandan_play_keys.dart:7` 注释里残留的备用 AppSecret 文本 | **不管**（D23③）：该文件已被 `.gitignore` 正确排除、`git ls-files` 无记录，真实密钥未入库 |
+| `AppFrameObserver` 栈漂移（报告 §3-43） | **不验证也不修**（D23④）：报告本身只是「待验证」推演，无复现 |
