@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:moumou/models/video_file.dart';
 
@@ -51,6 +52,9 @@ enum AudioSleepPreset {
 // ────────────────────────────────────────────────────────────
 
 /// 倍速面板：倍速档位胶囊 + 定时关闭预设胶囊（含自定义时长），右上角关闭按钮。
+///
+/// [sleepRemaining] 传 **ValueListenable** 而不是一次性快照：面板打开期间页面
+/// 仍在每秒递减倒计时，只传快照的话「剩余 xx:xx」会定在打开那一刻（P3）。
 Future<void> showAudioSpeedSheet(
   BuildContext context, {
   required double speed,
@@ -58,7 +62,7 @@ Future<void> showAudioSpeedSheet(
   required ValueChanged<double> onSpeed,
   required AudioSleepPreset sleepPreset,
   required void Function(AudioSleepPreset preset, {Duration? custom}) onSleepPreset,
-  Duration sleepRemaining = Duration.zero,
+  ValueListenable<Duration?>? sleepRemaining,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -133,18 +137,12 @@ Future<void> showAudioSpeedSheet(
                 ],
               ),
             ],
-            // 定时关闭激活时显示剩余时间
+            // 定时关闭激活时显示剩余时间（订阅 notifier：面板开着也会跳秒）
             if (sleepPreset != AudioSleepPreset.off) ...[
               const SizedBox(height: 12),
-              Text(
-                sleepPreset == AudioSleepPreset.trackEnd
-                    ? '将在当前曲目播放结束后停止'
-                    : '剩余 ${_fmtDuration(sleepRemaining)}',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.55),
-                  fontSize: 12,
-                ),
+              _SleepRemainingLine(
+                trackEnd: sleepPreset == AudioSleepPreset.trackEnd,
+                remaining: sleepRemaining,
               ),
             ],
           ],
@@ -306,6 +304,51 @@ class _AudioPanelHeader extends StatelessWidget {
           onPressed: onClose,
         ),
       ],
+    );
+  }
+}
+
+/// 定时关闭的剩余时间行。
+///
+/// 面板打开期间倒计时仍在走，所以订阅 [remaining] 实时刷新，而不是收一个
+/// 打开瞬间的时长快照（P3：旧实现「剩余时间定住不动」）。
+class _SleepRemainingLine extends StatelessWidget {
+  const _SleepRemainingLine({required this.trackEnd, required this.remaining});
+
+  /// 「播完当前曲目」模式：显示固定文案，不显示倒计时。
+  final bool trackEnd;
+
+  /// 剩余时长（null = 倒计时已结束/未启动，按 0 显示）。
+  final ValueListenable<Duration?>? remaining;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = TextStyle(
+      color: Colors.white.withValues(alpha: 0.55),
+      fontSize: 12,
+    );
+    if (trackEnd) {
+      return Text(
+        '将在当前曲目播放结束后停止',
+        textAlign: TextAlign.center,
+        style: style,
+      );
+    }
+    final listenable = remaining;
+    if (listenable == null) {
+      return Text(
+        '剩余 ${_fmtDuration(Duration.zero)}',
+        textAlign: TextAlign.center,
+        style: style,
+      );
+    }
+    return ValueListenableBuilder<Duration?>(
+      valueListenable: listenable,
+      builder: (_, value, _) => Text(
+        '剩余 ${_fmtDuration(value ?? Duration.zero)}',
+        textAlign: TextAlign.center,
+        style: style,
+      ),
     );
   }
 }

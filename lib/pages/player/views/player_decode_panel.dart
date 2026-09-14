@@ -42,14 +42,20 @@ class _PlayerDecodePanelState extends State<PlayerDecodePanel> {
   }
 
   /// 切换解码方式：写入设置后弹「需重启」确认（立即整应用重启 / 稍后）。
+  ///
+  /// ⚠️ 点「当前已选档位」不算改动：既不重复写设置、也不弹「需重启」
+  /// （旧实现照弹，用户会以为点一下就把配置改了 —— P3）。
   Future<void> _setMode(DecodeMode mode) async {
+    if (_settings.mode == mode) return;
     await _settings.setMode(mode);
     if (!mounted) return;
     await _promptRestart();
   }
 
   /// 切换解码预设：写入设置后弹「需重启」确认（立即整应用重启 / 稍后）。
+  /// 同 [_setMode]：点当前已选预设不弹「需重启」。
   Future<void> _setPreset(DecodePreset preset) async {
+    if (_settings.preset == preset) return;
     await _settings.setPreset(preset);
     if (!mounted) return;
     await _promptRestart();

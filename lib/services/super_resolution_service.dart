@@ -147,8 +147,11 @@ class SuperResolutionService extends ChangeNotifier {
   ///
   /// 底层走 mpv 命令：`change-list glsl-shaders set|clr`（与 Kazumi / PiliPlus 一致）。
   Future<void> apply(Player player) async {
-    final native = player.platform as NativePlayer;
     try {
+      // ⚠️ 取原生实例也要在 try 内：`as NativePlayer` 在非原生平台会抛
+      // TypeError，落在 try 外就逃出本方法「失败即静默」的契约，把调用方
+      // （打开媒体 / 切歌）的后续流程一起打断（P3）。
+      final native = player.platform as NativePlayer;
       await native.waitForPlayerInitialization;
       await native.waitForVideoControllerInitializationIfAttached;
       if (_mode == SuperResolutionMode.off) {

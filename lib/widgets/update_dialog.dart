@@ -72,6 +72,29 @@ Future<void> _openDownloadSource(
   }
 }
 
+/// 打开 Markdown 正文里的链接（外部浏览器）。
+///
+/// 正文链接不是主流程：解析不出 URL / 系统没有可处理的应用时**静默返回**，
+/// 不弹错误打断用户看更新说明。
+Future<void> _openMarkdownLink(
+  String href, {
+  Future<void> Function(Uri uri)? override,
+}) async {
+  final uri = Uri.tryParse(href.trim());
+  if (uri == null) return;
+  if (override != null) {
+    await override(uri);
+    return;
+  }
+  try {
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  } catch (_) {
+    // 平台无对应应用 / 通道异常：忽略
+  }
+}
+
 void _toast(BuildContext context, String message) {
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
@@ -86,9 +109,13 @@ void _toast(BuildContext context, String message) {
 
 /// 更新弹窗内容：固定尺寸 + 可滚动 Markdown + 三按钮。
 class UpdateDialog extends StatelessWidget {
-  const UpdateDialog({super.key, required this.info});
+  const UpdateDialog({super.key, required this.info, this.onOpenLink});
 
   final UpdateInfo info;
+
+  /// 打开正文链接的实现（测试注入，避免真实 url_launcher 平台通道）；
+  /// 默认外部浏览器打开。
+  final Future<void> Function(Uri uri)? onOpenLink;
 
   /// 忽略本版本按钮（测试定位用）
   static const ignoreButtonKey = Key('updateIgnoreButton');
@@ -147,7 +174,16 @@ class UpdateDialog extends StatelessWidget {
             Flexible(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-                child: MarkdownBody(data: info.body, styleSheet: markdownStyle),
+                child: MarkdownBody(
+                  data: info.body,
+                  styleSheet: markdownStyle,
+                  // ⚠️ 不传 onTapLink 时 flutter_markdown 只把链接渲染成高亮文本，
+                  // 点上去毫无反应（P3）：更新说明里带 release / 下载页链接是常态。
+                  onTapLink: (text, href, title) {
+                    if (href == null || href.isEmpty) return;
+                    _openMarkdownLink(href, override: onOpenLink);
+                  },
+                ),
               ),
             ),
             const Divider(height: 1),

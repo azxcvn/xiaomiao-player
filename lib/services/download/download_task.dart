@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -43,6 +44,8 @@ class DownloadTask extends ChangeNotifier {
     @visibleForTesting
     Future<bool> Function(String videoPath, String audioPath, String outputPath)?
         merger,
+    @visibleForTesting
+    this.progressNotifyInterval = const Duration(milliseconds: 500),
   })  : _video = video ?? BiliVideoService(),
         _danmaku = danmaku ?? BiliDanmakuService(),
         _clientFactory = clientFactory ?? http.Client.new,
@@ -65,6 +68,13 @@ class DownloadTask extends ChangeNotifier {
   final String bvid;
   final int qn;
   final bool withDanmaku;
+
+  /// 分块进度的通知节流窗口（§4.16 的 500ms 口径）。
+  ///
+  /// 每个 chunk 都 `notifyListeners()` 会让下载任务列表按块整表重建（P3）。
+  /// 测试注入一个极大值即可确定性断言「只通知阶段切换与收尾那几次」。
+  @visibleForTesting
+  final Duration progressNotifyInterval;
 
   DownloadStatus _status = DownloadStatus.pending;
   double _progress = 0; // 0~1
@@ -99,8 +109,15 @@ class DownloadTask extends ChangeNotifier {
   int _lastBytes = 0;
   DateTime _lastSpeedAt = DateTime.now();
 
-  /// 落盘文件名（去除路径非法字符后的标题）。
-  String get _safeTitle => _sanitizeFileName(title);
+  /// 上次进度通知时间（节流用，见 [progressNotifyInterval]）。
+  DateTime _lastProgressAt = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// 落盘文件名（去除路径非法字符 + 按 UTF-8 字节上限截断后的标题）。
+  ///
+  /// 预留扩展名（`.mp4`/`.xml`，4 字节）与 [FileOps.uniqueName] 的重名后缀
+  /// ` (9999)`（7 字节），保证**整个文件名**不超 [kMaxFileNameBytes]。
+  String get _safeTitle =>
+      _sanitizeFileName(title, maxBytes: kMaxFileNameBytes - 11);
 
   /// 序列化（供 [DownloadManager] 跨重启持久化下载记录，工作.md 第 2 点）。
   Map<String, dynamic> toJson() => {
@@ -423,7 +440,7 @@ class DownloadTask extends ChangeNotifier {
         sink.add(chunk);
         received += chunk.length;
         if (total > 0) {
-          _setProgress(start + (end - start) * (received / total));
+          _updateProgressThrottled(start + (end - start) * (received / total));
         }
         final now = DateTime.now();
         final dt = now.difference(_lastSpeedAt).inMilliseconds;
@@ -434,6 +451,8 @@ class DownloadTask extends ChangeNotifier {
           notifyListeners();
         }
       }
+      // 阶段收尾补发一次：节流窗口内的最终进度不能丢（P3 进度节流）
+      _flushProgress();
       try {
         await sink.flush();
       } catch (e) {
@@ -475,8 +494,27 @@ class DownloadTask extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 立即通知进度（阶段开始 / 切换 / 完成时用）。
   void _setProgress(double v) {
     _progress = v.clamp(0.0, 1.0);
+    _flushProgress();
+  }
+
+  /// 分块推进的进度：按 [progressNotifyInterval] 节流通知（值仍然实时更新）。
+  ///
+  /// ⚠️ 被节流吞掉的通知**必须**由调用方在阶段收尾补一次 [_flushProgress]，
+  /// 否则节流窗口内的最终进度（例如整段只发一块的 100%）永远传不到 UI。
+  void _updateProgressThrottled(double v) {
+    _progress = v.clamp(0.0, 1.0);
+    final now = DateTime.now();
+    if (now.difference(_lastProgressAt) < progressNotifyInterval) return;
+    _lastProgressAt = now;
+    notifyListeners();
+  }
+
+  /// 无条件发一次进度通知（重置节流窗口）。
+  void _flushProgress() {
+    _lastProgressAt = DateTime.now();
     notifyListeners();
   }
 }
@@ -510,9 +548,32 @@ int downloadTotalBytes(http.StreamedResponse resp, int startBytes) {
 
 final RegExp _illegalFileChars = RegExp(r'[\\/:*?"<>|]');
 
-/// 去除文件路径非法字符（B 站标题可能含 `/`、`:` 等），防止写盘失败。
-String _sanitizeFileName(String name) {
+/// 单个文件名的字节上限：ext4 / f2fs 的 `NAME_MAX` = **255 字节**（UTF-8）。
+///
+/// ⚠️ 是**字节**不是字符：一个汉字 3 字节，按字符数截断算不出这个上限。
+const int kMaxFileNameBytes = 255;
+
+/// 去除文件路径非法字符（B 站标题可能含 `/`、`:` 等），防止写盘失败，
+/// 并按 [maxBytes] 个 **UTF-8 字节**截断（旧实现按 120 字符截断，与文件系统
+/// 的 255 字节上限无关：纯英文长标题照样能超限，中文长标题又被砍得过狠）。
+String _sanitizeFileName(String name, {required int maxBytes}) {
   final trimmed = name.replaceAll(_illegalFileChars, '_').trim();
   if (trimmed.isEmpty) return '未命名';
-  return trimmed.length > 120 ? trimmed.substring(0, 120) : trimmed;
+  return truncateUtf8Bytes(trimmed, maxBytes);
+}
+
+/// 按 UTF-8 字节数截断 [input]，**不切坏多字节字符**（截到半个汉字会留乱码）。
+///
+/// 不足 [maxBytes] 字节时原样返回；否则从第 [maxBytes] 个字节往前退到字符
+/// 边界（UTF-8 续字节形如 `10xxxxxx`）。
+@visibleForTesting
+String truncateUtf8Bytes(String input, int maxBytes) {
+  if (maxBytes <= 0) return '';
+  final bytes = utf8.encode(input);
+  if (bytes.length <= maxBytes) return input;
+  var end = maxBytes;
+  while (end > 0 && (bytes[end] & 0xC0) == 0x80) {
+    end--;
+  }
+  return utf8.decode(bytes.sublist(0, end), allowMalformed: true);
 }

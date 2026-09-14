@@ -11,6 +11,7 @@ import 'package:moumou/pages/player/views/player_play_pause_button.dart';
 import 'package:moumou/services/device_services.dart';
 import 'package:moumou/services/fast_thumbnails.dart';
 import 'package:moumou/services/playback_progress_service.dart';
+import 'package:moumou/services/playback_tuning.dart';
 import 'package:moumou/services/super_resolution_service.dart';
 import 'package:moumou/utils/audio_shuffle.dart';
 import 'package:moumou/utils/formatters.dart';
@@ -27,7 +28,8 @@ import 'package:moumou/widgets/raw_thumb_image.dart';
 /// - 布局：顶栏（返回 + 「听视频」）+ 居中封面（1:1 圆角）+ 标题 +
 ///   进度条（拖动 seek）+ 底部控制卡（倍速 | 上一集 | 播放/暂停 | 下一集 |
 ///   播放列表）；播放/暂停与其余按钮同尺寸同水平线，切换带图标形变动画；
-/// - 倍速范围 **0.5 – 3.0，步进 0.5**；倍速/播放列表面板为**深色胶囊风格**
+/// - 倍速范围 **0.5 – 4.0，步进 0.5**（档位见 `_speedOptions()`）；
+///   倍速/播放列表面板为**深色胶囊风格**
 ///   （见 [audio_player_panels.dart]），均带右上角关闭按钮；
 /// - **定时关闭**（阶段1 第 2 点）：15/30/60 分钟或播完当前曲目，到时自动暂停；
 /// - 列表面板支持**随机播放**（时间刻算法 [audioShuffleNextIndex]）与**列表循环**；
@@ -79,6 +81,22 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   bool _playing = false;
   double _speed = 1.0;
 
+  /// 进入本页时共享播放器的原始倍速 + 用户是否在本页改过倍速。
+  ///
+  /// 本页档位是 0.5–4.0、步进 0.5，进入时会把当前倍速**吸附**到最近档位
+  /// （否则「显示 1.5x、实际 1.25x」）。吸附会改动共享播放器，所以记下原值：
+  /// 用户没动过倍速就退出还原，别让「进一趟听视频」把 1.25x 永久改成 1.5x。
+  double? _entryRate;
+  bool _speedTouched = false;
+
+  /// 退出中（pop-once 守卫）：[_exit] 里有 await，快速连按返回会在 await
+  /// 窗口内重入两次 `pop()`，把下层播放页一起弹掉（体检报告 §3-34）。
+  bool _exiting = false;
+
+  /// 封面请求代数 + 在途目标：切歌后丢弃过期结果（跨曲竞态，见 [_loadCover]）。
+  int _coverSession = 0;
+  String? _coverInFlight;
+
   /// 当前播放列表（同目录过滤，与播放页播放列表面板一致；为空回退全表）
   late List<VideoFile> _videos;
   int _currentIndex = 0;
@@ -95,8 +113,11 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   /// 当前定时关闭预设（默认关闭）
   AudioSleepPreset _sleepPreset = AudioSleepPreset.off;
 
-  /// 倒计时剩余时长（仅定时预设激活时非 null）
-  Duration? _sleepRemaining;
+  /// 倒计时剩余时长（仅定时预设激活时非 null）。
+  ///
+  /// 用 ValueNotifier 而不是普通字段：倍速/定时面板打开期间也要每秒刷新
+  /// 「剩余 xx:xx」，面板订阅这个 notifier 才能跟着跳（体检报告 §4 听视频）。
+  final ValueNotifier<Duration?> _sleepRemaining = ValueNotifier(null);
 
   /// 倒计时定时器（每秒递减 [_sleepRemaining]）
   Timer? _sleepTimer;
@@ -132,9 +153,11 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     _positionNotifier.value = _player.state.position;
     _durationNotifier.value = _player.state.duration;
     _playing = _player.state.playing;
-    // 本界面倍速范围 0.5 – 3.0、步进 0.5：把播放器当前倍速吸附到最近档位，
-    // 保证本界面内显示与实测一致（超出范围时收敛进范围）
+    // 本界面倍速档位 0.5–4.0、步进 0.5：把播放器当前倍速吸附到最近档位，
+    // 保证本界面内显示与实测一致（超出范围时收敛进范围）。原值记在
+    // [_entryRate]，用户没改过倍速的话退出时还原（吸附不该成为持久副作用）。
     final rate = _player.state.rate;
+    _entryRate = rate;
     _speed = _speedOptions().reduce(
       (a, b) => (a - rate).abs() < (b - rate).abs() ? a : b,
     );
@@ -172,7 +195,11 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     );
     _subs.add(
       _player.stream.duration.listen((d) {
-        if (mounted) _durationNotifier.value = d;
+        if (!mounted) return;
+        _durationNotifier.value = d;
+        // 切歌时封面请求会早于时长流到达（[_switchTo] 刚把时长置 0）→ 那时
+        // [_loadCover] 只能放弃；时长一到就补取一次，避免封面停在首帧。
+        if (d > Duration.zero && _coverFrame == null) _loadCover();
       }),
     );
     // 播放完成：本页处理（切歌/随机/列表循环/停止）
@@ -198,15 +225,33 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     );
   }
 
-  /// 取当前视频封面（居中显示 + 背景模糊共用）
+  /// 取当前视频封面（居中显示 + 背景模糊共用）。
+  ///
+  /// 位置取「时长一半」的帧，所以两个跨曲陷阱都要防：
+  /// ①切歌瞬间 [_durationNotifier] 刚被置 0 → 取到的是首帧；此时**先不取**，
+  /// 等 duration 流把时长送回来再补（见 initState 的 duration 订阅）；
+  /// ②上一首的取帧是异步的，可能在新歌之后才返回并覆盖新封面 → 用代数号
+  /// 丢弃过期结果；同一首在途也不重复取帧。
   Future<void> _loadCover() async {
-    final frame = await DeviceServices.getVideoFrameAt(
-      _path,
-      _durationNotifier.value.inMilliseconds ~/ 2,
-      maxWidth: 480,
-    );
-    if (!mounted || frame == null) return;
-    setState(() => _coverFrame = frame);
+    final path = _path;
+    final duration = _durationNotifier.value;
+    if (duration <= Duration.zero) return; // ①时长未知：等时长流到达后补取
+    if (_coverInFlight == path) return; // 同一首已在取帧
+    _coverInFlight = path;
+    final session = ++_coverSession;
+    try {
+      final frame = await DeviceServices.getVideoFrameAt(
+        path,
+        duration.inMilliseconds ~/ 2,
+        maxWidth: 480,
+      );
+      // ②过期结果（已切歌 / 已退出）直接丢弃
+      if (!mounted || session != _coverSession || path != _path) return;
+      if (frame == null) return;
+      setState(() => _coverFrame = frame);
+    } finally {
+      if (_coverInFlight == path) _coverInFlight = null;
+    }
   }
 
   /// 保存当前视频进度（切歌前 / 退出时调用，保证「视频进度还在」）
@@ -222,7 +267,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     }
   }
 
-  /// 切歌统一入口：保存旧进度 → open → 倍速/超分 → 复位状态。
+  /// 切歌统一入口：保存旧进度 → 调参 → open → 倍速/超分 → 复位状态。
   /// **不恢复上次进度**：新歌从 0 开始（听歌语义，工作.md 第 10 点）。
   Future<void> _switchTo(int index) async {
     if (index < 0 || index >= _videos.length) return;
@@ -230,6 +275,10 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     if (video.path == _path) return; // 同一首：不动作
     _isSwitching = true;
     await _saveProgress();
+    // mpv 缓存/网络调参必须在 open **之前**写入（§4.26）：听视频里
+    // 本地↔在线切换时，解封装缓存与重连参数只在打开文件时生效，
+    // 漏了这一步就会沿用上一首的档位参数。
+    await applyPlaybackTuning(_player, video.path);
     try {
       await _player.open(Media(video.path));
     } on AssertionError {
@@ -360,6 +409,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   }
 
   void _setSpeed(double v) {
+    _speedTouched = true;
     setState(() => _speed = v);
     _player.setRate(v);
   }
@@ -374,7 +424,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   void _applySleepPreset(AudioSleepPreset p, {Duration? custom}) {
     _sleepTimer?.cancel();
     _sleepTimer = null;
-    _sleepRemaining = null;
+    _sleepRemaining.value = null;
     _sleepPauseAtTrackEnd = false;
     _sleepPreset = p;
     switch (p) {
@@ -384,36 +434,37 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
         _sleepPauseAtTrackEnd = true;
         break;
       case AudioSleepPreset.custom:
-        _sleepRemaining = custom ?? const Duration(minutes: 15);
+        _sleepRemaining.value = custom ?? const Duration(minutes: 15);
         _startSleepCountdown();
         break;
       case AudioSleepPreset.min15:
       case AudioSleepPreset.min30:
       case AudioSleepPreset.min60:
-        _sleepRemaining = p.duration;
+        _sleepRemaining.value = p.duration;
         _startSleepCountdown();
         break;
     }
     if (mounted) setState(() {});
   }
 
-  /// 启动每秒倒计时，归零后暂停播放
+  /// 启动每秒倒计时，归零后暂停播放。
+  ///
+  /// 只写 [_sleepRemaining]（ValueNotifier），不再每秒 `setState`：面板订阅了
+  /// 这个 notifier，页面本身不显示剩余时间，整页重建是白做的。
   void _startSleepCountdown() {
     _sleepTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final rem = _sleepRemaining;
+      final rem = _sleepRemaining.value;
       if (rem == null) return;
       final next = rem - const Duration(seconds: 1);
       if (next <= Duration.zero) {
         // 到时：暂停播放并清除定时
         _sleepTimer?.cancel();
         _sleepTimer = null;
-        _sleepRemaining = null;
+        _sleepRemaining.value = null;
         _sleepPreset = AudioSleepPreset.off;
         _player.pause();
-        if (mounted) setState(() {});
       } else {
-        _sleepRemaining = next;
-        if (mounted) setState(() {});
+        _sleepRemaining.value = next;
       }
     });
   }
@@ -432,7 +483,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
       onSpeed: _setSpeed,
       sleepPreset: _sleepPreset,
       onSleepPreset: _applySleepPreset,
-      sleepRemaining: _sleepRemaining ?? Duration.zero,
+      sleepRemaining: _sleepRemaining,
     );
   }
 
@@ -453,6 +504,10 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   // ── 退出 ───────────────────────────────────────────────
 
   Future<void> _exit() async {
+    // pop-once 守卫：`_saveProgress()` 期间再次触发（连按返回 / 返回手势 +
+    // 返回按钮）会再 pop 一次，把下层播放页也弹掉（§3-34）。
+    if (_exiting) return;
+    _exiting = true;
     await _saveProgress();
     if (mounted) Navigator.of(context).pop();
   }
@@ -465,9 +520,15 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     // 定时关闭定时器清理 + 后台播放前台服务停止（工作.md 阶段1 第 2 点）
     _sleepTimer?.cancel();
     DeviceServices.stopBackgroundPlayback();
+    // 进入时把倍速吸附到了本页档位：用户没改过就还原原值（见 [_entryRate]）
+    final entryRate = _entryRate;
+    if (!_speedTouched && entryRate != null && entryRate != _speed) {
+      unawaited(_player.setRate(entryRate));
+    }
     unawaited(_saveProgress()); // dispose 无法 await，交给后台链完成
     _positionNotifier.dispose();
     _durationNotifier.dispose();
+    _sleepRemaining.dispose();
     // 注意：不 dispose 播放器——播放页持有
     super.dispose();
   }

@@ -109,4 +109,29 @@ void main() {
     expect(find.byType(SnackBar), findsOneWidget);
     expect(find.text('备用下载站链接待接入'), findsOneWidget);
   });
+
+  // P3：不传 onTapLink 时 flutter_markdown 只把链接渲染成高亮文本，点了没反应
+  testWidgets('Markdown 正文里的链接可点：回调拿到解析后的 URI', (tester) async {
+    final opened = <Uri>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: UpdateDialog(
+            info: const UpdateInfo(
+              version: '1.1.0',
+              // 整段只有链接一个 span：RichText 的中心必落在链接上
+              body: '[release 说明](https://example.com/releases/1.1.0)',
+            ),
+            onOpenLink: (uri) async => opened.add(uri),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.text('release 说明', findRichText: true));
+    await tester.pump();
+
+    expect(opened, [Uri.parse('https://example.com/releases/1.1.0')]);
+  });
 }

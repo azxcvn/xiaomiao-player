@@ -72,6 +72,18 @@ int mlsdModifyToMs(String value) {
       .millisecondsSinceEpoch;
 }
 
+/// 剥掉 Unix `LIST` 软链行名字里的 ` -> target` 尾巴。
+///
+/// 软链行形如 `lrwxrwxrwx 1 u g 12 Sep  1 10:00 link -> /srv/real.mp4`：
+/// 箭头右侧是**目标路径**，不是名字的一部分。不剥就会拿
+/// `link -> /srv/real.mp4` 去拼远端路径（既拼不出合法路径，也永远 404）。
+/// 无箭头时原样返回。
+String stripSymlinkTarget(String name) {
+  final arrow = name.indexOf(' -> ');
+  if (arrow <= 0) return name;
+  return name.substring(0, arrow);
+}
+
 /// 解析单行 Unix `LIST` 输出（`-rw-r--r-- ... 12345 Sep  1 10:00 name`）。
 ///
 /// 注意：LIST 格式随服务器/平台差异很大（Windows、BSD、带年份等多种变体），
@@ -85,7 +97,7 @@ FtpListEntry? parseUnixListLine(String line) {
   final parts = line.trimRight().split(RegExp(r'\s+'));
   // 头 8 列：perms links owner group size mon day time/year；其后为文件名。
   if (parts.length < 9) return null;
-  final name = parts.sublist(8).join(' ');
+  final name = stripSymlinkTarget(parts.sublist(8).join(' '));
   if (name.isEmpty || name == '.' || name == '..') return null;
 
   return FtpListEntry(

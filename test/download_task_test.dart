@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -84,10 +85,12 @@ void main() {
     http.Client Function()? clientFactory,
     Future<bool> Function(String, String, String)? merger,
     bool withDanmaku = false,
+    String title = '第1话',
+    Duration progressNotifyInterval = const Duration(milliseconds: 500),
   }) =>
       DownloadTask(
         id: 'vd_1',
-        title: '第1话',
+        title: title,
         subtitle: '某番剧',
         coverUrl: '',
         isVideo: true,
@@ -102,6 +105,7 @@ void main() {
         video: _FakeVideo(playUrl ?? _playUrl()),
         clientFactory: clientFactory,
         merger: merger,
+        progressNotifyInterval: progressNotifyInterval,
       );
 
   group('downloadTotalBytes（P2-32 的总量来源）', () {
@@ -282,6 +286,77 @@ void main() {
         () => !File(p.join(dir.path, 'vd_1.video.m4s')).existsSync(),
       );
       expect(DownloadManager.instance.tasks, isEmpty);
+    });
+  });
+
+  group('P3 进度通知节流', () {
+    test('分块推进不逐块通知，但阶段收尾一定补发最终值', () async {
+      final chunks = List.generate(200, (_) => List<int>.filled(1024, 1));
+      final task = videoTask(
+        // 注入超大窗口：可确定性地断言「只通知阶段切换/收尾那几次」
+        progressNotifyInterval: const Duration(hours: 1),
+        clientFactory: () => _TrackingClient(
+          (_) async => _resp(
+            Stream.fromIterable(chunks),
+            contentLength: 200 * 1024,
+          ),
+        ),
+      );
+      final seen = <double>[];
+      task.addListener(() => seen.add(task.progress));
+
+      await task.run();
+
+      expect(task.status, DownloadStatus.completed);
+      expect(
+        seen,
+        contains(0.5),
+        reason: '阶段收尾必须补发：节流窗口内的最终进度不能丢给 UI',
+      );
+      expect(seen.last, 1.0);
+      expect(
+        seen.length,
+        lessThan(20),
+        reason: '200 块逐块 notifyListeners 会让任务列表按块整表重建（旧实现）',
+      );
+    });
+  });
+
+  group('P3 文件名按 UTF-8 字节上限截断', () {
+    test('truncateUtf8Bytes 不切坏多字节字符', () {
+      expect(truncateUtf8Bytes('abc', 10), 'abc');
+      expect(truncateUtf8Bytes('abc', 3), 'abc');
+      expect(truncateUtf8Bytes('abc', 2), 'ab');
+      expect(truncateUtf8Bytes('abc', 0), '');
+      // 一个汉字 3 字节：上限落在字中间时往回退到字符边界
+      expect(truncateUtf8Bytes('a中', 2), 'a');
+      expect(truncateUtf8Bytes('中' * 100, 255), '中' * 85); // 85×3 = 255
+      expect(utf8.encode(truncateUtf8Bytes('中' * 100, 255)).length, 255);
+      expect(truncateUtf8Bytes('中' * 100, 256), '中' * 85);
+    });
+
+    test('超长标题：成品名不超 255 字节、扩展名完整、无半个汉字', () async {
+      final task = videoTask(
+        title: '超长标题' * 100, // 1200 字节
+        clientFactory: () => _TrackingClient(
+          (_) async => _resp(
+            Stream.value(List<int>.filled(10, 1)),
+            contentLength: 10,
+          ),
+        ),
+      );
+
+      await task.run();
+
+      expect(task.status, DownloadStatus.completed);
+      final name = p.basename(task.outputPath!);
+      expect(utf8.encode(name).length, lessThanOrEqualTo(kMaxFileNameBytes));
+      expect(name.endsWith('.mp4'), isTrue);
+      expect(
+        name.contains('\uFFFD'),
+        isFalse,
+        reason: '按字节截断不能把汉字切成半个',
+      );
     });
   });
 

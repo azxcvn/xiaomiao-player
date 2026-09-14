@@ -46,7 +46,9 @@ List<WebDavResource> parseWebDavMultistatus(String xml) {
     final hrefText = _textOf(block, 'href');
     if (hrefText == null || hrefText.isEmpty) continue;
 
-    final decodedHref = percentDecode(hrefText);
+    // ⚠️ XML 实体必须先反转义再百分号解码：服务端 href 里的 `&` 按 XML 规范
+    // 写作 `&amp;`，不解开就会拿字面量 `a&amp;b` 去请求 → 服务器 404（P3）。
+    final decodedHref = percentDecode(unescapeXmlEntities(hrefText));
     final name = _lastSegment(decodedHref);
     if (name.isEmpty) continue;
 
@@ -95,6 +97,40 @@ String _lastSegment(String decodedHref) {
   }
   final idx = p.lastIndexOf('/');
   return idx < 0 ? p : p.substring(idx + 1);
+}
+
+/// XML 实体反转义：五个内置实体 + 十进制/十六进制数字实体（`&#38;`/`&#x26;`）。
+///
+/// 只处理**元素文本**（href / getlastmodified 等），不做属性与 CDATA 解析；
+/// 认不出的实体（如自定义 DTD 实体）原样保留，避免把内容改错。
+String unescapeXmlEntities(String input) {
+  if (!input.contains('&')) return input;
+  return input.replaceAllMapped(
+    RegExp(r'&(#[0-9]+|#[xX][0-9A-Fa-f]+|[A-Za-z][A-Za-z0-9]*);'),
+    (m) {
+      final body = m.group(1)!;
+      if (body.startsWith('#')) {
+        final isHex = body.length > 1 && (body[1] == 'x' || body[1] == 'X');
+        final digits = isHex ? body.substring(2) : body.substring(1);
+        final code = int.tryParse(digits, radix: isHex ? 16 : 10);
+        if (code == null || code <= 0 || code > 0x10FFFF) return m.group(0)!;
+        return String.fromCharCode(code);
+      }
+      switch (body) {
+        case 'amp':
+          return '&';
+        case 'lt':
+          return '<';
+        case 'gt':
+          return '>';
+        case 'quot':
+          return '"';
+        case 'apos':
+          return "'";
+      }
+      return m.group(0)!;
+    },
+  );
 }
 
 /// 百分号解码（`%20` → 空格、`%E4%B8%AD` → `中`）。

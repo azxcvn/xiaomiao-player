@@ -65,4 +65,37 @@ void main() {
     expect(resources.length, 1);
     expect(resources[0].name, 'ok.mp4');
   });
+
+  // P3：服务端 href 里的 `&` 按 XML 规范写作 `&amp;`，不解开就会拿字面量
+  // `a&amp;b` 去请求 → 404
+  test('parseWebDavMultistatus 反转义 href 里的 XML 实体', () {
+    const xml = '''
+<d:multistatus xmlns:d="DAV:">
+  <d:response>
+    <d:href>/music/Tom&amp;Jerry.mp4</d:href>
+    <d:propstat><d:prop/></d:propstat>
+  </d:response>
+  <d:response>
+    <d:href>/music/a%20&amp;%20b.mp3</d:href>
+    <d:propstat><d:prop/></d:propstat>
+  </d:response>
+</d:multistatus>
+''';
+    final resources = parseWebDavMultistatus(xml);
+    // 实体先反转义、再百分号解码：两条都该还原出真正的 `&`
+    expect(resources[0].href, '/music/Tom&Jerry.mp4');
+    expect(resources[0].name, 'Tom&Jerry.mp4');
+    expect(resources[1].href, '/music/a & b.mp3');
+    expect(resources[1].name, 'a & b.mp3');
+  });
+
+  test('unescapeXmlEntities：内置实体 + 数字实体，认不出的原样保留', () {
+    expect(unescapeXmlEntities('a&amp;b'), 'a&b');
+    expect(unescapeXmlEntities('&lt;tag&gt;'), '<tag>');
+    expect(unescapeXmlEntities('&quot;q&quot;'), '"q"');
+    expect(unescapeXmlEntities('it&apos;s'), "it's");
+    expect(unescapeXmlEntities('&#38;&#x26;'), '&&');
+    expect(unescapeXmlEntities('&unknown;'), '&unknown;');
+    expect(unescapeXmlEntities('plain'), 'plain');
+  });
 }

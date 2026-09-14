@@ -62,6 +62,7 @@ import 'package:moumou/services/fast_thumbnails.dart';
 import 'package:moumou/services/intro_outro_settings.dart';
 import 'package:moumou/services/intro_outro_tracker.dart';
 import 'package:moumou/services/playback_progress_service.dart';
+import 'package:moumou/services/playback_tuning.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/services/subtitle_service.dart';
 import 'package:moumou/services/subtitle_settings.dart';
@@ -71,7 +72,6 @@ import 'package:moumou/utils/cast_source.dart';
 import 'package:moumou/utils/dolby_vision_hint.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/intro_outro_skip.dart';
-import 'package:moumou/utils/mpv_tuning.dart';
 import 'package:moumou/utils/pip_aspect.dart';
 import 'package:moumou/utils/playback_completion.dart';
 import 'package:moumou/utils/playback_history.dart';
@@ -339,34 +339,12 @@ class _PlayerPageState extends State<PlayerPage>
     }
   }
 
-  /// 应用 mpv 移动端缓存/网络调参（§4.26，对齐 mpvRx `initOptions`）。
+  /// 应用 mpv 移动端缓存/网络调参（§4.26）。
   ///
-  /// 必须在 `open` **之前**写入：解封装缓存 / 重连参数只在打开文件时生效。
-  /// `demuxer-lavf-o` 先读旧值再合并（media_kit 在里面放了
-  /// `protocol_whitelist`，整串覆盖会让 m3u8 等协议失效）；读不到旧值则
-  /// 不写该键（[buildMpvTuning] 返回的表里不含它）。
-  Future<void> _applyPlaybackTuning(String path) async {
-    try {
-      final native = _player.platform as NativePlayer;
-      await native.waitForPlayerInitialization;
-      String? lavfO;
-      try {
-        lavfO = await native.getProperty('demuxer-lavf-o');
-      } catch (_) {
-        lavfO = null;
-      }
-      final tuning = buildMpvTuning(
-        isOnline: isOnlineMedia(path),
-        existingDemuxerLavfO: lavfO,
-      );
-      for (final entry in tuning.entries) {
-        await native.setProperty(entry.key, entry.value);
-      }
-    } catch (e) {
-      // 播放器未就绪 / 属性不支持时静默失败，不影响播放
-      debugPrint('PlayerPage: apply mpv tuning failed: $e');
-    }
-  }
+  /// 实现收口在 [applyPlaybackTuning]——听视频切歌等其它打开媒体的地方共用
+  /// 同一份，见 `services/playback_tuning.dart`。
+  Future<void> _applyPlaybackTuning(String path) =>
+      applyPlaybackTuning(_player, path);
 
   /// 恢复进度指示器是否可见（恢复到位后显示，自管理 2.5s 隐藏）
   bool _resumeVisible = false;
