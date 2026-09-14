@@ -382,6 +382,7 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
               );
             }
             return VideoCard(
+              key: ValueKey(child.path),
               video: child.video!,
               fields: widget.viewSettings.videoFields,
               onTap: () => _onChildTap(child),

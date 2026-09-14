@@ -25,7 +25,8 @@ class VideoScanner {
   static Future<List<VideoFile>> scanVideos({
     MediaScanSettings? scanSettings,
   }) async {
-    if (_cachedVideos != null) return _cachedVideos!;
+    final isCustomSettings = scanSettings != null;
+    if (!isCustomSettings && _cachedVideos != null) return _cachedVideos!;
 
     final settings = scanSettings ?? MediaScanSettings.instance;
     await settings.ensureLoaded();
@@ -67,7 +68,9 @@ class VideoScanner {
     }
 
     videos.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-    _cachedVideos = videos;
+    if (!isCustomSettings) {
+      _cachedVideos = videos;
+    }
     return videos;
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/services/file_operations_service.dart';
 import 'package:moumou/services/pinned_folders_settings.dart';
+import 'package:moumou/services/video_info_service.dart';
 import 'package:moumou/utils/file_ops.dart';
 import 'package:moumou/utils/file_selection.dart';
 import 'package:moumou/widgets/directory_picker_dialog.dart';
@@ -281,6 +282,11 @@ Future<bool> _transfer(
     await pinned.retainExisting();
   }
 
+  if (move) {
+    VideoInfoService.clearCache(sourcePath);
+    if (target != null) VideoInfoService.clearCache(target);
+  }
+
   try {
     await onMutated();
   } catch (e, s) {
@@ -413,6 +419,13 @@ Future<bool> _batchTransfer(
     await pinned.retainExisting();
   }
 
+  if (move) {
+    for (final entry in movedTargets.entries) {
+      VideoInfoService.clearCache(entry.key);
+      VideoInfoService.clearCache(entry.value);
+    }
+  }
+
   try {
     await onMutated();
   } catch (e, s) {
@@ -485,6 +498,8 @@ Future<bool> _rename(
       await pinned.retainExisting(additionalStale: stale);
       if (wasPinned) await pinned.setPinned(newPath, true);
     }
+    VideoInfoService.clearCache(sourcePath);
+    VideoInfoService.clearCache(newPath);
     try {
       await onMutated();
     } catch (e, s) {
@@ -566,6 +581,7 @@ Future<bool> _batchDelete(
       } else {
         await FileOperationsService.deleteFile(item.path);
       }
+      VideoInfoService.clearCache(item.path);
       done++;
     } on FileOpException catch (e) {
       failures.add('${item.name}：${e.message}');

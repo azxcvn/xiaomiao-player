@@ -53,6 +53,7 @@ class _HomePageState extends State<HomePage>
   List<TreeNode> _folders = []; // 列表模式：含直接视频的文件夹
   bool _loading = true;
   bool _permissionDenied = false;
+  int _loadSession = 0;
 
   /// 搜索状态：false = 正常标题栏；true = 显示搜索输入框
   bool _searching = false;
@@ -89,6 +90,7 @@ class _HomePageState extends State<HomePage>
   }
 
   Future<void> _load() async {
+    final session = ++_loadSession;
     setState(() {
       _loading = true;
       _permissionDenied = false;
@@ -97,6 +99,7 @@ class _HomePageState extends State<HomePage>
     try {
       // 只检查权限状态，不主动弹权限请求（首次进入由用户点击「授予权限」触发）
       final granted = await _hasStoragePermission();
+      if (session != _loadSession) return;
       if (!granted) {
         if (mounted) {
           setState(() {
@@ -109,6 +112,8 @@ class _HomePageState extends State<HomePage>
       // 刷新时清缓存，重新查询 MediaStore（否则新增/删除的视频不生效）
       VideoScanner.clearCache();
       final videos = await VideoScanner.scanVideos();
+      if (session != _loadSession) return;
+
       // 建树 / 建文件夹列表移到后台 isolate（compute）执行：排序、建树、聚合
       // 是同步纯函数，视频量几千条时在 UI 线程跑会有几十毫秒级卡顿
       // （risk_audit #6）。TreeNode/VideoFile 均为纯数据（String/int/DateTime/
@@ -118,7 +123,7 @@ class _HomePageState extends State<HomePage>
           compute(VideoScanner.buildFolderList, videos); // 列表模式：含直接视频的文件夹
       final roots = await rootsFuture;
       final folders = await foldersFuture;
-      if (!mounted) return;
+      if (!mounted || session != _loadSession) return;
       setState(() {
         _roots = roots;
         _folders = folders;
@@ -126,7 +131,7 @@ class _HomePageState extends State<HomePage>
     } catch (e, s) {
       debugPrint('加载视频失败: $e\n$s');
     } finally {
-      if (mounted) {
+      if (mounted && session == _loadSession) {
         setState(() {
           _loading = false;
         });
@@ -419,7 +424,8 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _buildBody() {
-    if (_loading) {
+    // 只有首屏完全无数据时才展示整页转圈；已有数据时的重扫/文件变更均为原地静默刷新（P2-24）
+    if (_loading && _roots.isEmpty && _folders.isEmpty && !_permissionDenied) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_permissionDenied) {

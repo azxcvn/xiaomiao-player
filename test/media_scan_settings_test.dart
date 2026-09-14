@@ -141,4 +141,23 @@ void main() {
       isTrue,
     );
   });
+
+  test('unfiltered 实例绝对不受持久化黑白名单污染（P2-26）', () async {
+    // 写入白名单持久化配置
+    SharedPreferences.setMockInitialValues({
+      'media_scan_filter_mode': 'whitelist',
+      'media_scan_whitelist_folders': ['/storage/emulated/0/Anime'],
+      'media_scan_no_media': true,
+    });
+
+    final unf = MediaScanSettings.unfiltered;
+    await unf.ensureLoaded();
+
+    // 验证：unfiltered 继承了 no_media 开关，但 filterMode 恒为 none，不受白名单限制
+    expect(unf.scanNoMedia, isTrue);
+    expect(unf.filterMode, FolderFilterMode.none);
+    expect(unf.whitelistFolders, isEmpty);
+    expect(unf.blacklistFolders, isEmpty);
+    expect(unf.isPathAllowed('/storage/emulated/0/Other/video.mp4'), isTrue);
+  });
 }

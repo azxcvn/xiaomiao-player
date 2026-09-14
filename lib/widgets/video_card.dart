@@ -75,7 +75,14 @@ class _VideoCardState extends State<VideoCard> {
   @override
   void didUpdateWidget(VideoCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_needMeta && _meta == null) _loadMeta();
+    if (oldWidget.video.path != widget.video.path) {
+      _thumbPath = null;
+      _meta = null;
+      _loadThumb();
+      if (_needMeta) _loadMeta();
+    } else if (_needMeta && _meta == null) {
+      _loadMeta();
+    }
   }
 
   Future<void> _loadThumb() async {
@@ -227,7 +234,18 @@ class _VideoCardState extends State<VideoCard> {
                     fit: StackFit.expand,
                     children: [
                       _thumbPath != null
-                          ? Image.file(File(_thumbPath!), fit: BoxFit.cover)
+                          ? Image.file(
+                              File(_thumbPath!),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                color: scheme.surfaceContainerHighest,
+                                child: Icon(
+                                  Icons.movie_outlined,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            )
                           : Container(
                               color: scheme.surfaceContainerHighest,
                               child: Icon(

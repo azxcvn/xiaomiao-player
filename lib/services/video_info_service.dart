@@ -44,6 +44,18 @@ class VideoInfoService {
   static final AsyncSingleFlight<VideoBasicMetadata> _metaFlight =
       AsyncSingleFlight();
 
+  /// 清理视频信息与基本元数据内存缓存。
+  /// 若指定 [path]，只清理该路径对应的缓存项；若为 null，则清空全部内存缓存。
+  static void clearCache([String? path]) {
+    if (path != null) {
+      _cache.remove(path);
+      _metaCache.remove(path);
+    } else {
+      _cache.clear();
+      _metaCache.clear();
+    }
+  }
+
   static Future<VideoInfo> get(String path) async {
     final cached = _cache[path];
     if (cached != null) return cached;
@@ -51,14 +63,19 @@ class VideoInfoService {
   }
 
   static Future<VideoInfo> _fetchInfo(String path) async {
-    final result = await _channel
-        .invokeMapMethod<String, dynamic>('getVideoInfo', {'path': path});
-    final info = VideoInfo(
-      durationMs: (result?['durationMs'] as num?)?.toInt() ?? 0,
-      thumbPath: result?['thumbPath'] as String?,
-    );
-    _cache[path] = info;
-    return info;
+    try {
+      final result = await _channel
+          .invokeMapMethod<String, dynamic>('getVideoInfo', {'path': path});
+      final info = VideoInfo(
+        durationMs: (result?['durationMs'] as num?)?.toInt() ?? 0,
+        thumbPath: result?['thumbPath'] as String?,
+      );
+      _cache[path] = info;
+      return info;
+    } catch (_) {
+      // 原生异常（文件不存在、权限或解析失败）：返回安全兜底，且不存入 _cache 允许后续重试
+      return const VideoInfo(durationMs: 0, thumbPath: null);
+    }
   }
 
   /// 获取视频基本媒体元数据（帧率 / 内嵌字幕，MediaInfoLib 快速解析 + 磁盘缓存）。

@@ -185,6 +185,7 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
         if (index < videosEnd) {
           final video = videos[index - foldersEnd];
           return VideoCard(
+            key: ValueKey(video.path),
             video: _toVideoFile(video),
             fields: const {VideoField.size},
             onTap: () => _openVideo(_toVideoFile(video)),

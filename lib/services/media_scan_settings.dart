@@ -44,8 +44,8 @@ class MediaScanSettings extends ChangeNotifier {
   static MediaScanSettings get instance =>
       _instance ??= MediaScanSettings._();
 
-  /// 仅用于扫描全部视频的静态无过滤实例
-  static final MediaScanSettings unfiltered = MediaScanSettings._();
+  /// 仅用于扫描全部视频的静态无过滤实例（与持久化黑白名单隔离，P2-26）
+  static final MediaScanSettings unfiltered = _UnfilteredMediaScanSettings();
 
   MediaScanSettings._();
 
@@ -225,6 +225,36 @@ class MediaScanSettings extends ChangeNotifier {
     _filterMode = FolderFilterMode.none;
     _blacklistFolders = [];
     _whitelistFolders = [];
+    notifyListeners();
+  }
+}
+
+/// 静态无过滤扫描特化实现（P2-26）：
+/// - 过滤模式恒为 none
+/// - 黑白名单恒为空
+/// - 路径判定恒为允许
+/// - load() 仅加载 .nomedia 与隐藏文件夹开关，绝不从磁盘加载黑白名单与过滤模式
+class _UnfilteredMediaScanSettings extends MediaScanSettings {
+  _UnfilteredMediaScanSettings() : super._();
+
+  @override
+  FolderFilterMode get filterMode => FolderFilterMode.none;
+
+  @override
+  List<String> get blacklistFolders => const [];
+
+  @override
+  List<String> get whitelistFolders => const [];
+
+  @override
+  bool isPathAllowed(String path) => true;
+
+  @override
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    _scanNoMedia = prefs.getBool(MediaScanSettings._keyScanNoMedia) ?? false;
+    _scanHiddenFolders =
+        prefs.getBool(MediaScanSettings._keyScanHiddenFolders) ?? false;
     notifyListeners();
   }
 }

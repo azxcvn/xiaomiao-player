@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:moumou/services/device_services.dart';
+import 'package:moumou/services/video_info_service.dart';
 
 /// 缓存类别（key 与原生 `getCacheSizes` / `clearCache` 对应；纯数据，无 UI 依赖）
 class CacheCategory {
@@ -44,17 +45,21 @@ class CacheManagerService {
   static Future<bool> clearCategory(CacheCategory category) async {
     try {
       await _channel.invokeMethod<void>('clearCache', {'category': category.key});
+      if (category.key == listThumbs.key) {
+        VideoInfoService.clearCache();
+      }
       return true;
     } catch (_) {
       return false;
     }
   }
 
-  /// 一键清除所有缓存（同时清掉进度条缩略图的 Dart 内存缓存）
+  /// 一键清除所有缓存（同时清掉进度条缩略图与列表封面的 Dart 内存缓存）
   static Future<bool> clearAll() async {
     try {
       await _channel.invokeMethod<void>('clearAllCaches');
       DeviceServices.clearFrameCache();
+      VideoInfoService.clearCache();
       return true;
     } catch (_) {
       return false;

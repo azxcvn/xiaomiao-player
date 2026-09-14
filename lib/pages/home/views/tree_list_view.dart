@@ -64,6 +64,7 @@ class TreeListView extends StatelessWidget {
           );
         }
         return VideoCard(
+          key: ValueKey(node.video!.path),
           video: node.video!,
           fields: videoFields,
           onTap: () => onVideoTap(node.video!),

@@ -145,6 +145,7 @@ class _PlaybackHistoryPageState extends State<PlaybackHistoryPage> {
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: VideoCard(
+            key: ValueKey(entry.path),
             video: VideoFile(
               path: entry.path,
               name: entry.title,

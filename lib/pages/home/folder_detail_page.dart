@@ -277,6 +277,7 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
           itemBuilder: (context, index) {
             final video = videos[index];
             return VideoCard(
+              key: ValueKey(video.path),
               video: video,
               fields: widget.viewSettings.videoFields,
               onTap: () => _onVideoTap(video),
