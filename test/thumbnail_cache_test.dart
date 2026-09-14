@@ -125,5 +125,33 @@ void main() {
       expect(DeviceServices.peekFrame(path, 60000), isNotNull);
       expect(DeviceServices.peekFrame(path, 2000), isNull);
     });
+
+    test('失败记录：超限（256 条）淘汰最旧条目（P2-4）', () {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      // 填入 256 条失败条目
+      for (var i = 0; i < 256; i++) {
+        DeviceServices.debugPutFrameFailure('key_$i', now);
+      }
+      expect(DeviceServices.debugFrameFailCount, 256);
+      expect(DeviceServices.debugHasFrameFailure('key_0'), isTrue);
+
+      // 再填一条，应淘汰最早插入的 key_0
+      DeviceServices.debugPutFrameFailure('key_256', now);
+      expect(DeviceServices.debugFrameFailCount, 256);
+      expect(DeviceServices.debugHasFrameFailure('key_0'), isFalse);
+      expect(DeviceServices.debugHasFrameFailure('key_256'), isTrue);
+    });
+
+    test('失败记录：过期条目（>10s）自动清理（P2-4）', () {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      // 插入一条 15 秒前（已过期）的失败记录
+      DeviceServices.debugPutFrameFailure('old_key', now - 15000);
+      expect(DeviceServices.debugHasFrameFailure('old_key'), isTrue);
+
+      // 插入一条新记录时，应顺带清理掉过期记录
+      DeviceServices.debugPutFrameFailure('new_key', now);
+      expect(DeviceServices.debugHasFrameFailure('old_key'), isFalse);
+      expect(DeviceServices.debugHasFrameFailure('new_key'), isTrue);
+    });
   });
 }

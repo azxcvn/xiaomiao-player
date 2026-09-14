@@ -542,10 +542,14 @@ class DeviceServices {
 
     // 失败冷却：同 key 近期真实解码失败（非被顶掉）→ 直接返回 null，
     // 避免同一失败位置被反复拖动反复重解（对齐 mpvRx 10s 冷却）。
+    final now = DateTime.now().millisecondsSinceEpoch;
     final lastFail = _frameFailAt[key];
-    if (lastFail != null &&
-        DateTime.now().millisecondsSinceEpoch - lastFail < _frameFailCooldownMs) {
-      return null;
+    if (lastFail != null) {
+      if (now - lastFail < _frameFailCooldownMs) {
+        return null;
+      }
+      // 已过冷却期，清除过期记录（P2-4）
+      _frameFailAt.remove(key);
     }
 
     final future = _fetchFrame(path, bucketMs, maxWidth).then((result) {
@@ -555,8 +559,8 @@ class DeviceServices {
         _trimCache();
         _frameFailAt.remove(key);
       } else if (!result.stale) {
-        // 真实解码失败（引擎不可用 / 解码失败）→ 记冷却时间戳
-        _frameFailAt[key] = DateTime.now().millisecondsSinceEpoch;
+        // 真实解码失败（引擎不可用 / 解码失败）→ 记冷却时间戳（带过期清理与容量上限，P2-4）
+        _recordFrameFailure(key, DateTime.now().millisecondsSinceEpoch);
       }
       return result.frame;
     });
@@ -679,6 +683,30 @@ class DeviceServices {
 
   /// 真实解码失败时间戳（epoch ms）：被顶掉（stale）不计入。
   static final Map<String, int> _frameFailAt = {};
+
+  /// 失败冷却表容量上限（防无上限内存增长，P2-4）
+  static const int _frameFailMaxEntries = 256;
+
+  /// 记录真实解码失败：先清理过期条目，若仍超限则淘汰最旧条目（LinkedHashMap 保持插入序）。
+  static void _recordFrameFailure(String key, int now) {
+    _frameFailAt.removeWhere((_, time) => now - time >= _frameFailCooldownMs);
+    while (_frameFailAt.length >= _frameFailMaxEntries) {
+      _frameFailAt.remove(_frameFailAt.keys.first);
+    }
+    _frameFailAt[key] = now;
+  }
+
+  @visibleForTesting
+  static int get debugFrameFailCount => _frameFailAt.length;
+
+  @visibleForTesting
+  static void debugPutFrameFailure(String key, int timestamp) {
+    _recordFrameFailure(key, timestamp);
+  }
+
+  @visibleForTesting
+  static bool debugHasFrameFailure(String key) => _frameFailAt.containsKey(key);
+
   static int _frameCacheBytes = 0;
 
   static void _trimCache() {

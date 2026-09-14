@@ -79,6 +79,9 @@ class FastThumbnails {
 
   static _GrabJob? _running;
   static _GrabJob? _waiting;
+  static Isolate? _workerIsolate;
+  static SendPort? _workerPort;
+  static Completer<SendPort?>? _workerInitCompleter;
 
   static void _pump() {
     while (_running == null && _waiting != null) {
@@ -97,13 +100,90 @@ class FastThumbnails {
     }
   }
 
-  /// 在子 isolate 执行抓帧。必须是**独立静态函数**：Isolate.run 的闭包会
-  /// 连同捕获上下文一起发送，若与捕获了 _GrabJob（含 Completer，不可
-  /// 发送）的兄弟闭包共享作用域，编译器合并上下文后整包不可发送
-  /// （release AOT 实测踩坑：Context num_variables 会带上 _GrabJob）。
+  /// 长驻 worker isolate 调度（P1-14）：避免每帧 Isolate.run 创建/销毁
+  /// 与反复 DynamicLibrary.open('libmpv.so') 的固定开销。
+  static Future<SendPort?> _ensureWorker() async {
+    if (_workerPort != null) return _workerPort;
+    if (_workerInitCompleter != null) return _workerInitCompleter!.future;
+    final completer = Completer<SendPort?>();
+    _workerInitCompleter = completer;
+
+    final initPort = ReceivePort();
+    final errorPort = ReceivePort();
+    final exitPort = ReceivePort();
+
+    try {
+      final isolate = await Isolate.spawn(
+        _workerMain,
+        initPort.sendPort,
+        onError: errorPort.sendPort,
+        onExit: exitPort.sendPort,
+      );
+
+      errorPort.listen((message) {
+        debugPrint('[FastThumb] worker error: $message');
+        _resetWorker();
+      });
+      exitPort.listen((_) {
+        _resetWorker();
+      });
+
+      final dynamic port = await initPort.first;
+      initPort.close();
+      if (port is SendPort) {
+        _workerIsolate = isolate;
+        _workerPort = port;
+        completer.complete(port);
+        return port;
+      } else {
+        _resetWorker();
+        completer.complete(null);
+        return null;
+      }
+    } catch (e) {
+      debugPrint('[FastThumb] failed to spawn worker: $e');
+      _resetWorker();
+      completer.complete(null);
+      return null;
+    } finally {
+      _workerInitCompleter = null;
+    }
+  }
+
+  static void _resetWorker() {
+    _workerPort = null;
+    try {
+      _workerIsolate?.kill(priority: Isolate.immediate);
+    } catch (_) {}
+    _workerIsolate = null;
+  }
+
+  /// 在长驻 worker isolate 执行抓帧。
   static Future<FastThumbFrame?> _runGrab(
-      String path, double positionSec, int dimension, int useHwdec) {
-    return Isolate.run(() => _grabSync(path, positionSec, dimension, useHwdec));
+      String path, double positionSec, int dimension, int useHwdec) async {
+    final workerPort = await _ensureWorker();
+    if (workerPort == null) return null;
+
+    final responsePort = ReceivePort();
+    try {
+      workerPort.send([
+        responsePort.sendPort,
+        path,
+        positionSec,
+        dimension,
+        useHwdec,
+      ]);
+      final dynamic response = await responsePort.first;
+      if (response is FastThumbFrame) {
+        return response;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('[FastThumb] worker grab failed: $e');
+      return null;
+    } finally {
+      responsePort.close();
+    }
   }
 
   /// [grab] 的便捷版本：直接返回可显示的 [ui.Image]。
@@ -137,17 +217,72 @@ class FastThumbnails {
       _lib!.lookupFunction<Void Function(), void Function()>(
           'mk_thumbnail_clear_cache')();
     } catch (_) {}
+    _workerPort?.send('clear_cache');
   }
 
-  // ---- native 调用（跑在独立 Isolate 中，静态变量不跨 isolate 共享，
-  //      库必须在本 isolate 内打开）----
+  /// 测试用：重置调度队列与 worker isolate
+  @visibleForTesting
+  static void debugReset() {
+    _running = null;
+    _waiting = null;
+    _resetWorker();
+  }
+
+  // ---- native 调用（跑在长驻 Isolate 中，库与符号仅初始化一次）----
+
+  static void _workerMain(SendPort initSendPort) {
+    DynamicLibrary? lib;
+    _GrabDart? grab;
+    _FreeDart? free;
+
+    if (Platform.isAndroid) {
+      try {
+        lib = DynamicLibrary.open('libmpv.so');
+        grab = lib.lookupFunction<_GrabC, _GrabDart>('mk_thumbnail_grab');
+        free = lib.lookupFunction<_FreeC, _FreeDart>('mk_thumbnail_free');
+      } catch (e) {
+        initSendPort.send(null);
+        return;
+      }
+    } else {
+      initSendPort.send(null);
+      return;
+    }
+
+    final commandPort = ReceivePort();
+    initSendPort.send(commandPort.sendPort);
+
+    commandPort.listen((dynamic message) {
+      if (message is List && message.length >= 5) {
+        final replyPort = message[0] as SendPort;
+        final path = message[1] as String;
+        final positionSec = (message[2] as num).toDouble();
+        final dimension = message[3] as int;
+        final useHwdec = message[4] as int;
+
+        FastThumbFrame? frame;
+        try {
+          frame = _grabSync(grab!, free!, path, positionSec, dimension, useHwdec);
+        } catch (e) {
+          frame = null;
+        }
+        replyPort.send(frame);
+      } else if (message == 'clear_cache') {
+        try {
+          lib?.lookupFunction<Void Function(), void Function()>(
+              'mk_thumbnail_clear_cache')();
+        } catch (_) {}
+      }
+    });
+  }
 
   static FastThumbFrame? _grabSync(
-      String path, double positionSec, int dimension, int useHwdec) {
-    final lib = DynamicLibrary.open('libmpv.so');
-    final grab = lib.lookupFunction<_GrabC, _GrabDart>('mk_thumbnail_grab');
-    final free = lib.lookupFunction<_FreeC, _FreeDart>('mk_thumbnail_free');
-
+      _GrabDart grab,
+      _FreeDart free,
+      String path,
+      double positionSec,
+      int dimension,
+      int useHwdec) {
     final units = utf8.encode(path);
     final pathPtr = malloc<Uint8>(units.length + 1);
     pathPtr.asTypedList(units.length + 1)
@@ -159,24 +294,26 @@ class FastThumbnails {
     final outHeight = malloc<Int32>();
 
     FastThumbFrame? result;
-    final rc = grab(pathPtr, positionSec, dimension, useHwdec,
-        outData, outWidth, outHeight);
-    if (rc == 0) {
-      final w = outWidth.value;
-      final h = outHeight.value;
-      final data = outData.value;
-      if (data != nullptr && w > 0 && h > 0) {
-        // 拷贝到 Dart 堆后立刻释放 native 缓冲
-        final bytes = Uint8List.fromList(data.asTypedList(w * h * 4));
-        result = FastThumbFrame(bytes, w, h);
+    try {
+      final rc = grab(pathPtr, positionSec, dimension, useHwdec,
+          outData, outWidth, outHeight);
+      if (rc == 0) {
+        final w = outWidth.value;
+        final h = outHeight.value;
+        final data = outData.value;
+        if (data != nullptr && w > 0 && h > 0) {
+          // 拷贝到 Dart 堆后立刻释放 native 缓冲
+          final bytes = Uint8List.fromList(data.asTypedList(w * h * 4));
+          result = FastThumbFrame(bytes, w, h);
+        }
+        free(data);
       }
-      free(data);
+    } finally {
+      malloc.free(outHeight);
+      malloc.free(outWidth);
+      malloc.free(outData);
+      malloc.free(pathPtr);
     }
-
-    malloc.free(outHeight);
-    malloc.free(outWidth);
-    malloc.free(outData);
-    malloc.free(pathPtr);
     return result;
   }
 }

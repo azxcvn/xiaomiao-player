@@ -140,7 +140,7 @@ lib/
 │   ├── player_controls_settings.dart   # 播放器控制设置（槽位/手势/倍速/比例/长按/方向/顶部信息等）
 │   ├── device_services.dart   # 设备能力：音量/亮度/画中画/电量/网络类型/后台服务启停/字幕·字体文件与目录操作（MethodChannel）+ 任意时刻抓帧（FFmpeg 引擎 + 秒桶内存 LRU）+ 设备能力检测 + 整应用重启 + 动态色壁纸取色
 │   ├── dolby_vision_settings.dart # 杜比视界偏色提示「不再提示」记忆（ChangeNotifier + 持久化，§4.23）
-│   ├── fast_thumbnails.dart   # FFmpeg 快速缩略图引擎（FFI 直连自建 libmpv.so 的 mk_thumbnail_*，单飞+顶旧调度）
+│   ├── fast_thumbnails.dart   # FFmpeg 快速缩略图引擎（FFI 直连自建 libmpv.so 的 mk_thumbnail_*，长驻 worker+单飞顶旧调度，P1-14）
 │   ├── crash_log_service.dart # 崩溃日志：列表/读取/删除/清空/导出
 │   ├── cache_manager_service.dart # 缓存管理：列表封面磁盘缓存查询/清除（进度条缩略图为纯内存，不占磁盘）
 │   ├── super_resolution_service.dart   # 超分：模式持久化、着色器**安装期优化**后拷贝、mpv 应用（§4.25）
@@ -558,10 +558,10 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 层 | 文件 | 职责 |
 |---|---|---|
 | 内核 | libmpv.so `mk_thumbnail_grab` | 独立 FFmpeg 解码实例：MediaCodec 硬解优先/失败自动软解、硬解 ctx 全局复用、极速探测、**关键帧优先向后 seek + 逐帧解码到目标帧（帧级精确匹配）**；输出 RGBA |
-| 引擎 | `services/fast_thumbnails.dart` | FFI 绑定 + 后台 isolate + **单飞调度**（最多 1 在跑 + 1 待跑，新请求顶掉旧待跑） |
-| 缓存 | `services/device_services.dart` | `thumbnailBucketMs`（**秒桶=四舍五入到整秒**，唯一真值）+ `getVideoFrameAt`：**32MB 内存 LRU**（RGBA 字节计）+ 在飞去重 + **失败 10s 冷却**（被顶掉 `stale` 不计冷却）；`peekFrame`/`peekNearestFrame`（兜底半径 **±3s**，**命中即刷新 LRU**——拖动热路径上的帧也算「最近使用」，原先只有 `getVideoFrameAt` 刷，导致来回拖动时刚看过的帧反被先淘汰，下一帧重解码 63–134ms） |
-| UI | `views/player_thumbnail_preview.dart` + `widgets/raw_thumb_image.dart` | 气泡（**章节名胶囊在上 + 预览图 + 时间胶囊在下**，章节名超长单行省略且限宽预览图宽）+ RGBA 直渲（`ImageDescriptor.raw`，无 PNG/JPEG 编码往返） |
-| 调度 | `pages/player/player_page.dart` / `player_portrait_page.dart` | 横竖屏两页同款：拖动邻近帧秒显 + 精确帧异步补齐；**松手 seek 到「缩略图那一帧」的精确时刻**；淡出 150ms 后卸载 + **空闲 350ms 预取 ±1/±2/±3 秒桶**（再拖动立即终止，拖动请求绝对优先）；共用同一 FFmpeg 引擎与内存缓存，受同一 `showThumbnailPreview` 开关控制 |
+| 引擎 | `services/fast_thumbnails.dart` | FFI 绑定 + **长驻 worker isolate**（启动时加载动态库与 lookup 符号，P1-14）+ **单飞调度**（最多 1 在跑 + 1 待跑，新请求顶掉旧待跑） |
+| 缓存 | `services/device_services.dart` | `thumbnailBucketMs`（**秒桶=四舍五入到整秒**，唯一真值）+ `getVideoFrameAt`：**32MB 内存 LRU**（RGBA 字节计）+ 在飞去重 + **失败 10s 冷却**（256 容量上限截断 + 过期清理，P2-4，被顶掉 `stale` 不计冷却）；`peekFrame`/`peekNearestFrame`（兜底半径 **±3s**，**命中即刷新 LRU**——拖动热路径上的帧也算「最近使用」，原先只有 `getVideoFrameAt` 刷，导致来回拖动时刚看过的帧反被先淘汰，下一帧重解码 63–134ms） |
+| UI | `views/player_thumbnail_preview.dart` + `widgets/raw_thumb_image.dart` | 气泡（**章节名胶囊在上 + 预览图 + 时间胶囊在下**，章节名超长单行省略且限宽预览图宽；不可见时避免渲染转圈指示器，P3）+ RGBA 直渲（`ImageDescriptor.raw`，无 PNG/JPEG 编码往返） |
+| 调度 | `pages/player/player_page.dart` / `player_portrait_page.dart` | 横竖屏两页同款：拖动邻近帧秒显 + 精确帧异步补齐；**松手 seek 到「缩略图那一帧」的精确时刻**；淡出 150ms 后卸载（两页定时器严格对齐 150ms，P3）+ **空闲 350ms 预取 ±1/±2/±3 秒桶**（再拖动立即终止，拖动请求绝对优先）；共用同一 FFmpeg 引擎与内存缓存，受同一 `showThumbnailPreview` 开关控制 |
 
 **关键事实**：
 - JavaVM 无需自行注册——media_kit 启动时已通过官方补丁 `mpv_lavc_set_java_vm` 完成，MediaCodec 硬解天然可用
@@ -1913,9 +1913,10 @@ ASS 限制提示（`_AssLimitNote`：小标题 + 三条分点）/ 重置所有�
   - `test/playlist_sort_test.dart` — 播放列表 4 排序纯函数（名称/日期 × 升/降序，自然序/无日期垫底）+ 目录过滤（folderOfPath/filterVideosInFolder）
   - `test/pip_aspect_test.dart` — 画中画宽高比纯函数（gcd 约分/0.5–2.39 钳制/未知尺寸回退 16:9）
   - `test/portrait_player_bottom_bar_test.dart` — 竖屏底栏：右侧按钮簇顺序（超分辨率→列表→倍速→选择屏幕，左到右）+ 弹幕按钮（进度条上方右下角、与章节名同行、开关随 danmakuOn 切换）+ **对齐基准**（下一集图标/进度条轨道/章节名三处同 `kPlayerTrackLeftInset`，§4.33）
-  - `test/thumbnail_cache_test.dart` — FFmpeg 帧缓存查询（peekFrame 精确秒桶/peekNearestFrame 邻近匹配/跨视频隔离）+ 32MB LRU 超限淘汰 + **peek 命中即刷新 LRU**（B4/P2-3：拖动热路径看过的帧不再被下一个新帧挤掉）
+  - `test/thumbnail_cache_test.dart` — FFmpeg 帧缓存查询（peekFrame 精确秒桶/peekNearestFrame 邻近匹配/跨视频隔离）+ 32MB LRU 超限淘汰 + **peek 命中即刷新 LRU**（B4/P2-3：拖动热路径看过的帧不再被下一个新帧挤掉）+ **失败记录 256 上限截断与过期清理**（B7/P2-4）
   - `test/thumbnail_bucket_test.dart` — 缩略图秒桶纯函数 `thumbnailBucketMs`（四舍五入边界 499/500、幂等 → 缓存键稳定、负值归零、**取代截断分桶后落点偏差 ≤ 0.5s 的回归**，§4.9）
-  - `test/player_thumbnail_preview_test.dart` — 缩略图气泡渲染（有/无/空白章节名时胶囊显隐、超长章节名单行省略且不超预览图宽、**章节胶囊在图上方时间胶囊在下方**、不可见时整体透明，§4.9/§4.22）
+  - `test/player_thumbnail_preview_test.dart` — 缩略图气泡渲染（有/无/空白章节名时胶囊显隐、超长章节名单行省略且不超预览图宽、**章节胶囊在图上方时间胶囊在下方**、不可见时整体透明且不挂载转圈动画，§4.9/§4.22/B7）
+  - `test/fast_thumbnails_test.dart` — 缩略图引擎异常与边界保护（非 Android 环境降级/极端与非法参数钳制/清空 native 缓存安全/worker 重置，B7/P1-14）
   - `test/watch_state_test.dart` — 观看状态纯函数（未观看/观看中/已看完判定 + 自定义阈值 + 百分比）
   - `test/chapter_utils_test.dart` — 章节纯函数（标题关键词分类/片段派生过滤/当前章节定位/跳过目标 EOF 保护 + 自定义关键词归属与优先级 + **`chapterTitleAt` 任意时间点章节名/空白标题回退「第 N 章」/与 `currentChapterIndex` 一致性**，§4.22）
   - `test/chapter_tracker_test.dart` — 章节跟踪器（位置流驱动的章节推进/胶囊 5 秒窗口/回拖重复触发/跳过与跳转 + 章节跳段自动跳过每片段一次/自定义关键词派生 + **load 会话号与 dispose 防御**：先发起的 load 后到被作废、`clear()` 作废在途、dispose 后完成不写回不 notify，§4.22）

@@ -79,16 +79,18 @@ class PlayerThumbnailPreview extends StatelessWidget {
                         ),
                         child: frame != null
                             ? RawThumbImage(frame: frame!, fit: BoxFit.cover)
-                            : const Center(
-                                child: SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
+                            : (visible
+                                ? const Center(
+                                    child: SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox.shrink()),
                       ),
                     ),
                     // 时间胶囊

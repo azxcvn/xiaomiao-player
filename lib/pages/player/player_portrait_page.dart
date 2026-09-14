@@ -1712,7 +1712,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     _thumbHideTimer?.cancel();
     if (_thumbPreview == null) return;
     setState(() => _thumbVisible = false);
-    _thumbHideTimer = Timer(const Duration(milliseconds: 250), () {
+    _thumbHideTimer = Timer(const Duration(milliseconds: 150), () {
       // 期间又开始了新一轮拖动（_thumbVisible 被置回 true）则不清
       if (!mounted || _thumbVisible) return;
       setState(() {

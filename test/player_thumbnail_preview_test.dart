@@ -90,11 +90,20 @@ void main() {
     expect(chapterY, lessThan(timeY));
   });
 
-  testWidgets('不可见时（松手淡出后）整体透明', (tester) async {
+  testWidgets('不可见时（松手淡出后）整体透明且不渲染转圈指示器（P3）', (tester) async {
     await tester.pumpWidget(wrap(chapterTitle: '正片', visible: false));
     await tester.pump(const Duration(milliseconds: 200));
 
     final opacity = tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity));
     expect(opacity.opacity, 0.0);
+    // 不可见时不挂载 CircularProgressIndicator，避免浪费 vsync 动画资源
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  testWidgets('可见且帧未就绪时渲染转圈指示器', (tester) async {
+    await tester.pumpWidget(wrap(chapterTitle: '正片', visible: true));
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 }
