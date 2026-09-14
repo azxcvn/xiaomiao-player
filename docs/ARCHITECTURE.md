@@ -1066,7 +1066,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 服务 | `services/download/download_settings.dart` | 下载目录单例（ChangeNotifier + SharedPreferences） |
 | 服务 | `services/download/download_task.dart` | 任务状态机 + Range 流式下载（进度/速度/续传）+ 弹幕/视频两类执行；**临时文件与「合并到中间文件再改名」**（§4.37） |
 | 服务 | `services/download/download_manager.dart` | 任务队列 + 并发上限 1（串行防风控）+ 暂停/恢复/重试/删除 + 跨重启持久化 + **删除/清除时清临时文件**（§4.37） |
-| 原生 | `MainActivity.kt` `mergeM4s` + `services/device_services.dart` | MediaExtractor + MediaMuxer 流直拷合并 video.m4s + audio.m4s → mp4 |
+| 原生 | `MainActivity.kt` `mergeM4s` + `services/device_services.dart` | MediaExtractor + MediaMuxer 流直拷合并 video.m4s + audio.m4s → mp4；muxer/extractor 在 `finally` 无条件 `release()`（B13，§4.41） |
 | UI | `pages/bilibili/bili_danmaku_download_page.dart` | 弹幕下载：链接输入 + 解析 + 集数/分 P 勾选 + 全选 |
 | UI | `pages/bilibili/bili_video_download_page.dart` | 视频下载：清晰度选择 + 同步弹幕开关 + 集数/分 P 勾选 |
 | UI | `pages/download/download_manager_page.dart` | 下载管理页：任务列表（紧凑两行排版 + 进度/速度/暂停/恢复/重试/删除 + 清除二次确认） |
@@ -1102,6 +1102,8 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   `{id}.merge.mp4` 中间文件、成功后才改名到「不与已有文件重名的成品名」**；失败删中间产物、
   保留两个 m4s（重试走 Range 续传）；暂停保留 m4s（续传用），**删除/清除任务**才清临时文件。
   「合并中」是一次原生调用、**中途停不了**：`canPause` 为 false，管理页把暂停按钮置灰。
+  原生侧 `mergeM4s` 的 muxer/extractor 已在 `finally` 无条件 `release()`（**B13**，§4.41）——
+  否则失败分支泄漏会让那个 `.merge.mp4` 删不掉。
 - **UGC 支持 BV / av / b23.tv 短链（工作.md 第 8 点）**：`parseBiliBangumiUrl` 识别
   `av(\d+)`，`resolveUgcVideo` 支持 aid 通道（`/x/web-interface/view?aid=`）；分享短链
   不含令牌，`utils/bili_short_link.dart` 从**任意分享文本**正则提取（App 复制出来是
@@ -1370,7 +1372,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 
 | 层 | 文件 | 职责 |
 |---|---|---|
-| 原生 | `MediaInfoHelper.detectDolbyVision` | MediaInfo 扫视频轨 HDR_Format/CodecID/Format 命中 dovi/dvhe/dvav/Dolby Vision |
+| 原生 | `MediaInfoHelper.detectDolbyVision` | MediaInfo 扫视频轨 HDR_Format/CodecID/Format 命中 dovi/dvhe/dvav/Dolby Vision；三个 MediaInfo 入口共用 `withMediaInfo` 托管 fd（§4.41） |
 | 服务 | `services/video_info_service.dart` `detectDolbyVision` | MethodChannel 封装，返回 (isDolbyVision, hdrFormat) |
 | 设置 | `services/dolby_vision_settings.dart` | 「不再提示」`suppressed` 记忆（ChangeNotifier + 持久化，§4.1） |
 | 播放页 | `pages/player/player_page.dart` `_checkDolbyVision` | 本地文件 open/切集后测一次：杜比视界且未开 gpu-next 且未抑制 → `showAppDialog` 引导（可知/不再提示），`_dolbyVisionChecked` 防重复 |
@@ -2020,8 +2022,9 @@ Unix 软链行 `link -> /target` 只取箭头左侧的名字（`stripSymlinkTarg
 一律显式写 `color: colorScheme.onPrimary`（按钮自己的前景色：当前主题下即白色，深色主题下自动换成
 对应的高对比色；**写死白色会在深色主题里重新变成看不见**）。
 
-> ⚠️ **原生侧一半留给 B13**：`MainActivity.kt` 的 `mergeM4s` 失败分支仍不 `release()`
-> muxer/extractor（Dart 侧已改成中间文件，原生泄漏会让那个中间产物暂时删不掉）。
+> ✅ **原生侧一半已由 B13 完成**：`MediaInfoHelper.withMediaInfo` 统一托管 fd（先构造 `MediaInfo()`
+> 再 `detachFd()`，见 §4.41），`MainActivity.mergeM4s` 的 muxer/extractor 改在 `finally` 无条件
+> `release()`（Dart 侧改为中间文件后，原生泄漏会让那个中间产物删不掉）。
 
 **真机验收（2026-09，用户实测通过）**：删除任务不留 `.m4s` / 重下不覆盖同名成品 / 目录不可写有
 明确失败提示 / 合并中暂停按钮置灰 / 字幕下载中改关键词不卡死且仍下完勾选项 / 连按两次回车取最后一次。
@@ -2109,6 +2112,75 @@ Unix 软链行 `link -> /target` 只取箭头左侧的名字（`stripSymlinkTarg
 
 **真机验收（2026-09，用户实测通过）**：下载中任务列表不再整表重建 / 超长标题下载的文件名按
 255 字节截断且扩展名完整 / 解码面板点当前档位不再提示需重启 / 隐私政策正文不再承诺通知推送。
+
+---
+
+### 4.41 原生 Kotlin 层纪律（fd 生命周期 / 通道线程 / 资源释放，B13）
+
+> 来源：体检报告 §2.3 的 P1-17/18/19 与 §3 第 31 条的原生侧一半（P2-31）。
+> 改 `android/app/src/main/kotlin/**` 前必读。**这批踩了两次坑（一次真机闪退、一次编译不过），
+> 结论比实现更值钱**，两处都写在代码注释里了。
+
+**一、文件描述符（`ParcelFileDescriptor`）生命周期：三个入口只有一条正确写法**
+
+`MediaInfoHelper` 的三个入口（`extractBasicMetadata` / `getMediaInfo` / `detectDolbyVision`）
+**一律走 `withMediaInfo(context, path, block)`**，不要各写一份 try/finally：
+
+```kotlin
+val pfd = ParcelFileDescriptor.open(File(path), MODE_READ_ONLY)   // ① 先拿 pfd
+val mi = try { MediaInfo() } catch (e: Throwable) {               // ② 再构造（此刻 fd 仍归 pfd）
+    runCatching { pfd.close() }; return null                      //    so 缺失 → 真关闭，不漏
+}
+return try {
+    mi.Open(pfd.detachFd(), File(path).name)                      // ③ 构造成功后才交出所有权
+    block(mi)
+} catch (e: Throwable) { null
+} finally {
+    runCatching { mi.Close() }                                    // ④ 此后只由 mi.Close() 关
+}
+```
+
+| 写法 | 结果 |
+|---|---|
+| ✅ **先构造 `MediaInfo()`，再 `detachFd()`**（正确） | 「so 库缺失」时 fd 未易主、`pfd.close()` 真关闭；成功/解析失败路径与原实现语义一致 → 不漏也不双关 |
+| ❌ `detachFd()` 之后再 `pfd.close()`（原实现） | detach 后 `pfd.close()` 是**空操作** → 「`MediaInfo()` 构造失败」这条早退路径**每次泄漏 1 个 fd**（累积到 `EMFILE` → 列表封面全空、字幕/音轨导入失败） |
+| ❌ **不 detach**，把 `pfd.fd` 交给 `MediaInfo.Open` 再用 `pfd.close()` 关 | **双关同一个 fd**（`mi.Close()` 本来就会关它）→ 真机**进播放页（杜比视界检测）/ 媒体信息页必闪退到桌面** |
+| ❌ 用 `android.system.Os.dup` 中转 | `Os.dup` 返回 **`FileDescriptor`**，而 `MediaInfo.Open(int, String)` 要裸 `int`；`FileDescriptor.fd` **不是 Kotlin 可见 API** → 编译期 `Unresolved reference 'fd'` |
+
+- **要到 raw fd 只有 `ParcelFileDescriptor.detachFd()`（返回 `int`）**，别想从 `FileDescriptor` 里取。
+- `MediaInfo()` 构造失败是 `UnsatisfiedLinkError`（`Error`，不是 `Exception`）——**必须 `catch (Throwable)`**。
+
+**二、通道方法一律不占主线程**
+
+`getVideos`（MediaStore 全表 query + 逐条 `exists/length` + `.nomedia` 祖先链上溯 +
+`MediaMetadataRetriever` 兜底 + 可选深度 6 全盘递归）是本文件最重的通道方法：
+**每个通道方法都 `Thread { ... } + runOnUiThread { result.success(...) }`**，并带
+`catch (e: Throwable) → runOnUiThread { result.error("<CODE>", msg, null) }` 兜底
+（异常逃出通道线程即崩溃；回结构化错误后 Dart 侧 `home_page._load` 的 `finally` 才能复位 `_loading`）。
+
+**三、原生资源的取得与释放必须同层对称**
+
+`MediaMuxer` / `MediaExtractor`（`mergeM4s`）、`MediaMetadataRetriever` / `Bitmap`（抓帧）：
+**资源在 `try` 之外声明、在 `finally` 里无条件 `release()`/`recycle()`**，成功路径不要提前 return 掉清理。
+- `MediaMuxer.stop()` 在「一个样本都没写过」时会**抛异常** → 用 `started` 标志 + `runCatching { }` 兜住，
+  `release()` 必须照样执行（失败分支不释放会让 Dart 侧刚写的 `{id}.merge.mp4` 删不掉）。
+- 位图回收：`work`/`scaled` 与 `src` 是同一对象时**不能**回收（由调用方 `finally` 统一回收），
+  否则 `use-after-free` 直接原生崩溃。
+- 抓帧路径对大源做**有界降采样再裁剪**（`cropCover`：4K 先按 2 的幂降到长边 ≤ 768；目标封面仅
+  384×216）——`OutOfMemoryError` 是 `Error`，只捕 `Exception` 会让 `result.success()` 永不执行、
+  Dart Future 永久挂起（卡片卡「生成中」）。
+
+**四、收尾必须真的编译一次**
+
+`:app:compileReleaseKotlin`（可 `--offline`）是**唯一**能证明「Kotlin 改了没事」的手段：
+`flutter analyze` + `flutter test` 覆盖不到原生层。B13 的两次失败（闪退 / 编译不过）
+**都发生在「只靠静态阅读 + 推理」的改动上**——本批最终是跑过 `BUILD SUCCESSFUL` 才交付的。
+
+**验收限制（如实记录）**：P1-18 的两条确定性触发路径在 arm64 真机上不可达——① `MediaInfo()`
+构造失败需要缺 `libmediainfo.so`/`libzen.so`（仅 x86/x86_64）；② 泄漏要靠反复调用累积到
+`EMFILE`。故这条以**代码路径收口 + 正常链路真机无异常**共同覆盖，而非真机复现泄漏。
+
+**真机验收（2026-09，用户实测通过）**：闪退修复后进播放页 / 媒体信息页正常，其余同批行为无异常。
 
 ---
 
@@ -2477,6 +2549,8 @@ Unix 软链行 `link -> /target` 只取箭头左侧的名字（`stripSymlinkTarg
 | saver_gallery 不传 `albumPath` 时按 MIME 落默认根目录（截图/二维码直落 `Pictures/`，无父级文件夹） | `saveImage` 传 `albumPath: '小喵Player'` → 落 `Pictures/小喵Player/`（§4.8 截图 / §4.13 保存相册） |
 | 章节跳段设置变化 → `ChapterTracker` 用 `resolveSkipSegments` 重派生，把 B 站 `clip_info_list` 的精确 OP/ED 起止覆盖成「下一章起点」（OP 结束错扩到 ED 起点） | 外部精确片段（`setExternalChapters`）打 `_externalSegments` 标记；`_onSettingsChanged` 只在非外部时重派生，外部只清已跳过记录（§4.22） |
 | 整应用重启 `exitProcess` 编译报 Unresolved reference | `exitProcess` 是 `kotlin.system.exitProcess`，需显式 import（§4.24） |
+| **`detachFd()` 之后 `pfd.close()` 是空操作 → fd 永久泄漏；而「不 detach、把 `pfd.fd` 交给 MediaInfo 再用 `pfd.close()` 关」会双关同一个 fd → 真机进播放页/媒体信息页必闪退**（B13 第一版就这么崩的） | 唯一正确写法：**先构造 `MediaInfo()`、再 `detachFd()`**，此后只由 `mi.Close()` 关（`MediaInfoHelper.withMediaInfo`，§4.41） |
+| 想在 Kotlin 里「从 `FileDescriptor` 取 raw fd」→ 编译期 `Unresolved reference 'fd'`（`Os.dup` 返回 `FileDescriptor` 而非 `int`） | raw fd 只能经 `ParcelFileDescriptor.detachFd()` 拿（返回 `int`）；`MediaInfo.Open(int, String)` 要的就是它（§4.41） |
 | 解码器筛选胶囊文字出现「…」省略号（等宽均分后窄胶囊放不下） | 胶囊文字去掉 `maxLines`/`TextOverflow.ellipsis`，改 `softWrap:false` 单行居中；胶囊只放纯文本「音频/硬解/软解/视频/全部」（不带数字）（§4.24） |
 | 着色器优化改了算法但沙盒里还是旧文件（改了等于没改） | 用 `.patch_version` 记录补丁版本，算法改动必须 bump `kAnime4kPatchVersion` 才会重写已拷出的着色器（§4.25） |
 | Anime4K 头与正文之间的空行让精度注入整体失效（mpvRx 原实现遇到空行即放弃该 pass） | 空行视为头部间隙继续找首个正文行；pass 边界用 `//!DESC` 切分（缺失回退 `//!HOOK`），勿按 `//!HOOK` 切（会把一个 pass 拆两块）（§4.25） |

@@ -221,10 +221,27 @@ class MainActivity : FlutterActivity() {
                             runOnUiThread { result.success(colors) }
                         }.start()
                     }
+                    // 媒体库全表扫描（MediaStore 全表 query + 逐条 exists/length +
+                    // .nomedia 祖先链上溯 + MediaMetadataRetriever 时长兜底 + 可选的
+                    // 深度 6 全盘递归）：本文件体量最大的通道方法，必须与相邻分支一致
+                    // 放到后台线程，否则库大时主线程秒级阻塞 / ANR
                     "getVideos" -> {
                         val includeNoMedia = call.argument<Boolean>("includeNoMedia") ?: false
                         val includeHidden = call.argument<Boolean>("includeHidden") ?: false
-                        result.success(getVideos(includeNoMedia, includeHidden))
+                        Thread {
+                            try {
+                                val videos = getVideos(includeNoMedia, includeHidden)
+                                runOnUiThread { result.success(videos) }
+                            } catch (e: Throwable) {
+                                // 没有兜底时异常会逃到通道线程；回结构化错误让 Dart 侧
+                                // 进错误态（不再永久转圈）。用 Throwable 兜住 Error：
+                                // 全盘递归扫描在大库/坏介质上确实可能抛
+                                Log.w("MainActivity", "getVideos failed: ${e.message}")
+                                runOnUiThread {
+                                    result.error("GET_VIDEOS_FAILED", e.message, null)
+                                }
+                            }
+                        }.start()
                     }
                     "getSystemVolume" -> result.success(getSystemVolume())
                     "setSystemVolume" -> {
@@ -647,48 +664,61 @@ class MainActivity : FlutterActivity() {
      * ffmpeg_kit 依赖。合并成功会顺手删除两个临时 m4s 文件。
      */
     private fun mergeM4s(videoPath: String, audioPath: String, outputPath: String): Boolean {
+        // 三个资源都在 try 之外声明：任何一步抛错（setDataSource 打不开 m4s、
+        // addTrack/start 失败、copyTrack 中途解码异常、stop 失败）都要在 finally 里
+        // release。旧实现只在成功路径与「轨道缺失」分支 release，失败分支整条泄漏：
+        // muxer 不释放会让 Dart 侧刚写的 `{id}.merge.mp4` 删不掉（_deleteQuietly 吞掉，
+        // 只能等进程重启），extractor 泄漏则持续占着 fd。
+        var muxer: android.media.MediaMuxer? = null
+        var videoExtractor: android.media.MediaExtractor? = null
+        var audioExtractor: android.media.MediaExtractor? = null
+        var started = false
         return try {
-            val muxer = android.media.MediaMuxer(
+            val mux = android.media.MediaMuxer(
                 outputPath,
                 android.media.MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4,
             )
+            muxer = mux
 
-            val videoExtractor = android.media.MediaExtractor()
-            videoExtractor.setDataSource(videoPath)
+            val vEx = android.media.MediaExtractor()
+            videoExtractor = vEx
+            vEx.setDataSource(videoPath)
             var videoFormat: android.media.MediaFormat? = null
-            for (i in 0 until videoExtractor.trackCount) {
-                val fmt = videoExtractor.getTrackFormat(i)
+            for (i in 0 until vEx.trackCount) {
+                val fmt = vEx.getTrackFormat(i)
                 val mime = fmt.getString(android.media.MediaFormat.KEY_MIME) ?: ""
                 if (mime.startsWith("video/")) {
                     videoFormat = fmt
-                    videoExtractor.selectTrack(i)
+                    vEx.selectTrack(i)
                     break
                 }
             }
 
-            val audioExtractor = android.media.MediaExtractor()
-            audioExtractor.setDataSource(audioPath)
+            val aEx = android.media.MediaExtractor()
+            audioExtractor = aEx
+            aEx.setDataSource(audioPath)
             var audioFormat: android.media.MediaFormat? = null
-            for (i in 0 until audioExtractor.trackCount) {
-                val fmt = audioExtractor.getTrackFormat(i)
+            for (i in 0 until aEx.trackCount) {
+                val fmt = aEx.getTrackFormat(i)
                 val mime = fmt.getString(android.media.MediaFormat.KEY_MIME) ?: ""
                 if (mime.startsWith("audio/")) {
                     audioFormat = fmt
-                    audioExtractor.selectTrack(i)
+                    aEx.selectTrack(i)
                     break
                 }
             }
 
             if (videoFormat == null || audioFormat == null) {
-                videoExtractor.release()
-                audioExtractor.release()
-                muxer.release()
                 return false
             }
+            // 提到不可变局部量：下面有局部函数（copyTrack），可变捕获变量无法智能转换
+            val vFmt = videoFormat
+            val aFmt = audioFormat
 
-            val muxVideo = muxer.addTrack(videoFormat)
-            val muxAudio = muxer.addTrack(audioFormat)
-            muxer.start()
+            val muxVideo = mux.addTrack(vFmt)
+            val muxAudio = mux.addTrack(aFmt)
+            mux.start()
+            started = true
 
             fun copyTrack(
                 extractor: android.media.MediaExtractor,
@@ -701,25 +731,37 @@ class MainActivity : FlutterActivity() {
                     if (info.size < 0) break
                     info.presentationTimeUs = extractor.sampleTime
                     info.flags = extractor.sampleFlags
-                    muxer.writeSampleData(trackIndex, buffer, info)
+                    mux.writeSampleData(trackIndex, buffer, info)
                     extractor.advance()
                 }
             }
 
-            copyTrack(videoExtractor, muxVideo)
-            copyTrack(audioExtractor, muxAudio)
+            copyTrack(vEx, muxVideo)
+            copyTrack(aEx, muxAudio)
 
-            videoExtractor.release()
-            audioExtractor.release()
-            muxer.stop()
-            muxer.release()
+            mux.stop()
+            started = false
+            mux.release()
+            muxer = null
+            vEx.release()
+            videoExtractor = null
+            aEx.release()
+            audioExtractor = null
 
             File(videoPath).delete()
             File(audioPath).delete()
             true
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            // 连 Error 一起兜：合并失败要让 Dart 侧拿到 false 去删中间文件，
+            // 不能让异常逃到通道线程（且旧代码只捕 Exception）
             Log.w("MainActivity", "mergeM4s failed: ${e.message}")
             false
+        } finally {
+            // stop() 在「没写过任何样本」时会抛 → 静默兜住，release() 必须执行
+            if (started) runCatching { muxer?.stop() }
+            runCatching { muxer?.release() }
+            runCatching { videoExtractor?.release() }
+            runCatching { audioExtractor?.release() }
         }
     }
 
@@ -1613,6 +1655,8 @@ class MainActivity : FlutterActivity() {
         }
 
         val retriever = MediaMetadataRetriever()
+        var bitmap: Bitmap? = null
+        var cover: Bitmap? = null
         return try {
             retriever.setDataSource(path)
             val durationMs = retriever
@@ -1620,17 +1664,18 @@ class MainActivity : FlutterActivity() {
                 ?.toLongOrNull() ?: 0L
 
             @Suppress("DEPRECATION")
-            val bitmap = retriever.getFrameAtTime(
+            val frame = retriever.getFrameAtTime(
                 0,
                 MediaMetadataRetriever.OPTION_CLOSEST_SYNC,
             )
-            val thumbPath = if (bitmap != null) {
-                val cover = cropCover(bitmap)
-                if (cover !== bitmap) bitmap.recycle()
+            bitmap = frame
+            val thumbPath = if (frame != null) {
+                // 用局部 val 承接：可空字段的智能转换在 finally 之后不可靠
+                val cv = cropCover(frame)
+                cover = cv
                 FileOutputStream(cacheFile).use { out ->
-                    cover.compress(Bitmap.CompressFormat.JPEG, 70, out)
+                    cv.compress(Bitmap.CompressFormat.JPEG, 70, out)
                 }
-                cover.recycle()
                 cacheFile.absolutePath
             } else {
                 null
@@ -1640,9 +1685,18 @@ class MainActivity : FlutterActivity() {
                 "durationMs" to durationMs,
                 "thumbPath" to thumbPath,
             )
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            // 之前只捕 Exception：Bitmap 分配失败是 OutOfMemoryError（Error，不是 Exception），
+            // 漏掉后 result.success() 永不执行 → Dart 侧 Future 永久挂起（封面卡在「生成中」）。
+            // 这里连 Error 一起兜住，任何失败都回一个「无封面」结果，卡片不再永久转圈。
+            Log.w("MainActivity", "getVideoInfo failed: ${e.message}")
             mapOf("durationMs" to 0L, "thumbPath" to null)
         } finally {
+            // 位图与 retriever 一律在 finally 回收：原来 recycle() 散在正常路径里，
+            // 中途抛错（如 compress 失败）就漏回收；压缩成 JPEG 之后原件已无用，
+            // 再留一份 4K 位图（约 24MB）只会加速下一次 OOM
+            if (cover !== bitmap) runCatching { bitmap?.recycle() }
+            runCatching { cover?.recycle() }
             retriever.release()
         }
     }
@@ -1652,6 +1706,10 @@ class MainActivity : FlutterActivity() {
      *
      * 关键：先按「被填满的那个维度」等比缩放（高度填满或宽度填满），
      * 再居中裁剪超出部分——保证画面不变形（横屏/竖屏/超宽屏均不失真）。
+     *
+     * 4K 源（3840×2160，ARGB_8888 约 24MB）先按 2 的幂降采样到刚够 384×216 之上再裁剪：
+     * 目标封面只有 8.3 万像素，直接 `createScaledBitmap` 仍要先持有整帧 4K 位图，
+     * 叠加上 `getFrameAtTime` 的原始帧极易 OOM（P1-19 的触发场景）。
      */
     private fun cropCover(src: Bitmap): Bitmap {
         val srcWidth = src.width
@@ -1660,19 +1718,40 @@ class MainActivity : FlutterActivity() {
         val targetRatio = coverThumbWidth.toFloat() / coverThumbHeight // 384/216 ≈ 1.7778
         val srcRatio = srcWidth.toFloat() / srcHeight
 
+        // 降采样档位（2 的幂）：把长边压到 coverThumb 长边的 2 倍以内，画质对封面足够
+        var sample = 1
+        val longEdge = maxOf(srcWidth, srcHeight)
+        val longEdgeTarget = maxOf(coverThumbWidth, coverThumbHeight) * 2
+        while (longEdge / (sample * 2) >= longEdgeTarget) {
+            sample *= 2
+        }
+
+        val workWidth = if (sample > 1) (srcWidth / sample).coerceAtLeast(1) else srcWidth
+        val workHeight = if (sample > 1) (srcHeight / sample).coerceAtLeast(1) else srcHeight
+        val work = if (sample > 1) {
+            Bitmap.createScaledBitmap(src, workWidth, workHeight, true)
+        } else {
+            src
+        }
+
         val scaledWidth: Int
         val scaledHeight: Int
         if (srcRatio > targetRatio) {
             // 源更宽（横屏/超宽屏）：按高度填满，宽度等比放大后居中裁剪
             scaledHeight = coverThumbHeight
-            scaledWidth = (srcWidth * coverThumbHeight.toFloat() / srcHeight).toInt()
+            scaledWidth = (workWidth * coverThumbHeight.toFloat() / workHeight).toInt()
         } else {
             // 源更高（竖屏/方屏）：按宽度填满，高度等比放大后居中裁剪
             scaledWidth = coverThumbWidth
-            scaledHeight = (srcHeight * coverThumbWidth.toFloat() / srcWidth).toInt()
+            scaledHeight = (workHeight * coverThumbWidth.toFloat() / workWidth).toInt()
         }
 
-        val scaled = Bitmap.createScaledBitmap(src, scaledWidth, scaledHeight, true)
+        val scaled = if (workWidth == scaledWidth && workHeight == scaledHeight) {
+            work
+        } else {
+            Bitmap.createScaledBitmap(work, scaledWidth, scaledHeight, true)
+        }
+        if (work !== src && work !== scaled) work.recycle()
         val x = ((scaledWidth - coverThumbWidth) / 2).coerceAtLeast(0)
         val y = ((scaledHeight - coverThumbHeight) / 2).coerceAtLeast(0)
         val final = Bitmap.createBitmap(
@@ -1680,7 +1759,7 @@ class MainActivity : FlutterActivity() {
             minOf(coverThumbWidth, scaledWidth),
             minOf(coverThumbHeight, scaledHeight),
         )
-        if (scaled !== final) scaled.recycle()
+        if (scaled !== final && scaled !== src) scaled.recycle()
         return final
     }
 

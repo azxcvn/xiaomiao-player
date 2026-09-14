@@ -23,29 +23,65 @@ object MediaInfoHelper {
     ): String = Get(stream, index, parameter)
 
     /**
-     * 快速提取基本元数据：帧率 / 是否有内嵌字幕 / 字幕编码。
-     * 用于视频列表「帧率」「字幕指示器」字段（带磁盘缓存，见 MainActivity）。
+     * 统一资源托管：**先造 MediaInfo，再交 fd**，任何路径都恰好关闭一次。
+     *
+     * ⚠️ 这里是踩过坑写下的，改动前请先读完（两轮真机/编译教训）：
+     *
+     * 1. `ParcelFileDescriptor.detachFd()` 的契约是「交出所有权、本对象不再负责关闭」，
+     *    detach 之后 `pfd.close()` 是**空操作**。原实现的早退路径正是踩在这上面：
+     *    `MediaInfo()` 构造抛异常时（缺 `libmediainfo.so`/`libzen.so`，x86/x86_64 上必现）
+     *    那句 `pfd.close()` 关不掉任何东西，fd 被永久泄漏。
+     * 2. **反过来「不 detach、把 `pfd.fd` 交给 MediaInfo，再用 `pfd.close()` 关」会双关同一个
+     *    fd**：`mi.Close()` 本身就会关闭那个 fd，`pfd.close()` 再关一次 —— 属于明确不该写的
+     *    用法（真机实测：用这个写法的包里，进播放页〔杜比视界检测〕与媒体信息页必崩）。
+     * 3. **也不能用 `Os.dup` 中转**：`android.system.Os.dup` 返回 `FileDescriptor`，
+     *    而 `MediaInfo.Open(int, String)` 要的是裸 int，`FileDescriptor.fd` 在 Kotlin 里
+     *    不是可见 API（编译期就报 `Unresolved reference 'fd'`）。
+     *
+     * 因此唯一可行且安全的写法是**调整顺序**：
+     * - `MediaInfo()` 构造放在 `detachFd()` **之前** → 「so 库缺失」这条早退路径上 fd
+     *   还没交出去，`pfd.close()` 是真关闭（消灭原实现唯一确定性的泄漏）；
+     * - 构造成功之后才 `detachFd()`，此后 fd 由 `mi.Close()` **唯一**负责关闭（与原实现
+     *   在成功/解析失败路径上的语义完全一致，不会多关一次）。
      */
-    fun extractBasicMetadata(context: Context, path: String): Map<String, Any> {
+    private inline fun <T> withMediaInfo(context: Context, path: String, block: (MediaInfo) -> T): T? {
         val pfd = runCatching {
             android.os.ParcelFileDescriptor.open(
                 File(path), android.os.ParcelFileDescriptor.MODE_READ_ONLY
             )
-        }.getOrNull() ?: return emptyMap()
+        }.getOrNull() ?: return null
 
-        val fd = pfd.detachFd()
+        // ⚠️ 顺序要紧：构造必须先于 detachFd()。
+        // 失败时 fd 仍归 pfd（detach 没跑），pfd.close() 才能真正关掉它；此后直接返回，
+        // 不进入下面「fd 已易主」的 try，避免 pfd 与 mi 争抢同一个 fd
         val mi = try {
             MediaInfo()
         } catch (e: Throwable) {
             // so 库缺失（如 x86 模拟器无 libzen.so）时为 UnsatisfiedLinkError，
             // 不是 Exception 子类——必须捕 Throwable 才能兜住
             Log.w(TAG, "MediaInfo native lib unavailable: ${e.message}")
-            pfd.close()
-            return emptyMap()
+            runCatching { pfd.close() }
+            return null
         }
-        return try {
-            mi.Open(fd, File(path).name)
 
+        return try {
+            // 至此才交出所有权：此后**只有** mi.Close() 关这个 fd
+            mi.Open(pfd.detachFd(), File(path).name)
+            block(mi)
+        } catch (e: Throwable) {
+            Log.w(TAG, "MediaInfo parse failed: ${e.message}")
+            null
+        } finally {
+            runCatching { mi.Close() }
+        }
+    }
+
+    /**
+     * 快速提取基本元数据：帧率 / 是否有内嵌字幕 / 字幕编码。
+     * 用于视频列表「帧率」「字幕指示器」字段（带磁盘缓存，见 MainActivity）。
+     */
+    fun extractBasicMetadata(context: Context, path: String): Map<String, Any> =
+        withMediaInfo(context, path) { mi ->
             val fpsStr = mi.getInfo(MediaInfo.Stream.Video, 0, "FrameRate")
             val fps = fpsStr.toFloatOrNull() ?: 0f
 
@@ -82,34 +118,11 @@ object MediaInfoHelper {
                 "hasSubtitles" to hasSubtitles,
                 "subtitleCodec" to subtitleCodec,
             )
-        } catch (e: Throwable) {
-            Log.w(TAG, "extractBasicMetadata failed: ${e.message}")
-            emptyMap()
-        } finally {
-            mi.Close()
-            pfd.close()
-        }
-    }
+        } ?: emptyMap()
 
     /** 提取完整的媒体信息（媒体信息页展示用） */
-    fun getMediaInfo(context: Context, path: String): Map<String, Any>? {
-        val pfd = runCatching {
-            android.os.ParcelFileDescriptor.open(
-                File(path), android.os.ParcelFileDescriptor.MODE_READ_ONLY
-            )
-        }.getOrNull() ?: return null
-
-        val fd = pfd.detachFd()
-        val mi = try {
-            MediaInfo()
-        } catch (e: Throwable) {
-            Log.w(TAG, "MediaInfo native lib unavailable: ${e.message}")
-            pfd.close()
-            return null
-        }
-        return try {
-            mi.Open(fd, File(path).name)
-
+    fun getMediaInfo(context: Context, path: String): Map<String, Any>? =
+        withMediaInfo(context, path) { mi ->
             val general = buildGeneralInfo(mi)
             val videoStreams = buildVideoStreams(mi)
             val audioStreams = buildAudioStreams(mi)
@@ -121,14 +134,7 @@ object MediaInfoHelper {
                 "audioStreams" to audioStreams,
                 "textStreams" to textStreams,
             )
-        } catch (e: Throwable) {
-            Log.w(TAG, "getMediaInfo failed: ${e.message}")
-            null
-        } finally {
-            mi.Close()
-            pfd.close()
         }
-    }
 
     private fun buildGeneralInfo(mi: MediaInfo): Map<String, String> = mapOf(
         "format" to mi.getInfo(MediaInfo.Stream.General, 0, "Format"),
@@ -210,46 +216,26 @@ object MediaInfoHelper {
      * `DolbyVisionHintDialog`：检测 mime/codec 命中 dovi/dvhe）。
      * 返回 (Boolean, String)：是否杜比视界 + 命中的描述文本（未命中为空串）。
      */
-    fun detectDolbyVision(context: Context, path: String): Pair<Boolean, String> {
-        val pfd = runCatching {
-            android.os.ParcelFileDescriptor.open(
-                File(path), android.os.ParcelFileDescriptor.MODE_READ_ONLY
-            )
-        }.getOrNull() ?: return Pair(false, "")
-        val fd = pfd.detachFd()
-        val mi = try {
-            MediaInfo()
-        } catch (e: Throwable) {
-            Log.w(TAG, "MediaInfo native lib unavailable: ${e.message}")
-            pfd.close()
-            return Pair(false, "")
-        }
-        return try {
-            mi.Open(fd, File(path).name)
+    fun detectDolbyVision(context: Context, path: String): Pair<Boolean, String> =
+        withMediaInfo(context, path) { mi ->
             val videoCount = mi.Count_Get(MediaInfo.Stream.Video)
+            var hit = false
             for (i in 0 until videoCount) {
                 val hdr = mi.getInfo(MediaInfo.Stream.Video, i, "HDR_Format")
                 val codecId = mi.getInfo(MediaInfo.Stream.Video, i, "CodecID")
                 val format = mi.getInfo(MediaInfo.Stream.Video, i, "Format")
                 val combined = "$hdr|$codecId|$format"
-                when {
-                    hdr.contains("Dolby Vision", ignoreCase = true) ->
-                        return Pair(true, "Dolby Vision")
+                if (
+                    hdr.contains("Dolby Vision", ignoreCase = true) ||
                     combined.contains("dovi", ignoreCase = true) ||
-                        combined.contains("dvhe", ignoreCase = true) ||
-                        combined.contains("dvav", ignoreCase = true) ->
-                        return Pair(true, "Dolby Vision")
-                    format.contains("Dolby Vision", ignoreCase = true) ->
-                        return Pair(true, "Dolby Vision")
+                    combined.contains("dvhe", ignoreCase = true) ||
+                    combined.contains("dvav", ignoreCase = true) ||
+                    format.contains("Dolby Vision", ignoreCase = true)
+                ) {
+                    hit = true
+                    break
                 }
             }
-            Pair(false, "")
-        } catch (e: Throwable) {
-            Log.w(TAG, "detectDolbyVision failed: ${e.message}")
-            Pair(false, "")
-        } finally {
-            mi.Close()
-            pfd.close()
-        }
-    }
+            if (hit) Pair(true, "Dolby Vision") else Pair(false, "")
+        } ?: Pair(false, "")
 }
