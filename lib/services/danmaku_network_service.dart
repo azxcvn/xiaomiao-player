@@ -225,7 +225,7 @@ class DanmakuNetworkService {
 
   /// 落盘目录：`filesDir/danmaku/network/`（getApplicationSupportDirectory
   /// 在 Android 上即 filesDir，与原生手动导入的 danmaku/ 目录同级）。
-  Future<Directory?> _danmakuDir() async {
+  static Future<Directory?> cacheDirectory() async {
     final override = debugDirectoryOverride;
     if (override != null) return override();
     try {
@@ -236,10 +236,47 @@ class DanmakuNetworkService {
     }
   }
 
+  /// 网络弹幕缓存占用字节数（目录不存在/不可读返回 0；供缓存管理页展示）。
+  static Future<int> cacheSizeBytes() async {
+    try {
+      final dir = await cacheDirectory();
+      if (dir == null || !await dir.exists()) return 0;
+      var total = 0;
+      await for (final entity in dir.list()) {
+        if (entity is File) total += await entity.length();
+      }
+      return total;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  /// 清空网络弹幕缓存（只删目录内文件，保留目录本身）。
+  ///
+  /// 这些 XML 是「看过就有、丢了会重新下载」的派生数据；不清理的话会随观看
+  /// 番剧数量无限增长（体检报告 §3-14；用户拍板 2026-09：清理入口放缓存管理页）。
+  static Future<void> clearCache() async {
+    try {
+      final dir = await cacheDirectory();
+      if (dir == null || !await dir.exists()) return;
+      await for (final entity in dir.list()) {
+        if (entity is File) {
+          try {
+            await entity.delete();
+          } catch (_) {
+            // 单个文件删不掉不影响整体清理
+          }
+        }
+      }
+    } catch (_) {
+      // 清理失败静默：缓存是派生数据
+    }
+  }
+
   /// 写入 XML 文件，返回真实路径；失败返回 null（不阻断本次播放）。
   Future<String?> _saveXml(String xml, String fileName) async {
     try {
-      final dir = await _danmakuDir();
+      final dir = await cacheDirectory();
       if (dir == null) return null;
       if (!await dir.exists()) await dir.create(recursive: true);
       final file = File(p.join(dir.path, fileName));

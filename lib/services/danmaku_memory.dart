@@ -16,6 +16,7 @@ library;
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DanmakuManualMemory {
@@ -23,6 +24,12 @@ class DanmakuManualMemory {
 
   static const _key = 'danmaku_manual_memory';
   static const _toastedKey = 'danmaku_auto_toasted';
+
+  /// 记忆条数上限：超出后**淘汰最久未用**（见 [get] / [set]）。
+  ///
+  /// 无上限时「每看一个新视频就多一条」，配合每次全量 `jsonEncode` 写盘会
+  /// 越用越慢（体检报告 §3-14；用户拍板 2026-09：弹幕 200 条）。
+  static const maxEntries = 200;
 
   Map<String, String>? _cache;
   Set<String>? _toastedCache;
@@ -54,14 +61,37 @@ class DanmakuManualMemory {
     return {};
   }
 
-  /// 该视频记忆的手动弹幕文件路径（无记忆返回 null）
-  Future<String?> get(String videoPath) async => (await _map())[videoPath];
+  /// 该视频记忆的手动弹幕文件路径（无记忆返回 null）。
+  ///
+  /// 命中即把该键移到 Map 末尾（Dart Map 保序）→ 后续 [set] 淘汰时它不会
+  /// 被当作「最久未用」；纯内存操作，不额外写盘。
+  Future<String?> get(String videoPath) async {
+    final map = await _map();
+    final value = map.remove(videoPath);
+    if (value == null) return null;
+    map[videoPath] = value;
+    return value;
+  }
 
-  /// 记录/覆盖该视频的手动弹幕文件
+  /// 记录/覆盖该视频的手动弹幕文件（超上限时淘汰最久未用的若干条）。
   Future<void> set(String videoPath, String danmakuPath) async {
     final map = await _map();
+    map.remove(videoPath);
     map[videoPath] = danmakuPath;
+    trimToLimit(map, maxEntries);
     await _persist(map);
+  }
+
+  /// 把映射裁剪到 [limit] 条（淘汰 Map 头部 = 最久未用/最早写入的那些）。
+  @visibleForTesting
+  static void trimToLimit(Map<String, String> map, int limit) {
+    if (limit <= 0) {
+      map.clear();
+      return;
+    }
+    while (map.length > limit) {
+      map.remove(map.keys.first);
+    }
   }
 
   /// 清除该视频的记忆（记忆的弹幕文件失效场景）

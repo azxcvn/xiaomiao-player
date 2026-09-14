@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/device_services.dart';
 import 'package:moumou/services/video_info_service.dart';
 
@@ -24,25 +25,40 @@ class CacheManagerService {
   /// 视频列表封面缩略图缓存
   static const listThumbs = CacheCategory('listThumbs', '视频列表封面缩略图');
 
-  /// 其他缓存（未来：弹幕文件 / 字幕文件等）
+  /// 网络弹幕缓存（`filesDir/danmaku/network/` 的 XML）
+  ///
+  /// ⚠️ 这一类**由 Dart 侧管理**（原生 `getCacheSizes`/`clearCache` 不认识它），
+  /// 所以体积统计与清理都在 [getCacheSizes] / [clearCategory] / [clearAll] 里
+  /// 单独处理；不清理会随观看番剧数量无限增长（体检报告 §3-14）。
+  static const networkDanmaku = CacheCategory('networkDanmaku', '网络弹幕缓存');
+
+  /// 其他缓存（未来：字幕文件等）
   static const other = CacheCategory('other', '其他缓存');
 
   /// 全部类别（顺序即展示顺序）
-  static const all = [listThumbs, other];
+  static const all = [listThumbs, networkDanmaku, other];
 
   /// 各缓存类别占用字节数（失败返回空 map）
   static Future<Map<String, int>> getCacheSizes() async {
+    final map = <String, int>{};
     try {
       final raw = await _channel.invokeMapMethod<String, Object>('getCacheSizes');
-      if (raw == null) return const {};
-      return raw.map((k, v) => MapEntry(k, (v as num).toInt()));
+      if (raw != null) {
+        map.addAll(raw.map((k, v) => MapEntry(k, (v as num).toInt())));
+      }
     } catch (_) {
-      return const {};
+      // 原生通道不可用（测试/异常）：至少给出 Dart 侧类别
     }
+    map[networkDanmaku.key] = await DanmakuNetworkService.cacheSizeBytes();
+    return map;
   }
 
   /// 清除单个类别缓存
   static Future<bool> clearCategory(CacheCategory category) async {
+    if (category.key == networkDanmaku.key) {
+      await DanmakuNetworkService.clearCache();
+      return true;
+    }
     try {
       await _channel.invokeMethod<void>('clearCache', {'category': category.key});
       if (category.key == listThumbs.key) {
@@ -54,8 +70,9 @@ class CacheManagerService {
     }
   }
 
-  /// 一键清除所有缓存（同时清掉进度条缩略图与列表封面的 Dart 内存缓存）
+  /// 一键清除所有缓存（同时清掉进度条缩略图、列表封面与网络弹幕的 Dart 侧缓存）
   static Future<bool> clearAll() async {
+    await DanmakuNetworkService.clearCache();
     try {
       await _channel.invokeMethod<void>('clearAllCaches');
       DeviceServices.clearFrameCache();

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:moumou/services/cache_manager_service.dart';
 import 'package:moumou/services/dandan_play_api.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/danmaku_server_settings.dart';
@@ -235,6 +236,71 @@ void main() {
       owned.close();
       expect(owned.isClosed, isTrue);
       api.close();
+    });
+  });
+
+  group('响应解码容错（§3-12）', () {
+    test('畸形 UTF-8 不再让 FormatException 逃出类契约', () async {
+      final api = DandanPlayApi(
+        client: MockClient((_) async => http.Response.bytes(
+              // 非法 UTF-8 序列 + 合法 JSON 片段
+              [0xFF, 0xFE, 0x7B, 0x7D],
+              200,
+              headers: {'content-type': 'application/json'},
+            )),
+      );
+      await expectLater(
+        api.getComments(1),
+        throwsA(isA<DandanApiException>()),
+        reason: '必须是本类异常（调用方只 catch 它），不能是裸 FormatException',
+      );
+    });
+  });
+
+  group('网络弹幕缓存清理（§3-14）', () {
+    test('cacheSizeBytes / clearCache 只删文件、保留目录', () async {
+      final tmp = await Directory.systemTemp.createTemp('danmaku_cache_');
+      DanmakuNetworkService.debugDirectoryOverride = () async => tmp;
+      addTearDown(() async {
+        DanmakuNetworkService.debugDirectoryOverride = null;
+        if (tmp.existsSync()) await tmp.delete(recursive: true);
+      });
+
+      expect(await DanmakuNetworkService.cacheSizeBytes(), 0);
+      await File(p.join(tmp.path, 'a.xml')).writeAsString('<i/>');
+      await File(p.join(tmp.path, 'b.xml')).writeAsString('<i/>');
+      expect(await DanmakuNetworkService.cacheSizeBytes(), 8);
+
+      await DanmakuNetworkService.clearCache();
+      expect(await DanmakuNetworkService.cacheSizeBytes(), 0);
+      expect(tmp.existsSync(), isTrue, reason: '只清文件，目录保留');
+      // 幂等
+      await DanmakuNetworkService.clearCache();
+    });
+
+    test('缓存管理类别包含网络弹幕，且清它走 Dart 侧', () async {
+      final tmp = await Directory.systemTemp.createTemp('danmaku_cache_');
+      DanmakuNetworkService.debugDirectoryOverride = () async => tmp;
+      addTearDown(() async {
+        DanmakuNetworkService.debugDirectoryOverride = null;
+        if (tmp.existsSync()) await tmp.delete(recursive: true);
+      });
+      await File(p.join(tmp.path, 'a.xml')).writeAsString('<i/>');
+
+      expect(
+        CacheManagerService.all.map((c) => c.key),
+        contains(CacheManagerService.networkDanmaku.key),
+      );
+      expect(
+        (await CacheManagerService.getCacheSizes())[
+            CacheManagerService.networkDanmaku.key],
+        4,
+      );
+      expect(
+        await CacheManagerService.clearCategory(CacheManagerService.networkDanmaku),
+        isTrue,
+      );
+      expect(await DanmakuNetworkService.cacheSizeBytes(), 0);
     });
   });
 }

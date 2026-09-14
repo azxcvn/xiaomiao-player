@@ -144,7 +144,15 @@ class DandanPlayApi {
         '响应过大（${response.bodyBytes.length} 字节），已放弃解析',
       );
     }
-    final text = utf8.decode(response.bodyBytes);
+    // ⚠️ 解码必须在 try 内且 `allowMalformed`：服务端偶发返回畸形 UTF-8 时
+    // 裸 `utf8.decode` 会抛 `FormatException` **逃出本类的异常契约**
+    // （调用方只 catch `DandanApiException`，弹幕面板会整块静默失效，P0/P1 遗留）。
+    final String text;
+    try {
+      text = utf8.decode(response.bodyBytes, allowMalformed: true);
+    } catch (e) {
+      throw DandanApiException('响应解码失败：$e');
+    }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw DandanApiException('请求失败（HTTP ${response.statusCode}）');
     }
@@ -162,6 +170,19 @@ class DandanPlayApi {
     return text;
   }
 
+  /// 解析 JSON 文本：畸形响应在这里统一转成 [DandanApiException]。
+  ///
+  /// [_decode] 对非 JSON 响应只做“按成功文本返回”，因此裸 `jsonDecode` 会在
+  /// 调用方抛出 `FormatException` 逃出异常契约（调用方只 catch
+  /// [DandanApiException]），必须从这里收口。
+  Object? _parseJson(String text) {
+    try {
+      return jsonDecode(text);
+    } catch (e) {
+      throw DandanApiException('响应解析失败：$e');
+    }
+  }
+
   /// 搜索番剧：GET /api/v2/search/episodes?anime=KEYWORD
   Future<List<DandanAnime>> searchAnime(
     String keyword, {
@@ -171,7 +192,7 @@ class DandanPlayApi {
     final url =
         '${_resolveBase(baseUrl)}$path?anime=${Uri.encodeQueryComponent(keyword)}';
     final text = await _get(url, path);
-    final decoded = jsonDecode(text);
+    final decoded = _parseJson(text);
     if (decoded is! Map) return const [];
     final raw = decoded['animes'];
     if (raw is! List) return const [];
@@ -193,7 +214,7 @@ class DandanPlayApi {
     final path = '/api/v2/comment/$episodeId';
     final url = '${_resolveBase(baseUrl)}$path?withRelated=true';
     final text = await _get(url, path);
-    final decoded = jsonDecode(text);
+    final decoded = _parseJson(text);
     if (decoded is! Map) return const [];
     final raw = decoded['comments'];
     if (raw is! List) return const [];
@@ -221,7 +242,7 @@ class DandanPlayApi {
       'fileHash': fileHash,
       'fileSize': fileSize,
     });
-    final decoded = jsonDecode(text);
+    final decoded = _parseJson(text);
     if (decoded is! Map) return const [];
     if (decoded['isMatched'] != true) return const [];
     final raw = decoded['matches'];

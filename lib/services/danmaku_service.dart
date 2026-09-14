@@ -454,11 +454,26 @@ class DanmakuController extends ChangeNotifier {
       final videoName = p.basename(mediaPath);
       final videoBase = p.basenameWithoutExtension(mediaPath);
       if (videoBase.isEmpty) return null;
-      final names = <String>[];
-      await for (final e in videoFile.parent.list()) {
-        if (e is File) names.add(p.basename(e.path));
+
+      // ①**按名直读**：候选名就 9 种，逐个 `existsSync` 探测即可——旧实现先把
+      //    整个目录列一遍再去比对（大目录 / 网络盘上白白多一次全目录枚举，
+      //    体检报告 §3-15）。
+      String? found;
+      for (final candidate in danmakuCandidateNames(videoBase)) {
+        if (candidate == videoName) continue; // 排除视频自身
+        if (File(p.join(videoFile.parent.path, candidate)).existsSync()) {
+          found = candidate;
+          break;
+        }
       }
-      final found = findLocalDanmakuFileName(videoBase, videoName, names);
+      // ②兜底：目录列举（平台大小写差异 / 探测失败时仍按老逻辑匹配一次）
+      if (found == null) {
+        final names = <String>[];
+        await for (final e in videoFile.parent.list()) {
+          if (e is File) names.add(p.basename(e.path));
+        }
+        found = findLocalDanmakuFileName(videoBase, videoName, names);
+      }
       if (found == null) return null;
       final content =
           await File(p.join(videoFile.parent.path, found)).readAsString();

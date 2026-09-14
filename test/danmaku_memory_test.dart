@@ -47,6 +47,43 @@ void main() {
     await memory.remove('/a/video.mp4');
   });
 
+  group('容量上限与 LRU 淘汰（§3-14）', () {
+    test('trimToLimit：按 Map 顺序淘汰最旧，limit<=0 清空', () {
+      final map = {'a': '1', 'b': '2', 'c': '3'};
+      DanmakuManualMemory.trimToLimit(map, 2);
+      expect(map.keys, ['b', 'c']);
+      DanmakuManualMemory.trimToLimit(map, 0);
+      expect(map, isEmpty);
+    });
+
+    test('超出 maxEntries 时淘汰最久未用的那条', () async {
+      final memory = DanmakuManualMemory();
+      for (var i = 0; i < DanmakuManualMemory.maxEntries; i++) {
+        await memory.set('/v/$i.mp4', '/files/$i.xml');
+      }
+      // 访问第 0 条 → 它不再是「最久未用」
+      expect(await memory.get('/v/0.mp4'), '/files/0.xml');
+      // 再写入一条 → 淘汰的应是最久未用的第 1 条，而不是第 0 条
+      await memory.set('/v/new.mp4', '/files/new.xml');
+      expect(await memory.get('/v/1.mp4'), isNull);
+      expect(await memory.get('/v/0.mp4'), '/files/0.xml');
+      expect(await memory.get('/v/new.mp4'), '/files/new.xml');
+    });
+
+    test('上限内不淘汰；重复 set 同一视频只占一条', () async {
+      final memory = DanmakuManualMemory();
+      await memory.set('/a.mp4', '/a.xml');
+      await memory.set('/a.mp4', '/a2.xml');
+      expect(await memory.get('/a.mp4'), '/a2.xml');
+      // 大上限下写很多条也不会互相淘汰（这里用 3 条验证语义，不跑满 200）
+      await memory.set('/b.mp4', '/b.xml');
+      await memory.set('/c.mp4', '/c.xml');
+      expect(await memory.get('/a.mp4'), '/a2.xml');
+      expect(await memory.get('/b.mp4'), '/b.xml');
+      expect(await memory.get('/c.mp4'), '/c.xml');
+    });
+  });
+
   test('损坏的 JSON 数据：防御性回退无记忆（不抛异常）', () async {
     SharedPreferences.setMockInitialValues({
       'danmaku_manual_memory': 'not-a-json{',

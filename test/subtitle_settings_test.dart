@@ -22,6 +22,28 @@ void main() {
     expect(s.overrideEmbeddedStyle, isFalse);
   });
 
+  test('外挂字幕记忆有容量上限，超额淘汰最久未用（§3-14）', () async {
+    final s = SubtitleSettings.instance;
+    for (var i = 0; i < SubtitleSettings.maxRememberedVideos + 1; i++) {
+      await s.addImportedSubtitleFor('/v/$i.mp4', '/subs/$i.ass');
+    }
+    // 最早那条被淘汰，最新那条在
+    expect(s.getImportedSubtitlesFor('/v/0.mp4'), isEmpty);
+    expect(
+      s.getImportedSubtitlesFor(
+        '/v/${SubtitleSettings.maxRememberedVideos}.mp4',
+      ),
+      ['/subs/${SubtitleSettings.maxRememberedVideos}.ass'],
+    );
+    // 重启后仍是裁剪后的规模（说明真的写盘了，不是只在内存里裁）
+    await s.load();
+    var remembered = 0;
+    for (var i = 0; i <= SubtitleSettings.maxRememberedVideos; i++) {
+      if (s.getImportedSubtitlesFor('/v/$i.mp4').isNotEmpty) remembered++;
+    }
+    expect(remembered, SubtitleSettings.maxRememberedVideos);
+  });
+
   test('字幕延迟：设置/持久化/±60 范围钳制/快捷叠加', () async {
     final s = SubtitleSettings.instance;
     await s.setDelay(1.5);

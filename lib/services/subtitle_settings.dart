@@ -436,10 +436,32 @@ class SubtitleSettings extends ChangeNotifier {
 
   // ── 外挂字幕记忆（按视频路径独立隔离）────────────────────
 
+  /// 记忆的视频条数上限：超出后淘汰**最久未用**的（见 [getImportedSubtitlesFor]）。
+  ///
+  /// 无上限时每看一个新视频就多一条、且每次改动都全量序列化写盘（体检报告 §3-14；
+  /// 用户拍板 2026-09：字幕 100 个视频）。
+  static const maxRememberedVideos = 100;
+
   /// 获取指定视频已导入的外挂字幕路径列表
   List<String> getImportedSubtitlesFor(String videoPath) {
     if (videoPath.isEmpty) return const [];
-    return List.unmodifiable(_videoSubtitles[videoPath] ?? const []);
+    final list = _videoSubtitles.remove(videoPath);
+    if (list == null) return const [];
+    // 访问即刷新 LRU 位置（Map 保序）：后面的淘汰不会先扔刚看过的视频
+    _videoSubtitles[videoPath] = list;
+    return List.unmodifiable(list);
+  }
+
+  /// 把两个记忆表裁剪到上限（淘汰 Map 头部 = 最久未用/最早写入）。
+  void _trimVideoMemory() {
+    while (_videoSubtitles.length > maxRememberedVideos) {
+      final oldest = _videoSubtitles.keys.first;
+      _videoSubtitles.remove(oldest);
+      _videoSelectedSub.remove(oldest);
+    }
+    while (_videoSelectedSub.length > maxRememberedVideos) {
+      _videoSelectedSub.remove(_videoSelectedSub.keys.first);
+    }
   }
 
   /// 为指定视频添加一条已导入的外挂字幕路径
@@ -449,10 +471,13 @@ class SubtitleSettings extends ChangeNotifier {
     final list = List<String>.from(_videoSubtitles[videoPath] ?? []);
     if (!list.contains(subPath)) {
       list.add(subPath);
+      _videoSubtitles.remove(videoPath);
       _videoSubtitles[videoPath] = list;
+      _trimVideoMemory();
       notifyListeners();
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_keyVideoSubtitles, jsonEncode(_videoSubtitles));
+      await prefs.setString(_keyVideoSelectedSub, jsonEncode(_videoSelectedSub));
     }
   }
 
@@ -492,7 +517,9 @@ class SubtitleSettings extends ChangeNotifier {
     if (identifier == null) {
       _videoSelectedSub.remove(videoPath);
     } else {
-      _videoSelectedSub[videoPath] = identifier;
+      _videoSelectedSub.remove(videoPath);
+      _videoSelectedSub[videoPath] = identifier; // 重新插入 = 刷新 LRU 位置
+      _trimVideoMemory();
     }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyVideoSelectedSub, jsonEncode(_videoSelectedSub));
