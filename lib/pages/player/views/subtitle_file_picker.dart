@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/models/subtitle_dir.dart';
 import 'package:moumou/models/subtitle_track.dart';
 import 'package:moumou/services/device_services.dart';
-import 'package:moumou/utils/subtitle_sort.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 外挂字幕文件选择（工作.md 阶段1 第 3 点）：

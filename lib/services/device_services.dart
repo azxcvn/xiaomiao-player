@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:moumou/models/subtitle_dir.dart';
 import 'package:moumou/services/fast_thumbnails.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -751,23 +752,6 @@ class DeviceServices {
       // 重启失败静默（调用方已弹确认框）
     }
   }
-}
-
-/// 目录条目（自建字幕文件选择器用，工作.md 阶段1 第 3 点）
-class SubtitleDirEntry {
-  final String name;
-  final String path;
-  final bool isDirectory;
-  final int size;
-  final int modifiedMs;
-
-  const SubtitleDirEntry({
-    required this.name,
-    required this.path,
-    required this.isDirectory,
-    required this.size,
-    required this.modifiedMs,
-  });
 }
 
 /// 已导入的自定义字体条目（字幕字体选择列表用，工作.md 第 1 点）。

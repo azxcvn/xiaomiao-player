@@ -174,7 +174,6 @@ class _AccountEditPageState extends State<AccountEditPage> {
       path: _normalizePath(_path.text),
       isAnonymous: _isAnonymous,
       useHttps: _useHttps,
-      lastConnected: widget.connection?.lastConnected ?? 0,
     );
 
     final settings = NetworkConnectionSettings.instance;

@@ -17,6 +17,7 @@ import 'package:moumou/pages/player/player_page.dart';
 import 'package:moumou/services/bilibili/bili_bangumi_service.dart';
 import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/services/bilibili/bili_video_service.dart';
+import 'package:moumou/utils/app_dialog.dart';
 
 /// 播放 B 站 PGC 单集（番剧/影视）。
 ///
@@ -163,7 +164,8 @@ BiliMedia _buildUgcMedia(
 }
 
 void _showLoading(BuildContext context) {
-  showDialog<void>(
+  // 统一走 showAppDialog（§4.5）：屏障不可点 + 透明，视觉与原来一致、多一层淡入
+  showAppDialog<void>(
     context: context,
     barrierDismissible: false,
     builder: (_) => const Center(child: CircularProgressIndicator()),

@@ -32,7 +32,6 @@ class NetworkConnection {
   final String path; // 根路径，默认 '/'
   final bool isAnonymous;
   final bool useHttps; // 仅 WebDAV
-  final int lastConnected; // 最近连接时间戳（毫秒）
 
   const NetworkConnection({
     this.id = 0,
@@ -45,7 +44,6 @@ class NetworkConnection {
     this.path = '/',
     this.isAnonymous = false,
     this.useHttps = false,
-    this.lastConnected = 0,
   });
 
   NetworkConnection copyWith({
@@ -59,7 +57,6 @@ class NetworkConnection {
     String? path,
     bool? isAnonymous,
     bool? useHttps,
-    int? lastConnected,
   }) {
     return NetworkConnection(
       id: id ?? this.id,
@@ -72,7 +69,6 @@ class NetworkConnection {
       path: path ?? this.path,
       isAnonymous: isAnonymous ?? this.isAnonymous,
       useHttps: useHttps ?? this.useHttps,
-      lastConnected: lastConnected ?? this.lastConnected,
     );
   }
 
@@ -92,7 +88,6 @@ class NetworkConnection {
         'path': path,
         'isAnonymous': isAnonymous,
         'useHttps': useHttps,
-        'lastConnected': lastConnected,
       };
 
   /// 容错解析：字段缺失/类型不符时回退默认值，损坏单条不拖垮整个列表。
@@ -110,7 +105,6 @@ class NetworkConnection {
       path: (json['path'] as String?) ?? '/',
       isAnonymous: (json['isAnonymous'] as bool?) ?? false,
       useHttps: (json['useHttps'] as bool?) ?? false,
-      lastConnected: (json['lastConnected'] as num?)?.toInt() ?? 0,
     );
   }
 

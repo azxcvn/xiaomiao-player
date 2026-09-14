@@ -28,7 +28,6 @@ void main() {
       path: '/movies',
       isAnonymous: false,
       useHttps: true,
-      lastConnected: 1690000000000,
     );
     final restored = NetworkConnection.fromJson(c.toJson());
     expect(restored.id, 3);
@@ -41,7 +40,6 @@ void main() {
     expect(restored.path, '/movies');
     expect(restored.isAnonymous, isFalse);
     expect(restored.useHttps, isTrue);
-    expect(restored.lastConnected, 1690000000000);
   });
 
   test('NetworkConnection.fromJson 字段缺失容错', () {

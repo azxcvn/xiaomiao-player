@@ -11,6 +11,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:moumou/models/network_connection.dart';
 import 'package:moumou/services/network/network_client.dart';
 import 'package:moumou/services/network/network_client_factory.dart';
@@ -88,7 +89,9 @@ class NetworkStreamingProxy {
     await _closeEntry(entry);
   }
 
-  /// 关闭代理并释放所有流（测试 / 应用退出用）。
+  /// 关闭代理并释放所有流（**仅测试用**：生产不调用——单例随进程存活，
+  /// 释放后再次 register 会重新 bind；保留它是为了让测试之间不泄漏 HttpServer 端口）。
+  @visibleForTesting
   Future<void> stop() async {
     final server = _server;
     _server = null;
@@ -154,7 +157,7 @@ class NetworkStreamingProxy {
       }
     } catch (e) {
       // 不向响应泄露远端 URL、路径或异常细节；但记录到日志便于排查。
-      print('[NetProxy] upstream 失败: $e');
+      debugPrint('[NetProxy] upstream 失败: $e');
       await _text(response, HttpStatus.internalServerError, 'Upstream stream failed', headOnly);
     }
   }
@@ -219,7 +222,7 @@ class NetworkStreamingProxy {
       await response.addStream(_countBytes(entry, stream));
       await response.close();
     } catch (e) {
-      print('[NetProxy] 全量流 addStream 中断: $e');
+      debugPrint('[NetProxy] 全量流 addStream 中断: $e');
       await response.close();
     }
   }
@@ -272,7 +275,7 @@ class NetworkStreamingProxy {
       await response.addStream(_countBytes(entry, _limitBytes(stream, range.length)));
       await response.close();
     } catch (e) {
-      print('[NetProxy] 分段流 addStream 中断: $e');
+      debugPrint('[NetProxy] 分段流 addStream 中断: $e');
       await response.close();
     }
   }
@@ -299,7 +302,7 @@ class NetworkStreamingProxy {
       final client = await _connectedClient(entry);
       return await client.getFileSize(path.value);
     } catch (e) {
-      print('[NetProxy] getFileSize 失败: $e');
+      debugPrint('[NetProxy] getFileSize 失败: $e');
       return -1;
     }
   }
@@ -332,7 +335,7 @@ class NetworkStreamingProxy {
       final client = await _connectedClient(entry);
       return await client.openStream(path.value, offset: offset);
     } catch (e) {
-      print('[NetProxy] openStream 失败: $e');
+      debugPrint('[NetProxy] openStream 失败: $e');
       return null;
     }
   }

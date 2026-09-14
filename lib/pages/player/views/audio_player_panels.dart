@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:moumou/models/video_file.dart';
+import 'package:moumou/utils/app_dialog.dart';
 
 /// 听视频界面底部面板（工作.md 阶段1 第 2 点重设计）：
 ///
@@ -501,7 +502,7 @@ String _fmtDuration(Duration d) {
 /// 自定义定时关闭弹窗：滑杆选分钟（5 – 180，步进 5），确定返回分钟数。
 Future<int?> _showCustomSleepDialog(BuildContext context) {
   int minutes = 30;
-  return showDialog<int>(
+  return showAppDialog<int>(
     context: context,
     builder: (dialogContext) => StatefulBuilder(
       builder: (dialogContext, setDialogState) => AlertDialog(

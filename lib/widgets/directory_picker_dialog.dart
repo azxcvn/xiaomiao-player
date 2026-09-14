@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/models/subtitle_dir.dart';
 import 'package:moumou/services/device_services.dart';
+import 'package:moumou/utils/app_dialog.dart';
 
 /// 弹出目录选择器，返回用户选中的**真实目录路径**；取消返回 null。
 ///
@@ -7,7 +9,7 @@ import 'package:moumou/services/device_services.dart';
 /// 只展示子目录、点目录进入、点「选择此目录」确认当前目录。供下载目录设置、
 /// 字幕/弹幕选择等场景复用。
 Future<String?> showDirectoryPickerDialog(BuildContext context) {
-  return showDialog<String>(
+  return showAppDialog<String>(
     context: context,
     builder: (_) => const _DirectoryPickerDialog(),
   );

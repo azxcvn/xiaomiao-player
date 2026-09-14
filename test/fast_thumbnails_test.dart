@@ -43,14 +43,5 @@ void main() {
       );
       expect(outcome4.frame, isNull);
     });
-
-    test('grabImage 在引擎不可用时返回 null', () async {
-      final img = await FastThumbnails.grabImage('/path/to/video.mp4', 10.0);
-      expect(img, isNull);
-    });
-
-    test('clearNativeCache 在引擎不可用或空闲时调用不抛异常', () {
-      expect(() => FastThumbnails.clearNativeCache(), returnsNormally);
-    });
   });
 }

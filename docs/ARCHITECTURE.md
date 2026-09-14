@@ -62,8 +62,9 @@ Flutter 本地视频播放器（Android），核心能力：
 - **隐私政策**：首次启动隐私门禁弹窗（5 秒倒计时 + 勾选同意才可确认，取消退出应用）
   + 关于页「用户协议」组（预览用户服务协议与隐私政策正文）（§4.19）
 - **应用更新**：我的→关于→更新组（手动检查更新 + 自动检查更新开关）；更新弹窗（Markdown
-  渲染更新说明 + 立即更新/稍后提醒/忽略 + 主·备下载站子菜单）；更新源（GitHub API）与
-  主·备下载链接已就绪，`checkForUpdate` 仍开发写死（未接入真实抓取，§4.20）
+  渲染更新说明 + 立即更新/稍后提醒/忽略 + 主·备下载站子菜单）；更新源为 GitHub Releases API
+  （`checkForUpdate` 已接真实抓取：本地版本 vs 远端 tag、失败抛 `UpdateCheckException`，
+  抓取走 §4.28 有界响应，§4.20/§4.38）
 - **音量增强 (Volume Boost)**：系统音量满 100% 后继续上滑接管 mpv 音量放大（`volume-max=100+cap`），
   上限 10%~100% 十档、默认 60%（最高 200%）；指示器增强段红色显示 110%/150%/200%（§4.23）
 - **杜比视界偏色检测与引导**：本地视频 OpenMedia 检测杜比视界编码（MediaInfo），未开 gpu-next
@@ -128,8 +129,9 @@ lib/
 │   ├── device_decoder.dart     # 设备解码器条目模型（名称/MIME/分辨率/声道/特性/色彩格式/采样率/profile，设备能力检测页 + 详情页）
 │   ├── wyzie_models.dart       # Wyzie 字幕 API 数据模型（字幕条目/来源响应/密钥信息/TMDB 命中 + 语言/格式/编码/来源常量表，§4.21）
 │   ├── player_diagnostics.dart # 播放诊断快照模型（mpv 属性 → 容错解析的运行时统计，§4.27）
+│   ├── bili_playlist.dart      # 番剧播放列表模型（整季剧集 + 按 epId 定位当前集，§4.15）
+│   ├── subtitle_dir.dart       # 字幕目录条目 + 排序纯函数（目录恒在前；B16 从 utils/services 上移，§3 分层）
 │   └── subtitle_font_injection.dart # 字幕字体注入判定纯函数（`resolveSubtitleFontInjection` 永不返回 null：用户字体目录或 /system/fonts，§4.10/§4.32）
-│   └── bili_playlist.dart      # 番剧播放列表模型（整季剧集 + 按 epId 定位当前集，§4.15）
 ├── services/                  # 业务逻辑 / 数据层（无 UI）
 │   ├── view_settings.dart     # 排序/字段/视图模式设置（ChangeNotifier + 持久化）
 │   ├── common_list_controller.dart # 通用分页列表控制器（三态 + 刷新失败保留旧数据 + 加载更多，§4.29）
@@ -139,6 +141,7 @@ lib/
 │   ├── playback_history_service.dart # 播放历史（记录/去重置顶/上限淘汰/删除/清空/开关，ChangeNotifier + 持久化，§4.17）
 │   ├── playback_tuning.dart   # 每次 open 前的 mpv 缓存/网络调参（本地/在线两档 + lavf-o 合并；播放页与听视频切歌共用，§4.26/§4.38）
 │   ├── player_controls_settings.dart   # 播放器控制设置（槽位/手势/倍速/比例/长按/方向/顶部信息等）
+│   ├── decode_settings.dart   # 解码设置（硬解/软解档位 + 解码预设持久化，§4.24）
 │   ├── device_services.dart   # 设备能力：音量/亮度/画中画/电量/网络类型/后台服务启停/字幕·字体文件与目录操作（MethodChannel）+ 任意时刻抓帧（FFmpeg 引擎 + 秒桶内存 LRU）+ 设备能力检测 + 整应用重启 + 动态色壁纸取色
 │   ├── dolby_vision_settings.dart # 杜比视界偏色提示「不再提示」记忆（ChangeNotifier + 持久化，§4.23）
 │   ├── fast_thumbnails.dart   # FFmpeg 快速缩略图引擎（FFI 直连自建 libmpv.so 的 mk_thumbnail_*，长驻 worker+单飞顶旧调度，P1-14）
@@ -272,6 +275,8 @@ lib/
 │   │       ├── player_danmaku_settings_panel.dart # 弹幕设置面板（样式：字号/字重/速度/描边/不透明度滑杆+随机渐变色；配置：区域(10%档位)/行高/三类显隐/海量/去重/屏蔽词；偏移：时间轴偏移；字体：跟随系统/跟随App/自定义三选一+目录导入列表选择；横竖屏外壳共用）
 │   │       ├── player_bili_playlist_panel.dart   # B 站番剧剧集列表面板（集号/集名/角标 + 当前集高亮，§4.15）
 │   │       ├── player_bottom_bar.dart     # 底栏：进度条 + 下一集 + 时间 + 弹幕开关/设置 + 右下角按钮簇
+│   │       ├── player_quality_panel.dart  # 清晰度面板（档位列表 + 高亮仲裁：成功钉真实 qn、失败回切换前档，§4.36）
+│   │       ├── player_pressable.dart      # 播放页按压反馈壳（点击态缩放/高亮，供底栏与面板按钮复用）
 │   │       ├── player_seek_bar.dart       # 自绘进度条（替代 Slider，起点对齐 kPlayerLeftInset；章节圆点 + 跳过色段）
 │   │       ├── player_chapter_bar.dart    # 章节名行（可点击呼出列表）+ 跳过胶囊（5 秒自动消失/控制层可见时常驻）
 │   │       ├── player_chapter_panel.dart  # 章节列表面板（顶部固定「章节跳段」入口 + 竖向滚动实时高亮 + 点击跳转）
@@ -331,7 +336,7 @@ lib/
 │   ├── app_theme.dart         #   ThemeData 生成（light/dark/amoled）
 │   └── theme_controller.dart  #   主题控制（模式/色/风格/自定义色/动态色标记 + 迁移）
 └── utils/                     # 纯工具函数
-    ├── app_dialog.dart        #   （见 widgets/app_dialog.dart 说明）
+    ├── app_dialog.dart        #   showAppDialog 的**唯一实现**（统一弹窗动画，§4.5）；widgets/ 下无同名文件
     ├── anime4k_patch.dart     #   Anime4K 着色器安装期优化纯函数（精度注入 + C.R.E.L.U. 采样合并，§4.25）
     ├── formatters.dart        #   大小/日期/时长/倍速/网速格式化 + 截图文件名 + 在线媒体判定 + **底栏时间文本**（formatPlaybackTimeText，剩余为负清零，§4.33）
     ├── url_media.dart         #   在线直链纯函数（规范化补协议/流媒体协议白名单/URL 提取标题，§4.17）
@@ -358,7 +363,6 @@ lib/
     ├── mpv_tuning.dart        #   mpv 移动端缓存/网络调参模板（本地/在线两档 + lavf-o 合并，§4.26）
     ├── audio_shuffle.dart     #   听视频随机播放算法（结合当前时间刻，纯函数）
     ├── subtitle_auto_match.dart # 同名字幕自动匹配纯函数（扩展名优先级 + 同名优先 + 简/繁语言后缀，对齐小喵）
-    ├── subtitle_sort.dart     #   自建字幕选择器排序纯函数（目录恒在前）
     ├── subtitle_memory.dart   #   外挂字幕记忆路径失效分流（失效项剔除 + 回落同名扫描，§4.34）
     ├── subtitle_style_properties.dart # 字幕样式「字段 → mpv 属性」写入表（按字段 apply，§4.34）
     ├── danmaku_timeline.dart  #   弹幕时间轴纯函数（同秒多条 1 秒内错峰延迟 + 时间轴偏移）
@@ -402,7 +406,7 @@ models（模型）     → 无依赖（纯数据）
 **规则**：
 - `widgets/` 里的公共组件**禁止 import `pages/`**（否则页面组件耦合）
 - 页面专属的小组件放 `pages/<页面>/` 下（如 `views/`），不要塞进 `widgets/`
-- 单文件超过 ~400 行必须拆分（参考首页拆分出的 `views/`）
+- 单文件超过 ~400 行**应当考虑拆分**（参考首页拆分出的 `views/`）。**已豁免**：`pages/player/` 下的播放页主体与其 `views/` 面板组件（`player_page.dart` / `player_portrait_page.dart` 等数个大文件）——它们共享同一套会话状态与手势链，硬拆会把状态读写打成跨文件碎片；新增的**其它**文件仍按 400 行红线执行。
 
 ---
 
@@ -421,7 +425,7 @@ models（模型）     → 无依赖（纯数据）
 - 超分记忆语义（`SuperResolutionService`，默认关闭）：无论开关状态都记录「最近一次设置的 模式/质量」；开启记忆后 `load()`/`enterPlayer()` 自动恢复该组合应用到所有视频；**未开启记忆时 `enterPlayer()`（播放页 initState）把本次会话重置为关闭/均衡**——退出播放或重启后都回到默认关闭（参考 mpv-android-anime4k）
 - **文件管理多选状态**属 `FileSelectionController`（普通 `ChangeNotifier`，**页面 State 里 new 一个、dispose 释放，刻意不做单例、不持久化**）：多选只作用于当前页面的当前列表，做成全局单例会跨页污染（§4.31）
 - **禁止**：新增全局 `ValueNotifier` hack / 全局可变单例来跨页面通信
-  - 反例教训：曾经的 `fullscreen_state.dart` 全局 `playerActive`，靠页面手动置位影响全局布局，引发连锁补丁 → 已重构为 `AppFrameObserver`（§4.3）
+  - 反例教训：曾经的 `fullscreen_state.dart` 全局 `playerActive`（B16 已删除该墓碑文件），靠页面手动置位影响全局布局，引发连锁补丁 → 已重构为 `AppFrameObserver`（§4.3）
 - 跨页面状态先想清楚归属：全局设置 → services 里的 ChangeNotifier；页面局部 → 页面 State；路由相关 → 路由机制
 
 ### 4.2 安全区（三大金刚键 / 挖孔）—— 全局已处理，页面零负担
@@ -452,7 +456,7 @@ models（模型）     → 无依赖（纯数据）
 
 - **所有弹窗统一用** `showAppDialog`（`lib/utils/app_dialog.dart`，缩放 + 淡入动画），**不要**直接 `showDialog`。`barrierDismissible` 参数（默认 true）控制是否可点遮罩关闭；门禁类弹窗传 false 并让内容包 `PopScope(canPop: false)`（§4.19）
 - **播放器内右侧滑入面板统一用** `showPlayerPanel`（`lib/widgets/player_panel.dart`，滑入 + 淡入 + 面板内页面栈）。倍速 / 超分 / 画面比例 / 更多 / 编辑控制栏共用；面板内二级页面用 `PlayerPanelNavigator.of(context).push(...)` 就地切换，禁止叠加第二个面板。**新增类似右侧面板需求时直接复用，勿另写一套**。注意：`of` 必须用面板树内的 context（内容里先包一层 `Builder` 再取），不能用页面 State 的 context。`showPlayerPanel` / `showPlayerBottomPanel` 的 `animate` 参数（默认 null = 跟随「播放器设置 → 启用播放界面动画」开关）控制进出场与页内切换动画
-- **播放界面二级界面硬性约定**：播放器内凡需弹出二级界面（倍速、超分、画面比例、字幕/音频等后续功能）的，**横屏一律使用 `showPlayerPanel` 右侧滑入外壳**（同款外壳必须保证）；**竖屏播放页（`player_portrait_page.dart`）一律使用 `showPlayerBottomPanel` 底部弹出外壳**（`lib/widgets/player_bottom_panel.dart`，底部上滑 + 淡入，Material 外壳，面板内页面栈 `PlayerBottomPanelNavigator`）。两种外壳的面板内容组件（倍速/超分/画面比例/编辑控制栏）共用同一份数据与交互逻辑，只换容器。面板内容可选用 `PlayerOptionChip` 胶囊选择（视功能而定），也可用列表等其他形式，但**不得另写一套弹窗/面板外壳**。**竖屏页高需求**：`PlayerPanelPage.bottomHeightFactor`（默认 null = 外壳 0.42）可按页覆写底部外壳最大高度占比，只影响该页、返回上一页自动收回（高度差 240ms easeOutCubic 过渡）；网络弹幕搜索页用 0.82。**禁止**为了页高另开一个外壳
+- **播放界面二级界面硬性约定**：播放器内凡需弹出二级界面（倍速、超分、画面比例、字幕/音频等后续功能）的，**横屏一律使用 `showPlayerPanel` 右侧滑入外壳**（同款外壳必须保证）；**竖屏播放页（`player_portrait_page.dart`）一律使用 `showPlayerBottomPanel` 底部弹出外壳**（`lib/widgets/player_bottom_panel.dart`，底部上滑 + 淡入，Material 外壳，面板内页面栈 `PlayerBottomPanelNavigator`）。两种外壳的面板内容组件（倍速/超分/画面比例/编辑控制栏）共用同一份数据与交互逻辑，只换容器。面板内容可选用 `PlayerOptionChip` 胶囊选择（视功能而定），也可用列表等其他形式，但**不得另写一套弹窗/面板外壳**。**竖屏页高需求**：底部外壳高度由 `showPlayerBottomPanel(heightFactor:)` 的 `heightFactor` 参数控制（默认 `0.42`，一级/二级/三级一致），网络弹幕搜索页传更大的值抬高外壳。**禁止**为了页高另开一个外壳
 - **「更多」面板交互**：横竖屏「更多」面板均只列出**未放入槽位的动作**（`PlayerTopAction.values` 中不在 `topActions` 的）；点面板类动作（字幕/音频/比例/循环/章节/片头片尾）→ 面板内 `push` 就地切换（外壳 header 自动显示返回按钮，可返回「更多」列表，勿再关面板重开）；点动作类（画中画/听视频）→ 先关「更多」面板再执行（防叠加第二面板）；未实现动作提示「即将上线」；「编辑控制栏」为固定入口。**一级菜单 ListView 带 `PageStorageKey('more_panel')` 记忆滚动位置**（进二级再返回不回顶部）
 - **编辑控制栏交互**：横竖屏编辑控制栏的「已启用/可添加」列表项**无副标题**（图标与名字用 `titleAlignment: center` 对齐）；槽位已满（5/5）时点「添加」→ toast「最多允许放 5 个」（不再禁用按钮 + 副标题提示）；「重置控制栏」无副标题。竖屏与横屏一致最多 5 槽位（`PortraitPlayerTopBar.maxPortraitSlots = 5`），不再区分 4/5
 - **排序/字段弹窗统一用** `showSortOptionsSheet(context, viewSettings, hasFolders:, hasVideos:, showViewMode:)`（`lib/widgets/options_sheet.dart`）
@@ -475,8 +479,7 @@ models（模型）     → 无依赖（纯数据）
 
 ### 4.7 主题
 
-- 主题色/风格都在 `theme_controller.dart`（`presetColors` 23 色、`variantLabels` 21 风格）
-- 新增主题色：往 `presetColors` 加 `(color: ..., label: 'XXX色')`（3 字命名，色相排列）
+- 主题色/风格都在 `theme_controller.dart`（`presetColors` 23 色、`variantLabels` 21 风格）- 新增主题色：往 `presetColors` 加 `(color: ..., label: 'XXX色')`（3 字命名，色相排列）
 - 调色板风格来自 flex_seed_scheme 的 `FlexSchemeVariant`（21 种已全量），**勿**改枚举顺序（持久化 index）；
   外观页调色板为**显示层重排**（标准型独占首行 + 其余 20 个 4×5 胶囊化），枚举顺序与 index 不变
 - **调色板风格持久化键为 `theme_variant_scheme_v2`，旧键 `theme_variant` 只作一次性迁移来源**：
@@ -610,7 +613,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 - **目录必须存在且含字体文件才注入**（fork 侧 `_hasFontFile()` 校验 `.ttf/.otf/.ttc/.otc`）——libass 拿到**空目录**会让字体解析全部失败，比不设置 `sub-fonts-dir` 更糟（中文字幕变方块）。该扩展名清单必须与 `models/subtitle_track.dart` 的 `kFontExtensions` **保持同步**。
 - **`libassAndroidFontsDir` 必须与 `libassAndroidFontName` 同时提供**——libass 的 `sub-font` 按**族名**匹配，只给目录无法定位到具体字体；构造函数 `assert` 在 debug 拦截，release 走 `real.dart` 的告警分支。
 
-**维护**：`third_party/media_kit` 是本地 fork（`pubspec.yaml` `dependency_overrides` 指向），当前基线 **1.2.6**、共 **4 处补丁**（3 处在 `lib/`，1 处在 `pubspec.yaml` 的 SDK 约束）——**补丁清单、升级步骤与验证方法统一记在 `third_party/media_kit/FORK.md`，升级前必读**，禁止直接 `pub upgrade` 覆盖。依赖 `io.github.yubyf:truetypeparser-light:2.1.4` 与 `androidx.documentfile:documentfile:1.0.1`（`android/app/build.gradle.kts`）。
+**维护**：`third_party/media_kit` 是本地 fork（`pubspec.yaml` `dependency_overrides` 指向），当前基线 **1.2.6**、共 **4 处补丁**（3 处在 `lib/`，1 处在 `pubspec.yaml` 的 SDK 约束）——**补丁清单、升级步骤与验证方法统一记在 `third_party/media_kit/FORK.md`**，禁止直接 `pub upgrade` 覆盖。依赖 `io.github.yubyf:truetypeparser-light:2.1.4` 与 `androidx.documentfile:documentfile:1.0.1`（`android/app/build.gradle.kts`）。
 
 ### 4.11 弹幕 —— canvas_danmaku 渲染 + 本地同名加载 + 设置面板
 
@@ -793,8 +796,8 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   - **关键词历史**：胶囊 `Wrap` 直接贴在搜索框下方（末尾一枚「清除」胶囊），**不独占分组
     卡片、无分组标签**；搜索框折叠时历史一并隐藏。
   - **命中即折叠**：搜到结果后搜索区收成 34dp 的「关键词 · N 部」胶囊条（点击重新展开，
-    结果保留），把竖向空间全部让给结果列表；无结果/出错保持展开便于改词。竖屏另经
-    `PlayerPanelPage.bottomHeightFactor: 0.82` 抬高底部外壳（§4.5）。
+    结果保留），把竖向空间全部让给结果列表；无结果/出错保持展开便于改词。竖屏另调
+    `showPlayerBottomPanel(heightFactor:)` 抬高底部外壳（§4.5）。
   - **展开/收起动画**：每张结果卡自持 `AnimationController`（进 320ms easeOutCubic /
     退 250ms easeInCubic），`Align(heightFactor)` 高度与内容 `FadeTransition` **错峰**
     （展开先长高后显形 `Interval(0.30,1)`、收起先淡出后收高 `Interval(0.55,1)`），
@@ -858,7 +861,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 
 ### 4.13 哔哩哔哩账号登录（哔哩生态阶段一）
 
-> 调研方案见 `杂项文件/bili-ecosystem-research/`；接入进度见 `docs/哔哩哔哩生态接入状况.md`。
+> 调研方案见 `杂项文件/bili-ecosystem-research/`。
 
 **分层**（自下而上）：
 
@@ -932,7 +935,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 
 ### 4.14 哔哩番剧索引 / 搜索 / 详情（哔哩生态阶段二）
 
-> 调研方案见 `杂项文件/bili-ecosystem-research/`；接入进度见 `docs/哔哩哔哩生态接入状况.md`。
+> 调研方案见 `杂项文件/bili-ecosystem-research/`。
 > 阶段二只做「索引 / 搜索 / 详情 / 时间表」；播放、弹幕、OP/ED 章节与清晰度属阶段三（§4.15）。
 
 **分层**（自下而上）：
@@ -1575,7 +1578,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 
 | 原语 | 语义 | 已收敛的落点 |
 |---|---|---|
-| `AsyncSession` | 会话号令牌：`start()` 开新会话、`isCurrent(token)` 判废、`invalidate()` 主动作废 | `DanmakuController._loadSession`（4 处加载路径）、`DanmakuScheduler._generation`、`PlayerDanmakuNetworkPanel._searchSession`（P2-10：网络弹幕搜索取最后一次输入） |
+| `AsyncSession` | 会话号令牌：`start()` 开新会话、`isCurrent(token)` 判废、`invalidate()` 主动作废 | `DanmakuController._loadSession`（4 处加载路径）、`DanmakuScheduler._session`（由 `generation` 取值，§4.11）、`PlayerDanmakuNetworkPanel._searchSession`（P2-10：网络弹幕搜索取最后一次输入） |
 | `AsyncSingleFlight<T>` | 同 key 并发只执行一次、共享 Future；**失败不缓存**、完成后记录清除 | `VideoInfoService`（视频信息 + 基本元数据两条链路） |
 | `AsyncSerialQueue` | 按提交顺序串行执行；**任务异常不打断队列**（错误抛给各自调用方）；`idle` 等排空 | `PlaybackProgressService` 进度写盘串行链、`PlaybackHistoryService` 历史写盘（P2-40，§4.42——两者都配 `unawaited(queue.add(...).catchError(记日志))` + `await idle`） |
 | `AsyncCoalescedReload` | 串行合并重跑：在跑时只登记一次「待补跑」，等待者拿到的是**不早于自己请求**开跑的那一轮（不是"已经开跑的那一轮"） | `SubtitleController.reload()`（轨道刷新，§4.34）、`DanmakuController` 生效集重算（流式追加 + 开关变化，§4.11）。⚠️ 这里**不能**用 `AsyncSingleFlight`：single-flight 让后来者 join 早已开跑的旧轮，`sub-add`/新弹幕批次之后照样拿到旧结果 |
@@ -2278,10 +2281,13 @@ return try {
 
 > 两条的产品行为都已用临时诊断验证正确（`remove()` 返回时磁盘已是新快照）；产品代码**不需要**为这 3 条改动。
 
-- 现有测试（`flutter test` 全绿）：
+- 现有测试（`flutter test`：**1418 通过 / 3 跳过 / 0 失败**；跳过原因见上方表格）：
+- 公共辅助：`test/pb_test_helper.dart`（protobuf 测试数据构造，被弹幕/播放链路测试复用）
   - `test/widget_test.dart` — 胶囊导航渲染（**注意**：胶囊设计上所有标签都显示，勿改成 findsNothing）
   - `test/view_settings_test.dart` — sortTree / sortFolders / sortVideos 排序逻辑（含名称自然序：2 < 12 < 112）+ **加载纪律**（setter 同步段不得改内存、`ensureLoaded` 复用同一 load Future、读盘完成后不二次回读覆盖用户设置，§7）
   - `test/natural_compare_test.dart` — 自然序比较纯函数（数字段/字母段/前缀）
+  - `test/network_mime_types_test.dart` — 文件名 → MIME 映射与网络视频扩展名识别（`isNetworkVideoFile`）
+  - `test/http_byte_range_test.dart` — HTTP Range 头解析纯函数（`bytes=start-end` / `start-` / `-suffix` / 非法头）
   - `test/super_resolution_mode_test.dart` — 超分模型（7 模式 + 质量枚举 + buildAnime4KChain 链构建纯函数 + 着色器文件完整性）
   - `test/super_resolution_service_test.dart` — 超分服务状态/持久化（模式、质量、记忆开关的开启/关闭/load 恢复）+ **加载纪律**（setter 首行 await 读盘、`ensureLoaded` 共享同一 Future、读盘完成后不回退）
   - `test/app_frame_test.dart` — AppFrame 安全区行为 + 播放页路由检测（**安全区/播放页回归测试，改 AppFrame 必须跑**）
@@ -2304,6 +2310,7 @@ return try {
   - `test/player_thumbnail_preview_test.dart` — 缩略图气泡渲染（有/无/空白章节名时胶囊显隐、超长章节名单行省略且不超预览图宽、**章节胶囊在图上方时间胶囊在下方**、不可见时整体透明且不挂载转圈动画，§4.9/§4.22/B7）
   - `test/fast_thumbnails_test.dart` — 缩略图引擎异常与边界保护（非 Android 环境降级/极端与非法参数钳制/清空 native 缓存安全/worker 重置，B7/P1-14）
   - `test/watch_state_test.dart` — 观看状态纯函数（未观看/观看中/已看完判定 + 自定义阈值 + 百分比）
+  - `test/media_scan_settings_test.dart` — 媒体扫描与过滤设置（默认值/`.nomedia` 与隐藏目录开关/黑白名单增删与路径判定/持久化，§2 services）
   - `test/chapter_utils_test.dart` — 章节纯函数（标题关键词分类/片段派生过滤/当前章节定位/跳过目标 EOF 保护 + 自定义关键词归属与优先级 + **`chapterTitleAt` 任意时间点章节名/空白标题回退「第 N 章」/与 `currentChapterIndex` 一致性**，§4.22）
   - `test/chapter_tracker_test.dart` — 章节跟踪器（位置流驱动的章节推进/胶囊 5 秒窗口/回拖重复触发/跳过与跳转 + 章节跳段自动跳过每片段一次/自定义关键词派生 + **load 会话号与 dispose 防御**：先发起的 load 后到被作废、`clear()` 作废在途、dispose 后完成不写回不 notify，§4.22）
   - `test/chapter_skip_settings_test.dart` — 章节跳段设置服务（默认值/自动跳过类型增删/自定义关键词/持久化恢复/损坏防御，§4.22）
@@ -2319,7 +2326,10 @@ return try {
   - `test/subtitle_memory_test.dart` — 外挂字幕记忆路径失效分流（全部/部分/全部失效、去重保序、空串忽略、失效路径绝不出现在有效集，§4.34）
   - `test/async_coalesced_reload_test.dart` — 等待式串行重跑器（空闲即跑、并发合并为一轮补跑、等待者等到补跑结束、补跑期间新请求再补一轮、绝不并发、抛错交给等待者且随后仍可用，§4.29/§4.34）
   - `test/subtitle_auto_match_test.dart` — 同名字幕自动匹配纯函数（同名候选/扩展名优先级/完全同名优先/简繁语言后缀/短名优先/无匹配）
-  - `test/subtitle_sort_test.dart` — 自建字幕选择器排序纯函数（目录恒在前/大小日期升降序）
+  - `test/subtitle_sort_test.dart` — 字幕目录排序纯函数（`models/subtitle_dir.dart`：目录恒在前/大小日期升降序）
+  - `test/video_info_service_test.dart` — 列表封面/元数据服务（`VideoInfoService`：缓存命中与按路径失效、原生失败回落占位、并发在飞去重，§4.29 C1）
+  - `test/equalizer_preset_test.dart` — 均衡器预设模型（14 预设均为 5 段且增益在 ±15 内/频段标签/反查与相等纯函数）
+  - `test/equalizer_settings_test.dart` — 均衡器设置服务（默认值/频段与低音虚拟环绕钳制/预设应用/一键重置/持久化恢复）
   - `test/audio_track_test.dart` — 音轨纯函数（展示名/声道枚举/格式过滤/audio-channels 映射/af 滤镜链组装，工作.md 音频功能）
   - `test/audio_fallback_test.dart` — 音轨不可播放自动回退纯函数（mpv 日志判定只认音频前缀+失败特征、视频/网络错误不误触发；回退目标优先不同编码、内置优先于外部、无路可退返回 null，§4.32）
   - `test/danmaku_timeline_test.dart` — 弹幕时间轴错峰纯函数（同秒多条 1 秒内均分、<1000ms 上界）
@@ -2376,6 +2386,11 @@ return try {
   - `test/privacy_policy_settings_test.dart` — 隐私政策同意状态服务（默认未同意/同意持久化/load 恢复，§4.19）
   - `test/privacy_policy_dialog_test.dart` — 隐私弹窗（5 秒倒计时门禁/勾选同意才可确认/取消返回 false 同意返回 true，§4.19）
   - `test/version_compare_test.dart` — 版本号比较纯函数（v 前缀/逐段整数比较/缺段补 0/数字前缀，§4.20）
+  - `test/bili_app_sign_test.dart` — TV 端 appSign 签名纯函数（appkey/ts/sign 一致性与 query 拼接）
+  - `test/bili_credential_test.dart` — 凭证存储（`BiliSecureStore` 注入内存实现：Cookie 解析/读写/清除，§4.13）
+  - `test/bili_fingerprint_test.dart` — 反爬指纹纯函数（murmur3×64_128 / buvid_fp / b_lsid / bili_ticket hexsign，§4.13）
+  - `test/bilibili_user_test.dart` — B 站用户模型（nav 接口 level_info / vip_label / money 容错解析）
+  - `test/bili_episode_picker_page_test.dart` — 全屏选集页（进入页面第一页集数直接可见：切页动画控制器初始值回归，§4.14）
   - `test/update_settings_test.dart` — 更新设置服务（默认开启/开关持久化/忽略版本持久化，§4.20）
   - `test/update_dialog_test.dart` — 更新弹窗（三按钮齐全/Markdown 无原生符号/忽略落盘/立即更新弹子菜单与 Toast + **正文链接可点**：`onTapLink` 把解析后的 URI 交给打开回调，B17/§4.20/§4.40）
   - `test/update_service_test.dart` — 更新服务（版本比较接入 `checkForUpdate`/忽略版本/失败抛 `UpdateCheckException` + **抓取走上限与分级超时**：超 16MB 响应不解析、超时按 tier 收口，B14.5/§4.38）
@@ -2401,6 +2416,7 @@ return try {
   - `test/bili_playlist_test.dart` — 番剧播放列表模型（季详情/剧集数组构造、集号 1 起、按 epId 定位、hasNextAt/itemAt 边界、标题回落与角标透传，§4.15）
   - `test/player_bili_playlist_panel_test.dart` — 番剧剧集列表面板（头部集数进度/条目集号集名角标/当前集播放中/点击回调并关闭/空态，§4.15）
   - `test/bili_search_page_test.dart` — 番剧搜索页（未搜索提示/搜索渲染/触底加载更多/失败重试/无结果空态，§4.29 C2）
+  - `test/speed_dial_fab_test.dart` — 首页速拨（最近播放/打开链接/哔哩番剧/网络存储四入口渲染与回调，§4.17）
   - `test/subtitle_font_injection_test.dart` — 字幕字体注入判定纯函数（`resolveSubtitleFontInjection` **永不返回 null**：默认/空目录回落 `/system/fonts`；族名+目录齐备才注入用户字体；空族名也回落，§4.10/§4.32）
   - `test/folder_pin_test.dart` — 固定文件夹排序纯函数（稳定前置/固定项之间仍保序/视频不受影响/分组无变化原样返回 + 树状逐层递归/重建保留聚合信息，§4.30）
   - `test/file_ops_test.dart` — 文件管理纯函数（路径细分/目标校验含自己子目录拦截/重命名合法性与非法字符/**扩展名锁定**：预填主体·恒拼原扩展名·重复后缀不叠加·只输扩展名报错/重名避让序号插入位置/失效固定路径推导/**视频扩展名判定**：`.mp3·.flac·.ass·.nomedia` 不算视频、`.mp4.bak` 不算视频、与 `VideoScanner.videoExt` 同源且不含音频，§4.30）
@@ -2531,7 +2547,7 @@ return try {
 | 自定义字体运行时 `setProperty('sub-fonts-dir')` → libass 字体缓存打坏、字幕消失 | `sub-fonts-dir` 只在 mpv_initialize 前注入（media_kit 魔改字段）；运行时只允许改 `sub-font`/`sub-ass-override`（§4.10） |
 | 手写 sfnt name 表解析器读到错误 offset（族名解析成文件名） | 族名解析用 `truetypeparser` 库，勿手写 name 表字节解析（§4.10） |
 | 系统字库兜底用 symlink+隐藏文件名 → fontconfig 不识别 → 缺字空白 | 兜底字库直接复制成普通文件名（§4.10） |
-| media_kit 本地 fork 被 `pub upgrade` 覆盖 | `third_party/media_kit` 共 4 处补丁需手动 merge；**升级前先读该目录 `FORK.md`**（基线/清单/步骤/验证，§4.10） |
+| media_kit 本地 fork 被 `pub upgrade` 覆盖 | `third_party/media_kit` 共 4 处补丁需手动 merge；补丁清单与步骤见该目录 `FORK.md`（§4.10） |
 | SAF 目录选择器重启后 tree uri 失效、无法刷新字体 | `takePersistableUriPermission` + `FLAG_GRANT_PERSISTABLE_URI_PERMISSION`/`FLAG_GRANT_PREFIX_URI_PERMISSION`（§4.10） |
 | 注入**空**字体目录（或只含非字体文件）→ libass 字体解析全失败，中文字幕变**方块**（比不设置更糟） | fork 注入前用 `_hasFontFile()` 校验目录含 `.ttf/.otf/.ttc/.otc`，不合格则不注入并告警（§4.10） |
 | 只设 `libassAndroidFontsDir` 不设 `libassAndroidFontName` → **静默不注入**，用户选的字体不生效 | `PlayerConfiguration` 构造函数 `assert`（debug 拦截）+ `real.dart` 告警分支（release 可见）（§4.10） |
@@ -2631,6 +2647,7 @@ return try {
 | 弹幕/字幕秒桶在**数据落地之前**就被 1s tick 锚定 → 当前秒的弹幕永久错过 | 异步装载（isolate/网络）期间不要置 `_hasDanmaku`：秒桶空着时首个 tick 会把锚点推到当前秒，而前向补发只补锚点**之后**的桶。等重算结果 `replaceAll` 落地后再置位（§4.11） |
 | `compute` 里读设置单例 → 崩/读到脏值 | `DanmakuSettings` 等是 `ChangeNotifier`（不可跨 isolate 发送）：调用前必须在主 isolate **快照**成纯值（本项目打成一条 record），isolate 只算纯函数（§4.11/§7 闭包捕获坑同源） |
 | 10 万条弹幕「切屏蔽词/开合并」卡住 UI | 瓶颈不在解析：合并/去重各含一次全量 `sort` + 逐条文本归一化 → 整条流水线走 `compute`；另外两条固定浪费必须清掉：**归一化正则提升为文件级 `final`**（原先每条弹幕重建 3 个 `RegExp`）、**屏蔽词表每次过滤只归一化一次**（原先每条弹幕 × 每个词重复 `trim/toLowerCase`）（§4.11） |
+| `utils/` 里的纯函数反向 import `services/` 取数据类（`subtitle_sort.dart` → `device_services.dart` 的 `SubtitleDirEntry`）→ 违反 §3 分层（utils 只依赖 models），且让「纯函数」被服务层绑架 | 数据类与排纯函数一起上移到 `models/subtitle_dir.dart`（§3/§2）；**判断依据**：utils 里出现 `import .../services/` 一律视为分层违规，把被依赖的类型搬到 models |
 | 自建弹幕服务器加进去后**整份服务器列表被清空**（只剩默认服务器） | `DanmakuServer.fromJson` 的裸 `as bool?` 遇到类型不符（`1`/`"true"`）抛 `TypeError`，而解码处只有一个大 `catch` → 回退「仅默认服务器」。类型不符只能回退**那一个字段**的默认值（`_asBool`/`_asString`/`_asDouble` 宽松读取）；同理 `dandan_models.dart` 的 `type`/`shift` 裸强转会打断**整条响应解析**（搜索结果全空）（§4.11，P2-12） |
 | 每进一次播放器 / 每开一次网络弹幕面板泄漏一个 `http.Client`（连接池 + keep-alive socket） | `DandanPlayApi` 不传 `client` 时自建，必须成对释放：`DanmakuNetworkService.dispose()` → `DanmakuApi.close()`，由 `DanmakuController.dispose()` / 面板 dispose 调用。`close()` **只关自建的**，注入的 client 归调用方（§4.11，P2-11） |
 | 弱网下「连按两次搜索」毫无反馈 / 最终结果属于先输入的那个关键词 | 旧实现在 `_loading` 期间直接 `return`（静默吞掉新搜索），且没有会话号 → 旧响应后到会覆盖新结果。修法：不吞（照常发起）+ `AsyncSession` 判废旧响应 + loading 期间**搜索按钮仍在位**（只多一个转圈）。通用教训：**任何「加载中」入口的静默 return 都会让用户以为功能坏了**（§4.11，P2-10） |
@@ -2671,6 +2688,7 @@ return try {
 | 文件名按「120 **字符**」截断 → 纯英文长标题照样超 255 **字节**上限、中文又被砍得过狠 | 按 UTF-8 字节截断且**不切坏多字节字符**（退到字符边界），并预留扩展名与 ` (9999)` 重名后缀的字节数；上限是文件系统的 `NAME_MAX = 255` 字节（§4.40，B17） |
 | 更新弹窗正文里的链接「点了没反应」 | `MarkdownBody` **必须传 `onTapLink`**：不传时链接只是看着像链接的高亮文本（§4.20/§4.40，B17） |
 | widget 测试里「点一下就写设置」永远不生效（命令式断言读到旧值） | **`setUp` 里别 `await` 预热设置单例的 `ensureLoaded()`**：预热出来的 Future 属于真实事件循环的 zone，测试体内的续体被排进 `pump` 驱动不到的微任务队列（fake-async 作用域，与 §4.37 的「假时钟不推进真实写盘」同源）（§6，B17） |
+| 体检报告点名的「死代码」有一半是活的（B16 逐条复核：`isVolumeBoosting` 被 `player_session_state` 使用、`NetworkStreamingProxy.stop()` 被测试 tearDown 使用、`_StreamEntry.fileSize` 写进的 `knownSizes` 会被读） | 删代码前**逐条 grep 复核**（含 `test/`），报告只作线索；删掉立刻跑 `flutter analyze`（未使用符号会被 analyzer 抓到）。⚠️ 报告写的「`utils/app_dialog.dart` 描述错误」也不成立——那份描述指向的描述本身是错的（已改为「唯一实现」） |
 
 ### 7.1 明确不做（用户拍板，别再当缺陷反复改）
 

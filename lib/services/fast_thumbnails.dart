@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:isolate';
-import 'dart:ui' as ui;
 
 import 'package:ffi/ffi.dart' show malloc;
 import 'package:flutter/foundation.dart';
@@ -184,40 +183,6 @@ class FastThumbnails {
     } finally {
       responsePort.close();
     }
-  }
-
-  /// [grab] 的便捷版本：直接返回可显示的 [ui.Image]。
-  static Future<ui.Image?> grabImage(
-    String path,
-    double positionSec, {
-    int dimension = 320,
-    bool useHwdec = true,
-  }) async {
-    final out = await grab(path, positionSec,
-        dimension: dimension, useHwdec: useHwdec);
-    final frame = out.frame;
-    if (frame == null) return null;
-
-    final buffer = await ui.ImmutableBuffer.fromUint8List(frame.rgba);
-    final descriptor = ui.ImageDescriptor.raw(
-      buffer,
-      width: frame.width,
-      height: frame.height,
-      pixelFormat: ui.PixelFormat.rgba8888,
-    );
-    final codec = await descriptor.instantiateCodec();
-    final info = await codec.getNextFrame();
-    return info.image;
-  }
-
-  /// 清空内核里的 MediaCodec 硬解上下文缓存（低内存时可选调用）。
-  static void clearNativeCache() {
-    if (!isAvailable) return;
-    try {
-      _lib!.lookupFunction<Void Function(), void Function()>(
-          'mk_thumbnail_clear_cache')();
-    } catch (_) {}
-    _workerPort?.send('clear_cache');
   }
 
   /// 测试用：重置调度队列与 worker isolate

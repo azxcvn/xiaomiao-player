@@ -6,6 +6,7 @@ library;
 
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:smb_connect/smb_connect.dart';
 import 'package:moumou/models/network_connection.dart';
 import 'package:moumou/models/network_file.dart';
@@ -85,7 +86,7 @@ class SmbClient implements NetworkClient {
       final f = await c.file(path);
       return f.size;
     } catch (e) {
-      print('[SMB] getFileSize($path) 失败: $e');
+      debugPrint('[SMB] getFileSize($path) 失败: $e');
       return -1;
     }
   }
@@ -106,7 +107,7 @@ class SmbClient implements NetworkClient {
       }
       return await c.openRead(f, offset);
     } catch (e) {
-      print('[SMB] openStream($path, $offset) 失败: $e');
+      debugPrint('[SMB] openStream($path, $offset) 失败: $e');
       throw NetworkClientException(_friendly(e));
     }
   }

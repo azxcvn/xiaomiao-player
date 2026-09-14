@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moumou/services/device_services.dart';
-import 'package:moumou/utils/subtitle_sort.dart';
+import 'package:moumou/models/subtitle_dir.dart';
 
 void main() {
   SubtitleDirEntry dir(String name) => SubtitleDirEntry(

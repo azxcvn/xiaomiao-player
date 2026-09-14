@@ -1,5 +1,26 @@
-import 'package:moumou/services/device_services.dart';
 import 'package:moumou/utils/natural_compare.dart';
+
+/// 目录条目（自建字幕文件选择器用，工作.md 阶段1 第 3 点）。
+///
+/// 放在 `models/` 而非 `services/`：它是纯数据值对象，排序纯函数
+/// （[sortSubtitleDirEntries]）与自建选择器都要用它 —— 原来
+/// `utils/subtitle_sort.dart` 反向 import `services/device_services.dart` 取这个类，
+/// 违反 §3「utils 只依赖 models」（B16 收口）。
+class SubtitleDirEntry {
+  final String name;
+  final String path;
+  final bool isDirectory;
+  final int size;
+  final int modifiedMs;
+
+  const SubtitleDirEntry({
+    required this.name,
+    required this.path,
+    required this.isDirectory,
+    required this.size,
+    required this.modifiedMs,
+  });
+}
 
 /// 自建字幕文件选择器的排序字段（工作.md 阶段1 第 3 点）
 enum SubtitleDirSort {
