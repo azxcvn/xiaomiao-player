@@ -227,6 +227,9 @@ Future<bool> _transfer(
     return false;
   }
 
+  final pinned = PinnedFoldersSettings.instance;
+  final wasPinned = move && isDirectory && pinned.isPinned(sourcePath);
+
   final handle = _ProgressHandle.show(context, move ? '正在移动…' : '正在复制…');
   String? failure;
   String? target;
@@ -264,8 +267,25 @@ Future<bool> _transfer(
     return false;
   }
 
-  await PinnedFoldersSettings.instance.retainExisting();
-  await onMutated();
+  if (move && isDirectory) {
+    final stale = FileOps.stalePinnedPaths(
+      oldPath: sourcePath,
+      pinnedPaths: pinned.paths,
+      includeDescendants: true,
+    );
+    await pinned.retainExisting(additionalStale: stale);
+    if (wasPinned && target != null) {
+      await pinned.setPinned(target, true);
+    }
+  } else {
+    await pinned.retainExisting();
+  }
+
+  try {
+    await onMutated();
+  } catch (e, s) {
+    debugPrint('onMutated callback failed: $e\n$s');
+  }
   if (!context.mounted) return false;
   final targetName = target == null ? '' : '：${FileOps.baseName(target)}';
   await _notify(
@@ -305,8 +325,19 @@ Future<bool> _batchTransfer(
   }
 
   final verb = move ? '移动' : '复制';
+  final pinned = PinnedFoldersSettings.instance;
+  final pinnedSources = <String>{};
+  if (move) {
+    for (final item in items) {
+      if (item.isDirectory && pinned.isPinned(item.path)) {
+        pinnedSources.add(item.path);
+      }
+    }
+  }
+
   final handle = _ProgressHandle.show(context, move ? '正在移动…' : '正在复制…');
   final failures = <String>[];
+  final movedTargets = <String, String>{};
   var done = 0;
   try {
     for (var i = 0; i < items.length; i++) {
@@ -321,12 +352,15 @@ Future<bool> _batchTransfer(
       ));
       try {
         if (move) {
-          await FileOperationsService.move(
+          final target = await FileOperationsService.move(
             item.path,
             destination,
             cancelToken: handle.token,
             onProgress: (p) => handle.report(_asBatch(p, i, items.length, item.name)),
           );
+          if (item.isDirectory) {
+            movedTargets[item.path] = target;
+          }
         } else {
           await FileOperationsService.copy(
             item.path,
@@ -356,8 +390,34 @@ Future<bool> _batchTransfer(
     return false;
   }
 
-  await PinnedFoldersSettings.instance.retainExisting();
-  await onMutated();
+  if (move && movedTargets.isNotEmpty) {
+    final stale = <String>{};
+    final newPinned = <String>[];
+    for (final entry in movedTargets.entries) {
+      final oldPath = entry.key;
+      final newPath = entry.value;
+      stale.addAll(FileOps.stalePinnedPaths(
+        oldPath: oldPath,
+        pinnedPaths: pinned.paths,
+        includeDescendants: true,
+      ));
+      if (pinnedSources.contains(oldPath)) {
+        newPinned.add(newPath);
+      }
+    }
+    await pinned.retainExisting(additionalStale: stale);
+    if (newPinned.isNotEmpty) {
+      await pinned.setPinnedAll(newPinned, pinned: true);
+    }
+  } else {
+    await pinned.retainExisting();
+  }
+
+  try {
+    await onMutated();
+  } catch (e, s) {
+    debugPrint('onMutated callback failed: $e\n$s');
+  }
   if (!context.mounted) return true;
 
   if (failures.isEmpty) {
@@ -425,7 +485,11 @@ Future<bool> _rename(
       await pinned.retainExisting(additionalStale: stale);
       if (wasPinned) await pinned.setPinned(newPath, true);
     }
-    await onMutated();
+    try {
+      await onMutated();
+    } catch (e, s) {
+      debugPrint('onMutated callback failed: $e\n$s');
+    }
     if (!context.mounted) return true;
     await _notify(context, '已重命名为 $newName');
     return true;
@@ -511,7 +575,11 @@ Future<bool> _batchDelete(
   }
 
   await PinnedFoldersSettings.instance.retainExisting();
-  await onMutated();
+  try {
+    await onMutated();
+  } catch (e, s) {
+    debugPrint('onMutated callback failed: $e\n$s');
+  }
   if (!context.mounted) return true;
 
   if (failures.isEmpty) {

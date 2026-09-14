@@ -160,4 +160,19 @@ void main() {
     await settings.ensureLoaded();
     expect(settings.paths, isEmpty);
   });
+
+  test('写入口防御（P1-28）：未调 ensureLoaded 直接写，不会丢失既有持久化数据', () async {
+    SharedPreferences.setMockInitialValues({
+      'pinned_folder_paths': ['/existing/path'],
+    });
+    settings.debugReset();
+
+    // 不显式调用 ensureLoaded()，直接 toggle 新路径
+    await settings.toggle('/new/path');
+    expect(settings.paths, {'/existing/path', '/new/path'});
+
+    // 验证持久化内容完整
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getStringList('pinned_folder_paths'), containsAll(['/existing/path', '/new/path']));
+  });
 }

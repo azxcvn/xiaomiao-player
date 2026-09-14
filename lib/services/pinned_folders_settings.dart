@@ -45,6 +45,7 @@ class PinnedFoldersSettings extends ChangeNotifier {
 
   /// 固定 / 取消固定单个文件夹
   Future<void> toggle(String path) async {
+    await ensureLoaded();
     if (path.isEmpty) return;
     if (!_paths.remove(path)) _paths.add(path);
     notifyListeners();
@@ -52,6 +53,7 @@ class PinnedFoldersSettings extends ChangeNotifier {
   }
 
   Future<void> setPinned(String path, bool pinned) async {
+    await ensureLoaded();
     if (path.isEmpty) return;
     final changed = pinned ? _paths.add(path) : _paths.remove(path);
     if (!changed) return;
@@ -67,6 +69,7 @@ class PinnedFoldersSettings extends ChangeNotifier {
     Iterable<String> paths, {
     required bool pinned,
   }) async {
+    await ensureLoaded();
     var changed = false;
     for (final p in paths) {
       if (p.isEmpty) continue;
@@ -80,6 +83,7 @@ class PinnedFoldersSettings extends ChangeNotifier {
 
   /// 批量替换（「固定文件夹」设置页一键清空/批量取消用）
   Future<void> replaceAll(Iterable<String> paths) async {
+    await ensureLoaded();
     final next = paths.where((e) => e.isNotEmpty).toSet();
     if (setEquals(next, _paths)) return;
     _paths
@@ -94,6 +98,7 @@ class PinnedFoldersSettings extends ChangeNotifier {
   /// [additionalStale] 用于额外声明「本次操作已失效的旧路径」
   /// （如重命名：旧路径已不存在，但新路径尚未被扫描进目录树）。
   Future<void> retainExisting({Iterable<String> additionalStale = const []}) async {
+    await ensureLoaded();
     if (_paths.isEmpty) return;
     final next = <String>{};
     for (final p in _paths) {

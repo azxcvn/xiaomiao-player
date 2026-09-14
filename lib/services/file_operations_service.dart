@@ -157,10 +157,14 @@ class FileOperationsService {
     );
     final target = '$dest/$name';
 
-    if (move && !isDir) {
-      // 同卷文件移动：先试原子 rename，失败再走复制+删除
+    if (move) {
+      // 同卷文件/目录移动：先试原子 rename，失败再走复制+删除
       try {
-        await File(src).rename(target);
+        if (isDir) {
+          await Directory(src).rename(target);
+        } else {
+          await File(src).rename(target);
+        }
         onProgress?.call(FileOpProgress(
           currentName: name,
           bytesDone: 0,
@@ -265,8 +269,9 @@ class FileOperationsService {
     FileOpCancelToken? cancelToken,
     ValueChanged<FileOpProgress>? onProgress,
   }) async {
+    final partTarget = '$target.part';
     final input = File(source).openRead();
-    final output = File(target).openWrite();
+    final output = File(partTarget).openWrite();
     var done = bytesDone;
     final completer = Completer<void>();
     late final StreamSubscription<List<int>> subscription;
@@ -300,12 +305,31 @@ class FileOperationsService {
       cancelOnError: true,
     );
 
+    var success = false;
     try {
       await completer.future;
       await output.flush();
+      success = true;
     } finally {
       await subscription.cancel();
       await output.close();
+      if (success) {
+        try {
+          await File(partTarget).rename(target);
+        } catch (e) {
+          try {
+            final partFile = File(partTarget);
+            if (await partFile.exists()) await partFile.delete();
+          } catch (_) {}
+          throw FileOpException('重命名临时文件失败：$e');
+        }
+      } else {
+        // 未成功完成（取消或错误）：清理 .part 临时文件，避免半成品残留
+        try {
+          final partFile = File(partTarget);
+          if (await partFile.exists()) await partFile.delete();
+        } catch (_) {}
+      }
     }
     return done;
   }
@@ -417,7 +441,7 @@ class FileOperationsService {
 
     var deleted = 0;
     try {
-      for (final entity in dir.listSync(followLinks: false)) {
+      for (final entity in dir.listSync(recursive: true, followLinks: false)) {
         if (entity is! File) continue;
         if (!_isVideoFile(entity.path)) continue;
         await entity.delete();

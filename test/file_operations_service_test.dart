@@ -69,8 +69,8 @@ void main() {
     });
   });
 
-  group('只删文件夹内的视频文件（P0-1）', () {
-    test('只删视频：音频/字幕/伪装扩展名/子目录一律保留', () async {
+  group('只删文件夹内的视频文件（P0-1 & P2-27）', () {
+    test('只删视频：递归删除子目录视频，音频/字幕/伪装扩展名/子目录一律保留', () async {
       final dir = p('混合');
       Directory('$dir/子目录').createSync(recursive: true);
       File('$dir/a.mp4').writeAsStringSync('v');
@@ -84,8 +84,9 @@ void main() {
         deleteWholeFolder: false,
       );
 
-      expect(deleted, 1);
-      expect(File('$dir/a.mp4').existsSync(), isFalse, reason: '视频应被删除');
+      expect(deleted, 2);
+      expect(File('$dir/a.mp4').existsSync(), isFalse, reason: '根级视频应被删除');
+      expect(File('$dir/子目录/内.mp4').existsSync(), isFalse, reason: '子目录视频递归删除');
       expect(File('$dir/b.flac').existsSync(), isTrue, reason: '音频绝不能被删');
       expect(File('$dir/c.ass').existsSync(), isTrue, reason: '字幕不能被删');
       expect(
@@ -93,11 +94,7 @@ void main() {
         isTrue,
         reason: '扩展名必须精确匹配，.mp4.bak 不是视频',
       );
-      expect(
-        File('$dir/子目录/内.mp4').existsSync(),
-        isTrue,
-        reason: '「只删视频」不递归子目录',
-      );
+      expect(Directory('$dir/子目录').existsSync(), isTrue, reason: '子目录本身保留');
       expect(Directory(dir).existsSync(), isTrue, reason: '目录本身保留');
     });
 
@@ -131,6 +128,31 @@ void main() {
 
       expect(deleted, 1);
       expect(Directory(dir).existsSync(), isFalse);
+    });
+  });
+
+  group('临时文件防残留（P1-24）', () {
+    test('复制取消时不留半成品与 .part 临时文件', () async {
+      final src = p('large.mp4');
+      final dest = p('目标');
+      Directory(dest).createSync(recursive: true);
+      // 写入一些数据
+      File(src).writeAsBytesSync(List.filled(1024 * 1024, 42));
+
+      final cancelToken = FileOpCancelToken();
+      // 在第一次进度回调时立即取消
+      final future = FileOperationsService.copy(
+        src,
+        dest,
+        cancelToken: cancelToken,
+        onProgress: (_) {
+          cancelToken.cancel();
+        },
+      );
+
+      await expectLater(future, throwsA(isA<FileOpException>()));
+      expect(File('$dest/large.mp4').existsSync(), isFalse, reason: '未完成的目标文件不能残留');
+      expect(File('$dest/large.mp4.part').existsSync(), isFalse, reason: '.part 临时文件必须被清理');
     });
   });
 }

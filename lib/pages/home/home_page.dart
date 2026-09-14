@@ -94,34 +94,44 @@ class _HomePageState extends State<HomePage>
       _permissionDenied = false;
     });
 
-    // 只检查权限状态，不主动弹权限请求（首次进入由用户点击「授予权限」触发）
-    final granted = await _hasStoragePermission();
-    if (!granted) {
-      setState(() {
-        _loading = false;
-        _permissionDenied = true;
-      });
-      return;
-    }
+    try {
+      // 只检查权限状态，不主动弹权限请求（首次进入由用户点击「授予权限」触发）
+      final granted = await _hasStoragePermission();
+      if (!granted) {
+        if (mounted) {
+          setState(() {
+            _permissionDenied = true;
+          });
+        }
+        return;
+      }
 
-    // 刷新时清缓存，重新查询 MediaStore（否则新增/删除的视频不生效）
-    VideoScanner.clearCache();
-    final videos = await VideoScanner.scanVideos();
-    // 建树 / 建文件夹列表移到后台 isolate（compute）执行：排序、建树、聚合
-    // 是同步纯函数，视频量几千条时在 UI 线程跑会有几十毫秒级卡顿
-    // （risk_audit #6）。TreeNode/VideoFile 均为纯数据（String/int/DateTime/
-    // List），可跨 isolate 传输；两条计算并行发起的独立 isolate。
-    final rootsFuture = compute(VideoScanner.buildTree, videos); // 树状模式：完整目录树
-    final foldersFuture =
-        compute(VideoScanner.buildFolderList, videos); // 列表模式：含直接视频的文件夹
-    final roots = await rootsFuture;
-    final folders = await foldersFuture;
-    if (!mounted) return;
-    setState(() {
-      _roots = roots;
-      _folders = folders;
-      _loading = false;
-    });
+      // 刷新时清缓存，重新查询 MediaStore（否则新增/删除的视频不生效）
+      VideoScanner.clearCache();
+      final videos = await VideoScanner.scanVideos();
+      // 建树 / 建文件夹列表移到后台 isolate（compute）执行：排序、建树、聚合
+      // 是同步纯函数，视频量几千条时在 UI 线程跑会有几十毫秒级卡顿
+      // （risk_audit #6）。TreeNode/VideoFile 均为纯数据（String/int/DateTime/
+      // List），可跨 isolate 传输；两条计算并行发起的独立 isolate。
+      final rootsFuture = compute(VideoScanner.buildTree, videos); // 树状模式：完整目录树
+      final foldersFuture =
+          compute(VideoScanner.buildFolderList, videos); // 列表模式：含直接视频的文件夹
+      final roots = await rootsFuture;
+      final folders = await foldersFuture;
+      if (!mounted) return;
+      setState(() {
+        _roots = roots;
+        _folders = folders;
+      });
+    } catch (e, s) {
+      debugPrint('加载视频失败: $e\n$s');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
   }
 
   /// 检查「允许管理所有文件」权限（低版本 Android 回退到存储权限）
