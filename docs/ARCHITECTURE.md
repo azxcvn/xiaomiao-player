@@ -153,8 +153,8 @@ lib/
 │   ├── file_operations_service.dart # 文件管理服务（复制/移动/重命名/删除 + 进度与协作式取消，dart:io 真实路径，§4.30）
 │   ├── file_selection_controller.dart # 页面级多选状态（进入/退出/切换/全选/剔除失效项，**非单例**，§4.31）
 │   ├── audio_service.dart     # 音频控制器（音轨列表/aid 单选/外部音轨导入·移除（临时）/声道/af 滤镜链应用；声道与处理为会话级，随播放器生命周期重置；不可播放音轨经 stream.log 判定后自动回退，§4.32）
-│   ├── subtitle_settings.dart # 字幕设置（延迟/大小/位置/颜色/描边模式/内嵌样式覆盖/自定义字体/外挂字幕记忆/重置样式，ChangeNotifier + 持久化）
-│   ├── subtitle_service.dart  # 字幕控制器（单选模型：track-list/sid 同步/sub-add/sub-remove + 同名字幕自动加载（**外挂字幕来源唯一**：初始化 `sub-auto=no`，同名加载只由 App 负责）+ 设置应用（字体目录构造期注入，运行期只写 sub-font）+ 切集重应用 + 外挂字幕跨会话恢复，§4.32）
+│   ├── subtitle_settings.dart # 字幕设置（延迟/大小/位置/颜色/描边模式/背景色→模式隐式联动/「背景框大小」/内嵌样式覆盖/自定义字体/外挂字幕记忆/重置样式，ChangeNotifier + 持久化，§4.34）
+│   ├── subtitle_service.dart  # 字幕控制器（单选模型：track-list/sid 同步/sub-add/sub-remove + 同名字幕自动加载（**外挂字幕来源唯一**：初始化 `sub-auto=no`，同名加载只由 App 负责）+ 按字段样式写入 + 等待式轨道刷新 + 切轨「用户意图钉回」+ 记忆路径失效清理 + 切集重应用，§4.32/§4.34）
 │   ├── app_font_settings.dart # App 全局字体设置（开关/族名/字号/字重 + loadFontFromList 注册，ChangeNotifier + 持久化，§4.12）
 │   ├── equalizer_settings.dart # 音频均衡器设置（5 频段/低音增强/虚拟环绕/预设，ChangeNotifier + 持久化，AudioController 订阅重应用 af 链）
 │   ├── danmaku_service.dart    # 弹幕控制器（业务层：本地同名/手动导入/网络弹幕装载 + 1s tick 秒桶发射 + canvas 渲染层显隐/暂停/倍速同步 + 设置订阅应用 + 切集自动匹配，横竖屏共享）
@@ -349,6 +349,7 @@ lib/
     ├── async_session.dart     #   可替换异步任务的会话号令牌（§4.29 C1）
     ├── async_single_flight.dart # 在飞去重（同 key 共享 Future，失败不缓存，§4.29 C1）
     ├── async_serial_queue.dart #  串行异步队列（按序执行、异常不打断队列，§4.29 C1）
+    ├── async_coalesced_reload.dart # 串行合并的等待式重跑器（并发请求 → 当前轮 + 一轮补跑，§4.29 C1 / §4.34）
     ├── loading_state.dart     #   异步数据三态 sealed（Loading/Loaded/LoadError）+ PageResult（§4.29 C2）
     ├── chapter_utils.dart     #   章节纯函数（标题分类/片段派生/当前章节/跳过目标）
     ├── intro_outro_skip.dart  #   片头片尾动作决策纯函数（跳过片头/切下一集/无动作）
@@ -356,6 +357,8 @@ lib/
     ├── audio_shuffle.dart     #   听视频随机播放算法（结合当前时间刻，纯函数）
     ├── subtitle_auto_match.dart # 同名字幕自动匹配纯函数（扩展名优先级 + 同名优先 + 简/繁语言后缀，对齐小喵）
     ├── subtitle_sort.dart     #   自建字幕选择器排序纯函数（目录恒在前）
+    ├── subtitle_memory.dart   #   外挂字幕记忆路径失效分流（失效项剔除 + 回落同名扫描，§4.34）
+    ├── subtitle_style_properties.dart # 字幕样式「字段 → mpv 属性」写入表（按字段 apply，§4.34）
     ├── danmaku_timeline.dart  #   弹幕时间轴纯函数（同秒多条 1 秒内错峰延迟 + 时间轴偏移）
     ├── danmaku_local_file.dart #  同名弹幕文件查找纯函数（9 种命名规则，只查同目录）
     ├── danmaku_random_color.dart # 随机渐变色纯函数（HSV 色轮黄金角步进推进器，忽略文件颜色）
@@ -1495,6 +1498,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | `AsyncSession` | 会话号令牌：`start()` 开新会话、`isCurrent(token)` 判废、`invalidate()` 主动作废 | `DanmakuController._loadSession`（4 处加载路径）、`DanmakuScheduler._generation` |
 | `AsyncSingleFlight<T>` | 同 key 并发只执行一次、共享 Future；**失败不缓存**、完成后记录清除 | `VideoInfoService`（视频信息 + 基本元数据两条链路） |
 | `AsyncSerialQueue` | 按提交顺序串行执行；**任务异常不打断队列**（错误抛给各自调用方）；`idle` 等排空 | `PlaybackProgressService` 进度写盘串行链 |
+| `AsyncCoalescedReload` | 串行合并重跑：在跑时只登记一次「待补跑」，等待者拿到的是**不早于自己请求**开跑的那一轮（不是"已经开跑的那一轮"） | `SubtitleController.reload()`（轨道刷新，§4.34）。⚠️ 这里**不能**用 `AsyncSingleFlight`：single-flight 让后来者 join 早已开跑的旧轮，`sub-add` 之后照样拿到旧快照 |
 
 **C2 通用分页**：
 
@@ -1737,10 +1741,67 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   `didChangeAppLifecycleState` **只关乎控制层显隐**（退后台隐藏、回前台恢复），
   与"进入小窗"无关——**不要再把它当 PiP 生命周期来"修"**。
 
+### 4.34 字幕链路：按字段写入 + 等待式刷新 + 用户意图钉回（B5）
+
+> 来源：体检报告 P1-9 / P1-10 / P1-11 / P2-16 与真机追加的 P1-41 后半 / P2-42。
+> 改动集中在 `services/subtitle_service.dart` + `views/subtitle_panel.dart`，
+> 外加三个纯函数件（均可单测、**不需要构造 media_kit `Player`**）。
+
+**三个纯函数件**
+
+| 文件 | 职责 | 为什么抽出来 |
+|---|---|---|
+| `utils/subtitle_style_properties.dart` | `SubtitleStyleField`（14 个字段）+ `SubtitleStyleValues`（纯数据快照）+ `subtitleStyleWrites` / `allSubtitleStyleWrites` | 「一个字段只写它自己那几条 mpv 属性」是可测事实；顺带把「运行期绝不写 `sub-fonts-dir`」变成断言（§4.10） |
+| `utils/subtitle_memory.dart` | `partitionSubtitleMemoryPaths`：把外挂字幕记忆路径分流成「仍存在 / 已失效」 | P1-9 的判据是纯逻辑（存在性由调用方注入），单测不碰文件系统 |
+| `utils/async_coalesced_reload.dart` | `AsyncCoalescedReload`：并发请求合并成「当前轮 + 一轮补跑」 | P1-11 的核心语义，见 §4.29 C1 |
+
+**三条链路纪律**（改这个文件前必读）
+
+| 纪律 | 落点 | 反例（都踩过） |
+|---|---|---|
+| **按字段写入** | 滑杆实时路径 `applyStyleField(field)` 与全量路径 `applyAllSettings()` **共用同一张表** | 旧实现每次拖动都全量写 16 条 mpv 属性 + 一次设置写盘 |
+| **等待式刷新** | `reload()` → `AsyncCoalescedReload.run()`；`fetchTracks` 抛错时**保留上一份快照**而不是清空 | 旧实现 `if (_loading) return;`：「恢复上次选中字幕」拿到半新半旧快照 → 静默不选中；读轨道被打断还会把整批置空 → UI 闪「当前视频没有字幕」 |
+| **用户意图钉回** | 切轨期间 `_selectionLocks`（**嵌套计数**，连点不会提前解锁）锁住事件驱动刷新 → 自己 `reload()` → `_reassertSelection()` 按外挂**源路径**重写 `sid` | 旧实现里 `sub-reload` 重挂外挂轨会改轨道 id，事件驱动的 `reload`/`_syncActiveFromMpv` 随即用 mpv 的临时 sid 覆盖用户刚点的选择（`_primary` 抖动 → 条件行闪现 → 面板跳动） |
+
+**P1-9 外挂字幕记忆失效清理**：`reapplyForMedia` 挂载前逐个校验记忆路径存在性，
+失效项从设置里删除，**全部失效时照常回落同名扫描**（删掉字幕文件再放回去能重新自动加载）。
+此前「记忆非空即跳过同名扫描 + 死路径 `sub-add` 静默失败」= 该视频**永久**没有字幕
+（同类「记忆死路径」教训：§4.11 的弹幕记忆恢复与 §7 的选择器死路径防护都已处理，字幕侧此前没有）。
+
+**P2-42 面板条件行**：「关闭字幕」胶囊改**常驻**（无选中时置灰不可点），高度恒定、零位移。
+⚠️ 常驻只是消除可见位移，根因由上面的「意图钉回」治本——**两者缺一不可**（只做常驻 = 遮症状）。
+
+**关键决策（用户拍板，2026-09）**
+
+| 决策 | 内容 | 原因 |
+|---|---|---|
+| **D12 字幕滑杆必须实时生效** | 字幕样式面板的所有滑杆**不得**套用弹幕面板 `_CommitSliderTile` 的「松手提交」 | 弹幕那套是为「一次改动触发全层 canvas 重绘 → 卡」专门做的优化；字幕只有一条轨道、每个事件只写 1 条属性，没有那个压力。**实时预览是既定交互**，改动它会直接破坏手感（真机反馈） |
+| **D13 背景颜色隐式驱动描边模式** | 不提供「描边模式」选择器：设了背景色 → 背景框模式；选「无」→ 描边模式，由 `SubtitleSettings.setBackColor` 一处裁决（载入时也自洽纠正） | mpv 只在盒子模式下才画 `sub-back-color`；UI 控件越少越好 |
+| **模式用 `background-box`，不用 `opaque-box`** | 见下表 | `opaque-box` 画的是两个盒子、阴影盒默认被压在下面 → 「背景色滑杆像摆设、调描边颜色才改到色块」（真机踩过） |
+| **「背景框大小」= `sub-shadow-offset`** | 盒子留白做成滑杆，文案叫**「背景框大小」**（不写「留白 / 阴影偏移」），只在设了背景色时显示 | 用户感知的是「色块多大」，不需要知道背后的 mpv 原理；盒子大小 = 文字 + 描边粗细 + 本值 |
+| **文案纪律** | 开关副标题**不写**「已开启 / 已关闭」（开关本身就是状态）；一件事一段、多件事**分点列** | 真机反馈（2026-09）：副标题说「内嵌字幕」不准确（外挂同理）；提示文本挤成一段可读性差 |
+
+**⚠️ mpv 0.38+ 的字幕样式取值改名**（本项目内核 mpv `v0.41.0-110`；
+[upstream f8e3cf9](https://github.com/mpv-player/mpv/commit/f8e3cf92b5f4b09177b39f0674c2d7cc776365a8)，
+取值表可从内核 `libmpv.so` 的字符串与内置 profile 复核）：
+
+| 项 | 旧（≤0.37） | 现在 | 后果 / 处理 |
+|---|---|---|---|
+| `sub-border-style` | `flat` / `outline` / `box` | `none` / `outline-and-shadow` / `opaque-box` / `background-box` | 旧值**写入被 mpv 拒绝**（静默失败 → 保持默认 `outline-and-shadow`）：这是「背景颜色怎么调都没效果」的根因。`SubtitleBorderStyle.byMpvValue` 兼容旧持久化值 |
+| `sub-border-color` / `sub-border-size` | 本体 | `sub-outline-color` / `sub-outline-size` 的**别名** | 沿用旧名仍有效，未改写入 |
+| `sub-shadow-color` | 独立属性 | **`sub-back-color` 的别名**（同一字段，不能各设） | App **不再写**它（两个都写会互相覆盖）；`SubtitleStyleField` 里已删除 shadowColor 字段 |
+
+**盒子几何（libass）**：盒子必须包住**含描边**的文字 → 大小 = 文字 + `sub-outline-size`
++ `sub-shadow-offset`，所以「描边粗细」必然带动盒子大小（mpv 层面解不掉）；mpv 自带的
+box 观感就是 `outline-size=0` + `shadow-offset=4`（内核 `libmpv.so` 里的 `[sub-box]` profile）。
+
+**面板结构**（`views/subtitle_panel.dart` 字幕样式页）：文字颜色 / 描边颜色（+描边粗细）/
+背景颜色（+背景框大小）/ 文字效果（粗体·斜体·字间距·模糊）/ 强制覆盖内嵌样式开关 /
+ASS 限制提示（`_AssLimitNote`：小标题 + 三条分点）/ 重置所有样式。
+
 ---
 
 ## 5. 新增功能指南（按功能类型）
-
 ### 5.1 新增一个页面
 
 1. 建目录 `lib/pages/<name>/`，页面文件 `xxx_page.dart`（StatefulWidget）
@@ -1836,7 +1897,10 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   - `test/formatters_network_test.dart` — 网速格式化（KB/MB 自动切换两位小数）与在线媒体判定纯函数（阶段1 第 1 点）
   - `test/formatters_test.dart` — 截图文件名纯函数（app名称 + 日期 + 到秒时间，避免同日覆盖）+ **底栏时间文本**（`formatPlaybackTimeText`：已播/总、已播/剩余、**剩余为负清零不出现 `-59:55`**、时长未知退化、跨小时，§4.33）
   - `test/subtitle_track_test.dart` — 字幕轨道纯函数（展示名/ASS 样式判定/格式过滤/对齐/颜色 + RGBA↔mpv 颜色转换，阶段1 第 3 点）
-  - `test/subtitle_settings_test.dart` — 字幕设置服务（默认值/延迟叠加与钳制/描边模式/外挂字幕记忆/字体源目录记忆/重置样式持久化）
+  - `test/subtitle_settings_test.dart` — 字幕设置服务（默认值/延迟叠加与钳制/描边模式与外挂字幕记忆/字体源目录记忆/重置样式持久化 + **背景颜色隐式驱动描边模式**（有背景色→背景框、选「无」→描边、载入自洽纠正）+ **旧值 `flat`/`outline`/`box` 兼容映射** + 「背景框大小」持久化与 0–20 钳制，§4.34）
+  - `test/subtitle_style_properties_test.dart` — 字幕样式「字段 → mpv 属性」写入表（数值格式化/族名解析/**每字段只写自己那几条**（`backColor` 连 `sub-border-style`、`font` 三条常量开关）/全量写入顺序回归锁/颜色 null 回落/**绝不写 `sub-fonts-dir`** · **绝不写 `sub-shadow-color`**，§4.34）
+  - `test/subtitle_memory_test.dart` — 外挂字幕记忆路径失效分流（全部/部分/全部失效、去重保序、空串忽略、失效路径绝不出现在有效集，§4.34）
+  - `test/async_coalesced_reload_test.dart` — 等待式串行重跑器（空闲即跑、并发合并为一轮补跑、等待者等到补跑结束、补跑期间新请求再补一轮、绝不并发、抛错交给等待者且随后仍可用，§4.29/§4.34）
   - `test/subtitle_auto_match_test.dart` — 同名字幕自动匹配纯函数（同名候选/扩展名优先级/完全同名优先/简繁语言后缀/短名优先/无匹配）
   - `test/subtitle_sort_test.dart` — 自建字幕选择器排序纯函数（目录恒在前/大小日期升降序）
   - `test/audio_track_test.dart` — 音轨纯函数（展示名/声道枚举/格式过滤/audio-channels 映射/af 滤镜链组装，工作.md 音频功能）
@@ -1867,8 +1931,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   - `test/player_danmaku_network_panel_test.dart` — 网络弹幕搜索面板（40dp 搜索框定高/框下历史胶囊+清除/命中折叠与重新展开/结果卡收起态不构建子树+手风琴/选集回调+关闭面板）
   - `test/player_danmaku_settings_panel_test.dart` — 弹幕设置面板（两段式布局/开关滑杆实时写设置/恢复默认/读数联动/屏蔽词增删 + **「弹幕合并」开关位于去重与屏蔽词之间**）
   - `test/player_panel_theme_test.dart` — 播放器暗色面板强调色跟随主题（换主题色滑杆轨道/拇指随之改变且不等于旧写死蓝 0xFF4FC3F7；保留无气泡外观；浅色主题下派生色更亮；同 seed 复用缓存实例）
-  - `test/subtitle_file_picker_panel_test.dart` — 自建选择器面板（记忆文件夹被删向上回退/空目录正常落地/导航失败维持原状/选择回调+文件夹记忆）
-  - `test/bili_bangumi_test.dart` — 番剧模型 fromJson（索引/条件/搜索/季详情/选集/时间表 + 数字字段字符串兼容）+ 链接解析纯函数（ss/ep/BV）
+  - `test/subtitle_file_picker_panel_test.dart` — 自建选择器面板（记忆文件夹被删向上回退/空目录正常落地/导航失败维持原状/选择回调+文件夹记忆）  - `test/bili_bangumi_test.dart` — 番剧模型 fromJson（索引/条件/搜索/季详情/选集/时间表 + 数字字段字符串兼容）+ 链接解析纯函数（ss/ep/BV）
   - `test/bili_bangumi_service_test.dart` — 番剧服务（MockClient：条件/索引分页/推荐/搜索 WBI 签名/季详情 season_id·ep_id/时间表合并 + 业务错误语义化）
   - `test/bili_dash_test.dart` — playurl DASH 模型（DASH 解析/baseUrl·baseUrls 双格式/清晰度档/clips/dolby·flac 合并/数字字符串兼容/默认选流优先 30280）
   - `test/bili_pb_test.dart` — protobuf wire 解码器（varint/length-delimited/未知字段跳过）+ 弹幕消息字段号解析（DmWebViewReply.dmSge.total / DanmakuElem）
@@ -2091,7 +2154,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 重试时复用同一个 `http.Request` → 「Request has already been sent」 | 重试闭包内**新建** Request（`sendGet`、短链展开每跳都新建）（§4.28） |
 | 响应超限时用 `drain()` 丢弃 → 把上游巨量响应全部下载下来 | 超限一律 `stream.listen(null).cancel()` 取消订阅（一个字节都不读）；错误响应的丢弃用 `drainStreamCapped`（带上限）（§4.28） |
 | 想直接用 mpv 内置 stats/console 页（mpvRx 的 7 页统计） | 本项目自编 libmpv **未编译 Lua**，`script-binding stats/...` 静默无反应；改用 Dart 侧读 mpv 属性自建诊断页（§4.27） |
-| 用 PowerShell `Set-Content`/`Get-Content -Raw` 改源码 → UTF-8 被写成 ANSI，中文全乱码 | 源码编辑一律用编辑工具（edit/write）；确需 PowerShell 写文件时用 `[System.IO.File]::WriteAllText` + `UTF8Encoding($false)`（§4.28 排查记录） |
+| 用 PowerShell `Set-Content`/`Get-Content -Raw` 改源码 → UTF-8 被写成 ANSI，中文全乱码 | 源码编辑一律用编辑工具（edit/write）；确需 PowerShell 写文件时用 `[System.IO.File]::WriteAllText` + `UTF8Encoding($false)`（§4.28 排查记录）。⚠️ B5 期间**再次踩到**：对 `subtitle_panel.dart` 用 `-replace` + `Set-Content` 批量改调用点，整文件被写成 ANSI（中文全乱、行也被并掉），只能 `git checkout` 回滚后用编辑工具逐处重做——**批量文本改动不要用 PowerShell** |
 | 分页控制器「加载成功但结果为空」被当成加载中 → 空列表永远转圈 | `CommonListController` 用 `_hasLoadedOnce` 区分「未加载」与「加载过但无数据」，空结果返回 `Loaded([])`（§4.29 C2） |
 | 分页列表刷新失败直接把旧数据清空 + 报错 | 刷新失败只记 `error`（保留 `Loaded` 与旧数据）；换关键词/筛选条件才 `reset()`（§4.29 C2） |
 | 在飞去重手写 Map + try/finally 分散多处、失败会把错误粘住 | 统一用 `AsyncSingleFlight`（失败不缓存、完成即清记录）；串行写盘用 `AsyncSerialQueue`（§4.29 C1） |
@@ -2113,4 +2176,14 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 调色板风格选「保真型」重启后变成「中性型」（前 8 个风格全中招） | 一次性迁移必须门控：旧键 `theme_variant` 只在**新键 `theme_variant_scheme_v2` 缺失**时迁移一次并写回新键；新旧 index 语义冲突时不能靠 index 范围猜新旧（§4.7） |
 | 听视频从「打开链接/最近播放/历史记录/网络存储/B站」等**不传 playlist** 的入口进入即崩（`ArgumentError`） | `num.clamp` 要求 `lower ≤ upper`：空列表 `(-1).clamp(0, -1)` 必抛错；空表一律 `_videos.isEmpty ? 0 : index.clamp(0, len-1)`（§4.30） |
 | 同一外挂字幕被挂**两次**（面板出现两条一模一样的 `ass · 外挂 · ASS`）→ 点轨道高亮乱跳、界面闪烁；字幕名与视频名完全相同时必现，加 `-SC`/`-TC` 后缀则不复现 | 外挂字幕**来源唯一化**：`SubtitleController.applyOnInit()` **首行**（任何 `await` 之前）`setProperty('sub-auto','no')` —— mpv 默认会按同名自动挂一条，而 `_autoLoadSameNameSubtitle` 又 `sub-add` 同一条；⚠️ 代价是失去 mpv 原生匹配（字幕放 `sub/` 子目录不再自动加载） |
-| 字幕面板「关闭字幕」是**条件行**（`if (hasSelection)`），随选中态插入/移出 → 下方「导入外部字幕」上下跳动一格，快速点外挂轨时肉眼可见闪烁 | **待修（B5）**：根因是切轨 `sub-reload` 让外挂轨 id 变化、`reload()`（丢弃式）与 `_syncActiveFromMpv` 覆盖用户选择造成 `_primary` 抖动；修法为服务侧治本（按用户意图重设 sid + 等待式 reload/会话号）+ UI 侧常驻化或固定高度。**仅把该行改成常驻属遮住症状，不作最终方案** |
+| 字幕面板「关闭字幕」是**条件行**（`if (hasSelection)`），随选中态插入/移出 → 下方「导入外部字幕」上下跳动一格，快速点外挂轨时肉眼可见闪烁 | **已修（B5）**：根因是切轨 `sub-reload` 让外挂轨 id 变化、`reload()`（丢弃式）与 `_syncActiveFromMpv` 覆盖用户选择造成 `_primary` 抖动；服务侧治本（切轨期间锁事件驱动刷新 + 等待式 reload + 按外挂源路径把选择钉回 `sid`）+ UI 侧该行**常驻**（无选中置灰）。⚠️ 常驻只消除可见位移，两条缺一不可（§4.34） |
+| **字幕「背景颜色」怎么调都没效果**（有背景色、mpv 却不画） | 两层原因：①App 写 `sub-border-style=flat`/`box` —— mpv 0.38 起只认 `none`/`outline-and-shadow`/`opaque-box`/`background-box`，旧值**写入被拒**、mpv 保持默认描边模式；②`sub-back-color` 只在盒子模式下才画。修法：取值改名兼容 + 背景色隐式驱动模式（§4.34） |
+| 调「背景颜色」滑杆毫无反应，反而滑到「描边颜色」的自定义滑杆才能改到色块 | 模式选错：`opaque-box`（ASS `BorderStyle=3`）画的是**两个**盒子 —— 描边盒用 `sub-outline-color`、阴影盒才是 `sub-back-color` 且按 `sub-shadow-offset` 偏移；本 App 阴影偏移默认 0 → 两盒完全重合、阴影盒被压在下面。改用 `background-box`（`BorderStyle=4`：一个盒子、明确用 `sub-back-color`）后两个控件各管各的（§4.34） |
+| 「描边粗细」会同步改变背景色块的**整体大小** | libass 的盒子必须包住**含描边**的文字：盒子大小 = 文字 + `sub-outline-size` + `sub-shadow-offset`，mpv 层面**解不掉**。App 侧的解耦方式是另给一个「背景框大小」滑杆（= `sub-shadow-offset`）；mpv 自带的 box 观感是 `outline-size=0` + `shadow-offset=4`（§4.34） |
+| 「阴影颜色」与「背景颜色」互相覆盖（改一个另一个被抹掉） | mpv 0.38 起 `sub-shadow-color` 是 `sub-back-color` 的**别名**（同一字段，不能各设）。App 侧的写入表**删掉** shadowColor 字段、不再写 `sub-shadow-color`；测试锁死「任何字段任何路径都不得出现该属性」（§4.34） |
+| 把弹幕面板「松手才提交」的纪律照抄到字幕样式滑杆 → 拖动过程完全看不到变化 | 弹幕那套（`_CommitSliderTile`）是为「一次改动触发全层 canvas 重绘 → 卡」专门做的优化；**字幕只有一条轨道、每个事件只写 1 条属性**，实时预览才是既定交互（用户明确否决改动，D12）。性能问题用「按字段写入」解决，不用「延后提交」（§4.34） |
+| 样式滑杆/预设色「点了没反应」或「拖完第一次没变化」 | 设置 setter 首行 `await ensureLoaded()` 会挂起，紧随其后的 apply 读到的是**旧值**：离散操作（点一下）没有下一个事件来纠正就永远不生效。**先 `await` 设置落值、再按字段下发 mpv**（§4.34） |
+| 「恢复上次选中字幕」静默失败 / 面板显示「当前视频没有字幕」 | `reload()` 旧实现是**丢弃式**（`if (_loading) return;`）：在飞时调用方立即返回却假定 `_tracks` 已最新；`fetchTracks` 被打断还会把整批置空。改用 `AsyncCoalescedReload`（当前轮 + 一轮补跑），并让读轨道失败时**保留上一份快照**（§4.29/§4.34） |
+| 切轨瞬间高亮乱跳、`_primary` 短时变 null、面板行上下闪 | `sub-reload` 会把外挂轨删掉重挂（**轨道 id 变化**），期间 mpv 连发轨道事件，事件驱动的 `reload`/`_syncActiveFromMpv` 用临时 sid 覆盖用户刚点的选择。切轨期间锁住事件驱动刷新（嵌套计数）+ 自己刷新一次 + 按**外挂源路径**把 `sid` 钉回去（§4.34） |
+| 用户删掉/改名前次自动加载的外挂字幕后，该视频**永久**没有字幕（`sub-add` 静默失败且同名扫描被跳过） | 挂载前逐个校验记忆路径存在性（`partitionSubtitleMemoryPaths`），失效项从设置里删除、全部失效时回落同名扫描。同类「记忆死路径」教训在 §4.11（弹幕记忆）与 §7（选择器死路径）都记过，字幕侧此前没有清理（§4.34） |
+| 开关副标题写「已开启：…」/「已关闭：…」；多件事的说明挤成一段长句 | 开关本身就是状态，前缀是废话；副标题只描述**当前状态的含义**且不要不准确地限定范围（「内嵌字幕」→「字幕」）。多件事**分点列**（小标题 + 每点一行 + 悬挂缩进），别挤成一段（§4.34，真机反馈） |

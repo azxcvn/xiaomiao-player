@@ -112,27 +112,58 @@ enum SubtitleAlign {
       };
 }
 
-/// 字幕描边模式（mpv `sub-border-style`）：决定立体感的呈现方式。
-/// 面板「描边模式」三选一，并据此提示应该调节哪个颜色/粗细。
+/// 字幕描边模式（mpv `sub-border-style`）：决定字幕的「边框 / 背景」怎么画。
+///
+/// ⚠️ **mpv 0.38 起改了这一组选项**（本项目的内核是 mpv `v0.41.0-110`，见
+/// [upstream f8e3cf9](https://github.com/mpv-player/mpv/commit/f8e3cf92b5f4b09177b39f0674c2d7cc776365a8)）：
+/// - 合法取值只有 `none`(0) / `outline-and-shadow`(1) / `opaque-box`(3) /
+///   `background-box`(4)，**旧值 `flat` / `box` 会被 mpv 拒绝**（写入静默失败，
+///   mpv 保持默认 `outline-and-shadow`）——这正是「背景颜色怎么调都没效果」的根因；
+/// - `sub-border-color` / `sub-border-size` 已改名为 `sub-outline-color` /
+///   `sub-outline-size`（旧名保留为别名，故 App 现有写入仍有效）；
+/// - `sub-shadow-color` 变成 `sub-back-color` 的**别名**（同一字段，两者不能各设）。
+///
+/// ⚠️ **[box] 用 `background-box`，不能用 `opaque-box`**（真机踩过）：
+/// `opaque-box` 画的是**两个**盒子 —— 描边盒用 `sub-outline-color`，阴影盒才是
+/// `sub-back-color` 且位置由 `sub-shadow-offset` 偏移；本 App 的阴影偏移默认 0，
+/// 两个盒子完全重合、阴影盒被压在下面 → 用户看到的色块始终是**描边颜色**画的，
+/// 「背景颜色」滑杆调的是一个看不见的盒子（表现为「背景颜色滑块是摆设、调描边颜色
+/// 才能改到色块」）。`background-box` 只画**一个**盒子、且**明确用 `sub-back-color`**
+/// （描边仍照旧画在文字轮廓上），两个控件才各管各的。
+///
+/// ⚠️ **盒子大小是「文字 + 描边粗细 + `sub-shadow-offset`」三者之和**（libass 的
+/// 几何定义：盒子必须包住含描边的文字，无法解耦）。面板把 `sub-shadow-offset`
+/// 暴露成「**背景框大小**」（管盒子的内边距），「描边粗细」管文字轮廓——两个滑杆
+/// 各管一半，但描边变粗时盒子仍会跟着大一点，这是预期。mpv 自带的 box 观感
+/// （内核 `libmpv.so` 的 `[sub-box]` profile）就是 `outline-size=0` + `shadow-offset=4`。
+///
+/// **本 App 不提供「描边模式」选择器**（用户拍板）：模式由「背景颜色」隐式驱动
+/// ——有背景色 → [box]（否则 mpv 不画背景色），选「无」→ [outline]
+/// （见 `SubtitleSettings.setBackColor`）。枚举保留三态供设置层与持久化表达。
 enum SubtitleBorderStyle {
-  /// 无描边（flat：实心边缘，仅文字色）
-  none('flat', '无'),
+  /// 无边框、无背景（mpv `none`，对应 ASS `BorderStyle=0`）
+  none('none', '无'),
 
-  /// 经典细描边（outline）
-  outline('outline', '描边'),
+  /// 描边 + 阴影（mpv `outline-and-shadow`，ASS `BorderStyle=1`，也是 mpv 默认）
+  outline('outline-and-shadow', '描边'),
 
-  /// 字幕后方背景框（box）
-  box('box', '背景框');
+  /// 包住整段字幕的背景框，颜色 = `sub-back-color`（mpv `background-box`，libass 的 `BorderStyle=4`）
+  box('background-box', '背景框');
 
   /// mpv 属性值
   final String mpvValue;
   final String label;
   const SubtitleBorderStyle(this.mpvValue, this.label);
 
+  /// 从 mpv 取值 / 历史持久化值还原（兼容 0.38 之前的旧名）。
+  ///
+  /// 未知值一律回落 [outline]：那是 mpv 自己的默认值，也是 App 一直以来的实际观感。
   static SubtitleBorderStyle byMpvValue(String v) => switch (v) {
-        'outline' => SubtitleBorderStyle.outline,
-        'box' => SubtitleBorderStyle.box,
-        _ => SubtitleBorderStyle.none,
+        'none' || 'flat' => SubtitleBorderStyle.none,
+        'background-box' || 'box' => SubtitleBorderStyle.box,
+        // 'opaque-box' 曾是本 App 用错的值（见类文档），一并归到背景框
+        'opaque-box' => SubtitleBorderStyle.box,
+        _ => SubtitleBorderStyle.outline,
       };
 }
 

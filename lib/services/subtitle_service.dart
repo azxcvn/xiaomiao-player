@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart' hide SubtitleTrack;
-import 'package:moumou/models/subtitle_font_injection.dart';
 import 'package:moumou/models/subtitle_track.dart';
 import 'package:moumou/services/device_services.dart';
 import 'package:moumou/services/subtitle_settings.dart';
+import 'package:moumou/utils/async_coalesced_reload.dart';
 import 'package:moumou/utils/subtitle_auto_match.dart';
+import 'package:moumou/utils/subtitle_memory.dart';
+import 'package:moumou/utils/subtitle_style_properties.dart';
 import 'package:path/path.dart' as p;
 
 /// 字幕控制器：绑定单个播放器（横竖屏共享同一实例），
@@ -29,11 +31,24 @@ import 'package:path/path.dart' as p;
 ///   （保留 ASS 原生字体、特效、位置和排版，同时响应缩放调节）；
 /// - 开启「强制覆盖内嵌样式」时，`sub-ass-override` 设为 `force`（用户样式强制生效）。
 /// - 普通文本字幕（SRT/VTT）在 scale 和 force 模式下均能正常响应用户样式。
+///
+/// **B5 定下的三条链路纪律**（改动此处前先读）：
+/// - **按字段写入**：高频样式改动走 [applyStyleField]（字段 → 属性表见
+///   `utils/subtitle_style_properties.dart`），只有初始化/切媒体/重置才全量
+///   [applyAllSettings]（P1-10）；
+/// - **等待式刷新**：轨道刷新一律经 [reload]（`AsyncCoalescedReload` 合并成
+///   「当前轮 + 补跑」），调用方恢复时 `tracks` 至少含它请求之后的状态（P1-11）；
+/// - **用户意图钉回**：`sub-reload` 会重挂外挂轨、改变轨道 id，切轨流程锁住
+///   事件驱动刷新、刷新一次后按「外挂源路径」把选择重新钉回 `sid`（P1-41 后半）。
 class SubtitleController extends ChangeNotifier {
   SubtitleController(this._player, {SubtitleSettings? settings})
       : _settings = settings ?? SubtitleSettings.instance {
-    // 监听 media_kit 轨道流：mpv 解复用完成或轨道变动时自动刷新
+    // 监听 media_kit 轨道流：mpv 解复用完成或轨道变动时自动刷新。
+    // ⚠️ 显式切轨期间（[selectTrack] 的 `sub-reload`）**必须**跳过：那次重建会
+    // 连发多次轨道事件，每次都刷新的话会用 mpv 临时 sid 覆盖用户刚点的选择
+    // （P1-41 后半的 `_primary` 抖动/闪空）；切轨流程自己会锁结束后刷新一次。
     _tracksSubscription = _player.stream.tracks.listen((_) {
+      if (_selectionLocked) return;
       reload();
     });
   }
@@ -64,8 +79,34 @@ class SubtitleController extends ChangeNotifier {
   /// 最近一次 reapply 对应的媒体（防横竖屏页重复应用 / 切集重复添加）
   String? _appliedMedia;
 
-  /// 轨道读取是否进行中（防并发刷新互相覆盖）
-  bool _loading = false;
+  /// 轨道刷新：等待式串行重跑（P1-11）。
+  ///
+  /// 旧实现是「丢弃式」`if (_loading) return;` —— 在飞时调用方立即返回，
+  /// 却假定 `_tracks` 已最新，于是「恢复上次选中字幕」静默失败、UI 显示
+  /// 「当前视频没有字幕」。现在并发刷新合并成「当前轮 + 一轮补跑」，
+  /// 每个调用方恢复执行时拿到的轨道表**至少包含它请求之后的状态**。
+  late final AsyncCoalescedReload _reloader = AsyncCoalescedReload(_refreshTracks);
+
+  /// 显式切轨流程进行中（`sub-reload` 重建期）的**嵌套计数**：抑制事件驱动的
+  /// [reload]，由切轨流程收尾时统一等待式刷新 + 钉回用户意图（P1-41 后半）。
+  ///
+  /// 用计数而非 bool：快速连点会让两次 [selectTrack] 重叠执行，bool 会被先结束
+  /// 的那次提前解锁，重建期的事件又会漏进来。
+  int _selectionLocks = 0;
+  bool get _selectionLocked => _selectionLocks > 0;
+
+  /// 用户最近一次**显式**选择字幕的意图（P1-41 后半的「钉回」依据）。
+  ///
+  /// 切轨会 `sub-reload` 把外挂轨删掉重挂、**轨道 id 随之变化**，所以外挂轨
+  /// 记源路径（稳定）、内嵌轨记 id；「关闭字幕」记 [_intentClosed]。异步重建
+  /// 之后按它把选择重新写回 `sid`，迟到的轨道事件读到的就是正确轨道（幂等）。
+  String? _intentSourcePath;
+  String? _intentTrackId;
+  bool _intentClosed = false;
+  bool _hasIntent = false;
+
+  /// 已 dispose（异步刷新迟到时不得再 notify）
+  bool _disposed = false;
 
   /// 最近一次 fetchTracks 检测到被 mpv 选中的轨道 ID
   String? _lastSelectedTrackId;
@@ -137,32 +178,132 @@ class SubtitleController extends ChangeNotifier {
     final sid = await _readActiveSid();
     SubtitleTrack? resolved;
     if (sid != 'no' && sid.isNotEmpty) {
-      resolved = _resolveSelection(sid);
+      // 轨道 id 会因 `sub-reload` 重挂外挂轨而变化：解析不到时按**用户意图**
+      // （外挂轨按源路径，路径稳定）找回，别把用户刚点的那条丢掉（P1-41 后半）。
+      resolved = _resolveSelection(sid) ?? _resolveIntent();
     }
-    if (resolved == null && sid != 'no' && _lastSelectedTrackId != null) {
+    // 只有「用户从未显式选过/关过字幕」时才回落到上次探测到的选中项；
+    // 有意图时回落会把「关闭字幕」或刚点的选择重新点着（P1-41 后半）。
+    if (resolved == null && sid != 'no' && !_hasIntent && _lastSelectedTrackId != null) {
       resolved = _resolveSelection(_lastSelectedTrackId);
     }
     _primary = resolved;
     _primarySourcePath = resolved?.sourcePath;
-    notifyListeners();
+    _safeNotify();
   }
 
   /// 重新加载轨道列表并同步当前选中（以 mpv 实际 sid 为准）。
-  Future<void> reload() async {
-    if (_loading) return;
-    _loading = true;
+  ///
+  /// **等待式**（P1-11）：并发调用不互相丢弃，合并成「当前轮 + 一轮补跑」；
+  /// 每个调用方恢复执行时 `tracks` 至少包含它调用之后的状态。
+  Future<void> reload() => _reloader.run();
+
+  /// [reload] 的实际任务体（由 [AsyncCoalescedReload] 串行调度，绝不并发）。
+  Future<void> _refreshTracks() async {
+    List<SubtitleTrack>? tracks;
     try {
-      List<SubtitleTrack> tracks;
-      try {
-        tracks = await fetchTracks();
-      } catch (_) {
-        tracks = const [];
+      tracks = await fetchTracks();
+    } catch (_) {
+      // 读轨道被并发命令打断（`sub-add`/`sub-reload` 期间）时**保留上一份快照**，
+      // 不要清空：清空会让 UI 闪出「当前视频没有字幕」（P1-11 的可见症状）。
+      // 下一轮补跑/事件刷新会把真实轨道读回来。
+      tracks = null;
+    }
+    if (_disposed) return;
+    if (tracks != null) _tracks = tracks;
+    await _syncActiveFromMpv();
+  }
+
+  /// 记录用户显式选择意图（null = 关闭字幕）。
+  void _rememberIntent(SubtitleTrack? track) {
+    _hasIntent = true;
+    _intentClosed = track == null;
+    _intentTrackId = track?.id;
+    _intentSourcePath = track?.sourcePath;
+  }
+
+  /// 记录「按外挂字幕源路径」的选择意图（导入 / 同名自动加载用）。
+  void _rememberIntentPath(String sourcePath) {
+    _hasIntent = true;
+    _intentClosed = false;
+    _intentTrackId = null;
+    _intentSourcePath = sourcePath;
+  }
+
+  void _clearIntent() {
+    _hasIntent = false;
+    _intentClosed = false;
+    _intentTrackId = null;
+    _intentSourcePath = null;
+  }
+
+  /// 按用户意图在当前轨道表里找回应选中的轨道（找不到 = 意图已失效）。
+  SubtitleTrack? _resolveIntent() {
+    if (!_hasIntent || _intentClosed) return null;
+    final bySource = _resolveSelectionBySource(_intentSourcePath);
+    if (bySource != null) return bySource;
+    return _resolveSelection(_intentTrackId);
+  }
+
+  /// 把用户意图重新钉回 mpv（`sub-reload` 之后外挂轨 id 变化时会丢选中）。
+  ///
+  /// **以「mpv 当前 sid 是否已指向目标」为准重写 sid**：`sub-reload` 之后 mpv 的
+  /// sid 可能停在**已失效的旧 id** 上——此时 `_primary` 已由 [_syncActiveFromMpv]
+  /// 按意图路径找回、UI 显示为选中，但 mpv 侧实际没有生效的字幕；这时必须真写一次
+  /// `sid` 才能保证「UI 高亮的那条 = 真正渲染的那条」。反过来，sid 已等于目标 id
+  /// （内嵌轨、没被重挂的外挂轨都是这种）就不重复写，避免多余的重选动作
+  /// ——历史坑：内嵌 ASS 轨的样式依赖「`sub-ass-override` 先写、再 `sub-reload`」，
+  /// 无谓的重选会多一次副标题解码器重建，改这块时必验（§7）。
+  Future<void> _reassertSelection() async {
+    final native = _native;
+    if (native == null || !_hasIntent) return;
+    if (_intentClosed) {
+      // 显式「关闭字幕」也要钉住：重建期间 mpv 可能自己选了一条。
+      if (await _readActiveSid() != 'no') {
+        try {
+          await native.setProperty('sid', 'no');
+        } catch (_) {}
       }
-      _tracks = tracks;
-      await _syncActiveFromMpv();
-      notifyListeners();
+      _primary = null;
+      _primarySourcePath = null;
+      return;
+    }
+    final target = _resolveIntent();
+    if (target == null) return;
+    if (await _readActiveSid() != target.id) {
+      try {
+        await native.setProperty('sid', target.id);
+      } catch (_) {
+        return;
+      }
+    }
+    _primary = target;
+    _primarySourcePath = target.sourcePath;
+  }
+
+  /// 在「显式切轨锁」内执行 [body]：期间事件驱动的 [reload] 一律跳过。
+  Future<void> _withSelectionLock(Future<void> Function() body) async {
+    _selectionLocks++;
+    try {
+      await body();
     } finally {
-      _loading = false;
+      _selectionLocks--;
+    }
+  }
+
+  /// 通知监听者；已 dispose（异步刷新迟到）时静默返回，
+  /// 避免「ChangeNotifier used after dispose」断言。
+  void _safeNotify() {
+    if (_disposed) return;
+    notifyListeners();
+  }
+
+  /// 外挂字幕记忆路径是否仍可用（存在性校验，P1-9）。
+  bool _subtitlePathExists(String path) {
+    try {
+      return File(path).existsSync();
+    } catch (_) {
+      return false;
     }
   }
 
@@ -188,6 +329,7 @@ class SubtitleController extends ChangeNotifier {
   Future<void> selectTrack(SubtitleTrack? track) async {
     final native = _native;
     if (native == null) return;
+    _rememberIntent(track);
     try {
       await native.setProperty('sid', track?.id ?? 'no');
     } catch (_) {
@@ -201,9 +343,21 @@ class SubtitleController extends ChangeNotifier {
         track?.sourcePath ?? track?.id ?? 'no',
       );
     }
-    // 切轨道后重建一次，让 sub-ass-override 对新轨道生效（低频操作，可接受）
-    await applyStyleOverride();
-    notifyListeners();
+    // 切轨道后重建一次，让 sub-ass-override 对新轨道生效（低频操作，可接受）。
+    //
+    // ⚠️ `sub-reload` 会把外挂轨**删掉重挂**（轨道 id 变化），期间 mpv 连发
+    // 轨道事件；若每条事件都各自刷新一次，就会用 mpv 的临时 sid 覆盖用户刚点的
+    // 选择 → `_primary` 短暂为 null →「关闭字幕」条件行闪现、面板跳动
+    // （P1-41 后半 + P2-42 的真机现象，仅外挂轨触发）。因此这里：
+    // ①重建期间**锁住**事件驱动刷新；②重建完自己等待式刷新一次；
+    // ③按用户意图（外挂轨用源路径）把选择重新钉回 sid —— 之后迟到的轨道事件
+    // 读到的 sid 已是正确轨道，刷新幂等。
+    await _withSelectionLock(() async {
+      await applyStyleOverride();
+      await reload();
+      await _reassertSelection();
+    });
+    _safeNotify();
   }
 
   /// 面板点击轨道的两态循环：选中 → 关闭；未选中 → 选中。
@@ -228,12 +382,14 @@ class SubtitleController extends ChangeNotifier {
     if (!_externalPaths.contains(subtitlePath)) {
       _externalPaths.add(subtitlePath);
     }
+    _rememberIntentPath(subtitlePath);
     if (_currentMediaPath != null) {
       await _settings.addImportedSubtitleFor(_currentMediaPath!, subtitlePath);
       await _settings.setSelectedSubtitleFor(_currentMediaPath!, subtitlePath);
     }
     await reload();
-    notifyListeners();
+    await _reassertSelection();
+    _safeNotify();
     return true;
   }
 
@@ -251,9 +407,11 @@ class SubtitleController extends ChangeNotifier {
         await _settings.removeImportedSubtitleFor(_currentMediaPath!, source);
       }
     }
+    // 被移除的正是用户最后选中的那条 → 意图作废，交回 mpv 的 sid 决定后续。
+    if (source != null && _intentSourcePath == source) _clearIntent();
     _primarySourcePath = null;
     await reload();
-    notifyListeners();
+    _safeNotify();
   }
 
   /// 打开媒体 / 切集后调用（由播放页在 open 完成后触发）：
@@ -269,15 +427,26 @@ class SubtitleController extends ChangeNotifier {
     final native = _native;
     if (native == null) return;
 
-    // 获取当前视频专属导入的外挂字幕
-    final videoSubs = _settings.getImportedSubtitlesFor(mediaPath);
+    // 获取当前视频专属导入的外挂字幕，并**逐个校验存在性**（P1-9）：
+    // 用户删/改名了字幕文件后，记忆里的死路径会让 `sub-add` 静默失败，而
+    // 「记忆非空即跳过同名扫描」又让该视频**永久**没有字幕（文档 §4.11 记过的
+    // 「记忆死路径」教训，弹幕侧早已清理、字幕侧此前没有）。失效项从设置里删除，
+    // 全部失效时下面的同名扫描照常执行（把文件放回去即可重新自动加载）。
+    final remembered = _settings.getImportedSubtitlesFor(mediaPath);
+    final memo = partitionSubtitleMemoryPaths(
+      remembered,
+      exists: _subtitlePathExists,
+    );
+    for (final stale in memo.stale) {
+      await _settings.removeImportedSubtitleFor(mediaPath, stale);
+    }
     _externalPaths.clear();
-    _externalPaths.addAll(videoSubs);
+    _externalPaths.addAll(memo.valid);
 
-    // 同名字幕自动加载：仅当该视频还没有任何已导入字幕时扫描，
+    // 同名字幕自动加载：仅当该视频还没有任何**仍然有效**的已导入字幕时扫描，
     // 避免覆盖用户手动导入的选择；找到后 sub-add select 并记忆路径。
     String? autoLoadedPath;
-    if (videoSubs.isEmpty) {
+    if (memo.valid.isEmpty) {
       autoLoadedPath = await _autoLoadSameNameSubtitle(mediaPath);
       if (autoLoadedPath != null && !_externalPaths.contains(autoLoadedPath)) {
         _externalPaths.add(autoLoadedPath);
@@ -297,6 +466,7 @@ class SubtitleController extends ChangeNotifier {
     if (autoLoadedPath == null) {
       final savedSub = _settings.getSelectedSubtitleFor(mediaPath);
       if (savedSub == 'no') {
+        _rememberIntent(null);
         try {
           await native.setProperty('sid', 'no');
         } catch (_) {}
@@ -306,12 +476,20 @@ class SubtitleController extends ChangeNotifier {
         final t =
             _resolveSelectionBySource(savedSub) ?? _resolveSelection(savedSub);
         if (t != null) {
+          _rememberIntent(t);
           try {
             await native.setProperty('sid', t.id);
           } catch (_) {}
           _primary = t;
           _primarySourcePath = t.sourcePath;
+        } else {
+          // 记忆里的选中项已失效（文件被删/改名）→ 不留意图，
+          // 由上面 `sub-add … auto` 与 mpv 的实际 sid 决定选中态。
+          _clearIntent();
         }
+      } else {
+        // 该视频从未手动选过字幕：不留意图，尊重 mpv 自动选择的结果。
+        _clearIntent();
       }
     }
 
@@ -366,6 +544,7 @@ class SubtitleController extends ChangeNotifier {
       return null;
     }
     // 记忆路径 + 选中：下次打开跳过自动扫描、直接恢复（对齐小喵 setExternalSubtitle）
+    _rememberIntentPath(bestPath);
     await _settings.addImportedSubtitleFor(mediaPath, bestPath);
     await _settings.setSelectedSubtitleFor(mediaPath, bestPath);
     onAutoLoadedSubtitle?.call(bestName);
@@ -388,61 +567,60 @@ class SubtitleController extends ChangeNotifier {
     _primary = null;
     _primarySourcePath = null;
     _externalPaths.clear();
+    // 用户意图属于「上一个媒体」，一起清掉；新媒体的意图由 [reapplyForMedia] 重建。
+    _clearIntent();
     // 「已应用媒体」标记必须一起复位（B3/P1-8 根因）：[reapplyForMedia] 首行
     // `if (_appliedMedia == mediaPath) return;` 是「同一媒体不重复挂载」的早退，
     // 而 clear() 之后媒体已被重新 open（mpv 丢弃全部 sub-add 的外挂轨道）——
     // 不复位就会早退不补挂：单视频列表循环重播即「外挂字幕消失」。
     _appliedMedia = null;
-    notifyListeners();
+    _safeNotify();
+  }
+
+  /// 只写**单个字段**对应的 mpv 属性（P1-10：滑杆「松手提交」路径）。
+  ///
+  /// 字段 → 属性的映射收敛在 [subtitleStyleWrites]（纯函数，单测锁定
+  /// 「一个字段只写它自己那一条/那一组」）；旧实现每次拖动都全量
+  /// [applyAllSettings]，一次事件串行写 16 个 mpv 属性 + 一次设置写盘。
+  Future<void> applyStyleField(SubtitleStyleField field) async {
+    final values = SubtitleStyleValues.fromSettings(_settings);
+    await _writeProperties(subtitleStyleWrites(field, values));
   }
 
   /// 应用全部字幕设置（延迟/大小/颜色/描边/阴影/背景/粗细/斜体/间距/模糊/
   /// 位置/字体/内嵌样式策略）。
+  ///
+  /// **低频路径**：初始化（[applyOnInit]）、切媒体（[reapplyForMedia]）、
+  /// 面板里的「重置…」。滑杆等高频改动一律走 [applyStyleField]（P1-10）。
   Future<void> applyAllSettings() async {
+    await _writeProperties(
+      allSubtitleStyleWrites(SubtitleStyleValues.fromSettings(_settings)),
+    );
+    // 只写 override 值，不 sub-reload：颜色/缩放/位置等 sub-* 属性即时生效，
+    // 每次拖动都 sub-reload 会重新读盘解析外部字幕，导致卡顿。
+    await _setOverrideProperty();
+  }
+
+  /// 逐条写入 mpv 属性（串行，避免通道调用互相插队）。
+  ///
+  /// 字体**目录**已在 Player 构造时通过 `libassAndroidFontsDir` 注入
+  /// （`mpv_initialize` 之前），这里**绝不**再写 `sub-fonts-dir`。
+  ///
+  /// 历史 bug（P1-10）：默认字体分支曾在运行期写
+  /// `sub-fonts-dir='/system/fonts'`，会重载 libass 的 fontconfig 缓存；
+  /// 缓存被打坏后 libass 连**位图字幕**（PGS/DVD/DVB，靠 DRAWING 指令渲染）
+  /// 一起不渲染 —— 表现为「内嵌字幕无论选哪条都不显示」。因此运行期只允许
+  /// 写 `sub-font`（族名）与字体无关的样式属性，目录一律构造期注入。
+  Future<void> _writeProperties(List<SubtitlePropertyWrite> writes) async {
     final native = _native;
     if (native == null) return;
-    final s = _settings;
-    try {
-      await native.setProperty('sub-delay', _fmtDouble(s.delay));
-      await native.setProperty('sub-scale', _fmtDouble(s.scale));
-      await native.setProperty('sub-pos', _fmtDouble(s.position));
-      await native.setProperty('sub-color', s.color);
-      // 描边
-      await native.setProperty('sub-border-style', s.borderStyle.mpvValue);
-      await native.setProperty('sub-border-size', _fmtDouble(s.borderSize));
-      await native.setProperty('sub-border-color', s.borderColor ?? '#000000');
-      // 阴影
-      await native.setProperty('sub-shadow-offset', _fmtDouble(s.shadowOffset));
-      await native.setProperty('sub-shadow-color', s.shadowColor ?? '#00000000');
-      // 背景
-      await native.setProperty('sub-back-color', s.backColor ?? '#00000000');
-      // 粗细 / 斜体 / 字间距 / 模糊
-      await native.setProperty('sub-bold', s.bold ? 'yes' : 'no');
-      await native.setProperty('sub-italic', s.italic ? 'yes' : 'no');
-      await native.setProperty('sub-spacing', _fmtDouble(s.spacing));
-      await native.setProperty('sub-blur', _fmtDouble(s.blur));
-      // 字体设置：字体**目录**已在 Player 构造时通过 libassAndroidFontsDir 注入
-      // （mpv_initialize 之前），这里**绝不**再写 `sub-fonts-dir`。
-      //
-      // 历史 bug（P1-10）：默认字体分支曾在运行期写
-      // `sub-fonts-dir='/system/fonts'`，会重载 libass 的 fontconfig 缓存；
-      // 缓存被打坏后 libass 连**位图字幕**（PGS/DVD/DVB，靠 DRAWING 指令渲染）
-      // 一起不渲染 —— 表现为「内嵌字幕无论选哪条都不显示」。因此运行期只允许
-      // 写 `sub-font`（族名）与字体无关的样式属性，目录一律构造期注入。
-      await native.setProperty('sub-font-provider', 'auto');
-      await native.setProperty('embeddedfonts', 'yes');
-      if (s.font == kAutoSubtitleFont) {
-        // 「跟随系统字库」= 构造期注入的 /system/fonts + 默认族名
-        await native.setProperty('sub-font', kSystemFontName);
-      } else if (s.font.trim().isNotEmpty) {
-        // 用户字体：目录由构造期注入，这里只切换族名即可生效
-        await native.setProperty('sub-font', s.font);
+    for (final w in writes) {
+      try {
+        await native.setProperty(w.name, w.value);
+      } catch (_) {
+        // 播放器已销毁 / 属性不可用时跳过这一条，继续写其余属性
+        // （旧实现是一个 try 包住全部：任一条抛错后面的全被跳过）。
       }
-      // 只写 override 值，不 sub-reload：颜色/缩放/位置等 sub-* 属性即时生效，
-      // 每次拖动都 sub-reload 会重新读盘解析外部字幕，导致卡顿。
-      await _setOverrideProperty();
-    } catch (_) {
-      // 播放器不可用（已销毁）时静默
     }
   }
 
@@ -489,10 +667,11 @@ class SubtitleController extends ChangeNotifier {
     // 自动挂一条，而本控制器的 [_autoLoadSameNameSubtitle] 又会 `sub-add` 同一条
     // → 同一个外挂文件出现**两条完全相同的轨道**（都带「外挂」与删除按钮）；
     // 切轨时 [applyStyleOverride] 的 `sub-reload` 会重挂轨道、改变轨道 id，
-    // [reload]/[_syncActiveFromMpv] 随即用 mpv 的 sid 覆盖用户刚点的选择
-    // → 点轨道不亮、高亮乱跳、界面闪烁（真机 2026-09 复现；字幕名与视频名完全
-    // 相同时必现，加 `-SC`/`-TC` 后缀后 mpv 的同名匹配失效故不复现）。
+    // 引发「点轨道不亮、高亮乱跳、界面闪烁」（真机 2026-09 复现；字幕名与视频名
+    // 完全相同时必现，加 `-SC`/`-TC` 后缀后 mpv 的同名匹配失效故不复现）。
     // 同名字幕统一由 App 负责（匹配更准：简繁 -sc/-tc 优先 + 记忆 + 只认字幕扩展名）。
+    // 注：`sub-reload` 后 sid 覆盖用户选择那一半已在 B5 收口——切轨期间锁住
+    // 事件驱动刷新，并按用户意图（外挂轨用源路径）把选择重新钉回 sid（见 [selectTrack]）。
     final native = _native;
     if (native != null) {
       unawaited(native.setProperty('sub-auto', 'no').catchError((_) {}));
@@ -502,13 +681,10 @@ class SubtitleController extends ChangeNotifier {
     await applyAllSettings();
   }
 
-  static String _fmtDouble(double v) {
-    if (v == v.roundToDouble()) return v.toInt().toString();
-    return v.toStringAsFixed(2);
-  }
-
   @override
   void dispose() {
+    // 先置废标志：在途的等待式刷新回来时不得再 notify（P1-11 的迟到路径）。
+    _disposed = true;
     _tracksSubscription?.cancel();
     _tracks = const [];
     _primary = null;

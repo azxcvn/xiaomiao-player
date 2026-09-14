@@ -56,6 +56,19 @@ void main() {
     expect(s.scale, SubtitleSettings.maxScale);
   });
 
+  test('背景框大小（sub-shadow-offset）：持久化与 0–20 钳制', () async {
+    final s = SubtitleSettings.instance;
+    expect(s.shadowOffset, 0);
+    await s.setShadowOffset(4);
+    expect(s.shadowOffset, 4);
+    await s.load(); // 模拟重启
+    expect(s.shadowOffset, 4);
+    await s.setShadowOffset(-5);
+    expect(s.shadowOffset, 0);
+    await s.setShadowOffset(999);
+    expect(s.shadowOffset, SubtitleSettings.maxStyleValue);
+  });
+
   test('字幕杂项：垂直位置/水平对齐持久化', () async {
     final s = SubtitleSettings.instance;
     await s.setPosition(70);
@@ -92,14 +105,70 @@ void main() {
     expect(s.fontSourceDir, '');
   });
 
-  test('描边模式：默认无，设置后持久化', () async {
+  test('描边模式：默认描边（mpv 默认值），设置后持久化', () async {
     final s = SubtitleSettings.instance;
+    expect(s.borderStyle, SubtitleBorderStyle.outline);
+    await s.setBorderStyle(SubtitleBorderStyle.none);
     expect(s.borderStyle, SubtitleBorderStyle.none);
-    await s.setBorderStyle(SubtitleBorderStyle.outline);
+    await s.load();
+    expect(s.borderStyle, SubtitleBorderStyle.none);
+    await s.setBorderStyle(SubtitleBorderStyle.box);
+    expect(s.borderStyle, SubtitleBorderStyle.box);
+    // 清掉背景色后不该停在「背景框」（背景色才是它的驱动源，见 setBackColor）
+    await s.setBackColor(null);
+    expect(s.borderStyle, SubtitleBorderStyle.outline);
+  });
+
+  test('背景颜色隐式驱动描边模式：有背景色 → 背景框；选「无」→ 描边', () async {
+    final s = SubtitleSettings.instance;
+    expect(s.backColor, isNull);
+    expect(s.borderStyle, SubtitleBorderStyle.outline);
+
+    await s.setBackColor('#80000000');
+    expect(s.backColor, '#80000000');
+    // mpv 只在背景框模式下画 sub-back-color，所以必须联动
+    expect(s.borderStyle, SubtitleBorderStyle.box);
+
+    await s.load(); // 模拟重启：两个值都要自洽地回来
+    expect(s.backColor, '#80000000');
+    expect(s.borderStyle, SubtitleBorderStyle.box);
+
+    await s.setBackColor(null);
+    expect(s.backColor, isNull);
     expect(s.borderStyle, SubtitleBorderStyle.outline);
     await s.load();
+    expect(s.backColor, isNull);
     expect(s.borderStyle, SubtitleBorderStyle.outline);
-    await s.setBorderStyle(SubtitleBorderStyle.box);
+  });
+
+  test('历史持久化值兼容：旧值 flat/outline/box 映射到 mpv 0.38+ 的合法取值', () async {
+    final s = SubtitleSettings.instance;
+    // 旧版本写下的 'flat'（默认值）→ 无边框
+    SharedPreferences.setMockInitialValues({'subtitle_settings_border_style': 'flat'});
+    await s.load();
+    expect(s.borderStyle, SubtitleBorderStyle.none);
+    // 旧版本写下的 'outline' → 描边
+    SharedPreferences.setMockInitialValues({'subtitle_settings_border_style': 'outline'});
+    await s.load();
+    expect(s.borderStyle, SubtitleBorderStyle.outline);
+    // 旧版本写下的 'box' 但没有背景色 → 回落描边（模式跟随背景色，见 setBackColor）
+    SharedPreferences.setMockInitialValues({'subtitle_settings_border_style': 'box'});
+    await s.load();
+    expect(s.borderStyle, SubtitleBorderStyle.outline);
+    // 未知值 → 回落描边（mpv 自己的默认值）
+    SharedPreferences.setMockInitialValues({'subtitle_settings_border_style': '???'});
+    await s.load();
+    expect(s.borderStyle, SubtitleBorderStyle.outline);
+  });
+
+  test('历史数据自洽修复：有背景色但模式不是背景框 → 载入时纠正为背景框', () async {
+    final s = SubtitleSettings.instance;
+    SharedPreferences.setMockInitialValues({
+      'subtitle_settings_back_color': '#80000000',
+      'subtitle_settings_border_style': 'flat',
+    });
+    await s.load();
+    expect(s.backColor, '#80000000');
     expect(s.borderStyle, SubtitleBorderStyle.box);
   });
 
@@ -167,7 +236,7 @@ void main() {
     await s.resetStyles();
     expect(s.color, '#FFFFFF');
     expect(s.borderColor, isNull);
-    expect(s.borderStyle, SubtitleBorderStyle.none);
+    expect(s.borderStyle, SubtitleBorderStyle.outline);
     expect(s.borderSize, 2.5);
     expect(s.bold, isFalse);
     // 强制覆盖开关保持原选择（不被强制重置）

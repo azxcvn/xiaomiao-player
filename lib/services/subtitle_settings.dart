@@ -8,9 +8,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// 全局单例（同 [PlayerControlsSettings] 模式），ChangeNotifier + shared_preferences
 /// 持久化；字幕面板与播放页共同监听。设置值直接映射 mpv 属性：
 /// - 延迟 → `sub-delay`（秒）；
-/// - 样式 → `sub-scale`（大小）、`sub-color`（文字色）、`sub-border-color`/`sub-border-size`
-///   （描边）、`sub-shadow-color`/`sub-shadow-offset`（阴影）、`sub-back-color`（背景）、
-///   `sub-bold`/`sub-italic`（粗细/斜体）、`sub-spacing`（字间距）、`sub-blur`（模糊）、
+/// - 样式 → `sub-scale`（大小）、`sub-color`（文字色）、`sub-outline-color`/`sub-outline-size`
+///   （描边，旧名 `sub-border-*` 是别名）、`sub-shadow-offset`（阴影位移）、`sub-back-color`
+///   （背景；**mpv 0.38 起它同时是阴影颜色**）、`sub-border-style`（描边模式，
+///   **由背景颜色隐式驱动**，见 [setBackColor]）、`sub-bold`/`sub-italic`（粗细/斜体）、
+///   `sub-spacing`（字间距）、`sub-blur`（模糊）、
 ///   `sub-ass-override`（是否强制覆盖内嵌样式，默认关闭 = 尊重内嵌样式）；
 /// - 杂项 → `sub-pos`（垂直位置）、`sub-align-x`（水平对齐）、`sub-margin-x`/`sub-margin-y`（边距）；
 /// - 字体 → `sub-font`（'auto' 或自导入字体族名）+ `sub-fonts-dir`。
@@ -78,8 +80,8 @@ class SubtitleSettings extends ChangeNotifier {
   // 扩展样式（工作.md 阶段1 第 3 点：补全小喵 player 的字幕样式项）
   String? _borderColor; // 描边颜色（null = 默认黑）
   double _borderSize = 2.5; // 描边粗细
-  String? _shadowColor; // 阴影颜色
-  double _shadowOffset = 0; // 阴影偏移（0 = 无阴影）
+  String? _shadowColor; // 阴影颜色（mpv 0.38+ 已并入 sub-back-color，仅保留持久化兼容）
+  double _shadowOffset = 0; // 面板「背景框大小」：背景框模式下是盒子内边距，否则是阴影位移
   String? _backColor; // 背景色（null = 透明）
   bool _bold = false;
   bool _italic = false;
@@ -145,8 +147,15 @@ class SubtitleSettings extends ChangeNotifier {
     _blur = (prefs.getDouble(_keyBlur) ?? 0).clamp(0, maxStyleValue);
     _marginX = (prefs.getDouble(_keyMarginX) ?? 0).clamp(0, 100);
     _marginY = (prefs.getDouble(_keyMarginY) ?? 0).clamp(0, 100);
-    _borderStyle =
-        SubtitleBorderStyle.byMpvValue(prefs.getString(_keyBorderStyle) ?? 'flat');
+    _borderStyle = SubtitleBorderStyle.byMpvValue(
+        prefs.getString(_keyBorderStyle) ?? 'outline-and-shadow');
+    // 背景色与描边模式必须自洽（见 [setBackColor]）：有背景色就一定是背景框模式，
+    // 否则旧数据/旧版本（写过非法值 `flat`、`box`）会让背景色永远画不出来。
+    if (_backColor != null) {
+      _borderStyle = SubtitleBorderStyle.box;
+    } else if (_borderStyle == SubtitleBorderStyle.box) {
+      _borderStyle = SubtitleBorderStyle.outline;
+    }
     _importedSubtitlePaths = prefs.getStringList(_keyImportedSubtitles) ?? [];
 
     // 加载每个视频独立的外挂字幕映射
@@ -255,6 +264,11 @@ class SubtitleSettings extends ChangeNotifier {
     }
   }
 
+  /// 「背景框大小」（面板文案；mpv `sub-shadow-offset`，0–20）。
+  ///
+  /// 语义随模式而变：设了背景颜色（= `background-box`）时它是**背景框的内边距**；
+  /// 否则是传统意义的**文字阴影位移**。注意盒子总大小还包含「描边粗细」——
+  /// libass 的盒子必须包住含描边的文字，这部分解不掉（见 [SubtitleBorderStyle]）。
   Future<void> setShadowOffset(double v) async {
     await ensureLoaded();
     final clamped = v.clamp(0, maxStyleValue).toDouble();
@@ -274,10 +288,31 @@ class SubtitleSettings extends ChangeNotifier {
     await prefs.setString(_keyBorderStyle, v.mpvValue);
   }
 
+  /// 设置背景颜色（null = 无背景）。
+  ///
+  /// ⚠️ **背景颜色与描边模式是同一个视觉开关**，必须成对变化：
+  /// mpv（0.38+，本项目内核 v0.41）只在 `sub-border-style` 为盒子模式时才画
+  /// `sub-back-color`，默认的 `outline-and-shadow` 下**背景色完全不可见**（真机
+  /// 「背景颜色怎么调都没效果」的根因之一）。这里选的是 `background-box`
+  /// （不是 `opaque-box`：后者画的是描边盒 + 阴影盒两个盒子，阴影盒被压在下面，
+  /// 详见 [SubtitleBorderStyle] 的文档）。App 不提供「描边模式」选择器（用户拍板），
+  /// 所以这里隐式联动：
+  /// - 选中具体背景色 → [SubtitleBorderStyle.box]（背景框）；
+  /// - 选「无」→ [SubtitleBorderStyle.outline]（回到默认描边）。
+  ///
+  /// 调用方（字幕样式面板）改完颜色后按字段下发 mpv，而
+  /// `SubtitleStyleField.backColor` 的写入表里同时含 `sub-back-color` 与
+  /// `sub-border-style`，所以这一次调用就能把两个属性一起改对。
   Future<void> setBackColor(String? hex) async {
     await ensureLoaded();
-    if (_backColor == hex) return;
+    final style = hex == null
+        ? SubtitleBorderStyle.outline
+        : SubtitleBorderStyle.box;
+    // 注意：不能只比背景色就早退 —— 背景色没变但模式被别的入口改过时，
+    // 也必须把它拉回自洽状态（否则「背景色为 null + 模式仍是背景框」会留存）。
+    if (_backColor == hex && _borderStyle == style) return;
     _backColor = hex;
+    _borderStyle = style;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     if (hex == null) {
@@ -285,6 +320,7 @@ class SubtitleSettings extends ChangeNotifier {
     } else {
       await prefs.setString(_keyBackColor, hex);
     }
+    await prefs.setString(_keyBorderStyle, _borderStyle.mpvValue);
   }
 
   Future<void> setBold(bool v) async {
@@ -492,7 +528,9 @@ class SubtitleSettings extends ChangeNotifier {
     _color = '#FFFFFF';
     _borderColor = null;
     _borderSize = 2.5;
-    _borderStyle = SubtitleBorderStyle.none;
+    // 「无背景色」对应「描边」模式（= mpv 默认观感）；旧代码写 none('flat') 会被
+    // mpv 拒绝，实际生效的本来就是 outline，这里把它写成显式且合法的值。
+    _borderStyle = SubtitleBorderStyle.outline;
     _shadowColor = null;
     _shadowOffset = 0;
     _backColor = null;
@@ -540,7 +578,8 @@ class SubtitleSettings extends ChangeNotifier {
     _blur = 0;
     _marginX = 0;
     _marginY = 0;
-    _borderStyle = SubtitleBorderStyle.none;
+    // 与 [resetStyles] 一致：无背景色 = 描边模式（= mpv 默认观感）
+    _borderStyle = SubtitleBorderStyle.outline;
     _importedSubtitlePaths = [];
     _videoSubtitles = {};
     _videoSelectedSub = {};

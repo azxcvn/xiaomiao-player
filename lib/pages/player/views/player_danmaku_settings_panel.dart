@@ -1,11 +1,11 @@
 /// 弹幕设置面板（阶段2，工作.md 弹幕第 4 点）：两个部分组成——
 ///
-/// **弹幕样式**：字号 / 字重 / 描边粗细为「重栅格化」项（松手才提交，
-/// 见 [_CommitSliderTile]）+ 速度 / 不透明度（无极滑杆，实时生效）+
+/// **弹幕样式**：字号 / 字重 / 描边粗细 / 速度（数值越小越快）/ 不透明度
+/// 全部为「松手才提交」项（见 [_CommitSliderTile]：拖动不写盘、不热更新）+
 /// 随机渐变色开关（开启后忽略弹幕文件内颜色，所有弹幕按 HSV 色轮黄金角
 /// 渐变随机着色，算法见 utils/danmaku_random_color.dart）；
 ///
-/// **弹幕配置**：显示区域（10% 固定档位）/ 行高滑杆 + 顶部/底部/滚动弹幕
+/// **弹幕配置**：显示区域（10% 固定档位）/ 行高滑杆（同样松手才提交）+ 顶部/底部/滚动弹幕
 /// 显隐开关 + 海量弹幕开关（轨道占满时叠加绘制）+ 弹幕去重开关（时间窗内
 /// 相同内容合并为一条）+ 弹幕合并开关（不同时间内相同弹幕合并且计数）
 /// + 屏蔽词（输入添加 / 词条删除 / 一键清空）。
@@ -88,14 +88,14 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
                   onCommit: (v) => s.setFontWeight(v.round()),
                 ),
                 _groupDivider(),
-                _SliderTile(
+                _CommitSliderTile(
                   label: '弹幕速度',
                   value: s.scrollSeconds,
                   min: DanmakuSettings.minScrollSeconds,
                   max: DanmakuSettings.maxScrollSeconds,
-                  display: '${s.scrollSeconds.round()} 秒',
+                  display: (v) => '${v.round()} 秒',
                   hint: '数值越小弹幕越快',
-                  onChanged: s.setScrollSeconds,
+                  onCommit: s.setScrollSeconds,
                 ),
                 _groupDivider(),
                 _CommitSliderTile(
@@ -107,13 +107,13 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
                   onCommit: s.setStrokeWidth,
                 ),
                 _groupDivider(),
-                _SliderTile(
+                _CommitSliderTile(
                   label: '不透明度',
                   value: s.opacity,
                   min: DanmakuSettings.minOpacity,
                   max: DanmakuSettings.maxOpacity,
-                  display: '${(s.opacity * 100).round()}%',
-                  onChanged: s.setOpacity,
+                  display: (v) => '${(v * 100).round()}%',
+                  onCommit: s.setOpacity,
                 ),
                 _groupDivider(),
                 _SwitchTile(
@@ -126,24 +126,24 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
               const SizedBox(height: 16),
               const _SectionLabel('弹幕配置'),
               _SettingsGroup(children: [
-                _SliderTile(
+                _CommitSliderTile(
                   label: '显示区域',
                   value: s.area,
                   min: DanmakuSettings.minArea,
                   max: DanmakuSettings.maxArea,
-                  display: '${(s.area * 100).round()}%',
+                  display: (v) => '${(v * 100).round()}%',
                   // 10% 一档（0.1–1.0 共 10 档，工作.md 弹幕第 3 点）
                   divisions: 9,
-                  onChanged: s.setArea,
+                  onCommit: s.setArea,
                 ),
                 _groupDivider(),
-                _SliderTile(
+                _CommitSliderTile(
                   label: '弹幕行高',
                   value: s.lineHeight,
                   min: DanmakuSettings.minLineHeight,
                   max: DanmakuSettings.maxLineHeight,
-                  display: s.lineHeight.toStringAsFixed(1),
-                  onChanged: s.setLineHeight,
+                  display: (v) => v.toStringAsFixed(1),
+                  onCommit: s.setLineHeight,
                 ),
                 _groupDivider(),
                 _SwitchTile(
@@ -309,88 +309,18 @@ class _SettingsGroup extends StatelessWidget {
   }
 }
 
-/// 无极滑杆行：标签 + 右侧实时读数 → 滑杆（拖动实时写设置，轻量项）。
-class _SliderTile extends StatelessWidget {
-  final String label;
-  final double value;
-  final double min;
-  final double max;
-  final String display;
-  final String? hint;
-  final int? divisions;
-  final ValueChanged<double> onChanged;
-
-  const _SliderTile({
-    required this.label,
-    required this.value,
-    required this.min,
-    required this.max,
-    required this.display,
-    required this.onChanged,
-    this.hint,
-    this.divisions,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
-                ),
-              ),
-              Text(
-                display,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          if (hint != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                hint!,
-                style: const TextStyle(color: Colors.white38, fontSize: 11),
-              ),
-            ),
-          // 与字幕面板「字幕杂项」一致的滑杆（Kazumi 2024 新式外观，无拖拽气泡）
-          SliderTheme(
-            data: _panelSliderTheme(context),
-            child: Slider(
-              value: value.clamp(min, max),
-              min: min,
-              max: max,
-              divisions: divisions,
-              onChanged: onChanged,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 重栅格化项滑杆（字号/字重/描边）：拖动时只改本地预览值（不触发 canvas
-/// 重绘），松手时才提交到 [DanmakuSettings]（触发一次全量重绘）。避免
-/// onChanged 逐像素全量重绘导致掉帧（对齐弹幕移植方案「松手才 updateOption」
-/// 纪律）；轻量项仍走 [_SliderTile] 实时下发。
+/// 重栅格化项滑杆（字号/字重/描边粗细/速度/不透明度/显示区域/行高）：拖动时只改
+/// 本地预览值（不写设置、不触发 canvas 重绘），松手时才提交到 [DanmakuSettings]
+/// （一次写盘 + 一次全量重绘）。避免 `onChanged` 逐像素写盘 + 全层热更新导致掉帧
+/// （对齐弹幕移植方案「松手才 updateOption」纪律；P2-16 把最后四条实时写盘的滑杆
+/// 也并入了这一纪律）。
 class _CommitSliderTile extends StatefulWidget {
   final String label;
   final double value;
   final double min;
   final double max;
   final String Function(double value) display;
+  final String? hint;
   final int? divisions;
   final ValueChanged<double> onCommit;
 
@@ -401,6 +331,7 @@ class _CommitSliderTile extends StatefulWidget {
     required this.max,
     required this.display,
     required this.onCommit,
+    this.hint,
     this.divisions,
   });
 
@@ -445,6 +376,14 @@ class _CommitSliderTileState extends State<_CommitSliderTile> {
               ),
             ],
           ),
+          if (widget.hint != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                widget.hint!,
+                style: const TextStyle(color: Colors.white38, fontSize: 11),
+              ),
+            ),
           SliderTheme(
             data: _panelSliderTheme(context),
             child: Slider(
