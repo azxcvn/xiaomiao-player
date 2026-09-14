@@ -105,10 +105,13 @@ class _FakeDanmakuController extends ChangeNotifier
   int get danmakuCount => 0;
 
   @override
-  void attachLayer(canvas.DanmakuController<void> layer) {}
+  void attachLayer(canvas.DanmakuController<void> layer, {bool visible = false}) {}
 
   @override
   void detachLayer(canvas.DanmakuController<void> layer) {}
+
+  @override
+  void setLayerVisible(canvas.DanmakuController<void> layer, bool visible) {}
 
   @override
   void toggle() {}

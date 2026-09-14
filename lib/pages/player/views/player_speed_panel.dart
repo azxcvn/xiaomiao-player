@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/utils/formatters.dart';
@@ -20,8 +21,10 @@ class PlayerSpeedPanel extends StatefulWidget {
   static List<double> get systemPresets =>
       [for (var i = 1; i <= 8; i++) i * 0.5];
 
-  /// 当前实际倍速（可监听：面板打开期间外部切倍速会实时刷新 UI）
-  final ValueNotifier<double> speedListenable;
+  /// 当前实际倍速（可监听：面板打开期间外部切倍速会实时刷新 UI）。
+  /// 只读契约——倍速真值由播放页的共享会话状态持有（B4/D2），
+  /// 面板只显示不写入。
+  final ValueListenable<double> speedListenable;
 
   /// 应用倍速并写入记忆（点击预设/一键归位/取消临时应用时）
   final ValueChanged<double> onSpeedChanged;

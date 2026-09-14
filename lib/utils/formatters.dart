@@ -37,6 +37,26 @@ String formatDuration(int ms) {
   return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
 }
 
+/// 播放页底栏时间文本：「已播/总时长」⇄「已播/剩余时长」（点击底栏时间切换）。
+///
+/// **剩余时长负值必须清零**（B4/P1-5）：拖动进度条越过结尾或终帧位置略超
+/// 时长时，`total - pos` 为负，而 [formatDuration] 走 `~/` + `%`
+/// （`-5000` → `"59:55"`），屏幕上会出现 `-59:55` 这种荒唐显示。
+/// 横竖屏两页共用本函数，避免任一侧再漏钳制。
+String formatPlaybackTimeText({
+  required Duration position,
+  required Duration duration,
+  required bool showRemaining,
+}) {
+  final pos = formatDuration(position.inMilliseconds);
+  if (showRemaining && duration > Duration.zero) {
+    final remaining = duration - position;
+    final r = remaining.isNegative ? Duration.zero : remaining;
+    return '$pos / -${formatDuration(r.inMilliseconds)}';
+  }
+  return '$pos / ${formatDuration(duration.inMilliseconds)}';
+}
+
 /// 倍速显示：1.0 → '1.0x'，1.25 → '1.25x'（播放器倍速胶囊 / 倍速面板共用）
 String formatSpeed(double speed) {
   final s = speed.toStringAsFixed(speed == speed.roundToDouble() ? 1 : 2);

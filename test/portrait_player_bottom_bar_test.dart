@@ -4,12 +4,13 @@ import 'package:moumou/pages/player/player_metrics.dart';
 import 'package:moumou/pages/player/views/player_seek_bar.dart';
 import 'package:moumou/pages/player/views/portrait_player_bottom_bar.dart';
 
-/// 竖屏播放页底栏布局回归测试（v3 更新 + 弹幕第 5 点）：
+/// 竖屏播放页底栏布局回归测试（v3 更新 + 弹幕第 5 点 + B4/P1-6 对齐基准）：
 /// - 时间文本位于「下一集」按钮右侧、同一行（v3 用户反馈：改回此款式）；
-/// - 下一集按钮左缘 = kPlayerLeftInset（人体工学左对齐，与返回/进度条开端同 x）；
+/// - 「下一集」图标左缘、进度条轨道开端、章节名左缘三者同为
+///   [kPlayerTrackLeftInset]（B4/P1-6：与横屏底栏同一基准，原先竖屏用
+///   组件默认 40/20，两页对齐基准不同）；
 /// - PlayerSeekBar 为自定义绘制进度条（无 Material Slider，用户反馈
-///   「进度条难拖」修复）：轨道左缘精确落在 kPlayerLeftInset、右缘留
-///   rightInset（横竖屏共用同一进度条组件）；
+///   「进度条难拖」修复）：右缘留 rightInset（横竖屏共用同一进度条组件）；
 /// - 右侧按钮簇顺序（从左到右）：超分辨率 → 列表 → 倍速 → 选择屏幕
 ///   （即从右到左：选择屏幕 → 倍速 → 列表 → 超分辨率，工作.md 第 18 点）；
 /// - 弹幕开关/设置按钮在**进度条上方**靠右（与章节名同一行，无章节时
@@ -44,7 +45,7 @@ void main() {
     );
   }
 
-  testWidgets('时间在下一集右侧同一行，下一集左缘对齐 kPlayerLeftInset', (tester) async {
+  testWidgets('时间在下一集右侧同一行，下一集图标/轨道/章节名对齐同一 x', (tester) async {
     await tester.pumpWidget(buildBar());
     expect(tester.takeException(), isNull);
 
@@ -53,10 +54,19 @@ void main() {
     final timeRect = tester.getRect(find.text('00:01 / 00:10'));
     expect(timeRect.left > nextRect.right, isTrue);
     expect((timeRect.center.dy - nextRect.center.dy).abs() < 1, isTrue);
-    // 下一集左缘 = kPlayerLeftInset（与返回/进度条开端同 x）
-    expect(nextRect.left, kPlayerLeftInset);
+    // 下一集按钮行内边距 → 图标左缘落在统一轨道基准 x（B4/P1-6）。
+    // 图标盒被 SizedBox(38×40) 撑满，图标本体 26 号居中绘制 →
+    // 图标左缘 = 盒左缘 + (盒宽 - 图标尺寸) / 2
+    expect(nextRect.left, kPlayerNextRowLeftPadding);
+    final iconRect = tester.getRect(find.byIcon(Icons.skip_next_rounded));
+    final iconSize =
+        tester.widget<Icon>(find.byIcon(Icons.skip_next_rounded)).size!;
+    expect(
+      iconRect.left + (iconRect.width - iconSize) / 2,
+      kPlayerTrackLeftInset,
+    );
     // 进度条为自定义绘制（无 Material Slider）：轨道左缘精确落在
-    // kPlayerLeftInset、右缘留 rightInset（横竖屏共用同一组件）。
+    // kPlayerTrackLeftInset、右缘留 rightInset（横竖屏共用同一组件）。
     final seekRect = tester.getRect(find.byType(PlayerSeekBar));
     final rail = find.byWidgetPredicate(
       (w) =>
@@ -67,8 +77,16 @@ void main() {
     );
     expect(rail, findsOneWidget);
     final railRect = tester.getRect(rail);
-    expect(railRect.left - seekRect.left, kPlayerLeftInset);
+    expect(railRect.left - seekRect.left, kPlayerTrackLeftInset);
     expect(seekRect.right - railRect.right, PlayerSeekBar.rightInset);
+  });
+
+  testWidgets('章节名左缘同样对齐轨道基准 x（B4/P1-6 三处同 x）', (tester) async {
+    await tester.pumpWidget(buildBar(chapterName: '第 1 章'));
+    expect(tester.takeException(), isNull);
+    final seekRect = tester.getRect(find.byType(PlayerSeekBar));
+    final chapterRect = tester.getRect(find.text('第 1 章'));
+    expect(chapterRect.left - seekRect.left, kPlayerTrackLeftInset);
   });
 
   testWidgets('右侧按钮簇顺序：超分辨率→列表→倍速→选择屏幕（左到右）', (tester) async {

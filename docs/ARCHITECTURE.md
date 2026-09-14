@@ -255,14 +255,15 @@ lib/
 │   │   └── tree_folder_page.dart      # 树状目录页（混合内容 + 面包屑）
 │   ├── player/
 │   │   ├── player_page.dart   #   播放页（横屏沉浸式；手势/恢复进度/切集/EOF/画中画/面板）
-│   │   ├── player_metrics.dart #  人体工学对齐常量 kPlayerLeftInset（横竖屏共用）
+│   │   ├── player_metrics.dart #  对齐常量 kPlayerLeftInset（触摸行）+ kPlayerTrackLeftInset/kPlayerNextRowLeftPadding（轨道/章节名/下一集图标同一 x，§4.33）
 │   │   ├── player_portrait_page.dart # 竖屏播放页（共享横屏 Player/VideoController，切换零中断）
+│   │   ├── player_session_state.dart # ★ 横竖屏共享会话状态（音量/音量增强/亮度/倍速/滑动 seek/缩放；横屏创建并注入竖屏，禁止全局单例，§4.33）
 │   │   ├── audio_player_page.dart    # 听视频页（共享 Player 只播音频；封面模糊背景；1:1 圆角封面；后台播放；循环三态）
 │   │   └── views/             #   播放页专属控制组件
 │   │       ├── player_top_bar.dart        # 顶栏：返回 + 标题 + 5 槽位 + 更多
-│   │       ├── player_status_bar.dart     # 顶部信息行：时间/电量居中 + 网速胶囊/数据类型靠右（多选控制；网速=滑动窗口真实下行速率，在线常驻）
+│   │       ├── player_status_bar.dart     # 顶部信息行：时间/电量居中 + 网速胶囊/数据类型靠右（多选控制；网速=滑动窗口真实下行速率，在线常驻；`active=false` 时停表，§4.33）
 │   │       ├── player_center_cluster.dart # 中央簇：快退/播放暂停/快进
-│   │       ├── player_danmaku_layer.dart  # 弹幕渲染层（canvas_danmaku DanmakuScreen 封装，视频层与手势层之间，挂载/卸载即 rebind）
+│   │       ├── player_danmaku_layer.dart  # 弹幕渲染层（canvas_danmaku DanmakuScreen 封装，视频层与手势层之间，挂载/卸载即 rebind；`visible` 上报可见性 → 只有可见层收弹幕，§4.33）
 │   │       ├── player_danmaku_buttons.dart# 弹幕开关/设置按钮组（Kazumi 图标：开=内联 SVG 主题色对勾，关/设置=资源 SVG）
 │   │       ├── player_danmaku_panel.dart  # 弹幕二级界面（本地弹幕=复用字幕选择器面板导入 / 网络弹幕 / 自动匹配 / 弹幕设置；DanmakuFileService）
 │   │       ├── player_danmaku_network_panel.dart # 网络弹幕搜索三级界面（40dp 胶囊搜索框 + 框下关键词历史胶囊 + 命中后折叠为关键词条 + 结果卡自持动画展开集列表，横竖屏共用）
@@ -283,7 +284,8 @@ lib/
 │   │       ├── player_diagnostics_panel.dart     # 播放诊断面板（每秒采样 mpv 属性：播放/视频/音频/缓存与丢帧四组 + 顶部健康告警，§4.27）
 │   │       ├── player_play_pause_button.dart  # 播放/暂停图标形变动画
 │   │       ├── player_gesture_layer.dart      # ★ 手势层（裸识别器方案，见 §4.8）
-│   │       ├── player_gesture_indicator.dart  # 音量/亮度手势指示器
+│   │       ├── player_gesture_indicator.dart  # 音量/亮度手势指示器（音量填充色为语义色，不随主题；§4.8/§5.3）
+│   │       ├── player_zoom_restore_chip.dart  # 双指缩放后的「还原画面」胶囊（横竖屏共用，§4.8）
 │   │       ├── player_speed_indicator.dart    # 长按倍速指示器（胶囊样式）
 │   │       ├── player_playlist_panel.dart     # 播放列表面板内容
 │   │       ├── audio_player_panels.dart       # 听视频倍速/列表面板（胶囊式 + 定时关闭预设 + 统一关闭按钮）
@@ -329,7 +331,7 @@ lib/
 └── utils/                     # 纯工具函数
     ├── app_dialog.dart        #   （见 widgets/app_dialog.dart 说明）
     ├── anime4k_patch.dart     #   Anime4K 着色器安装期优化纯函数（精度注入 + C.R.E.L.U. 采样合并，§4.25）
-    ├── formatters.dart        #   大小/日期/时长/倍速/网速格式化 + 截图文件名 + 在线媒体判定
+    ├── formatters.dart        #   大小/日期/时长/倍速/网速格式化 + 截图文件名 + 在线媒体判定 + **底栏时间文本**（formatPlaybackTimeText，剩余为负清零，§4.33）
     ├── url_media.dart         #   在线直链纯函数（规范化补协议/流媒体协议白名单/URL 提取标题，§4.17）
     ├── natural_compare.dart   #   自然序（数字感知）比较
     ├── folder_pin.dart        #   固定文件夹排序纯函数（稳定前置 + 逐层递归，§4.30）
@@ -338,6 +340,8 @@ lib/
     ├── watch_state.dart       #   观看状态纯函数（未观看/观看中/已看完）
     ├── playback_completion.dart # EOF 动作解析纯函数（优先级链）
     ├── playback_restore.dart  #   恢复进度：openAndRestore（暂停加载→静音激活时间线→seek→确认）
+    ├── playback_history.dart  #   播放历史写入唯一入口（可重放来源过滤 recordPlaybackHistory + 时长回填，横竖屏共用，§4.33）
+    ├── dolby_vision_hint.dart #   杜比视界偏色检测 + 引导弹窗（本地文件，横竖屏共用，§4.33）
     ├── pip_aspect.dart        #   画中画宽高比纯函数
     ├── player_gestures.dart   #   双击判定 + 滑动手势数学
     ├── player_diagnostics.dart #  播放诊断纯函数（属性清单 + 数值格式化 + 健康提示，§4.27）
@@ -504,6 +508,12 @@ PiliPlus：裸 `RawGestureDetector` + 自定义识别器组 + `Listener` 兜底�
 | 单指水平滑动 | 实时 seek（满屏 = 90 秒，40ms 节流），居中浮层显示目标时间 | 右侧 8% 死区（避系统返回手势）；若滑动中途加入第二指，先撤销 seek（`onSwipeCancel`）再进缩放 |
 | 双指 | 缩放（0.75–4x，设置可禁缩小）+ 平移 | 以双指焦点为锚缩放 + 焦点位移平移；缩放后「还原画面」胶囊出现在播放/暂停按钮下方（Alignment 0.34） |
 
+> **横竖屏同源（B4/D2）**：上表全部手势的**状态与数学只有一份**，在
+> `pages/player/player_session_state.dart` 的 [PlayerSessionState] 里（横屏页创建并注入竖屏页，
+> **禁止全局单例**）。两页只保留各自的 UI 壳（指示器显隐、浮层、setState）——
+> 原先两页各一份实现导致「竖屏没有音量增强 / 指示器谎报响度 / 倍速被复位 /
+> 滑动 seek 不撤销 / 剩余时长显示 -59:55」这类漂移，详见 §4.33。
+
 音量/亮度与系统交互约定（原生在 `MainActivity.kt`，走 `DeviceServices`）：
 - 进入播放：读系统音量作为播放音量起点（如 20%）；亮度读系统值并**应用到窗口**
   （kt/mpvEx 做法：屏幕显示与指示器一致，播放期间亮度不随自动亮度漂移），**不改系统设置**；
@@ -515,6 +525,10 @@ PiliPlus：裸 `RawGestureDetector` + 自定义识别器组 + `Listener` 兜底�
   「保存音量到系统」（默认开）→ 写回系统，关闭 → 恢复进入前系统音量。`dispose` 兜底恢复，防异常路径泄漏；
 - 音量指示器在**屏幕左侧**、亮度指示器在**屏幕右侧**（对称）；kazumi 风格进出场
   （从屏幕边缘滑入滑出 + 淡入淡出 + 轻微缩放），2 秒无操作自动隐藏。
+- **指示器颜色属语义色豁免**（决策 D5）：音量填充（`0xFF4FC3F7`，增强态红 `0xFFFF5252`）、
+  倍速条、恢复指示器「重头开始」文本**不跟随主题**——它们表达"音量/倍速/恢复"的语义
+  （增强态红 = 过载警示），不是面板强调色；只有面板外壳内的强调色/滑杆才必须走
+  `playerPanelAccent(context)`（§5.3 第 5 条）。
 
 ### 4.9 进度条缩略图 —— FFmpeg 快速引擎（自建 libmpv 内核）
 
@@ -541,7 +555,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 |---|---|---|
 | 内核 | libmpv.so `mk_thumbnail_grab` | 独立 FFmpeg 解码实例：MediaCodec 硬解优先/失败自动软解、硬解 ctx 全局复用、极速探测、**关键帧优先向后 seek + 逐帧解码到目标帧（帧级精确匹配）**；输出 RGBA |
 | 引擎 | `services/fast_thumbnails.dart` | FFI 绑定 + 后台 isolate + **单飞调度**（最多 1 在跑 + 1 待跑，新请求顶掉旧待跑） |
-| 缓存 | `services/device_services.dart` | `thumbnailBucketMs`（**秒桶=四舍五入到整秒**，唯一真值）+ `getVideoFrameAt`：**32MB 内存 LRU**（RGBA 字节计）+ 在飞去重 + **失败 10s 冷却**（被顶掉 `stale` 不计冷却）；`peekFrame`/`peekNearestFrame`（兜底半径 **±3s**） |
+| 缓存 | `services/device_services.dart` | `thumbnailBucketMs`（**秒桶=四舍五入到整秒**，唯一真值）+ `getVideoFrameAt`：**32MB 内存 LRU**（RGBA 字节计）+ 在飞去重 + **失败 10s 冷却**（被顶掉 `stale` 不计冷却）；`peekFrame`/`peekNearestFrame`（兜底半径 **±3s**，**命中即刷新 LRU**——拖动热路径上的帧也算「最近使用」，原先只有 `getVideoFrameAt` 刷，导致来回拖动时刚看过的帧反被先淘汰，下一帧重解码 63–134ms） |
 | UI | `views/player_thumbnail_preview.dart` + `widgets/raw_thumb_image.dart` | 气泡（**章节名胶囊在上 + 预览图 + 时间胶囊在下**，章节名超长单行省略且限宽预览图宽）+ RGBA 直渲（`ImageDescriptor.raw`，无 PNG/JPEG 编码往返） |
 | 调度 | `pages/player/player_page.dart` / `player_portrait_page.dart` | 横竖屏两页同款：拖动邻近帧秒显 + 精确帧异步补齐；**松手 seek 到「缩略图那一帧」的精确时刻**；淡出 150ms 后卸载 + **空闲 350ms 预取 ±1/±2/±3 秒桶**（再拖动立即终止，拖动请求绝对优先）；共用同一 FFmpeg 引擎与内存缓存，受同一 `showThumbnailPreview` 开关控制 |
 
@@ -616,9 +630,15 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 
 **关键决策**：
 - **渲染层 registry（横竖屏双挂）**：横竖屏两个页面各挂一个 `DanmakuScreen`，业务层
-  `DanmakuController` 用 `List<DanmakuController<void>>` 同步驱动全部已挂载层——切换
-  屏幕（push/pop 竖屏页）时无需清屏重启，返回横屏时弹幕无缝续播；`attachLayer` 时补
-  应用当前倍速/暂停态，`detachLayer` 由渲染层 widget 的 `dispose` 触发。
+  `DanmakuController` 用 `Map<DanmakuController<void>, bool>`（值 = 是否可见层）注册
+  全部已挂载层——切换屏幕（push/pop 竖屏页）时无需清屏重启，返回横屏时弹幕无缝续播；
+  `attachLayer(layer, visible:)` 时补应用当前倍速/暂停态，`detachLayer` 由渲染层
+  widget 的 `dispose` 触发。
+  - **只有可见层收 `addDanmaku`**（B4/P2-7）：被遮住的那一层仍在树上，若照旧投递，
+    每条弹幕会做两遍 TextPainter 排版 + 两遍图片录制（渲染开销翻倍、用户看不见）。
+    页面用 `PlayerDanmakuLayer(visible: …)` 上报（横屏 = `!_portraitActive && !_audioActive`，
+    竖屏 = `!_audioActive`）；`clear`/暂停/样式仍**下发全部层**（否则切回该屏会看到上一轮
+    遗留的在屏弹幕）；没有任何层被标记可见时退回全部层（页面尚未上报时的兜底）。
 - **发射模型**：Kazumi 现网「秒桶 + 1s Timer + stagger + generation」+ 两处增强——
   ① tick 间**前向补发** `(上一秒, 当前秒]` 全部桶（高倍速/计时抖动不丢弹幕）；
   ② **实时 seek 检测**（Kazumi 体验）：位置流事件上以「倍速 × 事件间隔墙钟时间」为
@@ -1049,7 +1069,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 |---|---|---|
 | 模型 | `models/playback_history_entry.dart` | 条目（path/title/isUrl/playedAtMs/durationMs）+ toJson/fromJson 容错 |
 | 服务 | `services/playback_history_service.dart` | 记录（同 path 去重置顶）/上限 500 淘汰最旧/删除单条/清空/开关/时长回填，`ensureLoaded`（main.dart） |
-| 记录点 | `pages/player/player_page.dart` | `_recordPlaybackHistory`（open 与切集时记录）+ `_saveProgress` 内时长回填 |
+| 记录点 | `utils/playback_history.dart`（横竖屏播放页共用，§4.33） | `recordPlaybackHistory`（open 与切集时记录，**竖屏切集也走它**）+ `backfillPlaybackHistoryDuration`（`_saveProgress` 内时长回填） |
 | UI | `pages/settings/playback_history_page.dart` | VideoCard 条目（**固定只显示进度字段**——历史读不到文件大小，不展示大小/时长）+ **右侧垃圾桶按钮删除单条** + 清空二次确认（showAppDialog）+ 记录开关 |
 | 入口 | `widgets/speed_dial_fab.dart` + `home_page.dart` + `settings_page.dart` | 速拨「最近播放」直启最后一条（进度自动恢复）；「我的→播放→历史记录」 |
 
@@ -1057,7 +1077,8 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 - **只记录可重放来源**（用户拍板）：本地真实路径 + 在线直链；loopback 代理 URL
   （网络存储 `127.0.0.1` 流，退出即失效）与哔哩哔哩在线播放（需登录态重新解析
   playurl）**不写入**——B 站走 `_biliMedia` 分支天然跳过，loopback 由
-  `_recordPlaybackHistory` 前缀过滤。
+  `recordPlaybackHistory` 内的 `isLoopbackProxyUrl` 前缀过滤（B4 起该入口由
+  横竖屏两页共用，竖屏切集原先完全不记录）。
 - 关闭记录只停新写入，已存历史保留可查看/删除（开关不隐含清空）。
 - 时长记录两段式：open 时能从播放列表 MediaStore 拿到就先记，否则退出时
   `_saveProgress` 回填（历史条目显示时长徽标与进度条的依据）。
@@ -1664,6 +1685,60 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 
 ---
 
+### 4.33 横竖屏共享会话状态 + 播放页三处「单一入口」（B4 / 决策 D2）
+
+> 来源：体检报告 P1-1/P1-2/P1-4/P1-5/P1-6——横屏页与竖屏页各有 54 个同名私有方法、
+> 各一份实现，长期漂移。硬约束 C5 要求「同一能力必须同批动」，决策 D2 定为
+> **抽页面局部共享对象**（治本），而不是各修一遍。
+
+**共享对象**：`pages/player/player_session_state.dart` 的 `PlayerSessionState`
+（`ChangeNotifier`）——由**横屏页创建并持有**，经构造函数注入竖屏页
+（与 `chapterTracker` / `subtitleController` 同款）；竖屏页只 `addListener`、不 dispose。
+
+| 域 | 内容 | 为什么必须共享 |
+|---|---|---|
+| 倍速 | `rate`（`ValueNotifier`）+ `setRate/applyTemporaryRate/restoreRateAfterTemporary` | 竖屏原先从「倍速记忆设置」取基准（默认关→1.0x）→ 长按倍速松手会把横屏设的 2.0x **复位**（P1-2） |
+| 音量 | 系统音量 0–100 + mpv 增益 100~100+cap + 增强上限 + 浮点累加器；`verticalSwipe()` 返回指示器事件 | 竖屏原先只 clamp 系统音量、完全不知道 mpv 增益：横屏把增益推到 150% 后切竖屏，手势彻底空转且指示器**谎报 100%**（P1-1） |
+| 亮度 | 窗口亮度 0–1 + 累加器 | 同上，两页共用同一套增量数学 |
+| 水平滑动 seek | 起点/浮层数据/40ms 节流/`cancelSwipe()` 撤销 | 竖屏原先 `onSwipeCancel: () {}` → 误触 seek 不撤销（P1-4） |
+| 双指缩放 | `zoomScale`/`zoomOffset`/`zoomStart|Update|End`/`zoomMatrix`/`resetZoom` | 竖屏原先四个空回调（决策 D6 按缺陷处理）；视口尺寸由**调用页**传入，**不缓存**在共享状态里（被遮住的那页也会因 setState 重建，缓存会被写坏） |
+| 杜比引导去重 | `claimDolbyCheck(path)`（记住**最后一次认领的媒体路径**） | 同一媒体有两条触发路径（横屏 open / 竖屏 push），两页各记一个 bool 会重复弹窗 |
+
+**其余三处「单一入口」**（同一批一起收口，避免下次再各写一份）：
+
+| 入口 | 位置 | 规则 |
+|---|---|---|
+| 播放历史 | `utils/playback_history.dart` | `recordPlaybackHistory`（过滤本机回环代理 URL、`isUrl` 标记、时长未知传 0）+ `backfillPlaybackHistoryDuration`；横屏 open/切集与**竖屏切集**都走它（竖屏原先完全不写历史 → 连看多集只有进入那一集进历史，P1-3） |
+| 杜比视界引导 | `utils/dolby_vision_hint.dart` | `showDolbyVisionHintIfNeeded(context, path)`：在线跳过 / gpuNext 跳过 / `suppressed` 跳过 / MediaInfo 检测 / 弹窗（知道了·不再提示）。**谁在栈顶谁检测**：竖屏页在栈顶时横屏页 `if (_portraitActive) return;` 让位，避免弹窗被盖住 |
+| 底栏时间文本 | `utils/formatters.dart` 的 `formatPlaybackTimeText` | 「已播/总时长」⇄「已播/剩余」，**剩余为负清零**——`formatDuration(-5000)` 走 `~/`+`%` 会得到 `59:55`，竖屏原先未钳制会显示 `-59:55`（P1-5） |
+
+**底栏对齐基准**（P1-6）：`player_metrics.dart` 三常量——`kPlayerLeftInset`（触摸行 20）、
+`kPlayerTrackLeftInset`（**轨道开端/章节名/「下一集」图标同一 x = 28**）、
+`kPlayerNextRowLeftPadding`（竖屏操作行 22：38 宽盒内 26 号图标居中 → 图标左缘 28）。
+两页的 `PlayerSeekBar` 都传 `trackLeftInset: kPlayerTrackLeftInset`；**别再各写各的数字**。
+
+**两处性能门控**（P2-6/P2-7，横竖屏各挂一份组件的副作用）：
+
+| 组件 | 参数 | 行为 |
+|---|---|---|
+| `PlayerStatusBar` | `active`（横屏传 `!_portraitActive && !_audioActive.value`，竖屏传 `!_audioActive.value`） | false 时**停掉四个定时器**（时间 30s/电量 60s/网络 5s/网速 1s），重新可见立刻刷新并重启；原先被遮住的一页每秒 2 次 setState + 2 次通道调用空转 |
+| `PlayerDanmakuLayer` | `visible` → `DanmakuController.setLayerVisible` | 只有可见层收 `addDanmaku`（被遮住那层不做 TextPainter 排版 + 图片录制，省一半开销）；`clear`/暂停/样式仍下发**全部层**；若没有任何层被标记可见则退回全部层（保证"至少看得见弹幕"） |
+
+**关键决策**：
+
+- **禁止全局单例**：共享对象是**页面局部**的（§4.1），随横屏播放页创建/销毁；
+  竖屏页自建分支只作兜底（正常流程横屏页总会传入）。
+- **可测性优先**：对播放器与系统的副作用全部经可注入回调（默认直连 `DeviceServices`
+  与 media_kit `Player`），位置/时长也由注入读取器提供 → 单测**不构造 `Player`**
+  （原生库在单测环境不可用）也能覆盖音量增强段、倍速、滑动撤销、缩放边界。
+- **不做「按 Home 自动进画中画」**（用户明确要求，2026-09）：`setAutoPipEnabled`
+  **全仓零调用**，按 Home 一律退后台 + 暂停（`pauseUponEnteringBackgroundMode`）；
+  画中画只有一个入口 = 顶栏槽位／「更多」里的**显式**按钮。横竖屏两页的
+  `didChangeAppLifecycleState` **只关乎控制层显隐**（退后台隐藏、回前台恢复），
+  与"进入小窗"无关——**不要再把它当 PiP 生命周期来"修"**。
+
+---
+
 ## 5. 新增功能指南（按功能类型）
 
 ### 5.1 新增一个页面
@@ -1696,7 +1771,8 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
    **派生暗色方案**再取 primary：浅色主题下直接用 `scheme.primary` 在暗底上偏暗、对比不足，
    派生后自动提亮到暗底可读色阶且保留用户色相；派生结果按 seed 缓存（`fromSeed` 每次都跑
    HCT 调色板计算，滑杆拖动时逐帧 build，无缓存会掉帧）。
-   例外：语义色不跟随主题——字幕 RGBA 通道滑杆的 R/G/B/A 轨道色就是通道语义本身。
+   例外：语义色不跟随主题——字幕 RGBA 通道滑杆的 R/G/B/A 轨道色就是通道语义本身；
+   播放页手势指示器的音量填充/增强态红、倍速条、恢复指示器文本同属语义色（决策 D5，§4.8）。
 
 ### 5.4 新增模型字段
 
@@ -1736,6 +1812,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   - `test/home_page_permission_test.dart` — 权限流程（未授权 → 授予权限 → 授权扫描）
   - `test/player_controls_settings_test.dart` — 播放器控制设置（槽位增删/排序/上限/时长档位/倍速预设/按钮背景/进度条样式/长按倍速/灵敏度/保存音量到系统/音量增强开关与上限百分比 10% 步进就近对齐/指示器开关/首次提示/双指缩放/自动连播/自动退出/循环模式/已观看阈值 5% 档位/视频方向/播放界面动画开关/旧数据迁移；倍速不在顶栏动作之列）
   - `test/player_gestures_test.dart` — 双击手势三模式判定（含边界）+ 滑动手势数学（seek 灵敏度/音量·亮度增量/音量增强 mpv volume-max 与展示百分比·增强段判定/动态倍速档位与索引/最近档位）
+  - `test/player_session_state_test.dart` — **横竖屏共享会话状态**（B4/D2，§4.33；不构造 media_kit `Player`，副作用走注入回调）：音量增强段（系统音量满 100% 后接管 mpv 增益/指示器 >100% 且 boosting/下滑触底转回系统音量/上限封顶）、亮度手势、倍速唯一真值（`setRate` 写播放器与记忆、临时倍速不改用户值、倍速记忆初始化）、**滑动撤销**（`cancelSwipe` 落点回起点/未滑动不 seek/`endSwipe` 250ms 后卸载/时长未知不产生浮层）、**缩放**（0.75–4x 与禁缩小下限/平移钳制不露黑边/回 1.0 归中/resetZoom）、**杜比引导按路径认领去重**（同路径只认领一次/切新媒体重新认领/空路径不认领）
   - `test/player_panel_test.dart` — 右侧面板打开/面板内导航不崩溃（**改 PlayerPanel 必须跑**）
   - `test/player_bottom_panel_test.dart` — 竖屏底部面板打开/面板内二级导航/返回/关闭不崩溃（**改 PlayerBottomPanel 必须跑**）
   - `test/player_speed_panel_test.dart` — 倍速面板（「我的预设」✕ 删除 / 「添加到预设」随滑杆联动）
@@ -1744,8 +1821,8 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   - `test/audio_shuffle_test.dart` — 听视频随机播放算法（时间刻种子：结果范围/不重复当前曲目/同刻可复现/不同刻不同）
   - `test/playlist_sort_test.dart` — 播放列表 4 排序纯函数（名称/日期 × 升/降序，自然序/无日期垫底）+ 目录过滤（folderOfPath/filterVideosInFolder）
   - `test/pip_aspect_test.dart` — 画中画宽高比纯函数（gcd 约分/0.5–2.39 钳制/未知尺寸回退 16:9）
-  - `test/portrait_player_bottom_bar_test.dart` — 竖屏底栏右侧按钮簇顺序（超分辨率→列表→倍速→选择屏幕，左到右）+ 弹幕按钮（进度条上方右下角、与章节名同行、开关随 danmakuOn 切换）
-  - `test/thumbnail_cache_test.dart` — FFmpeg 帧缓存查询（peekFrame 精确秒桶/peekNearestFrame 邻近匹配/跨视频隔离）+ 32MB LRU 超限淘汰
+  - `test/portrait_player_bottom_bar_test.dart` — 竖屏底栏：右侧按钮簇顺序（超分辨率→列表→倍速→选择屏幕，左到右）+ 弹幕按钮（进度条上方右下角、与章节名同行、开关随 danmakuOn 切换）+ **对齐基准**（下一集图标/进度条轨道/章节名三处同 `kPlayerTrackLeftInset`，§4.33）
+  - `test/thumbnail_cache_test.dart` — FFmpeg 帧缓存查询（peekFrame 精确秒桶/peekNearestFrame 邻近匹配/跨视频隔离）+ 32MB LRU 超限淘汰 + **peek 命中即刷新 LRU**（B4/P2-3：拖动热路径看过的帧不再被下一个新帧挤掉）
   - `test/thumbnail_bucket_test.dart` — 缩略图秒桶纯函数 `thumbnailBucketMs`（四舍五入边界 499/500、幂等 → 缓存键稳定、负值归零、**取代截断分桶后落点偏差 ≤ 0.5s 的回归**，§4.9）
   - `test/player_thumbnail_preview_test.dart` — 缩略图气泡渲染（有/无/空白章节名时胶囊显隐、超长章节名单行省略且不超预览图宽、**章节胶囊在图上方时间胶囊在下方**、不可见时整体透明，§4.9/§4.22）
   - `test/watch_state_test.dart` — 观看状态纯函数（未观看/观看中/已看完判定 + 自定义阈值 + 百分比）
@@ -1757,7 +1834,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   - `test/intro_outro_tracker_test.dart` — 片头片尾跟踪器（就绪门控/每集一次/越过即标记/恢复点感知/切集重置）
   - `test/intro_outro_panel_test.dart` — 片头片尾面板（开关展开/输入换算 mm:ss/滑杆/设为当前时间与剩余时间/一键重置）
   - `test/formatters_network_test.dart` — 网速格式化（KB/MB 自动切换两位小数）与在线媒体判定纯函数（阶段1 第 1 点）
-  - `test/formatters_test.dart` — 截图文件名纯函数（app名称 + 日期 + 到秒时间，避免同日覆盖）
+  - `test/formatters_test.dart` — 截图文件名纯函数（app名称 + 日期 + 到秒时间，避免同日覆盖）+ **底栏时间文本**（`formatPlaybackTimeText`：已播/总、已播/剩余、**剩余为负清零不出现 `-59:55`**、时长未知退化、跨小时，§4.33）
   - `test/subtitle_track_test.dart` — 字幕轨道纯函数（展示名/ASS 样式判定/格式过滤/对齐/颜色 + RGBA↔mpv 颜色转换，阶段1 第 3 点）
   - `test/subtitle_settings_test.dart` — 字幕设置服务（默认值/延迟叠加与钳制/描边模式/外挂字幕记忆/字体源目录记忆/重置样式持久化）
   - `test/subtitle_auto_match_test.dart` — 同名字幕自动匹配纯函数（同名候选/扩展名优先级/完全同名优先/简繁语言后缀/短名优先/无匹配）
@@ -1800,12 +1877,12 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   - `test/bili_stream_proxy_test.dart` — 本地流代理（转发字节/Range 与响应头透传/未注册 404/start·stop 生命周期/网速 recentSpeedBytesPerSec）
   - `test/bili_auth_service_test.dart` — Web 扫码登录服务（generate 解析 url+qrcode_key / poll 成功从 data.url query 解析 Cookie+refresh_token / 86101·86090 状态）
   - `test/download_manager_test.dart` — 下载记录持久化（DownloadTask toJson/fromJson 往返 / 重启恢复未完成归位暂停·已完成保留 / 损坏数据防御）
-  - `test/playback_history_test.dart` — 播放历史服务（记录去重置顶/上限淘汰/删除单条/清空/关闭记录保留已存/时长回填/持久化恢复/损坏数据防御 + 条目模型往返，§4.17）
+  - `test/playback_history_test.dart` — 播放历史服务（记录去重置顶/上限淘汰/删除单条/清空/关闭记录保留已存/时长回填/持久化恢复/损坏数据防御 + 条目模型往返，§4.17）+ **播放页写入入口**（`utils/playback_history.dart`：回环代理 URL 过滤/本地与直链写入并标 isUrl/时长回填与非法值忽略，§4.33）
   - `test/playback_history_page_test.dart` — 历史记录页（空态/条目渲染/垃圾桶按钮删除单条落盘/清空二次确认取消与确认/无历史禁用清空/记录开关持久化）
   - `test/url_media_test.dart` — 在线直链纯函数（规范化补协议/内部空白拒绝/scheme 形态不补/协议白名单/标题提取解码与兜底，§4.17）
   - `test/open_link_dialog_test.dart` — 打开链接弹窗（有效链接回调并关弹窗/自动补协议/无效行内提示不关弹窗/取消不回调/**回调内 push 不被弹掉**：先关弹窗再进播放页的回归）
   - `test/device_services_external_video_test.dart` — 外部打开视频通道封装（takeExternalVideo/resolveVideoUri 返回解析/空值降级/通道异常静默，§4.17）
-  - `test/player_status_bar_net_speed_test.dart` — 顶部信息行网速来源分流（直连播放走 directNetSpeedReader/B 站代理命中不走 reader/reader 返回 null 不崩/本地播放隐藏胶囊，§4.17）
+  - `test/player_status_bar_net_speed_test.dart` — 顶部信息行网速来源分流（直连播放走 directNetSpeedReader/B 站代理命中不走 reader/reader 返回 null 不崩/本地播放隐藏胶囊，§4.17）+ **可见性门控**（`active=false` 时网速定时器停跑、`false→true` 立刻刷新并重启，B4/P2-6）
   - `test/cast_source_test.dart` — 投屏源分类纯函数（本地/直链/loopback/content + file:// 去前缀 + loopback 判定，§4.18）
   - `test/lan_media_server_test.dart` — 局域网媒体服务器（LAN URL 格式/全量+Range 拉流/错误 token 404/stop 释放/文件不存在抛错 + isSiteLocalIpv4，§4.18）
   - `test/cast_service_test.dart` — 投屏服务（isMediaRenderer 过滤 + CastDevice.kind，§4.18）
@@ -1883,6 +1960,18 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | 横竖屏切换卡顿/黑屏/音频断 | v3：共享同一 Player/VideoController，竖屏页只换布局不重开；EOF 由当前栈顶页处理 |
 | 竖屏返回不能直接退出 / 退出露横屏页 | 竖屏返回走 `_backExit` → `_exitWithPortrait`（先 `_exitBlackout` 黑化下层 → `pause()` → IO unawaited → 连 pop 竖屏页 + 横屏页，下层纯黑防「两个竖屏界面」复现）；「选择屏幕」仍仅回横屏 |
 | 竖屏锁定不生效 | 手势层传 `locked`，各手势回调补 `if (_locked) return` |
+| 竖屏缺少横屏已有的能力（音量增强/真实倍速/撤销 seek/剩余时长钳制/双指缩放） | 这类「两页各一份实现」的漂移点一律收敛进 `PlayerSessionState`（横屏创建、注入竖屏，禁止全局单例，§4.33）；**新增播放页能力时先看它属不属于该对象** |
+| 横屏把音量增强推到 150% 后切竖屏 → 手势空转且指示器显示 100% | 竖屏页也必须知道 mpv 增益：数值与手势数学都读共享会话状态（`verticalSwipe` 返回 `boosting` + 显示百分比），指示器补 `boosting` 形参（§4.33） |
+| 长按倍速松手把用户的 2.0x 复位成 1.0x | 倍速基准必须是**播放器当前速率**（共享会话状态的 `rate`），不能取「倍速记忆设置」——该开关默认关（§4.33） |
+| 滑动 seek 中途加第二指后落点停在误触位置 | `onSwipeCancel` 必须撤销已发生的 seek（共享会话状态的 `cancelSwipe`）；竖屏页曾传空实现（§4.33） |
+| 竖屏底栏时间显示 `-59:55` | 剩余时长格式化前必须钳负为零（`formatPlaybackTimeText`）——`formatDuration(-5000)` 走 `~/`+`%` 会得到 `59:55`（§4.33） |
+| 横竖屏底栏左对齐基准不一致（进度条轨道/章节名/下一集图标各写各的数字） | 三处统一用 `player_metrics.dart` 的 `kPlayerTrackLeftInset`（轨道级 28）与 `kPlayerNextRowLeftPadding`；`kPlayerLeftInset`（20）只是触摸行内边距（§4.33） |
+| 「锁定竖屏 → 直接进杜比视界视频」没有偏色引导 | `_openAndSetRate` 里 `await _applyVideoOrientation()` **会挂到竖屏页 pop**，排在它后面的检测被整体推迟 → 杜比检测必须走「谁在栈顶谁检测」：竖屏页 `initState`/切集都检，横屏页 `_portraitActive` 时让位；去重按**媒体路径**记在共享状态里（§4.33） |
+| 共享状态里缓存「视口尺寸」被被遮住的那一页写坏 | 视口参数由**调用页**逐次传入（`zoomUpdate(…, viewportWidth:, viewportHeight:)`）；横屏页被竖屏页盖住时仍可能因 setState 重建并写缓存 |
+| 横竖屏各挂一层弹幕 canvas → 每条弹幕排版/录制两遍 | `PlayerDanmakuLayer(visible:)` 上报可见性，`DanmakuController` 只向**可见层** `addDanmaku`；清屏/暂停/样式仍下发全部层（§4.11） |
+| 竖屏期间横屏页的状态栏定时器空转（每秒 2 次 setState + 2 次通道调用） | `PlayerStatusBar(active:)`：被遮住的一侧停表，重新可见立刻刷新并重启（§4.33） |
+| `peekFrame`/`peekNearestFrame` 命中不刷 LRU → 刚看过的帧被先淘汰、重解码 63–134ms | LRU「访问即刷新」必须在**所有**读取路径上：`getVideoFrameAt` 与两个 `peek*` 共用一个 `_touchLru`（§4.9） |
+| 按 Home 被"自动进画中画"（用户明确不要） | `setAutoPipEnabled` **全仓零调用**；按 Home 只退后台 + 暂停，画中画仅由顶栏/「更多」的**显式**按钮进入；两页的 `didChangeAppLifecycleState` 只关乎控制层显隐，**不是** PiP 生命周期（§4.33） |
 | 手机竖拍视频仍横屏播放（自动方向） | 竖屏判定结合 `VideoParams.rotate`（90/270 时宽高互换，参考 KT：`video-params/aspect` + rotate 修正）；⚠️ 用**原始 w/h**（`videoParams.w/h`）而非 `state.width/height`（后者已被 media_kit 按 rotate 交换成显示尺寸，再套 rotate 会双重交换误判） |
 | 画面比例不实时生效 | Video 外包 `ListenableBuilder(listenable: 设置)`；⚠️ 4:3→自动失效根因：media_kit `VideoViewParameters.copyWith(aspectRatio: null)` 保留旧值 → Video 加 `key: ValueKey(fit.index)` 强制重建 |
 | 音量手势被系统音量封顶 | v3：手势直控系统媒体音量，mpv 音量固定 100；退出按「保存到系统」写回/恢复 |
@@ -1984,7 +2073,7 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 | **弹窗「确认→push 播放页→pop 弹窗」顺序错 → 点播放毫无反应**（`Navigator.pop()` 弹的是**栈顶**，先 push 再 pop 会把刚 push 的播放页弹掉、弹窗残留；对任何链接都中招，曾被误报为「不支持 m3u8」） | 弹窗确认必须**先 pop 自己再回调**（open_link_dialog.dart `_confirm`，§4.17） |
 | **intent-filter 只声明 MIME 不声明 scheme → scheme 默认仅 content/file，外部播放器以 `http URL+video/*` 查询时匹配不到**（「调用外部播放」列表里没有本应用） | scheme(content/file/http/https) 与视频 MIME **声明在同一过滤器**（mpvRx 同款，§4.17） |
 | mkv/m3u8 的 MIME 是 `application/x-matroska`/`vnd.apple.mpegurl`，**不以 video/ 开头**——原生按 video/* 前缀过滤会把这类外部拉起误拒（点了没反应） | `isVideoMimeType` 用与 manifest 同步的注册集合判定（§4.17） |
-| 网络存储的 `127.0.0.1` loopback 代理 URL 退出即失效，写入播放历史成死链 | `_recordPlaybackHistory` 按 loopback 前缀过滤；B 站在线播放走 `_biliMedia` 分支天然不记录（§4.17） |
+| 网络存储的 `127.0.0.1` loopback 代理 URL 退出即失效，写入播放历史成死链 | `recordPlaybackHistory`（`utils/playback_history.dart`）内 `isLoopbackProxyUrl` 过滤；B 站在线播放走 `_biliMedia` 分支天然不记录（§4.17/§4.33） |
 | Dart `Uri` 对含空格 host 宽松（`https://not a url` 能解析）；裸补 `https://` 会把 `mailto:` 错位成 userinfo | URL 校验先拒内部空白；`scheme:` 形态不补协议，交给白名单判定（`utils/url_media.dart`，§4.17） |
 | 在线直链的章节信息无需网站接口 | mpv/FFmpeg 解封装远程容器原生读 chapter（MKV 内嵌章节），现有 `ChapterTracker`（mpv chapter-list）天然覆盖 URL 播放（§4.17） |
 | 投屏 LAN 服务器绑 127.0.0.1 → 电视拉不到流 | 绑 `0.0.0.0` + URL 用手机局域网 IPv4（`isSiteLocalIpv4` 挑站点本地地址、排除回环）（§4.18） |

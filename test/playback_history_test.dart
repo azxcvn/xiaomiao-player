@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/models/playback_history_entry.dart';
 import 'package:moumou/services/playback_history_service.dart';
+import 'package:moumou/utils/playback_history.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 播放历史服务测试（工作.md：播放历史记录功能）：
@@ -177,5 +178,54 @@ void main() {
     expect(back?.durationMs, 999);
     expect(PlaybackHistoryEntry.fromJson('str'), isNull);
     expect(PlaybackHistoryEntry.fromJson(null), isNull);
+  });
+
+  group('播放页写入入口（utils/playback_history.dart，B4/P1-3）', () {
+    setUp(() {
+      // 走单例入口：先清掉单例的内存态与加载态，避免上一个用例残留
+      PlaybackHistoryService.instance.debugReset();
+    });
+
+    test('isLoopbackProxyUrl：只识别本机回环代理地址', () {
+      expect(isLoopbackProxyUrl('http://127.0.0.1:8080/stream'), isTrue);
+      expect(isLoopbackProxyUrl('http://localhost:8080/stream'), isTrue);
+      expect(isLoopbackProxyUrl('https://127.0.0.1/x'), isTrue);
+      expect(isLoopbackProxyUrl('/storage/emulated/0/a.mkv'), isFalse);
+      expect(isLoopbackProxyUrl('https://cdn.example.com/v.m4s'), isFalse);
+      // 词首匹配：不是回环 address 的其它 127 网段不误判
+      expect(isLoopbackProxyUrl('http://127.0.0.2/x'), isFalse);
+    });
+
+    test('本地文件与在线直链都写入（在线标记 isUrl）', () async {
+      recordPlaybackHistory('/a.mkv', 'a', durationMs: 12000);
+      recordPlaybackHistory('https://cdn.example.com/v.mp4', 'v');
+      await Future.delayed(const Duration(milliseconds: 10));
+      final paths =
+          PlaybackHistoryService.instance.entries.map((e) => e.path).toList();
+      expect(paths, ['https://cdn.example.com/v.mp4', '/a.mkv']);
+      expect(PlaybackHistoryService.instance.entries.first.isUrl, isTrue);
+      expect(PlaybackHistoryService.instance.entries.last.durationMs, 12000);
+    });
+
+    test('回环代理 URL 不写入历史（不可重放）', () async {
+      recordPlaybackHistory('http://127.0.0.1:8080/stream', 'stream');
+      recordPlaybackHistory('http://localhost:1234/x.mkv', 'x');
+      await Future.delayed(const Duration(milliseconds: 10));
+      expect(PlaybackHistoryService.instance.entries, isEmpty);
+    });
+
+    test('backfillPlaybackHistoryDuration：回填时长，非法值静默忽略', () async {
+      recordPlaybackHistory('/a.mkv', 'a');
+      await Future.delayed(const Duration(milliseconds: 10));
+      expect(PlaybackHistoryService.instance.entries.first.durationMs, 0);
+      backfillPlaybackHistoryDuration('/a.mkv', const Duration(seconds: 95));
+      await Future.delayed(const Duration(milliseconds: 10));
+      expect(PlaybackHistoryService.instance.entries.first.durationMs, 95000);
+      // 0 / 负时长不写入；空路径不写入
+      backfillPlaybackHistoryDuration('/a.mkv', Duration.zero);
+      backfillPlaybackHistoryDuration('', const Duration(seconds: 5));
+      await Future.delayed(const Duration(milliseconds: 10));
+      expect(PlaybackHistoryService.instance.entries.first.durationMs, 95000);
+    });
   });
 }

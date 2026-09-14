@@ -124,6 +124,14 @@ class PortraitPlayerBottomBar extends StatelessWidget {
                       child: PlayerChapterNameRow(
                         name: currentChapterName!,
                         onTap: onChapterTap!,
+                        // 与横屏底栏同一基准（B4/P1-6）：进度条轨道开端 28，
+                        // bottom 10 抵消进度条 height 24 带来的下移
+                        padding: const EdgeInsets.fromLTRB(
+                          kPlayerTrackLeftInset,
+                          8,
+                          20,
+                          10,
+                        ),
                       ),
                     ),
                   )
@@ -154,11 +162,22 @@ class PortraitPlayerBottomBar extends StatelessWidget {
               onChangeEnd: onSeekEnd,
               chapters: chapters,
               skipSegments: skipSegments,
+              // 与横屏底栏同一几何（B4/P1-6：原先用组件默认 height/trackLeftInset
+              // 40/20，两页对齐基准不同）：height 24 让轨道贴近下方控制行，
+              // trackLeftInset 让轨道左端与「下一集」图标左缘同一 x
+              height: 24,
+              trackLeftInset: kPlayerTrackLeftInset,
             ),
             // ── 操作行：下一集 + 时间（点击切换）+ 右侧按钮簇 ──
             Padding(
-              // 左缘与进度条开端对齐（kPlayerLeftInset），右缘留 20
-              padding: const EdgeInsets.fromLTRB(kPlayerLeftInset, 0, 20, 10),
+              // 左缘 22：38 宽的「下一集」盒内 26 号图标居中 → 图标左缘落在
+              // kPlayerTrackLeftInset，与上面的轨道开端对齐（见 player_metrics）
+              padding: const EdgeInsets.fromLTRB(
+                kPlayerNextRowLeftPadding,
+                0,
+                20,
+                10,
+              ),
               child: Row(
                 children: [
                   // 下一集：紧凑尺寸（默认 48dp 触摸目标在竖屏窄屏会溢出）；

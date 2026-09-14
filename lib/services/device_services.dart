@@ -48,7 +48,13 @@ class DeviceServices {
   }
 
   /// 设置「返回桌面/上滑手势时自动进入画中画」（仅 API 31+ 生效，
-  /// 旧系统静默忽略）。播放页进入时置 true、退出时置 false。
+  /// 旧系统静默忽略）。
+  ///
+  /// ⚠️ **本项目设计上不使用自动进小窗，全仓零调用点（勿擅自调用）**：
+  /// 按 Home 一律「退后台 + 暂停」（用户明确要求，见播放页
+  /// `didChangeAppLifecycleState` 的说明）；画中画只有一个入口——顶栏槽位／
+  /// 「更多」里的**显式**「画中画」按钮（[enterPip]）。
+  /// 上方注释「播放页进入时置 true、退出时置 false」是旧实现残留，已不成立。
   static Future<void> setAutoPipEnabled(bool enabled) async {
     try {
       await _channel.invokeMethod<void>(
@@ -562,7 +568,9 @@ class DeviceServices {
     }
   }
 
-  /// 内存缓存中查找精确秒桶的已生成帧（不触发任何解码）
+  /// 内存缓存中查找精确秒桶的已生成帧（不触发任何解码）。
+  /// 命中即**刷新 LRU 位置**（B4/P2-3：拖动热路径上的帧同样算「最近使用」，
+  /// 否则来回拖动时刚看过的帧反被先淘汰，下一帧又要重解码 63–134ms）。
   static FastThumbFrame? peekFrame(
     String path,
     int timeMs, {
@@ -570,11 +578,16 @@ class DeviceServices {
   }) {
     if (timeMs < 0) return null;
     final bucketMs = thumbnailBucketMs(timeMs);
-    return _frameCache['$path|$bucketMs|$maxWidth'];
+    final key = '$path|$bucketMs|$maxWidth';
+    final cached = _frameCache[key];
+    if (cached == null) return null;
+    _touchLru(key, cached);
+    return cached;
   }
 
   /// 内存缓存中查找与 [timeMs] 最近且间隔不超过 [maxGapMs] 的已生成帧。
   /// 快速拖动时先显示最近帧（秒显），精确帧异步补齐。
+  /// 命中即刷新 LRU 位置（B4/P2-3，同 [peekFrame]）。
   static ({FastThumbFrame frame, int bucketMs})? peekNearestFrame(
     String path,
     int timeMs, {
@@ -586,6 +599,7 @@ class DeviceServices {
     final prefix = '$path|';
     final suffix = '|$maxWidth';
     ({FastThumbFrame frame, int bucketMs})? best;
+    String? bestKey;
     var bestGap = maxGapMs + 1;
     for (final entry in _frameCache.entries) {
       if (!entry.key.startsWith(prefix) || !entry.key.endsWith(suffix)) {
@@ -599,8 +613,10 @@ class DeviceServices {
       if (gap < bestGap) {
         bestGap = gap;
         best = (frame: entry.value, bucketMs: b);
+        bestKey = entry.key;
       }
     }
+    if (best != null && bestKey != null) _touchLru(bestKey, best.frame);
     return best;
   }
 
@@ -671,6 +687,13 @@ class DeviceServices {
       final key = _frameCache.keys.first;
       _frameCacheBytes -= _frameCache.remove(key)!.rgba.lengthInBytes;
     }
+  }
+
+  /// LRU「访问即刷新」：命中时把该 key 移到尾部（最近使用），
+  /// [_trimCache] 淘汰时删头部最久未用（B4/P2-3）
+  static void _touchLru(String key, FastThumbFrame frame) {
+    if (_frameCache.remove(key) == null) return;
+    _frameCache[key] = frame;
   }
 
   /// 清空 Dart 内存缓存（「清除所有缓存」时调用）

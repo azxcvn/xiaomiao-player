@@ -100,4 +100,59 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('0.00 KB/s'), findsNothing);
   });
+
+  group('可见性门控（B4/P2-6：被遮住的一侧不再跑定时器）', () {
+    testWidgets('active=false：网速定时器停跑，reader 一次都不调用', (tester) async {
+      var readerCalls = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PlayerStatusBar(
+              isOnlinePlayback: true,
+              streamUrl: 'https://example.com/movie.m3u8',
+              active: false,
+              directNetSpeedReader: () async {
+                readerCalls++;
+                return 12345.0;
+              },
+            ),
+          ),
+        ),
+      );
+      // 推进 5 秒（原实现每秒采样一次 → 会是 5 次左右）
+      await tester.pump(const Duration(seconds: 5));
+      expect(readerCalls, 0, reason: '被遮住的页面不该采样网速');
+    });
+
+    testWidgets('active=false → true：立刻刷新并重启定时器', (tester) async {
+      var readerCalls = 0;
+      Future<double?> reader() async {
+        readerCalls++;
+        return 2048.0;
+      }
+
+      Widget bar(bool active) => MaterialApp(
+            home: Scaffold(
+              body: PlayerStatusBar(
+                isOnlinePlayback: true,
+                streamUrl: 'https://example.com/movie.m3u8',
+                active: active,
+                directNetSpeedReader: reader,
+              ),
+            ),
+          );
+
+      await tester.pumpWidget(bar(false));
+      await tester.pump(const Duration(seconds: 3));
+      expect(readerCalls, 0);
+
+      await tester.pumpWidget(bar(true));
+      await tester.pump();
+      expect(readerCalls, greaterThan(0), reason: '重新可见时立刻采样一次');
+      // 重启后每秒继续采样
+      final afterResume = readerCalls;
+      await tester.pump(const Duration(seconds: 2));
+      expect(readerCalls, greaterThan(afterResume));
+    });
+  });
 }

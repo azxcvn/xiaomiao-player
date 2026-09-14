@@ -15,6 +15,7 @@ import 'package:moumou/models/video_file.dart';
 import 'package:moumou/models/subtitle_font_injection.dart';
 import 'package:moumou/pages/player/audio_player_page.dart';
 import 'package:moumou/pages/player/player_portrait_page.dart';
+import 'package:moumou/pages/player/player_session_state.dart';
 import 'package:moumou/pages/player/views/audio_panel.dart';
 import 'package:moumou/pages/player/views/equalizer_panel.dart';
 import 'package:moumou/pages/player/views/player_bili_playlist_panel.dart';
@@ -44,13 +45,13 @@ import 'package:moumou/pages/player/views/player_super_resolution_panel.dart';
 import 'package:moumou/pages/player/views/player_swipe_seek_overlay.dart';
 import 'package:moumou/pages/player/views/player_thumbnail_preview.dart';
 import 'package:moumou/pages/player/views/player_top_bar.dart';
+import 'package:moumou/pages/player/views/player_zoom_restore_chip.dart';
 import 'package:moumou/pages/player/views/subtitle_panel.dart';
 import 'package:moumou/services/audio_service.dart';
 import 'package:moumou/services/chapter_tracker.dart';
 import 'package:moumou/services/danmaku_service.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/decode_settings.dart';
-import 'package:moumou/services/dolby_vision_settings.dart';
 import 'package:moumou/services/bilibili/bili_danmaku_service.dart';
 import 'package:moumou/services/bilibili/bili_constants.dart';
 import 'package:moumou/services/bilibili/bili_stream_proxy.dart';
@@ -60,20 +61,20 @@ import 'package:moumou/services/device_services.dart';
 import 'package:moumou/services/fast_thumbnails.dart';
 import 'package:moumou/services/intro_outro_settings.dart';
 import 'package:moumou/services/intro_outro_tracker.dart';
-import 'package:moumou/services/playback_history_service.dart';
 import 'package:moumou/services/playback_progress_service.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/services/subtitle_service.dart';
 import 'package:moumou/services/subtitle_settings.dart';
-import 'package:moumou/services/video_info_service.dart';
 import 'package:moumou/services/super_resolution_service.dart';
 import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/utils/cast_source.dart';
+import 'package:moumou/utils/dolby_vision_hint.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/intro_outro_skip.dart';
 import 'package:moumou/utils/mpv_tuning.dart';
 import 'package:moumou/utils/pip_aspect.dart';
 import 'package:moumou/utils/playback_completion.dart';
+import 'package:moumou/utils/playback_history.dart';
 import 'package:moumou/utils/playback_restore.dart';
 import 'package:moumou/utils/player_diagnostics.dart';
 import 'package:moumou/utils/player_gestures.dart';
@@ -182,7 +183,10 @@ class _PlayerPageState extends State<PlayerPage>
   late final IntroOutroTracker _introOutroTracker =
       IntroOutroTracker(IntroOutroSettings.instance);
 
-  double _speed = 1.0;
+  /// 横竖屏共享的会话状态（B4/D2）：音量·音量增强·亮度·倍速·水平滑动 seek·
+  /// 双指缩放全部收敛到这一个页面局部对象，本页创建并持有、注入竖屏页
+  /// （禁止全局单例，§4.1）。原先两页各一份实现导致 P1-1/P1-2/P1-4/P1-5 漂移。
+  late final PlayerSessionState _session;
 
   /// 控制层显隐动画（Kazumi 风格：顶部下落 / 底部上升 / 右侧滑入 / 中央淡入）
   late final AnimationController _controlsController = AnimationController(
@@ -221,9 +225,6 @@ class _PlayerPageState extends State<PlayerPage>
     end: Offset.zero,
   ).animate(CurvedAnimation(parent: _unlockController, curve: Curves.easeInOut));
 
-  /// 实际倍速的监听器：倍速面板（独立弹窗路由）通过它实时刷新
-  final ValueNotifier<double> _speedNotifier = ValueNotifier(1.0);
-
   String? _seekFeedback;
   Timer? _seekFeedbackTimer;
 
@@ -231,29 +232,10 @@ class _PlayerPageState extends State<PlayerPage>
   double _viewportWidth = 0;
   double _viewportHeight = 0;
 
-  // ── 音量 / 亮度 ────────────────────────────────────────
+  // ── 手势指示器 ─────────────────────────────────────────
 
-  /// 当前应用音量（0 – 100，进入时同步自系统音量）
-  double _volume = 50;
-
-  /// 当前 mpv 增益音量（100 = 无增益，100~100+cap 为音量增强段）。
-  /// 系统音量满 100% 后接管 mpv `volume` 突破 100%（最高 200%）。
-  double _mpvVolume = 100;
-
-  /// 音量增强上限（百分比，进入时从设置读取）
-  int _volumeBoostCap = 0;
-
-  /// 进入播放前的系统音量（退出时按设置写回或恢复）
-  double? _initialSystemVolume;
-
-  /// 当前亮度（0 – 1，窗口亮度）
-  double _brightness = 1.0;
-
-  /// 音量/亮度浮点累加器（小步长滑动不丢失，参考 kt 项目）
-  double _volumeAccum = 0;
-  double _brightnessAccum = 0;
-
-  /// 手势指示器（音量/亮度共用，2 秒无操作自动隐藏）
+  /// 手势指示器（音量/亮度共用，2 秒无操作自动隐藏）。
+  /// 数值/boosting 来自 [_session]，本页只负责显示与自动隐藏（两页同款）。
   ({GestureIndicatorKind kind, double value, bool boosting})? _indicator;
 
   /// 最近一次显示的指示器类型：退场动画期间 [_indicator] 已置 null，
@@ -264,7 +246,6 @@ class _PlayerPageState extends State<PlayerPage>
   // ── 长按倍速 ──────────────────────────────────────────
 
   bool _longPressing = false;
-  double? _speedBeforeLongPress;
 
   /// 当前长按倍速（初始为设置值，左右滑动后为动态档位）
   double _longPressSpeed = 2.0;
@@ -277,20 +258,6 @@ class _PlayerPageState extends State<PlayerPage>
   bool _dynamicSpeedActive = false;
   bool _speedBarVisible = false;
   Timer? _speedBarTimer;
-
-  // ── 水平滑动 seek ─────────────────────────────────────
-
-  Duration _swipeSeekStart = Duration.zero;
-  ({Duration target, Duration delta})? _swipeSeekData;
-  bool _swipeSeekVisible = false;
-  Timer? _swipeSeekClearTimer;
-  DateTime? _lastSwipeSeekTime;
-
-  // ── 双指缩放 / 平移 ───────────────────────────────────
-
-  double _zoomScale = 1.0;
-  Offset _zoomOffset = Offset.zero;
-  double? _zoomStartScale;
 
   // ── 进度条缩略图预览 ──────────────────────────────────
 
@@ -412,9 +379,6 @@ class _PlayerPageState extends State<PlayerPage>
   /// 正在切换视频（防 EOF 重入：切集期间旧文件可能触发 completed 事件）
   bool _isSwitchingVideo = false;
 
-  /// 本视频已做过一次杜比视界偏色检测（切集时随路径重置）
-  bool _dolbyVisionChecked = false;
-
   /// 正在处理播放完成事件（防 completed 流重复触发）
   bool _isHandlingEndOfFile = false;
 
@@ -502,6 +466,10 @@ class _PlayerPageState extends State<PlayerPage>
     // 弹幕控制器：绑定同一播放器（本地同名弹幕加载 + 1s 秒桶发射 +
     // 渲染层暂停/倍速同步；首开加载在 _openAndSetRate 的 open 完成后）
     _danmakuController = DanmakuController(_player);
+    // 横竖屏共享会话状态（B4/D2）：倍速唯一真值、音量/亮度/增强、
+    // 水平滑动 seek、双指缩放；本页创建并持有、注入竖屏页
+    _session = PlayerSessionState(player: _player);
+    _session.addListener(_onSessionChanged);
     // 自动加载弹幕（同名/记忆恢复）成功后弹提示（服务层不依赖 UI）
     _danmakuController.onAutoLoadedDanmaku = (fileName) {
       if (mounted) _toast('已自动加载弹幕：$fileName');
@@ -526,14 +494,15 @@ class _PlayerPageState extends State<PlayerPage>
       _unlockController.duration = Duration.zero;
     }
 
-    // 倍速记忆：启用时恢复上次倍速
-    _speed = _settings.rememberSpeed ? _settings.lastSpeed : 1.0;
-    _speedNotifier.value = _speed;
+    // 倍速记忆：启用时恢复上次倍速（唯一真值在共享会话状态里，B4/P1-2）
     // 进入播放器：未开启记忆时本次会话从「关闭/均衡」开始超分
     // （退出播放/重启后自动回到默认关闭，记忆开启才恢复上次设置）
     SuperResolutionService.instance.enterPlayer();
-    // 同步系统音量/亮度作为本次会话起点（音量从手机当前音量开始）
-    _initDeviceState();
+    // 同步系统音量/亮度作为本次会话起点（音量从手机当前音量开始）；
+    // 会话状态不直接 setState，完成后由本页刷新一次
+    unawaited(_session.initFromDevice().then((_) {
+      if (mounted) setState(() {});
+    }));
     _openAndSetRate();
 
     // 初始方向（工作.md 第 5 点：视频方向设置）：
@@ -610,6 +579,12 @@ class _PlayerPageState extends State<PlayerPage>
     _resetHideTimer();
   }
 
+  /// 共享会话状态变化（音量/亮度/倍速/滑动浮层/缩放）：只重建本页 UI 壳。
+  /// 会话状态本身由横竖屏两页共用，数值语义不在这里分叉（B4/D2）。
+  void _onSessionChanged() {
+    if (mounted) setState(() {});
+  }
+
   /// 读取保存进度并做阈值过滤（Kazumi `resumedNearEnd` 同思路）：
   /// - 无进度 / ≤0 → null（从头播）；
   /// - 已知时长且 `saved / duration < 5%` 或 `≥ 已观看阈值`（默认 95%，
@@ -647,20 +622,13 @@ class _PlayerPageState extends State<PlayerPage>
   /// （网络存储的 `127.0.0.1` 流，退出即失效）不写入（哔哩哔哩在线播放
   /// 走 `_biliMedia` 分支，不经过本方法）。时长优先取播放列表
   /// MediaStore 的 durationMs（open 前就可知），未知传 0 由退出时回填。
+  /// 过滤与写入逻辑由 [recordPlaybackHistory] 统一提供（B4/P1-3：竖屏页
+  /// 切集也走同一入口）。
   void _recordPlaybackHistory(String path, String title) {
-    final lower = path.toLowerCase();
-    final isLoopback = lower.startsWith('http://127.0.0.1') ||
-        lower.startsWith('http://localhost') ||
-        lower.startsWith('https://127.0.0.1') ||
-        lower.startsWith('https://localhost');
-    if (isLoopback) return;
-    unawaited(
-      PlaybackHistoryService.instance.record(
-        path,
-        title,
-        isUrl: isOnlineMedia(path),
-        durationMs: _playlistDurationMsFor(path),
-      ),
+    recordPlaybackHistory(
+      path,
+      title,
+      durationMs: _playlistDurationMsFor(path),
     );
   }
 
@@ -720,7 +688,7 @@ class _PlayerPageState extends State<PlayerPage>
         saved: start,
         // 倍速 + 超分在播放/seek 之前完成（避免 shader 变化重置位置）
         prepare: () async {
-          await _player.setRate(_speed);
+          await _player.setRate(_session.rate);
           try {
             await SuperResolutionService.instance.apply(_player);
           } catch (_) {
@@ -758,59 +726,30 @@ class _PlayerPageState extends State<PlayerPage>
     unawaited(_audioController.reapplyForMedia(_path));
     // 弹幕功能：open 完成后加载同目录同名弹幕（无匹配静默跳过）
     unawaited(_danmakuController.loadForVideo(_path));
+    // ⚠️ 顺序要求：方向流程必须在前——锁定竖屏/自动竖屏时它会 push 竖屏页
+    // （await 到竖屏页 pop），杜比检测要等 `_portraitActive` 落定后再决定
+    // 「本页检测」还是「让位给竖屏页」，否则弹窗会压在被盖住的页上、
+    // 或排在竖屏页 push 之前而被盖住（真机 B4 验证：锁定竖屏直接进杜比
+    // 视频没有引导，根因就是这里把检测排在了 push 之后）。
     await _applyVideoOrientation();
     // 杜比视界偏色检测 + 引导（本地文件，工作.md 迁移功能）
     unawaited(_checkDolbyVision());
   }
 
-  /// 杜比视界偏色检测与引导（工作.md 迁移功能）：
-  /// 本地文件播放到杜比视界视频、且未开 gpu-next 时，弹窗引导启用
-  /// gpu-next 或切换软解；支持「不再提示」记忆（[DolbyVisionSettings]）。
-  /// 每次进入/切集只检测一次（[_dolbyVisionChecked]）。
+  /// 杜比视界偏色检测与引导（工作.md 迁移功能）：本地文件播放到杜比视界
+  /// 视频、且未开 gpu-next 时，弹窗引导启用 gpu-next 或切换软解；支持
+  /// 「不再提示」记忆。
+  ///
+  /// B4/P1-6：检测 + 弹窗实现抽到 [showDolbyVisionHintIfNeeded]，竖屏页
+  /// 走同一函数（原先只有横屏检测，竖屏连看剧集时无提示）。
+  /// 去重按**媒体路径**记在共享会话状态里（横竖屏两条触发路径共用）。
   Future<void> _checkDolbyVision() async {
-    if (_dolbyVisionChecked) return;
-    if (isOnlineMedia(_path)) return; // 只检测本地文件（MediaInfo 需真实路径）
-    _dolbyVisionChecked = true;
-    final decode = DecodeSettings.instance;
-    // 已开 gpu-next 或已软解：无需引导（硬解+ 也可能直通，同样提示）
-    if (decode.gpuNext) return;
-    await DolbyVisionSettings.instance.ensureLoaded();
-    if (DolbyVisionSettings.instance.suppressed) return;
-    final detected = await VideoInfoService.detectDolbyVision(_path);
-    if (_disposed || !mounted) return;
-    if (!detected.isDolbyVision) return;
-    await _showDolbyVisionHint();
-  }
-
-  /// 弹杜比视界偏色引导弹窗（对齐老项目 `DolbyVisionHintDialog`）：
-  /// 「知道了」仅关闭；「不再提示」记忆后续不再弹。
-  Future<void> _showDolbyVisionHint() async {
-    if (_disposed || !mounted) return;
-    final suppressed = await showAppDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('杜比视界视频'),
-        content: const Text(
-          '该视频为杜比视界（Dolby Vision）编码。\n'
-          '若画面发绿/发紫，请在「播放设置 → 解码」启用 GPU-next 渲染并切换软解；\n'
-          '若仍无法解决，则该设备可能不支持杜比视界播放。',
-          style: TextStyle(fontSize: 14, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop('dismiss'),
-            child: const Text('不再提示'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(null),
-            child: const Text('知道了'),
-          ),
-        ],
-      ),
-    );
-    if (suppressed == 'dismiss') {
-      await DolbyVisionSettings.instance.setSuppressed(true);
-    }
+    // 竖屏页在栈顶时让位：由竖屏页检测并弹窗（弹窗要盖在竖屏页之上，
+    // 且此时本页被遮住、用户看不到）；本页在竖屏页 pop 后不再重复检测
+    // ——路径已被竖屏页认领，[PlayerSessionState.claimDolbyCheck] 会拦下。
+    if (_portraitActive) return;
+    if (!_session.claimDolbyCheck(_path)) return;
+    await showDolbyVisionHintIfNeeded(context, _path);
   }
 
   // ── B 站在线播放（阶段三）──────────────────────────────
@@ -831,7 +770,7 @@ class _PlayerPageState extends State<PlayerPage>
       videoPath,
       saved: restoreTo,
       prepare: () async {
-        await _player.setRate(_speed);
+        await _player.setRate(_session.rate);
         try {
           await SuperResolutionService.instance.apply(_player);
         } catch (_) {}
@@ -1060,69 +999,15 @@ class _PlayerPageState extends State<PlayerPage>
     return size;
   }
 
-  /// 读取系统音量/亮度作为本次会话起点：
-  /// - 音量：以手机当前系统音量为播放音量起点（如 20%）；
-  /// - 亮度：读系统亮度并应用到窗口（kt/mpvEx 做法），保证指示器数值
-  ///   与屏幕实际亮度一致；退出时恢复 -1 交还系统控制（自动亮度恢复）。
-  ///
-  /// 音量语义（v3 用户反馈修复）：手势直接控制系统媒体音量（真实响度），
-  /// 播放器 mpv 音量固定 100（0dB 增益）——否则「系统 20% 进入 → 手势调到
-  /// 100%」实际输出仍只有 20%（mpv 增益受系统音量上限约束）。
-  Future<void> _initDeviceState() async {
-    final vol = await DeviceServices.getSystemVolume();
-    _initialSystemVolume = vol;
-    _volume = vol ?? 50;
-    // 音量增强上限（百分比）：`volume-max = 100 + cap`，系统音量满 100% 后
-    // 手势可把 mpv 音量从 100 提到 100+cap（110% ~ 200%）。
-    _volumeBoostCap = _settings.volumeBoostEnabled
-        ? _settings.volumeBoostCap
-        : 0;
-    _mpvVolume = 100;
-    // mpv 音量固定满增益；手势改调系统音量（见 _onVerticalSwipe）；
-    // 音量增强开启时扩展 volume-max，使 100~200 都可作为 mpv 增益。
-    try {
-      final native = _player.platform as NativePlayer;
-      await native.waitForPlayerInitialization;
-      await native.setProperty('volume-max', '${mpvVolumeMaxForBoost(_volumeBoostCap)}');
-      await _player.setVolume(100);
-    } on AssertionError {
-      // 播放器已被销毁（快速退出）：后续操作放弃
-      return;
-    } catch (_) {
-      // waitForPlayerInitialization / setProperty 失败不影响音量基准
-      try {
-        await _player.setVolume(100);
-      } on AssertionError {
-        return;
-      }
-    }
-    if (_disposed || !mounted) return;
-    final brightness = await DeviceServices.getBrightness();
-    if (brightness != null) {
-      _brightness = brightness;
-      // 锁到窗口，使屏幕显示与指示器一致（播放期间亮度不随自动亮度漂移）
-      await DeviceServices.setWindowBrightness(brightness);
-    }
-    if (!_disposed && mounted) setState(() {});
-  }
-
-  /// 退出播放时恢复设备状态：
+  /// 退出播放时恢复设备状态（实现见 [PlayerSessionState.restoreToDevice]）：
   /// - 亮度：恢复 -1（交还系统控制 = 进入播放前的状态）；
-  /// - 音量：手势已直控系统音量（v3 语义）——开启「保存到系统」保持当前值
-  ///   （本页 [_volume] 可能因竖屏页手势而陈旧，**不得**用它覆写系统音量）；
-  ///   关闭 → 恢复进入前的系统音量。
-  Future<void> _restoreDeviceState() async {
-    await DeviceServices.setWindowBrightness(null);
-    // 音量增强复位：mpv 增益音量回到 100（播放器销毁前尽力复位，防泄漏）
-    if (_mpvVolume > 100) {
-      try {
-        await _player.setVolume(100);
-      } catch (_) {}
-    }
-    if (!_settings.saveVolumeToSystem) {
-      await DeviceServices.setSystemVolume(_initialSystemVolume ?? _volume);
-    }
-  }
+  /// - 音量：手势已直控系统音量（v3 语义）——开启「保存到系统」保持当前值；
+  ///   关闭 → 恢复进入前的系统音量；
+  /// - 音量增强：mpv 增益复位 100 防泄漏。
+  ///
+  /// B4/D2：原先这套逻辑与竖屏页各一份（竖屏手势改动本页看不到 → 退出时
+  /// 可能写回过期音量），现统一在共享会话状态里。
+  Future<void> _restoreDeviceState() => _session.restoreToDevice();
 
   /// 进入沉浸式全屏：隐藏状态栏/导航栏，并把系统栏设为透明
   /// （即使系统栏短暂出现，也是透明的，不会露出浅色背景）
@@ -1140,15 +1025,17 @@ class _PlayerPageState extends State<PlayerPage>
     );
   }
 
-  // ── 应用生命周期（画中画 / 听视频相关）──────────────────
+  // ── 应用生命周期（退后台 / 听视频相关）──────────────────
 
-  /// 应用生命周期变化：
-  /// - 退后台 / 进入画中画（Android PiP 会触发 paused/hidden）：
-  ///   隐藏控制层（PiP 期间不显示控制，播放保持）；
-  /// - 返回前台（PiP 关闭返回 / 从后台切回）：恢复控制层并重置隐藏计时。
+  /// 应用生命周期变化（**只关乎控制层显隐**，不涉及"自动进小窗"）：
+  /// - 退后台（`paused`/`hidden`，含从显式「画中画」按钮进小窗、被系统
+  ///   小窗切走）：隐藏控制层（小窗/后台期间不显示控制，播放保持）；
+  /// - 返回前台（小窗关闭返回 / 从后台切回）：恢复控制层并重置隐藏计时。
   ///
-  /// 原生侧没有 PiP 事件回传通道（t3 只提供 isPipSupported/enterPip/
-  /// setAutoPipEnabled 三个方法），故用 AppLifecycleState 判断进出 PiP。
+  /// ⚠️ 本项目设计上**不**做「按 Home 自动进画中画」：`setAutoPipEnabled`
+  /// 全仓零调用，按 Home 一律退后台并暂停；画中画只有一个入口——顶栏槽位／
+  /// 「更多」里的显式「画中画」按钮（[_enterPip] 自己先隐藏控制层）。
+  /// 原生侧没有小窗事件回传通道，故这里用 `AppLifecycleState` 兜底判定。
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
@@ -1292,6 +1179,10 @@ class _PlayerPageState extends State<PlayerPage>
   }
 
   // ── 音量 / 亮度手势（左侧亮度，右侧音量）───────────────
+  //
+  // B4/D2：音量（含音量增强段）、亮度的手势数学与状态全部收敛到共享会话
+  // 状态 [PlayerSessionState.verticalSwipe]，横竖屏两页调用同一实现——竖屏页
+  // 不再出现「没有增强段 / 指示器谎报响度」（P1-1）。
 
   /// 指示器显隐：显示 [kind] 对应指示器，2 秒无操作自动隐藏
   void _showIndicator(
@@ -1313,161 +1204,43 @@ class _PlayerPageState extends State<PlayerPage>
 
   void _onVerticalSwipe(double dyDelta, bool isLeftHalf) {
     if (_locked) return;
-    if (_viewportHeight <= 0) return;
-    if (isLeftHalf) {
-      // 左侧：亮度（只调窗口亮度，不动系统；退出恢复）
-      _brightnessAccum +=
-          brightnessDeltaForSwipe(
-            dyDelta,
-            _viewportHeight,
-            _settings.brightnessSensitivity,
-          ) *
-          100;
-      final intDelta = _brightnessAccum.truncate();
-      if (intDelta != 0) {
-        _brightnessAccum -= intDelta;
-        final newB = (_brightness * 100 + intDelta).clamp(0.0, 100.0) / 100;
-        if ((newB - _brightness).abs() > 0.0001) {
-          _brightness = newB;
-          DeviceServices.setWindowBrightness(newB);
-          _showIndicator(GestureIndicatorKind.brightness, newB);
-        }
-      }
-    } else {
-      // 右侧：音量（直控系统媒体音量 = 真实响度；退出时按设置写回/恢复，
-      // 见 _restoreDeviceState；v3 用户反馈：只调 mpv 增益受系统音量上限约束）。
-      // 音量增强（工作.md 迁移功能）：系统音量到 100% 且增强开启时，
-      // 继续上滑接管 mpv 音量放大至 100~100+cap（对齐 mpvRx volumeBoost）。
-      final boostOn = _settings.volumeBoostEnabled && _volumeBoostCap > 0;
-      _volumeAccum +=
-          volumeDeltaForSwipe(
-            dyDelta,
-            _viewportHeight,
-            _settings.volumeSensitivity,
-          );
-      final intDelta = _volumeAccum.truncate();
-      if (intDelta == 0) return;
-      _volumeAccum -= intDelta;
-
-      // 增强段：系统音量满 100% 且 mpv 已有增益时（上滑续增、下滑回减，触底降系统）
-      if (boostOn && _volume >= 100.0 && _mpvVolume > 100.0) {
-        final newMpv = (_mpvVolume + intDelta)
-            .clamp(100.0, mpvVolumeMaxForBoost(_volumeBoostCap).toDouble());
-        if ((newMpv - _mpvVolume).abs() > 0.001) {
-          _mpvVolume = newMpv;
-          _player.setVolume(newMpv);
-        }
-        if (_mpvVolume > 100.0) {
-          _showIndicator(
-            GestureIndicatorKind.volume,
-            displayVolumePercent(100, _mpvVolume, boostEnabled: true),
-            boosting: true,
-          );
-        } else if (intDelta < 0) {
-          // mpv 增益触底 100，继续下滑 → 转回系统音量段
-          final newV = (_volume + intDelta).clamp(0.0, 100.0);
-          if ((newV - _volume).abs() > 0.001) {
-            _volume = newV;
-            DeviceServices.setSystemVolume(newV);
-            _showIndicator(GestureIndicatorKind.volume, newV);
-          }
-        }
-        return;
-      }
-
-      // 系统音量段：先调系统音量（0-100）
-      final prevVolume = _volume;
-      final newV = (_volume + intDelta).clamp(0.0, 100.0);
-      if ((newV - _volume).abs() > 0.001) {
-        _volume = newV;
-        DeviceServices.setSystemVolume(newV);
-      }
-      // 本帧上滑跨过 100%（从 <100 冲到 100 且仍有溢出）：溢出部分转入 mpv 增益
-      if (boostOn && intDelta > 0 && _volume >= 100.0) {
-        final overflow = prevVolume + intDelta - 100.0;
-        if (overflow > 0) {
-          final newMpv = (_mpvVolume + overflow)
-              .clamp(100.0, mpvVolumeMaxForBoost(_volumeBoostCap).toDouble());
-          _mpvVolume = newMpv;
-          _player.setVolume(newMpv);
-          _showIndicator(
-            GestureIndicatorKind.volume,
-            displayVolumePercent(100, _mpvVolume, boostEnabled: true),
-            boosting: true,
-          );
-        } else {
-          _showIndicator(GestureIndicatorKind.volume, newV);
-        }
-      } else {
-        _showIndicator(GestureIndicatorKind.volume, newV);
-      }
-    }
+    final event = _session.verticalSwipe(dyDelta, isLeftHalf, _viewportHeight);
+    if (event == null) return;
+    _showIndicator(event.kind, event.value, boosting: event.boosting);
   }
 
   // ── 水平滑动 seek ──────────────────────────────────────
+  //
+  // B4/D2：状态与节流/撤销逻辑收敛到共享会话状态（横竖屏同一实现，
+  // P1-4：竖屏页原先传 `onSwipeCancel: () {}`，误触 seek 不撤销）。
 
   void _onSwipeStart() {
     if (_locked) return;
-    _swipeSeekStart = _position;
-    _volumeAccum = 0;
-    _brightnessAccum = 0;
+    _session.beginSwipe();
     _hideTimer?.cancel();
   }
 
   void _onHorizontalSwipe(double totalDx) {
-    if (_locked || _duration <= Duration.zero) return;
-    final target = swipeSeekTarget(
-      _swipeSeekStart,
-      totalDx,
-      _viewportWidth,
-      _duration,
-    );
-    // 实时 seek 节流：两次操作至少间隔 40ms，避免拖动过快卡顿
-    final now = DateTime.now();
-    if (_lastSwipeSeekTime == null ||
-        now.difference(_lastSwipeSeekTime!) >= const Duration(milliseconds: 40)) {
-      _lastSwipeSeekTime = now;
-      _player.seek(target);
-    }
-    _swipeSeekClearTimer?.cancel();
-    if (mounted) {
-      setState(() {
-        _swipeSeekData = (target: target, delta: target - _swipeSeekStart);
-        _swipeSeekVisible = true;
-      });
-    }
+    if (_locked) return;
+    _session.updateSwipe(totalDx, _viewportWidth);
   }
 
   void _onSwipeEnd() {
-    _swipeSeekVisible = false;
-    _lastSwipeSeekTime = null;
-    _swipeSeekClearTimer?.cancel();
-    // 数据保留 250ms 让浮层淡出
-    _swipeSeekClearTimer = Timer(const Duration(milliseconds: 250), () {
-      if (mounted) setState(() => _swipeSeekData = null);
-    });
-    if (mounted) setState(() {});
+    _session.endSwipe();
     _resetHideTimer();
   }
 
   /// 单指滑动被双指手势打断（意图改为缩放）：撤销已发生的 seek，
   /// 避免「缩放时误触发左右滑动」
   void _onSwipeCancel() {
-    if (_swipeSeekData != null && _duration > Duration.zero) {
-      _player.seek(_swipeSeekStart);
-    }
-    _swipeSeekVisible = false;
-    _swipeSeekClearTimer?.cancel();
-    _lastSwipeSeekTime = null;
-    _swipeSeekData = null;
-    if (mounted) setState(() {});
+    if (_locked) return;
+    _session.cancelSwipe();
   }
 
   // ── 长按倍速 ───────────────────────────────────────────
 
   void _onLongPressStart(Offset pos) {
     if (_locked) return;
-    _speedBeforeLongPress = _speed;
     _longPressStartPos = pos;
     _longPressSpeed = _settings.longPressSpeed;
     _dynamicStartIndex = nearestSpeedPresetIndex(
@@ -1477,7 +1250,8 @@ class _PlayerPageState extends State<PlayerPage>
     _dynamicSpeedActive = false;
     _speedBarVisible = false;
     _longPressing = true;
-    _player.setRate(_longPressSpeed);
+    // 临时倍速只改播放器，不改用户选定倍速（恢复基准由共享状态保管，P1-2）
+    _session.applyTemporaryRate(_longPressSpeed);
     _hideTimer?.cancel(); // 长按期间不自动隐藏控制层
     if (mounted) setState(() {});
   }
@@ -1498,7 +1272,7 @@ class _PlayerPageState extends State<PlayerPage>
     final newSpeed = presets[newIndex];
     if ((newSpeed - _longPressSpeed).abs() < 0.01) return;
     _longPressSpeed = newSpeed;
-    _player.setRate(newSpeed);
+    _session.applyTemporaryRate(newSpeed);
     _dynamicSpeedActive = true;
     _speedBarVisible = true;
     // 首次完成「长按 + 左右滑动」：永久标记，后续不再出现提示
@@ -1517,73 +1291,39 @@ class _PlayerPageState extends State<PlayerPage>
     _speedBarTimer?.cancel();
     _speedBarVisible = false;
     _dynamicSpeedActive = false;
-    // 恢复长按前的倍速
-    final restore = _speedBeforeLongPress ?? _speed;
-    _speedBeforeLongPress = null;
+    // 恢复用户选定倍速（共享状态里的唯一真值）
     _longPressStartPos = null;
-    _player.setRate(restore);
+    _session.restoreRateAfterTemporary();
     if (mounted) setState(() {});
     _resetHideTimer();
   }
 
   // ── 双指缩放 / 平移 ────────────────────────────────────
+  //
+  // B4/D6：缩放状态与矩阵收敛到共享会话状态（竖屏页与横屏同口径：
+  // 0.75–4x、可禁缩小、双指焦点锚定 + 焦点位移平移、边界不露黑边）。
 
   void _onZoomStart() {
     if (_locked) return;
-    _zoomStartScale = _zoomScale;
+    _session.zoomStart();
     _hideTimer?.cancel();
   }
 
   void _onZoomUpdate(ScaleUpdateDetails d) {
-    if (_locked || _zoomStartScale == null) return;
-    final minScale = _settings.enableShrinkVideo ? 0.75 : 1.0;
-    // 双指最大放大倍率：4.0（原 2.0，用户要求增加；最小仍受设置控制）
-    final newScale = (_zoomStartScale! * d.scale).clamp(minScale, 4.0);
-    final ratio = newScale / _zoomScale;
-    final focal = d.localFocalPoint;
-    // 以双指焦点为中心缩放，再跟随焦点移动平移（PiliPlus 同款）
-    _zoomOffset = focal - (focal - _zoomOffset) * ratio;
-    _zoomScale = newScale;
-    _zoomOffset += d.focalPointDelta;
-    _clampZoomOffset();
-    if (mounted) setState(() {});
-  }
-
-  void _onZoomEnd() {
-    _zoomStartScale = null;
-    if (_zoomScale == 1.0) _zoomOffset = Offset.zero;
-    if (mounted) setState(() {});
-    _resetHideTimer();
-  }
-
-  /// 缩放平移边界：画面不能露出黑边（缩放 1 倍时归中）
-  void _clampZoomOffset() {
-    final w = _viewportWidth;
-    final h = _viewportHeight;
-    if (w <= 0 || h <= 0) return;
-    final maxDx = ((_zoomScale - 1).abs() * w) / 2;
-    final maxDy = ((_zoomScale - 1).abs() * h) / 2;
-    _zoomOffset = Offset(
-      _zoomOffset.dx.clamp(-maxDx, maxDx),
-      _zoomOffset.dy.clamp(-maxDy, maxDy),
+    if (_locked) return;
+    _session.zoomUpdate(
+      d,
+      viewportWidth: _viewportWidth,
+      viewportHeight: _viewportHeight,
     );
   }
 
-  /// 画面缩放矩阵：以视口中心为缩放原点，再按 [_zoomOffset] 平移
-  Matrix4 _zoomMatrix() {
-    final w = _viewportWidth / 2;
-    final h = _viewportHeight / 2;
-    return Matrix4.identity()
-      ..translateByDouble(_zoomOffset.dx + w, _zoomOffset.dy + h, 0, 1)
-      ..scaleByDouble(_zoomScale, _zoomScale, _zoomScale, 1)
-      ..translateByDouble(-w, -h, 0, 1);
+  void _onZoomEnd() {
+    _session.zoomEnd();
+    _resetHideTimer();
   }
 
-  void _resetZoom() {
-    _zoomScale = 1.0;
-    _zoomOffset = Offset.zero;
-    if (mounted) setState(() {});
-  }
+  void _resetZoom() => _session.resetZoom();
 
   // ── 进度条缩略图预览 ───────────────────────────────────
 
@@ -1890,7 +1630,6 @@ class _PlayerPageState extends State<PlayerPage>
     // `openAndRestore` 并发操作同一 Player（「切到 A 视频却放 B 音频」）。
     if (_isSwitchingVideo) return;
     _isSwitchingVideo = true;
-    _dolbyVisionChecked = false; // 新视频重新检测杜比视界
     try {
       // 章节功能：先清空旧媒体的章节标记（防 open 期间旧数据闪现）
       _chapterTracker.clear();
@@ -1921,7 +1660,7 @@ class _PlayerPageState extends State<PlayerPage>
         saved: savedForNew,
         // 倍速 + 超分在播放/seek 前完成（避免 shader 变化重置位置）
         prepare: () async {
-          await _player.setRate(_speed);
+          await _player.setRate(_session.rate);
           try {
             await SuperResolutionService.instance.apply(_player);
           } catch (_) {
@@ -1941,14 +1680,15 @@ class _PlayerPageState extends State<PlayerPage>
           _positionNotifier.value = _player.state.position;
           _durationNotifier.value = _player.state.duration;
           _dragPositionNotifier.value = null;
-          _zoomScale = 1.0;
-          _zoomOffset = Offset.zero;
           _indicator = null;
-          _swipeSeekData = null;
           _restoring = false;
           _clearThumbnail();
         });
       }
+      // 新集还原缩放 + 丢弃旧集的滑动浮层（与共享会话状态同步：
+      // 两页看到同一份画面状态，B4/D2）
+      _session.resetZoom();
+      _session.discardSwipe();
       if (restored && savedForNew != null) {
         _positionNotifier.value = savedForNew;
         _showResumeIndicator();
@@ -1987,12 +1727,11 @@ class _PlayerPageState extends State<PlayerPage>
 
   /// 应用倍速。[remember] 为 true 时写入记忆（下次打开恢复），
   /// 临时调整传 false，避免高频写盘。
+  ///
+  /// B4/P1-2：倍速唯一真值在共享会话状态里（横竖屏读同一个），
+  /// 竖屏页不再从「倍速记忆设置」取基准。
   void _setSpeed(double v, {bool remember = true}) {
-    _speed = v;
-    _speedNotifier.value = v; // 通知倍速面板实时刷新
-    _player.setRate(v);
-    if (remember) _settings.setSpeed(v);
-    if (mounted) setState(() {});
+    _session.setRate(v, remember: remember);
   }
 
   // ── 右侧面板（更多 / 倍速 / 编辑控制栏）────────────────
@@ -2001,7 +1740,7 @@ class _PlayerPageState extends State<PlayerPage>
   PlayerPanelPage _speedPanelPage() => PlayerPanelPage(
         title: '播放倍速',
         body: PlayerSpeedPanel(
-          speedListenable: _speedNotifier,
+          speedListenable: _session.rateListenable,
           onSpeedChanged: _setSpeed,
           onTemporaryApply: (v) => _setSpeed(v, remember: false),
           onReset: () => _setSpeed(1.0),
@@ -2750,6 +2489,9 @@ class _PlayerPageState extends State<PlayerPage>
           chapterTracker: _chapterTracker,
           // 片头片尾：共享横屏页跟踪器（同一 Player，状态一致）
           introOutroTracker: _introOutroTracker,
+          // 音量增强/倍速/手势指示器/缩放：共享横屏页会话状态（B4/D2 治本——
+          // 竖屏不再自建一份音量/倍速实现，P1-1/P1-2/P1-4/P1-5 根因消除）
+          sessionState: _session,
           // 字幕功能：共享横屏页控制器（同一 Player，切集后统一重新应用）
           subtitleController: _subtitleController,
           // 音频功能：共享横屏页控制器（同一 Player，切集后统一重新应用）
@@ -3083,12 +2825,7 @@ class _PlayerPageState extends State<PlayerPage>
   Future<void> _saveProgress({bool forcePersist = false}) async {
     // 播放历史：时长回填（条目存在且时长已就绪时一次生效；
     // 记录时未知的时长——如在线直链——在此补全，供历史列表显示时长/进度条）
-    final durationMs = _duration.inMilliseconds;
-    if (durationMs > 0) {
-      unawaited(
-        PlaybackHistoryService.instance.updateDuration(_path, durationMs),
-      );
-    }
+    backfillPlaybackHistoryDuration(_path, _duration);
     if (_position.inMilliseconds > 0 &&
         _duration.inMilliseconds > 0 &&
         _position < _duration) {
@@ -3112,13 +2849,15 @@ class _PlayerPageState extends State<PlayerPage>
     _seekFeedbackTimer?.cancel();
     _indicatorHideTimer?.cancel();
     _speedBarTimer?.cancel();
-    _swipeSeekClearTimer?.cancel();
     for (final s in _subs) {
       s.cancel();
     }
     _controlsController.dispose();
     _unlockController.dispose();
-    _speedNotifier.dispose();
+    // 共享会话状态：本页创建、本页销毁（竖屏页只借用；其滑动浮层淡出
+    // 定时器也在会话里，必须在这里释放，B4/D2）
+    _session.removeListener(_onSessionChanged);
+    _session.dispose();
     _positionNotifier.dispose();
     _durationNotifier.dispose();
     _dragPositionNotifier.dispose();
@@ -3150,8 +2889,6 @@ class _PlayerPageState extends State<PlayerPage>
     super.dispose();
   }
 
-  String _fmt(Duration d) => formatDuration(d.inMilliseconds);
-
   /// 直连播放（打开链接/外部直链）的网速兜底来源：读 mpv `cache-speed`
   /// 只读属性（demuxer 缓存的网络吞吐估计，字节/秒）。这类播放 mpv 直连
   /// 远程 URL、不经过任何本地代理，状态栏两个代理查询恒为 null——详见
@@ -3173,17 +2910,13 @@ class _PlayerPageState extends State<PlayerPage>
   bool _showRemainingTime = false;
 
   /// 底栏时间文本：「已播/总时长」⇄「已播/剩余时长」（剩余 = 总 - 已播，
-  /// 负值清零为 -00:00，避免拖动越过结尾时出现正数）
-  String get _timeText {
-    final pos = _dragPosition ?? _position;
-    final total = _duration;
-    if (_showRemainingTime && total > Duration.zero) {
-      final remaining = total - pos;
-      final r = remaining.isNegative ? Duration.zero : remaining;
-      return '${_fmt(pos)} / -${_fmt(r)}';
-    }
-    return '${_fmt(pos)} / ${_fmt(total)}';
-  }
+  /// 负值清零为 -00:00，避免拖动越过结尾时出现正数）。
+  /// B4/P1-5：格式化抽到 [formatPlaybackTimeText]，横竖屏共用同一钳制实现。
+  String get _timeText => formatPlaybackTimeText(
+        position: _dragPosition ?? _position,
+        duration: _duration,
+        showRemaining: _showRemainingTime,
+      );
 
   /// 点击底栏时间文本：切换显示模式
   void _toggleTimeMode() {
@@ -3223,7 +2956,7 @@ class _PlayerPageState extends State<PlayerPage>
                   child: ListenableBuilder(
                     listenable: Listenable.merge([_settings, _audioActive]),
                     builder: (context, _) => Transform(
-                      transform: _zoomMatrix(),
+                      transform: _session.zoomMatrix(_viewportWidth, _viewportHeight),
                       child: Video(
                         key: ValueKey('fit-${_settings.videoFit.index}'),
                         controller: _controller,
@@ -3239,9 +2972,14 @@ class _PlayerPageState extends State<PlayerPage>
                 ),
                 // 弹幕层（弹幕移植方案阶段1）：视频层与手势层之间；
                 // DanmakuScreen 内部自带 IgnorePointer 不拦截手势；
-                // 与视频缩放 Transform 无关（弹幕铺满整个播放区域）
+                // 与视频缩放 Transform 无关（弹幕铺满整个播放区域）。
+                // B4/P2-7：竖屏页/听视频页在栈顶时本层不可见 → 不再接收新弹幕
+                //（省掉被遮住那一层每条弹幕的排版 + 图片录制）
                 Positioned.fill(
-                  child: PlayerDanmakuLayer(controller: _danmakuController),
+                  child: PlayerDanmakuLayer(
+                    controller: _danmakuController,
+                    visible: !_portraitActive && !_audioActive.value,
+                  ),
                 ),
                 // 手势层：单击/双击/长按（+左右滑动调速）/单指滑动
                 // （音量·亮度·进度）/双指缩放平移
@@ -3297,6 +3035,9 @@ class _PlayerPageState extends State<PlayerPage>
                               isOnlinePlayback: isOnlineMedia(_path),
                               streamUrl: isOnlineMedia(_path) ? _path : null,
                               directNetSpeedReader: _readDirectNetSpeed,
+                              // B4/P2-6：竖屏页/听视频页在栈顶时本页被遮住
+                              // → 停掉四个定时器（原先两页定时器全在跑）
+                              active: !_portraitActive && !_audioActive.value,
                             ),
                             PlayerTopBar(                            title: _title,
                               onBack: _exitPlayer,
@@ -3592,14 +3333,14 @@ class _PlayerPageState extends State<PlayerPage>
                   ),
                 ),
                 // 水平滑动 seek 预览浮层（居中）
-                if (_swipeSeekData != null)
+                if (_session.swipeSeekData != null)
                   Positioned.fill(
                     child: IgnorePointer(
                       child: Center(
                         child: PlayerSwipeSeekOverlay(
-                          target: _swipeSeekData!.target,
-                          delta: _swipeSeekData!.delta,
-                          visible: _swipeSeekVisible,
+                          target: _session.swipeSeekData!.target,
+                          delta: _session.swipeSeekData!.delta,
+                          visible: _session.swipeSeekVisible,
                         ),
                       ),
                     ),
@@ -3642,11 +3383,11 @@ class _PlayerPageState extends State<PlayerPage>
                   ),
                 // 双指缩放后显示「还原画面」入口（播放/暂停按钮下方，
                 // 与中央簇保持一定间距；比原位置再往下移一些）
-                if (_zoomScale != 1.0 || _zoomOffset != Offset.zero)
+                if (_session.zoomed)
                   Positioned.fill(
                     child: Align(
                       alignment: const Alignment(0, 0.34),
-                      child: _ZoomRestoreChip(onTap: _resetZoom),
+                      child: PlayerZoomRestoreChip(onTap: _resetZoom),
                     ),
                   ),
                 // 常驻进度线（设置开启且控制层隐藏时显示；锁定后不显示）。
@@ -3846,38 +3587,3 @@ class _PanelSectionLabel extends StatelessWidget {
   }
 }
 
-/// 双指缩放后的「还原画面」胶囊（PiliPlus 同款，点击恢复 1:1）
-class _ZoomRestoreChip extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _ZoomRestoreChip({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.55),
-          borderRadius: BorderRadius.circular(22),
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.zoom_out_map_rounded, color: Colors.white, size: 20),
-            SizedBox(width: 6),
-            Text(
-              '还原画面',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

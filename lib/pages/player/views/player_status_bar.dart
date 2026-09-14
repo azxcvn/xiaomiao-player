@@ -46,12 +46,21 @@ class PlayerStatusBar extends StatefulWidget {
   /// 吞吐估计，直链/HLS/DASH 通吃）。两个代理命中时不会调用本回调。
   final Future<double?> Function()? directNetSpeedReader;
 
+  /// 本实例所在页面是否为**当前可见页**（B4/P2-6）。
+  ///
+  /// 横竖屏两页各挂一个信息行，切屏时被盖住的那一页仍在 widget 树里：原先
+  /// 两套定时器（时间 30s / 电量 60s / 网络 5s / 网速 1s）全都在跑，被盖住
+  /// 的页面每秒 2 次 setState + 2 次通道调用做无用功。传 false 时本组件
+  /// **停掉全部定时器**（保留最后一次数值），重新可见时立刻刷新并重启。
+  final bool active;
+
   const PlayerStatusBar({
     super.key,
     this.portrait = false,
     this.isOnlinePlayback = false,
     this.streamUrl,
     this.directNetSpeedReader,
+    this.active = true,
   });
 
   @override
@@ -81,6 +90,12 @@ class _PlayerStatusBarState extends State<PlayerStatusBar> {
   @override
   void initState() {
     super.initState();
+    if (widget.active) _startTimers();
+  }
+
+  /// 启动四个定时器并立刻刷新一轮数值（重新可见时不留陈旧值）
+  void _startTimers() {
+    _stopTimers();
     _updateTime();
     _timeTimer = Timer.periodic(
       const Duration(seconds: 30),
@@ -103,9 +118,29 @@ class _PlayerStatusBarState extends State<PlayerStatusBar> {
     );
   }
 
+  /// 停止全部定时器（被盖住期间不采样：省 setState 与通道调用）
+  void _stopTimers() {
+    _timeTimer?.cancel();
+    _batteryTimer?.cancel();
+    _netTypeTimer?.cancel();
+    _netSpeedTimer?.cancel();
+    _timeTimer = null;
+    _batteryTimer = null;
+    _netTypeTimer = null;
+    _netSpeedTimer = null;
+  }
+
   @override
   void didUpdateWidget(covariant PlayerStatusBar oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // 可见性切换：被盖住 → 停表；重新可见 → 立刻刷新并重启（B4/P2-6）
+    if (oldWidget.active != widget.active) {
+      if (widget.active) {
+        _startTimers();
+      } else {
+        _stopTimers();
+      }
+    }
     // 切集 / 换源：流 URL 或在线状态变了，重置网速显示，避免残留上一集的速度。
     if (oldWidget.streamUrl != widget.streamUrl ||
         oldWidget.isOnlinePlayback != widget.isOnlinePlayback) {
@@ -160,10 +195,7 @@ class _PlayerStatusBarState extends State<PlayerStatusBar> {
 
   @override
   void dispose() {
-    _timeTimer?.cancel();
-    _batteryTimer?.cancel();
-    _netTypeTimer?.cancel();
-    _netSpeedTimer?.cancel();
+    _stopTimers();
     super.dispose();
   }
 

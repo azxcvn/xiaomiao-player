@@ -83,5 +83,47 @@ void main() {
       expect(DeviceServices.peekFrame(path, 0), isNull);
       expect(DeviceServices.peekFrame(path, 60000), isNotNull);
     });
+
+    test('LRU：peek 命中即刷新（B4/P2-3：拖动热路径的帧不再被先淘汰）', () {
+      final big = FastThumbFrame(
+        Uint8List.fromList(List.filled(512 * 512 * 4, 7)),
+        512,
+        512,
+      );
+      // 填到超限：0 被淘汰，缓存里剩 2s ~ 64s（尾部最新）
+      DeviceServices.debugPutFrame(path, 0, big);
+      for (var b = 2000; b <= 64000; b += 2000) {
+        DeviceServices.debugPutFrame(path, b, big);
+      }
+      expect(DeviceServices.peekFrame(path, 2000), isNotNull);
+      // 此时 2s 是「最久未用」，若 peek 不刷 LRU，下一个新帧就会把它挤掉
+      DeviceServices.debugPutFrame(path, 66000, big);
+      expect(
+        DeviceServices.peekFrame(path, 2000),
+        isNotNull,
+        reason: 'peek 命中的帧必须被移到最近使用端（修复前这里是 null）',
+      );
+      expect(DeviceServices.peekFrame(path, 4000), isNull);
+    });
+
+    test('LRU：peekNearestFrame 命中同样刷新', () {
+      final big = FastThumbFrame(
+        Uint8List.fromList(List.filled(512 * 512 * 4, 7)),
+        512,
+        512,
+      );
+      DeviceServices.debugPutFrame(path, 0, big);
+      for (var b = 2000; b <= 64000; b += 2000) {
+        DeviceServices.debugPutFrame(path, b, big);
+      }
+      // 80s 最近帧是 60s（间隔内）→ 命中即应移到最近使用端
+      expect(
+        DeviceServices.peekNearestFrame(path, 80000, maxGapMs: 30000),
+        isNotNull,
+      );
+      DeviceServices.debugPutFrame(path, 66000, big);
+      expect(DeviceServices.peekFrame(path, 60000), isNotNull);
+      expect(DeviceServices.peekFrame(path, 2000), isNull);
+    });
   });
 }

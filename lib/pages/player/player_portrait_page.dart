@@ -11,6 +11,7 @@ import 'package:moumou/models/dandan_models.dart';
 import 'package:moumou/models/video_file.dart';
 import 'package:moumou/pages/player/audio_player_page.dart';
 import 'package:moumou/pages/player/player_metrics.dart';
+import 'package:moumou/pages/player/player_session_state.dart';
 import 'package:moumou/pages/player/views/audio_panel.dart';
 import 'package:moumou/pages/player/views/equalizer_panel.dart';
 import 'package:moumou/pages/player/views/player_center_cluster.dart';
@@ -41,6 +42,7 @@ import 'package:moumou/pages/player/views/portrait_edit_panel.dart';
 import 'package:moumou/pages/player/views/portrait_player_bottom_bar.dart';
 import 'package:moumou/pages/player/views/portrait_player_top_bar.dart';
 import 'package:moumou/pages/player/views/subtitle_panel.dart';
+import 'package:moumou/pages/player/views/player_zoom_restore_chip.dart';
 import 'package:moumou/services/audio_service.dart';
 import 'package:moumou/services/chapter_tracker.dart';
 import 'package:moumou/services/danmaku_service.dart';
@@ -55,9 +57,11 @@ import 'package:moumou/services/subtitle_service.dart';
 import 'package:moumou/services/super_resolution_service.dart';
 import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/utils/cast_source.dart';
+import 'package:moumou/utils/dolby_vision_hint.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/intro_outro_skip.dart';
 import 'package:moumou/utils/playback_completion.dart';
+import 'package:moumou/utils/playback_history.dart';
 import 'package:moumou/utils/playback_restore.dart';
 import 'package:moumou/utils/pip_aspect.dart';
 import 'package:moumou/utils/player_diagnostics.dart';
@@ -148,6 +152,13 @@ class PlayerPortraitPage extends StatefulWidget {
   /// 传 null 时自建——正常流程横屏页总会传入）
   final DanmakuController? danmakuController;
 
+  /// 横竖屏共享的会话状态（横屏页创建并持有，本页只使用、不 dispose；
+  /// 传 null 时自建——正常流程横屏页总会传入）。
+  ///
+  /// B4/D2：音量（含音量增强）、亮度、倍速、水平滑动 seek、双指缩放全部
+  /// 收敛在这个对象里，本页不再自建第二份实现（P1-1/P1-2/P1-4/P1-5 根因）。
+  final PlayerSessionState? sessionState;
+
   const PlayerPortraitPage({
     super.key,
     required this.player,
@@ -167,6 +178,7 @@ class PlayerPortraitPage extends StatefulWidget {
     this.subtitleController,
     this.audioController,
     this.danmakuController,
+    this.sessionState,
   });
 
   @override
@@ -174,7 +186,7 @@ class PlayerPortraitPage extends StatefulWidget {
 }
 
 class _PlayerPortraitPageState extends State<PlayerPortraitPage>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   late final Player _player;
   late final VideoController _controller;
   final PlayerControlsSettings _settings = PlayerControlsSettings.instance;
@@ -234,6 +246,10 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   /// （同一 Player，秒桶调度与渲染层驱动统一），未传入时自建
   late final DanmakuController _danmakuController;
 
+  /// 横竖屏共享会话状态（B4/D2）：优先共享横屏页实例（音量/增强/亮度/
+  /// 倍速/滑动 seek/缩放唯一真值），未传入时自建（正常流程总会传入）
+  late final PlayerSessionState _session;
+
   Duration get _position => _positionNotifier.value;
   Duration get _duration => _durationNotifier.value;
   Duration? get _dragPosition => _dragPositionNotifier.value;
@@ -245,37 +261,18 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     _dragPositionNotifier,
   ]);
 
-  double _speed = 1.0;
-
-  /// 实际倍速的监听器：倍速底部面板通过它实时刷新
-  final ValueNotifier<double> _speedNotifier = ValueNotifier(1.0);
-
   /// 控制层显隐（单击切换，播放中 3 秒自动隐藏）
   bool _controlsVisible = true;
   Timer? _hideTimer;
 
-  /// 手势指示器（音量/亮度共用，2 秒无操作自动隐藏）
-  ({GestureIndicatorKind kind, double value})? _indicator;
+  /// 手势指示器（音量/亮度共用，2 秒无操作自动隐藏）。
+  /// 数值/boosting 来自共享会话状态（[_session]），本页只负责显示与自动隐藏。
+  ({GestureIndicatorKind kind, double value, bool boosting})? _indicator;
   GestureIndicatorKind? _indicatorKind;
   Timer? _indicatorHideTimer;
 
-  /// 当前应用音量（0 – 100，进入时从系统/窗口同步，仅作指示器基准；
-  /// 音量/亮度改动直控系统/窗口，本页不负责退出恢复——横屏页统一处理）
-  double _volume = 50;
-  double _brightness = 1.0;
-  double _volumeAccum = 0;
-  double _brightnessAccum = 0;
-
-  /// 水平滑动 seek 相关
-  Duration _swipeSeekStart = Duration.zero;
-  ({Duration target, Duration delta})? _swipeSeekData;
-  bool _swipeSeekVisible = false;
-  Timer? _swipeSeekClearTimer;
-  DateTime? _lastSwipeSeekTime;
-
   /// 长按倍速
   bool _longPressing = false;
-  double? _speedBeforeLongPress;
   double _longPressSpeed = 2.0;
   Offset? _longPressStartPos;
   int _dynamicStartIndex = 0;
@@ -353,6 +350,10 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   @override
   void initState() {
     super.initState();
+    // 生命周期观察者（B4/P1-6）：退后台时隐藏控制层、回前台恢复
+    // ——与横屏页对齐，只关乎控制层显隐，不涉及任何「自动进小窗」
+    //（见 didChangeAppLifecycleState 的说明）
+    WidgetsBinding.instance.addObserver(this);
     _player = widget.player;
     _controller = widget.controller;
     // 章节跟踪器：共享横屏页实例（同一 Player，状态一致）；未传入时自建
@@ -390,6 +391,14 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         if (mounted) _toast('已加载弹幕：$message');
       };
     }
+    // 横竖屏共享会话状态（B4/D2）：共享横屏页实例（倍速唯一真值、音量/
+    // 音量增强、亮度、滑动 seek、缩放都读这一份）；未传入时自建并初始化
+    // 设备状态（正常流程横屏页总会传入，此分支仅兜底）
+    _session = widget.sessionState ?? PlayerSessionState(player: _player);
+    _session.addListener(_onSessionChanged);
+    if (widget.sessionState == null) {
+      unawaited(_session.initFromDevice());
+    }
     _path = widget.initialPath;
     _title = widget.initialTitle;
     _biliEpId = widget.initialBiliEpId;
@@ -410,12 +419,14 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     // 工作.md 第 3 点：横屏页已完成恢复时，本页接住并显示恢复指示器
     _resumeVisible = widget.initialResumeVisible;
 
-    // 倍速展示：跟随共享播放器当前设置（不 setRate，横屏已应用）
-    _speed = _settings.rememberSpeed ? _settings.lastSpeed : 1.0;
-    _speedNotifier.value = _speed;
+    // 倍速/音量/亮度基准：**不再本页自建**——全在共享会话状态里
+    //（B4/P1-2：原先本页从「倍速记忆设置」取基准，长按结束会把横屏设的
+    // 2.0x 复位成 1.0x；P1-1：原先本页完全不知道 mpv 增益，指示器谎报响度）。
 
-    // 手势指示器基准：从系统/窗口同步（不锁窗口亮度——横屏已锁）
-    _initGestureState();
+    // 杜比视界偏色检测（B4/P1-6）：本页成为栈顶播放页时由本页负责，
+    // 覆盖「锁定竖屏 → 直接点进杜比视界视频」这条原先完全没有引导的路径
+    //（横屏页那时被本页盖住，检测已让位给本页）
+    unawaited(_checkDolbyVision());
 
     // 竖屏 + 沉浸式全屏（状态栏/导航栏隐藏）
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -470,12 +481,9 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     _resetHideTimer();
   }
 
-  /// 手势指示器基准（音量/亮度），不改任何系统/窗口状态
-  Future<void> _initGestureState() async {
-    final vol = await DeviceServices.getSystemVolume();
-    if (vol != null) _volume = vol;
-    final brightness = await DeviceServices.getBrightness();
-    if (brightness != null) _brightness = brightness;
+  /// 共享会话状态变化（音量/亮度/倍速/滑动浮层/缩放）：只重建本页 UI 壳。
+  /// 数值语义全部由会话状态决定，本页不再分叉（B4/D2）。
+  void _onSessionChanged() {
     if (mounted) setState(() {});
   }
 
@@ -627,12 +635,16 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     });
   }
 
-  void _showIndicator(GestureIndicatorKind kind, double value) {
+  void _showIndicator(
+    GestureIndicatorKind kind,
+    double value, {
+    bool boosting = false,
+  }) {
     _indicatorHideTimer?.cancel();
     if (mounted) {
       setState(() {
         _indicatorKind = kind;
-        _indicator = (kind: kind, value: value);
+        _indicator = (kind: kind, value: value, boosting: boosting);
       });
     }
     _indicatorHideTimer = Timer(const Duration(seconds: 2), () {
@@ -640,88 +652,59 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     });
   }
 
+  /// 垂直滑动（左半屏亮度 / 右半屏音量）：
+  /// B4/D2 —— 手势数学与状态全部在共享会话状态里（与横屏同一实现），
+  /// 本页只负责把返回的指示器状态显示出来。音量增强段（110%~200%）、
+  /// 「增强触底回退系统音量」等行为与横屏完全一致（P1-1）。
   void _onVerticalSwipe(double dyDelta, bool isLeftHalf) {
     if (_locked) return; // 锁定时拦截手势（工作.md 第 8 点 bug 修复）
-    if (_viewportHeight <= 0) return;
-    if (isLeftHalf) {
-      // 左侧：亮度（直控窗口亮度；退出恢复由横屏页统一处理）
-      _brightnessAccum +=
-          brightnessDeltaForSwipe(
-            dyDelta,
-            _viewportHeight,
-            _settings.brightnessSensitivity,
-          ) *
-          100;
-      final intDelta = _brightnessAccum.truncate();
-      if (intDelta != 0) {
-        _brightnessAccum -= intDelta;
-        final newB = (_brightness * 100 + intDelta).clamp(0.0, 100.0) / 100;
-        if ((newB - _brightness).abs() > 0.0001) {
-          _brightness = newB;
-          DeviceServices.setWindowBrightness(newB);
-          _showIndicator(GestureIndicatorKind.brightness, newB);
-        }
-      }
-    } else {
-      // 右侧：音量（直控系统媒体音量 = 真实响度）
-      _volumeAccum +=
-          volumeDeltaForSwipe(
-            dyDelta,
-            _viewportHeight,
-            _settings.volumeSensitivity,
-          );
-      final intDelta = _volumeAccum.truncate();
-      if (intDelta != 0) {
-        _volumeAccum -= intDelta;
-        final newV = (_volume + intDelta).clamp(0.0, 100.0);
-        if ((newV - _volume).abs() > 0.001) {
-          _volume = newV;
-          DeviceServices.setSystemVolume(newV);
-          _showIndicator(GestureIndicatorKind.volume, newV);
-        }
-      }
-    }
+    final event = _session.verticalSwipe(dyDelta, isLeftHalf, _viewportHeight);
+    if (event == null) return;
+    _showIndicator(event.kind, event.value, boosting: event.boosting);
   }
 
   void _onSwipeStart() {
     if (_locked) return; // 锁定时拦截手势（工作.md 第 8 点 bug 修复）
-    _swipeSeekStart = _position;
-    _volumeAccum = 0;
-    _brightnessAccum = 0;
+    _session.beginSwipe();
     _hideTimer?.cancel();
   }
 
   void _onHorizontalSwipe(double totalDx) {
-    if (_locked || _duration <= Duration.zero) return;
-    final target = swipeSeekTarget(
-      _swipeSeekStart,
-      totalDx,
-      _viewportWidth,
-      _duration,
-    );
-    final now = DateTime.now();
-    if (_lastSwipeSeekTime == null ||
-        now.difference(_lastSwipeSeekTime!) >= const Duration(milliseconds: 40)) {
-      _lastSwipeSeekTime = now;
-      _player.seek(target);
-    }
-    _swipeSeekClearTimer?.cancel();
-    if (mounted) {
-      setState(() {
-        _swipeSeekData = (target: target, delta: target - _swipeSeekStart);
-        _swipeSeekVisible = true;
-      });
-    }
+    if (_locked) return;
+    _session.updateSwipe(totalDx, _viewportWidth);
   }
 
   void _onSwipeEnd() {
-    _swipeSeekVisible = false;
-    _lastSwipeSeekTime = null;
-    _swipeSeekClearTimer?.cancel();
-    _swipeSeekClearTimer = Timer(const Duration(milliseconds: 250), () {
-      if (mounted) setState(() => _swipeSeekData = null);
-    });
-    if (mounted) setState(() {});
+    _session.endSwipe();
+    _resetHideTimer();
+  }
+
+  /// 滑动被双指手势打断：撤销已发生的 seek（B4/P1-4，原先是空实现
+  /// `onSwipeCancel: () {}`，误触 seek 不撤销、落点停在误触位置）
+  void _onSwipeCancel() {
+    if (_locked) return;
+    _session.cancelSwipe();
+  }
+
+  // ── 双指缩放 / 平移（B4/D6：与横屏同口径）────────────────
+
+  void _onZoomStart() {
+    if (_locked) return;
+    _session.zoomStart();
+    _hideTimer?.cancel();
+  }
+
+  void _onZoomUpdate(ScaleUpdateDetails d) {
+    if (_locked) return;
+    _session.zoomUpdate(
+      d,
+      viewportWidth: _viewportWidth,
+      viewportHeight: _viewportHeight,
+    );
+  }
+
+  void _onZoomEnd() {
+    _session.zoomEnd();
     _resetHideTimer();
   }
 
@@ -729,7 +712,6 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
 
   void _onLongPressStart(Offset pos) {
     if (_locked) return; // 锁定时拦截长按倍速（工作.md 第 8 点 bug 修复）
-    _speedBeforeLongPress = _speed;
     _longPressStartPos = pos;
     _longPressSpeed = _settings.longPressSpeed;
     _dynamicStartIndex = nearestSpeedPresetIndex(
@@ -739,7 +721,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     _dynamicSpeedActive = false;
     _speedBarVisible = false;
     _longPressing = true;
-    _player.setRate(_longPressSpeed);
+    // 临时倍速只改播放器；用户选定倍速（唯一真值）在共享会话状态里
+    _session.applyTemporaryRate(_longPressSpeed);
     _hideTimer?.cancel();
     if (mounted) setState(() {});
   }
@@ -759,7 +742,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     final newSpeed = presets[newIndex];
     if ((newSpeed - _longPressSpeed).abs() < 0.01) return;
     _longPressSpeed = newSpeed;
-    _player.setRate(newSpeed);
+    _session.applyTemporaryRate(newSpeed);
     _dynamicSpeedActive = true;
     _speedBarVisible = true;
     _settings.markSpeedHintShown();
@@ -776,10 +759,10 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     _speedBarTimer?.cancel();
     _speedBarVisible = false;
     _dynamicSpeedActive = false;
-    final restore = _speedBeforeLongPress ?? _speed;
-    _speedBeforeLongPress = null;
     _longPressStartPos = null;
-    _player.setRate(restore);
+    // 恢复用户选定倍速（共享会话状态里的真值；不再是本页缓存的 1.0x，
+    // B4/P1-2：横屏设的 2.0x 不再被长按松手复位）
+    _session.restoreRateAfterTemporary();
     if (mounted) setState(() {});
     _resetHideTimer();
   }
@@ -822,10 +805,12 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         _dragPositionNotifier.value = null;
         _clearThumbnail();
         _indicator = null;
-        _swipeSeekData = null;
         _resumeVisible = false;
         _restoring = false;
       });
+      // 新集丢弃旧集滑动浮层 + 还原缩放（共享会话状态）
+      _session.discardSwipe();
+      _session.resetZoom();
     } finally {
       _isSwitchingVideo = false;
     }
@@ -866,7 +851,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         saved: savedForNew,
         // 倍速 + 超分在播放/seek 前完成（避免 shader 变化重置位置）
         prepare: () async {
-          await _player.setRate(_speed);
+          await _player.setRate(_session.rate);
           try {
             await SuperResolutionService.instance.apply(_player);
           } catch (_) {
@@ -885,11 +870,16 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
           _dragPositionNotifier.value = null;
           _clearThumbnail();
           _indicator = null;
-          _swipeSeekData = null;
           _resumeVisible = false;
           _restoring = false;
         });
       }
+      // 新集还原缩放 + 丢弃旧集滑动浮层（共享会话状态：两页同一份画面状态）
+      _session.resetZoom();
+      _session.discardSwipe();
+      // 播放历史：竖屏切集同样记录新的一集（B4/P1-3：原先竖屏切集
+      // 完全不写历史，竖屏连看多集时只有进入播放器那一集进历史）
+      recordPlaybackHistory(path, name, durationMs: _listDurationMsFor(path));
       // 通知横屏页同步最新 path/title（共享播放器，横屏侧状态必须跟随）
       widget.onVideoChanged?.call(path, name);
       if (!mounted) return;
@@ -914,6 +904,9 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       // 弹幕功能：切集后重新加载新集的同名弹幕（共享控制器，与横屏
       // 切集同一条路径；在途旧集弹幕按加载会话号判废）
       unawaited(_danmakuController.loadForVideo(path));
+      // 杜比视界偏色检测 + 引导（B4/P1-6：竖屏切集原先不检测，
+      // 竖屏连看剧集遇到杜比视界视频时画面偏色却无任何提示）
+      unawaited(_checkDolbyVision());
     } on AssertionError {
       // 共享播放器已被销毁（横屏页已退出）：静默返回，不写假崩溃日志
       return;
@@ -1099,12 +1092,25 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
 
   // ── 倍速 ────────────────────────────────────────────────
 
+  /// 应用倍速（B4/P1-2：唯一真值在共享会话状态里，横竖屏读同一份；
+  /// 本页原先从「倍速记忆设置」取基准，横屏设的 2.0x 切到竖屏后
+  /// 长按倍速松手会被复位成 1.0x）。
   void _setSpeed(double v, {bool remember = true}) {
-    _speed = v;
-    _speedNotifier.value = v; // 通知倍速面板实时刷新
-    _player.setRate(v);
-    if (remember) _settings.setSpeed(v);
-    if (mounted) setState(() {});
+    _session.setRate(v, remember: remember);
+  }
+
+  // ── 杜比视界（B4/P1-6）──────────────────────────────────
+
+  /// 杜比视界偏色检测与引导：本页在栈顶时由本页负责（横屏页让位），
+  /// 实现与横屏页共用 [showDolbyVisionHintIfNeeded]；去重按**媒体路径**
+  /// 记在共享会话状态里——横屏 open 与竖屏 push/切集两条路径不会重复弹窗。
+  ///
+  /// 覆盖三种进入方式：①直接进竖屏页（initState 调用）；②竖屏内切集
+  /// （[_switchTo] 调用）；③横屏先进普通视频、再下一集/列表切到杜比
+  /// （同上）。原先只有横屏检测，①（锁定竖屏直接进杜比视频）没有引导。
+  Future<void> _checkDolbyVision() async {
+    if (!_session.claimDolbyCheck(_path)) return;
+    await showDolbyVisionHintIfNeeded(context, _path);
   }
 
   // ── 底部面板（倍速 / 超分 / 画面比例 / 更多 / 编辑控制栏）────
@@ -1112,7 +1118,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   PlayerPanelPage _speedPanelPage() => PlayerPanelPage(
         title: '播放倍速',
         body: PlayerSpeedPanel(
-          speedListenable: _speedNotifier,
+          speedListenable: _session.rateListenable,
           onSpeedChanged: _setSpeed,
           onTemporaryApply: (v) => _setSpeed(v, remember: false),
           onReset: () => _setSpeed(1.0),
@@ -1814,6 +1820,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   /// 记录播放进度（播了一部分才记，避免污染"没看过的视频"）。
   /// [forcePersist] = true 时强制落盘（退出/切集调用，保证重启后可恢复）。
   Future<void> _saveProgress({bool forcePersist = false}) async {
+    // 播放历史：时长回填（B4/P1-3：竖屏切集原先既不写历史也不回填时长）
+    backfillPlaybackHistoryDuration(_path, _duration);
     if (_position.inMilliseconds > 0 &&
         _duration.inMilliseconds > 0 &&
         _position < _duration) {
@@ -1829,17 +1837,16 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _hideTimer?.cancel();
     _seekFeedbackTimer?.cancel();
     _indicatorHideTimer?.cancel();
     _speedBarTimer?.cancel();
-    _swipeSeekClearTimer?.cancel();
     _thumbHideTimer?.cancel();
     _cancelThumbPrefetch();
     for (final s in _subs) {
       s.cancel();
     }
-    _speedNotifier.dispose();
     _unlockController.dispose();
     _positionNotifier.dispose();
     _durationNotifier.dispose();
@@ -1848,12 +1855,46 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     // 仅自建时销毁（共享实例由横屏页持有与销毁）
     if (widget.chapterTracker == null) _chapterTracker.dispose();
     if (widget.danmakuController == null) _danmakuController.dispose();
+    // B4：自建的字幕/音频控制器同样只在自建时销毁（原先漏了，
+    // 共享实例由横屏页销毁；见修复计划 §7「分支不可达的潜在问题」）
+    if (widget.subtitleController == null) _subtitleController.dispose();
+    if (widget.audioController == null) _audioController.dispose();
+    _session.removeListener(_onSessionChanged);
+    if (widget.sessionState == null) _session.dispose();
     _saveProgress();
-    // 注意：不 dispose 播放器/控制器、不恢复设备状态——横屏页持有
+    // 注意：不 dispose 播放器、不恢复设备状态——横屏页持有
     super.dispose();
   }
 
-  String _fmt(Duration d) => formatDuration(d.inMilliseconds);
+  /// 应用生命周期（B4/P1-6：与横屏页对齐，**只关乎控制层显隐**）。
+  ///
+  /// ⚠️ 与「自动进小窗」无关：本项目设计上**不**做「按 Home 自动进画中画」
+  /// （`DeviceServices.setAutoPipEnabled` 全仓零调用，按 Home 一律退后台并
+  /// 暂停）；画家画只有一个入口——顶栏槽位／「更多」里的显式「画中画」按钮，
+  /// 那条路径由 [_enterPip] 自己先隐藏控制层。
+  ///
+  /// 所以这里做的仅仅是：退后台（含从显式按钮进小窗、被系统小窗切走）时
+  /// 隐藏控制层，回前台恢复并重置隐藏计时——与横屏页同一行为，
+  /// 避免"回到前台时控制层状态与横屏不一致"。
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+        _hideTimer?.cancel();
+        if (mounted && _controlsVisible && !_locked) {
+          setState(() => _controlsVisible = false);
+          _unlockController.reverse();
+        }
+      case AppLifecycleState.resumed:
+        if (mounted && !_locked && !_controlsVisible) {
+          setState(() => _controlsVisible = true);
+        }
+        _resetHideTimer();
+      default:
+        break;
+    }
+  }
 
   /// 直连播放（打开链接/外部直链）的网速兜底来源：读 mpv `cache-speed`
   /// （demuxer 缓存网络吞吐估计）。与横屏页同一实现（共享同一 Player），
@@ -1877,15 +1918,14 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   Duration get _controlsFadeDuration =>
       _settings.playerAnimations ? const Duration(milliseconds: 200) : Duration.zero;
 
-  /// 时间文本：「已播放/总时长」⇄「已播放/剩余时长」（点击切换）
-  String get _timeText {
-    final pos = _dragPosition ?? _position;
-    final total = _duration;
-    if (_showRemaining && total > Duration.zero) {
-      return '${_fmt(pos)} / -${_fmt(total - pos)}';
-    }
-    return '${_fmt(pos)} / ${_fmt(total)}';
-  }
+  /// 时间文本：「已播放/总时长」⇄「已播放/剩余时长」（点击切换）。
+  /// B4/P1-5：格式化抽到 [formatPlaybackTimeText]（剩余为负清零），
+  /// 横竖屏共用同一实现——原先竖屏拖动越过结尾会显示 `-59:55`。
+  String get _timeText => formatPlaybackTimeText(
+        position: _dragPosition ?? _position,
+        duration: _duration,
+        showRemaining: _showRemaining,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -1908,35 +1948,46 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
                 // 视频画面（与横屏同一 VideoController，同一路画面；
                 // Android 支持多 Video 挂同一 controller）。
                 // 用 ListenableBuilder 监听设置：画面比例实时生效
-                //（工作.md 第 8 点 bug 修复）
+                //（工作.md 第 8 点 bug 修复）。
+                // 外层 Transform 承载双指缩放/平移（B4/D6：缩放状态在共享
+                // 会话状态里，与横屏同一份、同一套边界钳制）
                 Positioned.fill(
                   child: ListenableBuilder(
                     listenable: Listenable.merge([_settings, _audioActive]),
-                    builder: (context, _) => Video(
-                      // ⚠️ key 随 fit 变化：4:3 → 自动时强制重建，
-                      // 否则 Video 内部渲染纹理尺寸缓存不刷新（工作.md 第 3 点）
-                      key: ValueKey('fit-${_settings.videoFit.index}'),
-                      controller: _controller,
-                      controls: NoVideoControls,
-                      fit: _settings.videoFit.boxFit,
-                      aspectRatio: _settings.videoFit.aspectRatio,
-                      // 听视频页打开期间退后台不暂停（后台播放）；否则保持
-                      // 默认「退后台暂停」。
-                      pauseUponEnteringBackgroundMode: !_audioActive.value,
+                    builder: (context, _) => Transform(
+                      transform: _session.zoomMatrix(_viewportWidth, _viewportHeight),
+                      child: Video(
+                        // ⚠️ key 随 fit 变化：4:3 → 自动时强制重建，
+                        // 否则 Video 内部渲染纹理尺寸缓存不刷新（工作.md 第 3 点）
+                        key: ValueKey('fit-${_settings.videoFit.index}'),
+                        controller: _controller,
+                        controls: NoVideoControls,
+                        fit: _settings.videoFit.boxFit,
+                        aspectRatio: _settings.videoFit.aspectRatio,
+                        // 听视频页打开期间退后台不暂停（后台播放）；否则保持
+                        // 默认「退后台暂停」。
+                        pauseUponEnteringBackgroundMode: !_audioActive.value,
+                      ),
                     ),
                   ),
                 ),
                 // 弹幕层（弹幕移植方案阶段1）：视频层与手势层之间，
                 // 与横屏页共享同一业务控制器（渲染层 rebind，切换屏幕
                 // 时两侧同步驱动、返回无缝）；DanmakuScreen 内部自带
-                // IgnorePointer 不拦截手势
+                // IgnorePointer 不拦截手势。
+                // B4/P2-7：听视频页在栈顶时本层不可见 → 只向可见层投弹幕
                 Positioned.fill(
-                  child: PlayerDanmakuLayer(controller: _danmakuController),
+                  child: PlayerDanmakuLayer(
+                    controller: _danmakuController,
+                    visible: !_audioActive.value,
+                  ),
                 ),
                 // 手势层：单击显隐控制层 / 双击按设置 / 长按倍速 /
-                // 单指滑动（音量·亮度·水平 seek）。与横屏同一裸识别器
-                // 方案（PlayerGestureLayer）；锁定时仅放行单击（呼出/隐藏
-                // 解锁按钮），其余手势全部拦截（工作.md 第 8 点 bug 修复）。
+                // 单指滑动（音量·亮度·水平 seek）/ 双指缩放平移。
+                // 与横屏同一裸识别器方案（PlayerGestureLayer）；锁定时仅
+                // 放行单击（呼出/隐藏解锁按钮），其余手势全部拦截。
+                // B4：四个原先的空实现回调（onSwipeCancel / onZoom*）现已
+                // 接上共享会话状态——误触 seek 会被撤销、双指可缩放（D6）。
                 Positioned.fill(
                   child: PlayerGestureLayer(
                     locked: _locked,
@@ -1949,10 +2000,10 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
                     onVerticalSwipe: _onVerticalSwipe,
                     onHorizontalSwipe: _onHorizontalSwipe,
                     onSwipeEnd: _onSwipeEnd,
-                    onSwipeCancel: () {},
-                    onZoomStart: () {},
-                    onZoomUpdate: (_) {},
-                    onZoomEnd: () {},
+                    onSwipeCancel: _onSwipeCancel,
+                    onZoomStart: _onZoomStart,
+                    onZoomUpdate: _onZoomUpdate,
+                    onZoomEnd: _onZoomEnd,
                     child: const SizedBox.expand(),
                   ),
                 ),
@@ -1996,6 +2047,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
                                 isOnlinePlayback: isOnlineMedia(_path),
                                 streamUrl: isOnlineMedia(_path) ? _path : null,
                                 directNetSpeedReader: _readDirectNetSpeed,
+                                // B4/P2-6：听视频页在栈顶时本页被遮住 → 停表
+                                active: !_audioActive.value,
                               ),
                               PortraitPlayerTopBar(
                                 title: _title,
@@ -2283,6 +2336,9 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
                                   key: ValueKey(_indicator!.kind),
                                   kind: _indicator!.kind,
                                   value: _indicator!.value,
+                                  // B4/P1-1：音量增强段红色样式 + 「音量增强」
+                                  // 标签（原先竖屏连这个形参都没有）
+                                  boosting: _indicator!.boosting,
                                 ),
                         ),
                       ),
@@ -2290,15 +2346,26 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
                   ),
                 ),
                 // 水平滑动 seek 预览浮层（居中）
-                if (_swipeSeekData != null)
+                if (_session.swipeSeekData != null)
                   Positioned.fill(
                     child: IgnorePointer(
                       child: Center(
                         child: PlayerSwipeSeekOverlay(
-                          target: _swipeSeekData!.target,
-                          delta: _swipeSeekData!.delta,
-                          visible: _swipeSeekVisible,
+                          target: _session.swipeSeekData!.target,
+                          delta: _session.swipeSeekData!.delta,
+                          visible: _session.swipeSeekVisible,
                         ),
+                      ),
+                    ),
+                  ),
+                // 双指缩放后显示「还原画面」入口（B4/D6：竖屏与横屏同款、
+                // 同一位置；缩放状态在共享会话状态里）
+                if (_session.zoomed)
+                  Positioned.fill(
+                    child: Align(
+                      alignment: const Alignment(0, 0.34),
+                      child: PlayerZoomRestoreChip(
+                        onTap: () => _session.resetZoom(),
                       ),
                     ),
                   ),

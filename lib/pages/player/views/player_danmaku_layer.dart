@@ -20,7 +20,16 @@ class PlayerDanmakuLayer extends StatefulWidget {
   /// 业务控制器（横竖屏页共享同一实例）
   final DanmakuController controller;
 
-  const PlayerDanmakuLayer({super.key, required this.controller});
+  /// 本层是否为**当前可见层**（B4/P2-7）：横竖屏各挂一份，只有栈顶页面
+  /// 那一份为 true——被遮住的那一层不再接收新弹幕（省掉每条弹幕一轮
+  /// TextPainter 排版 + 图片录制）；清屏/暂停/样式仍对两层下发。
+  final bool visible;
+
+  const PlayerDanmakuLayer({
+    super.key,
+    required this.controller,
+    this.visible = true,
+  });
 
   @override
   State<PlayerDanmakuLayer> createState() => _PlayerDanmakuLayerState();
@@ -38,12 +47,24 @@ class _PlayerDanmakuLayerState extends State<PlayerDanmakuLayer> {
     return canvas.DanmakuScreen<void>(
       createdController: (layer) {
         _layer = layer;
-        widget.controller.attachLayer(layer);
+        widget.controller.attachLayer(layer, visible: widget.visible);
       },
       // 初始值取当前设置（新挂载层首帧即用户样式）；后续变化由业务层
       // updateOption 热更新（倍速/速度/样式/配置统一走 danmaku_service）
       option: danmakuOptionFromSettings(DanmakuSettings.instance),
     );
+  }
+
+  @override
+  void didUpdateWidget(covariant PlayerDanmakuLayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 页面栈变化（进入/退出竖屏）→ 重新上报可见性（B4/P2-7）
+    if (oldWidget.visible != widget.visible) {
+      final layer = _layer;
+      if (layer != null) {
+        widget.controller.setLayerVisible(layer, widget.visible);
+      }
+    }
   }
 
   @override

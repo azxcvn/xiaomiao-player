@@ -117,18 +117,23 @@ class PlayerBottomBar extends StatelessWidget {
             // 章节名称行：进度条上方（工作.md 章节功能第 2 点），
             // 点击呼出章节列表；无章节时不占位。
             // bottom 10：进度条下移（height 24）后同步下移 8px，
-            // 保持与轨道的间距不变（竖屏底栏用组件默认 padding）；
-            // left 28：与进度条轨道起点（trackLeftInset）对齐
+            // 保持与轨道的间距不变（竖屏底栏同款 padding）；
+            // left kPlayerTrackLeftInset：与进度条轨道起点（trackLeftInset）对齐
             if (currentChapterName != null && onChapterTap != null)
               PlayerChapterNameRow(
                 name: currentChapterName!,
                 onTap: onChapterTap!,
-                padding: const EdgeInsets.fromLTRB(28, 8, 20, 10),
+                padding: const EdgeInsets.fromLTRB(
+                  kPlayerTrackLeftInset,
+                  8,
+                  20,
+                  10,
+                ),
               ),
             // 进度条贴近下方控制行（用户反馈：间距过大）：
             // - height 24（默认 40）：轨道下移 8px，离控制行约 10px；
-            // - trackLeftInset 28：轨道左端与「下一集」按钮图标左缘对齐
-            //   （原 20 会比按钮多伸出 8px）
+            // - trackLeftInset：轨道左端与「下一集」按钮图标左缘对齐
+            //   （统一常量见 player_metrics.dart，B4/P1-6）
             PlayerSeekBar(
               valueMs: valueMs,
               maxMs: maxMs,
@@ -137,7 +142,7 @@ class PlayerBottomBar extends StatelessWidget {
               chapters: chapters,
               skipSegments: skipSegments,
               height: 24,
-              trackLeftInset: 28,
+              trackLeftInset: kPlayerTrackLeftInset,
             ),
             Padding(
               // 左缘与进度条开端对齐（kPlayerLeftInset），右缘留 20

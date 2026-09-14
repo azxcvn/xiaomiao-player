@@ -136,8 +136,12 @@ class DanmakuController extends ChangeNotifier {
   /// 自动匹配缓存（切集自动匹配弹幕，工作.md 第 7 点）
   final DanmakuAutoMatchCacheStore _autoMatchCache = DanmakuAutoMatchCacheStore();
 
-  /// 渲染层注册表（横竖屏页各挂一个 DanmakuScreen，同步驱动）
-  final List<canvas.DanmakuController<void>> _layers = [];
+  /// 渲染层注册表（横竖屏页各挂一个 DanmakuScreen）：值 = 该层是否为
+  /// **当前可见层**（B4/P2-7：两层 canvas 同时挂载时，每条弹幕会在两个
+  /// 层各做一次 TextPainter 排版 + 图片录制，渲染开销翻倍且用户看不见）。
+  /// 只有可见层接收 addDanmaku；清屏/暂停/样式仍下发全部层，保证切换屏幕
+  /// 时可见层立刻是干净的最新状态。
+  final Map<canvas.DanmakuController<void>, bool> _layers = {};
 
   Duration _position = Duration.zero;
   bool _enginePlaying = false;
@@ -270,7 +274,7 @@ class DanmakuController extends ChangeNotifier {
   /// 渲染层未挂载时无需下发（attachLayer 挂载时会应用一次）。
   void _applyOption() {
     if (_disposed) return;
-    for (final layer in _layers) {
+    for (final layer in _layers.keys) {
       _applyOptionTo(layer);
     }
   }
@@ -295,8 +299,8 @@ class DanmakuController extends ChangeNotifier {
 
   // ── 渲染层挂载（页面 Stack 内 DanmakuScreen 的 createdController 回调）──
 
-  void attachLayer(canvas.DanmakuController<void> layer) {
-    _layers.add(layer);
+  void attachLayer(canvas.DanmakuController<void> layer, {bool visible = false}) {
+    _layers[layer] = visible;
     _applyOptionTo(layer);
     if (!_enginePlaying) layer.pause();
   }
@@ -304,6 +308,12 @@ class DanmakuController extends ChangeNotifier {
   /// 页面卸载 DanmakuScreen 时移除（竖屏页 pop 返回横屏，渲染层归一）
   void detachLayer(canvas.DanmakuController<void> layer) {
     _layers.remove(layer);
+  }
+
+  /// 标记某渲染层是否为当前可见层（页面栈变化时调用；B4/P2-7）
+  void setLayerVisible(canvas.DanmakuController<void> layer, bool visible) {
+    if (!_layers.containsKey(layer)) return;
+    _layers[layer] = visible;
   }
 
   // ── 显隐开关（工作.md 弹幕第 2 点：弹幕的显示与隐藏）──
@@ -667,7 +677,17 @@ class DanmakuController extends ChangeNotifier {
       //（随机色本身就是逐条改色，两者叠加只会互相打架）
       isColorful: entry.isColorful && !randomColor,
     );
-    for (final layer in _layers) {
+    // 只投给当前可见层（B4/P2-7）：被遮住的那一层不做排版/录制，避免双倍
+    // 渲染开销。若没有任何层被标记可见（页面尚未上报可见性），退回全部层，
+    // 保持「至少能看见弹幕」的旧行为。
+    var anyVisible = false;
+    for (final e in _layers.entries) {
+      if (!e.value) continue;
+      anyVisible = true;
+      e.key.addDanmaku(item);
+    }
+    if (anyVisible) return;
+    for (final layer in _layers.keys) {
       layer.addDanmaku(item);
     }
   }
@@ -684,7 +704,7 @@ class DanmakuController extends ChangeNotifier {
 
   void _syncPlaying() {
     if (_disposed) return;
-    for (final layer in _layers) {
+    for (final layer in _layers.keys) {
       if (_enginePlaying) {
         layer.resume();
       } else {
@@ -712,7 +732,9 @@ class DanmakuController extends ChangeNotifier {
   }
 
   void _clearLayers() {
-    for (final layer in _layers) {
+    // 清屏下发**全部层**（含被遮住的层）：否则切回该屏时会看到上一轮遗留的
+    // 在屏弹幕（可见性只影响 addDanmaku 的投放目标，B4/P2-7）
+    for (final layer in _layers.keys) {
       layer.clear();
     }
   }
