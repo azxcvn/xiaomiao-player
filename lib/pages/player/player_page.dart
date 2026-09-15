@@ -296,48 +296,10 @@ class _PlayerPageState extends State<PlayerPage>
 
   // ── 恢复进度 / 播放完成（EOF）处理 ──────────────────────
 
-  /// 把 mpv 的 hr-seek 设为 absolute：绝对 seek 一律精确（从上一关键帧
-  /// 解码到目标帧）。长 GOP 视频松手后可能多等几十毫秒，换取所见即所得。
-  Future<void> _applyExactSeek() async {
-    try {
-      final native = _player.platform as NativePlayer;
-      await native.waitForPlayerInitialization;
-      await native.setProperty('hr-seek', 'absolute');
-    } catch (_) {
-      // 播放器初始化失败时随打开流程报错，此处静默
-    }
-  }
+  // 注：`hr-seek` / `profile` / `gpu-api` 三个「必须早于 open」的属性已收口到
+  // `services/player_renderer_settings.dart`，由 `applyPlaybackTuning` 在每次
+  // open 前统一写入（原先在本页 initState 以 unawaited 下发，与 open 竞速）。
 
-  /// 应用解码预设（mpv 内置 profile）：需在 open 前写入，
-  /// 重启播放器（重开视频）后生效；默认「快速」。
-  Future<void> _applyDecodePreset() async {
-    try {
-      final native = _player.platform as NativePlayer;
-      await native.waitForPlayerInitialization;
-      final profile = DecodeSettings.instance.preset.profile;
-      if (profile.isNotEmpty) {
-        await native.setProperty('profile', profile);
-      }
-    } catch (_) {
-      // 播放器初始化失败时随打开流程报错，此处静默
-    }
-  }
-
-  /// 应用 GPU 渲染后端：开启 gpu-next + Vulkan 时写入 `gpu-api=vulkan`
-  /// （libplacebo 选 Vulkan；否则 gpu-next 默认走 OpenGL）。需在 open 前写入，
-  /// 重启播放器（重开视频）后生效。
-  Future<void> _applyGpuApi() async {
-    try {
-      final native = _player.platform as NativePlayer;
-      await native.waitForPlayerInitialization;
-      final d = DecodeSettings.instance;
-      if (d.gpuNext && d.useVulkan) {
-        await native.setProperty('gpu-api', 'vulkan');
-      }
-    } catch (_) {
-      // 播放器初始化失败时随打开流程报错，此处静默
-    }
-  }
 
   /// 应用 mpv 移动端缓存/网络调参（§4.26）。
   ///
@@ -456,14 +418,9 @@ class _PlayerPageState extends State<PlayerPage>
     _danmakuController.onNetworkDanmakuLoaded = (message) {
       if (mounted) _toast('已加载弹幕：$message');
     };
-    // 精确落帧：hr-seek=absolute 后所有绝对 seek 帧级精确解码
-    // （对齐 mpvRx 的 "seek absolute+exact"——拖动松手即停在预览帧，
-    // 而非落在最近关键帧）
-    unawaited(_applyExactSeek());
-    // 解码预设（vd-lavc-*）：open 前写入，重启播放器后生效
-    unawaited(_applyDecodePreset());
-    // GPU 后端（gpu-api=vulkan）：open 前写入，重启播放器后生效
-    unawaited(_applyGpuApi());
+    // 精确落帧 / 解码预设 / GPU 后端（hr-seek、profile、gpu-api）不再在此处
+    // 异步下发：三者都必须在 open 之前写入，已随 `_applyPlaybackTuning`
+    // 一并收口（见 services/player_renderer_settings.dart 的竞速说明）。
 
     // 工作.md 第 7 点：关闭「启用播放界面动画」后，控制层/解锁按钮
     // 的进出场动画时长归零（forward/reverse 立即完成，直接出现/消失）
@@ -2367,16 +2324,38 @@ class _PlayerPageState extends State<PlayerPage>
   ///
   /// 单个属性读取失败（不支持/未就绪）只把该键置 null，不影响其余字段；
   /// 非 NativePlayer 平台返回空表（面板显示占位符）。
+  ///
+  /// ⚠️ **不可读一律返回 null，不要落成空串**：mpv 的 `getProperty` 对不可用
+  /// 属性返回空串，若原样带出，面板会把它当合法值覆盖掉上一次的好值（成片
+  /// 变横杠且无法与"真的为空"区分）。判空统一走 [isDiagnosticValueAvailable]。
+  ///
+  /// ⚠️ `waitForInitialization: false` 是**必须的**：默认值会等
+  /// `waitForVideoControllerInitializationIfAttached`（视频控制器就绪），而
+  /// 面板只需要读 mpv 属性、不需要视频输出。视频输出异常时该 completer 一直
+  /// 不完成 → 全部属性一起阻塞 → 面板整块空（真机复现：开 Vulkan 后
+  /// 「视频编码/硬解/视频输出/分辨率…」集体变横杠的根因）。
+  ///
+  /// 读取按 [expandDiagnosticPropertyNames] 展开（含字段别名回退），再经
+  /// [pickDiagnosticValue] 归一到主键名。
   Future<Map<String, String?>> _readDiagnosticsProperties() async {
     final platform = _player.platform;
     if (platform is! NativePlayer) return const {};
+    final raw = <String, String?>{};
+    for (final key in expandDiagnosticPropertyNames()) {
+      try {
+        final value =
+            await platform.getProperty(key, waitForInitialization: false);
+        // 不可读落哨兵值：日志里能区分"读不到"与"读到了但是空串"
+        raw[key] = isDiagnosticValueAvailable(value)
+            ? value
+            : kDiagnosticUnreadable;
+      } catch (_) {
+        raw[key] = kDiagnosticUnreadable;
+      }
+    }
     final out = <String, String?>{};
     for (final key in kPlayerDiagnosticsProperties) {
-      try {
-        out[key] = await platform.getProperty(key);
-      } catch (_) {
-        out[key] = null;
-      }
+      out.addAll(pickDiagnosticValue(raw, key));
     }
     return out;
   }

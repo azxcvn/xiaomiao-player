@@ -69,6 +69,12 @@ Future<void> main() async {
   await PrivacyPolicySettings.instance.ensureLoaded();
   // 更新设置：runApp 前加载，确保自动检查更新读正确开关/忽略版本状态。
   await UpdateSettings.instance.ensureLoaded();
+  // 解码设置：必须 runApp 前 await —— 播放页 `initState` 是**同步**的，会用
+  // `gpuNext` 决定 `VideoControllerConfiguration.vo`（gpu-next / gpu），没有
+  // 机会 await。原先只在 `_MoumouAppState.initState` 里发起（异步、无人 await），
+  // 于是「冷启动立刻播视频」时可能读到默认 false → 用户开了 GPU-next 却不生效
+  // （同一竞态也会影响 open 前的渲染属性注入）。
+  await DecodeSettings.instance.ensureLoaded();
   // Zone 层兜底：异步未捕获异常也写日志
   runZonedGuarded(
     () => runApp(const MoumouApp()),
@@ -179,8 +185,8 @@ class _MoumouAppState extends State<MoumouApp> {
     // 超分：同 ensureLoaded 模式（面板 setter 与这里共享同一 load Future，
     // 防止「启动 `load()` 的成员写回把用户刚选的档位覆盖」，P1-30）
     SuperResolutionService.instance.ensureLoaded();
-    // 解码设置（硬解/软解档位）：同 ensureLoaded 模式，播放页创建
-    // VideoController 时同步读取（防竞态）
+    // 解码设置（硬解/软解档位 + GPU-next/Vulkan）：`main()` 已在 runApp 前
+    // **await** 加载完成，这里补 ensureLoaded 防测试/热重载路径竞态
     DecodeSettings.instance.ensureLoaded();
     // 音频均衡器设置（工作.md 均衡器功能）：同 ensureLoaded 模式，
     // AudioController 构造时订阅、applyAudioOptions 读取（防竞态）

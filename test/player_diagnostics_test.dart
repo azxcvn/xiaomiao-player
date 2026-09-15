@@ -12,25 +12,25 @@ void main() {
       final s = PlayerDiagnosticsSnapshot.fromProperties(const {
         'media-title': '测试视频.mkv',
         'file-format': 'Matroska',
-        'video-codec': 'h264 (High)',
         'audio-codec-name': 'aac',
         'width': '1920',
         'height': '1080',
         'video-params/pixelformat': 'yuv420p',
         'container-fps': '23.976',
         'estimated-vf-fps': '23.98',
-        'display-fps': '60.0',
         'hwdec-current': 'mediacodec-copy',
-        'current-vo': 'gpu',
+        'current-vo': 'gpu-next',
+        'current-gpu-context': 'androidvk',
         'video-sync': 'audio',
-        'drop-frame-count': '3',
+        // ⚠️ 真名是 frame-drop-count（drop-frame-count 在 mpv 中不存在）
+        'frame-drop-count': '3',
         'decoder-frame-drop-count': '1',
         'vo-delayed-frame-count': '2',
-        'vo-delayed-frame-average-ms': '18.5',
-        'mistimed-frame-count': '0',
         'demuxer-cache-duration': '4.2',
         'demuxer-cache-time': '12.0',
-        'cache-used': '8388608',
+        // ⚠️ 缓存字节数取自 demuxer-cache-state 的**整表 JSON**（子属性路径不可用）
+        'demuxer-cache-state':
+            '{"fw-bytes":8388608,"total-bytes":12800000}',
         'cache-speed': '1048576',
         'video-bitrate': '1420000',
         'audio-bitrate': '128000',
@@ -39,22 +39,19 @@ void main() {
       });
       expect(s.mediaTitle, '测试视频.mkv');
       expect(s.fileFormat, 'Matroska');
-      expect(s.videoCodec, 'h264 (High)');
       expect(s.audioCodec, 'aac');
       expect(s.width, 1920);
       expect(s.height, 1080);
       expect(s.pixelFormat, 'yuv420p');
       expect(s.containerFps, closeTo(23.976, 1e-9));
       expect(s.estimatedFps, closeTo(23.98, 1e-9));
-      expect(s.displayFps, 60.0);
       expect(s.hwdec, 'mediacodec-copy');
-      expect(s.vo, 'gpu');
+      expect(s.vo, 'gpu-next');
+      expect(s.gpuContext, 'androidvk');
       expect(s.videoSync, 'audio');
       expect(s.droppedFrames, 3);
       expect(s.decoderDroppedFrames, 1);
       expect(s.delayedFrames, 2);
-      expect(s.delayedFrameAverageMs, 18.5);
-      expect(s.mistimedFrames, 0);
       expect(s.demuxerCacheDurationSec, 4.2);
       expect(s.demuxerCacheTimeSec, 12.0);
       expect(s.cacheUsedBytes, 8388608);
@@ -68,7 +65,7 @@ void main() {
     test('数字字段兼容字符串/小数（防 String is not a subtype of num）', () {
       final s = PlayerDiagnosticsSnapshot.fromProperties(const {
         'width': '1920.0',
-        'drop-frame-count': '12.0',
+        'frame-drop-count': '12.0',
         'avsync': '-0.35',
       });
       expect(s.width, 1920);
@@ -82,7 +79,7 @@ void main() {
         'width': '',
         'height': null,
         'container-fps': 'abc',
-        'drop-frame-count': 'NaN',
+        'frame-drop-count': 'NaN',
       });
       expect(s.mediaTitle, '--');
       expect(s.width, isNull);
@@ -94,6 +91,7 @@ void main() {
       expect(empty.mediaTitle, '--');
       expect(empty.width, isNull);
       expect(empty.hwdec, '--');
+      expect(empty.gpuContext, '--');
     });
   });
 
@@ -147,6 +145,20 @@ void main() {
       expect(formatDiagnosticText('--'), kDiagnosticPlaceholder);
       expect(formatDiagnosticText(' gpu '), 'gpu');
     });
+
+    test('视频输出拼接实际图形后端（判断 Vulkan 是否真的生效）', () {
+      // 两者都有：`vo · 后端`
+      expect(formatVideoOutput('gpu-next', 'androidvk'), 'gpu-next · androidvk');
+      expect(formatVideoOutput('gpu-next', 'android'), 'gpu-next · android');
+      expect(formatVideoOutput('gpu', 'android'), 'gpu · android');
+      // 缺一个时只显示可用的那个（不出现 `gpu-next · —` 半截值）
+      expect(formatVideoOutput('gpu-next', null), 'gpu-next');
+      expect(formatVideoOutput('gpu-next', '--'), 'gpu-next');
+      expect(formatVideoOutput(null, 'androidvk'), 'androidvk');
+      // 都缺 → 占位符
+      expect(formatVideoOutput(null, null), kDiagnosticPlaceholder);
+      expect(formatVideoOutput('--', '--'), kDiagnosticPlaceholder);
+    });
   });
 
   group('diagnosticsWarnings', () {
@@ -154,25 +166,17 @@ void main() {
       const s = PlayerDiagnosticsSnapshot(
         hwdec: 'mediacodec-copy',
         droppedFrames: 0,
-        delayedFrameAverageMs: 5,
         avsync: 0.01,
-        mistimedFrames: 0,
       );
       expect(diagnosticsWarnings(s), isEmpty);
     });
 
-    test('丢帧 / 渲染延迟 / 软解 / 不同步 / 时间戳异常各自命中', () {
+    test('丢帧 / 软解 / 音画不同步各自命中', () {
       const dropped = PlayerDiagnosticsSnapshot(
         hwdec: 'mediacodec-copy',
         droppedFrames: 7,
       );
       expect(diagnosticsWarnings(dropped).single, contains('已丢帧 7 帧'));
-
-      const delayed = PlayerDiagnosticsSnapshot(
-        hwdec: 'mediacodec-copy',
-        delayedFrameAverageMs: 33.3,
-      );
-      expect(diagnosticsWarnings(delayed).single, contains('渲染延迟偏高'));
 
       const soft = PlayerDiagnosticsSnapshot(hwdec: 'no');
       expect(diagnosticsWarnings(soft).single, contains('软解'));
@@ -182,57 +186,212 @@ void main() {
         avsync: -0.4,
       );
       expect(diagnosticsWarnings(desync).single, contains('音画不同步'));
-
-      const mistimed = PlayerDiagnosticsSnapshot(
-        hwdec: 'mediacodec-copy',
-        mistimedFrames: 3,
-      );
-      expect(diagnosticsWarnings(mistimed).single, contains('时间戳异常帧 3'));
     });
 
     test('多项异常按优先级全部列出', () {
       const s = PlayerDiagnosticsSnapshot(
         hwdec: 'no',
         droppedFrames: 2,
-        delayedFrameAverageMs: 40,
         avsync: 0.5,
-        mistimedFrames: 1,
       );
       final warnings = diagnosticsWarnings(s);
-      expect(warnings.length, 5);
+      expect(warnings.length, 3);
       expect(warnings.first, contains('已丢帧'));
-      expect(warnings[1], contains('渲染延迟'));
-      expect(warnings[2], contains('软解'));
-      expect(warnings[3], contains('音画不同步'));
-      expect(warnings[4], contains('时间戳异常'));
-    });
-
-    test('阈值边界：延迟=20ms 不告警，>20ms 告警', () {
-      expect(
-        diagnosticsWarnings(const PlayerDiagnosticsSnapshot(
-          hwdec: 'mediacodec-copy',
-          delayedFrameAverageMs: kDelayedFrameWarnMs,
-        )),
-        isEmpty,
-      );
-      expect(
-        diagnosticsWarnings(const PlayerDiagnosticsSnapshot(
-          hwdec: 'mediacodec-copy',
-          delayedFrameAverageMs: kDelayedFrameWarnMs + 0.1,
-        )),
-        hasLength(1),
-      );
+      expect(warnings[1], contains('软解'));
+      expect(warnings[2], contains('音画不同步'));
     });
 
     test('属性清单覆盖关键诊断项', () {
-      expect(kPlayerDiagnosticsProperties, contains('drop-frame-count'));
+      expect(kPlayerDiagnosticsProperties, contains('frame-drop-count'));
       expect(kPlayerDiagnosticsProperties, contains('demuxer-cache-time'));
       expect(kPlayerDiagnosticsProperties, contains('hwdec-current'));
-      expect(kPlayerDiagnosticsProperties, contains('vo-delayed-frame-average-ms'));
+      expect(kPlayerDiagnosticsProperties, contains('current-gpu-context'));
+      expect(kPlayerDiagnosticsProperties, contains('demuxer-cache-state'));
       expect(kPlayerDiagnosticsProperties, contains('cache-speed'));
       expect(kPlayerDiagnosticsProperties, contains('avsync'));
       expect(kPlayerDiagnosticsProperties.toSet().length,
           kPlayerDiagnosticsProperties.length);
+    });
+
+    test('属性清单不含 mpv 中不存在的历史错误名', () {
+      // 这三个名字是历史 bug：写错永远读到空值（libmpv 属性表里没有）
+      expect(kPlayerDiagnosticsProperties, isNot(contains('drop-frame-count')));
+      expect(kPlayerDiagnosticsProperties, isNot(contains('cache-used')));
+      expect(
+        kPlayerDiagnosticsProperties,
+        isNot(contains('vo-delayed-frame-average-ms')),
+      );
+    });
+
+    test('属性清单不含真机实测永远读不到的字段', () {
+      // 这四项已按实测定论移除（Android 纹理输出/MediaCodec 路径下恒为空）
+      expect(kPlayerDiagnosticsProperties, isNot(contains('video-codec')));
+      expect(kPlayerDiagnosticsProperties, isNot(contains('display-fps')));
+      expect(kPlayerDiagnosticsProperties, isNot(contains('vsync-jitter')));
+      expect(
+        kPlayerDiagnosticsProperties,
+        isNot(contains('mistimed-frame-count')),
+      );
+    });
+  });
+
+  group('读取容错（合并 / 失败键名）', () {
+    test('isDiagnosticValueAvailable：null / 空串 / -- / 不可读哨兵 都算读不到', () {
+      expect(isDiagnosticValueAvailable(null), isFalse);
+      expect(isDiagnosticValueAvailable(''), isFalse);
+      expect(isDiagnosticValueAvailable('   '), isFalse);
+      expect(isDiagnosticValueAvailable('--'), isFalse);
+      // 读取失败哨兵：必须算"读不到"，否则会污染快照与合并
+      expect(isDiagnosticValueAvailable(kDiagnosticUnreadable), isFalse);
+      expect(isDiagnosticValueAvailable(' h264 '), isTrue);
+      expect(isDiagnosticValueAvailable('0'), isTrue);
+    });
+
+    test('不可读哨兵不覆盖上次好值、也不会透传进快照', () {
+      final merged = mergeDiagnosticsRaw(
+        previous: const {'width': '1920'},
+        current: const {'width': kDiagnosticUnreadable},
+      );
+      // 保留上次好值
+      expect(merged['width'], '1920');
+      // 无上次值时落 null（而不是把哨兵字符串显示到面板上）
+      final empty = mergeDiagnosticsRaw(
+        previous: const {},
+        current: const {'width': kDiagnosticUnreadable},
+      );
+      expect(empty['width'], isNull);
+    });
+
+    test('describeDiagnosticKeys：带原始值，区分读不到与空串', () {
+      final shown = describeDiagnosticKeys(
+        const {
+          'pixelFormat': kDiagnosticUnreadable,
+          'current-vo': '',
+        },
+        const ['pixelFormat', 'current-vo', 'width'],
+      );
+      expect(shown, contains("pixelFormat='<unreadable>'"));
+      expect(shown, contains("current-vo=''"));
+      expect(shown, contains('width=<missing>'));
+    });
+
+    test('缓存字节数从 demuxer-cache-state 整表 JSON 解析', () {
+      // 真机实测返回的真实结构（字段名带连字符）
+      const raw = '{"cache-end":116.138396,"reader-pts":15.913937,'
+          '"cache-duration":100.224458,"eof":false,"underrun":false,'
+          '"idle":true,"total-bytes":76388800,"fw-bytes":67109120,'
+          '"raw-input-rate":912160,"bof-cached":false,"eof-cached":false}';
+      // 优先取 fw-bytes（前向缓存 = 已缓冲可播部分）
+      expect(parseDemuxerCacheBytes(raw), 67109120);
+      // 只有 total-bytes 时退回它
+      expect(
+        parseDemuxerCacheBytes('{"total-bytes":123456}'),
+        123456,
+      );
+      // 兼容下划线写法（mpv 版本差异）
+      expect(parseDemuxerCacheBytes('{"fw_bytes":4096}'), 4096);
+      // 小数兼容
+      expect(parseDemuxerCacheBytes('{"fw-bytes":4096.0}'), 4096);
+      // 解析失败 / 缺字段 / 空 → null（面板显示占位符）
+      expect(parseDemuxerCacheBytes(null), isNull);
+      expect(parseDemuxerCacheBytes(''), isNull);
+      expect(parseDemuxerCacheBytes('not json'), isNull);
+      expect(parseDemuxerCacheBytes('[]'), isNull);
+      expect(parseDemuxerCacheBytes('{"eof":true}'), isNull);
+    });
+
+    test('快照从整表 JSON 取到缓存占用字节', () {
+      final s = PlayerDiagnosticsSnapshot.fromProperties(const {
+        'demuxer-cache-state': '{"fw-bytes":67109120,"total-bytes":76388800}',
+        'demuxer-cache-duration': '100.2',
+      });
+      expect(s.cacheUsedBytes, 67109120);
+      expect(s.demuxerCacheDurationSec, closeTo(100.2, 1e-9));
+    });
+
+    test('mergeDiagnosticsRaw：本次读不到时保留上一次的好值', () {
+      final merged = mergeDiagnosticsRaw(
+        previous: const {
+          'width': '1920',
+          'video-params/pixelformat': 'yuv420p',
+        },
+        current: const {'width': '1280'},
+      );
+      // 本次读到 → 用新值
+      expect(merged['width'], '1280');
+      // 本次没给（null）→ 保留上次
+      expect(merged['video-params/pixelformat'], 'yuv420p');
+      // 两边都没有 → null（面板显示占位符）
+      expect(merged['height'], isNull);
+    });
+
+    test('mergeDiagnosticsRaw：空串与 -- 不覆盖上次的好值', () {
+      final merged = mergeDiagnosticsRaw(
+        previous: const {
+          'estimated-vf-fps': '23.98',
+          'video-params/pixelformat': 'yuv420p',
+        },
+        // mpv 对不可用属性返回空串；若原样采信就会抹掉好值（历史 bug）
+        current: const {
+          'estimated-vf-fps': '',
+          'video-params/pixelformat': '--',
+        },
+      );
+      expect(merged['estimated-vf-fps'], '23.98');
+      expect(merged['video-params/pixelformat'], 'yuv420p');
+    });
+
+    test('mergeDiagnosticsRaw：只输出声明过的键（键序稳定）', () {
+      final merged = mergeDiagnosticsRaw(
+        previous: const {},
+        current: const {'width': '1920', 'not-a-real-property': 'x'},
+      );
+      expect(merged.containsKey('not-a-real-property'), isFalse);
+      expect(
+        merged.keys.toList(),
+        equals(kPlayerDiagnosticsProperties),
+      );
+      expect(merged['width'], '1920');
+    });
+
+    test('failedDiagnosticsKeys：列出读不到的键并排序', () {
+      final failed = failedDiagnosticsKeys(
+        const {
+          'width': '1920',
+          'video-params/pixelformat': '--',
+          'height': '',
+        },
+      );
+      // 缺失 / 空串 / -- 都算失败
+      expect(failed, contains('video-params/pixelformat'));
+      expect(failed, contains('height'));
+      expect(failed, contains('estimated-vf-fps'));
+      // 读到的键不算失败
+      expect(failed, isNot(contains('width')));
+      // 已排序（警示卡直接拼接展示，顺序需稳定）
+      expect(failed, equals([...failed]..sort()));
+    });
+
+    test('全部可读时无失败键', () {
+      final raw = <String, String?>{
+        for (final key in kPlayerDiagnosticsProperties) key: '1',
+      };
+      expect(failedDiagnosticsKeys(raw), isEmpty);
+    });
+
+    test('别名回退机制本身可用（当前清单为空，用自定义键验证）', () {
+      // 展开不破坏原有属性、且无重复
+      final names = expandDiagnosticPropertyNames();
+      expect(names, contains('demuxer-cache-state'));
+      expect(names, contains('hwdec-current'));
+      expect(names.toSet().length, names.length);
+
+      // 无别名的属性原样取值
+      expect(pickDiagnosticValue(const {'width': '1920'}, 'width'),
+          {'width': '1920'});
+      // 读不到 → null（面板显示占位符）
+      expect(pickDiagnosticValue(const {'width': '--'}, 'width'),
+          {'width': null});
     });
   });
 }

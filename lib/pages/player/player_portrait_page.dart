@@ -1151,17 +1151,35 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         body: PlayerDiagnosticsPanel(readProperties: _readDiagnosticsProperties),
       );
 
-  /// 读取一组 mpv 运行时属性（诊断面板每秒采样一次；与横屏同款实现）
+  /// 读取一组 mpv 运行时属性（诊断面板每秒采样一次；与横屏同款实现）。
+  ///
+  /// ⚠️ **不可读一律返回 null，不要落成空串**（同横屏实现）：mpv 对不可用
+  /// 属性返回空串，原样带出会覆盖掉面板上一次的好值。
+  ///
+  /// ⚠️ `waitForInitialization: false` 是**必须的**：默认会等视频控制器就绪，
+  /// 视频输出异常时该 completer 永不完成 → 面板整块空（同横屏，见其注释）。
+  ///
+  /// 读取按 [expandDiagnosticPropertyNames] 展开（含字段别名回退），再经
+  /// [pickDiagnosticValue] 归一到主键名。
   Future<Map<String, String?>> _readDiagnosticsProperties() async {
     final platform = _player.platform;
     if (platform is! NativePlayer) return const {};
+    final raw = <String, String?>{};
+    for (final key in expandDiagnosticPropertyNames()) {
+      try {
+        final value =
+            await platform.getProperty(key, waitForInitialization: false);
+        // 不可读落哨兵值：日志里能区分"读不到"与"读到了但是空串"
+        raw[key] = isDiagnosticValueAvailable(value)
+            ? value
+            : kDiagnosticUnreadable;
+      } catch (_) {
+        raw[key] = kDiagnosticUnreadable;
+      }
+    }
     final out = <String, String?>{};
     for (final key in kPlayerDiagnosticsProperties) {
-      try {
-        out[key] = await platform.getProperty(key);
-      } catch (_) {
-        out[key] = null;
-      }
+      out.addAll(pickDiagnosticValue(raw, key));
     }
     return out;
   }

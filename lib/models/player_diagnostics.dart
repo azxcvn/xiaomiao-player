@@ -4,6 +4,8 @@
 /// 展示格式化与健康判定在 `utils/player_diagnostics.dart`。
 library;
 
+import 'package:moumou/utils/player_diagnostics.dart';
+
 /// 一次采样得到的播放诊断快照（字段缺失为 null，字符串缺失为 `--`）。
 class PlayerDiagnosticsSnapshot {
   /// 媒体标题（mpv `media-title`）
@@ -11,9 +13,6 @@ class PlayerDiagnosticsSnapshot {
 
   /// 容器/文件格式（mpv `file-format`）
   final String fileFormat;
-
-  /// 视频编码（含 profile，mpv `video-codec`）
-  final String videoCodec;
 
   /// 音频编码（mpv `audio-codec-name`）
   final String audioCodec;
@@ -31,19 +30,24 @@ class PlayerDiagnosticsSnapshot {
   /// 解码+滤镜后实际输出帧率（mpv `estimated-vf-fps`）
   final double? estimatedFps;
 
-  /// 显示刷新率（mpv `display-fps`）
-  final double? displayFps;
-
   /// 当前生效的硬解模式（mpv `hwdec-current`；`no` = 软解）
   final String hwdec;
 
   /// 当前视频输出驱动（mpv `current-vo`）
   final String vo;
 
+  /// 当前实际生效的图形后端（mpv `current-gpu-context`）：
+  /// `android` = OpenGL ES，`androidvk` = Vulkan。
+  ///
+  /// ⚠️ 这是**运行时实测值**，不是应用设置值——用户开启 Vulkan 后本项仍可能
+  /// 是 `android`（未生效 / mpv 回退）。判断「Vulkan 开关有没有真的起作用」
+  /// 只能靠它，不能靠设置项。
+  final String gpuContext;
+
   /// 视频同步方式（mpv `video-sync`）
   final String videoSync;
 
-  /// 累计丢帧数（mpv `drop-frame-count`）
+  /// 累计丢帧数（mpv `frame-drop-count`）
   final int? droppedFrames;
 
   /// 解码器丢帧数（mpv `decoder-frame-drop-count`）
@@ -52,19 +56,17 @@ class PlayerDiagnosticsSnapshot {
   /// 显示队列中延迟的帧数（mpv `vo-delayed-frame-count`）
   final int? delayedFrames;
 
-  /// 延迟帧平均等待时长（mpv `vo-delayed-frame-average-ms`，毫秒）
-  final double? delayedFrameAverageMs;
-
-  /// 时间戳错乱帧数（mpv `mistimed-frame-count`）
-  final int? mistimedFrames;
-
   /// 解封装缓存已缓冲的时长（mpv `demuxer-cache-duration`，秒）
   final double? demuxerCacheDurationSec;
 
   /// 当前位置在缓存中的剩余可播时长（mpv `demuxer-cache-time`，秒）
   final double? demuxerCacheTimeSec;
 
-  /// 已占用的解封装缓存字节（mpv `cache-used`）
+  /// 已占用的解封装缓存字节（取自 mpv `demuxer-cache-state` 的 `fw-bytes` 字段）
+  ///
+  /// ⚠️ 只能从**整表 JSON** 解析（见 `parseDemuxerCacheBytes`）：该 libmpv 构建下
+  /// `demuxer-cache-state/fw-bytes` 这类 map 子属性路径返回空串。
+  /// 且缓存状态仅**流式缓存启用**时才有值。
   final int? cacheUsedBytes;
 
   /// 当前下行速率估计（mpv `cache-speed`，字节/秒）
@@ -85,22 +87,19 @@ class PlayerDiagnosticsSnapshot {
   const PlayerDiagnosticsSnapshot({
     this.mediaTitle = '--',
     this.fileFormat = '--',
-    this.videoCodec = '--',
     this.audioCodec = '--',
     this.width,
     this.height,
     this.pixelFormat = '--',
     this.containerFps,
     this.estimatedFps,
-    this.displayFps,
     this.hwdec = '--',
     this.vo = '--',
+    this.gpuContext = '--',
     this.videoSync = '--',
     this.droppedFrames,
     this.decoderDroppedFrames,
     this.delayedFrames,
-    this.delayedFrameAverageMs,
-    this.mistimedFrames,
     this.demuxerCacheDurationSec,
     this.demuxerCacheTimeSec,
     this.cacheUsedBytes,
@@ -128,26 +127,26 @@ class PlayerDiagnosticsSnapshot {
     return PlayerDiagnosticsSnapshot(
       mediaTitle: text('media-title'),
       fileFormat: text('file-format'),
-      videoCodec: text('video-codec'),
       audioCodec: text('audio-codec-name'),
       width: _asInt(properties['width']),
       height: _asInt(properties['height']),
       pixelFormat: text('video-params/pixelformat'),
       containerFps: _asDouble(properties['container-fps']),
       estimatedFps: _asDouble(properties['estimated-vf-fps']),
-      displayFps: _asDouble(properties['display-fps']),
       hwdec: text('hwdec-current'),
       vo: text('current-vo'),
+      gpuContext: text('current-gpu-context'),
       videoSync: text('video-sync'),
-      droppedFrames: _asInt(properties['drop-frame-count']),
+      // ⚠️ frame-drop-count（不是 drop-frame-count，后者 mpv 无此属性）
+      droppedFrames: _asInt(properties['frame-drop-count']),
       decoderDroppedFrames: _asInt(properties['decoder-frame-drop-count']),
       delayedFrames: _asInt(properties['vo-delayed-frame-count']),
-      delayedFrameAverageMs:
-          _asDouble(properties['vo-delayed-frame-average-ms']),
-      mistimedFrames: _asInt(properties['mistimed-frame-count']),
       demuxerCacheDurationSec: _asDouble(properties['demuxer-cache-duration']),
       demuxerCacheTimeSec: _asDouble(properties['demuxer-cache-time']),
-      cacheUsedBytes: _asInt(properties['cache-used']),
+      // ⚠️ 缓存字节数从 demuxer-cache-state 的**整表 JSON** 解析（子属性路径不可用）
+      cacheUsedBytes: parseDemuxerCacheBytes(
+        properties['demuxer-cache-state'],
+      ),
       cacheSpeedBytesPerSec: _asDouble(properties['cache-speed']),
       videoBitrate: _asInt(properties['video-bitrate']),
       audioBitrate: _asInt(properties['audio-bitrate']),

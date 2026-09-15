@@ -334,16 +334,30 @@ class PlayerSettingsPage extends StatelessWidget {
                     SettingsSwitchTile(
                       icon: Icons.memory_outlined,
                       title: '启用 Vulkan',
-                      subtitle: const Text('改用 Vulkan 渲染后端'),
+                      subtitle: const Text('优先使用 Vulkan 渲染'),
                       value: decodeSettings.useVulkan,
                       onChanged: decodeSettings.gpuNext
                           ? (v) => _onVulkanChanged(context, v)
                           : null,
                     ),
+                    // 禁用原因说明：`gpu-api` 只对 GPU-next 渲染器有效，
+                    // vo=gpu 不认它——只把开关置灰会让用户以为坏了（可发现性）。
+                    if (!decodeSettings.gpuNext)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                        child: Text(
+                          '需先启用上方的「GPU-next」：Vulkan 只对 GPU-next 渲染器生效',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                       child: Text(
-                        '切换后需重启播放器（重开视频）生效；Vulkan 需设备支持，不支持时自动回退 OpenGL',
+                        '切换后需重启播放器（重开视频）生效；'
+                        '设备或驱动不支持时会自动回落 OpenGL，不会黑屏',
                         style: TextStyle(
                           fontSize: 12,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -390,7 +404,7 @@ class PlayerSettingsPage extends StatelessWidget {
     if (ok == true) DecodeSettings.instance.setGpuNext(true);
   }
 
-  /// 启用 Vulkan 前的二次确认：告知可能的花屏/黑屏/崩溃与自动回退。
+  /// 启用 Vulkan 前的二次确认（说明机制与回落行为）。
   /// 仅开启时弹窗（关闭直接生效）；取消则不写设置。
   Future<void> _onVulkanChanged(BuildContext context, bool v) async {
     if (!v) {
@@ -402,7 +416,9 @@ class PlayerSettingsPage extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         title: const Text('启用 Vulkan'),
         content: const Text(
-          'Vulkan 需设备与驱动支持，部分设备可能出现花屏、黑屏或崩溃；\n不支持时自动回退 OpenGL。\n\n是否继续？',
+          '视频输出将优先使用 Vulkan 渲染，新建的上下文不再限定 OpenGL ES。\n\n'
+          '若设备或驱动不支持，会自动回落 OpenGL，不会黑屏。\n\n'
+          '切换后需重启播放器（重开视频）生效。',
           style: TextStyle(fontSize: 14, height: 1.5),
         ),
         actions: [
