@@ -25,11 +25,15 @@
 /// 拉取并装载，随后关闭整个面板。
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:moumou/models/dandan_models.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/danmaku_search_history.dart';
 import 'package:moumou/utils/async_session.dart';
+import 'package:moumou/utils/danmaku_episode.dart';
 import 'package:moumou/widgets/settings_ui.dart';
 
 /// 面板内统一强调色（**跟随主题**，对齐弹幕设置面板的派生方式）：
@@ -60,12 +64,21 @@ class PlayerDanmakuNetworkPanel extends StatefulWidget {
     DandanAnime anime,
     DandanEpisode episode,
     String? serverUrl,
-  ) onEpisodeSelected;
+  )
+  onEpisodeSelected;
+
+  /// 当前正在播放的视频文件名（含扩展名）。
+  ///
+  /// 用于展开番剧时**自动定位到对应集**：`extractEpisodeNumber` 解析出的集数
+  /// 经 `findMatchingEpisode` 命中后滚动 + 高亮，省掉上百集手动翻找。
+  /// 为空/解析不出时不做自动定位（用户仍可用「跳至第 N 集」）。
+  final String? currentFileName;
 
   const PlayerDanmakuNetworkPanel({
     super.key,
     this.networkService,
     required this.onEpisodeSelected,
+    this.currentFileName,
   });
 
   @override
@@ -150,8 +163,8 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
       _results = result.items;
       _error = result.items.isEmpty
           ? (result.errors.isEmpty
-              ? '未找到相关番剧，请尝试其他关键词'
-              : '搜索失败：${result.errors.join('；')}')
+                ? '未找到相关番剧，请尝试其他关键词'
+                : '搜索失败：${result.errors.join('；')}')
           : null;
       // 命中才折叠搜索框；无结果/出错保持展开，方便立刻改关键词
       _searchOpen = result.items.isEmpty;
@@ -162,8 +175,9 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
 
   void _toggleCard(DanmakuSearchItem item) {
     setState(() {
-      _expandedAnimeId =
-          _expandedAnimeId == item.anime.animeId ? null : item.anime.animeId;
+      _expandedAnimeId = _expandedAnimeId == item.anime.animeId
+          ? null
+          : item.anime.animeId;
     });
   }
 
@@ -191,10 +205,7 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
               switchOutCurve: Curves.easeInCubic,
               layoutBuilder: (currentChild, previousChildren) => Stack(
                 alignment: Alignment.topCenter,
-                children: [
-                  ...previousChildren,
-                  ?currentChild,
-                ],
+                children: [...previousChildren, ?currentChild],
               ),
               child: KeyedSubtree(
                 key: ValueKey(_isSearchCollapsed),
@@ -381,6 +392,7 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
             expanded: _expandedAnimeId == _results[i].anime.animeId,
             onToggle: () => _toggleCard(_results[i]),
             onEpisodeSelected: (ep) => _selectEpisode(_results[i], ep),
+            currentFileName: widget.currentFileName,
           ),
         ],
       ],
@@ -483,12 +495,12 @@ class _MiniIconButton extends StatelessWidget {
 }
 
 Widget _panelDivider() => const Divider(
-      height: 1,
-      thickness: 0.5,
-      indent: 16,
-      endIndent: 16,
-      color: Colors.white10,
-    );
+  height: 1,
+  thickness: 0.5,
+  indent: 16,
+  endIndent: 16,
+  color: Colors.white10,
+);
 
 /// 小标签胶囊（类型 / 集数 / 来源服务器）。
 class _CapsuleLabel extends StatelessWidget {
@@ -571,12 +583,16 @@ class _AnimeResultCard extends StatefulWidget {
   final VoidCallback onToggle;
   final ValueChanged<DandanEpisode> onEpisodeSelected;
 
+  /// 当前播放的视频文件名（用于展开时自动定位到对应集；见面板参数说明）
+  final String? currentFileName;
+
   const _AnimeResultCard({
     super.key,
     required this.item,
     required this.expanded,
     required this.onToggle,
     required this.onEpisodeSelected,
+    this.currentFileName,
   });
 
   @override
@@ -609,6 +625,89 @@ class _AnimeResultCardState extends State<_AnimeResultCard>
   /// 卡头 key：展开时把卡头顶到可视区（长列表展开不再「跑到屏幕外」）
   final GlobalKey _headerKey = GlobalKey();
 
+  /// 集列表滚动控制器（超过 [_episodeInlineLimit] 集时才挂到 ListView 上）
+  final ScrollController _episodeScroll = ScrollController();
+
+  /// 「跳至第 N 集」输入框（集数多时按集号直达）
+  final TextEditingController _jumpController = TextEditingController();
+
+  /// 高亮中的集下标（自动定位/跳转命中后短暂高亮，便于确认落点）
+  int? _highlightIndex;
+
+  Timer? _highlightTimer;
+
+  /// 自动定位失败的一次性提示（在集列表上方内联显示，不弹对话框）
+  String? _locateHint;
+
+  /// 集列表行高（滚动定位用）：`padding 11*2 + 单行文本 ≈ 40`
+  static const double _episodeRowExtent = 40;
+
+  /// 展开时若尚未定位，按当前视频文件名自动定位到对应集。
+  ///
+  /// 解析/匹配都复用已有纯函数（`extractEpisodeNumber` /
+  /// `findMatchingEpisode`）——它们在「切集自动匹配」里已经过真机验证。
+  void _locateCurrentEpisodeOnce() {
+    if (_locateHint != null || _highlightIndex != null) return;
+    final loc = locateCurrentEpisode(
+      widget.currentFileName,
+      widget.item.anime.episodes,
+    );
+    if (loc.index < 0) {
+      _locateHint = loc.message;
+      return;
+    }
+    _highlightIndex = loc.index;
+    _scrollToEpisode(loc.index);
+    _scheduleHighlightClear();
+  }
+
+  /// 滚动到第 [index] 集（仅长列表需要；短列表内联展示、无需滚动）。
+  void _scrollToEpisode(int index) {
+    if (widget.item.anime.episodes.length <= _episodeInlineLimit) return;
+    if (!_episodeScroll.hasClients) return;
+    final max = _episodeScroll.position.maxScrollExtent;
+    final target = (index * _episodeRowExtent).clamp(0.0, max);
+    _episodeScroll.animateTo(
+      target,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  /// 1.6s 后取消高亮（足够用户确认落点，又不长期占视觉）
+  void _scheduleHighlightClear() {
+    _highlightTimer?.cancel();
+    _highlightTimer = Timer(const Duration(milliseconds: 1600), () {
+      if (!mounted) return;
+      setState(() => _highlightIndex = null);
+    });
+  }
+
+  /// 「跳至第 N 集」：按**集标题里的集数**优先匹配，失败按「第 N 集 = 第 N 项」
+  /// 回退（与 [findMatchingEpisode] 同一套语义，保证和自动匹配一致）。
+  void _jumpToEpisode() {
+    final episodes = widget.item.anime.episodes;
+    final raw = _jumpController.text.trim();
+    final number = double.tryParse(raw);
+    if (number == null) {
+      setState(() => _locateHint = '请输入集数（数字）');
+      return;
+    }
+    final match = findMatchingEpisode(episodes, number);
+    final index = match == null ? -1 : episodes.indexOf(match);
+    if (index < 0) {
+      setState(() => _locateHint = '没有第 ${number.toInt()} 集');
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _locateHint = null;
+      _highlightIndex = index;
+    });
+    _scrollToEpisode(index);
+    _scheduleHighlightClear();
+  }
+
   @override
   void didUpdateWidget(covariant _AnimeResultCard oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -616,13 +715,30 @@ class _AnimeResultCardState extends State<_AnimeResultCard>
     if (widget.expanded) {
       _controller.forward();
       _ensureHeaderVisible();
+      // 展开动画走完再定位：此刻集列表已布局完成、滚动控制器才有 clients
+      // （短列表内联展示不需要滚动，也无需延时）
+      if (widget.item.anime.episodes.length > _episodeInlineLimit) {
+        _locateTimer?.cancel();
+        _locateTimer = Timer(_expandInDuration, () {
+          if (mounted) setState(_locateCurrentEpisodeOnce);
+        });
+      } else {
+        _locateCurrentEpisodeOnce();
+      }
     } else {
       _controller.reverse();
     }
   }
 
+  /// 展开后延时自动定位的定时器（等集列表布局完成）
+  Timer? _locateTimer;
+
   @override
   void dispose() {
+    _locateTimer?.cancel();
+    _highlightTimer?.cancel();
+    _episodeScroll.dispose();
+    _jumpController.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -672,6 +788,24 @@ class _AnimeResultCardState extends State<_AnimeResultCard>
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+                        // 番剧名超长会被截断：点标题看完整名称（与集名同一出口）
+                        if (anime.animeTitle.length > 18)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: GestureDetector(
+                              onTap: () => showEpisodeTitleDialog(
+                                context,
+                                anime.animeTitle,
+                              ),
+                              child: Text(
+                                '查看完整名称',
+                                style: TextStyle(
+                                  color: _accentOf(context),
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ),
+                          ),
                         const SizedBox(height: 6),
                         Wrap(
                           spacing: 6,
@@ -710,7 +844,10 @@ class _AnimeResultCardState extends State<_AnimeResultCard>
                 child: Align(
                   alignment: Alignment.topCenter,
                   heightFactor: _height.value,
-                  child: FadeTransition(opacity: _fade, child: _buildEpisodes()),
+                  child: FadeTransition(
+                    opacity: _fade,
+                    child: _buildEpisodes(),
+                  ),
                 ),
               );
             },
@@ -727,6 +864,7 @@ class _AnimeResultCardState extends State<_AnimeResultCard>
         if (i > 0) _panelDivider(),
         _EpisodeRow(
           episode: episodes[i],
+          highlighted: _highlightIndex == i,
           onTap: () => widget.onEpisodeSelected(episodes[i]),
         ),
       ],
@@ -734,6 +872,9 @@ class _AnimeResultCardState extends State<_AnimeResultCard>
     return Column(
       children: [
         _panelDivider(),
+        // 集数定位条：集数多（>6）才出现——短番剧直接看得到，加了是噪声
+        if (episodes.length > _episodeInlineLimit) _buildEpisodeLocator(),
+        if (_locateHint != null) _buildLocateHint(_locateHint!),
         // 集数少 → 直接内联；集数多 → 定高滚动容器（动画期间布局量恒定）
         if (episodes.length <= _episodeInlineLimit)
           Column(children: rows)
@@ -742,6 +883,7 @@ class _AnimeResultCardState extends State<_AnimeResultCard>
             height: _episodeListHeight,
             child: Scrollbar(
               child: ListView(
+                controller: _episodeScroll,
                 padding: EdgeInsets.zero,
                 physics: const ClampingScrollPhysics(),
                 children: rows,
@@ -751,29 +893,130 @@ class _AnimeResultCardState extends State<_AnimeResultCard>
       ],
     );
   }
+
+  /// 「跳至第 N 集」定位条（集数上下限给用户一个预期）
+  Widget _buildEpisodeLocator() {
+    final total = widget.item.anime.episodes.length;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 34,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(17),
+              ),
+              child: Row(
+                children: [
+                  const Text(
+                    '跳至第',
+                    style: TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _jumpController,
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.go,
+                      onSubmitted: (_) => _jumpToEpisode(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        height: 1.2,
+                      ),
+                      cursorColor: _accentOf(context),
+                      cursorHeight: 14,
+                      decoration: const InputDecoration.collapsed(
+                        hintText: '集数',
+                        hintStyle: TextStyle(
+                          color: Colors.white38,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '集 / 共 $total 集',
+                    style: const TextStyle(color: Colors.white38, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          _MiniIconButton(
+            icon: Icons.arrow_forward_rounded,
+            tooltip: '跳转',
+            color: _accentOf(context),
+            onTap: _jumpToEpisode,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 定位失败提示（内联一行，不弹对话框——面板里弹窗体验更重）
+  Widget _buildLocateHint(String message) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, size: 13, color: Colors.orangeAccent),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: Colors.orangeAccent, fontSize: 11),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-/// 集列表行：集标题 + 下载图标。
+/// 集列表行：集标题 + 下载图标；[highlighted] 时整行高亮（定位落点）。
+///
+/// 标题单行过长会截断，点击标题弹出完整文本 + 复制（长番剧集名常带
+/// 字幕组/分辨率后缀，一行放不下）。
 class _EpisodeRow extends StatelessWidget {
   final DandanEpisode episode;
   final VoidCallback onTap;
+  final bool highlighted;
 
-  const _EpisodeRow({required this.episode, required this.onTap});
+  const _EpisodeRow({
+    required this.episode,
+    required this.onTap,
+    this.highlighted = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      child: Padding(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        color: highlighted
+            ? _accentOf(context).withValues(alpha: 0.16)
+            : Colors.transparent,
         padding: const EdgeInsets.fromLTRB(16, 11, 16, 11),
         child: Row(
           children: [
             Expanded(
-              child: Text(
-                episode.episodeTitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Colors.white70, fontSize: 13),
+              child: GestureDetector(
+                // 长按看完整集名（单击仍是「选中该集」，不改变原有交互）
+                onLongPress: () =>
+                    showEpisodeTitleDialog(context, episode.episodeTitle),
+                child: Text(
+                  episode.episodeTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                ),
               ),
             ),
             const SizedBox(width: 8),
@@ -783,4 +1026,43 @@ class _EpisodeRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 集标题完整内容弹窗（长文本被截断时的出口）：完整文本 + 一键复制。
+///
+/// 用 `showDialog` 而非本 App 惯用的 `showAppDialog`：后者是「顶层面板路由」
+/// 语义（播放器面板用），而这里只需要一个轻量对话框。样式与
+/// `showPlayerPanel` 内的卡片一致（暗底 + 主色描边）。
+Future<void> showEpisodeTitleDialog(BuildContext context, String title) {
+  return showDialog<void>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      backgroundColor: const Color(0xFF1C1C1E),
+      title: const Text(
+        '完整集名',
+        style: TextStyle(color: Colors.white, fontSize: 15),
+      ),
+      content: SelectableText(
+        title,
+        style: const TextStyle(
+          color: Colors.white70,
+          fontSize: 13,
+          height: 1.4,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () async {
+            await Clipboard.setData(ClipboardData(text: title));
+            if (dialogContext.mounted) Navigator.of(dialogContext).pop();
+          },
+          child: const Text('复制'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(),
+          child: const Text('关闭'),
+        ),
+      ],
+    ),
+  );
 }

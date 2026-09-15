@@ -1,9 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moumou/models/danmaku_color_mode.dart';
 import 'package:moumou/models/danmaku_font_mode.dart';
 import 'package:moumou/services/danmaku_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// 弹幕设置服务测试（阶段2）：默认值、钳制、持久化恢复、一键恢复默认。
+/// 弹幕设置服务测试（阶段2）：默认值、钳制、持久化恢复、一键恢复默认，
+/// 以及弹幕颜色三态（含旧键迁移）。
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -18,7 +20,12 @@ void main() {
     expect(s.scrollSeconds, 10);
     expect(s.opacity, 1.0);
     expect(s.strokeWidth, 1.5);
-    expect(s.randomColor, isFalse);
+    expect(
+      s.colorMode,
+      DanmakuColorMode.source,
+      reason: '默认跟随弹幕自身颜色（保留会员渐变彩色）',
+    );
+    expect(s.colorValue, kDanmakuDefaultColor);
     expect(s.area, 1.0);
     expect(s.lineHeight, 1.6);
     expect(s.showTop, isTrue);
@@ -36,14 +43,16 @@ void main() {
     await s.setScrollSeconds(6);
     await s.setOpacity(0.5);
     await s.setStrokeWidth(0);
-    await s.setRandomColor(true);
+    await s.setColorMode(DanmakuColorMode.fixed);
+    await s.setColorValue('#FF00FF00');
     await s.load();
     expect(s.fontSize, 24);
     expect(s.fontWeight, 7);
     expect(s.scrollSeconds, 6);
     expect(s.opacity, 0.5);
     expect(s.strokeWidth, 0);
-    expect(s.randomColor, isTrue);
+    expect(s.colorMode, DanmakuColorMode.fixed);
+    expect(s.colorValue, '#FF00FF00');
   });
 
   test('配置 setter 持久化（模拟重启 load）', () async {
@@ -144,14 +153,16 @@ void main() {
 
   test('恢复默认：全部回默认值且持久化', () async {
     await s.setFontSize(30);
-    await s.setRandomColor(true);
+    await s.setColorMode(DanmakuColorMode.fixed);
+    await s.setColorValue('#FF123456');
     await s.setShowTop(false);
     await s.setMassiveMode(true);
     await s.setMerge(true);
     await s.setTimeOffset(60);
     await s.reset();
     expect(s.fontSize, 16);
-    expect(s.randomColor, isFalse);
+    expect(s.colorMode, DanmakuColorMode.source);
+    expect(s.colorValue, kDanmakuDefaultColor);
     expect(s.showTop, isTrue);
     expect(s.massiveMode, isFalse);
     expect(s.merge, isFalse);
@@ -159,9 +170,67 @@ void main() {
     // 持久化确认：重载后仍是默认值
     await s.load();
     expect(s.fontSize, 16);
-    expect(s.randomColor, isFalse);
+    expect(s.colorMode, DanmakuColorMode.source);
+    expect(s.colorValue, kDanmakuDefaultColor);
     expect(s.merge, isFalse);
     expect(s.timeOffsetSeconds, 0);
+  });
+
+  // ── 弹幕颜色三态（issue #1 需求 5 的改良方案）──────────────────────
+
+  test('颜色值：空串回落默认白，避免空值进渲染层', () async {
+    await s.setColorValue('');
+    expect(s.colorValue, kDanmakuDefaultColor);
+  });
+
+  test('颜色模式与颜色值各自持久化，互不干扰', () async {
+    await s.setColorValue('#FF336699');
+    await s.setColorMode(DanmakuColorMode.fixed);
+    await s.load();
+    expect(s.colorMode, DanmakuColorMode.fixed);
+    expect(s.colorValue, '#FF336699');
+  });
+
+  test('旧键迁移：历史 danmaku_random_color=true → 随机色模式', () async {
+    // 模拟老用户数据：只有旧的布尔键，没有新的 int 模式键
+    SharedPreferences.setMockInitialValues({'danmaku_random_color': true});
+    s.resetForTest();
+    await s.load();
+    expect(
+      s.colorMode,
+      DanmakuColorMode.random,
+      reason: '老用户开着随机色，升级后不能被静默重置回原色',
+    );
+  });
+
+  test('旧键迁移：danmaku_random_color=false → 原色模式（默认）', () async {
+    SharedPreferences.setMockInitialValues({'danmaku_random_color': false});
+    s.resetForTest();
+    await s.load();
+    expect(s.colorMode, DanmakuColorMode.source);
+  });
+
+  test('新键优先于旧键（用户已在新版本选过模式）', () async {
+    SharedPreferences.setMockInitialValues({
+      'danmaku_random_color': true, // 旧值说随机
+      'danmaku_color_mode': DanmakuColorMode.fixed.index, // 新值说指定色
+    });
+    s.resetForTest();
+    await s.load();
+    expect(s.colorMode, DanmakuColorMode.fixed, reason: '新键存在时以新键为准');
+  });
+
+  test('颜色模式 index 越界/损坏回落 source', () {
+    expect(DanmakuColorMode.fromIndex(null), DanmakuColorMode.source);
+    expect(DanmakuColorMode.fromIndex(-1), DanmakuColorMode.source);
+    expect(DanmakuColorMode.fromIndex(99), DanmakuColorMode.source);
+    expect(DanmakuColorMode.fromIndex(1), DanmakuColorMode.random);
+  });
+
+  test('mpvColorToRgbInt：丢掉 alpha、保留 RGB', () {
+    expect(mpvColorToRgbInt('#FF00FF00'), 0x00FF00);
+    expect(mpvColorToRgbInt('#00FF00'), 0x00FF00);
+    expect(mpvColorToRgbInt('#FFFFFFFF'), 0xFFFFFF);
   });
 
   test('时间轴偏移：取整 / 持久化 / 钳制', () async {

@@ -69,3 +69,41 @@ DandanEpisode? findMatchingEpisode(
   if (index >= 0 && index < episodes.length) return episodes[index];
   return null;
 }
+
+/// 「按当前视频文件名定位到哪一集」的解析结果。
+///
+/// [index] < 0 表示未命中（此时 [message] 为给用户看的说明）；命中的 [number]
+/// 是解析出的集数（失败时为 null），便于调用方做提示文案。
+typedef DanmakuEpisodeLocation = ({int index, double? number, String? message});
+
+/// 从当前视频文件名解析集数，并在集列表里定位（供网络弹幕面板**自动定位**用）。
+///
+/// 纯函数（无副作用、不依赖 UI）：面板只负责把结果落到滚动 + 高亮上。
+/// 解析与匹配都复用 [extractEpisodeNumber] / [findMatchingEpisode]——
+/// 与「切集自动匹配」同一套规则，避免两处行为漂移。
+DanmakuEpisodeLocation locateCurrentEpisode(
+  String? fileName,
+  List<DandanEpisode> episodes,
+) {
+  if (fileName == null || fileName.isEmpty) {
+    return (index: -1, number: null, message: null);
+  }
+  final number = extractEpisodeNumber(fileName);
+  if (number == null) {
+    return (
+      index: -1,
+      number: null,
+      message: '未能从文件名识别集数，可用上方输入框直接跳转',
+    );
+  }
+  final match = findMatchingEpisode(episodes, number);
+  final index = match == null ? -1 : episodes.indexOf(match);
+  if (index < 0) {
+    return (
+      index: -1,
+      number: number,
+      message: '未找到第 ${number.toInt()} 集，可用上方输入框直接跳转',
+    );
+  }
+  return (index: index, number: number, message: null);
+}

@@ -2114,6 +2114,8 @@ class _PlayerPageState extends State<PlayerPage>
                   title: '网络弹幕',
                   body: PlayerDanmakuNetworkPanel(
                     onEpisodeSelected: _onNetworkEpisodeSelected,
+                    // 当前视频文件名：展开番剧时自动定位到对应集
+                    currentFileName: _path,
                   ),
                 ),
               ),

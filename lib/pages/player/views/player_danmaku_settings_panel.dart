@@ -24,11 +24,13 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:moumou/models/danmaku_color_mode.dart';
 import 'package:moumou/models/danmaku_font_mode.dart';
 import 'package:moumou/services/app_font_settings.dart';
 import 'package:moumou/services/danmaku_settings.dart';
 import 'package:moumou/services/device_services.dart';
 import 'package:moumou/utils/danmaku_timeline.dart';
+import 'package:moumou/widgets/color_editor_row.dart';
 import 'package:moumou/widgets/settings_ui.dart';
 
 /// FontWeight.values 下标 → 中文名称（字重滑杆读数）
@@ -67,182 +69,214 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const _SectionLabel('弹幕样式'),
-              _SettingsGroup(children: [
-                _CommitSliderTile(
-                  label: '弹幕字号',
-                  value: s.fontSize,
-                  min: DanmakuSettings.minFontSize,
-                  max: DanmakuSettings.maxFontSize,
-                  display: (v) => v.round().toString(),
-                  onCommit: s.setFontSize,
-                ),
-                _groupDivider(),
-                _CommitSliderTile(
-                  label: '字体字重',
-                  value: s.fontWeight.toDouble(),
-                  min: DanmakuSettings.minFontWeight,
-                  max: DanmakuSettings.maxFontWeight,
-                  display: (v) => _fontWeightNames[v.round()],
-                  // 字重取整档（w100–w900 九档，滑杆无极拖动松手即最近档）
-                  divisions: 8,
-                  onCommit: (v) => s.setFontWeight(v.round()),
-                ),
-                _groupDivider(),
-                _CommitSliderTile(
-                  label: '弹幕速度',
-                  value: s.scrollSeconds,
-                  min: DanmakuSettings.minScrollSeconds,
-                  max: DanmakuSettings.maxScrollSeconds,
-                  display: (v) => '${v.round()} 秒',
-                  hint: '数值越小弹幕越快',
-                  onCommit: s.setScrollSeconds,
-                ),
-                _groupDivider(),
-                _CommitSliderTile(
-                  label: '描边粗细',
-                  value: s.strokeWidth,
-                  min: DanmakuSettings.minStrokeWidth,
-                  max: DanmakuSettings.maxStrokeWidth,
-                  display: (v) => v == 0 ? '无' : v.toStringAsFixed(1),
-                  onCommit: s.setStrokeWidth,
-                ),
-                _groupDivider(),
-                _CommitSliderTile(
-                  label: '不透明度',
-                  value: s.opacity,
-                  min: DanmakuSettings.minOpacity,
-                  max: DanmakuSettings.maxOpacity,
-                  display: (v) => '${(v * 100).round()}%',
-                  onCommit: s.setOpacity,
-                ),
-                _groupDivider(),
-                _SwitchTile(
-                  label: '随机渐变色',
-                  hint: '开启后忽略弹幕文件内颜色，全部使用随机渐变色',
-                  value: s.randomColor,
-                  onChanged: s.setRandomColor,
-                ),
-              ]),
+              _SettingsGroup(
+                children: [
+                  _CommitSliderTile(
+                    label: '弹幕字号',
+                    value: s.fontSize,
+                    min: DanmakuSettings.minFontSize,
+                    max: DanmakuSettings.maxFontSize,
+                    display: (v) => v.round().toString(),
+                    onCommit: s.setFontSize,
+                  ),
+                  _groupDivider(),
+                  _CommitSliderTile(
+                    label: '字体字重',
+                    value: s.fontWeight.toDouble(),
+                    min: DanmakuSettings.minFontWeight,
+                    max: DanmakuSettings.maxFontWeight,
+                    display: (v) => _fontWeightNames[v.round()],
+                    // 字重取整档（w100–w900 九档，滑杆无极拖动松手即最近档）
+                    divisions: 8,
+                    onCommit: (v) => s.setFontWeight(v.round()),
+                  ),
+                  _groupDivider(),
+                  _CommitSliderTile(
+                    label: '弹幕速度',
+                    value: s.scrollSeconds,
+                    min: DanmakuSettings.minScrollSeconds,
+                    max: DanmakuSettings.maxScrollSeconds,
+                    display: (v) => '${v.round()} 秒',
+                    hint: '数值越小弹幕越快',
+                    onCommit: s.setScrollSeconds,
+                  ),
+                  _groupDivider(),
+                  _CommitSliderTile(
+                    label: '描边粗细',
+                    value: s.strokeWidth,
+                    min: DanmakuSettings.minStrokeWidth,
+                    max: DanmakuSettings.maxStrokeWidth,
+                    display: (v) => v == 0 ? '无' : v.toStringAsFixed(1),
+                    onCommit: s.setStrokeWidth,
+                  ),
+                  _groupDivider(),
+                  _CommitSliderTile(
+                    label: '不透明度',
+                    value: s.opacity,
+                    min: DanmakuSettings.minOpacity,
+                    max: DanmakuSettings.maxOpacity,
+                    display: (v) => '${(v * 100).round()}%',
+                    onCommit: s.setOpacity,
+                  ),
+                  _groupDivider(),
+                  // ── 弹幕颜色三态（互斥单选）──
+                  //
+                  // 用户原始诉求是「开关一关就全白」，但那会否定弹幕自身颜色
+                  // （B 站彩色弹幕与大会员渐变彩色全失效）。改为「保留原色为
+                  // 默认 + 提供覆盖」，选「指定颜色」后才展开调色区。
+                  for (final mode in DanmakuColorMode.values) ...[
+                    _ColorModeTile(
+                      mode: mode,
+                      selected: s.colorMode == mode,
+                      onTap: () => s.setColorMode(mode),
+                    ),
+                    if (mode != DanmakuColorMode.values.last) _groupDivider(),
+                  ],
+                  if (s.colorMode == DanmakuColorMode.fixed) ...[
+                    _groupDivider(),
+                    // 复用字幕那套调色件（预设色点 + 可展开 RGBA 滑杆）。
+                    //
+                    // 拖动/松手的职责划分：
+                    // - 拖动中：`ColorEditorRow` 内部维护**本地预览色**，标题左侧
+                    //   预览点与滑杆读数实时跟随（不盲拖）——这一步**不经过设置
+                    //   单例**，因此不会触发本面板整棵重建（卡顿根因）；
+                    // - 松手：`onSelect` 一次性写设置（`notifyListeners`），
+                    //   与同面板的字号/字重/速度同一条纪律。
+                    ColorEditorRow(
+                      label: '弹幕颜色',
+                      value: s.colorValue,
+                      onSelect: (hex) =>
+                          s.setColorValue(hex ?? kDanmakuDefaultColor),
+                    ),
+                  ],
+                ],
+              ),
               const SizedBox(height: 16),
               const _SectionLabel('弹幕配置'),
-              _SettingsGroup(children: [
-                _CommitSliderTile(
-                  label: '显示区域',
-                  value: s.area,
-                  min: DanmakuSettings.minArea,
-                  max: DanmakuSettings.maxArea,
-                  display: (v) => '${(v * 100).round()}%',
-                  // 10% 一档（0.1–1.0 共 10 档，工作.md 弹幕第 3 点）
-                  divisions: 9,
-                  onCommit: s.setArea,
-                ),
-                _groupDivider(),
-                _CommitSliderTile(
-                  label: '弹幕行高',
-                  value: s.lineHeight,
-                  min: DanmakuSettings.minLineHeight,
-                  max: DanmakuSettings.maxLineHeight,
-                  display: (v) => v.toStringAsFixed(1),
-                  onCommit: s.setLineHeight,
-                ),
-                _groupDivider(),
-                _SwitchTile(
-                  label: '顶部弹幕',
-                  value: s.showTop,
-                  onChanged: s.setShowTop,
-                ),
-                _groupDivider(),
-                _SwitchTile(
-                  label: '底部弹幕',
-                  value: s.showBottom,
-                  onChanged: s.setShowBottom,
-                ),
-                _groupDivider(),
-                _SwitchTile(
-                  label: '滚动弹幕',
-                  value: s.showScroll,
-                  onChanged: s.setShowScroll,
-                ),
-                _groupDivider(),
-                _SwitchTile(
-                  label: '海量弹幕',
-                  hint: '轨道占满时叠加绘制，弹幕过多不再丢弃',
-                  value: s.massiveMode,
-                  onChanged: s.setMassiveMode,
-                ),
-                _groupDivider(),
-                _SwitchTile(
-                  label: '弹幕去重',
-                  hint: '相同时间下相同弹幕合并为一条',
-                  value: s.deduplication,
-                  onChanged: s.setDeduplication,
-                ),
-                _groupDivider(),
-                _SwitchTile(
-                  label: '弹幕合并',
-                  hint: '不同时间内相同弹幕合并且计数',
-                  value: s.merge,
-                  onChanged: s.setMerge,
-                ),
-                _groupDivider(),
-                // 不能加 const：父级 ListenableBuilder 重建时需刷新词条列表
-                _BlocklistTile(),
-              ]),
+              _SettingsGroup(
+                children: [
+                  _CommitSliderTile(
+                    label: '显示区域',
+                    value: s.area,
+                    min: DanmakuSettings.minArea,
+                    max: DanmakuSettings.maxArea,
+                    display: (v) => '${(v * 100).round()}%',
+                    // 10% 一档（0.1–1.0 共 10 档，工作.md 弹幕第 3 点）
+                    divisions: 9,
+                    onCommit: s.setArea,
+                  ),
+                  _groupDivider(),
+                  _CommitSliderTile(
+                    label: '弹幕行高',
+                    value: s.lineHeight,
+                    min: DanmakuSettings.minLineHeight,
+                    max: DanmakuSettings.maxLineHeight,
+                    display: (v) => v.toStringAsFixed(1),
+                    onCommit: s.setLineHeight,
+                  ),
+                  _groupDivider(),
+                  _SwitchTile(
+                    label: '顶部弹幕',
+                    value: s.showTop,
+                    onChanged: s.setShowTop,
+                  ),
+                  _groupDivider(),
+                  _SwitchTile(
+                    label: '底部弹幕',
+                    value: s.showBottom,
+                    onChanged: s.setShowBottom,
+                  ),
+                  _groupDivider(),
+                  _SwitchTile(
+                    label: '滚动弹幕',
+                    value: s.showScroll,
+                    onChanged: s.setShowScroll,
+                  ),
+                  _groupDivider(),
+                  _SwitchTile(
+                    label: '海量弹幕',
+                    hint: '轨道占满时叠加绘制，弹幕过多不再丢弃',
+                    value: s.massiveMode,
+                    onChanged: s.setMassiveMode,
+                  ),
+                  _groupDivider(),
+                  _SwitchTile(
+                    label: '弹幕去重',
+                    hint: '相同时间下相同弹幕合并为一条',
+                    value: s.deduplication,
+                    onChanged: s.setDeduplication,
+                  ),
+                  _groupDivider(),
+                  _SwitchTile(
+                    label: '弹幕合并',
+                    hint: '不同时间内相同弹幕合并且计数',
+                    value: s.merge,
+                    onChanged: s.setMerge,
+                  ),
+                  _groupDivider(),
+                  // 不能加 const：父级 ListenableBuilder 重建时需刷新词条列表
+                  _BlocklistTile(),
+                ],
+              ),
               const SizedBox(height: 16),
               const _SectionLabel('弹幕偏移'),
-              _SettingsGroup(children: [
-                _CommitSliderTile(
-                  label: '时间轴偏移',
-                  value: s.timeOffsetSeconds,
-                  min: DanmakuSettings.minTimeOffsetSeconds,
-                  max: DanmakuSettings.maxTimeOffsetSeconds,
-                  display: formatDanmakuTimeOffset,
-                  // 1 秒一档（-180~+180 共 360 档），松手提交重锚定弹幕
-                  divisions: 360,
-                  onCommit: s.setTimeOffset,
-                ),
-                _groupDivider(),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _OffsetActionButton(
-                          icon: Icons.remove,
-                          label: '提前 1 秒',
-                          enabled: s.timeOffsetSeconds >
-                              DanmakuSettings.minTimeOffsetSeconds,
-                          onTap: () =>
-                              s.setTimeOffset(s.timeOffsetSeconds - 1),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _OffsetActionButton(
-                          icon: Icons.add,
-                          label: '延后 1 秒',
-                          enabled: s.timeOffsetSeconds <
-                              DanmakuSettings.maxTimeOffsetSeconds,
-                          onTap: () =>
-                              s.setTimeOffset(s.timeOffsetSeconds + 1),
-                        ),
-                      ),
-                    ],
+              _SettingsGroup(
+                children: [
+                  _CommitSliderTile(
+                    label: '时间轴偏移',
+                    value: s.timeOffsetSeconds,
+                    min: DanmakuSettings.minTimeOffsetSeconds,
+                    max: DanmakuSettings.maxTimeOffsetSeconds,
+                    display: formatDanmakuTimeOffset,
+                    // 1 秒一档（-180~+180 共 360 档），松手提交重锚定弹幕
+                    divisions: 360,
+                    onCommit: s.setTimeOffset,
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: _OffsetActionButton(
-                      icon: Icons.restart_alt,
-                      label: '重置偏移',
-                      enabled: s.timeOffsetSeconds != 0,
-                      onTap: () => s.setTimeOffset(0),
+                  _groupDivider(),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _OffsetActionButton(
+                            icon: Icons.remove,
+                            label: '提前 1 秒',
+                            enabled:
+                                s.timeOffsetSeconds >
+                                DanmakuSettings.minTimeOffsetSeconds,
+                            onTap: () =>
+                                s.setTimeOffset(s.timeOffsetSeconds - 1),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _OffsetActionButton(
+                            icon: Icons.add,
+                            label: '延后 1 秒',
+                            enabled:
+                                s.timeOffsetSeconds <
+                                DanmakuSettings.maxTimeOffsetSeconds,
+                            onTap: () =>
+                                s.setTimeOffset(s.timeOffsetSeconds + 1),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ]),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: _OffsetActionButton(
+                        icon: Icons.restart_alt,
+                        label: '重置偏移',
+                        enabled: s.timeOffsetSeconds != 0,
+                        onTap: () => s.setTimeOffset(0),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 16),
               const _SectionLabel('弹幕字体'),
               // 不能加 const：否则父级 ListenableBuilder 重建时该子组件因
@@ -259,12 +293,12 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
 
   /// 组内分隔线（与播放器设置分组卡一致：1px 缩进线）
   static Widget _groupDivider() => const Divider(
-        height: 1,
-        thickness: 0.5,
-        indent: 16,
-        endIndent: 16,
-        color: Colors.white10,
-      );
+    height: 1,
+    thickness: 0.5,
+    indent: 16,
+    endIndent: 16,
+    color: Colors.white10,
+  );
 }
 
 /// 分组标题（如「弹幕样式」「弹幕配置」）
@@ -453,6 +487,61 @@ class _OffsetActionButton extends StatelessWidget {
   }
 }
 
+/// 弹幕颜色模式单选行（跟随弹幕颜色 / 随机渐变色 / 指定颜色，互斥）。
+///
+/// 与「弹幕字体」段的三选一同款观感（右侧圆形勾选 + 说明文字），
+/// 让「颜色」与「字体」两类互斥选项在面板里保持一致。
+class _ColorModeTile extends StatelessWidget {
+  final DanmakuColorMode mode;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ColorModeTile({
+    required this.mode,
+    required this.selected,
+    required this.onTap,
+  });
+
+  /// 每种模式的说明（讲清「原色会不会被覆盖」）
+  String get _hint => switch (mode) {
+    DanmakuColorMode.source => '保留弹幕自带颜色（含会员渐变彩色）',
+    DanmakuColorMode.random => '忽略文件颜色，按色轮逐条随机着色',
+    DanmakuColorMode.fixed => '所有弹幕统一使用下方指定的颜色',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = playerPanelAccent(context);
+    return Material(
+      type: MaterialType.transparency,
+      child: ListTile(
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+        title: Text(
+          mode.label,
+          style: TextStyle(
+            color: selected ? accent : Colors.white,
+            fontSize: 14,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
+        subtitle: Text(
+          _hint,
+          style: const TextStyle(color: Colors.white38, fontSize: 11),
+        ),
+        trailing: selected
+            ? Icon(Icons.check_circle, size: 18, color: accent)
+            : const Icon(
+                Icons.circle_outlined,
+                size: 18,
+                color: Colors.white24,
+              ),
+        onTap: onTap,
+      ),
+    );
+  }
+}
+
 /// 开关行：标签（+ 可选说明）→ 右侧 Switch
 class _SwitchTile extends StatelessWidget {
   final String label;
@@ -487,8 +576,10 @@ class _SwitchTile extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 2, bottom: 6),
                     child: Text(
                       hint!,
-                      style:
-                          const TextStyle(color: Colors.white38, fontSize: 11),
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 11,
+                      ),
                     ),
                   )
                 else
@@ -603,8 +694,9 @@ class _BlocklistTileState extends State<_BlocklistTile> {
                           FilledButton(
                             onPressed: _add,
                             style: FilledButton.styleFrom(
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.primary,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
                               foregroundColor: Colors.black87,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
@@ -633,8 +725,8 @@ class _BlocklistTileState extends State<_BlocklistTile> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () => DanmakuSettings.instance
-                                .clearBlockedKeywords(),
+                            onPressed: () =>
+                                DanmakuSettings.instance.clearBlockedKeywords(),
                             child: const Text(
                               '清空',
                               style: TextStyle(
@@ -719,9 +811,7 @@ class _ResetButtonState extends State<_ResetButton> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: _flash
-              ? scheme.error
-              : Colors.white.withValues(alpha: 0.06),
+          color: _flash ? scheme.error : Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(18),
         ),
         child: Text(
@@ -805,71 +895,73 @@ class _DanmakuFontSectionState extends State<_DanmakuFontSection> {
     final s = DanmakuSettings.instance;
     final mode = s.fontMode;
     final appFamily = AppFontSettings.instance.effectiveFamily;
-    return _SettingsGroup(children: [
-      _FontRadioTile(
-        label: DanmakuFontMode.followSystem.label,
-        selected: mode == DanmakuFontMode.followSystem,
-        onTap: () => s.setFontMode(DanmakuFontMode.followSystem),
-      ),
-      PlayerDanmakuSettingsPanel._groupDivider(),
-      _FontRadioTile(
-        label: DanmakuFontMode.followApp.label,
-        subtitle: appFamily,
-        selected: mode == DanmakuFontMode.followApp,
-        onTap: () => s.setFontMode(DanmakuFontMode.followApp),
-      ),
-      PlayerDanmakuSettingsPanel._groupDivider(),
-      _FontRadioTile(
-        label: DanmakuFontMode.custom.label,
-        selected: mode == DanmakuFontMode.custom,
-        onTap: () => s.setFontMode(DanmakuFontMode.custom),
-      ),
-      if (mode == DanmakuFontMode.custom) ...[
-        PlayerDanmakuSettingsPanel._groupDivider(),
-        _FontTile(
-          icon: Icons.folder_open,
-          title: '选择字体目录',
-          subtitle: _loading
-              ? '正在加载...'
-              : (_entries.isEmpty
-                  ? '点击导入包含 .ttf/.otf 字体的目录'
-                  : '已加载 ${_entries.length} 种字体'),
-          trailing: const Icon(Icons.chevron_right, color: Colors.white54),
-          onTap: _loading ? null : _pickDirectory,
+    return _SettingsGroup(
+      children: [
+        _FontRadioTile(
+          label: DanmakuFontMode.followSystem.label,
+          selected: mode == DanmakuFontMode.followSystem,
+          onTap: () => s.setFontMode(DanmakuFontMode.followSystem),
         ),
-        if (_entries.isNotEmpty) ...[
+        PlayerDanmakuSettingsPanel._groupDivider(),
+        _FontRadioTile(
+          label: DanmakuFontMode.followApp.label,
+          subtitle: appFamily,
+          selected: mode == DanmakuFontMode.followApp,
+          onTap: () => s.setFontMode(DanmakuFontMode.followApp),
+        ),
+        PlayerDanmakuSettingsPanel._groupDivider(),
+        _FontRadioTile(
+          label: DanmakuFontMode.custom.label,
+          selected: mode == DanmakuFontMode.custom,
+          onTap: () => s.setFontMode(DanmakuFontMode.custom),
+        ),
+        if (mode == DanmakuFontMode.custom) ...[
           PlayerDanmakuSettingsPanel._groupDivider(),
           _FontTile(
-            icon: Icons.text_fields,
-            title: s.customFontFamily ?? '选择字体',
-            trailing: Icon(
-              _expanded ? Icons.expand_less : Icons.expand_more,
-              color: Colors.white54,
+            icon: Icons.folder_open,
+            title: '选择字体目录',
+            subtitle: _loading
+                ? '正在加载...'
+                : (_entries.isEmpty
+                      ? '点击导入包含 .ttf/.otf 字体的目录'
+                      : '已加载 ${_entries.length} 种字体'),
+            trailing: const Icon(Icons.chevron_right, color: Colors.white54),
+            onTap: _loading ? null : _pickDirectory,
+          ),
+          if (_entries.isNotEmpty) ...[
+            PlayerDanmakuSettingsPanel._groupDivider(),
+            _FontTile(
+              icon: Icons.text_fields,
+              title: s.customFontFamily ?? '选择字体',
+              trailing: Icon(
+                _expanded ? Icons.expand_less : Icons.expand_more,
+                color: Colors.white54,
+              ),
+              onTap: () => setState(() => _expanded = !_expanded),
             ),
-            onTap: () => setState(() => _expanded = !_expanded),
-          ),
-          // 展开/收起动画（字幕字体面板同款 AnimatedSize）
-          AnimatedSize(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.topCenter,
-            child: _expanded
-                ? Column(
-                    children: [
-                      for (final e in _entries)
-                        _FontOptionTile(
-                          label: e.family,
-                          subtitle: e.file,
-                          selected: s.customFontFamily == e.family,
-                          onTap: () => _selectFont(e),
-                        ),
-                    ],
-                  )
-                : const SizedBox.shrink(),
-          ),
+            // 展开/收起动画（字幕字体面板同款 AnimatedSize）
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: _expanded
+                  ? Column(
+                      children: [
+                        for (final e in _entries)
+                          _FontOptionTile(
+                            label: e.family,
+                            subtitle: e.file,
+                            selected: s.customFontFamily == e.family,
+                            onTap: () => _selectFont(e),
+                          ),
+                      ],
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ],
         ],
       ],
-    ]);
+    );
   }
 }
 
@@ -902,9 +994,7 @@ class _FontRadioTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected ? accent : Colors.transparent,
             shape: BoxShape.circle,
-            border: Border.all(
-              color: selected ? accent : Colors.white24,
-            ),
+            border: Border.all(color: selected ? accent : Colors.white24),
           ),
           child: selected
               ? const Icon(Icons.check, size: 13, color: Colors.black87)
@@ -958,9 +1048,7 @@ class _FontOptionTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected ? accent : Colors.transparent,
             shape: BoxShape.circle,
-            border: Border.all(
-              color: selected ? accent : Colors.white24,
-            ),
+            border: Border.all(color: selected ? accent : Colors.white24),
           ),
           child: selected
               ? const Icon(Icons.check, size: 12, color: Colors.black87)

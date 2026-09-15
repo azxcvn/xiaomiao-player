@@ -106,8 +106,11 @@ class PlaybackProgressService extends ChangeNotifier {
   /// 退出/切集时内存进度仍是最新的，进程正常存活不受影响）。
   /// [forcePersist] = true 时跳过节流强制落盘（退出播放/切集时调用，
   /// 保证重启后磁盘上一定是最新进度，用户反馈「重启后恢复不了」的修复）。
-  Future<void> save(String path, Duration position,
-      {bool forcePersist = false}) async {
+  Future<void> save(
+    String path,
+    Duration position, {
+    bool forcePersist = false,
+  }) async {
     await ensureLoaded();
     // 「已看完」粘性保护（B3）：[markCompleted] 已把进度写成时长，此后**任何**
     // 更小的位置都不得覆盖它 —— EOF 之后退出/切集/dispose 会连续来好几次保存
@@ -135,6 +138,44 @@ class PlaybackProgressService extends ChangeNotifier {
   /// 不解除的话，本次会话内该视频的进度会一直被粘在 100%（重看中途退出也
   /// 存不下来）。调用点：播放页打开/切到某媒体且**未恢复进度**（从头播）时。
   void releaseCompleted(String path) => _completed.remove(path);
+
+  /// 删除单个视频的进度（**同步**清内存 + 「已看完」标记，随后强制落盘）。
+  ///
+  /// 用途：历史记录页开启「删除历史时同步清除进度」后，删单条历史时级联调用。
+  ///
+  /// ⚠️ 必须**连「已看完」粘性一起清**（[_completed]）：只删 [_cache] 而留着
+  /// 粘性，用户重新播该视频时仍会被 `save()` 的粘性保护挡住、进度存不下来
+  /// （见 B3 的两条粘性说明）。
+  ///
+  /// ⚠️ 调用方需先 [ensureLoaded]（沿用本类既有纪律：写操作前保证已读盘，
+  /// 否则 `load()` 的 `_cache = decode(...)` 会把这次删除覆盖回去）。
+  void removeProgress(String path) {
+    if (!_loaded) {
+      unawaited(ensureLoaded().then((_) => removeProgress(path)));
+      return;
+    }
+    _cache.remove(path);
+    _completed.remove(path);
+    _lastPersistedAt.remove(path);
+    notifyListeners();
+    unawaited(_persistAll());
+  }
+
+  /// 清空**全部**播放进度（同步清内存 + 粘性标记，随后强制落盘）。
+  ///
+  /// 用途：历史记录页「清除全部历史」开启级联删除时调用。
+  void clearAllProgress() {
+    if (!_loaded) {
+      unawaited(ensureLoaded().then((_) => clearAllProgress()));
+      return;
+    }
+    if (_cache.isEmpty && _completed.isEmpty) return;
+    _cache.clear();
+    _completed.clear();
+    _lastPersistedAt.clear();
+    notifyListeners();
+    unawaited(_persistAll());
+  }
 
   /// 同步标记「已看完」（= 时长），并强制落盘。
   ///
@@ -188,11 +229,41 @@ class PlaybackProgressService extends ChangeNotifier {
             await prefs.setString(_key, snapshot);
           })
           .catchError((Object error, StackTrace stack) {
-        debugPrint('PlaybackProgressService: 进度写盘失败：$error');
-      }),
+            debugPrint('PlaybackProgressService: 进度写盘失败：$error');
+          }),
     );
     await _writeQueue.idle;
   }
+
+  /// 全量落盘（删除路径专用，见 [removeProgress] / [clearAllProgress]）。
+  ///
+  /// 与 [_persist] 的区别：
+  /// - **不走 30 秒节流**——删除是用户显式动作，静默跳过节流会让用户以为
+  ///   "删了但重启又回来了"（[_persist] 的节流是为高频进度写入设计的）；
+  /// - 快照在**调用时同步生成**（与 `PlaybackHistoryService._persist` 同一纪律：
+  ///   等到排队执行再编码就晚了，中途的写入会串进快照）。
+  Future<void> _persistAll() async {
+    final snapshot = jsonEncode(_cache);
+    unawaited(
+      _writeQueue
+          .add(() async {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString(_key, snapshot);
+          })
+          .catchError((Object error, StackTrace stack) {
+            debugPrint('PlaybackProgressService: 进度删除落盘失败：$error');
+          }),
+    );
+    await _writeQueue.idle;
+  }
+
+  /// 等待在途的进度写盘完成（串行队列排空）。
+  ///
+  /// 用途：退出前落盘、以及**测试**里「触发删除后断言磁盘内容」——widget 测试的
+  /// `pumpAndSettle` 只保证帧与定时器排空，不保证这条 microtask 链跑完，
+  /// 直接读 SharedPreferences 会看到上一份快照（对齐 `PlaybackHistoryService`
+  /// 的同名方法）。
+  Future<void> flushPendingWrites() => _writeQueue.idle;
 
   /// 测试用：把单例恢复成「未加载」状态（对齐 `ChapterSkipSettings.resetForTest`）
   @visibleForTesting

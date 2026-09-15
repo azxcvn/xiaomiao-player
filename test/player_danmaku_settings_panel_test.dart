@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moumou/models/danmaku_color_mode.dart';
 import 'package:moumou/pages/player/views/player_danmaku_settings_panel.dart';
 import 'package:moumou/services/danmaku_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 弹幕设置面板回归测试（阶段2）：
-/// - 两段式布局齐全：弹幕样式（5 滑杆 + 随机渐变色开关）与
-///   弹幕配置（2 滑杆 + 5 开关）；
-/// - 滑杆拖动 / 开关切换写设置单例（重栅格化项字号/字重/描边松手提交，
-///   轻量项实时写）；
+/// - 三段式布局齐全：弹幕样式（滑杆 + 颜色三态单选）、弹幕配置、
+///   弹幕偏移；
+/// - 滑杆拖动 / 开关切换 / 颜色模式单选写设置单例（重栅格化项字号/字重/
+///   描边松手提交，轻量项实时写）；
 /// - 恢复默认按钮一键回默认值。
 void main() {
   setUp(() {
@@ -17,9 +18,9 @@ void main() {
   });
 
   Future<void> pumpPanel(WidgetTester tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(body: PlayerDanmakuSettingsPanel()),
-    ));
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: PlayerDanmakuSettingsPanel())),
+    );
     await tester.pumpAndSettle();
   }
 
@@ -72,19 +73,30 @@ void main() {
     expect(find.text('恢复默认设置'), findsOneWidget);
   });
 
-  testWidgets('开关切换实时写设置（随机渐变色 / 海量弹幕 / 去重 / 合并）', (tester) async {
+  testWidgets('颜色模式单选 + 开关切换实时写设置', (tester) async {
     await pumpPanel(tester);
     final s = DanmakuSettings.instance;
-    // Switch 组件定位：按标签找行内的 Switch（value 初始 false → tap 开）
-    final switches = find.byType(Switch);
-    expect(switches, findsNWidgets(7)); // 随机色 + 3 显隐 + 海量 + 去重 + 合并
-    // 随机渐变色是样式区第一个 Switch（index 0，首屏可见）
-    await tester.tap(switches.first);
+    // 「随机渐变色」已由开关改为三态单选（跟随弹幕颜色 / 随机渐变色 / 指定颜色）
+    expect(s.colorMode, DanmakuColorMode.source);
+    await tester.tap(find.text('随机渐变色'));
     await tester.pumpAndSettle();
-    expect(s.randomColor, isTrue);
+    expect(s.colorMode, DanmakuColorMode.random);
+    // 选「指定颜色」后才展开调色区
+    expect(find.text('弹幕颜色'), findsNothing, reason: '未选指定色时不展开调色区');
+    // 选中「随机渐变色」后其副标题变长、把下一项推出视口，先滚动到可见再点
+    await ensureVisible(tester, find.text('指定颜色'));
+    await tester.tap(find.text('指定颜色'));
+    await tester.pumpAndSettle();
+    expect(s.colorMode, DanmakuColorMode.fixed);
+    await ensureVisible(tester, find.text('弹幕颜色'));
+    expect(find.text('弹幕颜色'), findsOneWidget, reason: '选指定色后展开调色区');
+
+    // Switch 组件定位：颜色模式已不是 Switch，还剩 3 显隐 + 海量 + 去重 + 合并
+    final switches = find.byType(Switch);
+    expect(switches, findsNWidgets(6));
     // 去重是倒数第二个 Switch、合并是最后一个（都在视口外，先滚动到可见）
-    await ensureVisible(tester, switches.at(5));
-    await tester.tap(switches.at(5));
+    await ensureVisible(tester, switches.at(4));
+    await tester.tap(switches.at(4));
     await tester.pumpAndSettle();
     expect(s.deduplication, isTrue);
     await ensureVisible(tester, switches.last);

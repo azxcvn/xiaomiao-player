@@ -87,4 +87,57 @@ void main() {
       expect(findMatchingEpisode(const [], 1), isNull);
     });
   });
+
+  // ── 按当前视频文件名定位（网络弹幕面板「展开自动定位到当前集」）──────
+  group('locateCurrentEpisode', () {
+    const episodes = [
+      DandanEpisode(episodeId: 101, episodeTitle: '第01话 起点'),
+      DandanEpisode(episodeId: 102, episodeTitle: '第02话 前进'),
+      DandanEpisode(episodeId: 103, episodeTitle: '第03话 终点'),
+    ];
+
+    test('从文件名解析集数并命中下标', () {
+      final loc = locateCurrentEpisode('[Group] Anime - 02 [1080p].mkv', episodes);
+      expect(loc.index, 1);
+      expect(loc.number, 2);
+      expect(loc.message, isNull);
+    });
+
+    test('第 1 集命中下标 0（不能把 0 当"未命中"）', () {
+      final loc = locateCurrentEpisode('第01话.mp4', episodes);
+      expect(loc.index, 0);
+      expect(loc.message, isNull);
+    });
+
+    test('文件名无集数 → 未命中 + 提示可用输入框', () {
+      final loc = locateCurrentEpisode('Anime 合集.mkv', episodes);
+      expect(loc.index, -1);
+      expect(loc.number, isNull);
+      expect(loc.message, contains('未能从文件名识别集数'));
+    });
+
+    test('集数超出范围 → 未命中 + 提示未找到', () {
+      final loc = locateCurrentEpisode('第99话.mkv', episodes);
+      expect(loc.index, -1);
+      expect(loc.number, 99);
+      expect(loc.message, contains('未找到第 99 集'));
+    });
+
+    test('文件名为空/未提供 → 静默不提示（用户只是没在放视频）', () {
+      for (final name in [null, '']) {
+        final loc = locateCurrentEpisode(name, episodes);
+        expect(loc.index, -1);
+        expect(loc.message, isNull, reason: '不该给用户一条无意义的提示');
+      }
+    });
+
+    test('标题无集数时按数组下标回退（与切集自动匹配同语义）', () {
+      const plain = [
+        DandanEpisode(episodeId: 201, episodeTitle: '正片'),
+        DandanEpisode(episodeId: 202, episodeTitle: '正片'),
+      ];
+      final loc = locateCurrentEpisode('02.mkv', plain);
+      expect(loc.index, 1);
+    });
+  });
 }

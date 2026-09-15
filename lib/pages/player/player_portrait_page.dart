@@ -1354,6 +1354,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
                 // 搜索结果区在面板内滚动），不再单独抬高
                 body: PlayerDanmakuNetworkPanel(
                   onEpisodeSelected: _onNetworkEpisodeSelected,
+                  // 当前视频文件名：展开番剧时自动定位到对应集
+                  currentFileName: _path,
                 ),
               ),
             ),

@@ -10,6 +10,20 @@
 /// - **只记录可重放来源**：本地真实路径与在线直链。loopback 代理 URL
 ///   （网络存储，`127.0.0.1` 退出即失效）与哔哩哔哩在线播放
 ///   （需登录态重新解析 playurl）由调用方过滤，不写入历史。
+///
+/// ## 与播放进度的关系（[clearProgressOnDelete]）
+///
+/// 播放历史（本服务）与播放进度（`PlaybackProgressService`）**存储上解耦**：
+/// 两个独立的 SharedPreferences 键，互不依赖。用户反馈「删除历史后进度还在」
+/// 的诉求，用**开关**解决而非改成硬耦合：
+///
+/// - [clearProgressOnDelete] 开 → 删历史**级联**清进度；
+/// - 关 → 删历史不动进度（原行为）。
+///
+/// ⚠️ [clearProgressOnDelete] **依赖** [enabled]：关掉历史记录后列表里没有
+/// 条目，"删除历史"这个动作根本不会发生，开关处于悬空状态（还会让用户误以为
+/// 进度被清了）。故用 [effectiveClearProgressOnDelete] 做一次裁决——
+/// 只有历史记录开启时级联才真正生效。裁决只放这一处，UI 与删除路径共用。
 library;
 
 import 'dart:async';
@@ -38,6 +52,7 @@ class PlaybackHistoryService extends ChangeNotifier {
 
   static const _keyEntries = 'playback_history_entries';
   static const _keyEnabled = 'playback_history_enabled';
+  static const _keyClearProgressOnDelete = 'playback_history_clear_progress';
 
   /// 历史条目上限（超过淘汰最旧；对齐 mpvRx 最近播放为有界列表的思路）
   static const int maxEntries = 500;
@@ -45,7 +60,24 @@ class PlaybackHistoryService extends ChangeNotifier {
   bool _enabled = true;
   List<PlaybackHistoryEntry> _entries = const [];
 
+  /// 删除历史时是否同步清除播放进度（默认**关闭** = 原行为，两套数据解耦）
+  bool _clearProgressOnDelete = false;
+
   bool get enabled => _enabled;
+
+  /// 「删除历史时同步清除进度」的**原始**开关值（不代表当前是否真的生效，
+  /// 生效判定见 [effectiveClearProgressOnDelete]）
+  bool get clearProgressOnDelete => _clearProgressOnDelete;
+
+  /// 该开关当前**是否可操作**：只有历史记录开启时才有意义
+  /// （关掉历史记录后列表为空，没有"删除历史"这个动作）
+  bool get canClearProgressOnDelete => _enabled;
+
+  /// 级联删除**实际是否生效** = 开关值 ∧ 历史记录开启。
+  ///
+  /// ⚠️ 删除路径必须用本值、不要直接用 [clearProgressOnDelete]——否则
+  /// 「历史记录关 + 级联开关开」时用户会以为进度被清了，实际没清。
+  bool get effectiveClearProgressOnDelete => _enabled && _clearProgressOnDelete;
 
   /// 历史条目（新 → 旧；unmodifiable 防外部直接改）
   List<PlaybackHistoryEntry> get entries => List.unmodifiable(_entries);
@@ -58,6 +90,7 @@ class PlaybackHistoryService extends ChangeNotifier {
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
     _enabled = prefs.getBool(_keyEnabled) ?? true;
+    _clearProgressOnDelete = prefs.getBool(_keyClearProgressOnDelete) ?? false;
     _entries = _decode(prefs.getString(_keyEntries));
     notifyListeners();
   }
@@ -68,6 +101,7 @@ class PlaybackHistoryService extends ChangeNotifier {
     _loadFuture = null;
     _entries = const [];
     _enabled = true;
+    _clearProgressOnDelete = false;
   }
 
   /// 记录一次播放（同 path 去重并提到最前；关闭记录时不写入）。
@@ -83,8 +117,7 @@ class PlaybackHistoryService extends ChangeNotifier {
     final now = DateTime.now().millisecondsSinceEpoch;
     // 保留已知时长（旧条目时长 > 新传入的 0 时沿用旧值）
     final old = _entries.where((e) => e.path == path).firstOrNull;
-    final keptDuration =
-        durationMs > 0 ? durationMs : (old?.durationMs ?? 0);
+    final keptDuration = durationMs > 0 ? durationMs : (old?.durationMs ?? 0);
     _entries = [
       PlaybackHistoryEntry(
         path: path,
@@ -127,7 +160,10 @@ class PlaybackHistoryService extends ChangeNotifier {
   Future<void> remove(String path) async {
     await ensureLoaded();
     if (!_entries.any((e) => e.path == path)) return;
-    _entries = [for (final e in _entries) if (e.path != path) e];
+    _entries = [
+      for (final e in _entries)
+        if (e.path != path) e,
+    ];
     notifyListeners();
     await _persist();
   }
@@ -149,6 +185,19 @@ class PlaybackHistoryService extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyEnabled, v);
+  }
+
+  /// 设置「删除历史时同步清除进度」。
+  ///
+  /// 只写开关值本身（不连带改 [enabled]）：实际是否生效由
+  /// [effectiveClearProgressOnDelete] 裁决，UI 那边会把开关置灰提示。
+  Future<void> setClearProgressOnDelete(bool v) async {
+    await ensureLoaded();
+    if (_clearProgressOnDelete == v) return;
+    _clearProgressOnDelete = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyClearProgressOnDelete, v);
   }
 
   Future<void> _persist() async {

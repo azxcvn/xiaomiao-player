@@ -9,8 +9,15 @@
 library;
 
 import 'package:flutter/foundation.dart';
+import 'package:moumou/models/danmaku_color_mode.dart';
 import 'package:moumou/models/danmaku_font_mode.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// 弹幕「指定颜色」模式的默认色（白）与回退色。
+///
+/// 与字幕默认色（`SubtitleSettings.color` 的 `#FFFFFF`）同值，但**各自独立**：
+/// 字幕颜色可被用户改，弹幕默认色不该跟着变。
+const String kDanmakuDefaultColor = '#FFFFFFFF';
 
 class DanmakuSettings extends ChangeNotifier {
   static final DanmakuSettings instance = DanmakuSettings._();
@@ -74,9 +81,12 @@ class DanmakuSettings extends ChangeNotifier {
   /// 描边粗细（0–4，默认 1.5；0 = 无描边）
   double _strokeWidth = 1.5;
 
-  /// 随机渐变色（默认关闭）：开启后忽略弹幕文件内颜色，所有弹幕按
-  /// HSV 色轮渐变随机着色（算法见 utils/danmaku_random_color.dart）
-  bool _randomColor = false;
+  /// 弹幕**颜色值**（mpv 串 `#AARRGGBB`）：仅 [DanmakuColorMode.fixed] 生效。
+  /// 默认白色——用户原始诉求里「统一白色」就是这个模式的默认值。
+  String _colorValue = kDanmakuDefaultColor;
+
+  /// 弹幕颜色模式（默认**跟随弹幕自身颜色**——保留 B 站彩色/渐变彩色弹幕）
+  DanmakuColorMode _colorMode = DanmakuColorMode.source;
 
   // ── 弹幕配置 ──
 
@@ -123,7 +133,10 @@ class DanmakuSettings extends ChangeNotifier {
   /// 弹幕自定义字体文件名（filesDir/fonts/ 内，冷启动重读字节用）。
   String? _customFontFile;
 
-  bool get randomColor => _randomColor;
+  DanmakuColorMode get colorMode => _colorMode;
+
+  /// 「指定颜色」模式使用的颜色（mpv 串 `#AARRGGBB`）
+  String get colorValue => _colorValue;
   double get fontSize => _fontSize;
   int get fontWeight => _fontWeight;
   double get scrollSeconds => _scrollSeconds;
@@ -146,30 +159,42 @@ class DanmakuSettings extends ChangeNotifier {
   /// 启动时加载（main.dart 调用）
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
-    _fontSize = (prefs.getDouble(_keyFontSize) ?? 16)
-        .clamp(minFontSize, maxFontSize);
-    _fontWeight =
-        (prefs.getInt(_keyFontWeight) ?? 4).clamp(0, 8);
-    _scrollSeconds = (prefs.getDouble(_keyScrollSeconds) ?? 10)
-        .clamp(minScrollSeconds, maxScrollSeconds);
-    _opacity =
-        (prefs.getDouble(_keyOpacity) ?? 1.0).clamp(minOpacity, maxOpacity);
-    _strokeWidth = (prefs.getDouble(_keyStrokeWidth) ?? 1.5)
-        .clamp(minStrokeWidth, maxStrokeWidth);
-    _randomColor = prefs.getBool(_keyRandomColor) ?? false;
+    _fontSize = (prefs.getDouble(_keyFontSize) ?? 16).clamp(
+      minFontSize,
+      maxFontSize,
+    );
+    _fontWeight = (prefs.getInt(_keyFontWeight) ?? 4).clamp(0, 8);
+    _scrollSeconds = (prefs.getDouble(_keyScrollSeconds) ?? 10).clamp(
+      minScrollSeconds,
+      maxScrollSeconds,
+    );
+    _opacity = (prefs.getDouble(_keyOpacity) ?? 1.0).clamp(
+      minOpacity,
+      maxOpacity,
+    );
+    _strokeWidth = (prefs.getDouble(_keyStrokeWidth) ?? 1.5).clamp(
+      minStrokeWidth,
+      maxStrokeWidth,
+    );
+    _loadColorMode(prefs);
     _area = snapArea(prefs.getDouble(_keyArea) ?? 1.0);
-    _lineHeight = (prefs.getDouble(_keyLineHeight) ?? 1.6)
-        .clamp(minLineHeight, maxLineHeight);
+    _lineHeight = (prefs.getDouble(_keyLineHeight) ?? 1.6).clamp(
+      minLineHeight,
+      maxLineHeight,
+    );
     _showTop = prefs.getBool(_keyShowTop) ?? true;
     _showBottom = prefs.getBool(_keyShowBottom) ?? true;
     _showScroll = prefs.getBool(_keyShowScroll) ?? true;
     _massiveMode = prefs.getBool(_keyMassiveMode) ?? false;
     _deduplication = prefs.getBool(_keyDedup) ?? false;
     _merge = prefs.getBool(_keyMerge) ?? false;
-    _timeOffset = (prefs.getDouble(_keyTimeOffset) ?? 0)
-        .clamp(minTimeOffsetSeconds, maxTimeOffsetSeconds);
-    _blockedKeywords =
-        _normalizeBlocklist(prefs.getStringList(_keyBlockedKeywords) ?? const []);
+    _timeOffset = (prefs.getDouble(_keyTimeOffset) ?? 0).clamp(
+      minTimeOffsetSeconds,
+      maxTimeOffsetSeconds,
+    );
+    _blockedKeywords = _normalizeBlocklist(
+      prefs.getStringList(_keyBlockedKeywords) ?? const [],
+    );
     _fontMode = _fontModeFromIndex(prefs.getInt(_keyFontMode));
     _customFontFamily = prefs.getString(_keyCustomFontFamily);
     _customFontFile = prefs.getString(_keyCustomFontFile);
@@ -182,6 +207,24 @@ class DanmakuSettings extends ChangeNotifier {
       return DanmakuFontMode.values[index];
     }
     return DanmakuFontMode.followSystem;
+  }
+
+  /// 加载弹幕颜色模式（含**旧键迁移**）。
+  ///
+  /// 历史版本只有布尔 `danmaku_random_color`（「随机渐变色」开关）。升级到三态
+  /// 后若用户曾开着随机色，必须落到 [DanmakuColorMode.random]，否则会被静默
+  /// 重置回「跟随弹幕颜色」——用户会认为设置丢了。
+  void _loadColorMode(SharedPreferences prefs) {
+    final rawIndex = prefs.getInt(_keyColorMode);
+    if (rawIndex != null) {
+      _colorMode = DanmakuColorMode.fromIndex(rawIndex);
+    } else if (prefs.getBool(_keyRandomColor) ?? false) {
+      // 旧数据迁移：随机色开关开 → 随机色模式
+      _colorMode = DanmakuColorMode.random;
+    } else {
+      _colorMode = DanmakuColorMode.source;
+    }
+    _colorValue = prefs.getString(_keyColorValue) ?? kDanmakuDefaultColor;
   }
 
   /// 屏蔽词归一化：去首尾空白、去空串、去重（保持原顺序）。
@@ -248,13 +291,27 @@ class DanmakuSettings extends ChangeNotifier {
     await prefs.setDouble(_keyStrokeWidth, c);
   }
 
-  Future<void> setRandomColor(bool v) async {
+  /// 切换弹幕颜色模式（跟随弹幕颜色 / 随机渐变色 / 指定颜色）。
+  Future<void> setColorMode(DanmakuColorMode v) async {
     await ensureLoaded();
-    if (_randomColor == v) return;
-    _randomColor = v;
+    if (_colorMode == v) return;
+    _colorMode = v;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_keyRandomColor, v);
+    await prefs.setInt(_keyColorMode, v.index);
+  }
+
+  /// 设置「指定颜色」模式的颜色（mpv 串 `#AARRGGBB`）。
+  ///
+  /// 颜色为空串/非法时回退默认白，避免把空值写进渲染层。
+  Future<void> setColorValue(String hex) async {
+    await ensureLoaded();
+    final v = hex.trim().isEmpty ? kDanmakuDefaultColor : hex.trim();
+    if (_colorValue == v) return;
+    _colorValue = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyColorValue, v);
   }
 
   // ── 配置 setter ──
@@ -344,9 +401,10 @@ class DanmakuSettings extends ChangeNotifier {
 
   Future<void> setTimeOffset(double v) async {
     await ensureLoaded();
-    final c = v
-        .roundToDouble()
-        .clamp(minTimeOffsetSeconds, maxTimeOffsetSeconds);
+    final c = v.roundToDouble().clamp(
+      minTimeOffsetSeconds,
+      maxTimeOffsetSeconds,
+    );
     if (_timeOffset == c) return;
     _timeOffset = c;
     notifyListeners();
@@ -423,7 +481,8 @@ class DanmakuSettings extends ChangeNotifier {
     _scrollSeconds = 10;
     _opacity = 1.0;
     _strokeWidth = 1.5;
-    _randomColor = false;
+    _colorMode = DanmakuColorMode.source;
+    _colorValue = kDanmakuDefaultColor;
     _area = 1.0;
     _lineHeight = 1.6;
     _showTop = true;
@@ -444,7 +503,8 @@ class DanmakuSettings extends ChangeNotifier {
     await prefs.setDouble(_keyScrollSeconds, 10);
     await prefs.setDouble(_keyOpacity, 1.0);
     await prefs.setDouble(_keyStrokeWidth, 1.5);
-    await prefs.setBool(_keyRandomColor, false);
+    await prefs.setInt(_keyColorMode, DanmakuColorMode.source.index);
+    await prefs.setString(_keyColorValue, kDanmakuDefaultColor);
     await prefs.setDouble(_keyArea, 1.0);
     await prefs.setDouble(_keyLineHeight, 1.6);
     await prefs.setBool(_keyShowTop, true);
@@ -466,7 +526,8 @@ class DanmakuSettings extends ChangeNotifier {
       _scrollSeconds == 10 &&
       _opacity == 1.0 &&
       _strokeWidth == 1.5 &&
-      !_randomColor &&
+      _colorMode == DanmakuColorMode.source &&
+      _colorValue == kDanmakuDefaultColor &&
       _area == 1.0 &&
       _lineHeight == 1.6 &&
       _showTop &&
@@ -488,6 +549,16 @@ class DanmakuSettings extends ChangeNotifier {
   static const _keyScrollSeconds = 'danmaku_speed';
   static const _keyOpacity = 'danmaku_opacity';
   static const _keyStrokeWidth = 'danmaku_stroke_width';
+
+  /// 弹幕颜色模式（int，[DanmakuColorMode] 的 index）
+  static const _keyColorMode = 'danmaku_color_mode';
+
+  /// 「指定颜色」模式的颜色值（mpv 串）
+  static const _keyColorValue = 'danmaku_color_value';
+
+  /// **历史键（只读，用于迁移）**：旧版「随机渐变色」布尔开关。
+  /// 新代码不再写入；[_loadColorMode] 见其为 true 时迁移到
+  /// [DanmakuColorMode.random]，避免老用户设置被静默重置。
   static const _keyRandomColor = 'danmaku_random_color';
   static const _keyArea = 'danmaku_area';
   static const _keyLineHeight = 'danmaku_line_height';
@@ -512,7 +583,8 @@ class DanmakuSettings extends ChangeNotifier {
     _scrollSeconds = 10;
     _opacity = 1.0;
     _strokeWidth = 1.5;
-    _randomColor = false;
+    _colorMode = DanmakuColorMode.source;
+    _colorValue = kDanmakuDefaultColor;
     _area = 1.0;
     _lineHeight = 1.6;
     _showTop = true;

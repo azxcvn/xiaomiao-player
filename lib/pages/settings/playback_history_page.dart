@@ -39,20 +39,43 @@ class _PlaybackHistoryPageState extends State<PlaybackHistoryPage> {
   }
 
   Future<void> _playEntry(PlaybackHistoryEntry entry) async {
-    await Navigator.of(context).push(
-      playerPageRoute(PlayerPage(path: entry.path, title: entry.title)),
-    );
+    await Navigator.of(
+      context,
+    ).push(playerPageRoute(PlayerPage(path: entry.path, title: entry.title)));
     // 返回后刷新：进度条变化 + 重放条目被提到最前
     if (mounted) setState(() {});
   }
 
-  /// 一键清空全部历史（showAppDialog 二次确认，工作.md 明确要求）
+  /// 删除单条历史（垃圾桶按钮）。
+  ///
+  /// [clearProgress] 为真时**级联清除该视频的播放进度**（含「已看完」粘性），
+  /// 由历史页的「删除历史时同步清除进度」开关决定（见
+  /// `PlaybackHistoryService.effectiveClearProgressOnDelete`）。
+  Future<void> _removeEntry(
+    PlaybackHistoryEntry entry, {
+    required bool clearProgress,
+  }) async {
+    await _history.remove(entry.path);
+    if (clearProgress) {
+      PlaybackProgressService.instance.removeProgress(entry.path);
+    }
+  }
+
+  /// 一键清空全部历史（showAppDialog 二次确认，工作.md 明确要求）。
+  ///
+  /// 开启级联开关时，弹窗文案会点明「播放进度也会一起清除」——清除进度是
+  /// 破坏性操作，必须让用户在点「清除」之前就知道。
   Future<void> _confirmClearAll() async {
+    final clearProgress = _history.effectiveClearProgressOnDelete;
     final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('清除历史记录'),
-        content: const Text('确定要清除全部播放历史吗？此操作不可恢复。'),
+        content: Text(
+          clearProgress
+              ? '确定要清除全部播放历史吗？\n\n同时会清除全部播放进度（含「已看完」标记），此操作不可恢复。'
+              : '确定要清除全部播放历史吗？此操作不可恢复。',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -67,6 +90,9 @@ class _PlaybackHistoryPageState extends State<PlaybackHistoryPage> {
     );
     if (confirmed == true) {
       await _history.clearAll();
+      if (clearProgress) {
+        PlaybackProgressService.instance.clearAllProgress();
+      }
     }
   }
 
@@ -98,14 +124,44 @@ class _PlaybackHistoryPageState extends State<PlaybackHistoryPage> {
           final entries = _history.entries;
           return Column(
             children: [
-              // ── 播放历史记录开关（关闭只停新记录，已存历史保留）──
+              // ── 两个开关：历史记录（主）+ 删除时是否级联清进度（从）──
               SettingsCard(
-                child: SettingsSwitchTile(
-                  icon: Icons.history,
-                  title: '播放历史记录',
-                  subtitle: const Text('关闭后不再记录新的播放'),
-                  value: _history.enabled,
-                  onChanged: (v) => _history.setEnabled(v),
+                child: Column(
+                  children: [
+                    SettingsSwitchTile(
+                      icon: Icons.history,
+                      title: '播放历史记录',
+                      subtitle: const Text('关闭后不再记录新的播放'),
+                      value: _history.enabled,
+                      onChanged: (v) => _history.setEnabled(v),
+                    ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    // 依赖主开关：历史记录关掉后列表为空、没有"删除"这个动作，
+                    // 置灰并说明原因（只置灰会让用户以为坏了）。
+                    SettingsSwitchTile(
+                      icon: Icons.delete_forever_outlined,
+                      title: '删除历史时清除进度',
+                      subtitle: const Text('关闭时两套数据互相独立'),
+                      value: _history.clearProgressOnDelete,
+                      onChanged: _history.canClearProgressOnDelete
+                          ? (v) => _history.setClearProgressOnDelete(v)
+                          : null,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                      child: Text(
+                        _history.canClearProgressOnDelete
+                            ? '开启后，删除历史记录会同时清除该视频的播放进度'
+                            : '需先开启上方的「播放历史记录」；关闭时不记录历史，但播放进度会一直保留',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _history.canClearProgressOnDelete
+                              ? Theme.of(context).colorScheme.onSurfaceVariant
+                              : Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 8),
@@ -155,16 +211,23 @@ class _PlaybackHistoryPageState extends State<PlaybackHistoryPage> {
             ),
             fields: _fields,
             onTap: () => _playEntry(entry),
-            // 最右侧垃圾桶：点击删除单条（无二次确认，清空才有二次确认）
+            // 最右侧垃圾桶：点击删除单条（无二次确认，清空才有二次确认）；
+            // 是否级联清进度由「删除历史时同步清除进度」开关决定（单条无二次
+            // 确认——用户已通过开关表达过意图，再加确认会过于啰嗦）
             trailing: IconButton(
               icon: Icon(
                 Icons.delete_outline,
                 size: 20,
                 color: scheme.onSurfaceVariant,
               ),
-              tooltip: '删除该条记录',
+              tooltip: _history.effectiveClearProgressOnDelete
+                  ? '删除该条记录（同时清除播放进度）'
+                  : '删除该条记录',
               visualDensity: VisualDensity.compact,
-              onPressed: () => _history.remove(entry.path),
+              onPressed: () => _removeEntry(
+                entry,
+                clearProgress: _history.effectiveClearProgressOnDelete,
+              ),
             ),
           ),
         );

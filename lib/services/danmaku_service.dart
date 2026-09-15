@@ -33,6 +33,7 @@ import 'package:moumou/services/danmaku_scheduler.dart';
 import 'package:moumou/utils/async_coalesced_reload.dart';
 import 'package:moumou/utils/async_session.dart';
 import 'package:moumou/services/danmaku_server_settings.dart';
+import 'package:moumou/models/danmaku_color_mode.dart';
 import 'package:moumou/services/danmaku_settings.dart';
 import 'package:moumou/utils/danmaku_episode.dart';
 import 'package:moumou/utils/danmaku_local_file.dart';
@@ -78,15 +79,19 @@ class DanmakuController extends ChangeNotifier {
     _buffering = _player.state.buffering;
     _position = _player.state.position;
     _subs.add(_player.stream.position.listen(_onPositionEvent));
-    _subs.add(_player.stream.playing.listen((v) {
-      _enginePlaying = v;
-      _syncPlaying();
-    }));
+    _subs.add(
+      _player.stream.playing.listen((v) {
+        _enginePlaying = v;
+        _syncPlaying();
+      }),
+    );
     _subs.add(_player.stream.buffering.listen((v) => _buffering = v));
-    _subs.add(_player.stream.rate.listen((v) {
-      _rate = v;
-      _applyOption();
-    }));
+    _subs.add(
+      _player.stream.rate.listen((v) {
+        _rate = v;
+        _applyOption();
+      }),
+    );
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _onTick());
     // 阶段2：订阅弹幕设置（面板/全局改动 → 实时应用）
     DanmakuSettings.instance.addListener(_onSettingsChanged);
@@ -95,7 +100,9 @@ class DanmakuController extends ChangeNotifier {
     AppFontSettings.instance.addListener(_onSettingsChanged);
     _lastDedup = _settings.deduplication;
     _lastMerge = _settings.merge;
-    _lastRandomColor = _settings.randomColor;
+    // 颜色模式（构造时同步一次；模式变化由 [_onSettingsChanged] 处理）
+    _lastColorMode = _settings.colorMode;
+    _syncColorWheel();
     _lastTimeOffset = _settings.timeOffsetSeconds;
     _lastBlocklist = _settings.blockedKeywords;
   }
@@ -114,11 +121,13 @@ class DanmakuController extends ChangeNotifier {
   /// 随机渐变色推进器（随机色开启期间逐条生成；关闭→开启重建）
   DanmakuColorWheel? _colorWheel;
 
-  /// 上次同步的去重/合并/随机色开关（仅开关变化时才清屏重灌，
+  /// 上次同步的去重/合并/颜色模式开关（仅开关变化时才清屏重灌，
   /// 避免拖动其他滑杆时在屏弹幕被反复清掉闪屏）
   bool _lastDedup = false;
   bool _lastMerge = false;
-  bool _lastRandomColor = false;
+
+  /// 上次同步的弹幕颜色模式（变化时重建色轮 + 清屏）
+  DanmakuColorMode _lastColorMode = DanmakuColorMode.source;
 
   /// 上次同步的时间轴偏移（偏移变化时重锚定秒桶 + 清屏，弹幕按新偏移对齐）
   double _lastTimeOffset = 0;
@@ -133,7 +142,8 @@ class DanmakuController extends ChangeNotifier {
   final DanmakuNetworkService _network = DanmakuNetworkService();
 
   /// 自动匹配缓存（切集自动匹配弹幕，工作.md 第 7 点）
-  final DanmakuAutoMatchCacheStore _autoMatchCache = DanmakuAutoMatchCacheStore();
+  final DanmakuAutoMatchCacheStore _autoMatchCache =
+      DanmakuAutoMatchCacheStore();
 
   /// 渲染层注册表（横竖屏页各挂一个 DanmakuScreen）：值 = 该层是否为
   /// **当前可见层**（B4/P2-7：两层 canvas 同时挂载时，每条弹幕会在两个
@@ -165,8 +175,9 @@ class DanmakuController extends ChangeNotifier {
   /// 用 [AsyncCoalescedReload] 而非 [AsyncSingleFlight]：并发请求必须合并成
   /// 「当前轮 + 一轮补跑」，否则后到的请求会 join 早已开跑的旧轮，拿到的仍是
   /// 「自己那批数据之前」的结果（§4.29 同 `SubtitleController.reload` 的取舍）。
-  late final AsyncCoalescedReload _bucketReload =
-      AsyncCoalescedReload(_rebuildBuckets);
+  late final AsyncCoalescedReload _bucketReload = AsyncCoalescedReload(
+    _rebuildBuckets,
+  );
 
   /// 当前播放的视频路径（手动导入记忆的键）
   String? _currentMediaPath;
@@ -234,21 +245,24 @@ class DanmakuController extends ChangeNotifier {
     _applyOption();
     final dedupChanged = _settings.deduplication != _lastDedup;
     final mergeChanged = _settings.merge != _lastMerge;
-    final randomChanged = _settings.randomColor != _lastRandomColor;
+    final colorModeChanged = _settings.colorMode != _lastColorMode;
     final offsetChanged = _settings.timeOffsetSeconds != _lastTimeOffset;
-    final blocklistChanged =
-        !listEquals(_settings.blockedKeywords, _lastBlocklist);
+    final blocklistChanged = !listEquals(
+      _settings.blockedKeywords,
+      _lastBlocklist,
+    );
     _lastDedup = _settings.deduplication;
     _lastMerge = _settings.merge;
-    _lastRandomColor = _settings.randomColor;
+    _lastColorMode = _settings.colorMode;
     _lastTimeOffset = _settings.timeOffsetSeconds;
     _lastBlocklist = _settings.blockedKeywords;
     if (dedupChanged || mergeChanged || blocklistChanged) {
       _refeedIfLoaded();
     }
-    if (randomChanged) {
-      // 随机色轮重建：开启时新建（新随机起点），关闭时释放（发射不再取色）
-      _colorWheel = _settings.randomColor ? DanmakuColorWheel() : null;
+    if (colorModeChanged) {
+      // 颜色模式切换：随机色轮按需重建（开启时新建 = 新随机起点，其余释放）；
+      // 清屏让在屏弹幕立即按新着色规则重绘（指定色/原色同样需要）
+      _syncColorWheel();
       _clearLayers();
     }
     if (offsetChanged) {
@@ -256,6 +270,15 @@ class DanmakuController extends ChangeNotifier {
       _scheduler.notifySeeked(_sourcePosition(_position));
       _clearLayers();
     }
+  }
+
+  /// 随机色轮与颜色模式同步：只有 [DanmakuColorMode.random] 需要推进器。
+  ///
+  /// 集中一处，避免「构造 / 设置变化 / 重灌」三处各写一遍三元表达式。
+  void _syncColorWheel() {
+    _colorWheel = _settings.colorMode == DanmakuColorMode.random
+        ? DanmakuColorWheel()
+        : null;
   }
 
   /// 去重/合并/屏蔽词开关变化时重灌秒桶：按**全量**原始条目重算生效集再整体
@@ -322,10 +345,7 @@ class DanmakuController extends ChangeNotifier {
   /// 时间轴偏移后的源时间位置（对齐 Kazumi：source = playback − offset；
   /// 结果可为负，负秒桶在调度器中为空，即片头前无弹幕）。
   Duration _sourcePosition(Duration playbackPosition) {
-    return sourceDanmakuPosition(
-      playbackPosition,
-      _settings.timeOffsetSeconds,
-    );
+    return sourceDanmakuPosition(playbackPosition, _settings.timeOffsetSeconds);
   }
 
   /// 应用当前设置（样式/配置 → 渲染层；发射侧字段实时读取设置单例）。
@@ -344,7 +364,10 @@ class DanmakuController extends ChangeNotifier {
 
   // ── 渲染层挂载（页面 Stack 内 DanmakuScreen 的 createdController 回调）──
 
-  void attachLayer(canvas.DanmakuController<void> layer, {bool visible = false}) {
+  void attachLayer(
+    canvas.DanmakuController<void> layer, {
+    bool visible = false,
+  }) {
     _layers[layer] = visible;
     _applyOptionTo(layer);
     if (!_enginePlaying) layer.pause();
@@ -428,8 +451,8 @@ class DanmakuController extends ChangeNotifier {
   /// 与画面一致，见 `player_danmaku_panel.dart`）。
   Future<void> _feedEntries(List<DanmakuEntry> entries) async {
     _rawEntries = List.of(entries);
-    // 随机色开启时每次装载重建色轮：新随机起点，同内容不重样
-    _colorWheel = _settings.randomColor ? DanmakuColorWheel() : null;
+    // 随机色模式每次装载重建色轮：新随机起点，同内容不重样
+    _syncColorWheel();
     await _requestBucketReload();
   }
 
@@ -446,8 +469,9 @@ class DanmakuController extends ChangeNotifier {
   }
 
   /// 扫描同目录并解析同名弹幕文件；无匹配 / 失败返回 null。
-  Future<({List<DanmakuEntry> entries, String fileName})?>
-      _loadLocalDanmaku(String mediaPath) async {
+  Future<({List<DanmakuEntry> entries, String fileName})?> _loadLocalDanmaku(
+    String mediaPath,
+  ) async {
     try {
       final videoFile = File(mediaPath);
       if (!videoFile.existsSync()) return null;
@@ -475,8 +499,9 @@ class DanmakuController extends ChangeNotifier {
         found = findLocalDanmakuFileName(videoBase, videoName, names);
       }
       if (found == null) return null;
-      final content =
-          await File(p.join(videoFile.parent.path, found)).readAsString();
+      final content = await File(
+        p.join(videoFile.parent.path, found),
+      ).readAsString();
       if (content.isEmpty) return null;
       // 大文件（整集弹幕可达数 MB）放后台 isolate 解析；
       // compute 只捕获原始值（§7 坑表：闭包捕获不可发送对象会崩）
@@ -602,7 +627,10 @@ class DanmakuController extends ChangeNotifier {
   /// [_hasDanmaku]——否则 1s tick 会在空桶上把秒桶锚点推到当前秒，
   /// 等首批数据落地时当前秒的弹幕已经错过（前向补发只补锚点之后的桶）。
   /// 期间又切了集（会话号变了）则不再回写，避免旧装载改写新集的显示态。
-  Future<void> _feedBiliFirstBatch(List<DanmakuEntry> entries, int session) async {
+  Future<void> _feedBiliFirstBatch(
+    List<DanmakuEntry> entries,
+    int session,
+  ) async {
     await _feedEntries(entries);
     if (_disposed || !_loadSession.isCurrent(session)) return;
     _hasDanmaku = true;
@@ -648,12 +676,14 @@ class DanmakuController extends ChangeNotifier {
     required String? serverUrl,
     required List<DandanEpisode> episodes,
   }) async {
-    await _autoMatchCache.save(DanmakuAutoMatchCache(
-      animeId: animeId,
-      animeTitle: animeTitle,
-      serverUrl: serverUrl,
-      episodes: episodes,
-    ));
+    await _autoMatchCache.save(
+      DanmakuAutoMatchCache(
+        animeId: animeId,
+        animeTitle: animeTitle,
+        serverUrl: serverUrl,
+        episodes: episodes,
+      ),
+    );
   }
 
   /// 通过番剧名 + animeId 取回完整集列表（自动匹配命中后保存切集缓存用）。
@@ -752,16 +782,29 @@ class DanmakuController extends ChangeNotifier {
 
   void _addEntry(DanmakuEntry entry) {
     if (_layers.isEmpty) return;
-    final randomColor = _colorWheel != null;
+    // 颜色三态（互斥）：
+    // - source：用弹幕文件自带颜色，并保留会员渐变彩色；
+    // - random：忽略文件颜色，逐条从色轮取色（随机色本身就是改色，
+    //   渐变彩色必须让位，否则两者互相打架）;
+    // - fixed：统一用用户指定颜色，渐变彩色同样让位。
+    final mode = _settings.colorMode;
+    final int color;
+    switch (mode) {
+      case DanmakuColorMode.source:
+        color = entry.color;
+      case DanmakuColorMode.random:
+        color = _colorWheel?.nextColor() ?? entry.color;
+      case DanmakuColorMode.fixed:
+        color = mpvColorToRgbInt(_settings.colorValue);
+    }
     final item = canvas.DanmakuContentItem<void>(
       // 合并条目渲染为「文本 ×N」（count 由合并算法写入；文本本身保持原样）
       entry.displayText,
-      // 随机渐变色开启：忽略文件颜色，逐条生成（关闭 = 文件原色）
-      color: Color(0xFF000000 | (_colorWheel?.nextColor() ?? entry.color)),
+      color: Color(0xFF000000 | color),
       type: itemTypeForMode(entry.mode),
-      // 会员渐变彩色弹幕（B站 protobuf colorful 字段）：随机色开启时让位
-      //（随机色本身就是逐条改色，两者叠加只会互相打架）
-      isColorful: entry.isColorful && !randomColor,
+      // 会员渐变彩色弹幕（B站 protobuf colorful 字段）：仅「跟随弹幕颜色」
+      // 模式保留
+      isColorful: entry.isColorful && mode == DanmakuColorMode.source,
     );
     // 只投给当前可见层（B4/P2-7）：被遮住的那一层不做排版/录制，避免双倍
     // 渲染开销。若没有任何层被标记可见（页面尚未上报可见性），退回全部层，
