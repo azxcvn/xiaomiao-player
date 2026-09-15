@@ -814,9 +814,11 @@ class _AnimeResultCardState extends State<_AnimeResultCard>
                             if (anime.typeDescription.isNotEmpty)
                               _CapsuleLabel(anime.typeDescription),
                             _CapsuleLabel('${anime.episodes.length} 集'),
-                            // 自建服务器结果标注来源（默认弹弹Play 不额外标注）
-                            if (widget.item.serverUrl != null)
-                              _CapsuleLabel(widget.item.serverName),
+                            // **每个**结果都标来源服务器名，用户点选集前就能
+                            // 判断这条来自哪里（issue #1 需求 4）。
+                            // 默认弹弹Play 同样标注——只标自建服务器时，默认
+                            // 那条"没有标签"反而让人以为是别的来源。
+                            _CapsuleLabel(widget.item.serverName),
                           ],
                         ),
                       ],

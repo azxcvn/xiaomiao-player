@@ -63,8 +63,11 @@ void main() {
     expect(find.text('TV'), findsOneWidget);
     expect(find.text('2 集'), findsOneWidget);
     expect(find.text('OVA'), findsOneWidget);
-    expect(find.text('我的服务器'), findsOneWidget); // 自建来源胶囊
-    expect(find.text('弹弹Play（默认）'), findsNothing); // 默认服务器不标注
+    // **每个**结果都标来源：自建服务器标其名字
+    expect(find.text('我的服务器'), findsOneWidget);
+    // 默认弹弹Play 同样标注——只标自建时，默认那条"没有标签"反而让人
+    // 以为是别的来源（用户点选集前就要能判断来自哪里）
+    expect(find.text('弹弹Play（默认）'), findsOneWidget);
   });
 
   testWidgets('结果卡展开/收起动画：收起态不构建集列表，展开后可见，再点收起', (tester) async {
@@ -106,10 +109,12 @@ void main() {
   testWidgets('搜索框紧凑：胶囊容器定高 40dp', (tester) async {
     await pumpPanel(tester);
     final box = tester.getSize(
-      find.ancestor(
-        of: find.byType(TextField),
-        matching: find.byType(Container),
-      ).first,
+      find
+          .ancestor(
+            of: find.byType(TextField),
+            matching: find.byType(Container),
+          )
+          .first,
     );
     expect(box.height, 40);
   });
@@ -289,24 +294,26 @@ class _ControlledNetworkService extends DanmakuNetworkService {
 
   /// 让第 [index] 次搜索返回一部标题为 [title] 的番剧
   void complete(int index, String title) {
-    pending[index].complete(DanmakuSearchResult(
-      items: [
-        DanmakuSearchItem(
-          anime: DandanAnime(
-            animeId: index + 1,
-            animeTitle: title,
-            type: 'tv',
-            typeDescription: 'TV',
-            episodes: const [
-              DandanEpisode(episodeId: 1, episodeTitle: '第01话'),
-            ],
+    pending[index].complete(
+      DanmakuSearchResult(
+        items: [
+          DanmakuSearchItem(
+            anime: DandanAnime(
+              animeId: index + 1,
+              animeTitle: title,
+              type: 'tv',
+              typeDescription: 'TV',
+              episodes: const [
+                DandanEpisode(episodeId: 1, episodeTitle: '第01话'),
+              ],
+            ),
+            serverUrl: null,
+            serverName: '弹弹Play（默认）',
           ),
-          serverUrl: null,
-          serverName: '弹弹Play（默认）',
-        ),
-      ],
-      errors: const [],
-    ));
+        ],
+        errors: const [],
+      ),
+    );
   }
 }
 

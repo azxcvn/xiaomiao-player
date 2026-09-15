@@ -69,11 +69,27 @@ class DanmakuServerSettings extends ChangeNotifier {
   String? get autoMatchBlockedMessage => autoMatchAllowed
       ? null
       : '已启用「${DanmakuServer.defaultName}」服务器时不可开启'
-          '「切集自动匹配弹幕」，如需使用请先停用该服务器';
+            '「切集自动匹配弹幕」，如需使用请先停用该服务器';
 
   /// 默认（弹弹Play）服务器当前是否启用
-  bool get isDefaultEnabled =>
-      _servers.any((s) => s.isDefault && s.isEnabled);
+  bool get isDefaultEnabled => _servers.any((s) => s.isDefault && s.isEnabled);
+
+  /// 服务器地址 → 展示名（弹幕「来源」显示的单一事实来源）。
+  ///
+  /// - [url] 为 null（默认服务器）→ [DanmakuServer.defaultName]；
+  /// - 命中自建服务器 → 其名称；
+  /// - 地址已不存在（服务器被删除，但缓存里仍记着）→ 原样回显地址，
+  ///   至少让用户知道"来自哪里"，而不是显示空白。
+  ///
+  /// ⚠️ 文案只在本层出现：网络弹幕面板与加载成功的 toast 都用它，
+  /// 避免"来源"在两处各写一份措辞而漂移（同 [autoMatchBlockedMessage] 的纪律）。
+  String serverLabelFor(String? url) {
+    if (url == null || url.isEmpty) return DanmakuServer.defaultName;
+    for (final s in _servers) {
+      if (!s.isDefault && s.url == url) return s.name;
+    }
+    return url;
+  }
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -153,8 +169,7 @@ class DanmakuServerSettings extends ChangeNotifier {
   Future<void> setServerEnabled(String id, bool enabled) async {
     await ensureLoaded();
     _servers = [
-      for (final s in _servers)
-        s.id == id ? s.copyWith(isEnabled: enabled) : s,
+      for (final s in _servers) s.id == id ? s.copyWith(isEnabled: enabled) : s,
     ];
     notifyListeners();
     await _persistServers();

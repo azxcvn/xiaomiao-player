@@ -598,7 +598,12 @@ class DanmakuController extends ChangeNotifier {
     // 重启播放/软件与 loadForVideo 第 1 步（手动记忆）同一恢复路径，
     // 与「切集自动匹配」开关无关。
     await _rememberDownload(download.filePathOrNull);
-    onNetworkDanmakuLoaded?.call('$animeTitle · $episodeTitle');
+    // 提示带**来源服务器名**：用户选完弹幕后面板上没有别处能看到它来自哪台
+    // 服务器（issue #1 需求 4）。搜索结果卡同样带来源胶囊，这里是加载后的回执。
+    final serverLabel = DanmakuServerSettings.instance.serverLabelFor(
+      serverUrl,
+    );
+    onNetworkDanmakuLoaded?.call('$animeTitle · $episodeTitle（$serverLabel）');
     return true;
   }
 
@@ -740,7 +745,13 @@ class DanmakuController extends ChangeNotifier {
       notifyListeners();
     }
     await _rememberDownload(download.filePathOrNull);
-    onNetworkDanmakuLoaded?.call('${cache.animeTitle} ${matched.episodeTitle}');
+    // 同上：提示带来源服务器名（此路径是「切集自动匹配」命中）
+    final autoLabel = DanmakuServerSettings.instance.serverLabelFor(
+      cache.serverUrl,
+    );
+    onNetworkDanmakuLoaded?.call(
+      '${cache.animeTitle} ${matched.episodeTitle}（$autoLabel）',
+    );
   }
 
   /// 把网络弹幕落盘文件记忆到当前视频（工作.md 第 2 点：无论本地导入、

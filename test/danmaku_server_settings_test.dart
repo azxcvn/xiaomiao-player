@@ -145,7 +145,8 @@ void main() {
 
   test('解码时兜底保留默认服务器（即使历史数据缺默认）', () async {
     SharedPreferences.setMockInitialValues({
-      'dandanplay_servers': '[{"id":"c","name":"n","url":"u","isEnabled":true,"isDefault":false}]',
+      'dandanplay_servers':
+          '[{"id":"c","name":"n","url":"u","isEnabled":true,"isDefault":false}]',
     });
     DanmakuServerSettings.instance.resetForTest();
     await s.ensureLoaded();
@@ -159,7 +160,7 @@ void main() {
     SharedPreferences.setMockInitialValues({
       'dandanplay_servers':
           '[{"id":"c","name":"我的服务器","url":"https://self.com",'
-              '"isEnabled":1,"isDefault":0}]',
+          '"isEnabled":1,"isDefault":0}]',
     });
     DanmakuServerSettings.instance.resetForTest();
     await s.ensureLoaded();
@@ -168,5 +169,32 @@ void main() {
     expect(custom.name, '我的服务器');
     expect(custom.isEnabled, isTrue);
     expect(s.enabledServers.length, 2);
+  });
+
+  // ── 弹幕来源显示（issue #1 需求 4：「来源信息无法完整显示」）──────────
+  group('serverLabelFor：服务器地址 → 展示名', () {
+    test('null / 空串 → 默认服务器名（弹弹Play）', () async {
+      await s.ensureLoaded();
+      expect(s.serverLabelFor(null), DanmakuServer.defaultName);
+      expect(s.serverLabelFor(''), DanmakuServer.defaultName);
+    });
+
+    test('命中自建服务器 → 其名称（不只显示地址）', () async {
+      await s.addServer('我的自建服', 'https://self.com');
+      expect(s.serverLabelFor('https://self.com'), '我的自建服');
+    });
+
+    test('地址已不存在（服务器被删）→ 原样回显地址，不显示空白', () async {
+      await s.ensureLoaded();
+      const gone = 'https://removed.example.com';
+      expect(s.serverLabelFor(gone), gone, reason: '至少让用户知道来自哪里，而不是留空');
+    });
+
+    test('两个自建服务器各显其名（不串台）', () async {
+      await s.addServer('甲服', 'https://a.example.com');
+      await s.addServer('乙服', 'https://b.example.com');
+      expect(s.serverLabelFor('https://a.example.com'), '甲服');
+      expect(s.serverLabelFor('https://b.example.com'), '乙服');
+    });
   });
 }
