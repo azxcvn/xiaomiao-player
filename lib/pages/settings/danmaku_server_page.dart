@@ -14,12 +14,21 @@ import 'package:moumou/models/danmaku_server.dart';
 import 'package:moumou/services/danmaku_server_settings.dart';
 import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/widgets/settings_ui.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// 「切集自动匹配弹幕」被禁用时，盖在该行上的透明命中层 key。
 ///
 /// 禁用态下 `Switch`/`ListTile` 都不响应手势，命中层负责吞掉点击并弹 toast；
 /// 暴露 key 供 UI 测试稳定定位（否则只能点被遮挡的文本，触发命中警告）。
 const Key kAutoMatchBlockedTapKey = Key('auto_match_blocked_tap');
+
+/// 自建弹幕服务器使用教程（作者撰写的飞书文档）。
+///
+/// 只在「添加服务器」弹窗里以行内小链接的形式露出——教程的受众正是"正在
+/// 填地址、不知道怎么填"的人，放在那里最省空间也最贴场景；不单独占一张
+/// 设置卡片（一整行卡片只为一行字，视觉过重且占屏幕）。
+const String _helpGuideUrl =
+    'https://acnmwaofo249.feishu.cn/wiki/NIp1wW2eKi26s5kbnRqcdFhynLh';
 
 class DanmakuServerPage extends StatelessWidget {
   const DanmakuServerPage({super.key});
@@ -279,6 +288,13 @@ class _AddServerDialogState extends State<_AddServerDialog> {
               hintText: 'https://example.com',
             ),
           ),
+          // 行内小链接（教程入口）：左对齐贴住「服务器地址」输入框下缘，
+          // 不占额外高度、不抢主操作（取消 / 添加）的视觉重量
+          const SizedBox(height: 6),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _HelpLink(onTap: _openHelp),
+          ),
         ],
       ),
       actions: [
@@ -286,11 +302,85 @@ class _AddServerDialogState extends State<_AddServerDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('取消'),
         ),
-        FilledButton(
-          onPressed: _canSubmit ? _submit : null,
-          child: const Text('添加'),
+        // 地址为空时按钮变灰（onPressed: null）：被禁用的按钮不响应手势，
+        // 外层套透明命中层，点它照样能打开教程——不然用户正是在
+        // "不知道地址怎么填"的时候，最需要帮助却点不动
+        Stack(
+          children: [
+            FilledButton(
+              onPressed: _canSubmit ? _submit : null,
+              child: const Text('添加'),
+            ),
+            if (!_canSubmit)
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _openHelp,
+                ),
+              ),
+          ],
         ),
       ],
+    );
+  }
+
+  /// 跳系统浏览器 / 飞书 App 打开教程。
+  ///
+  /// 用 `externalApplication` 而非 App 内 WebView：飞书文档在 WebView 里
+  /// 登录态与跳转体验都很差，交给系统处理更稳。
+  Future<void> _openHelp() async {
+    final uri = Uri.parse(_helpGuideUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else if (mounted) {
+      _toast('未找到可用的浏览器');
+    }
+  }
+
+  void _toast(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: const Duration(milliseconds: 1500),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+  }
+}
+
+/// 弹窗内的行内外链：小号主题色文字 + 前置外链图标（不占整行、无按钮底色）。
+class _HelpLink extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _HelpLink({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        // 纵向留 4：点击热区不至于贴着文字太小，又不撑高弹窗
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.open_in_new, size: 15, color: scheme.primary),
+            const SizedBox(width: 5),
+            Text(
+              '如何获取服务器地址',
+              style: TextStyle(
+                fontSize: 13,
+                color: scheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
