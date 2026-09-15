@@ -286,6 +286,7 @@ Android 播放内核由本项目自行编译（mpv + FFmpeg + libass + libplaceb
 - [Kazumi](https://github.com/Predidit/Kazumi)
 - [mpvRx](https://github.com/Riteshp2001/mpvRx)
 - [PiliPlus](https://github.com/bggRGjQaUbCoE/PiliPlus)
+- [Bili23-Downloader](https://github.com/ScottSloan/Bili23-Downloader) —— 设备指纹与 WBI 签名算法
 
 ### 五、图标素材
 
