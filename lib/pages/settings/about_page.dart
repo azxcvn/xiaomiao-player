@@ -125,17 +125,16 @@ class _AboutPageState extends State<AboutPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: scheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Icon(
-                      Icons.play_circle_fill_rounded,
-                      size: 42,
-                      color: scheme.primary,
+                  // 应用图标（与桌面/启动图标同源）：assets/icon/
+                  // app_icon_display.png 是 1024 源图的 256px 缩放版，
+                  // 只作展示用，避免把 621 KB 的图标源文件打进包体。
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: Image.asset(
+                      'assets/icon/app_icon_display.png',
+                      width: 64,
+                      height: 64,
+                      fit: BoxFit.cover,
                     ),
                   ),
                   const SizedBox(width: 14),
