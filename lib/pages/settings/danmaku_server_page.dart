@@ -1,12 +1,14 @@
 /// 弹幕服务器设置子页（工作.md 第 6/7 点）：
 /// - 启用/停用已添加的弹幕服务器（弹弹Play 默认服务器不可删除，只能开关）；
 /// - 右下角加号添加自建服务器（名称 + 地址），已添加服务器可自由删除/启停；
+/// - 「搜索结果自动去重」开关：多台服务器返回同一部番剧时是否只留集数最全的
+///   那条（**默认关**；开启前弹二次确认，见 [_SearchDedupeTile]）；
 /// - 「切集自动匹配弹幕」开关：与默认弹弹Play 服务器**互斥**（工作.md 第 7 点，
 ///   收尾阶段恢复的限制）——默认服务器启用时开关变灰 + 副标题换成禁用原因，
 ///   点击弹 toast 说明；停用默认服务器后自动恢复用户此前的选择
 ///   （判定与文案统一由 [DanmakuServerSettings] 提供，见 `_AutoMatchTile`）。
 ///
-/// 启用的服务器同时用于网络弹幕搜索（结果合并展示）与自动匹配。
+/// 启用的服务器同时用于网络弹幕搜索（逐台实时呈现，不等齐再合并）与自动匹配。
 library;
 
 import 'package:flutter/material.dart';
@@ -50,7 +52,8 @@ class DanmakuServerPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 96),
             children: [
               Text(
-                '启用的服务器将同时用于弹幕搜索，搜索结果会合并展示',
+                '启用的服务器将同时用于弹幕搜索与自动匹配，搜索结果按各服务器'
+                '返回顺序实时呈现',
                 style: TextStyle(
                   fontSize: 13,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -58,7 +61,13 @@ class DanmakuServerPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               SettingsCard(
-                child: _AutoMatchTile(settings: settings),
+                child: Column(
+                  children: [
+                    _SearchDedupeTile(settings: settings),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    _AutoMatchTile(settings: settings),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
               const SettingsGroupTitle(title: '服务器'),
@@ -82,6 +91,129 @@ class DanmakuServerPage extends StatelessWidget {
     await showAppDialog<void>(
       context: context,
       builder: (context) => const _AddServerDialog(),
+    );
+  }
+}
+
+/// 「搜索结果自动去重」开关行。
+///
+/// 多台服务器同时启用时，同一部番剧常常每台都有：
+/// - 开：同一部番剧只留一条——先返回的先上屏，后面某台**集数更全**就替换掉
+///   那张卡（来源胶囊跟着变）。**默认关**：合并会"吞掉"某些服务器的结果，
+///   属于需要用户知情的动作，所以由用户主动开启，且开启前弹一次二次确认
+///   （见 [_DedupeConfirmDialog]，勾过「不再提示」就不再打扰）；
+/// - 关：每台服务器的结果各自成卡，同一部番剧会并列出现多条，用户按来源
+///   自己挑（想看哪台集数更全时有用）。
+///
+/// 判定只在 `DanmakuNetworkService.searchStream` 里读一次（[searchDedupe]），
+/// 页面不做二次处理。
+class _SearchDedupeTile extends StatelessWidget {
+  final DanmakuServerSettings settings;
+
+  const _SearchDedupeTile({required this.settings});
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = settings.searchDedupe;
+    return SettingsSwitchTile(
+      icon: Icons.filter_alt_outlined,
+      title: '搜索结果自动去重',
+      // 副标题只讲"结果长什么样"：具体会做什么动作（替换/可能看不到某台）
+      // 放在开启前的二次确认里，一句话塞不下、塞进去反而误导
+      subtitle: Text(
+        enabled ? '重复番剧合并为一条，保留集数最全的' : '每台服务器的结果各自展示，可自行挑选来源',
+      ),
+      value: enabled,
+      onChanged: (value) => _onChanged(context, value),
+    );
+  }
+
+  /// 开启走二次确认（取消则不生效）；关闭立即生效。
+  Future<void> _onChanged(BuildContext context, bool value) async {
+    if (!value) {
+      await settings.setSearchDedupe(false);
+      return;
+    }
+    if (!settings.searchDedupeHintDismissed) {
+      final confirmed = await showAppDialog<bool>(
+        context: context,
+        builder: (dialogContext) => const _DedupeConfirmDialog(),
+      );
+      if (confirmed != true) return;
+    }
+    await settings.setSearchDedupe(true);
+  }
+}
+
+/// 开启「搜索结果自动去重」前的二次确认（确认式：取消则开关不生效）。
+///
+/// 讲清三件事，避免用户以为"某台服务器搜不到"：
+/// 1. 结果依旧是"谁先返回谁先显示"，不会等齐再合并；
+/// 2. 同一部番剧只留一条，后续**集数更全**的会替换先到的；
+/// 3. 所以某台服务器的结果可能不单独出现——**不代表它没搜到**。
+///
+/// 勾「不再提示」后（无论确认还是取消）不再弹（[DanmakuServerSettings
+/// .searchDedupeHintDismissed]）。
+class _DedupeConfirmDialog extends StatefulWidget {
+  const _DedupeConfirmDialog();
+
+  @override
+  State<_DedupeConfirmDialog> createState() => _DedupeConfirmDialogState();
+}
+
+class _DedupeConfirmDialogState extends State<_DedupeConfirmDialog> {
+  bool _dontAskAgain = false;
+
+  Future<void> _close(bool confirmed) async {
+    if (_dontAskAgain) {
+      await DanmakuServerSettings.instance.setSearchDedupeHintDismissed(true);
+    }
+    if (mounted) Navigator.of(context).pop(confirmed);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return AlertDialog(
+      title: const Text('开启搜索结果自动去重？'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '各服务器返回的结果仍然立刻显示，不会等全部返回。\n'
+            '同一部番剧只保留一条；如果后续服务器返回的集数更全，'
+            '会自动替换成更全的那条。\n'
+            '因此某台服务器的结果可能不单独出现——那不代表它没搜到，'
+            '而是被去重合并了。',
+            style: TextStyle(fontSize: 13, height: 1.45),
+          ),
+          const SizedBox(height: 6),
+          // 勾选框左对齐贴住正文，不额外撑高弹窗（用 CheckboxListTile 而不是
+          // Checkbox + InkWell：后者两层点击识别器会抢同一个 tap）
+          CheckboxListTile(
+            value: _dontAskAgain,
+            onChanged: (v) => setState(() => _dontAskAgain = v ?? false),
+            title: Text(
+              '不再提示',
+              style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
+            ),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => _close(false),
+          child: const Text('取消'),
+        ),
+        TextButton(
+          onPressed: () => _close(true),
+          child: const Text('开启'),
+        ),
+      ],
     );
   }
 }

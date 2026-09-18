@@ -197,4 +197,36 @@ void main() {
       expect(s.serverLabelFor('https://b.example.com'), '乙服');
     });
   });
+
+  // ── 搜索结果自动去重开关（多服务器）────────────────────────────
+  group('searchDedupe：跨服务器去重开关', () {
+    test('默认关闭（合并会吞掉某些服务器的结果，需用户主动开启）', () async {
+      await s.ensureLoaded();
+      expect(s.searchDedupe, isFalse);
+      expect(s.searchDedupeHintDismissed, isFalse);
+    });
+
+    test('开启后持久化（模拟重启仍是开启）', () async {
+      await s.setSearchDedupe(true);
+      expect(s.searchDedupe, isTrue);
+      DanmakuServerSettings.instance.resetForTest();
+      await s.ensureLoaded();
+      expect(s.searchDedupe, isTrue);
+    });
+
+    test('「不再提示」持久化（模拟重启仍不再弹）', () async {
+      await s.setSearchDedupeHintDismissed(true);
+      DanmakuServerSettings.instance.resetForTest();
+      await s.ensureLoaded();
+      expect(s.searchDedupeHintDismissed, isTrue);
+    });
+
+    test('resetForTest 回到默认（关闭 + 未勾不再提示）', () async {
+      await s.setSearchDedupe(true);
+      await s.setSearchDedupeHintDismissed(true);
+      DanmakuServerSettings.instance.resetForTest();
+      expect(s.searchDedupe, isFalse);
+      expect(s.searchDedupeHintDismissed, isFalse);
+    });
+  });
 }

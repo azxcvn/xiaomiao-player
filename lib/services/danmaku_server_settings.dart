@@ -1,10 +1,12 @@
 /// 弹幕服务器设置（工作.md 第 6/7 点）：全局单例 ChangeNotifier +
 /// shared_preferences 持久化，管理：
 /// - 弹幕服务器列表（内置弹弹Play 默认服务器 + 用户自建服务器，可增删/启停）；
-/// - 「切集自动匹配弹幕」开关。
+/// - 「切集自动匹配弹幕」开关；
+/// - 「搜索结果自动去重」开关（多台服务器返回同一部番剧时只留先到的那条）。
 ///
-/// 启用的服务器同时用于网络弹幕搜索与自动匹配，搜索结果合并展示
-/// （见 `services/danmaku_network_service.dart`）。
+/// 启用的服务器同时用于网络弹幕搜索与自动匹配；搜索按各服务器返回顺序
+/// **逐台实时呈现**（不再等全部返回再合并），见
+/// `services/danmaku_network_service.dart` 的 `searchStream`。
 ///
 /// **互斥约束（工作.md 第 7 点，收尾阶段恢复）**：默认弹弹Play 服务器启用时
 /// 不允许开启「切集自动匹配」。为避免 UI 与运行时各判一次而漂移，互斥统一
@@ -26,6 +28,8 @@ class DanmakuServerSettings extends ChangeNotifier {
 
   static const _keyServers = 'dandanplay_servers';
   static const _keyAutoMatch = 'danmaku_auto_match_enabled';
+  static const _keySearchDedupe = 'danmaku_search_dedupe';
+  static const _keySearchDedupeHint = 'danmaku_search_dedupe_hint_dismissed';
 
   /// 加载去重（risk_audit #9）：setter 在改设置前 await [ensureLoaded]。
   Future<void>? _loadFuture;
@@ -34,6 +38,8 @@ class DanmakuServerSettings extends ChangeNotifier {
 
   List<DanmakuServer> _servers = [DanmakuServer.createDefault()];
   bool _autoMatchEnabled = false;
+  bool _searchDedupe = false;
+  bool _searchDedupeHintDismissed = false;
 
   /// 全部服务器（含默认）
   List<DanmakuServer> get servers => List.unmodifiable(_servers);
@@ -74,6 +80,26 @@ class DanmakuServerSettings extends ChangeNotifier {
   /// 默认（弹弹Play）服务器当前是否启用
   bool get isDefaultEnabled => _servers.any((s) => s.isDefault && s.isEnabled);
 
+  /// 网络弹幕搜索结果是否**跨服务器去重**（默认**关**）。
+  ///
+  /// - 开：同一部番剧（animeId 相同）只保留一条。先返回的先上屏（不为比较而
+  ///   等待），后面某台返回的**集数更多**时替换掉那张卡；集数相同/更少则丢弃。
+  /// - 关：每台服务器的结果各自成卡，同一部番剧可能出现多条（各带来源胶囊），
+  ///   由用户按来源自己挑。
+  ///
+  /// 默认关的理由：去重会"合并掉"某些服务器的结果，属于用户需要知情的动作——
+  /// 由用户在设置页主动开启（开启时给二次确认，文案见
+  /// [searchDedupeHintDismissed] 对应的弹窗）。
+  ///
+  /// 只在 `DanmakuNetworkService.searchStream` 里读取，UI 不做二次判定
+  /// （同 [autoMatchEnabled] 的纪律：单一事实来源）。
+  bool get searchDedupe => _searchDedupe;
+
+  /// 用户是否勾过「不再提示」（开启去重前的二次确认弹窗）。
+  ///
+  /// 只在 UI 层（弹幕服务器设置页）用来决定弹不弹；勾过一次后不再打扰。
+  bool get searchDedupeHintDismissed => _searchDedupeHintDismissed;
+
   /// 服务器地址 → 展示名（弹幕「来源」显示的单一事实来源）。
   ///
   /// - [url] 为 null（默认服务器）→ [DanmakuServer.defaultName]；
@@ -95,6 +121,8 @@ class DanmakuServerSettings extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _servers = _decodeServers(prefs.getString(_keyServers));
     _autoMatchEnabled = prefs.getBool(_keyAutoMatch) ?? false;
+    _searchDedupe = prefs.getBool(_keySearchDedupe) ?? false;
+    _searchDedupeHintDismissed = prefs.getBool(_keySearchDedupeHint) ?? false;
     notifyListeners();
   }
 
@@ -192,12 +220,37 @@ class DanmakuServerSettings extends ChangeNotifier {
     return true;
   }
 
+  /// 设置「搜索结果自动去重」开关（写偏好 + 立即通知 UI）。
+  ///
+  /// ⚠️ 开启前 UI 会先弹二次确认说明它会做什么（集数更全的源替换先到的、
+  /// 某台的结果可能不单独出现），确认后才调这里。
+  Future<void> setSearchDedupe(bool enabled) async {
+    await ensureLoaded();
+    if (_searchDedupe == enabled) return;
+    _searchDedupe = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keySearchDedupe, enabled);
+  }
+
+  /// 记录用户勾了「不再提示」（此后开启去重不再弹二次确认）。
+  Future<void> setSearchDedupeHintDismissed(bool dismissed) async {
+    await ensureLoaded();
+    if (_searchDedupeHintDismissed == dismissed) return;
+    _searchDedupeHintDismissed = dismissed;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keySearchDedupeHint, dismissed);
+  }
+
   /// 测试用：恢复默认值并清加载标记（单例在测试间共享，避免状态泄漏）。
   @visibleForTesting
   void resetForTest() {
     _loadFuture = null;
     _servers = [DanmakuServer.createDefault()];
     _autoMatchEnabled = false;
+    _searchDedupe = false;
+    _searchDedupeHintDismissed = false;
     notifyListeners();
   }
 }

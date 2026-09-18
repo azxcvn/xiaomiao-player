@@ -1,13 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/widgets/app_frame.dart';
+import 'package:moumou/widgets/marquee_text.dart';
 
 /// 面板内导航的一层页面
 class PlayerPanelPage {
   final String title;
   final Widget body;
 
-  const PlayerPanelPage({required this.title, required this.body});
+  /// 标题行长标题是否走跑马灯（循环滚动显示完整名称）。
+  ///
+  /// 默认 false——「弹幕」「倍速」这类固定短标题静态更安静；开启是给标题本身
+  /// 就是内容（番剧名等长文本）的页面用的，见网络弹幕的集数二级界面。
+  /// 文本一行装得下时 [MarqueeText] 不会启动动画，等同于普通标题。
+  final bool marqueeTitle;
+
+  const PlayerPanelPage({
+    required this.title,
+    required this.body,
+    this.marqueeTitle = false,
+  });
 }
 
 /// 面板导航器：面板内容通过 [PlayerPanelNavigator.of] 获取，push/pop 二级页面。
@@ -113,7 +125,7 @@ class _PlayerPanelState extends State<PlayerPanel> {
             navigator: _navigator,
             child: Column(
               children: [
-                _buildHeader(page.title),
+                _buildHeader(page),
                 Expanded(
                   child: AnimatedSwitcher(
                     // 进场 200ms；退场仅 80ms（reverseDuration），
@@ -164,7 +176,7 @@ class _PlayerPanelState extends State<PlayerPanel> {
     );
   }
 
-  Widget _buildHeader(String title) {
+  Widget _buildHeader(PlayerPanelPage page) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
       child: Row(
@@ -176,15 +188,9 @@ class _PlayerPanelState extends State<PlayerPanel> {
               onPressed: _navigator.pop,
             ),
           Expanded(
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+            child: panelHeaderTitle(
+              text: page.title,
+              marquee: page.marqueeTitle,
             ),
           ),
           IconButton(
@@ -196,6 +202,25 @@ class _PlayerPanelState extends State<PlayerPanel> {
       ),
     );
   }
+}
+
+/// 面板标题行文本（横竖屏两个外壳共用，§4.5：不各写一份）。
+///
+/// - [marquee] 为 false（默认）：单行省略号，静态；
+/// - [marquee] 为 true：复用 [MarqueeText] 跑马灯——**只有装不下时才滚**，
+///   装得下等同普通静态标题（见 [MarqueeText] 的溢出判断）。
+///
+/// 样式与两个外壳原来的标题完全一致。
+Widget panelHeaderTitle({required String text, bool marquee = false}) {
+  const style = TextStyle(
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+  );
+  if (!marquee) {
+    return Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: style);
+  }
+  return MarqueeText(text: text, style: style);
 }
 
 /// 公用入口：从屏幕右缘弹出面板（倍速 / 更多 / 编辑控制栏等统一走这里）。

@@ -24,6 +24,7 @@ import 'package:moumou/pages/player/views/player_chapter_bar.dart';
 import 'package:moumou/pages/player/views/player_chapter_panel.dart';
 import 'package:moumou/pages/player/views/player_center_cluster.dart';
 import 'package:moumou/pages/player/views/player_danmaku_layer.dart';
+import 'package:moumou/pages/player/views/player_danmaku_episodes_panel.dart';
 import 'package:moumou/pages/player/views/player_danmaku_network_panel.dart';
 import 'package:moumou/pages/player/views/player_danmaku_panel.dart';
 import 'package:moumou/pages/player/views/player_danmaku_settings_panel.dart';
@@ -51,6 +52,7 @@ import 'package:moumou/services/audio_service.dart';
 import 'package:moumou/services/chapter_tracker.dart';
 import 'package:moumou/services/danmaku_service.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
+import 'package:moumou/services/danmaku_search_store.dart';
 import 'package:moumou/services/decode_settings.dart';
 import 'package:moumou/services/bilibili/bili_danmaku_service.dart';
 import 'package:moumou/services/bilibili/bili_constants.dart';
@@ -2092,9 +2094,13 @@ class _PlayerPageState extends State<PlayerPage>
   /// 二级入口列表——本地弹幕（文件选择器导入）/ 网络弹幕（弹弹Play 搜索）/
   /// 自动匹配（弹弹Play 文件匹配）/ 弹幕设置（面板内就地切换到设置页，
   /// 不叠加第二个面板，§4.5）。
-  PlayerPanelPage _danmakuPanelPage() => PlayerPanelPage(
-        title: '弹幕',
-        body: Builder(
+  PlayerPanelPage _danmakuPanelPage() {
+    // 新一次弹幕面板会话开始：上一次若是**用户主动关面板**，此刻等价于
+    // "关掉搜索结果" → 清空；若是"选完一集自动关闭" → 保留（省一次搜索请求）
+    DanmakuSearchStore.instance.beginPanelSession();
+    return PlayerPanelPage(
+      title: '弹幕',
+      body: Builder(
           builder: (panelContext) {
             final navigator = PlayerPanelNavigator.of(panelContext);
             return PlayerDanmakuPanel(
@@ -2113,9 +2119,20 @@ class _PlayerPageState extends State<PlayerPage>
                 PlayerPanelPage(
                   title: '网络弹幕',
                   body: PlayerDanmakuNetworkPanel(
-                    onEpisodeSelected: _onNetworkEpisodeSelected,
-                    // 当前视频文件名：展开番剧时自动定位到对应集
-                    currentFileName: _path,
+                    // 点结果 → 集数二级界面（面板内就地切换，不叠第二个弹窗）
+                    onResultTap: (item) => navigator.push(
+                      PlayerPanelPage(
+                        title: item.anime.animeTitle,
+                        // 标题就是番剧名本身，长了要能看全（跑马灯）
+                        marqueeTitle: true,
+                        body: PlayerDanmakuEpisodesPanel(
+                          item: item,
+                          // 当前视频文件名：进页自动定位到对应集
+                          currentFileName: _path,
+                          onEpisodeSelected: _onNetworkEpisodeSelected,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -2124,6 +2141,7 @@ class _PlayerPageState extends State<PlayerPage>
           },
         ),
       );
+  }
 
   /// 打开弹幕面板（右侧滑入，[showPlayerPanel]）。
   Future<void> _openDanmakuPanel() async {

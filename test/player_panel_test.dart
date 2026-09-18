@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/models/player_action.dart';
 import 'package:moumou/services/player_controls_settings.dart';
+import 'package:moumou/widgets/marquee_text.dart';
 import 'package:moumou/widgets/player_panel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -53,6 +54,8 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.text('控制栏'), findsOneWidget);
+    // 默认标题静态（不用跑马灯）
+    expect(find.byType(MarqueeText), findsNothing);
     // 已放置的动作显示在面板列表中
     expect(find.text('字幕'), findsOneWidget);
     expect(find.text('弹幕'), findsOneWidget);
@@ -63,7 +66,39 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('编辑页'), findsOneWidget);
   });
+
+  testWidgets('marqueeTitle：长标题用跑马灯循环显示完整名称', (tester) async {
+    const longTitle = '紫罗兰永恒花园 剧场版 特别篇 完全版 收藏套装 4K 修复版';
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PlayerPanel(
+            pages: const [
+              PlayerPanelPage(
+                title: longTitle,
+                marqueeTitle: true,
+                body: SizedBox.shrink(),
+              ),
+            ],
+            onClose: _noop,
+          ),
+        ),
+      ),
+    );
+    // 注意：跑马灯是无限循环动画，只能定帧 pump（pumpAndSettle 会一直等下去）
+    await tester.pump();
+    await tester.pump();
+    expect(find.byType(MarqueeText), findsOneWidget);
+    // 溢出时渲染两份文本做无缝衔接
+    expect(find.text(longTitle), findsNWidgets(2));
+
+    // 卸掉整棵树，确认跑马灯 ticker 能正常释放
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
 }
+
+void _noop() {}
 
 Widget _buildMockMorePanel() {
   // 与真实 _buildMorePanel 一致：必须用 Builder 取面板树内的 context，

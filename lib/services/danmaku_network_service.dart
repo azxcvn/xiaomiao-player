@@ -1,6 +1,7 @@
 /// 弹幕网络服务（弹弹Play 开放弹幕网络业务层，无 UI）：
-/// - 搜索：遍历所有**已启用**的弹幕服务器并合并结果（按 animeId 去重，
-///   记录每条结果的来源服务器），供网络弹幕搜索页展示；
+/// - 搜索：遍历所有**已启用**的弹幕服务器，**逐台实时产出**结果
+///   （[searchStream]，先返回的服务器先呈现，不等其余服务器），是否跨服务器
+///   去重由设置决定；[search] 是它的"全部收齐再合并"包装；
 /// - 自动匹配：对当前视频文件（前 16MB MD5 + 文件名 + 大小）向所有启用
 ///   服务器发起匹配，合并候选；
 /// - 下载：按 episodeId 拉取单集弹幕，转成本地 [DanmakuEntry] 并生成
@@ -26,20 +27,45 @@ import 'package:moumou/utils/dandan_comment.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-/// 搜索结果条目（番剧 + 来源服务器；搜索合并时按 animeId 去重，先到先得）。
+/// 搜索结果条目（番剧 + 来源服务器；去重开启时按 animeId 跨服务器先到先得）。
 class DanmakuSearchItem {
   final DandanAnime anime;
 
   /// 来源服务器地址；null = 默认弹弹Play 服务器
   final String? serverUrl;
 
-  /// 来源服务器名称（搜索结果胶囊标签展示；默认服务器不在 UI 单独标注）
+  /// 来源服务器名称（搜索结果胶囊标签展示）
   final String serverName;
 
   const DanmakuSearchItem({
     required this.anime,
     required this.serverUrl,
     required this.serverName,
+  });
+}
+
+/// 单台服务器的搜索产出（[searchStream] 的逐条事件）。
+///
+/// [items] 为**本次新增**的结果（去重开启时已剔除重复的 animeId），
+/// [upgrades] 为**替换**事件：同一 animeId 已在更早的服务器上屏，但这台返回的
+/// 集数**更多**，面板应当用它对同 animeId 的旧卡就地覆盖（见 [searchStream]）。
+/// [error] 为该服务器失败原因（成功为 null）；与 [items]/[upgrades] 不同时非空。
+class DanmakuServerSearchOutcome {
+  final String serverName;
+
+  /// 来源服务器地址；null = 默认弹弹Play 服务器
+  final String? serverUrl;
+
+  final List<DanmakuSearchItem> items;
+  final List<DanmakuSearchItem> upgrades;
+  final String? error;
+
+  const DanmakuServerSearchOutcome({
+    required this.serverName,
+    required this.serverUrl,
+    this.items = const [],
+    this.upgrades = const [],
+    this.error,
   });
 }
 
@@ -97,32 +123,95 @@ class DanmakuNetworkService {
   @visibleForTesting
   static Future<Directory?> Function()? debugDirectoryOverride;
 
-  /// 搜索番剧：合并所有已启用服务器的结果（animeId 去重，先到先得）。
-  Future<DanmakuSearchResult> search(String keyword) async {
-    final items = <DanmakuSearchItem>[];
-    final seenIds = <int>{};
-    final errors = <String>[];
+  /// 逐台服务器搜索番剧，**每台返回就立刻产出一条事件**（不等其余服务器）。
+  ///
+  /// 网络弹幕面板直接消费本流：先返回的服务器结果马上呈现，转圈一直转到
+  /// 所有服务器返回或用户点「停止」（取消订阅即终止，后面的服务器不再发起）。
+  ///
+  /// 去重由 [DanmakuServerSettings.searchDedupe] 裁决：
+  /// - 开（默认）：同一 animeId 只留一条。**先到先上屏**，不为了比较而等待；
+  ///   但后面某台返回的集数**更多**时，用 [DanmakuServerSearchOutcome.upgrades]
+  ///   产出一条替换事件，面板就地覆盖旧卡（来源胶囊跟着变）——既保住"快"，
+  ///   又不至于因为某台响应快、结果少就永久丢掉更全的源；
+  ///   集数相同或更少则丢弃（卡片不跳动）。
+  /// - 关：每台服务器的结果原样产出，同一部番剧会各出一张卡。
+  ///
+  /// 单台服务器失败不抛出：以带 [DanmakuServerSearchOutcome.error] 的事件
+  /// 产出，其余服务器继续。
+  Stream<DanmakuServerSearchOutcome> searchStream(String keyword) async* {
+    final dedupe = _serverSettings.searchDedupe;
+    // animeId → 已上屏的那条（去重时用来比较集数，决定"丢弃"还是"替换"）
+    final shown = <int, DanmakuSearchItem>{};
+    final servers = _serverSettings.enabledServers;
     // 存在自建服务器时先请求本地网络权限（自建服务器可能在局域网，
     // Android 16+ 缺权限会被系统拦截）
-    if (_serverSettings.enabledServers.any((s) => !s.isDefault)) {
+    if (servers.any((s) => !s.isDefault)) {
       await DeviceServices.requestLocalNetworkPermission();
     }
-    for (final server in _serverSettings.enabledServers) {
+    for (final server in servers) {
+      final serverUrl = server.isDefault ? null : server.url;
       try {
-        final serverUrl = server.isDefault ? null : server.url;
         final animes = await _api.searchAnime(keyword, baseUrl: serverUrl);
+        final items = <DanmakuSearchItem>[];
+        final upgrades = <DanmakuSearchItem>[];
         for (final anime in animes) {
-          if (seenIds.add(anime.animeId)) {
-            items.add(DanmakuSearchItem(
-              anime: anime,
-              serverUrl: serverUrl,
-              serverName: server.name,
-            ));
+          final item = DanmakuSearchItem(
+            anime: anime,
+            serverUrl: serverUrl,
+            serverName: server.name,
+          );
+          if (!dedupe) {
+            items.add(item);
+            continue;
+          }
+          final existing = shown[anime.animeId];
+          if (existing == null) {
+            shown[anime.animeId] = item;
+            items.add(item);
+          } else if (anime.episodes.length >
+              existing.anime.episodes.length) {
+            // 更全的那台：替换已上屏的卡（相等不算更全，避免卡片无谓跳动）
+            shown[anime.animeId] = item;
+            upgrades.add(item);
           }
         }
+        yield DanmakuServerSearchOutcome(
+          serverName: server.name,
+          serverUrl: serverUrl,
+          items: items,
+          upgrades: upgrades,
+        );
       } catch (e) {
-        errors.add('${server.name}: ${e is DandanApiException ? e.message : e}');
+        yield DanmakuServerSearchOutcome(
+          serverName: server.name,
+          serverUrl: serverUrl,
+          error: '${server.name}: ${e is DandanApiException ? e.message : e}',
+        );
       }
+    }
+  }
+
+  /// 搜索番剧：收齐所有已启用服务器的结果后合并返回（[searchStream] 的包装）。
+  ///
+  /// UI 走流式 [searchStream]；本方法保留给「需要一次性完整结果」的调用方
+  /// （也覆盖原有合并语义的单测）。去重规则与流式一致（同 animeId 集数更多者
+  /// 覆盖先到者）。
+  Future<DanmakuSearchResult> search(String keyword) async {
+    final items = <DanmakuSearchItem>[];
+    // animeId → 在 items 中的下标（替换事件按它就地覆盖）
+    final positionOf = <int, int>{};
+    final errors = <String>[];
+    await for (final outcome in searchStream(keyword)) {
+      for (final item in outcome.items) {
+        positionOf[item.anime.animeId] = items.length;
+        items.add(item);
+      }
+      for (final upgraded in outcome.upgrades) {
+        final at = positionOf[upgraded.anime.animeId];
+        if (at != null) items[at] = upgraded;
+      }
+      final error = outcome.error;
+      if (error != null) errors.add(error);
     }
     return DanmakuSearchResult(items: items, errors: errors);
   }

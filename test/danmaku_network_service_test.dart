@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:moumou/models/danmaku_server.dart';
 import 'package:moumou/services/cache_manager_service.dart';
 import 'package:moumou/services/dandan_play_api.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
@@ -42,6 +43,8 @@ void main() {
 
   group('search 合并（MockClient）', () {
     test('默认+自建服务器结果合并，animeId 去重，记录来源服务器', () async {
+      // 去重默认关闭（用户主动开启的功能），这里显式打开验证合并语义
+      await DanmakuServerSettings.instance.setSearchDedupe(true);
       final api = DandanPlayApi(
         client: MockClient((request) async {
           if (request.url.host == 'api.dandanplay.net') {
@@ -111,6 +114,246 @@ void main() {
       expect(result.items.single.anime.animeId, 2);
       expect(result.errors.length, 1);
       expect(result.errors.single, contains('弹弹Play'));
+    });
+  });
+
+  group('searchStream 逐台实时产出（不合并等待）', () {
+    /// 两台服务器：默认返回番剧A（可延时），自建返回番剧B
+    ({DandanPlayApi api, List<int> selfCalls}) makeApi({
+      int defaultDelayMs = 0,
+      int defaultAnimeId = 1,
+      int selfAnimeId = 2,
+    }) {
+      final selfCalls = <int>[];
+      final api = DandanPlayApi(
+        client: MockClient((request) async {
+          if (request.url.host == 'api.dandanplay.net') {
+            if (defaultDelayMs > 0) {
+              await Future<void>.delayed(Duration(milliseconds: defaultDelayMs));
+            }
+            return http.Response.bytes(
+              utf8.encode(jsonEncode({
+                'animes': [
+                  _animeJson(defaultAnimeId, '番剧A', [_epJson(11, '第01话')]),
+                ],
+              })),
+              200,
+            );
+          }
+          selfCalls.add(1);
+          return http.Response.bytes(
+            utf8.encode(jsonEncode({
+              'animes': [
+                _animeJson(selfAnimeId, '番剧B', [_epJson(22, '第02话')]),
+              ],
+            })),
+            200,
+          );
+        }),
+      );
+      return (api: api, selfCalls: selfCalls);
+    }
+
+    test('每台返回即产出一条事件：先返回的不等后返回的', () async {
+      final made = makeApi(defaultDelayMs: 0);
+      final service = DanmakuNetworkService(api: made.api);
+      // 让自建服务器"慢"：改成默认先返回、自建后返回
+      await DanmakuServerSettings.instance.addServer('我的服务器', 'https://self.example.com');
+
+      final events = <DanmakuServerSearchOutcome>[];
+      final done = Completer<void>();
+      service.searchStream('关键词').listen(events.add, onDone: done.complete);
+
+      // 默认服务器（无延时）已经产出，自建服务器随后
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(events, isNotEmpty, reason: '第一台返回就该看到结果，不等其余');
+      expect(events.first.items.single.anime.animeTitle, '番剧A');
+      expect(events.first.serverUrl, isNull);
+
+      await done.future;
+      expect(events.length, 2);
+      expect(events.last.items.single.anime.animeTitle, '番剧B');
+      expect(events.last.serverUrl, 'https://self.example.com');
+    });
+
+    test('慢服务器不阻塞已返回的服务器（核心：旧实现会等齐再合并）', () async {
+      // 默认服务器慢 150ms，自建服务器快
+      final made = makeApi(defaultDelayMs: 150, defaultAnimeId: 1);
+      final service = DanmakuNetworkService(api: made.api);
+      await DanmakuServerSettings.instance.addServer('我的服务器', 'https://self.example.com');
+
+      final events = <DanmakuServerSearchOutcome>[];
+      final done = Completer<void>();
+      service.searchStream('关键词').listen(events.add, onDone: done.complete);
+
+      // 150ms 还没到：默认服务器仍在路上
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      expect(
+        events.any((e) => e.items.any((i) => i.anime.animeTitle == '番剧A')),
+        isFalse,
+        reason: '慢的那台还没返回，就不该出现它的结果',
+      );
+      await done.future;
+      expect(events.length, 2);
+    });
+
+    test('去重开启：同一 animeId 只产出先到的那台', () async {
+      await DanmakuServerSettings.instance.setSearchDedupe(true);
+      final made = makeApi(defaultAnimeId: 1, selfAnimeId: 1); // 两台都返回 animeId=1
+      final service = DanmakuNetworkService(api: made.api);
+      await DanmakuServerSettings.instance.addServer('我的服务器', 'https://self.example.com');
+
+      final events = await service.searchStream('关键词').toList();
+      expect(events.length, 2);
+      expect(events.first.items.single.serverUrl, isNull);
+      expect(events.last.items, isEmpty, reason: '与默认服务器重复 → 这台不再产出');
+    });
+
+    test('去重关闭（默认）：每台服务器各自产出（同一番剧两处都出卡）', () async {
+      expect(DanmakuServerSettings.instance.searchDedupe, isFalse, reason: '默认关');
+      final made = makeApi(defaultAnimeId: 1, selfAnimeId: 1);
+      final service = DanmakuNetworkService(api: made.api);
+      await DanmakuServerSettings.instance.addServer('我的服务器', 'https://self.example.com');
+
+      final events = await service.searchStream('关键词').toList();
+      expect(events.length, 2);
+      expect(events.first.items.single.serverName, DanmakuServer.defaultName);
+      expect(events.last.items.single.serverName, '我的服务器');
+      expect(
+        events.last.items.single.anime.animeId,
+        events.first.items.single.anime.animeId,
+        reason: '同一个 animeId 两台各出一条，由用户按来源挑',
+      );
+    });
+
+    // 去重语义：不为了"比较哪台更全"而等待，但也不能因为某台响应快、
+    // 结果少就永久丢掉更全的源。
+    test('去重开启：后到的服务器集数更多 → 产出替换事件', () async {
+      await DanmakuServerSettings.instance.setSearchDedupe(true);
+      final api = DandanPlayApi(
+        client: MockClient((request) async {
+          final isDefault = request.url.host == 'api.dandanplay.net';
+          return http.Response.bytes(
+            utf8.encode(jsonEncode({
+              'animes': [
+                _animeJson(1, '番剧A', [
+                  _epJson(11, '第01话'),
+                  if (!isDefault) _epJson(12, '第02话'),
+                  if (!isDefault) _epJson(13, '第03话'),
+                ]),
+              ],
+            })),
+            200,
+          );
+        }),
+      );
+      final service = DanmakuNetworkService(api: api);
+      await DanmakuServerSettings.instance.addServer('我的服务器', 'https://self.example.com');
+
+      final events = await service.searchStream('关键词').toList();
+      expect(events.length, 2);
+      // 先到的（1 集）先上屏，不等慢的那台
+      expect(events.first.items.single.anime.episodes.length, 1);
+      // 后到的更全 → 不是新增一条，而是替换事件
+      expect(events.last.items, isEmpty, reason: '同一 animeId 不重复上屏');
+      expect(events.last.upgrades.single.anime.episodes.length, 3);
+      expect(events.last.upgrades.single.serverName, '我的服务器');
+    });
+
+    test('去重开启：后到的集数相同或更少 → 丢弃（卡片不跳动）', () async {
+      await DanmakuServerSettings.instance.setSearchDedupe(true);
+      final api = DandanPlayApi(
+        client: MockClient((request) async {
+          final isDefault = request.url.host == 'api.dandanplay.net';
+          return http.Response.bytes(
+            utf8.encode(jsonEncode({
+              'animes': [
+                _animeJson(1, '番剧A', [
+                  _epJson(11, '第01话'),
+                  if (isDefault) _epJson(12, '第02话'),
+                ]),
+              ],
+            })),
+            200,
+          );
+        }),
+      );
+      final service = DanmakuNetworkService(api: api);
+      await DanmakuServerSettings.instance.addServer('我的服务器', 'https://self.example.com');
+
+      final events = await service.searchStream('关键词').toList();
+      expect(events.first.items.single.anime.episodes.length, 2);
+      expect(events.last.items, isEmpty);
+      expect(events.last.upgrades, isEmpty, reason: '不更全就不换，避免卡片无谓跳动');
+    });
+
+    test('search() 聚合同样"更全的覆盖先到的"', () async {
+      await DanmakuServerSettings.instance.setSearchDedupe(true);
+      final api = DandanPlayApi(
+        client: MockClient((request) async {
+          final isDefault = request.url.host == 'api.dandanplay.net';
+          return http.Response.bytes(
+            utf8.encode(jsonEncode({
+              'animes': [
+                _animeJson(1, '番剧A', [
+                  _epJson(11, '第01话'),
+                  if (!isDefault) _epJson(12, '第02话'),
+                ]),
+              ],
+            })),
+            200,
+          );
+        }),
+      );
+      final service = DanmakuNetworkService(api: api);
+      await DanmakuServerSettings.instance.addServer('我的服务器', 'https://self.example.com');
+
+      final result = await service.search('关键词');
+      expect(result.items.length, 1, reason: '去重后只有一条');
+      expect(result.items.single.anime.episodes.length, 2);
+      expect(result.items.single.serverName, '我的服务器');
+    });
+
+    test('单台失败：以带 error 的事件产出，其余服务器继续', () async {
+      final api = DandanPlayApi(
+        client: MockClient((request) async {
+          if (request.url.host == 'api.dandanplay.net') {
+            return http.Response('server error', 500);
+          }
+          return http.Response.bytes(
+            utf8.encode(jsonEncode({
+              'animes': [
+                _animeJson(2, '番剧B', [_epJson(22, '第02话')]),
+              ],
+            })),
+            200,
+          );
+        }),
+      );
+      final service = DanmakuNetworkService(api: api);
+      await DanmakuServerSettings.instance.addServer('我的服务器', 'https://self.example.com');
+
+      final events = await service.searchStream('关键词').toList();
+      expect(events.length, 2);
+      expect(events.first.error, contains('弹弹Play'));
+      expect(events.first.items, isEmpty);
+      expect(events.last.items.single.anime.animeTitle, '番剧B');
+      expect(events.last.error, isNull);
+    });
+
+    test('取消订阅（用户点停止）：在途结果丢弃、后续服务器不再发起请求', () async {
+      final made = makeApi(defaultDelayMs: 60); // 默认服务器还在路上
+      final service = DanmakuNetworkService(api: made.api);
+      await DanmakuServerSettings.instance.addServer('我的服务器', 'https://self.example.com');
+
+      final events = <DanmakuServerSearchOutcome>[];
+      final sub = service.searchStream('关键词').listen(events.add);
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      await sub.cancel(); // 用户点「停止」
+
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      expect(events, isEmpty, reason: '已经点了停止，在途结果不得再上屏');
+      expect(made.selfCalls, isEmpty, reason: '停止后不再向后继服务器发请求');
     });
   });
 

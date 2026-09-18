@@ -112,4 +112,56 @@ void main() {
     expect(autoMatchSwitch(tester).onChanged, isNull);
     expect(settings.autoMatchPreference, isTrue, reason: '偏好保留待恢复');
   });
+
+  testWidgets('搜索结果自动去重：默认关闭，开启前二次确认（取消则不生效）', (tester) async {
+    await pumpPage(tester);
+
+    expect(settings.searchDedupe, isFalse);
+    expect(find.text('每台服务器的结果各自展示，可自行挑选来源'), findsOneWidget);
+
+    // 点开关 → 先弹二次确认，讲清"会做什么"（含"不代表没搜到"）
+    await tester.tap(find.text('搜索结果自动去重'));
+    await tester.pumpAndSettle();
+    expect(find.text('开启搜索结果自动去重？'), findsOneWidget);
+    expect(find.textContaining('不代表它没搜到'), findsOneWidget);
+
+    // 取消 → 开关不生效（确认式二次确认）
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+    expect(settings.searchDedupe, isFalse);
+    expect(find.text('每台服务器的结果各自展示，可自行挑选来源'), findsOneWidget);
+
+    // 再来一次并点「开启」→ 生效，副标题换成结果形态的描述
+    await tester.tap(find.text('搜索结果自动去重'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('开启'));
+    await tester.pumpAndSettle();
+    expect(settings.searchDedupe, isTrue);
+    expect(find.text('重复番剧合并为一条，保留集数最全的'), findsOneWidget);
+    expect(find.text('每台服务器的结果各自展示，可自行挑选来源'), findsNothing);
+  });
+
+  testWidgets('自动去重确认弹窗：勾「不再提示」后开启不再弹', (tester) async {
+    await pumpPage(tester);
+
+    await tester.tap(find.text('搜索结果自动去重'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('不再提示'));
+    await tester.pump();
+    await tester.tap(find.text('开启'));
+    await tester.pumpAndSettle();
+
+    expect(settings.searchDedupe, isTrue);
+    expect(settings.searchDedupeHintDismissed, isTrue);
+
+    // 关掉再打开：不再弹二次确认，直接生效
+    await tester.tap(find.text('搜索结果自动去重'));
+    await tester.pumpAndSettle();
+    expect(settings.searchDedupe, isFalse);
+
+    await tester.tap(find.text('搜索结果自动去重'));
+    await tester.pumpAndSettle();
+    expect(find.text('开启搜索结果自动去重？'), findsNothing);
+    expect(settings.searchDedupe, isTrue);
+  });
 }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/widgets/app_frame.dart';
-import 'package:moumou/widgets/player_panel.dart' show PlayerPanelPage;
+import 'package:moumou/widgets/player_panel.dart'
+    show PlayerPanelPage, panelHeaderTitle;
 
 /// 竖屏播放页的底部弹出面板导航器（与横屏 [PlayerPanelNavigator] 等价的小型实现）。
 ///
@@ -137,7 +138,7 @@ class _PlayerBottomPanelState extends State<PlayerBottomPanel> {
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                _buildHeader(page.title),
+                _buildHeader(page),
                 // 内容区：自适应高度，超限可滚动（面板内容均为可滚动组件）
                 Flexible(
                   child: AnimatedSwitcher(
@@ -188,7 +189,7 @@ class _PlayerBottomPanelState extends State<PlayerBottomPanel> {
     );
   }
 
-  Widget _buildHeader(String title) {
+  Widget _buildHeader(PlayerPanelPage page) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
       child: Row(
@@ -200,15 +201,10 @@ class _PlayerBottomPanelState extends State<PlayerBottomPanel> {
               onPressed: _navigator.pop,
             ),
           Expanded(
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+            // 标题行渲染与横屏外壳共用（含可选跑马灯，§4.5）
+            child: panelHeaderTitle(
+              text: page.title,
+              marquee: page.marqueeTitle,
             ),
           ),
           IconButton(
