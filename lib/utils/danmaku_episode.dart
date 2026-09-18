@@ -12,10 +12,41 @@ import 'package:moumou/models/dandan_models.dart';
 /// 支持：`01.mkv` / `第01话` / `S01E01` / `EP01` /
 /// `[Group] Anime - 01 [1080p].mkv` / `Anime_12.5.mkv` 等。
 /// 无法识别返回 null。
+///
+/// **也接受完整路径**（`/storage/emulated/0/Download/1.mp4`、`smb://nas/a/2.mkv`、
+/// `C:\Videos\3.mp4`）：先取路径最后一段再匹配。播放页拿到的是完整路径，而纯
+/// 数字文件名（`1`、`2`、`3`…）的规则是**首尾锚定**的，路径里带 `/` 就会失配
+/// ——用户实测"文件名是 1、2、3 的视频定位不到"就是这个原因（切集自动匹配那条
+/// 链路在调用处 `p.basename` 过，网络弹幕面板这条没有）。
 double? extractEpisodeNumber(String fileName) {
-  final name = fileName.contains('.')
+  final base = _baseName(fileName);
+  final fromBase = _matchEpisodeNumber(base);
+  if (fromBase != null) return fromBase;
+  // 兜底：万一路径分隔符其实是标题本身的一部分（如「第1/2话」），原串再试一次
+  return base == fileName ? null : _matchEpisodeNumber(fileName);
+}
+
+/// 取路径最后一段：`/a/b/1.mkv` → `1.mkv`。
+///
+/// `/` 与 `\` 都当分隔符，不依赖当前平台——Android 上跑来自 Windows 的网络路径
+/// 也不会误判。没有分隔符时原样返回。
+String _baseName(String path) {
+  var cut = -1;
+  for (final sep in const ['/', '\\']) {
+    final at = path.lastIndexOf(sep);
+    if (at > cut) cut = at;
+  }
+  return cut < 0 ? path : path.substring(cut + 1);
+}
+
+/// 按文件名（不含目录）匹配集数：去扩展名后依次套规则。
+double? _matchEpisodeNumber(String fileName) {
+  final raw = fileName.contains('.')
       ? fileName.substring(0, fileName.lastIndexOf('.'))
       : fileName;
+  // 首尾空白容错：云盘/网络传输/重命名的文件名常带空格，而「纯数字文件名」
+  // 等规则是首尾锚定的，一个空格就会失配
+  final name = raw.trim();
 
   // S01E01（季 + 集，取集）
   final sxxExx = RegExp(r'[Ss](\d+)[Ee](\d+)').firstMatch(name);

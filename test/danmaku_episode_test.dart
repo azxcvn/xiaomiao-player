@@ -46,6 +46,35 @@ void main() {
       expect(extractEpisodeNumber('Movie.mkv'), isNull);
       expect(extractEpisodeNumber(''), isNull);
     });
+
+    // 播放页拿到的是**完整路径**；纯数字文件名的规则是首尾锚定的，路径里带
+    // 分隔符就会失配（用户实测：文件名是 1、2、3 的视频定位不到）
+    test('完整路径也认（Android 存储 / SMB / Windows 反斜杠）', () {
+      expect(extractEpisodeNumber('/storage/emulated/0/Download/1.mp4'), 1);
+      expect(extractEpisodeNumber('/storage/emulated/0/Movies/2.mkv'), 2);
+      expect(extractEpisodeNumber('smb://nas/anime/03.mkv'), 3);
+      expect(extractEpisodeNumber(r'C:\Videos\4.mp4'), 4);
+      expect(extractEpisodeNumber('/storage/emulated/0/Download/第05话.mp4'), 5);
+      expect(
+        extractEpisodeNumber('/storage/emulated/0/Anime/[Group] Show - 06 [1080p].mkv'),
+        6,
+      );
+    });
+
+    test('目录名里的数字不算集数', () {
+      expect(extractEpisodeNumber('/storage/emulated/0/2024/Show.mkv'), isNull);
+      expect(extractEpisodeNumber('/Movies/1080p/Movie.mkv'), isNull);
+    });
+
+    test('首尾空白容错（云盘/传输重命名常见的 " 1.mkv"）', () {
+      expect(extractEpisodeNumber(' 1.mkv'), 1);
+      expect(extractEpisodeNumber('/storage/emulated/0/Download/ 2.mp4'), 2);
+      expect(extractEpisodeNumber('03 .mkv'), 3);
+    });
+
+    test('兜底：文件名段里没集数时仍按原串规则试一次（保留旧行为）', () {
+      expect(extractEpisodeNumber('Show 第1话/ep.mkv'), 1);
+    });
   });
 
   group('extractEpisodeNumberFromTitle', () {
@@ -138,6 +167,17 @@ void main() {
       ];
       final loc = locateCurrentEpisode('02.mkv', plain);
       expect(loc.index, 1);
+    });
+
+    test('完整路径 + 纯数字文件名（1、2、3…）也能定位并滚到首行', () {
+      // 播放页传的 currentFileName 就是完整路径
+      final loc = locateCurrentEpisode(
+        '/storage/emulated/0/Download/2.mp4',
+        episodes,
+      );
+      expect(loc.index, 1);
+      expect(loc.number, 2);
+      expect(loc.message, isNull);
     });
   });
 }
