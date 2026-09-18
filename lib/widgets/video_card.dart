@@ -12,9 +12,11 @@ import 'package:moumou/widgets/file_selection_ui.dart';
 
 /// 视频卡片：缩略图 + 名称 + 字段（列表视图与目录详情页共用）。
 ///
-/// 字段共 7 个（由 [fields] 控制显隐）：
+/// 字段共 8 个（由 [fields] 控制显隐）：
 /// - **时长**：缩略图右下角标签；**大小**：缩略图左下角标签——
 ///   两者自动避让缩略图底部进度条（有进度条时上移）；
+/// - **完整名称**：名称不截断、整名换行显示（卡片高度随标题行数变化，
+///   默认选中；关掉后回到 2 行省略号）；
 /// - 其余字段（日期 / 分辨率 / 进度 / 帧率 / 字幕指示器）以标签行展示。
 ///
 /// 进度字段自动计算观看百分比，并驱动卡片状态：
@@ -199,6 +201,10 @@ class _VideoCardState extends State<VideoCard> {
       ));
     }
 
+    // 完整名称：标题不截断、整名换行（卡片高度由标题行数决定，动态变化）；
+    // 未选中时维持原来的「最多 2 行 + 省略号」
+    final showFullName = fields.contains(VideoField.fullName);
+
     // 看完置灰：卡片底色换灰 + 名称变灰
     final cardColor = watched
         ? scheme.surfaceContainerHighest
@@ -286,8 +292,10 @@ class _VideoCardState extends State<VideoCard> {
                   children: [
                     Text(
                       widget.video.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      maxLines: showFullName ? null : 2,
+                      overflow: showFullName
+                          ? TextOverflow.visible
+                          : TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,

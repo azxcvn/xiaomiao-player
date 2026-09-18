@@ -45,8 +45,10 @@ enum FolderField {
 }
 
 /// 视频列表可显示的字段（名称固定显示，不在此列）
-/// 一共 7 个字段：时长 / 大小 / 日期 / 分辨率 / 进度 / 字幕指示器 / 帧率。
-/// 卡片内按三行胶囊布局：第一行 3 个、第二行 3 个、第三行 1 个（字幕指示器，全宽）。
+/// 一共 8 个字段：时长 / 大小 / 日期 / 分辨率 / 进度 / 字幕指示器 / 帧率 /
+/// 完整名称。
+/// 面板内按三行胶囊布局：第一行 3 个、第二行 3 个，
+/// 第三行 2 个（字幕指示器 + 完整名称，横向两个）。
 enum VideoField {
   duration('时长'),
   size('大小'),
@@ -54,7 +56,11 @@ enum VideoField {
   resolution('分辨率'),
   progress('进度'),
   subtitle('字幕指示器'),
-  frameRate('帧率');
+  frameRate('帧率'),
+  // 完整名称（默认选中）：标题不截断、整名换行显示，卡片高度随标题行数变化。
+  // ⚠️ 新字段一律追加在枚举末尾——[ViewSettings] 按 index 持久化字段集合，
+  // 插在中间会让老用户已保存的字段全部错位
+  fullName('完整名称');
 
   final String label;
   const VideoField(this.label);
@@ -79,6 +85,13 @@ class ViewSettings extends ChangeNotifier {
   static const _keyVideoSortField = 'view_video_sort_field';
   static const _keyVideoSortOrder = 'view_video_sort_order';
   static const _keyVideoFields = 'view_video_fields';
+
+  /// 视频显示字段（v2）：新增「完整名称」字段后的落盘 key。
+  ///
+  /// 老 key 里不可能有「完整名称」的选择，所以只做一次性迁移：老 key 的集合
+  /// 补上「完整名称」（用户没关过它，按默认选中补齐）后写进 v2；v2 一旦存在就
+  /// 以它为准——否则用户之后手动关掉「完整名称」会被迁移逻辑反复打开。
+  static const _keyVideoFieldsV2 = 'view_video_fields_v2';
   static const _keyViewMode = 'view_mode';
 
   SortField _sortField = SortField.name;
@@ -87,7 +100,11 @@ class ViewSettings extends ChangeNotifier {
 
   VideoSortField _videoSortField = VideoSortField.name;
   SortOrder _videoSortOrder = SortOrder.asc;
-  Set<VideoField> _videoFields = {VideoField.duration, VideoField.size};
+  Set<VideoField> _videoFields = {
+    VideoField.duration,
+    VideoField.size,
+    VideoField.fullName,
+  };
 
   ViewMode _viewMode = ViewMode.list;
 
@@ -117,6 +134,7 @@ class ViewSettings extends ChangeNotifier {
     final vsf = prefs.getInt(_keyVideoSortField);
     final vso = prefs.getInt(_keyVideoSortOrder);
     final videoFieldsList = prefs.getStringList(_keyVideoFields);
+    final videoFieldsV2 = prefs.getStringList(_keyVideoFieldsV2);
     final viewMode = prefs.getInt(_keyViewMode);
 
     if (sf != null && sf >= 0 && sf < SortField.values.length) {
@@ -136,10 +154,21 @@ class ViewSettings extends ChangeNotifier {
     if (vso != null && vso >= 0 && vso < SortOrder.values.length) {
       _videoSortOrder = SortOrder.values[vso];
     }
-    if (videoFieldsList != null && videoFieldsList.isNotEmpty) {
-      _videoFields = videoFieldsList
+    if (videoFieldsV2 != null && videoFieldsV2.isNotEmpty) {
+      _videoFields = videoFieldsV2
           .map((e) => VideoField.values[int.tryParse(e) ?? 0])
           .toSet();
+    } else if (videoFieldsList != null && videoFieldsList.isNotEmpty) {
+      // 迁移（一次性）：老 key 的字段 + 新字段「完整名称」（默认选中）。
+      // 迁移结果立刻落到 v2，之后用户手动关掉它也不会被再次补上。
+      _videoFields = videoFieldsList
+          .map((e) => VideoField.values[int.tryParse(e) ?? 0])
+          .toSet()
+        ..add(VideoField.fullName);
+      await prefs.setStringList(
+        _keyVideoFieldsV2,
+        _videoFields.map((e) => e.index.toString()).toList(),
+      );
     }
     if (viewMode != null && viewMode >= 0 && viewMode < ViewMode.values.length) {
       _viewMode = ViewMode.values[viewMode];
@@ -210,7 +239,7 @@ class ViewSettings extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(
-      _keyVideoFields,
+      _keyVideoFieldsV2,
       _videoFields.map((e) => e.index.toString()).toList(),
     );
   }

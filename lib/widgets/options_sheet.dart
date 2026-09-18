@@ -132,9 +132,9 @@ class _SortOptionsSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 _sectionTitle(context, '视频显示字段'),
-                // 7 字段三行胶囊（等宽均分）：
+                // 8 字段三行胶囊（等宽均分）：
                 // 第一行 时长/大小/日期，第二行 进度/帧率/分辨率，
-                // 第三行 字幕指示器独占整行（长度与上方两行整体一致）
+                // 第三行 字幕指示器/完整名称（横向两个）
                 _videoFieldChips(context, viewSettings),
               ]);
             }
@@ -205,11 +205,11 @@ class _SortOptionsSheet extends StatelessWidget {
     );
   }
 
-  /// 视频显示字段：三行胶囊布局（7 字段 = 3 + 3 + 1），**行内等宽均分**。
+  /// 视频显示字段：三行胶囊布局（8 字段 = 3 + 3 + 2），**行内等宽均分**。
   ///
   /// - 第一行：时长 / 大小 / 日期（3 个胶囊，各占 1/3 行宽）；
   /// - 第二行：进度 / 帧率 / 分辨率（3 个胶囊，各占 1/3 行宽）；
-  /// - 第三行：字幕指示器独占整行（长度与上方两行整体一致）。
+  /// - 第三行：字幕指示器 / 完整名称（2 个胶囊，各占 1/2 行宽）。
   Widget _videoFieldChips(BuildContext context, ViewSettings viewSettings) {
     ({String label, bool selected, VoidCallback onToggle}) chip(
       VideoField f,
@@ -232,7 +232,7 @@ class _SortOptionsSheet extends StatelessWidget {
       chip(VideoField.frameRate),
       chip(VideoField.resolution),
     ];
-    final row3 = [chip(VideoField.subtitle)];
+    final row3 = [chip(VideoField.subtitle), chip(VideoField.fullName)];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

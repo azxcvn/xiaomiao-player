@@ -232,4 +232,63 @@ void main() {
       expect(prefs.getInt('view_sort_field'), SortField.name.index);
     });
   });
+
+  group('视频显示字段：完整名称（用户反馈标题显示不全）', () {
+    test('默认选中：时长 / 大小 / 完整名称', () async {
+      final s = ViewSettings();
+      await s.ensureLoaded();
+      expect(s.videoFields, {
+        VideoField.duration,
+        VideoField.size,
+        VideoField.fullName,
+      });
+    });
+
+    test('切换并落盘：关掉后读盘仍是关（不被默认值/迁移再打开）', () async {
+      final s = ViewSettings();
+      await s.toggleVideoField(VideoField.fullName);
+      expect(s.videoFields.contains(VideoField.fullName), isFalse);
+
+      final again = ViewSettings();
+      await again.load(); // 模拟重启
+      expect(again.videoFields.contains(VideoField.fullName), isFalse);
+      expect(again.videoFields, {VideoField.duration, VideoField.size});
+    });
+
+    test('老数据迁移：老 key 的字段 + 补上「完整名称」并落到新 key', () async {
+      SharedPreferences.setMockInitialValues({
+        // 老 key：时长(0) + 进度(4)
+        'view_video_fields': ['0', '4'],
+      });
+      final s = ViewSettings();
+      await s.load();
+      expect(s.videoFields, {
+        VideoField.duration,
+        VideoField.progress,
+        VideoField.fullName,
+      });
+      final prefs = await SharedPreferences.getInstance();
+      expect(
+        prefs.getStringList('view_video_fields_v2')?.toSet(),
+        {'0', '4', '7'},
+        reason: '迁移结果必须立刻落盘，否则用户随后关掉会被再次补回来',
+      );
+
+      // 迁移后再关掉：重启不会又被打开
+      await s.toggleVideoField(VideoField.fullName);
+      final again = ViewSettings();
+      await again.load();
+      expect(again.videoFields.contains(VideoField.fullName), isFalse);
+    });
+
+    test('新 key 存在时以它为准（老 key 不再参与）', () async {
+      SharedPreferences.setMockInitialValues({
+        'view_video_fields': ['0'],
+        'view_video_fields_v2': ['1'],
+      });
+      final s = ViewSettings();
+      await s.load();
+      expect(s.videoFields, {VideoField.size});
+    });
+  });
 }
