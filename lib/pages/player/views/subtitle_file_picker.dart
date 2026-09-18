@@ -6,9 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// 外挂字幕文件选择（工作.md 阶段1 第 3 点）：
 ///
-/// - **Android 11 及以下（SDK ≤ 30）**：调用系统文件选择器
-///   （原生 ACTION_OPEN_DOCUMENT，content:// 由原生侧拷贝为真实路径）；
-/// - **Android 11 以上（SDK ≥ 31）**：使用自建文件选择器
+/// - **Android 10 及以下（SDK ≤ 29）**：调用系统文件选择器
+///   （原生 ACTION_OPEN_DOCUMENT，content:// 由原生侧拷贝为真实路径）——
+///   分区存储下非媒体文件拿不到真实路径读权限，只有 SAF 授权才读得到
+///   （分派规则与理由见 [DeviceServices.shouldUseSystemPicker]）；
+/// - **Android 11 及以上（SDK ≥ 30）**：使用自建文件选择器
 ///   （[SubtitleFilePickerPanel]，作为右侧面板二级页就地切换，不再从底部弹出），
 ///   支持当前路径显示、名称/大小/日期排序（下拉菜单 + 升降序）、文件夹记忆
 ///   （成功导入后记住文件夹，下次打开自动定位；记忆文件夹已被删除/不可读时
@@ -36,7 +38,7 @@ class SubtitleFileService {
     await prefs.setString(key, path);
   }
 
-  /// 系统文件选择器（Android ≤ 11）：content:// 拷贝为应用内真实路径后返回。
+  /// 系统文件选择器（Android 10 及以下）：content:// 拷贝为应用内真实路径后返回。
   static Future<String?> pickWithSystemPicker() async {
     final uri = await DeviceServices.openDocumentPicker();
     if (uri == null) return null;

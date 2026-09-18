@@ -349,6 +349,24 @@ class MainActivity : FlutterActivity() {
                             }
                         }
                     }
+                    // 本地弹幕选择器（弹幕专用 MIME 白名单含 text/xml，
+                    // 系统选择器不再把 XML 弹幕置灰——用户反馈的根因）
+                    "openDanmakuPicker" -> {
+                        if (pendingDocumentPickerResult != null) {
+                            result.error("BUSY", "picker already open", null)
+                        } else {
+                            pendingDocumentPickerResult = result
+                            try {
+                                startActivityForResult(
+                                    buildDocumentPickerIntent(danmakuPickerMimeTypes),
+                                    2002,
+                                )
+                            } catch (e: Exception) {
+                                pendingDocumentPickerResult = null
+                                result.success(null)
+                            }
+                        }
+                    }
                     // 音频选择器（MIME 含 audio 类型，系统选择器不再置灰 .mp3/.m4a/.flac）
                     "openAudioPicker" -> {
                         if (pendingDocumentPickerResult != null) {
@@ -1135,14 +1153,34 @@ class MainActivity : FlutterActivity() {
     }
 
     // ── 字幕功能（工作.md 阶段1 第 3 点）────────────────────
+    //
+    // ⚠️ 下面这些 MIME 白名单一律用行注释写：白名单里会出现「星号 + 斜杠」的通配
+    //   写法，放进 /* */ 块注释里会被当成注释结束符，把后面的代码整段吃掉
+    //   （构建报「Syntax error: Missing '}'」的根因）。
 
-    /** 外挂字幕文件选择器的 MIME 白名单（额外的 octet-stream 兑底） */
+    // 外挂字幕文件选择器的 MIME 白名单：
+    // 放宽到 text 系 + application 系 + 全类型通配——系统选择器（DocumentsUI）会把
+    // **不在** EXTRA_MIME_TYPES 里的文件置灰，而同一扩展名在不同 ROM/Provider 上
+    // 可能报成完全不同的 MIME（.ass 可能是 text/x-ssa，.sub 可能是
+    // text/vnd.dvb.subtitle，甚至 application/octet-stream）。内容校验交给导入
+    // 那一侧（解析失败会提示「导入失败，请检查文件格式」），选择器只求「不误置灰」。
+    // 参考项目小喵 player 的 SAF 白名单同样是 text 系 + application 系 + 全类型通配。
     private val subtitlePickerMimeTypes = arrayOf(
-        "text/plain",
-        "text/vtt",
-        "text/x-ssa",
-        "application/x-subrip",
-        "application/octet-stream",
+        "text/*",
+        "application/*",
+        "*/*",
+    )
+
+    // 本地弹幕文件选择器的 MIME 白名单（**必须与字幕分开**）：
+    // .xml 的 MIME 是 text/xml（Android MimeTypeMap 把 xml 映射到 text/xml），
+    // 以前弹幕复用字幕白名单（里面没有 xml 的两种 MIME），系统选择器把 XML 弹幕
+    // 全部置灰、用户根本选不中（用户反馈：Android 11 上导入本地弹幕选不中文件）。
+    private val danmakuPickerMimeTypes = arrayOf(
+        "text/xml",
+        "application/xml",
+        "text/*",
+        "application/*",
+        "*/*",
     )
 
     /** 字体选择器的 MIME 白名单（含 font 类型，避免系统选择器把 .ttf/.otf 置灰） */
@@ -1158,10 +1196,13 @@ class MainActivity : FlutterActivity() {
         "application/octet-stream",
     )
 
-    /** 音频选择器的 MIME 白名单（工作.md 音频功能：.mp3/.m4a/.flac 等不置灰） */
+    // 音频选择器的 MIME 白名单（工作.md 音频功能：.mp3/.m4a/.flac 等不置灰）：
+    // 同样带上全类型通配——部分 ROM 把 .m4a 报成 video/mp4、把无损格式报成
+    // application/octet-stream，白名单窄了就会被置灰。
     private val audioPickerMimeTypes = arrayOf(
         "audio/*",
         "application/octet-stream",
+        "*/*",
     )
 
     /**

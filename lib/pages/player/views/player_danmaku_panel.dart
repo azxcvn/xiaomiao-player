@@ -23,16 +23,20 @@ import 'package:moumou/widgets/player_panel.dart';
 
 /// 本地弹幕文件选择服务（对齐 [SubtitleFileService] / AudioFileService 的思路）。
 ///
-/// - SDK ≤ 30：系统选择器（content:// 由原生侧拷贝为真实路径）；
-/// - SDK ≥ 31：复用自建选择器（[SubtitleFilePickerPanel]，独立记忆文件夹）。
+/// - SDK ≤ 29（Android 10 及以下）：系统选择器（content:// 由原生侧拷贝为真实路径）；
+/// - SDK ≥ 30（Android 11 及以上）：复用自建选择器（[SubtitleFilePickerPanel]，
+///   独立记忆文件夹）。
 class DanmakuFileService {
   DanmakuFileService._();
 
   static const lastFolderKey = 'danmaku_picker_last_folder';
 
-  /// 系统文件选择器（Android ≤ 11）：content:// 拷贝为应用内真实路径后返回。
+  /// 系统文件选择器（Android 10 及以下）：content:// 拷贝为应用内真实路径后返回。
+  ///
+  /// ⚠️ 必须走 [DeviceServices.openDanmakuPicker]（弹幕专用 MIME 白名单）：
+  /// 复用字幕选择器会把 .xml（MIME `text/xml`）置灰选不中。
   static Future<String?> pickWithSystemPicker() async {
-    final uri = await DeviceServices.openDocumentPicker();
+    final uri = await DeviceServices.openDanmakuPicker();
     if (uri == null) return null;
     final name = uri.split('/').where((s) => s.isNotEmpty).last;
     final fileName = name.isEmpty ? 'danmaku.xml' : name;
@@ -115,12 +119,14 @@ class PlayerDanmakuPanel extends StatelessWidget {
   }
 
   /// 导入本地弹幕：按 Android 版本走系统/自建文件选择器。
-  /// - SDK ≤ 30：系统选择器（原生 ACTION_OPEN_DOCUMENT）；
-  /// - SDK ≥ 31：自建选择器（复用 [SubtitleFilePickerPanel]，面板二级页）。
+  /// - Android 10 及以下（SDK ≤ 29）：系统选择器（原生 ACTION_OPEN_DOCUMENT，
+  ///   分区存储下非媒体文件只有 SAF 授权才读得到）；
+  /// - Android 11 及以上（SDK ≥ 30）：自建选择器（复用 [SubtitleFilePickerPanel]，
+  ///   面板二级页）。分派规则与理由见 [DeviceServices.shouldUseSystemPicker]。
   Future<void> _importLocalDanmaku(BuildContext context) async {
     final sdk = await DeviceServices.getSdkInt();
     if (!context.mounted || sdk <= 0) return;
-    if (sdk <= 30) {
+    if (DeviceServices.shouldUseSystemPicker(sdk)) {
       final path = await DanmakuFileService.pickWithSystemPicker();
       if (path == null || !context.mounted) return;
       await _loadPickedFile(context, path);

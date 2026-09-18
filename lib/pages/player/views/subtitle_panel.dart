@@ -188,12 +188,14 @@ class PlayerSubtitlePanel extends StatelessWidget {
   }
 
   /// 导入外挂字幕：按 Android 版本走系统/自建文件选择器。
-  /// - SDK ≤ 30：系统选择器（原生 ACTION_OPEN_DOCUMENT）；
-  /// - SDK ≥ 31：自建选择器（[SubtitleFilePickerPanel]，右侧面板二级页）。
+  /// - Android 10 及以下（SDK ≤ 29）：系统选择器（原生 ACTION_OPEN_DOCUMENT，
+  ///   分区存储下非媒体文件只有 SAF 授权才读得到）；
+  /// - Android 11 及以上（SDK ≥ 30）：自建选择器（[SubtitleFilePickerPanel]，
+  ///   右侧面板二级页）。分派规则与理由见 [DeviceServices.shouldUseSystemPicker]。
   Future<void> _importExternalSubtitle(BuildContext context) async {
     final sdk = await DeviceServices.getSdkInt();
     if (!context.mounted || sdk <= 0) return;
-    if (sdk <= 30) {
+    if (DeviceServices.shouldUseSystemPicker(sdk)) {
       final path = await SubtitleFileService.pickWithSystemPicker();
       if (path == null || !context.mounted) return;
       await _importPath(context, path);

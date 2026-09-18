@@ -295,11 +295,47 @@ class DeviceServices {
     }
   }
 
+  /// 系统文件选择器分派的 SDK 上限：**Android 10（API 29）**。
+  ///
+  /// `sdk <= 29` 必须用系统 SAF 选择器，Android 11（API 30）起才用自建选择器：
+  /// App 是 targetSdk 36 且没有 `requestLegacyExternalStorage`，Android 10 起是
+  /// 分区存储，**非媒体文件**（字幕 .ass/.srt、弹幕 .xml、外挂音轨）拿不到真实
+  /// 路径读取权；而「所有文件访问」（`MANAGE_EXTERNAL_STORAGE`）API 30 才有。
+  /// 自建选择器走 `listDirectory` 真实路径，在 Android 10 及以下列不出/读不了
+  /// 这些文件（参考项目小喵 player 同款边界：`isAndroid10OrBelow = SDK <= 29`）。
+  ///
+  /// 原先写的是 `<= 30`，把 Android 11 也算进了系统选择器那一档——而 Android 11
+  /// 已经有「所有文件访问」、自建选择器完全可用，白白多受一份系统选择器的限制
+  ///（用户反馈：Android 11 上 XML 弹幕被置灰）。
+  static const int systemPickerMaxSdk = 29;
+
+  /// 该 SDK 版本是否必须走系统文件选择器（见 [systemPickerMaxSdk]）
+  static bool shouldUseSystemPicker(int sdkInt) =>
+      sdkInt > 0 && sdkInt <= systemPickerMaxSdk;
+
   /// 打开系统文件选择器（ACTION_OPEN_DOCUMENT）：返回所选 content:// uri；
   /// 用户取消/不可用返回 null。
+  ///
+  /// MIME 白名单是**字幕**那一档（`text/*` / `application/*` / `*/*`）：
+  /// 弹幕（.xml）走 [openDanmakuPicker]，音频走 [openAudioPicker]
+  /// ——白名单窄了系统选择器会把文件置灰，用户点不动。
   static Future<String?> openDocumentPicker() async {
     try {
       return await _channel.invokeMethod<String>('openDocumentPicker');
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// 打开「本地弹幕」系统文件选择器。
+  ///
+  /// ⚠️ 不能复用 [openDocumentPicker]：那条走的是字幕白名单，里面没有
+  /// `text/xml` / `application/xml`，而 `.xml` 的 MIME 正是 `text/xml`——
+  /// 系统选择器（DocumentsUI）会把不在 `EXTRA_MIME_TYPES` 里的文件**置灰**，
+  /// 于是 Android 10 及以下的用户根本选不中 XML 弹幕（用户反馈的根因）。
+  static Future<String?> openDanmakuPicker() async {
+    try {
+      return await _channel.invokeMethod<String>('openDanmakuPicker');
     } catch (_) {
       return null;
     }
