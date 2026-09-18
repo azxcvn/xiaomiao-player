@@ -413,7 +413,9 @@ class _HomePageState extends State<HomePage>
 
   Future<void> _openNetworkStorage() async {
     await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const NetworkStoragePage()),
+      MaterialPageRoute(
+        builder: (_) => NetworkStoragePage(viewSettings: widget.viewSettings),
+      ),
     );
   }
 

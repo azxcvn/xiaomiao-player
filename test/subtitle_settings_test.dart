@@ -243,6 +243,51 @@ void main() {
     expect(s.getSelectedSubtitleFor(videoA), isNull); // 选中的字幕被删除后清除选中记忆
   });
 
+  test('远端同名字幕记忆：按视频独立、与本地导入列表分开、可持久化（网络存储）', () async {
+    final s = SubtitleSettings.instance;
+    const videoA = 'http://127.0.0.1:1234/tokenA/share/A.mkv';
+    const videoB = 'http://127.0.0.1:1234/tokenB/share/B.mkv';
+
+    expect(s.getRemoteSubtitleFor(videoA), isNull);
+    await s.setRemoteSubtitleFor(videoA, buildRemoteSubtitlePath(1, '/share/A.sc.ass'));
+    await s.setRemoteSubtitleFor(videoB, buildRemoteSubtitlePath(2, '/share/sub/B.srt'));
+
+    // 与本地导入列表互不干扰：远端记忆不进 File 失效校验的那张表
+    expect(s.getImportedSubtitlesFor(videoA), isEmpty);
+    expect(parseRemoteSubtitlePath(s.getRemoteSubtitleFor(videoA)),
+        (connectionId: 1, remotePath: '/share/A.sc.ass'));
+    expect(parseRemoteSubtitlePath(s.getRemoteSubtitleFor(videoB)),
+        (connectionId: 2, remotePath: '/share/sub/B.srt'));
+
+    // 模拟重启
+    await s.load();
+    expect(parseRemoteSubtitlePath(s.getRemoteSubtitleFor(videoA)),
+        (connectionId: 1, remotePath: '/share/A.sc.ass'));
+    expect(parseRemoteSubtitlePath(s.getRemoteSubtitleFor(videoB)),
+        (connectionId: 2, remotePath: '/share/sub/B.srt'));
+
+    // 空值/空路径不写
+    await s.setRemoteSubtitleFor('', buildRemoteSubtitlePath(1, '/a.srt'));
+    await s.setRemoteSubtitleFor(videoA, '');
+    expect(s.getRemoteSubtitleFor(''), isNull);
+  });
+
+  test('远端字幕标识编解码：合法可还原，非法一律 null', () {
+    expect(buildRemoteSubtitlePath(7, '/share/x.ass'), '7|/share/x.ass');
+    expect(parseRemoteSubtitlePath('7|/share/x.ass'),
+        (connectionId: 7, remotePath: '/share/x.ass'));
+    // 远端路径里再出现 | 也不影响（只按第一个分隔）
+    expect(parseRemoteSubtitlePath('7|/share/a|b.ass'),
+        (connectionId: 7, remotePath: '/share/a|b.ass'));
+    expect(parseRemoteSubtitlePath(null), isNull);
+    expect(parseRemoteSubtitlePath(''), isNull);
+    expect(parseRemoteSubtitlePath('nosep'), isNull);
+    expect(parseRemoteSubtitlePath('x|/a.ass'), isNull); // 连接 id 非数字
+    expect(parseRemoteSubtitlePath('7|a.ass'), isNull); // 远端路径不以 / 开头
+    expect(parseRemoteSubtitlePath('7|'), isNull); // 远端路径为空
+    expect(parseRemoteSubtitlePath('|/a.ass'), isNull); // 连接 id 为空
+  });
+
   test('重置所有样式：颜色/描边/效果回默认，保留延迟/缩放/位置/字体以及强制覆盖内嵌样式开关', () async {
     final s = SubtitleSettings.instance;
     await s.setDelay(3);

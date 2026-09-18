@@ -129,6 +129,9 @@ lib/
 │   │   ├── network_repository.dart # 高层 API（浏览目录 / 解析播放流）
 │   │   ├── network_streaming_proxy.dart # 本地回环流代理（Range/HEAD + 1 秒滑动窗口网速统计）
 │   │   ├── smb_pipeline.dart       # SMB 并发预读管线（多句柄 + 取消/背压/出错即停）
+│   │   ├── network_subtitle_stream.dart # 远端同名字幕：一次性连接列目录 + 注册回环字幕流
+│   │   ├── network_directory_cache.dart # 网络目录列表短时缓存（LRU + TTL，返回上级瞬时打开）
+│   │   ├── network_view_settings.dart   # 网络浏览设置（排序偏好 + 显示隐藏项 + 已播放时长记忆）
 │   │   ├── webdav_client.dart      # WebDAV 客户端（PROPFIND 列表 / Range 流式读取）
 │   │   ├── ftp_client.dart         # FTP 客户端（被动模式双连接 / MLSD→LIST 回退 / REST 偏移）
 │   │   └── smb_client.dart         # SMB 客户端（smb_connect + 交给 smb_pipeline 预读）
@@ -312,6 +315,9 @@ lib/
     ├── mpv_tuning.dart        # mpv 移动端缓存/网络调参模板
     ├── audio_shuffle.dart     # 听视频随机播放算法
     ├── subtitle_auto_match.dart # 同名字幕自动匹配纯函数
+    ├── network_subtitle_match.dart # 远端同名字幕匹配纯函数（远端路径取目录/文件名 + 挑最佳字幕）
+    ├── network_entry_filter.dart # 网络目录隐藏项过滤 + 本目录搜索（纯函数）
+    ├── network_sort.dart      # 网络目录排序（只有名称/日期；时间缺失恒排末尾）
     ├── subtitle_memory.dart   # 外挂字幕记忆路径失效分流
     ├── subtitle_style_properties.dart # 字幕样式「字段 → mpv 属性」写入表
     ├── danmaku_timeline.dart  # 弹幕时间轴纯函数（同秒错峰 + 时间轴偏移）
@@ -386,7 +392,7 @@ utils（纯工具）    → 只依赖 models
 
 ### 5.3 字幕
 
-- **来源**：内嵌轨道（mpv `track-list`）、外挂导入（Android ≤11 用系统选择器；>11 用自建选择器，带排序与文件夹记忆）、同名字幕自动加载（简/繁后缀优先，只由 App 负责挂载）。
+- **来源**：内嵌轨道（mpv `track-list`）、外挂导入（Android ≤11 用系统选择器；>11 用自建选择器，带排序与文件夹记忆）、同名字幕自动加载（简/繁后缀优先，只由 App 负责挂载；本地与**网络存储远端**走同一套匹配规则）。
 - **控制器**：`SubtitleService` 单选模型，同步 `track-list` / `sid`，支持增删轨道、按字段写入样式、等待式轨道刷新、切轨后按用户意图钉回、记忆路径失效清理。
 - **样式**：`SubtitleSettings` 管理延迟 / 大小 / 位置 / 颜色 / 描边 / 背景框 / 内嵌样式覆盖 / 自定义字体；字段到 mpv 属性的映射集中在 `subtitle_style_properties.dart`。
 - **字体**：自定义字体走 libass 原生渲染；字体目录在播放器构造期注入（运行期不改 `sub-fonts-dir`）。
@@ -411,7 +417,9 @@ utils（纯工具）    → 只依赖 models
 - **抽象层**：`NetworkClient` 接口 + `network_client_factory` 按协议构造；`NetworkRepository` 提供浏览目录与解析播放流的高层 API。
 - **协议实现**：WebDAV（纯 Dart `http`，PROPFIND 列表 + Range 流式读取）、SMB（`smb_connect` + `smb_pipeline` 并发预读）、FTP（被动模式双连接、`MLSD`→`LIST` 回退、REST 偏移续传）。
 - **播放**：`NetworkStreamingProxy` 把远端文件转成 `127.0.0.1` 的无凭据回环 URL 供 mpv 拉流，处理 Range/HEAD 并提供滑动窗口网速统计。
-- **凭据**：账户清单存 SharedPreferences，密码只进加密存储（含老明文迁移）。
+- **远端同名字幕**：`network_subtitle_match`（纯函数）按本地同规则在远端目录里挑最佳同名字幕，`network_subtitle_stream` 用一次性连接列目录、把命中的字幕文件注册成同形状回环 URL 交给 mpv `sub-add`；远端记忆存「连接 id + 远端路径」（会话 URL 里的 token 跨会话必变，不入库），全链路失败静默、不影响播放（对齐 mpvRx `SubtitleOps`）。
+- **浏览**：`NetworkBrowserPage` 复用 `FolderCard` / `VideoCard`，但**只展示远端列目录真的给得出的信息**——文件夹与视频都显示**日期**，视频另加**完整名称**；不显示大小（部分服务器给 0/-1），列目录时也拿不到时长/帧率/分辨率/字幕/进度。唯一例外是**时长**：播过一次的视频由播放页回报真实时长并按稳定键（连接 id + 远端路径）记住，没播过的不显示。排序自带一套 `NetworkSort`（**只有名称 / 日期**，各升降序，日期缺失恒排末尾），不复用本地那套「名称/日期/大小/数量 + 字段开关」——那些在远端排不动。另支持搜索（本目录）、下拉刷新、回到共享根、默认隐藏 `.`/`@eaDir` 等隐藏项（可开）；目录列表走 `NetworkDirectoryCache`（TTL + LRU），返回上级与重进已看过的目录即时打开。
+- **凭据**：账户清单存 SharedPreferences，密码只进加密存储（含老明文迁移）；WebDAV 的默认端口按 scheme 区分（HTTP 80 / HTTPS 443），切换 HTTPS 或协议时端口自动跟随、手改过的端口保留。
 
 ### 5.7 哔哩哔哩
 

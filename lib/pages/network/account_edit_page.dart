@@ -49,14 +49,14 @@ class _AccountEditPageState extends State<AccountEditPage> {
     _protocol = c?.protocol ?? NetworkProtocol.webdav;
     _name = TextEditingController(text: c?.name ?? '');
     _host = TextEditingController(text: c?.host ?? '');
+    _useHttps = c?.useHttps ?? false;
     _port = TextEditingController(
-      text: (c?.port ?? _protocol.defaultPort).toString(),
+      text: (c?.port ?? _protocol.defaultPortFor(useHttps: _useHttps)).toString(),
     );
     _username = TextEditingController(text: c?.username ?? '');
     _password = TextEditingController(text: c?.password ?? '');
     _path = TextEditingController(text: c?.path ?? '/');
     _isAnonymous = c?.isAnonymous ?? false;
-    _useHttps = c?.useHttps ?? false;
   }
 
   @override
@@ -73,11 +73,35 @@ class _AccountEditPageState extends State<AccountEditPage> {
   void _onProtocolChanged(NetworkProtocol? p) {
     if (p == null) return;
     setState(() {
+      // 端口跟随协议：用户没手改过端口时，从旧协议的默认端口换成新协议的
+      // （手改过的端口（如群晖 5005/5006）一律保留）。
+      _port.text = resolvePortOnChange(
+        currentText: _port.text,
+        previousProtocol: _protocol,
+        previousHttps: _useHttps,
+        nextProtocol: p,
+        nextHttps: _useHttps,
+        touched: _portTouched,
+      );
       _protocol = p;
-      if (!_portTouched) {
-        _port.text = p.defaultPort.toString();
-      }
       // 协议切换即失效上一次测试结果，避免误导
+      _testResult = null;
+    });
+  }
+
+  void _onHttpsChanged(bool value) {
+    setState(() {
+      // 与协议切换同一条规矩：http 的默认 80 ↔ https 的默认 443 自动跟随，
+      // 手改过的端口不动（否则勾了 HTTPS 还停在 80，是本次要修的 bug）。
+      _port.text = resolvePortOnChange(
+        currentText: _port.text,
+        previousProtocol: _protocol,
+        previousHttps: _useHttps,
+        nextProtocol: _protocol,
+        nextHttps: value,
+        touched: _portTouched,
+      );
+      _useHttps = value;
       _testResult = null;
     });
   }
@@ -193,6 +217,15 @@ class _AccountEditPageState extends State<AccountEditPage> {
     return trimmed;
   }
 
+  /// 端口输入框的占位提示：给「默认端口 + NAS 常用端口」，减少瞎试。
+  String _defaultPortHint() {
+    final def = _protocol.defaultPortFor(useHttps: _useHttps);
+    if (_protocol == NetworkProtocol.webdav) {
+      return '默认 $def（群晖 5005/5006）';
+    }
+    return '默认 $def';
+  }
+
   @override
   Widget build(BuildContext context) {
     final editing = widget.connection != null;
@@ -263,9 +296,10 @@ class _AccountEditPageState extends State<AccountEditPage> {
                   flex: 2,
                   child: TextFormField(
                     controller: _port,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: '端口',
-                      border: OutlineInputBorder(),
+                      hintText: _defaultPortHint(),
+                      border: const OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -345,9 +379,9 @@ class _AccountEditPageState extends State<AccountEditPage> {
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('使用 HTTPS'),
-                subtitle: const Text('启用后使用加密连接'),
+                subtitle: const Text('启用后使用加密连接（默认端口 443）'),
                 value: _useHttps,
-                onChanged: (v) => setState(() => _useHttps = v),
+                onChanged: _onHttpsChanged,
               ),
             // 账号密码（匿名时隐藏，对齐小喵）
             if (!_isAnonymous) ...[

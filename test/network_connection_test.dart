@@ -16,6 +16,113 @@ void main() {
     expect(NetworkProtocol.webdav.defaultPort, 80);
   });
 
+  group('默认端口按 scheme 区分（WebDAV 的 HTTPS 是 443，不是 80）', () {
+    test('webdav：http → 80，https → 443', () {
+      expect(NetworkProtocol.webdav.defaultPortFor(), 80);
+      expect(NetworkProtocol.webdav.defaultPortFor(useHttps: true), 443);
+      expect(NetworkProtocol.webdav.secureDefaultPort, 443);
+    });
+
+    test('smb / ftp 无加密变体：两者相同', () {
+      expect(NetworkProtocol.smb.defaultPortFor(useHttps: true), 445);
+      expect(NetworkProtocol.ftp.defaultPortFor(useHttps: true), 21);
+    });
+
+    test('切换 HTTPS：默认 80 跟随成 443', () {
+      expect(
+        resolvePortOnChange(
+          currentText: '80',
+          previousProtocol: NetworkProtocol.webdav,
+          previousHttps: false,
+          nextProtocol: NetworkProtocol.webdav,
+          nextHttps: true,
+        ),
+        '443',
+      );
+      // 反向同样跟随
+      expect(
+        resolvePortOnChange(
+          currentText: '443',
+          previousProtocol: NetworkProtocol.webdav,
+          previousHttps: true,
+          nextProtocol: NetworkProtocol.webdav,
+          nextHttps: false,
+        ),
+        '80',
+      );
+    });
+
+    test('切换协议：默认端口跟随（SMB 445 → FTP 21）', () {
+      expect(
+        resolvePortOnChange(
+          currentText: '445',
+          previousProtocol: NetworkProtocol.smb,
+          previousHttps: false,
+          nextProtocol: NetworkProtocol.ftp,
+          nextHttps: false,
+        ),
+        '21',
+      );
+      expect(
+        resolvePortOnChange(
+          currentText: '80',
+          previousProtocol: NetworkProtocol.webdav,
+          previousHttps: false,
+          nextProtocol: NetworkProtocol.webdav,
+          nextHttps: true,
+        ),
+        '443',
+      );
+    });
+
+    test('用户手改过的端口一律保留（群晖 5005/5006、自定义 8080）', () {
+      expect(
+        resolvePortOnChange(
+          currentText: '5005',
+          previousProtocol: NetworkProtocol.webdav,
+          previousHttps: false,
+          nextProtocol: NetworkProtocol.webdav,
+          nextHttps: true,
+        ),
+        '5005',
+      );
+      expect(
+        resolvePortOnChange(
+          currentText: '5005',
+          previousProtocol: NetworkProtocol.webdav,
+          previousHttps: false,
+          nextProtocol: NetworkProtocol.webdav,
+          nextHttps: true,
+          touched: true,
+        ),
+        '5005',
+      );
+    });
+
+    test('端口为空 / 非法 → 直接给新默认值', () {
+      expect(
+        resolvePortOnChange(
+          currentText: '',
+          previousProtocol: NetworkProtocol.webdav,
+          previousHttps: false,
+          nextProtocol: NetworkProtocol.webdav,
+          nextHttps: true,
+        ),
+        '443',
+      );
+      expect(
+        resolvePortOnChange(
+          currentText: 'abc',
+          previousProtocol: NetworkProtocol.webdav,
+          previousHttps: false,
+          nextProtocol: NetworkProtocol.webdav,
+          nextHttps: true,
+        ),
+        '443',
+      );
+    });
+  });
+
   test('NetworkConnection JSON 往返', () {
     const c = NetworkConnection(
       id: 3,

@@ -101,6 +101,15 @@ class PlayerPage extends StatefulWidget {
   final String title;
   final List<VideoFile>? playlist;
 
+  /// 网络存储播放来源（null = 本地文件）：网络浏览页用 [VideoFile.remotePath]
+  /// / [VideoFile.connectionId] 带上「这条流来自哪个连接、远端哪个文件」，
+  /// 字幕侧据此做同名字幕远端扫描（本地 `File` 链路对 loopback URL 不成立）。
+  final VideoFile? networkSource;
+
+  /// 拿到真实媒体时长后回报一次（毫秒；网络存储列表页用它记住时长，
+  /// 因为远端不做媒体探测）。null = 不回报。
+  final void Function(int durationMs)? onDurationKnown;
+
   /// B 站在线播放媒体（null = 本地/网络文件播放）。非空时走双流 + 代理 +
   /// B 站弹幕 + OP/ED 章节 + 清晰度切换流程。
   final BiliMedia? biliMedia;
@@ -114,6 +123,8 @@ class PlayerPage extends StatefulWidget {
     required this.path,
     required this.title,
     this.playlist,
+    this.networkSource,
+    this.onDurationKnown,
     this.biliMedia,
     this.biliPlaylist,
   });
@@ -131,6 +142,12 @@ class _PlayerPageState extends State<PlayerPage>
   late String _path;
   late String _title;
   bool _controlsVisible = true;
+
+  /// 当前媒体的网络存储来源（null = 本地文件；切集/B 站播放会清空）。
+  VideoFile? _networkSource;
+
+  /// 是否已把本次媒体的真实时长回报出去（[PlayerPage.onDurationKnown] 只回报一次）
+  bool _reportedDuration = false;
 
   /// B 站在线播放媒体（null = 本地/网络文件播放）。画质切换时更新为新实例。
   BiliMedia? _biliMedia;
@@ -392,6 +409,8 @@ class _PlayerPageState extends State<PlayerPage>
     _path = widget.path;
     _title = widget.title;
     _biliMedia = widget.biliMedia;
+    // 网络存储播放：记下来源（字幕远端同名扫描要用）
+    _networkSource = widget.networkSource;
     // 兄弟视频列表：入口给的就用（首页/文件夹页传的是当前排序的可见列表），
     // 没给（最近播放/历史记录/外部打开）就按当前视频所在文件夹从媒体库补全。
     // 补全不阻塞 open，完成后底栏「下一集」与播放列表面板自动跟上。
@@ -539,6 +558,12 @@ class _PlayerPageState extends State<PlayerPage>
     _subs.add(
       _player.stream.duration.listen((d) {
         if (!_disposed && mounted) _durationNotifier.value = d;
+        // 网络存储播放：把真实时长回报给列表页（远端不做探测，列表靠这个值
+        // 显示「时长」字段；一次播放只回报一次）
+        if (!_reportedDuration && d > Duration.zero) {
+          _reportedDuration = true;
+          widget.onDurationKnown?.call(d.inMilliseconds);
+        }
         // 恢复进度改由 _openAndSetRate（open 完成后）统一触发，
         // 避免 mpv 加载期 seek 被丢弃（历史 bug：指示器出现但进度不回位）。
         // 缩略图预热不再进入播放即触发：改为「用户第一次拖动进度条时」
@@ -694,7 +719,9 @@ class _PlayerPageState extends State<PlayerPage>
     // 章节功能：open 完成后读取章节（此时时长已就绪；空章节静默清空）
     unawaited(_chapterTracker.load());
     // 字幕功能：open 完成后刷新轨道/重新添加外挂字幕/应用设置
-    unawaited(_subtitleController.reapplyForMedia(_path));
+    unawaited(
+      _subtitleController.reapplyForMedia(_path, networkSource: _networkSource),
+    );
     // 音频功能：open 完成后刷新音轨/同步当前音轨/应用声道与音频处理
     unawaited(_audioController.reapplyForMedia(_path));
     // 弹幕功能：open 完成后加载同目录同名弹幕（无匹配静默跳过）
@@ -1755,6 +1782,10 @@ class _PlayerPageState extends State<PlayerPage>
       _chapterTracker.clear();
       // 字幕功能：清空旧媒体轨道（切集后重新加载）
       _subtitleController.clear();
+      // 本地列表切集：来源必为本地文件，网络来源标记一起清掉（防串到本地视频）
+      _networkSource = null;
+      // 新媒体的时长要重新回报（切集后 duration 事件会重新来一轮）
+      _reportedDuration = false;
       // 音频功能：清空旧媒体音轨（切集后重新加载；外部音轨临时不跨集保留）
       _audioController.clear();
       // 片头片尾：重置跟踪状态（open 期间位置事件不评估）
@@ -1824,7 +1855,9 @@ class _PlayerPageState extends State<PlayerPage>
       // 章节功能：切集后重新读取新媒体的章节
       unawaited(_chapterTracker.load());
       // 字幕功能：切集后重新添加外挂字幕 + 刷新轨道 + 应用设置
-      unawaited(_subtitleController.reapplyForMedia(path));
+      unawaited(
+        _subtitleController.reapplyForMedia(path, networkSource: _networkSource),
+      );
       // 音频功能：切集后刷新音轨 + 同步当前音轨 + 应用声道与音频处理
       unawaited(_audioController.reapplyForMedia(path));
       // 弹幕功能：切集后重新加载新集的同名弹幕（loadForVideo 内部会先
@@ -2631,6 +2664,8 @@ class _PlayerPageState extends State<PlayerPage>
           initialPath: _path,
           initialTitle: _title,
           playlistListenable: _playlistNotifier,
+          // 网络存储播放：来源透传给竖屏页（字幕远端同名扫描要用）
+          networkSource: _networkSource,
           // 跟随手机方向进来的竖屏页：不锁竖屏（窗口转横屏时自己 pop 回本页）
           followPhoneRotation: followPhone,
           // 控制层显隐/锁定两页共用一份：切过去沿用当前状态，离开前交回来

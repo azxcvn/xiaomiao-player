@@ -108,6 +108,10 @@ class PlayerPortraitPage extends StatefulWidget {
   /// 进入时正在播放的视频标题
   final String initialTitle;
 
+  /// 当前媒体的网络存储来源（横屏页透传；null = 本地文件）。
+  /// 字幕控制器据它做远端同名字幕扫描（见 [SubtitleController.reapplyForMedia]）。
+  final VideoFile? networkSource;
+
   /// 兄弟视频列表（「下一集」与播放列表用）。
   ///
   /// 横屏页创建并持有（入口没传 playlist 时由它从媒体库异步补全），本页只读、
@@ -193,6 +197,7 @@ class PlayerPortraitPage extends StatefulWidget {
     required this.controller,
     required this.initialPath,
     required this.initialTitle,
+    this.networkSource,
     required this.playlistListenable,
     this.biliPlaylist,
     this.initialBiliEpId,
@@ -225,6 +230,9 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
 
   late String _path;
   late String _title;
+
+  /// 当前媒体的网络存储来源（null = 本地文件；由横屏页透传，网络播放时非空）。
+  VideoFile? _networkSource;
 
   /// 当前 B 站剧集 epId（B 站番剧播放时非空；切集后更新）
   int? _biliEpId;
@@ -447,6 +455,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       unawaited(_session.initFromDevice());
     }
     _path = widget.initialPath;
+    _networkSource = widget.networkSource;
     _title = widget.initialTitle;
     _biliEpId = widget.initialBiliEpId;
 
@@ -914,6 +923,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       _chapterTracker.clear();
       // 字幕功能：清空旧媒体轨道（切集后重新加载）
       _subtitleController.clear();
+      // 本地列表切集：来源必为本地文件，网络来源标记一起清掉（防串到本地视频）
+      _networkSource = null;
       // 音频功能：清空旧媒体音轨（切集后重新加载；外部音轨临时不跨集保留）
       _audioController.clear();
       // 片头片尾：重置跟踪状态（open 期间位置事件不评估）
@@ -981,7 +992,9 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       // 章节功能：切集后重新读取新媒体的章节
       unawaited(_chapterTracker.load());
       // 字幕功能：切集后重新添加外挂字幕 + 刷新轨道 + 应用设置
-      unawaited(_subtitleController.reapplyForMedia(path));
+      unawaited(
+        _subtitleController.reapplyForMedia(path, networkSource: _networkSource),
+      );
       // 音频功能：切集后刷新音轨 + 同步当前音轨 + 应用声道与音频处理
       unawaited(_audioController.reapplyForMedia(path));
       // 弹幕功能：切集后重新加载新集的同名弹幕（共享控制器，与横屏

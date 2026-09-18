@@ -3,12 +3,17 @@ import 'package:moumou/models/network_connection.dart';
 import 'package:moumou/pages/network/account_edit_page.dart';
 import 'package:moumou/pages/network/network_browser_page.dart';
 import 'package:moumou/services/network/network_connection_settings.dart';
+import 'package:moumou/services/view_settings.dart';
 
 /// 网络存储账户列表：新增 / 编辑 / 删除 WebDAV、SMB、FTP 账户。
 ///
 /// 点击账户卡片进入在线浏览（复用 FolderCard / VideoCard 的文件夹/视频列表）。
 class NetworkStoragePage extends StatelessWidget {
-  const NetworkStoragePage({super.key});
+  /// 视图设置（排序与字段）：由首页传入，浏览页与本地目录页共用同一份偏好，
+  /// 不在这里自建第二份（[ViewSettings] 不是单例）。
+  final ViewSettings viewSettings;
+
+  const NetworkStoragePage({super.key, required this.viewSettings});
 
   Future<void> _openEdit(BuildContext context, {NetworkConnection? connection}) async {
     await Navigator.of(context).push(
@@ -21,7 +26,10 @@ class NetworkStoragePage extends StatelessWidget {
   Future<void> _openBrowser(BuildContext context, NetworkConnection connection) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => NetworkBrowserPage(connection: connection),
+        builder: (_) => NetworkBrowserPage(
+          connection: connection,
+          viewSettings: viewSettings,
+        ),
       ),
     );
   }

@@ -3,6 +3,28 @@ import 'package:flutter/foundation.dart';
 import 'package:moumou/models/subtitle_track.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// 网络存储视频的**远端**外挂字幕记忆（`连接 id + 远端路径`）。
+///
+/// 为什么不能直接存 loopback URL：那个 URL 带本次会话随机生成的 token
+/// （`NetworkStreamingProxy` 每次注册都换），跨会话必变，存下来只会是死路径。
+/// 远端路径是稳定的，重开视频时按它重新注册代理流即可。
+///
+/// 编码成单串存进 `Map<String, String>`（`{ 视频路径: 远端字幕标识 }`），
+/// 与本地导入字幕的列表分开——本地列表的失效校验走 `File`，对远端路径恒失败。
+String buildRemoteSubtitlePath(int connectionId, String remotePath) =>
+    '$connectionId|$remotePath';
+
+/// 解析 [buildRemoteSubtitlePath] 的结果；无法解析返回 null。
+({int connectionId, String remotePath})? parseRemoteSubtitlePath(String? raw) {
+  if (raw == null || raw.isEmpty) return null;
+  final sep = raw.indexOf('|');
+  if (sep <= 0 || sep >= raw.length - 1) return null;
+  final id = int.tryParse(raw.substring(0, sep));
+  final path = raw.substring(sep + 1);
+  if (id == null || path.isEmpty || !path.startsWith('/')) return null;
+  return (connectionId: id, remotePath: path);
+}
+
 /// 字幕设置（工作.md 阶段1 第 3 点）：字幕延迟 / 样式 / 杂项 / 字体的全局设置。
 ///
 /// 全局单例（同 [PlayerControlsSettings] 模式），ChangeNotifier + shared_preferences
@@ -48,6 +70,7 @@ class SubtitleSettings extends ChangeNotifier {
   static const _keyImportedSubtitles = 'subtitle_settings_imported_subtitles';
   static const _keyVideoSubtitles = 'subtitle_settings_video_subtitles';
   static const _keyVideoSelectedSub = 'subtitle_settings_video_selected_sub';
+  static const _keyVideoRemoteSub = 'subtitle_settings_video_remote_sub';
   static const _keyFont = 'subtitle_settings_font';
   static const _keyFontDir = 'subtitle_settings_font_dir';
   static const _keyFontSourceDir = 'subtitle_settings_font_source_dir';
@@ -99,6 +122,12 @@ class SubtitleSettings extends ChangeNotifier {
 
   /// 每个视频最后选中的字幕标识（外挂字幕路径或轨道 id 或 'no'）
   Map<String, String> _videoSelectedSub = {};
+
+  /// 每个**网络存储**视频记忆的远端同名字幕：{ videoPath: '连接id|远端路径' }
+  ///
+  /// 与 [_videoSubtitles]（本地导入列表，失效校验走 `File`）分开存：
+  /// 本地校验对远端路径恒失败，混在一起会把远端记忆当场清掉。
+  Map<String, String> _videoRemoteSub = {};
 
   double get delay => _delay;
   double get scale => _scale;
@@ -184,6 +213,19 @@ class SubtitleSettings extends ChangeNotifier {
       }
     } catch (_) {
       _videoSelectedSub = {};
+    }
+
+    // 加载每个网络视频记忆的远端同名字幕
+    try {
+      final rawRemoteMap = prefs.getString(_keyVideoRemoteSub);
+      if (rawRemoteMap != null && rawRemoteMap.isNotEmpty) {
+        final decoded = jsonDecode(rawRemoteMap) as Map<String, dynamic>;
+        _videoRemoteSub = decoded.map((k, v) => MapEntry(k, v.toString()));
+      } else {
+        _videoRemoteSub = {};
+      }
+    } catch (_) {
+      _videoRemoteSub = {};
     }
 
     _font = prefs.getString(_keyFont) ?? 'auto';
@@ -525,6 +567,27 @@ class SubtitleSettings extends ChangeNotifier {
     await prefs.setString(_keyVideoSelectedSub, jsonEncode(_videoSelectedSub));
   }
 
+  /// 获取指定视频记忆的**远端**同名字幕标识（`连接id|远端路径`，无则 null）。
+  String? getRemoteSubtitleFor(String videoPath) {
+    if (videoPath.isEmpty) return null;
+    return _videoRemoteSub[videoPath];
+  }
+
+  /// 记忆指定视频的远端同名字幕（下次播放直接用回环代理 URL 挂回来）。
+  Future<void> setRemoteSubtitleFor(String videoPath, String remoteMarker) async {
+    if (videoPath.isEmpty || remoteMarker.isEmpty) return;
+    await ensureLoaded();
+    _videoRemoteSub.remove(videoPath);
+    _videoRemoteSub[videoPath] = remoteMarker; // 重新插入 = 刷新 LRU 位置
+    // 与本地记忆共用条数上限：两个 Map 都按「最后访问」淘汰，超出的一起裁剪。
+    while (_videoRemoteSub.length > maxRememberedVideos) {
+      _videoRemoteSub.remove(_videoRemoteSub.keys.first);
+    }
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyVideoRemoteSub, jsonEncode(_videoRemoteSub));
+  }
+
   /// 记忆一条导入的外挂字幕路径（兼容旧接口）。
   Future<void> addImportedSubtitle(String path) async {
     await ensureLoaded();
@@ -610,6 +673,7 @@ class SubtitleSettings extends ChangeNotifier {
     _importedSubtitlePaths = [];
     _videoSubtitles = {};
     _videoSelectedSub = {};
+    _videoRemoteSub = {};
     notifyListeners();
   }
 }

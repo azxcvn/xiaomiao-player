@@ -2,10 +2,14 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart' hide SubtitleTrack;
+import 'package:moumou/models/network_file.dart';
 import 'package:moumou/models/subtitle_track.dart';
+import 'package:moumou/models/video_file.dart';
 import 'package:moumou/services/device_services.dart';
+import 'package:moumou/services/network/network_subtitle_stream.dart';
 import 'package:moumou/services/subtitle_settings.dart';
 import 'package:moumou/utils/async_coalesced_reload.dart';
+import 'package:moumou/utils/network_subtitle_match.dart';
 import 'package:moumou/utils/subtitle_auto_match.dart';
 import 'package:moumou/utils/subtitle_memory.dart';
 import 'package:moumou/utils/subtitle_style_properties.dart';
@@ -78,6 +82,15 @@ class SubtitleController extends ChangeNotifier {
 
   /// 最近一次 reapply 对应的媒体（防横竖屏页重复应用 / 切集重复添加）
   String? _appliedMedia;
+
+  /// 当前媒体的网络来源（网络存储播放时非空）：远端列目录 + 同名字幕经本地
+  /// 回环代理挂载；null = 本地路径（走 `File` 的那条链路）。
+  VideoFile? _networkSource;
+
+  /// 已经为哪个媒体做过那次远端同名扫描（同一媒体只扫一次：避免重复弹提示、
+  /// 重复建远端连接）。与 [_appliedMedia] 的早退互补——后者只在「同一媒体」
+  /// 时挡重复应用，这里挡的是「同一次播放里的重复触发」。
+  String? _networkScannedFor;
 
   /// 轨道刷新：等待式串行重跑（P1-11）。
   ///
@@ -417,13 +430,23 @@ class SubtitleController extends ChangeNotifier {
   /// 打开媒体 / 切集后调用（由播放页在 open 完成后触发）：
   /// - 按媒体路径独立加载该视频专属的外挂字幕；
   /// - 若无任何已导入字幕，则自动加载同目录下的同名字幕（对齐小喵 player，
-  ///   简体系统优先 sc、繁体系统优先 tc）；
+  ///   简体系统优先 sc、繁体系统优先 tc）；网络存储播放时改由
+  ///   [networkSource] 走「远端列目录 + 代理 URL 挂载」那条链路；
   /// - 恢复该视频最后一次选中的字幕轨道；
   /// - 应用全部字幕设置。
-  Future<void> reapplyForMedia(String mediaPath) async {
+  ///
+  /// [networkSource] 由播放页传入（网络存储播放的 `VideoFile`）：非空即表示
+  /// 当前媒体是远端文件，[mediaPath] 是它的 loopback 播放 URL，本方法不再拿
+  /// `File` 去判它存在与否；远端同名字幕的挂载 URL 由
+  /// `networkSubtitleStreams` 注册代理流时生成（与视频流同一形状）。
+  Future<void> reapplyForMedia(
+    String mediaPath, {
+    VideoFile? networkSource,
+  }) async {
     if (_appliedMedia == mediaPath) return;
     _appliedMedia = mediaPath;
     _currentMediaPath = mediaPath;
+    _networkSource = networkSource;
     final native = _native;
     if (native == null) return;
 
@@ -447,9 +470,21 @@ class SubtitleController extends ChangeNotifier {
     // 避免覆盖用户手动导入的选择；找到后 sub-add select 并记忆路径。
     String? autoLoadedPath;
     if (memo.valid.isEmpty) {
-      autoLoadedPath = await _autoLoadSameNameSubtitle(mediaPath);
-      if (autoLoadedPath != null && !_externalPaths.contains(autoLoadedPath)) {
-        _externalPaths.add(autoLoadedPath);
+      if (_networkSource != null) {
+        // 网络存储：远端同名字幕（本地 `File` 链路对 loopback URL 恒不成立）。
+        // 挂载用的 loopback URL 是**本次会话专用**（token 每次都变），因此：
+        // ①它要进 [_externalPaths] 让「跳过 auto 重复挂载」生效；
+        // ②它绝不进「按视频路径记忆的导入列表」——下一次播放由远端记忆
+        //   （连接 id + 远端路径）重建 URL，不靠这条会话 URL。
+        autoLoadedPath = await _loadNetworkSubtitle();
+        if (autoLoadedPath != null && !_externalPaths.contains(autoLoadedPath)) {
+          _externalPaths.add(autoLoadedPath);
+        }
+      } else {
+        autoLoadedPath = await _autoLoadSameNameSubtitle(mediaPath);
+        if (autoLoadedPath != null && !_externalPaths.contains(autoLoadedPath)) {
+          _externalPaths.add(autoLoadedPath);
+        }
       }
     }
 
@@ -551,6 +586,98 @@ class SubtitleController extends ChangeNotifier {
     return bestPath;
   }
 
+  /// 网络存储媒体的同名字幕加载（对齐 mpvRx `SubtitleOps` 的网络链路）：
+  ///
+  /// - 记忆里已有该视频的远端字幕 → 直接用回环代理 URL 挂回来（不再列目录，
+  ///   也就不会重复弹「已自动加载字幕」）；
+  /// - 没有记忆 → 远端列所在目录、按同规则挑最佳字幕，命中后直接 `sub-add`。
+  ///
+  /// 返回挂载用的 loopback URL；返回 null 表示**这次没挂上新字幕**
+  /// （无同名字幕 / 连接不可用 / 超时 / 该媒体本次会话已扫过一次）。
+  ///
+  /// 全程静默：任何失败都不抛异常，绝不阻塞或影响播放。
+  Future<String?> _loadNetworkSubtitle() async {
+    final source = _networkSource;
+    final native = _native;
+    if (source == null || native == null) return null;
+    if (_networkScannedFor == _currentMediaPath) return null;
+    _networkScannedFor = _currentMediaPath;
+
+    final remotePath = source.remotePath;
+    final connectionId = source.connectionId;
+    if (remotePath == null || remotePath.isEmpty || connectionId == null) {
+      return null;
+    }
+
+    // ① 记忆恢复：上次看过这个视频的远端字幕，直接挂回来
+    final videoPath = _currentMediaPath;
+    if (videoPath == null) return null;
+    final remembered = parseRemoteSubtitlePath(
+      _settings.getRemoteSubtitleFor(videoPath),
+    );
+    if (remembered != null && remembered.connectionId == connectionId) {
+      final url = await _addRemoteSubtitle(connectionId, remembered.remotePath);
+      if (url != null) return url;
+    }
+
+    // ② 远端同名扫描
+    final files = await _listRemoteFiles(connectionId, remoteDirOf(remotePath));
+    if (files.isEmpty) return null;
+    final best = findBestRemoteSubtitle(
+      source.name.isNotEmpty ? source.name : remoteFileNameOf(remotePath),
+      files: files,
+      systemLanguage: _systemLocaleString(),
+    );
+    if (best == null) return null;
+    final url = await _addRemoteSubtitle(connectionId, best.path);
+    if (url == null) return null;
+
+    _rememberIntentPath(url);
+    await _settings.setRemoteSubtitleFor(
+      videoPath,
+      buildRemoteSubtitlePath(connectionId, best.path),
+    );
+    await _settings.setSelectedSubtitleFor(videoPath, url);
+    onAutoLoadedSubtitle?.call(
+      best.name.isNotEmpty ? best.name : remoteFileNameOf(best.path),
+    );
+    return url;
+  }
+
+  /// 列远端目录；失败/超时返回空表（自动加载静默放弃）。
+  Future<List<NetworkFile>> _listRemoteFiles(
+    int connectionId,
+    String dirPath,
+  ) async {
+    try {
+      return await networkSubtitleStreams.listFiles(connectionId, dirPath);
+    } catch (e) {
+      debugPrint('[字幕] 远端目录扫描失败：$e');
+      return const [];
+    }
+  }
+
+  /// 把远端字幕文件注册成回环代理 URL 并 `sub-add select`。
+  ///
+  /// 返回挂载用的 loopback URL（由代理注册产生，形状与视频流一致）；失败返回
+  /// null。**必须用注册返回的 URL**：`sub-add` 一发出 mpv 就会去拉这个 URL，
+  /// 注册没建好 entry 的话会 404。
+  Future<String?> _addRemoteSubtitle(int connectionId, String remotePath) async {
+    final native = _native;
+    if (native == null || remotePath.isEmpty) return null;
+    try {
+      final url = await networkSubtitleStreams.registerSubtitleStream(
+        connectionId,
+        NetworkFile(name: remoteFileNameOf(remotePath), path: remotePath),
+      );
+      await native.command(['sub-add', url, 'select']);
+      return url;
+    } catch (e) {
+      debugPrint('[字幕] 远端字幕挂载失败：$e');
+      return null;
+    }
+  }
+
   /// 当前系统首选 locale（转成小写 Android 风格串，如 `zh_cn`/`zh_tw`/`zh_hk`）。
   String _systemLocaleString() {
     final locales = PlatformDispatcher.instance.locales;
@@ -567,6 +694,10 @@ class SubtitleController extends ChangeNotifier {
     _primary = null;
     _primarySourcePath = null;
     _externalPaths.clear();
+    // 网络来源与「本媒体已扫描」标记一起复位：下一个媒体的远端扫描必须重开
+    // （否则同一次播放里换到另一个网络视频会拿到上一个的静默早退）。
+    _networkSource = null;
+    _networkScannedFor = null;
     // 用户意图属于「上一个媒体」，一起清掉；新媒体的意图由 [reapplyForMedia] 重建。
     _clearIntent();
     // 「已应用媒体」标记必须一起复位（B3/P1-8 根因）：[reapplyForMedia] 首行
