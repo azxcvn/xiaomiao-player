@@ -48,6 +48,8 @@ void main() {
     // 视频方向默认自动；播放界面动画默认开启（工作.md 第 5/7 点）
     expect(s.videoOrientation, VideoOrientationMode.auto);
     expect(s.playerAnimations, isTrue);
+    // 锁定状态豁免双击默认关闭（锁定 = 手势全拦，用户显式开启才豁免）
+    expect(s.lockGestureExempt, isFalse);
     // 顶部信息默认：时间/电量/网速/数据类型四项全选（工作.md 阶段1 第 1 点）
     expect(s.showTopTime, isTrue);
     expect(s.showTopBattery, isTrue);
@@ -516,5 +518,18 @@ void main() {
     expect(s.volumeBoostCap, PlayerControlsSettings.minVolumeBoostCap);
     await s.setVolumeBoostCap(999);
     expect(s.volumeBoostCap, PlayerControlsSettings.maxVolumeBoostCap);
+  });
+
+  test('锁定状态豁免双击：默认关闭，开关双向持久化', () async {
+    final s = PlayerControlsSettings.instance;
+    expect(s.lockGestureExempt, isFalse, reason: '默认关闭');
+    await s.setLockGestureExempt(true);
+    expect(s.lockGestureExempt, isTrue);
+    await s.load(); // 模拟重启
+    expect(s.lockGestureExempt, isTrue, reason: '开启后必须落盘');
+    await s.setLockGestureExempt(false);
+    expect(s.lockGestureExempt, isFalse);
+    await s.load();
+    expect(s.lockGestureExempt, isFalse, reason: '关闭后同样落盘');
   });
 }

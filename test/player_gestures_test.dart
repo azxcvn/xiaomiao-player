@@ -68,6 +68,62 @@ void main() {
     );
   });
 
+  // ── 锁定状态豁免双击（resolveDoubleTap）───────────────
+
+  test('未锁定：resolveDoubleTap 与 classifyDoubleTap 完全一致', () {
+    for (final mode in DoubleTapMode.values) {
+      for (final dx in [0.0, 100.0, 240.0, 400.0, 560.0, 799.0]) {
+        expect(
+          resolveDoubleTap(
+            locked: false,
+            lockExempt: false,
+            dx: dx,
+            width: w,
+            mode: mode,
+          ),
+          classifyDoubleTap(dx, w, mode),
+          reason: '未锁定不应受豁免开关影响（mode=$mode dx=$dx）',
+        );
+      }
+    }
+  });
+
+  test('锁定 + 豁免关闭：任何模式/位置都不动作（保持锁定 = 手势全拦）', () {
+    for (final mode in DoubleTapMode.values) {
+      for (final dx in [0.0, 100.0, 240.0, 400.0, 560.0, 799.0]) {
+        expect(
+          resolveDoubleTap(
+            locked: true,
+            lockExempt: false,
+            dx: dx,
+            width: w,
+            mode: mode,
+          ),
+          isNull,
+          reason: '豁免关闭时必须无动作（mode=$mode dx=$dx）',
+        );
+      }
+    }
+  });
+
+  test('锁定 + 豁免开启：恒定播放/暂停，绝不快进快退（与双击模式无关）', () {
+    for (final mode in DoubleTapMode.values) {
+      for (final dx in [0.0, 100.0, 240.0, 400.0, 560.0, 799.0]) {
+        expect(
+          resolveDoubleTap(
+            locked: true,
+            lockExempt: true,
+            dx: dx,
+            width: w,
+            mode: mode,
+          ),
+          DoubleTapGesture.pauseToggle,
+          reason: '锁定态只豁免播放/暂停（mode=$mode dx=$dx）',
+        );
+      }
+    }
+  });
+
   // ── 水平滑动 seek ──────────────────────────────────────
 
   test('滑动 seek 灵敏度：满屏宽度 = 90 秒', () {

@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:moumou/models/playlist_sort.dart';
 import 'package:moumou/models/tree_node.dart';
 import 'package:moumou/models/video_file.dart';
 import 'package:moumou/services/media_scan_settings.dart';
@@ -72,6 +73,27 @@ class VideoScanner {
       _cachedVideos = videos;
     }
     return videos;
+  }
+
+  /// 某个本地视频所在文件夹的兄弟视频列表（播放页「下一集」/播放列表面板用）。
+  ///
+  /// 首页与文件夹页播放时会把「当前可见的排序列表」直接传给播放页，而
+  /// 「最近播放」「历史记录」「外部打开」这三个入口手上没有列表——按视频
+  /// 路径反查媒体库补全，避免播放列表面板空着（只显示「当前文件夹没有
+  /// 其他视频」）。
+  ///
+  /// - [path] 不是本地绝对路径（在线直链 / B 站与网络存储的本机代理流）→ 空表；
+  /// - 媒体库不可用（权限被拒 / 通道异常）→ 抛出，由调用方决定是否忽略；
+  /// - 排序 = 名称自然序升序，与播放列表面板默认排序一致。
+  static Future<List<VideoFile>> folderSiblingsOf(String path) async {
+    if (!path.startsWith('/')) return const [];
+    final folder = folderOfPath(path);
+    if (folder.isEmpty) return const [];
+    final videos = await scanVideos();
+    return sortVideosForPlaylist(
+      filterVideosInFolder(videos, folder),
+      PlaylistSortMode.nameAsc,
+    );
   }
 
   /// 构建完整目录树：从存储卷根开始，包含中间目录（只含子文件夹的目录

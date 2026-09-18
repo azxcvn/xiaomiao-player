@@ -11,7 +11,8 @@ enum _LayerGestureKind { horizontal, verticalLeft, verticalRight, zoom }
 /// 多手势竞争导致的判定漂移）：
 ///
 /// - **单击**：切换控制层显隐（锁定态由页面自行处理解锁按钮）；
-/// - **双击**：按设置执行暂停 / 快退快进；
+/// - **双击**：按设置执行暂停 / 快退快进（锁定态由页面按「锁定状态豁免
+///   双击」决定是否放行，见 [onDoubleTap]）；
 /// - **长按（500ms 无移动）**：进入长按倍速，长按期间手指横向移动
 ///   通过 [onLongPressUpdate] 逐帧回调（动态调速），松手恢复原速；
 /// - **单指滑动**：位移超过阈值后延迟 80ms 再确认方向（垂直/水平），
@@ -22,18 +23,19 @@ enum _LayerGestureKind { horizontal, verticalLeft, verticalRight, zoom }
 /// - **双指**：缩放 + 平移画面（[onZoomStart]/[onZoomUpdate]/[onZoomEnd]），
 ///   若滑动中途加入第二指，先回调 [onSwipeCancel] 供页面撤销 seek。
 ///
-/// 锁定态（[locked]）只放行单击，其余手势一律拦截。
+/// 锁定态（[locked]）只放行单击 + 由页面裁决的双击，其余手势一律拦截。
 class PlayerGestureLayer extends StatefulWidget {
   /// 手势层覆盖的内容（视频画面等，透明叠加在上层即可）
   final Widget child;
 
-  /// 控制层是否锁定（锁定后仅单击放行）
+  /// 控制层是否锁定（锁定后仅单击放行；双击是否豁免由页面按设置裁决）
   final bool locked;
 
   /// 单击（任意态都会回调，页面自行处理锁定分支）
   final VoidCallback onTap;
 
-  /// 双击（仅未锁定）
+  /// 双击（**任意态都会回调**，锁定分支由页面按「锁定状态豁免双击」裁决——
+  /// 这里不做拦截，否则开关一开就要在两层各写一份判断，容易漂移）
   final ValueChanged<Offset> onDoubleTap;
 
   /// 长按开始（未锁定，参数为按下位置，页面据此记录调速起点）
@@ -293,10 +295,7 @@ class _PlayerGestureLayerState extends State<PlayerGestureLayer> {
                       DoubleTapGestureRecognizer>(
                 () => DoubleTapGestureRecognizer(),
                 (r) => r
-                  ..onDoubleTapDown = (d) {
-                    if (widget.locked) return;
-                    widget.onDoubleTap(d.localPosition);
-                  },
+                  ..onDoubleTapDown = (d) => widget.onDoubleTap(d.localPosition),
               ),
               LongPressGestureRecognizer:
                   GestureRecognizerFactoryWithHandlers<

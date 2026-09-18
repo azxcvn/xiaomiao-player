@@ -14,6 +14,7 @@ import 'package:moumou/models/dandan_models.dart';
 import 'package:moumou/models/video_file.dart';
 import 'package:moumou/models/subtitle_font_injection.dart';
 import 'package:moumou/pages/player/audio_player_page.dart';
+import 'package:moumou/pages/player/player_metrics.dart';
 import 'package:moumou/pages/player/player_portrait_page.dart';
 import 'package:moumou/pages/player/player_session_state.dart';
 import 'package:moumou/pages/player/views/audio_panel.dart';
@@ -69,6 +70,7 @@ import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/services/subtitle_service.dart';
 import 'package:moumou/services/subtitle_settings.dart';
 import 'package:moumou/services/super_resolution_service.dart';
+import 'package:moumou/services/video_scanner.dart';
 import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/utils/cast_source.dart';
 import 'package:moumou/utils/dolby_vision_hint.dart';
@@ -160,9 +162,13 @@ class _PlayerPageState extends State<PlayerPage>
   late final Listenable _chapterListenable =
       Listenable.merge([_progressListenable, _chapterTracker]);
 
-  /// 底栏监听合并：章节 + 弹幕开关状态（弹幕开关图标随 danmakuOn 刷新）
-  late final Listenable _bottomBarListenable =
-      Listenable.merge([_chapterListenable, _danmakuController]);
+  /// 底栏监听合并：章节 + 弹幕开关状态（弹幕开关图标随 danmakuOn 刷新）+
+  /// 兄弟视频列表（媒体库补全完成后「下一集」按钮自动刷新）
+  late final Listenable _bottomBarListenable = Listenable.merge([
+    _chapterListenable,
+    _danmakuController,
+    _playlistNotifier,
+  ]);
 
   /// 章节状态跟踪器（工作.md 章节功能）：读取章节与跳过片段、跟踪当前
   /// 章节与胶囊自动弹出窗口；横竖屏共享同一实例（切集/位置流统一驱动）。
@@ -218,6 +224,11 @@ class _PlayerPageState extends State<PlayerPage>
     vsync: this,
     duration: const Duration(milliseconds: 250),
   );
+
+  /// 解锁按钮自动收回计时：锁定态呼出后过了 [kPlayerAutoHideDelay] 自己收回去
+  /// （与控制层同一时长）。只负责「自动」那一次——用户主动单击收起时取消它，
+  /// 否则会出现「刚手动收起又被旧计时器收起一次」的错位。
+  Timer? _unlockHideTimer;
   late final Animation<Offset> _leftUnlockSlide = Tween<Offset>(
     begin: const Offset(-1, 0),
     end: Offset.zero,
@@ -274,27 +285,41 @@ class _PlayerPageState extends State<PlayerPage>
 
   final List<StreamSubscription<dynamic>> _subs = [];
 
+  /// 兄弟视频列表（同目录视频）：底栏「下一集」、EOF 自动连播/列表循环、
+  /// 播放列表面板的数据源。
+  ///
+  /// 入口传了 [PlayerPage.playlist] 就用它（首页/文件夹页给的是当前排序后的
+  /// 可见列表）；没传（首页「最近播放」、历史记录、外部打开）时按当前视频
+  /// 所在文件夹从媒体库补全（[_loadFolderPlaylist]）——否则播放列表面板只会
+  /// 显示「当前文件夹没有其他视频」。
+  ///
+  /// 用 [ValueNotifier] 而不是普通字段：补全是异步的，且竖屏页与横屏页共享
+  /// 同一份（补全完成前竖屏页可能已被 push，传快照会让它拿到空表）。
+  final ValueNotifier<List<VideoFile>> _playlistNotifier =
+      ValueNotifier(const <VideoFile>[]);
+
+  List<VideoFile> get _playlist => _playlistNotifier.value;
+
   /// 当前 B 站剧集在 [PlayerPage.biliPlaylist] 中的下标（-1 = 未定位）
   int get _biliIndex =>
       widget.biliPlaylist?.indexOfEpId(_biliMedia?.epId) ?? -1;
 
   /// 是否存在「下一集」：
   /// - B 站番剧在线播放 → 按剧集列表当前集定位后判断；
-  /// - 本地/网络文件 → 按 [PlayerPage.playlist] 当前项定位后判断。
+  /// - 本地/网络文件 → 按 [_playlist] 当前项定位后判断。
   bool get _hasNext {
     if (_biliMedia != null) {
       return widget.biliPlaylist?.hasNextAt(_biliIndex) ?? false;
     }
-    final list = widget.playlist;
-    if (list == null || list.isEmpty) return false;
+    final list = _playlist;
+    if (list.isEmpty) return false;
     final idx = list.indexWhere((v) => v.path == _path);
     return idx >= 0 && idx < list.length - 1;
   }
 
   /// 是否有可循环的播放列表（EOF「列表循环」判定用，两种来源合并）
   bool get _hasAnyPlaylist =>
-      (widget.playlist?.isNotEmpty ?? false) ||
-      (widget.biliPlaylist?.isNotEmpty ?? false);
+      _playlist.isNotEmpty || (widget.biliPlaylist?.isNotEmpty ?? false);
 
   // ── 恢复进度 / 播放完成（EOF）处理 ──────────────────────
 
@@ -357,6 +382,11 @@ class _PlayerPageState extends State<PlayerPage>
     _path = widget.path;
     _title = widget.title;
     _biliMedia = widget.biliMedia;
+    // 兄弟视频列表：入口给的就用（首页/文件夹页传的是当前排序的可见列表），
+    // 没给（最近播放/历史记录/外部打开）就按当前视频所在文件夹从媒体库补全。
+    // 补全不阻塞 open，完成后底栏「下一集」与播放列表面板自动跟上。
+    _playlistNotifier.value = widget.playlist ?? const <VideoFile>[];
+    if (_playlistNotifier.value.isEmpty) unawaited(_loadFolderPlaylist());
     // 开启 libass：走 mpv 原生字幕渲染（sub-visibility=yes），而非 Flutter
     // SubtitleView。这也是内嵌字幕原生样式 / 各种 sub-* 样式属性生效的前提。
     //
@@ -531,13 +561,10 @@ class _PlayerPageState extends State<PlayerPage>
   ///   交给 [openAndRestore] 在时长就绪后 seek + 确认。
   Duration? _resumeStartFor(String path) {
     Duration? listDuration;
-    final list = widget.playlist;
-    if (list != null) {
-      for (final v in list) {
-        if (v.path == path && v.durationMs > 0) {
-          listDuration = Duration(milliseconds: v.durationMs);
-          break;
-        }
+    for (final v in _playlist) {
+      if (v.path == path && v.durationMs > 0) {
+        listDuration = Duration(milliseconds: v.durationMs);
+        break;
       }
     }
     final saved = PlaybackProgressService.instance.getProgress(path);
@@ -571,9 +598,7 @@ class _PlayerPageState extends State<PlayerPage>
 
   /// 从播放列表查该路径的 MediaStore 时长（毫秒；未知返回 0）
   int _playlistDurationMsFor(String path) {
-    final list = widget.playlist;
-    if (list == null) return 0;
-    for (final v in list) {
+    for (final v in _playlist) {
       if (v.path == path && v.durationMs > 0) return v.durationMs;
     }
     return 0;
@@ -905,12 +930,10 @@ class _PlayerPageState extends State<PlayerPage>
       final displayRatio = swapped ? h / w : w / h;
       return displayRatio <= 1.0;
     }
-    final list = widget.playlist;
-    if (list != null) {
-      for (final v in list) {
-        if (v.path == _path && v.width > 0 && v.height > 0) {
-          return v.height > v.width;
-        }
+    final list = _playlist;
+    for (final v in list) {
+      if (v.path == _path && v.width > 0 && v.height > 0) {
+        return v.height > v.width;
       }
     }
     return false;
@@ -1010,11 +1033,20 @@ class _PlayerPageState extends State<PlayerPage>
 
   void _resetHideTimer() {
     _hideTimer?.cancel();
-    _hideTimer = Timer(const Duration(seconds: 3), () {
+    _hideTimer = Timer(kPlayerAutoHideDelay, () {
       if (mounted && _playing && !_locked) {
         setState(() => _controlsVisible = false);
         _controlsController.reverse();
       }
+    });
+  }
+
+  /// 解锁按钮呼出后启动自动收回计时（[kPlayerAutoHideDelay] 后滑出）
+  void _resetUnlockHideTimer() {
+    _unlockHideTimer?.cancel();
+    _unlockHideTimer = Timer(kPlayerAutoHideDelay, () {
+      // 期间已解锁（或页面已销毁）就不再动它
+      if (mounted && _locked) _unlockController.reverse();
     });
   }
 
@@ -1023,9 +1055,11 @@ class _PlayerPageState extends State<PlayerPage>
     if (_locked) {
       if (_unlockController.status == AnimationStatus.forward ||
           _unlockController.status == AnimationStatus.completed) {
+        _unlockHideTimer?.cancel(); // 手动收起：撤销待执行的自动收回
         _unlockController.reverse();
       } else {
         _unlockController.forward();
+        _resetUnlockHideTimer();
       }
       return;
     }
@@ -1045,15 +1079,17 @@ class _PlayerPageState extends State<PlayerPage>
   void _toggleLock() {
     setState(() => _locked = !_locked);
     if (_locked) {
-      // 锁定：隐藏全部控制，左右滑入解锁按钮
+      // 锁定：隐藏全部控制，左右滑入解锁按钮（随后自动收回，可单击再呼出）
       _hideTimer?.cancel();
       if (_controlsVisible) {
         _controlsVisible = false;
         _controlsController.reverse();
       }
       _unlockController.forward();
+      _resetUnlockHideTimer();
     } else {
       // 解锁：解锁按钮滑出，恢复控制层
+      _unlockHideTimer?.cancel();
       _unlockController.reverse();
       _controlsVisible = true;
       _controlsController.forward();
@@ -1110,14 +1146,24 @@ class _PlayerPageState extends State<PlayerPage>
 
   // ── 手势 ────────────────────────────────────────────────
 
+  /// 双击手势（暂停 / 左退右进 / 混合，跟随设置）。
+  ///
+  /// 锁定态由 [resolveDoubleTap] 统一裁决：默认拦截（防误触），开启「锁定
+  /// 状态豁免双击」后只放行播放/暂停，快进快退与其余手势依旧全部拦截。
+  /// 锁定下的双击**不碰控制层与解锁按钮**：暂停时 `playing` 流的「显示控制层」
+  /// 分支有 `!_locked` 守卫，解锁按钮的显隐也不会被双击改变（双击赢得竞技场，
+  /// 单击回调根本不触发）。
   void _handleDoubleTap(double dx, double width) {
-    if (_locked) return; // 锁定状态拦截双击手势，防误触
-    final gesture = classifyDoubleTap(
-      dx,
-      width,
-      _settings.doubleTapMode,
+    final gesture = resolveDoubleTap(
+      locked: _locked,
+      lockExempt: _settings.lockGestureExempt,
+      dx: dx,
+      width: width,
+      mode: _settings.doubleTapMode,
     );
     switch (gesture) {
+      case null:
+        return;
       case DoubleTapGesture.pauseToggle:
         _togglePlay();
       case DoubleTapGesture.seekBackward:
@@ -1488,8 +1534,8 @@ class _PlayerPageState extends State<PlayerPage>
       await _switchToBiliEpisode(next);
       return;
     }
-    final list = widget.playlist;
-    if (list == null) return;
+    final list = _playlist;
+    if (list.isEmpty) return;
     final idx = list.indexWhere((v) => v.path == _path);
     if (idx < 0 || idx >= list.length - 1) return;
     final next = list[idx + 1];
@@ -1504,8 +1550,8 @@ class _PlayerPageState extends State<PlayerPage>
       await _switchToBiliEpisode(first);
       return;
     }
-    final list = widget.playlist;
-    if (list == null || list.isEmpty) return;
+    final list = _playlist;
+    if (list.isEmpty) return;
     final first = list.first;
     // 同一路径不重播（B3/P1-8 根因）：重新 open 会让 mpv 丢弃全部 `sub-add`
     // 的外挂轨道，而字幕侧 `reapplyForMedia` 的「同一媒体」早退又不会补挂
@@ -2452,7 +2498,7 @@ class _PlayerPageState extends State<PlayerPage>
           controller: _controller,
           initialPath: _path,
           initialTitle: _title,
-          playlist: widget.playlist,
+          playlistListenable: _playlistNotifier,
           // B 站番剧：竖屏页同样能看剧集列表并切集（切集实际由本页执行）
           biliPlaylist: widget.biliPlaylist,
           initialBiliEpId: _biliMedia?.epId,
@@ -2571,7 +2617,7 @@ class _PlayerPageState extends State<PlayerPage>
           player: _player,
           initialPath: _path,
           initialTitle: _title,
-          playlist: widget.playlist,
+          playlist: _playlist,
           // 听视频页内切歌后同步最新 path/title 给本页
           onVideoChanged: (path, title) {
             if (!mounted) return;
@@ -2615,9 +2661,28 @@ class _PlayerPageState extends State<PlayerPage>
     _resetHideTimer();
   }
 
+  /// 补全兄弟视频列表：入口没传 [PlayerPage.playlist] 时（首页「最近播放」、
+  /// 历史记录、外部打开），按当前视频所在文件夹从媒体库反查。
+  ///
+  /// 失败（权限被拒 / 通道异常 / 在线流）保持空表即可——播放页本身不依赖它，
+  /// 只是「下一集」与播放列表面板会空着，不能因此打断播放。
+  Future<void> _loadFolderPlaylist() async {
+    // B 站在线播放没有本地兄弟列表（其剧集列表走 [PlayerPage.biliPlaylist]）
+    if (_biliMedia != null) return;
+    final List<VideoFile> videos;
+    try {
+      videos = await VideoScanner.folderSiblingsOf(_path);
+    } catch (e, s) {
+      debugPrint('补全同目录视频列表失败: $e\n$s');
+      return;
+    }
+    if (_disposed || !mounted || videos.isEmpty) return;
+    _playlistNotifier.value = videos;
+  }
+
   /// 底栏「列表」按钮：右侧滑入播放列表面板（工作.md 第 7 点）。
   ///
-  /// 内容 = 当前视频所在文件夹的视频（从 [widget.playlist] 按同目录过滤），
+  /// 内容 = 当前视频所在文件夹的视频（从 [_playlist] 按同目录过滤），
   /// 面板内自带 4 排序胶囊 + 当前项高亮；点击列表项 → [_switchTo] 统一切集
   /// （自动获得进度记忆 + 新集进度恢复），面板自身随后关闭。
   Future<void> _openPlaylistPanel() async {
@@ -2645,7 +2710,7 @@ class _PlayerPageState extends State<PlayerPage>
       return;
     }
     final folder = folderOfPath(_path);
-    final videos = filterVideosInFolder(widget.playlist ?? const [], folder);
+    final videos = filterVideosInFolder(_playlist, folder);
     await showPlayerPanel(
       context,
       pages: [
@@ -2753,9 +2818,7 @@ class _PlayerPageState extends State<PlayerPage>
 
   /// 播放列表里该视频登记的时长（毫秒；0 = 未知/不在列表内）
   int _listDurationMsFor(String path) {
-    final list = widget.playlist;
-    if (list == null) return 0;
-    for (final v in list) {
+    for (final v in _playlist) {
       if (v.path == path) return v.durationMs;
     }
     return 0;
@@ -2835,6 +2898,7 @@ class _PlayerPageState extends State<PlayerPage>
     _disposed = true;
     WidgetsBinding.instance.removeObserver(this);
     _hideTimer?.cancel();
+    _unlockHideTimer?.cancel();
     _seekFeedbackTimer?.cancel();
     _indicatorHideTimer?.cancel();
     _speedBarTimer?.cancel();
@@ -2850,6 +2914,7 @@ class _PlayerPageState extends State<PlayerPage>
     _positionNotifier.dispose();
     _durationNotifier.dispose();
     _dragPositionNotifier.dispose();
+    _playlistNotifier.dispose();
     _chapterTracker.dispose();
     _subtitleController.dispose();
     // 断开页面回调，避免控制器（可能被竖屏页/听视频页短暂共享）持有页面引用
@@ -3379,10 +3444,12 @@ class _PlayerPageState extends State<PlayerPage>
                       child: PlayerZoomRestoreChip(onTap: _resetZoom),
                     ),
                   ),
-                // 常驻进度线（设置开启且控制层隐藏时显示；锁定后不显示）。
+                // 常驻进度线（设置开启且控制层隐藏时显示；锁定后同样显示——
+                // 它只是只读展示，不带来任何误触风险，锁定后看不到进度反而
+                // 让人不知道播到哪了，用户反馈要求锁定态保留）。
                 // 内部局部订阅进度（risk_audit #1）：位置变化只重画这条线，
                 // 不重建整页；时长未知时先渲染空位（时长就绪后自动出现）。
-                if (_settings.showProgressLine && !_controlsVisible && !_locked)
+                if (_settings.showProgressLine && !_controlsVisible)
                   Positioned(
                     left: 0,
                     right: 0,

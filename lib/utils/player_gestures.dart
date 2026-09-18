@@ -41,6 +41,31 @@ DoubleTapGesture classifyDoubleTap(
   }
 }
 
+/// 解析一次双击的**最终动作**（横竖屏播放页共用，锁定态豁免的唯一裁决点）：
+///
+/// - 未锁定：与 [classifyDoubleTap] 完全一致（暂停 / 左退右进 / 混合）；
+/// - 锁定 + [lockExempt] 关闭：返回 null（不动作，保持「锁定 = 手势全拦」）；
+/// - 锁定 + [lockExempt] 开启：恒为播放/暂停。
+///
+/// 锁定态只看豁免开关、不看 [mode]/[dx]，是有意为之：双击是**唯一**被豁免
+/// 的手势，若按双击模式放行，「左退右进/混合」用户在锁定时就会双指跳进度
+/// ——而跳进度正是锁定要防的误触；播放/暂停误触的代价只是暂停一下。
+///
+/// 与单击（锁定态呼出/隐藏解锁按钮）不冲突：双击由双击识别器赢下手势竞技场，
+/// 单击识别器被拒，单击回调不会触发，解锁按钮的显隐状态保持不变。
+///
+/// 返回 null 表示这次双击不产生任何动作。
+DoubleTapGesture? resolveDoubleTap({
+  required bool locked,
+  required bool lockExempt,
+  required double dx,
+  required double width,
+  required DoubleTapMode mode,
+}) {
+  if (locked) return lockExempt ? DoubleTapGesture.pauseToggle : null;
+  return classifyDoubleTap(dx, width, mode);
+}
+
 // ────────────────────────────────────────────────────────────
 // 滑动手势数学（纯函数，可单测）
 // ────────────────────────────────────────────────────────────

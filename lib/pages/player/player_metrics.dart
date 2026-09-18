@@ -18,3 +18,11 @@ const double kPlayerTrackLeftInset = 28;
 /// 竖屏底栏操作行左内边距：38 宽「下一集」盒内 26 号图标居中，
 /// 22 + (38 - 26) / 2 = [kPlayerTrackLeftInset]（见上）。
 const double kPlayerNextRowLeftPadding = 22;
+
+/// 播放页自动隐藏时长（横竖屏共用）：控制层无操作后收起、锁定后呼出的
+/// 解锁按钮同样在该时长后收回。
+///
+/// 两处共用一个常量：它们都是「呼出后没人理就自己收回去」的同类行为，
+/// 各写各的数字会出现「控制层已收起、解锁按钮还挂在屏幕上」的错位
+/// （与 kPlayerTrackLeftInset 同一类漂移问题）。
+const Duration kPlayerAutoHideDelay = Duration(seconds: 3);

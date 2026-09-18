@@ -16,7 +16,8 @@ import 'package:moumou/widgets/settings_ui.dart';
 /// - **视频方向**：自动 / 锁定竖屏 / 锁定横屏（工作.md 第 5 点）；
 /// - **播放行为**：常驻进度线、进度条缩略图、记住上次倍速、保存音量到系统、
 ///   双指缩小视频、按钮背景、自动连播、播放完毕自动退出、倍速播放指示器、
-///   启用播放界面动画、音量增强（开关 + 可折叠的上限百分比滑杆，组内最后一项）；
+///   启用播放界面动画、锁定状态豁免双击、音量增强（开关 + 可折叠的上限
+///   百分比滑杆，组内最后一项）；
 /// - **已观看进度阈值**：滑杆设置（5% – 100%，步进 5%）。
 ///
 /// 循环播放模式（关闭/列表循环/单集循环）已移至播放界面内调整
@@ -275,6 +276,17 @@ class PlayerSettingsPage extends StatelessWidget {
                       ),
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
+                    SettingsTile(
+                      icon: Icons.lock_open_outlined,
+                      title: '锁定状态豁免双击',
+                      subtitle: const Text('启用锁定状态下双击屏幕播放/暂停的功能'),
+                      trailing: Switch(
+                        value: settings.lockGestureExempt,
+                        onChanged: (v) =>
+                            _onLockGestureExemptChanged(context, v),
+                      ),
+                    ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
                     // 音量增强（组内最后一项）：开关 + 可折叠的上限滑杆。
                     SettingsTile(
                       icon: Icons.volume_up_outlined,
@@ -372,6 +384,44 @@ class PlayerSettingsPage extends StatelessWidget {
         },
       ),
     );
+  }
+
+  /// 启用「锁定状态豁免双击」前的二次确认。
+  ///
+  /// 锁定本就是给口袋/背包等误触场景用的保护，豁免双击等于在锁定态重新
+  /// 打开一个会改变播放状态的手势，必须让用户在开启前知道代价；仅开启时
+  /// 弹窗（关闭直接生效），取消则不写设置。
+  Future<void> _onLockGestureExemptChanged(BuildContext context, bool v) async {
+    if (!v) {
+      PlayerControlsSettings.instance.setLockGestureExempt(false);
+      return;
+    }
+    final ok = await showAppDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('启用锁定状态豁免双击'),
+        content: const Text(
+          '开启后，控制层锁定期间双击屏幕即可暂停/播放。\n\n'
+          '只豁免这一个手势：左右滑动快进快退、上下滑动音量与亮度、长按倍速'
+          '在锁定状态下依然不会生效；单击呼出解锁按钮也不受影响。\n\n'
+          '锁定本是防误触用的，若视频会在口袋/包里误暂停，请保持关闭。',
+          style: TextStyle(fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('确定启用'),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await PlayerControlsSettings.instance.setLockGestureExempt(true);
+    }
   }
 
   /// 启用 GPU-next 前的二次确认：超分不可用 + 杜比视界提示。

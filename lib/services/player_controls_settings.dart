@@ -6,7 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// 播放器控制设置：右上角「更多」面板的启用动作、双击手势、快进/快退时长、
 /// 常驻进度线、倍速记忆、自定义倍速预设、控制按钮背景、画面比例、
 /// 长按倍速（倍率/指示器开关/首次提示）、音量亮度手势（灵敏度/保存到系统/
-/// 音量增强）、双指缩放、已观看进度阈值、自动连播/自动退出/循环播放模式。
+/// 音量增强）、双指缩放、已观看进度阈值、自动连播/自动退出/循环播放模式、
+/// 锁定状态豁免双击。
 ///
 /// 全局单例（同 [PlaybackProgressService] 模式），ChangeNotifier + shared_preferences
 /// 持久化；播放页与「播放器设置」子页共同监听。
@@ -55,6 +56,8 @@ class PlayerControlsSettings extends ChangeNotifier {
   // 视频方向（自动/锁定竖屏/锁定横屏）+ 播放界面动画开关
   static const _keyVideoOrientation = 'player_controls_video_orientation';
   static const _keyPlayerAnimations = 'player_controls_player_animations';
+  // 锁定状态豁免双击（默认关闭：锁定后双击屏幕仍可播放/暂停）
+  static const _keyLockGestureExempt = 'player_controls_lock_gesture_exempt';
   // 播放界面顶部信息栏（工作.md 阶段1 第 1 点：时间/电量/网速/数据类型多选）
   static const _keyShowTopTime = 'player_controls_show_top_time';
   static const _keyShowTopBattery = 'player_controls_show_top_battery';
@@ -184,6 +187,11 @@ class PlayerControlsSettings extends ChangeNotifier {
   /// 播放界面动画（默认开启）：关闭后控制层/面板等不再显示进出场动画
   bool _playerAnimations = true;
 
+  /// 锁定状态豁免双击（默认关闭）：开启后控制层锁定期间双击屏幕仍可
+  /// 播放/暂停；其余手势（左右滑动快进快退、上下滑动音量亮度、长按倍速、
+  /// 双指缩放）与单击呼出解锁按钮的语义一律不变，仍按锁定态处理
+  bool _lockGestureExempt = false;
+
   /// 播放界面顶部信息栏多选开关（工作.md 阶段1 第 1 点，默认四项全选）：
   /// 时间 / 电量 / 网速详情 / 数据类型（WiFi/移动数据图标）。
   bool _showTopTime = true;
@@ -220,6 +228,7 @@ class PlayerControlsSettings extends ChangeNotifier {
   LoopMode get loopMode => _loopMode;
   VideoOrientationMode get videoOrientation => _videoOrientation;
   bool get playerAnimations => _playerAnimations;
+  bool get lockGestureExempt => _lockGestureExempt;
   bool get showTopTime => _showTopTime;
   bool get showTopBattery => _showTopBattery;
   bool get showTopNetSpeed => _showTopNetSpeed;
@@ -300,6 +309,7 @@ class PlayerControlsSettings extends ChangeNotifier {
       _videoOrientation = VideoOrientationMode.values[orientation];
     }
     _playerAnimations = prefs.getBool(_keyPlayerAnimations) ?? true;
+    _lockGestureExempt = prefs.getBool(_keyLockGestureExempt) ?? false;
     // 顶部信息多选（工作.md 阶段1 第 1 点）：新 key 优先；无新 key 时从旧单选枚举
     // 迁移时间/电量两项，网速/数据类型默认开启。
     final migrated = _migrateTopStatus(prefs.getInt(_keyTopStatusDisplay));
@@ -589,6 +599,19 @@ class PlayerControlsSettings extends ChangeNotifier {
     await prefs.setBool(_keyPlayerAnimations, v);
   }
 
+  /// 锁定状态豁免双击开关（默认关闭；开启后锁定期间双击 = 播放/暂停）。
+  ///
+  /// 调用方（「播放设置 → 播放行为」）负责在开启前做二次确认——锁定本来
+  /// 就是给口袋/背包场景用的误触保护，用户必须知道双击会重新生效。
+  Future<void> setLockGestureExempt(bool v) async {
+    await ensureLoaded();
+    if (_lockGestureExempt == v) return;
+    _lockGestureExempt = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyLockGestureExempt, v);
+  }
+
   /// 播放界面顶部信息栏：时间/电量/网速/数据类型四项多选开关（工作.md 阶段1 第 1 点）
   Future<void> setShowTopTime(bool v) => _setTopFlag(_keyShowTopTime, v, (x) => _showTopTime = x, _showTopTime);
   Future<void> setShowTopBattery(bool v) => _setTopFlag(_keyShowTopBattery, v, (x) => _showTopBattery = x, _showTopBattery);
@@ -725,6 +748,7 @@ class PlayerControlsSettings extends ChangeNotifier {
     _loopMode = LoopMode.off;
     _videoOrientation = VideoOrientationMode.auto;
     _playerAnimations = true;
+    _lockGestureExempt = false;
     _showTopTime = true;
     _showTopBattery = true;
     _showTopNetSpeed = true;

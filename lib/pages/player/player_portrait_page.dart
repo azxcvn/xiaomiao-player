@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
@@ -106,8 +107,13 @@ class PlayerPortraitPage extends StatefulWidget {
   /// 进入时正在播放的视频标题
   final String initialTitle;
 
-  /// 兄弟视频列表（「下一集」与播放列表用，可空）
-  final List<VideoFile>? playlist;
+  /// 兄弟视频列表（「下一集」与播放列表用）。
+  ///
+  /// 横屏页创建并持有（入口没传 playlist 时由它从媒体库异步补全），本页只读、
+  /// 不 dispose。收 [ValueListenable] 而不是 List 快照：补全完成前本页就可能
+  /// 已被 push（「锁定竖屏」进入播放立即转竖屏），传快照会拿到空表 → 播放
+  /// 列表面板空着、「下一集」置灰。
+  final ValueListenable<List<VideoFile>> playlistListenable;
 
   /// B 站番剧整季剧集列表（B 站在线播放时由横屏页传入，可空）
   final BiliPlaylist? biliPlaylist;
@@ -167,7 +173,7 @@ class PlayerPortraitPage extends StatefulWidget {
     required this.controller,
     required this.initialPath,
     required this.initialTitle,
-    this.playlist,
+    required this.playlistListenable,
     this.biliPlaylist,
     this.initialBiliEpId,
     this.onBiliEpisodeSelected,
@@ -224,9 +230,13 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   late final Listenable _chapterListenable =
       Listenable.merge([_progressListenable, _chapterTracker]);
 
-  /// 底栏监听合并：章节 + 弹幕开关状态（弹幕开关图标随 danmakuOn 刷新）
-  late final Listenable _bottomBarListenable =
-      Listenable.merge([_chapterListenable, _danmakuController]);
+  /// 底栏监听合并：章节 + 弹幕开关状态（弹幕开关图标随 danmakuOn 刷新）+
+  /// 兄弟视频列表（横屏页媒体库补全完成后「下一集」按钮自动刷新）
+  late final Listenable _bottomBarListenable = Listenable.merge([
+    _chapterListenable,
+    _danmakuController,
+    widget.playlistListenable,
+  ]);
 
   /// 章节状态跟踪器（工作.md 章节功能）：优先共享横屏页实例
   /// （切集/位置流统一驱动），未传入时自建并绑定共享播放器
@@ -322,6 +332,10 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     end: Offset.zero,
   ).animate(CurvedAnimation(parent: _unlockController, curve: Curves.easeInOut));
 
+  /// 解锁按钮自动收回计时（与横屏同款：呼出后过了 [kPlayerAutoHideDelay]
+  /// 自己收回去，以免锁定后两个按钮一直挂在屏幕上挡画面）
+  Timer? _unlockHideTimer;
+
   /// 当前视口尺寸（手势计算用，build 时更新）
   double _viewportWidth = 0;
   double _viewportHeight = 0;
@@ -334,20 +348,22 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
 
   /// 是否存在「下一集」：
   /// - B 站番剧（[widget.biliPlaylist] 非空）→ 按当前 epId 定位剧集列表；
-  /// - 本地/网络文件 → 按 [widget.playlist] 当前路径定位。
+  /// - 本地/网络文件 → 按 [_playlist] 当前路径定位。
   bool get _hasNext {
     final bili = widget.biliPlaylist;
     if (bili != null) return bili.hasNextAt(bili.indexOfEpId(_biliEpId));
-    final list = widget.playlist;
-    if (list == null || list.isEmpty) return false;
+    final list = _playlist;
+    if (list.isEmpty) return false;
     final idx = list.indexWhere((v) => v.path == _path);
     return idx >= 0 && idx < list.length - 1;
   }
 
   /// 是否有可循环的播放列表（EOF「列表循环」判定用，两种来源合并）
   bool get _hasAnyPlaylist =>
-      (widget.playlist?.isNotEmpty ?? false) ||
-      (widget.biliPlaylist?.isNotEmpty ?? false);
+      _playlist.isNotEmpty || (widget.biliPlaylist?.isNotEmpty ?? false);
+
+  /// 兄弟视频列表（横屏页持有的共享实例，可能仍在异步补全中）
+  List<VideoFile> get _playlist => widget.playlistListenable.value;
 
   @override
   void initState() {
@@ -508,10 +524,19 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
 
   void _resetHideTimer() {
     _hideTimer?.cancel();
-    _hideTimer = Timer(const Duration(seconds: 3), () {
+    _hideTimer = Timer(kPlayerAutoHideDelay, () {
       if (mounted && _playing && !_locked) {
         setState(() => _controlsVisible = false);
       }
+    });
+  }
+
+  /// 解锁按钮呼出后启动自动收回计时（[kPlayerAutoHideDelay] 后滑出）
+  void _resetUnlockHideTimer() {
+    _unlockHideTimer?.cancel();
+    _unlockHideTimer = Timer(kPlayerAutoHideDelay, () {
+      // 期间已解锁（或页面已销毁）就不再动它
+      if (mounted && _locked) _unlockController.reverse();
     });
   }
 
@@ -520,9 +545,11 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     if (_locked) {
       if (_unlockController.status == AnimationStatus.forward ||
           _unlockController.status == AnimationStatus.completed) {
+        _unlockHideTimer?.cancel(); // 手动收起：撤销待执行的自动收回
         _unlockController.reverse();
       } else {
         _unlockController.forward();
+        _resetUnlockHideTimer();
       }
       return;
     }
@@ -540,12 +567,14 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   void _toggleLock() {
     setState(() => _locked = !_locked);
     if (_locked) {
-      // 锁定：隐藏全部控制，左右滑入解锁按钮（与横屏一致）
+      // 锁定：隐藏全部控制，左右滑入解锁按钮（与横屏一致，随后自动收回）
       _hideTimer?.cancel();
       _controlsVisible = false;
       _unlockController.forward();
+      _resetUnlockHideTimer();
     } else {
       // 解锁：解锁按钮滑出，恢复控制层（与横屏一致）
+      _unlockHideTimer?.cancel();
       _unlockController.reverse();
       _controlsVisible = true;
       _resetHideTimer();
@@ -611,11 +640,21 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     _resetHideTimer();
   }
 
-  /// 双击手势（暂停 / 左退右进 / 混合，跟随设置；锁定时拦截）
+  /// 双击手势（暂停 / 左退右进 / 混合，跟随设置）。
+  ///
+  /// 锁定态由 [resolveDoubleTap] 统一裁决（与横屏同款）：默认拦截，开启
+  /// 「锁定状态豁免双击」后只放行播放/暂停，快进快退依旧拦截。
   void _handleDoubleTap(double dx, double width) {
-    if (_locked) return; // 锁定状态拦截双击手势，防误触
-    final gesture = classifyDoubleTap(dx, width, _settings.doubleTapMode);
+    final gesture = resolveDoubleTap(
+      locked: _locked,
+      lockExempt: _settings.lockGestureExempt,
+      dx: dx,
+      width: width,
+      mode: _settings.doubleTapMode,
+    );
     switch (gesture) {
+      case null:
+        return;
       case DoubleTapGesture.pauseToggle:
         _togglePlay();
       case DoubleTapGesture.seekBackward:
@@ -779,8 +818,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       await _switchToBiliEpisode(next);
       return;
     }
-    final list = widget.playlist;
-    if (list == null) return;
+    final list = _playlist;
+    if (list.isEmpty) return;
     final idx = list.indexWhere((v) => v.path == _path);
     if (idx < 0 || idx >= list.length - 1) return;
     final next = list[idx + 1];
@@ -925,13 +964,10 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   /// （<5%）→ null 从头播；时长优先用播放列表 MediaStore 的 durationMs。
   Duration? _resumeStartFor(String path) {
     Duration? listDuration;
-    final list = widget.playlist;
-    if (list != null) {
-      for (final v in list) {
-        if (v.path == path && v.durationMs > 0) {
-          listDuration = Duration(milliseconds: v.durationMs);
-          break;
-        }
+    for (final v in _playlist) {
+      if (v.path == path && v.durationMs > 0) {
+        listDuration = Duration(milliseconds: v.durationMs);
+        break;
       }
     }
     final saved = PlaybackProgressService.instance.getProgress(path);
@@ -965,8 +1001,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       await _switchToBiliEpisode(first);
       return;
     }
-    final list = widget.playlist;
-    if (list == null || list.isEmpty) return;
+    final list = _playlist;
+    if (list.isEmpty) return;
     final first = list.first;
     // 同一路径不重播（B3/P1-8 根因，与横屏页同款）：重新 open 会让 mpv 丢弃
     // 全部 `sub-add` 的外挂轨道 → 单视频列表循环播到片尾即「外挂字幕消失」。
@@ -1004,7 +1040,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       return;
     }
     final folder = folderOfPath(_path);
-    final videos = filterVideosInFolder(widget.playlist ?? const [], folder);
+    final videos = filterVideosInFolder(_playlist, folder);
     await showPlayerBottomPanel(
       context,
       pages: [
@@ -1084,9 +1120,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
 
   /// 播放列表里该视频登记的时长（毫秒；0 = 未知/不在列表内）
   int _listDurationMsFor(String path) {
-    final list = widget.playlist;
-    if (list == null) return 0;
-    for (final v in list) {
+    for (final v in _playlist) {
       if (v.path == path) return v.durationMs;
     }
     return 0;
@@ -1817,7 +1851,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
           player: _player,
           initialPath: _path,
           initialTitle: _title,
-          playlist: widget.playlist,
+          playlist: _playlist,
           onVideoChanged: (path, title) {
             if (!mounted) return;
             setState(() {
@@ -1875,6 +1909,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _hideTimer?.cancel();
+    _unlockHideTimer?.cancel();
     _seekFeedbackTimer?.cancel();
     _indicatorHideTimer?.cancel();
     _speedBarTimer?.cancel();
