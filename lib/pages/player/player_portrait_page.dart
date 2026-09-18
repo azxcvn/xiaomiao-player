@@ -2543,13 +2543,24 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
                     ),
                   ),
                 // 双指缩放后显示「还原画面」入口（B4/D6：竖屏与横屏同款、
-                // 同一位置；缩放状态在共享会话状态里）
+                // 同一位置；缩放状态在共享会话状态里）。
+                // **跟随控制层**淡入淡出（和其他控制组件同一套显隐），不再常驻。
                 if (_session.zoomed)
                   Positioned.fill(
-                    child: Align(
-                      alignment: const Alignment(0, 0.34),
-                      child: PlayerZoomRestoreChip(
-                        onTap: () => _session.resetZoom(),
+                    child: IgnorePointer(
+                      ignoring: !_controlsVisible,
+                      child: AnimatedOpacity(
+                        opacity: _controlsVisible ? 1 : 0,
+                        duration: _controlsFadeDuration,
+                        child: Align(
+                          alignment: const Alignment(
+                            0,
+                            kZoomRestoreChipAlignmentY,
+                          ),
+                          child: PlayerZoomRestoreChip(
+                            onTap: () => _session.resetZoom(),
+                          ),
+                        ),
                       ),
                     ),
                   ),

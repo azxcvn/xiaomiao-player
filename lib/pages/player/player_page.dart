@@ -3624,13 +3624,23 @@ class _PlayerPageState extends State<PlayerPage>
                           _chapterTracker.chapterTitleAt(_thumbPreview!.time),
                     ),
                   ),
-                // 双指缩放后显示「还原画面」入口（播放/暂停按钮下方，
-                // 与中央簇保持一定间距；比原位置再往下移一些）
+                // 双指缩放后显示「还原画面」入口：**跟随控制层**淡入淡出
+                // （与中央簇同一份 `_controlsController`），不再常驻屏幕；
+                // 位置见 kZoomRestoreChipAlignmentY（已下移，避开播放按钮阴影）。
                 if (_session.zoomed)
                   Positioned.fill(
-                    child: Align(
-                      alignment: const Alignment(0, 0.34),
-                      child: PlayerZoomRestoreChip(onTap: _resetZoom),
+                    child: IgnorePointer(
+                      ignoring: !_controlsVisible,
+                      child: FadeTransition(
+                        opacity: _controlsController,
+                        child: Align(
+                          alignment: const Alignment(
+                            0,
+                            kZoomRestoreChipAlignmentY,
+                          ),
+                          child: PlayerZoomRestoreChip(onTap: _resetZoom),
+                        ),
+                      ),
                     ),
                   ),
                 // 常驻进度线（设置开启且控制层隐藏时显示；锁定后同样显示——
