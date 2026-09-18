@@ -50,6 +50,8 @@ void main() {
     expect(s.playerAnimations, isTrue);
     // 锁定状态豁免双击默认关闭（锁定 = 手势全拦，用户显式开启才豁免）
     expect(s.lockGestureExempt, isFalse);
+    // 界面跟随重力旋转默认关闭（要用户明确开启，且开启前有前提说明）
+    expect(s.followPhoneRotation, isFalse);
     // 顶部信息默认：时间/电量/网速/数据类型四项全选（工作.md 阶段1 第 1 点）
     expect(s.showTopTime, isTrue);
     expect(s.showTopBattery, isTrue);
@@ -531,5 +533,18 @@ void main() {
     expect(s.lockGestureExempt, isFalse);
     await s.load();
     expect(s.lockGestureExempt, isFalse, reason: '关闭后同样落盘');
+  });
+
+  test('界面跟随重力旋转：默认关闭，开关双向持久化', () async {
+    final s = PlayerControlsSettings.instance;
+    expect(s.followPhoneRotation, isFalse, reason: '默认关闭');
+    await s.setFollowPhoneRotation(true);
+    expect(s.followPhoneRotation, isTrue);
+    await s.load(); // 模拟重启
+    expect(s.followPhoneRotation, isTrue, reason: '开启后必须落盘');
+    await s.setFollowPhoneRotation(false);
+    expect(s.followPhoneRotation, isFalse);
+    await s.load();
+    expect(s.followPhoneRotation, isFalse, reason: '关闭后同样落盘');
   });
 }

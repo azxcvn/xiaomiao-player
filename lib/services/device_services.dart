@@ -155,6 +155,35 @@ class DeviceServices {
     }
   }
 
+  // ── 系统「自动旋转」开关（播放界面跟随手机方向）──────────
+  //
+  // 播放页进入时要**同步**决定初始方向（等一次通道往返会先闪一帧错误方向），
+  // 故这里缓存一份：启动（`main()`）刷新一次，每次进播放页再刷新一次纠正
+  //（用户可能在通知栏快捷开关里改过它，那不会触发 App 生命周期回调）。
+
+  static bool? _cachedAutoRotateEnabled;
+
+  /// 缓存的系统「自动旋转」状态（默认 true = 跟随；读不到时按跟随处理，
+  /// 与 App 默认「不指定方向」的行为一致）
+  static bool get cachedAutoRotateEnabled => _cachedAutoRotateEnabled ?? true;
+
+  /// 读取系统「自动旋转」是否开启；读取失败返回 null（区分「关闭」与「读不到」）
+  static Future<bool?> readAutoRotateEnabled() async {
+    try {
+      final v = await _channel.invokeMethod<int>('isAutoRotateEnabled');
+      if (v == null || v < 0) return null;
+      return v == 1;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// 刷新 [cachedAutoRotateEnabled]；读不到时保留上一次的值（首次保持默认 true）
+  static Future<void> refreshAutoRotate() async {
+    final v = await readAutoRotateEnabled();
+    if (v != null) _cachedAutoRotateEnabled = v;
+  }
+
   /// 请求本地网络权限（Android 16+ ACCESS_LOCAL_NETWORK，访问局域网 NAS/
   /// 自建弹幕服务器前调用）。Android 16 以下或已授权返回 true；拒绝返回 false。
   static Future<bool> requestLocalNetworkPermission() async {

@@ -82,6 +82,7 @@ import 'package:moumou/utils/playback_history.dart';
 import 'package:moumou/utils/playback_restore.dart';
 import 'package:moumou/utils/player_diagnostics.dart';
 import 'package:moumou/utils/player_gestures.dart';
+import 'package:moumou/utils/player_orientation.dart';
 import 'package:moumou/widgets/app_frame.dart';
 import 'package:moumou/widgets/cast_device_dialog.dart';
 import 'package:moumou/widgets/player_panel.dart';
@@ -366,6 +367,15 @@ class _PlayerPageState extends State<PlayerPage>
   /// 保证任何时刻两层页面不同框，从机制上杜绝「两个竖屏界面」复现）。
   bool _exitBlackout = false;
 
+  /// 本次播放是否「跟随手机方向」（进入时决定：设置开关 + 「自动」+
+  /// 系统「自动旋转」三者同时成立，见 [shouldFollowPhoneOrientation]）。
+  ///
+  /// 开启时本页不锁定方向（交还系统），横竖屏由手机方向决定：窗口转成竖屏
+  /// 就 push 竖屏播放页（[_syncPageWithPhoneOrientation]），竖屏页在窗口转回
+  /// 横屏时自己 pop 回本页。用户手动点「选择屏幕」= 手动接管，本次播放不再
+  /// 跟随（否则按下去会被重力立刻转回来）。
+  bool _followPhoneRotation = false;
+
   /// 播放器是否已销毁（退出路径先 await 销毁，widget dispose 兜底防重复）
   bool _playerDisposed = false;
 
@@ -473,17 +483,18 @@ class _PlayerPageState extends State<PlayerPage>
     _openAndSetRate();
 
     // 初始方向（工作.md 第 5 点：视频方向设置）：
-    // 锁定竖屏 → 直接竖屏；其余（自动/锁定横屏）先横屏，
-    // 「自动」会在 open 完成后按视频方向决定是否切竖屏
-    final lockPortrait =
-        _settings.videoOrientation == VideoOrientationMode.portrait;
-    SystemChrome.setPreferredOrientations(lockPortrait
-        ? [DeviceOrientation.portraitUp]
-        : [
-            DeviceOrientation.landscapeLeft,
-            DeviceOrientation.landscapeRight,
-          ]);
+    // - 跟随手机方向（开关 + 「自动」+ 系统自动旋转）：不指定方向、交还系统，
+    //   横竖屏由手机方向决定（竖屏窗口 → 竖屏播放页，见
+    //   [_syncPageWithPhoneOrientation]）；
+    // - 锁定竖屏 → 直接竖屏；
+    // - 其余（自动/锁定横屏）先横屏，「自动」会在 open 完成后按视频方向
+    //   决定是否切竖屏。
+    _followPhoneRotation = _shouldFollowPhoneOrientation;
+    SystemChrome.setPreferredOrientations(_initialOrientations());
     _enterFullscreen();
+    // 系统「自动旋转」可能在 App 存活期间被改过（通知栏快捷开关不触发
+    // 生命周期回调，缓存可能是旧的）：进入后异步刷新一次并纠正方向策略
+    unawaited(_refreshAutoRotateCache());
 
     // 横屏旋转与路由转场是异步的，完成后系统栏可能被临时恢复显示；
     // 在转场后再次确认沉浸式，并延迟重设一次，确保状态栏不再露出
@@ -885,7 +896,74 @@ class _PlayerPageState extends State<PlayerPage>
               ),
       );
 
+  // ── 方向策略：跟随手机方向（重力感应）─────────────────────
+
+  /// 本次播放是否跟随手机方向（设置开关 + 「自动」+ 系统「自动旋转」，
+  /// 三者同时成立才生效，见 [shouldFollowPhoneOrientation]）
+  bool get _shouldFollowPhoneOrientation => shouldFollowPhoneOrientation(
+        mode: _settings.videoOrientation,
+        followPhoneRotation: _settings.followPhoneRotation,
+        systemAutoRotate: DeviceServices.cachedAutoRotateEnabled,
+      );
+
+  /// 进入播放时的方向：跟随手机方向 → 交还系统；锁定竖屏 → 竖屏；
+  /// 其余（自动/锁定横屏）→ 先横屏（「自动」随后按视频方向决定是否切竖屏）
+  List<DeviceOrientation> _initialOrientations() {
+    if (_followPhoneRotation) return PlayerOrientation.appDefault;
+    return _settings.videoOrientation == VideoOrientationMode.portrait
+        ? PlayerOrientation.portrait
+        : PlayerOrientation.landscape;
+  }
+
+  /// 引擎上报的当前窗口是否竖屏。
+  ///
+  /// 直接问引擎视图要尺寸，不读 MediaQuery：[didChangeMetrics] 触发时
+  /// MediaQuery 还是上一帧的旧尺寸，旧尺寸会让「就是这次旋转」的判断漏掉。
+  bool get _windowIsPortrait {
+    final size =
+        WidgetsBinding.instance.platformDispatcher.implicitView?.physicalSize;
+    if (size == null || size.isEmpty) {
+      final media = MediaQuery.maybeOf(context);
+      return media != null && media.size.height > media.size.width;
+    }
+    return size.height > size.width;
+  }
+
+  /// 跟随手机方向：把页面与当前窗口方向对齐（竖屏窗口 → 竖屏播放页；
+  /// 横屏窗口由竖屏页自己 pop 回本页）。
+  ///
+  /// 不只在 [didChangeMetrics] 里对齐：手工点「选择屏幕」回来、从听视频页
+  /// 返回、App 回前台等路径下窗口方向可能没变化，但页面需要重新对齐。
+  Future<void> _syncPageWithPhoneOrientation() async {
+    if (!_followPhoneRotation || !mounted || _disposed || _exiting) return;
+    if (!_windowIsPortrait || _portraitActive) return;
+    await _openPortraitPlayer(followPhone: true);
+  }
+
+  /// 异步刷新系统「自动旋转」缓存，结果与本次决定不一致时纠正方向策略。
+  ///
+  /// 用户可能在通知栏快捷开关里改过它——那不会触发 App 生命周期回调，
+  /// 启动时缓存的值可能已经过期。
+  Future<void> _refreshAutoRotateCache() async {
+    await DeviceServices.refreshAutoRotate();
+    if (_disposed || !mounted || _exiting) return;
+    final follow = _shouldFollowPhoneOrientation;
+    if (follow == _followPhoneRotation) return;
+    _followPhoneRotation = follow;
+    await SystemChrome.setPreferredOrientations(
+      follow ? PlayerOrientation.appDefault : PlayerOrientation.landscape,
+    );
+    if (_disposed || !mounted || _exiting) return;
+    if (follow) {
+      await _syncPageWithPhoneOrientation();
+    } else if (!_portraitActive) {
+      // 改回不跟随：交给「视频方向」逻辑重新定页面
+      await _applyVideoOrientation();
+    }
+  }
+
   /// 视频方向（工作.md 第 5 点）：
+  /// - 跟随手机方向：方向交还系统，页面按窗口方向对齐（不看视频方向）；
   /// - 锁定横屏：保持横屏（不动作）；
   /// - 锁定竖屏：自动进入竖屏播放页（共享同一 Player，音频零中断）；
   /// - 自动：按视频方向（宽高比）决定横/竖屏。
@@ -894,6 +972,11 @@ class _PlayerPageState extends State<PlayerPage>
   /// videoParams 流，期间用户退出则播放器已销毁——抛 AssertionError 时
   /// 静默返回，不写假崩溃日志。
   Future<void> _applyVideoOrientation() async {
+    // 跟随手机方向：横竖屏由手机方向决定（进入时窗口已是竖屏 → 直接进竖屏页）
+    if (_followPhoneRotation) {
+      await _syncPageWithPhoneOrientation();
+      return;
+    }
     if (_settings.videoOrientation == VideoOrientationMode.landscape) return;
     try {
       final portrait =
@@ -903,7 +986,7 @@ class _PlayerPageState extends State<PlayerPage>
       // 已在竖屏页（用户手动切过）或已开始退出时不再自动 push
       if (!mounted || _portraitActive || _exiting || _disposed) return;
       // 先切方向再进竖屏页，避免先横屏闪一下再旋转
-      await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+      await SystemChrome.setPreferredOrientations(PlayerOrientation.portrait);
       await _openPortraitPlayer();
     } on AssertionError {
       // 播放器已被销毁（快速退出）：静默返回
@@ -998,6 +1081,24 @@ class _PlayerPageState extends State<PlayerPage>
   }
 
   // ── 应用生命周期（退后台 / 听视频相关）──────────────────
+
+  /// 窗口尺寸/方向变化：跟随手机方向时按新方向对齐页面。
+  ///
+  /// 跟随开着时本页没有锁定方向（方向交还系统），窗口转成竖屏就切到竖屏
+  /// 播放页；转回横屏由竖屏页自己 pop 回来（见 PlayerPortraitPage）。
+  ///
+  /// 只在 App 处于前台时响应：画中画小窗（16:9 横屏窗口）也是「窗口尺寸变化」，
+  /// 在竖屏页里按尺寸判断会把小窗当成横屏、把竖屏页 pop 掉（返回全屏后布局
+  /// 被悄悄换掉）。
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    if (!_followPhoneRotation) return;
+    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      return;
+    }
+    unawaited(_syncPageWithPhoneOrientation());
+  }
 
   /// 应用生命周期变化（**只关乎控制层显隐**，不涉及"自动进小窗"）：
   /// - 退后台（`paused`/`hidden`，含从显式「画中画」按钮进小窗、被系统
@@ -1098,6 +1199,30 @@ class _PlayerPageState extends State<PlayerPage>
   }
 
   void _unlock() => _toggleLock();
+
+  /// 接住竖屏页离开前交回的状态（控制层显隐 + 锁定）。
+  ///
+  /// 重力切换只是换一个布局渲染同一路画面，控制层显隐与锁定属于「本次播放」
+  /// 而不是某一页：不接住的话每次重力切换都会切过去自动呼出控制层、切回横屏
+  /// 又消失地抖一次（用户反馈），锁定也会在旋转时被悄悄解掉。
+  ///
+  /// 本页此刻刚露出来（或被竖屏页盖着），直接归位、不走 250ms 进出场动画。
+  void _onPortraitStateReport({
+    required bool controlsVisible,
+    required bool locked,
+  }) {
+    if (!mounted || _disposed || _exiting) return;
+    setState(() {
+      _locked = locked;
+      _controlsVisible = locked ? false : controlsVisible;
+    });
+    _hideTimer?.cancel();
+    _unlockHideTimer?.cancel();
+    // 锁定态：解锁按钮从「收起」开始（单击屏幕呼出，与锁定后的常态一致）
+    _unlockController.value = 0;
+    _controlsController.value = _controlsVisible ? 1 : 0;
+    if (_controlsVisible) _resetHideTimer();
+  }
 
   // ── 截图 ────────────────────────────────────────────────
 
@@ -2474,7 +2599,12 @@ class _PlayerPageState extends State<PlayerPage>
   ///
   /// [onVideoChanged]：竖屏页切集后同步最新 path/title 给本页；
   /// [onExitPlayer]：竖屏页 EOF「自动退出」时先关竖屏页再退出本页（回到列表）。
-  Future<void> _openPortraitPlayer() async {
+  ///
+  /// [followPhone] = true 表示这次 push 是「跟随手机方向」触发的（窗口已是
+  /// 竖屏）：竖屏页不锁定竖屏、窗口转回横屏时自己 pop；转场也取瞬时（不会有
+  /// 淡入过程暴露下面那层横屏布局）。用户点「选择屏幕」进来的（默认 false）
+  /// 仍按原来的方式锁竖屏。
+  Future<void> _openPortraitPlayer({bool followPhone = false}) async {
     // 重入 / 互斥守卫（B3/P2-1）：连点切屏按钮会 push 两个竖屏页；听视频页
     // 打开期间也不允许再叠一层竖屏页（三者共享同一 Player，会互相抢方向、
     // 系统 UI 与 `_portraitActive`/`_audioActive` 标志）。
@@ -2489,7 +2619,9 @@ class _PlayerPageState extends State<PlayerPage>
     await Navigator.of(context).push(
       PageRouteBuilder(
         settings: const RouteSettings(name: playerRouteName),
-        transitionDuration: const Duration(milliseconds: 200),
+        transitionDuration: followPhone
+            ? Duration.zero
+            : const Duration(milliseconds: 200),
         // 出场瞬时：竖屏页 pop 即消失（退出播放/切回横屏不再有 200ms 淡出，
         // 与主播放路由「无退出动画」保持一致）
         reverseTransitionDuration: Duration.zero,
@@ -2499,6 +2631,12 @@ class _PlayerPageState extends State<PlayerPage>
           initialPath: _path,
           initialTitle: _title,
           playlistListenable: _playlistNotifier,
+          // 跟随手机方向进来的竖屏页：不锁竖屏（窗口转横屏时自己 pop 回本页）
+          followPhoneRotation: followPhone,
+          // 控制层显隐/锁定两页共用一份：切过去沿用当前状态，离开前交回来
+          initialControlsVisible: _controlsVisible,
+          initialLocked: _locked,
+          onStateReport: _onPortraitStateReport,
           // B 站番剧：竖屏页同样能看剧集列表并切集（切集实际由本页执行）
           biliPlaylist: widget.biliPlaylist,
           initialBiliEpId: _biliMedia?.epId,
@@ -2541,23 +2679,30 @@ class _PlayerPageState extends State<PlayerPage>
     if (!mounted) return;
     _portraitActive = false;
     setState(() {});
-    // 竖屏页退出时恢复了「edgeToEdge」，返回后重新应用横屏+沉浸式；
+    // 竖屏页退出时恢复了「edgeToEdge」，返回后重新应用方向+沉浸式；
     // 播放从未中断，无需 seek/play。
     // ⚠️ 若用户是在竖屏页按返回退出整个播放器（_exitWithPortrait），
     // _exiting 已置位：这里**不能再恢复横屏**，否则会和 _exitPlayer 的
     // 竖屏恢复竞争，导致退出后列表页先横屏再竖屏（用户反馈的闪烁根因）。
     if (_exiting) return;
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+    // 跟随手机方向：
+    // - 窗口已转横屏（重力感应触发的 pop）→ 继续跟随，方向仍交还系统；
+    // - 窗口还是竖屏（用户点「选择屏幕」手动切回来的）→ 手动接管，本次播放
+    //   不再跟随（用户明确要了这个方向，不该被重力立刻转回去），按原来的
+    //   方式恢复横屏。
+    if (_followPhoneRotation && !_windowIsPortrait) {
+      SystemChrome.setPreferredOrientations(PlayerOrientation.appDefault);
+    } else {
+      _followPhoneRotation = false;
+      SystemChrome.setPreferredOrientations(PlayerOrientation.landscape);
+    }
     _enterFullscreen();
     _resetHideTimer();
   }
 
   /// 竖屏页 EOF「自动退出」/ 竖屏返回：先完成退出准备（保存进度/恢复设备/
-  /// 恢复竖屏方向与系统 UI），此时竖屏页仍盖住横屏页、用户看不到底下画面；
-  /// 再连续关掉竖屏页 + 横屏页（两个 pop 均无动画，直接回到列表）。
+  /// **把方向交还系统**与恢复系统 UI），此时竖屏页仍盖住横屏页、用户看不到
+  /// 底下画面；再连续关掉竖屏页 + 横屏页（两个 pop 均无动画，直接回到列表）。
   ///
   /// ⚠️ v5 重写（用户反馈 v4 仍有「当前帧竖屏界面」闪现、黑屏淡出也嫌生硬）：
   /// 先把退出准备做完（这期间竖屏页全程在栈顶遮住横屏页），随后 `_exiting`
@@ -2580,10 +2725,11 @@ class _PlayerPageState extends State<PlayerPage>
     } on AssertionError {
       // 播放器已销毁：静默
     }
-    // 2. 旋转与 IO 并行、不阻塞 pop
-    unawaited(
-      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]),
-    );
+    // 2. 方向与 IO 并行、不阻塞 pop
+    // 方向交还系统（App 默认策略）：退出播放后要跟随系统自动旋转/用户旋转
+    // 锁定，不能把播放期的竖屏/横屏钉死在 Activity 上（否则退出后系统自动
+    // 旋转失效，只能重启 App——用户反馈的根因）
+    unawaited(PlayerOrientation.restoreAppDefault());
     unawaited(_saveProgress(forcePersist: true));
     unawaited(_restoreDeviceState());
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -2597,8 +2743,8 @@ class _PlayerPageState extends State<PlayerPage>
   ///
   /// 与竖屏页同思路：**共享同一个 [Player]**（音频零中断），听视频页只是
   /// 一个竖屏的「只播音频」界面——不新建播放器、不 open、不恢复进度。
-  /// 本页打开期间 EOF 让位给听视频页（[_audioActive]），返回后恢复横屏
-  /// 方向与沉浸式全屏。
+  /// 本页打开期间 EOF 让位给听视频页（[_audioActive]），返回后恢复方向
+  /// 与沉浸式全屏。
   Future<void> _openAudioPlayer() async {
     // 重入 / 互斥守卫（B3/P2-1）：连点「听视频」会 push 两个听视频页；竖屏页
     // 打开期间同样不允许（三者共享同一 Player 与方向/系统 UI 状态）。
@@ -2606,7 +2752,7 @@ class _PlayerPageState extends State<PlayerPage>
     _hideTimer?.cancel();
     _audioActive.value = true;
     if (mounted) setState(() {});
-    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    await SystemChrome.setPreferredOrientations(PlayerOrientation.portrait);
     if (!mounted) return; // 防异步间隙后使用过期 context
     await Navigator.of(context).push(
       PageRouteBuilder(
@@ -2648,17 +2794,21 @@ class _PlayerPageState extends State<PlayerPage>
       );
       _introOutroTracker.markReady();
     }
-    // 听视频页是竖屏，返回后恢复横屏 + 沉浸式（与竖屏页返回一致）
-    final lockPortrait =
-        _settings.videoOrientation == VideoOrientationMode.portrait;
-    await SystemChrome.setPreferredOrientations(lockPortrait
-        ? [DeviceOrientation.portraitUp]
-        : [
-            DeviceOrientation.landscapeLeft,
-            DeviceOrientation.landscapeRight,
-          ]);
+    // 听视频页是竖屏，返回后恢复方向 + 沉浸式（与竖屏页返回一致）：
+    // 跟随手机方向 → 交还系统（继续按手机方向）；否则按「视频方向」设置
+    if (_followPhoneRotation) {
+      await PlayerOrientation.restoreAppDefault();
+    } else {
+      final lockPortrait =
+          _settings.videoOrientation == VideoOrientationMode.portrait;
+      await SystemChrome.setPreferredOrientations(
+        lockPortrait ? PlayerOrientation.portrait : PlayerOrientation.landscape,
+      );
+    }
     _enterFullscreen();
     _resetHideTimer();
+    // 跟随手机方向：听视频页期间窗口被锁在竖屏，返回后要按手机方向重新对齐
+    unawaited(_syncPageWithPhoneOrientation());
   }
 
   /// 补全兄弟视频列表：入口没传 [PlayerPage.playlist] 时（首页「最近播放」、
@@ -2826,21 +2976,24 @@ class _PlayerPageState extends State<PlayerPage>
 
   // ── 退出与进度 ──────────────────────────────────────────
 
-  /// 退出播放器：保存进度、恢复设备状态（音量/亮度）、恢复竖屏方向与
-  /// 系统 UI，再 pop 回列表。
+  /// 退出播放器：保存进度、恢复设备状态（音量/亮度）、**把方向交还系统**与
+  /// 恢复系统 UI，再 pop 回列表。
   ///
   /// ⚠️ v5 重写（用户反馈 v4：退出仍有错向界面闪现，黑屏淡出也嫌生硬）：
-  /// - **不加 300ms 延时、不盖黑屏**：立即发起竖屏方向（旋转与保存/恢复
-  ///   并行），随后恢复系统 UI 并立即 pop。pop 的 200ms 淡出与系统旋转
-  ///   自然重叠——横屏页在淡出过程中旋转回竖屏，列表页淡入，视觉平滑；
+  /// - **不加 300ms 延时、不盖黑屏**：立即发起方向恢复（与保存/恢复并行），
+  ///   随后恢复系统 UI 并立即 pop。pop 的 200ms 淡出与系统旋转自然重叠——
+  ///   横屏页在淡出过程中转回手机方向，列表页淡入，视觉平滑；
   /// - 竖屏页路径走 [_exitWithPortrait]（先准备再连 pop 两层）。
+  ///
+  /// ⚠️ 方向必须是 [PlayerOrientation.restoreAppDefault]（交还系统），不能钉成
+  /// 竖屏：钉死后 Activity 的 requestedOrientation 一直是竖屏，用户开着系统
+  /// 自动旋转也转不动，只能重启 App（VR 眼镜横屏进入、播完一个视频就变竖屏
+  /// 的根因）。
   Future<void> _exitPlayer() async {
     if (_exiting) return;
     _exiting = true;
-    // 1. 立即发起竖屏方向（不阻塞，让旋转与保存/恢复并行）
-    unawaited(
-      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]),
-    );
+    // 1. 立即恢复方向（不阻塞，让旋转与保存/恢复并行）
+    unawaited(PlayerOrientation.restoreAppDefault());
     // 2. 同一帧冻结出帧：pause 后 mpv 零新帧（flutter#188300 不复发），
     //    末帧留在纹理上随转场消失，不再是「黑屏渐隐」
     try {
@@ -2930,8 +3083,9 @@ class _PlayerPageState extends State<PlayerPage>
     // 兜底恢复设备状态（正常退出已走 _exitPlayer，这里防异常路径泄漏）
     _restoreDeviceState();
     DeviceServices.clearFrameCache();
-    // 退出时强制恢复竖屏和系统 UI
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    // 退出时把方向交还系统（App 默认策略）+ 恢复系统 UI：
+    // ⚠️ 不能钉成竖屏——钉死后系统自动旋转失效，只能重启 App（用户反馈根因）
+    unawaited(PlayerOrientation.restoreAppDefault());
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     // 兜底销毁播放器（正常退出已先 pause 冻结出帧，这里销毁释放纹理；
     // 幂等，不会重复销毁）
@@ -3550,6 +3704,17 @@ class _PlayerPageState extends State<PlayerPage>
                 // 退出黑化遮罩（z 序最顶）：竖屏退出期间盖住整个横屏页
                 // （视频 + UI 骨架），保证两层页面任何时刻不同框
                 if (_exitBlackout)
+                  const Positioned.fill(
+                    child: ColoredBox(color: Colors.black),
+                  ),
+                // 跟随手机方向 + 窗口已是竖屏、竖屏页还没就位：整页盖黑。横屏
+                // 骨架绝不能画进竖屏窗口（进入播放时竖屏页要等 open 完成才
+                // push，不盖住会闪一帧横屏布局，且会抢竖屏页的手势）；只盖一层
+                // 黑（ColoredBox 吃点击）而不是不构建，Video 不卸载、纹理不重建。
+                if (_followPhoneRotation &&
+                    _windowIsPortrait &&
+                    !_portraitActive &&
+                    !_exiting)
                   const Positioned.fill(
                     child: ColoredBox(color: Colors.black),
                   ),

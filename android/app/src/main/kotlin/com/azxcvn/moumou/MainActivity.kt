@@ -257,6 +257,8 @@ class MainActivity : FlutterActivity() {
                     "getBatteryLevel" -> result.success(getBatteryLevel())
                     // 播放界面顶部网络类型显示（工作.md 阶段1 第 1 点）
                     "getNetworkType" -> result.success(getNetworkType())
+                    // 系统「自动旋转」开关（播放界面「跟随手机方向」用，只读无权限）
+                    "isAutoRotateEnabled" -> result.success(isAutoRotateEnabled())
                     // 本地网络权限（Android 16+）：连局域网 NAS/自建服务器前请求；
                     // 16 以下无此权限直接视为已授权
                     "requestLocalNetworkPermission" -> {
@@ -1065,6 +1067,30 @@ class MainActivity : FlutterActivity() {
             }
         } catch (e: Exception) {
             "none"
+        }
+    }
+
+    // ── 系统「自动旋转」开关（播放界面跟随手机方向）────────────
+
+    /**
+     * 系统「自动旋转」是否开启（`Settings.System.ACCELEROMETER_ROTATION`）。
+     *
+     * 只读系统设置，无需任何权限。返回 1 = 开启、0 = 关闭、-1 = 读取失败
+     * （Dart 侧把 -1 当「未知」，保留上一次的缓存值）。
+     *
+     * 播放页用它判断「跟随手机方向」是否生效：系统自动旋转关闭时系统根本
+     * 不会随重力转窗口，跟随只会退化成「固定在当前方向」，因此回落到
+     * 「按视频方向」的原行为。
+     */
+    private fun isAutoRotateEnabled(): Int {
+        return try {
+            Settings.System.getInt(
+                contentResolver,
+                Settings.System.ACCELEROMETER_ROTATION,
+                -1,
+            )
+        } catch (e: Exception) {
+            -1
         }
     }
 

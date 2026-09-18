@@ -75,6 +75,11 @@ Future<void> main() async {
   // 于是「冷启动立刻播视频」时可能读到默认 false → 用户开了 GPU-next 却不生效
   // （同一竞态也会影响 open 前的渲染属性注入）。
   await DecodeSettings.instance.ensureLoaded();
+  // 系统「自动旋转」开关：播放页进入时要**同步**决定初始方向（「跟随手机
+  // 方向」），等一次通道往返就会先闪一帧错误方向，所以在这里先读一次填缓存
+  // （进播放页时还会再刷新一次纠正：通知栏快捷开关改它不触发生命周期回调）。
+  // 读不到时静默保留默认值（按跟随处理）。
+  await DeviceServices.refreshAutoRotate();
   // Zone 层兜底：异步未捕获异常也写日志
   runZonedGuarded(
     () => runApp(const MoumouApp()),

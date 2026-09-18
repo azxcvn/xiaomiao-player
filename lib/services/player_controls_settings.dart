@@ -58,6 +58,7 @@ class PlayerControlsSettings extends ChangeNotifier {
   static const _keyPlayerAnimations = 'player_controls_player_animations';
   // 锁定状态豁免双击（默认关闭：锁定后双击屏幕仍可播放/暂停）
   static const _keyLockGestureExempt = 'player_controls_lock_gesture_exempt';
+  static const _keyFollowPhoneRotation = 'player_controls_follow_phone_rotation';
   // 播放界面顶部信息栏（工作.md 阶段1 第 1 点：时间/电量/网速/数据类型多选）
   static const _keyShowTopTime = 'player_controls_show_top_time';
   static const _keyShowTopBattery = 'player_controls_show_top_battery';
@@ -192,6 +193,12 @@ class PlayerControlsSettings extends ChangeNotifier {
   /// 双指缩放）与单击呼出解锁按钮的语义一律不变，仍按锁定态处理
   bool _lockGestureExempt = false;
 
+  /// 界面跟随重力旋转（默认关闭）：「视频方向 = 自动」且系统「自动旋转」开着
+  /// 时，播放界面横竖屏交给手机方向决定（竖起来 → 竖屏播放页，横过来 →
+  /// 横屏播放页）；两个前提缺一个就回落到原来的「按视频方向」行为。
+  /// 「锁定竖屏 / 锁定横屏」是用户的明确指定，不受本开关影响。
+  bool _followPhoneRotation = false;
+
   /// 播放界面顶部信息栏多选开关（工作.md 阶段1 第 1 点，默认四项全选）：
   /// 时间 / 电量 / 网速详情 / 数据类型（WiFi/移动数据图标）。
   bool _showTopTime = true;
@@ -229,6 +236,7 @@ class PlayerControlsSettings extends ChangeNotifier {
   VideoOrientationMode get videoOrientation => _videoOrientation;
   bool get playerAnimations => _playerAnimations;
   bool get lockGestureExempt => _lockGestureExempt;
+  bool get followPhoneRotation => _followPhoneRotation;
   bool get showTopTime => _showTopTime;
   bool get showTopBattery => _showTopBattery;
   bool get showTopNetSpeed => _showTopNetSpeed;
@@ -310,6 +318,7 @@ class PlayerControlsSettings extends ChangeNotifier {
     }
     _playerAnimations = prefs.getBool(_keyPlayerAnimations) ?? true;
     _lockGestureExempt = prefs.getBool(_keyLockGestureExempt) ?? false;
+    _followPhoneRotation = prefs.getBool(_keyFollowPhoneRotation) ?? false;
     // 顶部信息多选（工作.md 阶段1 第 1 点）：新 key 优先；无新 key 时从旧单选枚举
     // 迁移时间/电量两项，网速/数据类型默认开启。
     final migrated = _migrateTopStatus(prefs.getInt(_keyTopStatusDisplay));
@@ -612,6 +621,20 @@ class PlayerControlsSettings extends ChangeNotifier {
     await prefs.setBool(_keyLockGestureExempt, v);
   }
 
+  /// 界面跟随重力旋转开关（默认关闭；开启前由调用方做二次确认，讲明生效前提）。
+  ///
+  /// 关闭 = 完全回到「按视频方向」的锁定行为（锁定横屏/竖屏本来就是用户的
+  /// 明确指定，不受本开关影响）；系统「自动旋转」关闭或视频方向不是「自动」时
+  /// 本开关也不生效。
+  Future<void> setFollowPhoneRotation(bool v) async {
+    await ensureLoaded();
+    if (_followPhoneRotation == v) return;
+    _followPhoneRotation = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyFollowPhoneRotation, v);
+  }
+
   /// 播放界面顶部信息栏：时间/电量/网速/数据类型四项多选开关（工作.md 阶段1 第 1 点）
   Future<void> setShowTopTime(bool v) => _setTopFlag(_keyShowTopTime, v, (x) => _showTopTime = x, _showTopTime);
   Future<void> setShowTopBattery(bool v) => _setTopFlag(_keyShowTopBattery, v, (x) => _showTopBattery = x, _showTopBattery);
@@ -749,6 +772,7 @@ class PlayerControlsSettings extends ChangeNotifier {
     _videoOrientation = VideoOrientationMode.auto;
     _playerAnimations = true;
     _lockGestureExempt = false;
+    _followPhoneRotation = false;
     _showTopTime = true;
     _showTopBattery = true;
     _showTopNetSpeed = true;

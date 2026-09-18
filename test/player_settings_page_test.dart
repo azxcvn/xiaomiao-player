@@ -100,4 +100,76 @@ void main() {
     expect(settings.lockGestureExempt, isFalse);
     expect(exemptSwitch(tester).value, isFalse);
   });
+
+  testWidgets('界面跟随重力旋转：在「视频方向」组内、默认关闭、无副标题', (tester) async {
+    await pumpPage(tester);
+
+    expect(find.text('界面跟随重力旋转'), findsOneWidget);
+    final tile = find.ancestor(
+      of: find.text('界面跟随重力旋转'),
+      matching: find.byType(ListTile),
+    );
+    // 按需求：取消副标题文本
+    expect(tester.widget<ListTile>(tile).subtitle, isNull);
+    expect(
+      tester
+          .widget<Switch>(find.descendant(of: tile, matching: find.byType(Switch)))
+          .value,
+      isFalse,
+      reason: '默认关闭',
+    );
+    // 位置：三个方向单选（自动/锁定竖屏/锁定横屏）之后
+    expect(titleY(tester, '锁定横屏'), lessThan(titleY(tester, '界面跟随重力旋转')));
+  });
+
+  testWidgets('开启前弹二次确认：讲明两个前提，取消则不写设置', (tester) async {
+    await pumpPage(tester);
+
+    final tile = find.ancestor(
+      of: find.text('界面跟随重力旋转'),
+      matching: find.byType(ListTile),
+    );
+    await tester.tap(find.descendant(of: tile, matching: find.byType(Switch)));
+    await tester.pumpAndSettle();
+
+    expect(find.text('开启界面跟随重力旋转'), findsOneWidget);
+    // 必须讲清两个前提：系统「自动旋转」+ 视频方向「自动」
+    expect(find.textContaining('「自动旋转」'), findsOneWidget);
+    expect(find.textContaining('「视频方向」设为「自动」'), findsOneWidget);
+
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+
+    expect(settings.followPhoneRotation, isFalse);
+    expect(
+      tester
+          .widget<Switch>(find.descendant(of: tile, matching: find.byType(Switch)))
+          .value,
+      isFalse,
+    );
+  });
+
+  testWidgets('确认后生效并落盘；关闭直接生效不弹窗', (tester) async {
+    await pumpPage(tester);
+
+    final tile = find.ancestor(
+      of: find.text('界面跟随重力旋转'),
+      matching: find.byType(ListTile),
+    );
+    await tester.tap(find.descendant(of: tile, matching: find.byType(Switch)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('确定开启'));
+    await tester.pumpAndSettle();
+
+    expect(settings.followPhoneRotation, isTrue);
+    await settings.load(); // 模拟重启：读盘仍是开
+    expect(settings.followPhoneRotation, isTrue);
+
+    // 关闭：直接生效，不弹二次确认
+    await tester.tap(find.descendant(of: tile, matching: find.byType(Switch)));
+    await tester.pumpAndSettle();
+
+    expect(find.text('开启界面跟随重力旋转'), findsNothing);
+    expect(settings.followPhoneRotation, isFalse);
+  });
 }

@@ -69,6 +69,7 @@ import 'package:moumou/utils/playback_restore.dart';
 import 'package:moumou/utils/pip_aspect.dart';
 import 'package:moumou/utils/player_diagnostics.dart';
 import 'package:moumou/utils/player_gestures.dart';
+import 'package:moumou/utils/player_orientation.dart';
 import 'package:moumou/widgets/app_frame.dart';
 import 'package:moumou/widgets/cast_device_dialog.dart';
 import 'package:moumou/widgets/player_bottom_panel.dart';
@@ -167,6 +168,25 @@ class PlayerPortraitPage extends StatefulWidget {
   /// 收敛在这个对象里，本页不再自建第二份实现（P1-1/P1-2/P1-4/P1-5 根因）。
   final PlayerSessionState? sessionState;
 
+  /// 本次进入是否是「跟随手机方向」（横屏页跟随开着、窗口已是竖屏时 push）：
+  /// - true：本页**不锁竖屏**（方向交还系统），窗口转回横屏时自己 pop 回横屏
+  ///   播放页（脏活由横屏页继续按手机方向处理）；
+  /// - false（默认，用户点「选择屏幕」进来的）：按原来的方式锁竖屏，只在
+  ///   用户手动返回时 pop。
+  final bool followPhoneRotation;
+
+  /// 切入本页时横屏页的控制层显隐（重力切换时两页共用一份状态：切过去不该
+  /// 自己把控制层呼出来）。
+  final bool initialControlsVisible;
+
+  /// 切入本页时横屏页的锁定状态（同理：旋转不该悄悄把锁定解掉）。
+  final bool initialLocked;
+
+  /// 离开本页前把「控制层显隐 + 锁定」交回横屏页（[followPhoneRotation] 的
+  /// 重力切换来回时两页共用一份状态，否则每次切换都会呼出控制层 / 掉锁定）。
+  final void Function({required bool controlsVisible, required bool locked})?
+      onStateReport;
+
   const PlayerPortraitPage({
     super.key,
     required this.player,
@@ -187,6 +207,10 @@ class PlayerPortraitPage extends StatefulWidget {
     this.audioController,
     this.danmakuController,
     this.sessionState,
+    this.followPhoneRotation = false,
+    this.initialControlsVisible = true,
+    this.initialLocked = false,
+    this.onStateReport,
   });
 
   @override
@@ -206,6 +230,11 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   int? _biliEpId;
   bool _playing = false;
   bool _buffering = false;
+
+  /// 已发起退出本页（防重复 pop）：系统返回 / 「选择屏幕」/ 跟随手机方向
+  /// 三条路径可能同时到（例如点返回的瞬间手机转了方向），多 pop 一次会把
+  /// 下面的横屏播放页也关掉
+  bool _popping = false;
 
   // ── 播放位置/时长（risk_audit #1）────────────────────────
   // 与横屏页同款：位置流高频更新只走 ValueNotifier，底栏（进度条/时间文本）
@@ -437,6 +466,13 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     // 工作.md 第 3 点：横屏页已完成恢复时，本页接住并显示恢复指示器
     _resumeVisible = widget.initialResumeVisible;
 
+    // 控制层显隐 / 锁定：沿用切入前的状态——重力把界面切过来时用户没做任何
+    // 操作，不该自己把控制层呼出来（用户反馈：横→竖切一次就呼出控制层、
+    // 切回横屏又消失），锁定也不该在旋转时被悄悄解掉
+    _controlsVisible = widget.initialControlsVisible;
+    _locked = widget.initialLocked;
+    if (_locked) _controlsVisible = false;
+
     // 倍速/音量/亮度基准：**不再本页自建**——全在共享会话状态里
     //（B4/P1-2：原先本页从「倍速记忆设置」取基准，长按结束会把横屏设的
     // 2.0x 复位成 1.0x；P1-1：原先本页完全不知道 mpv 增益，指示器谎报响度）。
@@ -446,8 +482,14 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     //（横屏页那时被本页盖住，检测已让位给本页）
     unawaited(_checkDolbyVision());
 
-    // 竖屏 + 沉浸式全屏（状态栏/导航栏隐藏）
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    // 竖屏 + 沉浸式全屏（状态栏/导航栏隐藏）。
+    // 跟随手机方向进来的：**不锁竖屏**，方向仍交还系统——窗口转回横屏时本页
+    // 自己 pop（见 didChangeMetrics），锁住就再也回不去横屏了
+    SystemChrome.setPreferredOrientations(
+      widget.followPhoneRotation
+          ? PlayerOrientation.appDefault
+          : PlayerOrientation.portrait,
+    );
     _enterFullscreen();
     WidgetsBinding.instance.addPostFrameCallback((_) => _enterFullscreen());
     Future.delayed(const Duration(milliseconds: 400), () {
@@ -1688,10 +1730,66 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
 
   // ── 退出与进度 ──────────────────────────────────────────
 
+  /// 引擎上报的当前窗口是否竖屏（不读 MediaQuery：[didChangeMetrics] 触发时
+  /// 它还是上一帧的旧尺寸，会漏掉「就是这次旋转」的判断）。
+  bool get _windowIsPortrait {
+    final size =
+        WidgetsBinding.instance.platformDispatcher.implicitView?.physicalSize;
+    if (size == null || size.isEmpty) {
+      final media = MediaQuery.maybeOf(context);
+      return media != null && media.size.height > media.size.width;
+    }
+    return size.height > size.width;
+  }
+
+  /// 窗口方向变化（跟随手机方向时）：窗口转回横屏就退出本页，回到横屏播放页
+  /// （脏活由横屏页继续按手机方向处理）。
+  ///
+  /// 只在 App 处于前台时响应：画中画小窗是 16:9 横屏窗口，这时按窗口尺寸判断
+  /// 会把它当成「手机转横屏」而 pop 本页（关掉小窗回到全屏后发现布局被换了）。
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    if (!widget.followPhoneRotation || !mounted) return;
+    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      return;
+    }
+    if (_windowIsPortrait) return;
+    _exitForPhoneOrientation();
+  }
+
+  /// 跟随手机方向触发的退出：**先 pop 再后台保存进度**。
+  ///
+  /// 与 [_exitPlayer] 的区别是不能 await 落盘——等 IO 完成期间竖屏布局会一直
+  /// 停在已经转成横屏的窗口里（多停几帧）。保存进度失败与否都不影响返回，
+  /// 横屏页退出时还会再强制落盘一次。
+  void _exitForPhoneOrientation() {
+    if (!mounted || _popping) return;
+    // 有面板（倍速/弹幕设置等）压在本页上时不抢 pop：不然 pop 掉的是面板，
+    // 页面与窗口方向就对不上了（用户关掉面板后不会再收到方向变化事件）
+    if (ModalRoute.of(context)?.isCurrent != true) return;
+    _popping = true;
+    _reportStateToLandscape();
+    unawaited(_saveProgress(forcePersist: true));
+    Navigator.of(context).pop();
+  }
+
+  /// 把「控制层显隐 + 锁定」交回横屏页（本页即将 pop，由横屏页接住继续用
+  /// 同一份状态，重力切换来回时控制层不会忽隐忽现、锁定不会丢）
+  void _reportStateToLandscape() {
+    widget.onStateReport?.call(
+      controlsVisible: _controlsVisible,
+      locked: _locked,
+    );
+  }
+
   /// 退出竖屏页（返回横屏播放页，工作.md 第 17 点「选择屏幕」）：
   /// 只保存进度并 pop——播放器/设备状态/方向/系统 UI 由横屏页统一持有与恢复，
   /// **音频零中断**（共享播放器从未停止）。
   Future<void> _exitPlayer() async {
+    if (_popping) return;
+    _popping = true;
+    _reportStateToLandscape();
     await _saveProgress(forcePersist: true);
     if (mounted) Navigator.of(context).pop();
   }
@@ -1700,6 +1798,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   /// 竖屏模式下返回应**直接退出播放**（先关本页，再退出横屏播放页回到列表），
   /// 而不是回到横屏再退一次。走横屏页的 [_exitWithPortrait]（onExitPlayer）。
   Future<void> _backExit() async {
+    if (_popping) return;
+    _popping = true;
     // 保存不阻塞退出：由横屏页 _finishExitWithPortrait 统一负责落盘，
     // 去掉点击返回后的第一段阻塞（工作调研：出场淡化感根因之一）
     unawaited(_saveProgress(forcePersist: true));

@@ -13,7 +13,8 @@ import 'package:moumou/widgets/settings_ui.dart';
 /// 分组结构（各组别内的设置项以分割线分隔）：
 /// - **手势**：双击手势、快进/快退时长、音量/亮度灵敏度、长按倍速滑杆
 ///   （工作.md 第 3 点：全部归为**一张卡片**内，项间用分割线分隔）；
-/// - **视频方向**：自动 / 锁定竖屏 / 锁定横屏（工作.md 第 5 点）；
+/// - **视频方向**：自动 / 锁定竖屏 / 锁定横屏（工作.md 第 5 点）+
+///   界面跟随重力旋转开关（默认关闭，只作用于「自动」）；
 /// - **播放行为**：常驻进度线、进度条缩略图、记住上次倍速、保存音量到系统、
 ///   双指缩小视频、按钮背景、自动连播、播放完毕自动退出、倍速播放指示器、
 ///   启用播放界面动画、锁定状态豁免双击、音量增强（开关 + 可折叠的上限
@@ -117,6 +118,18 @@ class PlayerSettingsPage extends StatelessWidget {
                         selected: settings.videoOrientation == m,
                         onTap: () => settings.setVideoOrientation(m),
                       ),
+                    // 界面跟随重力旋转（默认关闭；只作用于「自动」：锁定竖屏/
+                    // 锁定横屏是用户的明确指定，优先级更高）
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    SettingsTile(
+                      icon: Icons.screen_rotation,
+                      title: '界面跟随重力旋转',
+                      trailing: Switch(
+                        value: settings.followPhoneRotation,
+                        onChanged: (v) =>
+                            _onFollowPhoneRotationChanged(context, v),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -421,6 +434,50 @@ class PlayerSettingsPage extends StatelessWidget {
     );
     if (ok == true) {
       await PlayerControlsSettings.instance.setLockGestureExempt(true);
+    }
+  }
+
+  /// 启用「界面跟随重力旋转」前的二次确认。
+  ///
+  /// 这个开关有两个前提（系统「自动旋转」开着、「视频方向」= 自动），不满足时
+  /// 开了也不生效——必须先讲清前提，否则用户会当成开关坏了。仅开启时弹窗
+  ///（关闭直接生效），取消则不写设置。
+  Future<void> _onFollowPhoneRotationChanged(
+    BuildContext context,
+    bool v,
+  ) async {
+    if (!v) {
+      PlayerControlsSettings.instance.setFollowPhoneRotation(false);
+      return;
+    }
+    final ok = await showAppDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('开启界面跟随重力旋转'),
+        content: const Text(
+          '生效前提（两个都要满足）：\n'
+          '① 手机系统设置里已开启「自动旋转」；\n'
+          '② 本页「视频方向」设为「自动」。\n\n'
+          '两个前提满足后，再开启本开关，播放界面的横竖屏才会跟随手机方向'
+          '（竖起来进竖屏播放页，横过来回横屏播放页）。前提不满足时仍按'
+          '「视频方向」的设置播放，本开关不生效。\n\n'
+          '「锁定竖屏 / 锁定横屏」是明确指定的方向，不受本开关影响。',
+          style: TextStyle(fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('确定开启'),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await PlayerControlsSettings.instance.setFollowPhoneRotation(true);
     }
   }
 
