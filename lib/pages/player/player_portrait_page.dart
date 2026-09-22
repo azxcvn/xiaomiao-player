@@ -63,10 +63,11 @@ import 'package:moumou/utils/cast_source.dart';
 import 'package:moumou/utils/dolby_vision_hint.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/intro_outro_skip.dart';
+import 'package:moumou/utils/network_playlist.dart';
+import 'package:moumou/utils/pip_aspect.dart';
 import 'package:moumou/utils/playback_completion.dart';
 import 'package:moumou/utils/playback_history.dart';
 import 'package:moumou/utils/playback_restore.dart';
-import 'package:moumou/utils/pip_aspect.dart';
 import 'package:moumou/utils/player_diagnostics.dart';
 import 'package:moumou/utils/player_gestures.dart';
 import 'package:moumou/utils/player_orientation.dart';
@@ -131,6 +132,12 @@ class PlayerPortraitPage extends StatefulWidget {
   final Future<({String path, String title, int epId})?> Function(
     BiliPlaylistItem item,
   )? onBiliEpisodeSelected;
+
+  /// 网络存储列表切集回调（横屏页实现：注册目标文件的回环流 + 开新流 + 释放
+  /// 旧流——回环流的生命周期归横屏页）。返回新媒体的 (path, title)，
+  /// 本页据此同步自身状态；失败返回 null。
+  final Future<({String path, String title})?> Function(VideoFile video)?
+      onNetworkVideoSelected;
 
   /// 本页切集后通知横屏页同步最新 path/title
   final void Function(String path, String title)? onVideoChanged;
@@ -202,6 +209,7 @@ class PlayerPortraitPage extends StatefulWidget {
     this.biliPlaylist,
     this.initialBiliEpId,
     this.onBiliEpisodeSelected,
+    this.onNetworkVideoSelected,
     this.onVideoChanged,
     this.onExitPlayer,
     this.initialResumeVisible = false,
@@ -385,13 +393,14 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
 
   /// 是否存在「下一集」：
   /// - B 站番剧（[widget.biliPlaylist] 非空）→ 按当前 epId 定位剧集列表；
-  /// - 本地/网络文件 → 按 [_playlist] 当前路径定位。
+  /// - 本地/网络文件 → 按 [_playlist] 当前项定位（网络项按远端路径，
+  ///   媒体路径是每次注册都换 token 的回环 URL，不能当身份）。
   bool get _hasNext {
     final bili = widget.biliPlaylist;
     if (bili != null) return bili.hasNextAt(bili.indexOfEpId(_biliEpId));
     final list = _playlist;
     if (list.isEmpty) return false;
-    final idx = list.indexWhere((v) => v.path == _path);
+    final idx = list.indexWhere((v) => v.path == _playlistKey);
     return idx >= 0 && idx < list.length - 1;
   }
 
@@ -401,6 +410,9 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
 
   /// 兄弟视频列表（横屏页持有的共享实例，可能仍在异步补全中）
   List<VideoFile> get _playlist => widget.playlistListenable.value;
+
+  /// 当前媒体在 [_playlist] 里的身份（与横屏页同规则，见 [playlistKeyOf]）
+  String get _playlistKey => playlistKeyOf(_path, _networkSource);
 
   @override
   void initState() {
@@ -871,10 +883,51 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     }
     final list = _playlist;
     if (list.isEmpty) return;
-    final idx = list.indexWhere((v) => v.path == _path);
+    final key = _playlistKey;
+    final idx = list.indexWhere((v) => v.path == key);
     if (idx < 0 || idx >= list.length - 1) return;
     final next = list[idx + 1];
-    await _switchTo(next.path, next.name);
+    await _switchToVideo(next);
+  }
+
+  /// 列表切集统一入口（面板点击 / 下一集 / 列表循环共用）：
+  ///
+  /// - 本地文件：本页直接切（[_switchTo]，共享播放器上原地打开）；
+  /// - 网络视频：交给横屏页执行（回环流的注册/释放归它持有），本页只把
+  ///   返回的新媒体状态同步到自身 UI——与 B 站切集同一手法。
+  Future<void> _switchToVideo(VideoFile video) async {
+    if (video.source != VideoSource.network) {
+      await _switchTo(video.path, video.name);
+      return;
+    }
+    final select = widget.onNetworkVideoSelected;
+    if (select == null) return;
+    // 并发互斥：与 [_switchTo] 同一守卫（连点两次列表项挡住第二次）
+    if (_isSwitchingVideo) return;
+    _isSwitchingVideo = true;
+    try {
+      final result = await select(video);
+      if (!mounted || result == null) return;
+      setState(() {
+        _path = result.path;
+        _title = result.title;
+        // 网络来源随新媒体更新（字幕远端同名扫描 / 列表定位都按它工作）
+        _networkSource = video;
+        _positionNotifier.value = _player.state.position;
+        _durationNotifier.value = _player.state.duration;
+        _dragPositionNotifier.value = null;
+        _clearThumbnail();
+        _indicator = null;
+        _resumeVisible = false;
+        _restoring = false;
+      });
+      // 新集丢弃旧集滑动浮层 + 还原缩放（共享会话状态）
+      _session.discardSwipe();
+      _session.resetZoom();
+    } finally {
+      _isSwitchingVideo = false;
+    }
+    _resetHideTimer();
   }
 
   /// B 站切集：实际切换由横屏页执行（它持有 BiliMedia/流代理/弹幕控制器），
@@ -1061,12 +1114,12 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     final first = list.first;
     // 同一路径不重播（B3/P1-8 根因，与横屏页同款）：重新 open 会让 mpv 丢弃
     // 全部 `sub-add` 的外挂轨道 → 单视频列表循环播到片尾即「外挂字幕消失」。
-    if (first.path == _path) {
+    if (first.path == _playlistKey) {
       _player.seek(Duration.zero);
       _player.play();
       return;
     }
-    await _switchTo(first.path, first.name);
+    await _switchToVideo(first);
   }
 
   /// 底栏「列表」按钮：底部弹出播放列表面板（工作.md 第 7 点）。
@@ -1094,7 +1147,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       _resetHideTimer();
       return;
     }
-    final folder = folderOfPath(_path);
+    final folder = folderOfPath(_playlistKey);
     final videos = filterVideosInFolder(_playlist, folder);
     await showPlayerBottomPanel(
       context,
@@ -1103,10 +1156,10 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
           title: '播放列表',
           body: PlayerPlaylistPanel(
             videos: videos,
-            currentPath: _path,
+            currentPath: _playlistKey,
             onSelect: (video) {
-              if (video.path == _path) return; // 选当前项：不动作
-              _switchTo(video.path, video.name);
+              if (video.path == _playlistKey) return; // 选当前项：不动作
+              _switchToVideo(video);
             },
           ),
         ),

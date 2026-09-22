@@ -212,8 +212,7 @@ void main() {
     });
   });
 
-  test('并发注册共用一次 bind（不会 bind 出两个 HttpServer，P2-23）', () async {
-    final p = NetworkStreamingProxy(clientFactory: (_) => _FakeClient(bytes));
+  test('并发注册共用一次 bind（不会 bind 出两个 HttpServer，P2-23）', () async {    final p = NetworkStreamingProxy(clientFactory: (_) => _FakeClient(bytes));
     addTearDown(p.stop);
     final urls = await Future.wait([
       p.registerStream(_connection, '/a.mp4', fileSize: bytes.length),

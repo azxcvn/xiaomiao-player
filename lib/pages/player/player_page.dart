@@ -64,6 +64,9 @@ import 'package:moumou/services/device_services.dart';
 import 'package:moumou/services/fast_thumbnails.dart';
 import 'package:moumou/services/intro_outro_settings.dart';
 import 'package:moumou/services/intro_outro_tracker.dart';
+import 'package:moumou/services/network/network_connection_settings.dart';
+import 'package:moumou/services/network/network_playlist_source.dart';
+import 'package:moumou/services/network/network_repository.dart';
 import 'package:moumou/services/playback_progress_service.dart';
 import 'package:moumou/services/playback_tuning.dart';
 import 'package:moumou/services/player_controls_settings.dart';
@@ -76,6 +79,8 @@ import 'package:moumou/utils/cast_source.dart';
 import 'package:moumou/utils/dolby_vision_hint.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/intro_outro_skip.dart';
+import 'package:moumou/utils/network_mime_types.dart';
+import 'package:moumou/utils/network_playlist.dart';
 import 'package:moumou/utils/pip_aspect.dart';
 import 'package:moumou/utils/playback_completion.dart';
 import 'package:moumou/utils/playback_history.dart';
@@ -96,6 +101,10 @@ import 'package:saver_gallery/saver_gallery.dart';
 /// - 倍速等二级设置统一走右侧滑入面板（[showPlayerPanel]）。
 ///
 /// [playlist] 为兄弟视频列表（用于「下一集」，null 时按钮置灰）。
+///
+/// 网络存储播放（[networkSource] 非空）的媒体路径是回环代理 URL，入口拿不到
+/// 兄弟列表，由本页在 [PlayerPage.playlist] 为空时按远端目录补全
+/// （见 `_loadNetworkFolderPlaylist`）；列表项身份是**远端路径**。
 class PlayerPage extends StatefulWidget {
   final String path;
   final String title;
@@ -108,7 +117,10 @@ class PlayerPage extends StatefulWidget {
 
   /// 拿到真实媒体时长后回报一次（毫秒；网络存储列表页用它记住时长，
   /// 因为远端不做媒体探测）。null = 不回报。
-  final void Function(int durationMs)? onDurationKnown;
+  ///
+  /// [remotePath] 为本次回报对应的**远端路径**（本地播放为空串）：切集后
+  /// 新一集的时长不能被记到上一集头上，列表页据此落到正确的文件。
+  final void Function(String remotePath, int durationMs)? onDurationKnown;
 
   /// B 站在线播放媒体（null = 本地/网络文件播放）。非空时走双流 + 代理 +
   /// B 站弹幕 + OP/ED 章节 + 清晰度切换流程。
@@ -318,6 +330,15 @@ class _PlayerPageState extends State<PlayerPage>
 
   List<VideoFile> get _playlist => _playlistNotifier.value;
 
+  /// 当前媒体在 [_playlist] 里的身份（列表定位 / 同目录过滤 / 高亮都用它）：
+  /// 网络存储播放用**远端路径**（媒体路径是回环 URL，token 每次都换，
+  /// 不能当身份），本地播放与媒体路径一致。见 [playlistKeyOf]。
+  String get _playlistKey => playlistKeyOf(_path, _networkSource);
+
+  /// 本页自己注册的网络回流地址（网络列表切集时注册的那条），退出时释放。
+  /// 入口（网络浏览页）注册的首条流不在这里——那条由浏览页自己释放。
+  String? _ownNetworkUrl;
+
   /// 当前 B 站剧集在 [PlayerPage.biliPlaylist] 中的下标（-1 = 未定位）
   int get _biliIndex =>
       widget.biliPlaylist?.indexOfEpId(_biliMedia?.epId) ?? -1;
@@ -331,7 +352,7 @@ class _PlayerPageState extends State<PlayerPage>
     }
     final list = _playlist;
     if (list.isEmpty) return false;
-    final idx = list.indexWhere((v) => v.path == _path);
+    final idx = list.indexWhere((v) => v.path == _playlistKey);
     return idx >= 0 && idx < list.length - 1;
   }
 
@@ -559,10 +580,14 @@ class _PlayerPageState extends State<PlayerPage>
       _player.stream.duration.listen((d) {
         if (!_disposed && mounted) _durationNotifier.value = d;
         // 网络存储播放：把真实时长回报给列表页（远端不做探测，列表靠这个值
-        // 显示「时长」字段；一次播放只回报一次）
+        // 显示「时长」字段；一次播放只回报一次）。带上**当前**远端路径：
+        // 列表内切集后回报的是新一集的时长，不能记到上一集头上。
         if (!_reportedDuration && d > Duration.zero) {
           _reportedDuration = true;
-          widget.onDurationKnown?.call(d.inMilliseconds);
+          widget.onDurationKnown?.call(
+            _networkSource?.remotePath ?? '',
+            d.inMilliseconds,
+          );
         }
         // 恢复进度改由 _openAndSetRate（open 完成后）统一触发，
         // 避免 mpv 加载期 seek 被丢弃（历史 bug：指示器出现但进度不回位）。
@@ -1678,7 +1703,7 @@ class _PlayerPageState extends State<PlayerPage>
   // ── 下一集 / 切集 ───────────────────────────────────────
 
   /// 手动/自动「下一集」：定位播放列表中的下一项后统一切集。
-  /// B 站番剧走剧集列表（[_switchToBiliEpisode]），本地走 [_switchTo]。
+  /// B 站番剧走剧集列表（[_switchToBiliEpisode]），本地/网络走 [_switchToVideo]。
   Future<void> _playNext() async {
     if (_biliMedia != null) {
       final next = widget.biliPlaylist?.itemAt(_biliIndex + 1);
@@ -1688,10 +1713,11 @@ class _PlayerPageState extends State<PlayerPage>
     }
     final list = _playlist;
     if (list.isEmpty) return;
-    final idx = list.indexWhere((v) => v.path == _path);
+    final key = _playlistKey;
+    final idx = list.indexWhere((v) => v.path == key);
     if (idx < 0 || idx >= list.length - 1) return;
     final next = list[idx + 1];
-    await _switchTo(next.path, next.name);
+    await _switchToVideo(next);
   }
 
   /// 列表循环：回到播放列表第一集（B 站番剧回到第一集）。
@@ -1709,12 +1735,84 @@ class _PlayerPageState extends State<PlayerPage>
     // 的外挂轨道，而字幕侧 `reapplyForMedia` 的「同一媒体」早退又不会补挂
     // → 单视频列表循环播到片尾即「外挂字幕消失」。原地回到开头，媒体状态
     // （章节/弹幕/进度/音频处理）一律不动，与单集循环同一手法。
-    if (first.path == _path) {
+    if (first.path == _playlistKey) {
       _player.seek(Duration.zero);
       _player.play();
       return;
     }
-    await _switchTo(first.path, first.name);
+    await _switchToVideo(first);
+  }
+
+  /// 播放列表切集统一入口（面板点击 / 下一集 / 列表循环）：
+  ///
+  /// - 本地文件：直接用媒体路径 open（[_switchTo]）；
+  /// - 网络视频：先为它注册一条**新的**回环流（每个文件一条 token，沿用
+  ///   「一次播放一条流」的纪律）再交给 [_switchTo]，成功后释放上一条流。
+  Future<void> _switchToVideo(VideoFile video) async {
+    if (video.source != VideoSource.network) {
+      await _switchTo(video.path, video.name);
+      return;
+    }
+    await _switchToNetworkVideo(video);
+  }
+
+  /// 网络存储列表切集：注册目标文件的回环流 → [_switchTo] 打开（同时把
+  /// [_networkSource] 换成新视频，字幕远端同名扫描与列表定位都按它工作）
+  /// → 释放上一条流（同一时刻只留一条流，避免 SMB/NAS 连接被列表翻页耗尽）。
+  ///
+  /// 返回新媒体状态（成功）或 null（失败/被并发守卫挡下），供竖屏页/听视频页
+  /// 同步自身状态。
+  Future<({String path, String title})?> _switchToNetworkVideo(
+    VideoFile video,
+  ) async {
+    final connectionId = video.connectionId;
+    final remotePath = video.remotePath;
+    if (connectionId == null || remotePath == null || remotePath.isEmpty) {
+      return null;
+    }
+    // 并发互斥：与 [_switchTo] 同一守卫（提前挡一次，不白注册一条流）
+    if (_isSwitchingVideo) return null;
+    final connection = NetworkConnectionSettings.instance.byId(connectionId);
+    if (connection == null) {
+      _toast('网络连接不存在，无法切换');
+      return null;
+    }
+    final String url;
+    try {
+      url = await NetworkRepository.instance.playbackUrl(
+        connection,
+        remotePath,
+        fileSize: video.size > 0 ? video.size : -1,
+        mimeType: networkMimeTypeForFileName(video.name) ?? 'video/mp4',
+      );
+    } catch (e) {
+      _toast('切换失败：$e');
+      return null;
+    }
+    final previousUrl = _networkSource != null ? _path : null;
+    final previousSource = _networkSource;
+    try {
+      await _switchTo(url, video.name, networkSource: video);
+    } catch (_) {
+      // 切集失败（open 抛错）：刚注册的流没人用，立刻释放；来源标记也退回
+      // 上一个媒体（[_switchTo] 已在 open 前把它换成新视频），然后原样上抛
+      // （与本地切集同一行为，上层已有兜底）
+      _networkSource = previousSource;
+      await NetworkRepository.instance.releasePlayback(url);
+      rethrow;
+    }
+    if (_disposed || !mounted || _path != url) {
+      // 没落地（页面已退出 / 被并发守卫挡下 / 切集半途失败）：释放这条流，
+      // 来源标记退回来（否则字幕远端扫描/列表定位会指着一个没在播的视频）
+      if (mounted) _networkSource = previousSource;
+      await NetworkRepository.instance.releasePlayback(url);
+      return null;
+    }
+    _ownNetworkUrl = url;
+    if (previousUrl != null && previousUrl != url) {
+      await NetworkRepository.instance.releasePlayback(previousUrl);
+    }
+    return (path: _path, title: _title);
   }
 
   /// 切换到指定 B 站剧集：重新解析 playurl → 换 [BiliMedia] → 重开双流
@@ -1771,7 +1869,15 @@ class _PlayerPageState extends State<PlayerPage>
   /// 3. 打开新媒体（恢复时暂停加载 + 封层 + seek，见 [openAndRestore]）并
   ///    重设倍速、超分着色器（mpv 打开新文件时 glsl-shaders 需重确认）；
   /// 4. 重置播放页状态与恢复指示器（新视频各自恢复自己的进度）。
-  Future<void> _switchTo(String path, String title) async {
+  ///
+  /// [networkSource] 非空表示新媒体的 [path] 是网络存储的回环播放 URL，它带来
+  /// 新的远端来源（字幕远端同名扫描、列表定位都按它工作）；本地切集传 null
+  /// （来源标记必须清掉，防串到本地视频）。
+  Future<void> _switchTo(
+    String path,
+    String title, {
+    VideoFile? networkSource,
+  }) async {
     // 并发互斥（B3/P2-2）：[_isSwitchingVideo] 此前只用于抑制切集瞬间的 EOF，
     // **不拦第二次切集** —— 连点两次「下一集」（间隔 <1 秒）会让两个
     // `openAndRestore` 并发操作同一 Player（「切到 A 视频却放 B 音频」）。
@@ -1782,8 +1888,9 @@ class _PlayerPageState extends State<PlayerPage>
       _chapterTracker.clear();
       // 字幕功能：清空旧媒体轨道（切集后重新加载）
       _subtitleController.clear();
-      // 本地列表切集：来源必为本地文件，网络来源标记一起清掉（防串到本地视频）
-      _networkSource = null;
+      // 来源标记随新媒体一起换：本地切集为 null（防串到本地视频），
+      // 网络存储列表切集为新视频的远端来源
+      _networkSource = networkSource;
       // 新媒体的时长要重新回报（切集后 duration 事件会重新来一轮）
       _reportedDuration = false;
       // 音频功能：清空旧媒体音轨（切集后重新加载；外部音轨临时不跨集保留）
@@ -2676,6 +2783,9 @@ class _PlayerPageState extends State<PlayerPage>
           biliPlaylist: widget.biliPlaylist,
           initialBiliEpId: _biliMedia?.epId,
           onBiliEpisodeSelected: _switchToBiliEpisode,
+          // 网络存储列表切集同样由本页执行（回环流的注册与释放都在本页，
+          // 竖屏页只负责同步自身 UI）
+          onNetworkVideoSelected: _switchToNetworkVideo,
           initialResumeVisible: resumeVisible,
           onResumeDismissed: () {
             if (!mounted) return;
@@ -2799,6 +2909,10 @@ class _PlayerPageState extends State<PlayerPage>
           initialPath: _path,
           initialTitle: _title,
           playlist: _playlist,
+          // 网络存储播放：来源透传给听视频页（歌单定位与切歌都按远端路径）
+          networkSource: _networkSource,
+          // 网络歌单切歌由本页执行（回环流的注册与释放都在本页）
+          onNetworkVideoSelected: _switchToNetworkVideo,
           // 听视频页内切歌后同步最新 path/title 给本页
           onVideoChanged: (path, title) {
             if (!mounted) return;
@@ -2847,13 +2961,21 @@ class _PlayerPageState extends State<PlayerPage>
   }
 
   /// 补全兄弟视频列表：入口没传 [PlayerPage.playlist] 时（首页「最近播放」、
-  /// 历史记录、外部打开），按当前视频所在文件夹从媒体库反查。
+  /// 历史记录、外部打开、网络存储播放），按当前视频所在文件夹反查——
+  /// 本地走媒体库（[VideoScanner.folderSiblingsOf]），网络存储走远端列目录
+  /// （[NetworkPlaylistSource.siblingVideosOf]：媒体路径是回环代理 URL，
+  /// 本地那条链路对它恒不成立）。
   ///
-  /// 失败（权限被拒 / 通道异常 / 在线流）保持空表即可——播放页本身不依赖它，
-  /// 只是「下一集」与播放列表面板会空着，不能因此打断播放。
+  /// 失败（权限被拒 / 通道异常 / 在线流 / 远端超时）保持空表即可——播放页本身
+  /// 不依赖它，只是「下一集」与播放列表面板会空着，不能因此打断播放。
   Future<void> _loadFolderPlaylist() async {
     // B 站在线播放没有本地兄弟列表（其剧集列表走 [PlayerPage.biliPlaylist]）
     if (_biliMedia != null) return;
+    final networkSource = _networkSource;
+    if (networkSource != null) {
+      await _loadNetworkFolderPlaylist(networkSource);
+      return;
+    }
     final List<VideoFile> videos;
     try {
       videos = await VideoScanner.folderSiblingsOf(_path);
@@ -2865,10 +2987,28 @@ class _PlayerPageState extends State<PlayerPage>
     _playlistNotifier.value = videos;
   }
 
+  /// 网络存储：按「连接 id + 当前视频远端路径」列同目录视频补全列表。
+  ///
+  /// 列表项身份是**远端路径**（见 [_playlistKey]），切集由
+  /// [_switchToNetworkVideo] 为目标文件注册新的回环流。
+  Future<void> _loadNetworkFolderPlaylist(VideoFile source) async {
+    final connectionId = source.connectionId;
+    final remotePath = source.remotePath;
+    if (connectionId == null || remotePath == null || remotePath.isEmpty) {
+      return;
+    }
+    final videos = await networkPlaylistSource.siblingVideosOf(
+      connectionId: connectionId,
+      remotePath: remotePath,
+    );
+    if (_disposed || !mounted || videos.isEmpty) return;
+    _playlistNotifier.value = videos;
+  }
+
   /// 底栏「列表」按钮：右侧滑入播放列表面板（工作.md 第 7 点）。
   ///
   /// 内容 = 当前视频所在文件夹的视频（从 [_playlist] 按同目录过滤），
-  /// 面板内自带 4 排序胶囊 + 当前项高亮；点击列表项 → [_switchTo] 统一切集
+  /// 面板内自带 4 排序胶囊 + 当前项高亮；点击列表项 → [_switchToVideo] 统一切集
   /// （自动获得进度记忆 + 新集进度恢复），面板自身随后关闭。
   Future<void> _openPlaylistPanel() async {
     _hideTimer?.cancel();
@@ -2894,7 +3034,7 @@ class _PlayerPageState extends State<PlayerPage>
       _resetHideTimer();
       return;
     }
-    final folder = folderOfPath(_path);
+    final folder = folderOfPath(_playlistKey);
     final videos = filterVideosInFolder(_playlist, folder);
     await showPlayerPanel(
       context,
@@ -2903,10 +3043,10 @@ class _PlayerPageState extends State<PlayerPage>
           title: '播放列表',
           body: PlayerPlaylistPanel(
             videos: videos,
-            currentPath: _path,
+            currentPath: _playlistKey,
             onSelect: (video) {
-              if (video.path == _path) return; // 选当前项：不动作
-              _switchTo(video.path, video.name);
+              if (video.path == _playlistKey) return; // 选当前项：不动作
+              _switchToVideo(video);
             },
           ),
         ),
@@ -3084,6 +3224,12 @@ class _PlayerPageState extends State<PlayerPage>
     // 先置销毁标志：异步打开/恢复/方向流程的每个 await 之后查它并放弃
     //（risk_audit #2，防止恢复流程对已销毁播放器 seek 抛异常写假崩溃日志）
     _disposed = true;
+    // 释放本页为网络列表切集注册的回环流（入口注册的首条由网络浏览页释放；
+    // 不释放会让代理与远端连接一直挂在内存里）
+    final ownNetworkUrl = _ownNetworkUrl;
+    if (ownNetworkUrl != null) {
+      unawaited(NetworkRepository.instance.releasePlayback(ownNetworkUrl));
+    }
     WidgetsBinding.instance.removeObserver(this);
     _hideTimer?.cancel();
     _unlockHideTimer?.cancel();

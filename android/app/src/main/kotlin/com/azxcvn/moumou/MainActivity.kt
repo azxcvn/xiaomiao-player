@@ -1815,13 +1815,25 @@ class MainActivity : FlutterActivity() {
     private val coverThumbWidth = 384
     private val coverThumbHeight = 216
 
+    /** 列表封面磁盘文件：按**身份串**命名（本地 = 路径+修改时间；远端 = 连接+远端路径+大小+时间）。
+     *  `_v3` 是版本标记：v2 及以前抓的是第 0 秒帧，改名后旧封面自动失效重建。 */
+    private fun thumbFileFor(cacheKey: String): File =
+        File(thumbsDir(), "${cacheKey.hashCode()}_${cacheKey.length}_v3.jpg")
+
+    /** 列表封面抓帧位置：片长 1/4 处（第 0 秒常是黑场/台标，什么都看不到）。
+     *  时长未知（0）时退回第 0 秒——算不出 1/4 也不能不抓。 */
+    private fun coverFrameTimeUs(durationMs: Long): Long =
+        if (durationMs <= 0L) 0L else durationMs * 1000L / 4L
+
+    /**
+     * 本地视频封面（列表卡片，[MediaMetadataRetriever] 直接读本地文件）。
+     *
+     * 身份串 = 路径 + 修改时间（文件被替换/修改后自动失效）；抓 1/4 处帧；
+     * 输出等比缩放 + 居中裁剪成 384×216 的 JPEG（质量 70）。
+     */
     private fun getVideoInfo(path: String): Map<String, Any?> {
-        val dir = File(cacheDir, "thumbs")
-        if (!dir.exists()) dir.mkdirs()
-        // 以 path + lastModified 作为缓存 key：文件被替换/修改后自动失效。
-        // 带 `_v2` 标记：v2 起封面改为 等比缩放+居中裁剪，旧版拉伸封面自动失效重建
-        val cacheFile = File(dir, "${path.hashCode()}_${File(path).lastModified()}_v2.jpg")
-        // 磁盘缓存命中：直接返回，完全跳过 MediaMetadataRetriever 解码
+        val cacheFile = thumbFileFor("$path|${File(path).lastModified()}")
+        // 磁盘缓存命中：直接返回，完全跳过解码
         // （时长由 MediaStore 提供，列表不需要这里的 duration）
         if (cacheFile.exists()) {
             return mapOf("durationMs" to 0L, "thumbPath" to cacheFile.absolutePath)
@@ -1838,7 +1850,7 @@ class MainActivity : FlutterActivity() {
 
             @Suppress("DEPRECATION")
             val frame = retriever.getFrameAtTime(
-                0,
+                coverFrameTimeUs(durationMs),
                 MediaMetadataRetriever.OPTION_CLOSEST_SYNC,
             )
             bitmap = frame

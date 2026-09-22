@@ -89,7 +89,8 @@ class _VideoCardState extends State<VideoCard> {
 
   Future<void> _loadThumb() async {
     // 网络来源视频无本地缩略图，跳过 MediaMetadataRetriever（避免把远程
-    // 相对路径当本地文件解析）。
+    // 相对路径当本地文件解析）。远端抓帧方案做过又砍掉了：一张封面要
+    // 8~23MB 流量（见 network_streaming_proxy.dart 的注释），不值。
     if (widget.video.source == VideoSource.network) return;
     final info = await VideoInfoService.get(widget.video.path);
     if (!mounted) return;

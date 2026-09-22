@@ -37,6 +37,12 @@ class NetworkStreamingProxy {
   final Random _random = Random.secure();
 
   /// 注册一个流并返回无凭据 loopback URL。
+  ///
+  /// ⚠️ **不要为了省流量去截短 `Range` 响应**（2026-09 实测教训）：读者（mpv /
+  /// 抓帧引擎用的都是 FFmpeg 的 http 协议）会按自己的节奏大量小 seek，
+  /// 把 `bytes=X-` 的响应截成一小段后它**不会顺着续读**，而是当成异常重新探测/
+  /// 重试——结果是反复重读同一段、连文件都打不开、流量反而更高。想让某类读取少
+  /// 花流量，只能从「少读几次」入手，不能从「单次少发几个字节」入手。
   Future<String> registerStream(
     NetworkConnection connection,
     String filePath, {
@@ -227,6 +233,7 @@ class NetworkStreamingProxy {
     }
   }
 
+  /// 分段响应（`Range: bytes=X-Y` / `bytes=X-` / `bytes=-N`）。
   Future<void> _serveRangeMaybe(
     HttpRequest request,
     _StreamEntry entry,
@@ -466,6 +473,7 @@ class _StreamEntry {
   final NetworkPath primaryPath;
   int fileSize;
   final String mimeType;
+
   final Map<NetworkPath, int> knownSizes = {};
   NetworkClient? client;
   Future<void> lock = Future.value();

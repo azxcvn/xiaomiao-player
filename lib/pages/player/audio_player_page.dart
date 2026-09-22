@@ -15,6 +15,7 @@ import 'package:moumou/services/playback_tuning.dart';
 import 'package:moumou/services/super_resolution_service.dart';
 import 'package:moumou/utils/audio_shuffle.dart';
 import 'package:moumou/utils/formatters.dart';
+import 'package:moumou/utils/network_playlist.dart';
 import 'package:moumou/widgets/raw_thumb_image.dart';
 
 /// 听视频界面（工作.md 第 10 点 + 阶段1 第 2 点重设计，参考小喵 KT 项目 AudioPlayerScreen）：
@@ -51,6 +52,16 @@ class AudioPlayerPage extends StatefulWidget {
   /// 兄弟视频列表（「上一集/下一集」与播放列表用，可空）
   final List<VideoFile>? playlist;
 
+  /// 当前媒体的网络存储来源（null = 本地文件）：网络播放的媒体路径是回环
+  /// 代理 URL，歌单定位/切歌要按**远端路径**（见 [playlistKeyOf]），切歌还要
+  /// 由播放页注册新流（[onNetworkVideoSelected]）。
+  final VideoFile? networkSource;
+
+  /// 网络歌单切歌回调（播放页实现：注册目标文件的回环流 + 开新流 + 释放旧流）。
+  /// 返回新媒体的 (path, title)；失败返回 null。
+  final Future<({String path, String title})?> Function(VideoFile video)?
+      onNetworkVideoSelected;
+
   /// 本页切歌后通知播放页同步最新 path/title
   final void Function(String path, String title)? onVideoChanged;
 
@@ -60,6 +71,8 @@ class AudioPlayerPage extends StatefulWidget {
     required this.initialPath,
     required this.initialTitle,
     this.playlist,
+    this.networkSource,
+    this.onNetworkVideoSelected,
     this.onVideoChanged,
   });
 
@@ -72,6 +85,12 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
 
   late String _path;
   late String _title;
+
+  /// 当前媒体的网络存储来源（null = 本地文件）；网络歌单切歌后随之更新
+  VideoFile? _networkSource;
+
+  /// 当前媒体在歌单里的身份（网络项按远端路径，见 [playlistKeyOf]）
+  String get _playlistKey => playlistKeyOf(_path, _networkSource);
 
   /// 播放位置/时长：位置流高频更新只走 ValueNotifier，进度区局部订阅
   final ValueNotifier<Duration> _positionNotifier = ValueNotifier(Duration.zero);
@@ -148,6 +167,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     _player = widget.player;
     _path = widget.initialPath;
     _title = widget.initialTitle;
+    _networkSource = widget.networkSource;
 
     // 从共享播放器当前状态初始化（迟订阅不重放当前值）
     _positionNotifier.value = _player.state.position;
@@ -163,14 +183,16 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     );
     _player.setRate(_speed);
 
-    // 播放列表：同目录过滤（与播放页列表面板一致）；为空回退全表
-    final folder = folderOfPath(_path);
+    // 播放列表：同目录过滤（与播放页列表面板一致）；为空回退全表。
+    // 网络存储的歌单项身份是**远端路径**（媒体路径是回环 URL），
+    // 当前项也按它定位，否则下标恒为 -1、歌单从第一首错位。
+    final folder = folderOfPath(_playlistKey);
     final filtered = filterVideosInFolder(widget.playlist ?? const [], folder);
     _videos = filtered.isEmpty ? (widget.playlist ?? const []) : filtered;
     // 空表时 indexWhere 返回 -1，`(-1).clamp(0, -1)` 因 lowerLimit > upperLimit
     // 抛 ArgumentError → initState 直接崩（任一不传 playlist 的入口都必崩）；
     // 空表用 0 占位，切歌入口本身已有 isEmpty 守卫（体检报告 P0-4）。
-    final index = _videos.indexWhere((v) => v.path == _path);
+    final index = _videos.indexWhere((v) => v.path == _playlistKey);
     _currentIndex = _videos.isEmpty ? 0 : index.clamp(0, _videos.length - 1);
 
     // 竖屏 + 沉浸式全屏（状态栏/导航栏隐藏）
@@ -269,10 +291,18 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
 
   /// 切歌统一入口：保存旧进度 → 调参 → open → 倍速/超分 → 复位状态。
   /// **不恢复上次进度**：新歌从 0 开始（听歌语义，工作.md 第 10 点）。
+  ///
+  /// 网络存储的歌单项没有可直接 open 的路径（[VideoFile.path] 是远端路径，
+  /// 回环流的注册/释放归播放页）→ 交给 [AudioPlayerPage.onNetworkVideoSelected]
+  /// 执行，本页只同步自身状态。
   Future<void> _switchTo(int index) async {
     if (index < 0 || index >= _videos.length) return;
     final video = _videos[index];
-    if (video.path == _path) return; // 同一首：不动作
+    if (video.path == _playlistKey) return; // 同一首：不动作
+    if (video.source == VideoSource.network) {
+      await _switchToNetwork(index, video);
+      return;
+    }
     _isSwitching = true;
     await _saveProgress();
     // mpv 缓存/网络调参必须在 open **之前**写入（§4.26）：听视频里
@@ -310,6 +340,37 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     // 后台播放：刷新前台服务通知标题为新曲目（服务已在运行，重复启动仅更新）
     DeviceServices.startBackgroundPlayback(title: video.name);
     _loadCover();
+  }
+
+  /// 网络歌单切歌：由播放页注册新流并开流（[_switchTo] 的本地参数写入、
+  /// 进度保存、倍速/超分都由播放页那条统一切集路径完成），本页同步自身的
+  /// 路径/标题/下标与封面，并重放本页的倍速档位（听视频页的倍速是页内状态）。
+  Future<void> _switchToNetwork(int index, VideoFile video) async {
+    final select = widget.onNetworkVideoSelected;
+    if (select == null) return;
+    _isSwitching = true;
+    try {
+      await _saveProgress();
+      final result = await select(video);
+      if (!mounted || result == null) return;
+      _player.setRate(_speed);
+      setState(() {
+        _path = result.path;
+        _title = result.title;
+        _currentIndex = index;
+        // 来源随新媒体更新（下一次切歌 / 歌单定位都按它工作）
+        _networkSource = video;
+        _positionNotifier.value = Duration.zero;
+        _durationNotifier.value = Duration.zero;
+        _dragPosition = null;
+        _coverFrame = null;
+      });
+      // 后台播放：刷新前台服务通知标题为新曲目（服务已在运行，重复启动仅更新）
+      DeviceServices.startBackgroundPlayback(title: video.name);
+      _loadCover();
+    } finally {
+      _isSwitching = false;
+    }
   }
 
   /// 下一首：随机模式用时间刻算法；单曲循环回到当前；否则顺序（列表循环回绕）

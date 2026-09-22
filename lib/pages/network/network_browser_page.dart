@@ -218,8 +218,10 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
           // 带上网络来源：字幕侧据此扫描远端同目录的同名字幕
           // （本地 `File` 链路对 loopback URL 不成立）
           networkSource: video,
-          // 退出时把真实时长回写到列表（远端不做探测，靠「播过一次就记住」）
-          onDurationKnown: (durationMs) => _rememberDuration(video, durationMs),
+          // 退出时把真实时长回写到列表（远端不做探测，靠「播过一次就记住」）；
+          // 远端路径由播放页带上——播放页内切集后回报的是新一集的时长，
+          // 不能记到打开时那一条上
+          onDurationKnown: _rememberDuration,
         ),
       ),
     );
@@ -227,10 +229,12 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
     if (mounted) setState(() {});
   }
 
-  Future<void> _rememberDuration(VideoFile video, int durationMs) async {
-    if (durationMs <= 0) return;
+  /// 记住某个远端视频的真实时长（播放页回报；键 = 连接 id + 远端路径，
+  /// 与回环播放 URL 无关——那条 URL 每次播放都换 token）。
+  Future<void> _rememberDuration(String remotePath, int durationMs) async {
+    if (durationMs <= 0 || remotePath.isEmpty) return;
     await _netSettings.rememberDuration(
-      '${_connection.id}|${video.remotePath ?? video.path}',
+      '${_connection.id}|$remotePath',
       durationMs,
     );
     if (mounted) setState(() {});
