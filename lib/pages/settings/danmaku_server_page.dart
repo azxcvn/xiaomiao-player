@@ -1,6 +1,8 @@
 /// 弹幕服务器设置子页（工作.md 第 6/7 点）：
-/// - 启用/停用已添加的弹幕服务器（弹弹Play 默认服务器不可删除，只能开关）；
-/// - 右下角加号添加自建服务器（名称 + 地址），已添加服务器可自由删除/启停；
+/// - 启用/停用已添加的弹幕服务器（弹弹Play 默认服务器不可编辑、不可删除，
+///   只能开关）；
+/// - 右下角加号添加自建服务器（名称 + 地址），已添加的自建服务器可在卡片
+///   右侧「更多操作」里编辑 / 删除（与网络存储账户列表一致，删除前二次确认）；
 /// - 「搜索结果自动去重」开关：多台服务器返回同一部番剧时是否只留集数最全的
 ///   那条（**默认关**；开启前弹二次确认，见 [_SearchDedupeTile]）；
 /// - 「切集自动匹配弹幕」开关：与默认弹弹Play 服务器**互斥**（工作.md 第 7 点，
@@ -76,7 +78,8 @@ class DanmakuServerPage extends StatelessWidget {
                   server: server,
                   onToggle: (enabled) =>
                       settings.setServerEnabled(server.id, enabled),
-                  onDelete: () => settings.removeServer(server.id),
+                  onEdit: () => _showEditDialog(context, server),
+                  onDelete: () => _confirmDelete(context, server),
                 ),
                 const SizedBox(height: 8),
               ],
@@ -90,8 +93,41 @@ class DanmakuServerPage extends StatelessWidget {
   Future<void> _showAddDialog(BuildContext context) async {
     await showAppDialog<void>(
       context: context,
-      builder: (context) => const _AddServerDialog(),
+      builder: (context) => const _ServerEditDialog(),
     );
+  }
+
+  Future<void> _showEditDialog(BuildContext context, DanmakuServer server) async {
+    await showAppDialog<void>(
+      context: context,
+      builder: (context) => _ServerEditDialog(server: server),
+    );
+  }
+
+  /// 删除前二次确认（与网络存储页的删除确认一致：取消则不删）。
+  ///
+  /// 服务器配置删掉就得重新手填名称 + 地址，值得多一步。
+  Future<void> _confirmDelete(BuildContext context, DanmakuServer server) async {
+    final confirmed = await showAppDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('删除服务器'),
+        content: Text('确定删除「${server.name}」吗？此操作不可撤销。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await DanmakuServerSettings.instance.removeServer(server.id);
+    }
   }
 }
 
@@ -284,15 +320,20 @@ class _AutoMatchTile extends StatelessWidget {
   }
 }
 
-/// 单个服务器卡片：开关 + 名称/地址 + 删除（默认服务器不显示删除）。
+/// 单个服务器卡片：开关 + 名称/地址 + 更多操作。
+///
+/// 自建服务器在右侧露出「更多操作」菜单（编辑 / 删除，与网络存储账户卡片
+/// 一致）；默认弹弹Play 服务器不显示菜单——它内置且不可编辑、不可删除。
 class _DanmakuServerCard extends StatelessWidget {
   final DanmakuServer server;
   final ValueChanged<bool> onToggle;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const _DanmakuServerCard({
     required this.server,
     required this.onToggle,
+    required this.onEdit,
     required this.onDelete,
   });
 
@@ -333,7 +374,7 @@ class _DanmakuServerCard extends StatelessWidget {
                   if (server.isDefault) ...[
                     const SizedBox(height: 2),
                     Text(
-                      '内置服务器，不可删除',
+                      '内置服务器，不可编辑、删除',
                       style: TextStyle(fontSize: 11, color: scheme.outline),
                     ),
                   ],
@@ -341,10 +382,16 @@ class _DanmakuServerCard extends StatelessWidget {
               ),
             ),
             if (!server.isDefault)
-              IconButton(
-                tooltip: '删除',
-                icon: Icon(Icons.delete_outline, color: scheme.error),
-                onPressed: onDelete,
+              PopupMenuButton<String>(
+                tooltip: '更多操作',
+                onSelected: (value) {
+                  if (value == 'edit') onEdit();
+                  if (value == 'delete') onDelete();
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'edit', child: Text('编辑')),
+                  PopupMenuItem(value: 'delete', child: Text('删除')),
+                ],
               ),
           ],
         ),
@@ -353,17 +400,27 @@ class _DanmakuServerCard extends StatelessWidget {
   }
 }
 
-/// 添加弹幕服务器弹窗（名称 + 地址）。
-class _AddServerDialog extends StatefulWidget {
-  const _AddServerDialog();
+/// 添加 / 编辑弹幕服务器弹窗（名称 + 地址）。
+///
+/// [server] 为 null 即「添加」，否则为「编辑」——两种场景的字段、校验、
+/// 教程入口完全一致，只有标题与主按钮文案不同，故共用同一个弹窗。
+class _ServerEditDialog extends StatefulWidget {
+  /// 待编辑的服务器；null 表示新建
+  final DanmakuServer? server;
+
+  const _ServerEditDialog({this.server});
 
   @override
-  State<_AddServerDialog> createState() => _AddServerDialogState();
+  State<_ServerEditDialog> createState() => _ServerEditDialogState();
 }
 
-class _AddServerDialogState extends State<_AddServerDialog> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _urlController = TextEditingController();
+class _ServerEditDialogState extends State<_ServerEditDialog> {
+  late final TextEditingController _nameController =
+      TextEditingController(text: widget.server?.name ?? '');
+  late final TextEditingController _urlController =
+      TextEditingController(text: widget.server?.url ?? '');
+
+  bool get _isEditing => widget.server != null;
 
   @override
   void initState() {
@@ -389,17 +446,24 @@ class _AddServerDialogState extends State<_AddServerDialog> {
 
   Future<void> _submit() async {
     if (!_canSubmit) return;
-    await DanmakuServerSettings.instance.addServer(
-      _nameController.text,
-      _urlController.text,
-    );
+    final settings = DanmakuServerSettings.instance;
+    final editing = widget.server;
+    if (editing == null) {
+      await settings.addServer(_nameController.text, _urlController.text);
+    } else {
+      await settings.updateServer(
+        editing.id,
+        _nameController.text,
+        _urlController.text,
+      );
+    }
     if (mounted) Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('添加弹幕服务器'),
+      title: Text(_isEditing ? '编辑服务器' : '添加服务器'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -441,7 +505,7 @@ class _AddServerDialogState extends State<_AddServerDialog> {
           children: [
             FilledButton(
               onPressed: _canSubmit ? _submit : null,
-              child: const Text('添加'),
+              child: Text(_isEditing ? '保存' : '添加'),
             ),
             if (!_canSubmit)
               Positioned.fill(

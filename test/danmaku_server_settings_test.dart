@@ -3,7 +3,7 @@ import 'package:moumou/models/danmaku_server.dart';
 import 'package:moumou/services/danmaku_server_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// 弹幕服务器设置服务测试（工作.md 第 6/7 点）：默认服务器、增删/启停、
+/// 弹幕服务器设置服务测试（工作.md 第 6/7 点）：默认服务器、增删改/启停、
 /// 切集自动匹配开关、**与默认弹弹Play 服务器的互斥限制**、持久化恢复、
 /// 损坏数据防御。
 void main() {
@@ -53,6 +53,49 @@ void main() {
     await s.removeServer(customId);
     expect(s.servers.length, 1);
     expect(s.servers.single.isDefault, isTrue);
+  });
+
+  test('编辑自建服务器：改名 / 改地址，地址去掉末尾斜杠，启停状态保留', () async {
+    await s.addServer('旧名', 'https://old.example.com');
+    final id = s.servers.last.id;
+    await s.setServerEnabled(id, false);
+    await s.updateServer(id, '  新名  ', 'https://new.example.com/api/');
+
+    final edited = s.servers.last;
+    expect(edited.id, id, reason: '编辑不换 id，启停/引用关系不丢');
+    expect(edited.name, '新名');
+    expect(edited.url, 'https://new.example.com/api');
+    expect(edited.isEnabled, isFalse);
+    expect(s.servers.length, 2);
+  });
+
+  test('编辑默认服务器被忽略', () async {
+    await s.updateServer(
+      DanmakuServer.defaultId,
+      '改成别的',
+      'https://evil.example.com',
+    );
+    expect(s.servers.single.isDefault, isTrue);
+    expect(s.servers.single.name, DanmakuServer.defaultName);
+    expect(s.servers.single.url, DanmakuServer.defaultUrl);
+  });
+
+  test('编辑成空名称 / 空地址被忽略（不把服务器改成不可用状态）', () async {
+    await s.addServer('自建', 'https://self.com');
+    final id = s.servers.last.id;
+    await s.updateServer(id, '  ', 'https://other.example.com');
+    await s.updateServer(id, '新名', '   ');
+    expect(s.servers.last.name, '自建');
+    expect(s.servers.last.url, 'https://self.com');
+  });
+
+  test('编辑结果持久化（模拟重启 load）', () async {
+    await s.addServer('自建', 'https://self.com');
+    await s.updateServer(s.servers.last.id, '改过的名字', 'https://new.example.com');
+    DanmakuServerSettings.instance.resetForTest();
+    await s.ensureLoaded();
+    expect(s.servers.last.name, '改过的名字');
+    expect(s.servers.last.url, 'https://new.example.com');
   });
 
   test('自动匹配开关持久化（默认服务器已停用，开关可生效）', () async {

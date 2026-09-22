@@ -1,6 +1,6 @@
 /// 弹幕服务器设置（工作.md 第 6/7 点）：全局单例 ChangeNotifier +
 /// shared_preferences 持久化，管理：
-/// - 弹幕服务器列表（内置弹弹Play 默认服务器 + 用户自建服务器，可增删/启停）；
+/// - 弹幕服务器列表（内置弹弹Play 默认服务器 + 用户自建服务器，自建可增删改/启停）；
 /// - 「切集自动匹配弹幕」开关；
 /// - 「搜索结果自动去重」开关（多台服务器返回同一部番剧时只留先到的那条）。
 ///
@@ -160,14 +160,20 @@ class DanmakuServerSettings extends ChangeNotifier {
     );
   }
 
+  /// 地址归一化：去首尾空白 + 去掉末尾多余的 `/`（添加与编辑共用一份规则）。
+  static String _normalizeUrl(String url) {
+    var trimmed = url.trim();
+    while (trimmed.endsWith('/')) {
+      trimmed = trimmed.substring(0, trimmed.length - 1);
+    }
+    return trimmed;
+  }
+
   /// 添加自建服务器（名称 + 地址；地址统一去掉末尾 `/`）。
   Future<void> addServer(String name, String url) async {
     await ensureLoaded();
     final trimmedName = name.trim();
-    var trimmedUrl = url.trim();
-    while (trimmedUrl.endsWith('/')) {
-      trimmedUrl = trimmedUrl.substring(0, trimmedUrl.length - 1);
-    }
+    final trimmedUrl = _normalizeUrl(url);
     if (trimmedName.isEmpty || trimmedUrl.isEmpty) return;
     _servers = [
       ..._servers,
@@ -178,6 +184,25 @@ class DanmakuServerSettings extends ChangeNotifier {
         isEnabled: true,
         isDefault: false,
       ),
+    ];
+    notifyListeners();
+    await _persistServers();
+  }
+
+  /// 编辑自建服务器的名称 / 地址（归一化规则同 [addServer]）。
+  ///
+  /// 默认服务器不可编辑（与不可删除一致），忽略该请求；名称或地址为空
+  /// （清理后）也忽略，避免把服务器改成无法使用的状态。
+  Future<void> updateServer(String id, String name, String url) async {
+    await ensureLoaded();
+    final target = _servers.where((s) => s.id == id).firstOrNull;
+    if (target == null || target.isDefault) return;
+    final trimmedName = name.trim();
+    final trimmedUrl = _normalizeUrl(url);
+    if (trimmedName.isEmpty || trimmedUrl.isEmpty) return;
+    _servers = [
+      for (final s in _servers)
+        s.id == id ? s.copyWith(name: trimmedName, url: trimmedUrl) : s,
     ];
     notifyListeners();
     await _persistServers();

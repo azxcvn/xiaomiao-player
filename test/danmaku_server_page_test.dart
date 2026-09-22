@@ -5,7 +5,8 @@ import 'package:moumou/pages/settings/danmaku_server_page.dart';
 import 'package:moumou/services/danmaku_server_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// 弹幕服务器设置页 UI 测试（工作.md 第 7 点收尾：互斥限制的呈现）：
+/// 弹幕服务器设置页 UI 测试（工作.md 第 7 点收尾：互斥限制的呈现，
+/// 以及服务器卡片的「更多操作」编辑 / 删除，对齐网络存储账户列表）：
 /// 默认弹弹Play 服务器启用时「切集自动匹配弹幕」开关变灰 + 副标题给出原因 +
 /// 点击弹 toast；停用默认服务器后开关恢复可用。
 void main() {
@@ -163,5 +164,80 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('开启搜索结果自动去重？'), findsNothing);
     expect(settings.searchDedupe, isTrue);
+  });
+
+  // ── 服务器卡片的「更多操作」：编辑 / 删除（对齐网络存储账户列表）────
+
+  testWidgets('默认服务器没有「更多操作」菜单（内置不可编辑、不可删除）', (tester) async {
+    await pumpPage(tester);
+
+    expect(find.byIcon(Icons.more_vert), findsNothing);
+    expect(find.text('内置服务器，不可编辑、删除'), findsOneWidget);
+  });
+
+  testWidgets('自建服务器：菜单可编辑，弹窗预填当前值，保存后生效', (tester) async {
+    await settings.addServer('自建', 'https://self.example.com');
+    await pumpPage(tester);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    expect(find.text('编辑'), findsOneWidget);
+    expect(find.text('删除'), findsOneWidget);
+
+    await tester.tap(find.text('编辑'));
+    await tester.pumpAndSettle();
+    expect(find.text('编辑服务器'), findsOneWidget);
+    // 预填当前名称与地址：改一处即可，不用重敲
+    expect(find.widgetWithText(TextField, '自建'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'https://self.example.com'), findsOneWidget);
+
+    await tester.enterText(find.widgetWithText(TextField, '自建'), '改过的名字');
+    await tester.pump();
+    await tester.tap(find.text('保存'));
+    await tester.pumpAndSettle();
+
+    expect(settings.servers.last.name, '改过的名字');
+    expect(settings.servers.last.url, 'https://self.example.com');
+    expect(find.text('改过的名字'), findsOneWidget);
+    expect(find.text('编辑服务器'), findsNothing);
+  });
+
+  testWidgets('自建服务器：删除前二次确认，取消不删、确认才删', (tester) async {
+    await settings.addServer('自建', 'https://self.example.com');
+    await pumpPage(tester);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('删除'));
+    await tester.pumpAndSettle();
+    expect(find.text('删除服务器'), findsOneWidget);
+    expect(find.textContaining('确定删除「自建」吗'), findsOneWidget);
+
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+    expect(settings.servers.length, 2, reason: '取消不删');
+
+    // 再来一次并确认 → 真的删掉（只剩内置默认服务器）
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('删除'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, '删除'));
+    await tester.pumpAndSettle();
+
+    expect(settings.servers.length, 1);
+    expect(settings.servers.single.isDefault, isTrue);
+    expect(find.byIcon(Icons.more_vert), findsNothing);
+  });
+
+  testWidgets('添加弹窗仍为「添加」模式（标题与主按钮未被编辑模式带偏）', (tester) async {
+    await pumpPage(tester);
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('添加服务器'), findsOneWidget);
+    expect(find.text('添加'), findsOneWidget);
+    expect(find.text('编辑服务器'), findsNothing);
   });
 }
