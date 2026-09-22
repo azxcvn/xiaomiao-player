@@ -407,6 +407,38 @@ class DeviceServices {
     }
   }
 
+  // ── 播放页方向预读（本地文件）──────────────────────────
+
+  /// 预读本地视频的**编码宽高 + 旋转角**（原生 `MediaMetadataRetriever` 只读
+  /// 文件头）：播放页一进去就能定好横/竖屏，不必等 mpv 上报 `videoParams`
+  /// （那条要 0.5–1s，用户会看到「先横屏再转竖屏」）。
+  ///
+  /// 返回 null 表示「不知道」，调用方回落到原路径：
+  /// - 非本地路径（含 `://` 的网络存储 / B 站在线流）：不发起通道调用；
+  /// - 原生读不到（不支持的容器等）：宽高为 0 时也返回 null。
+  static Future<({int width, int height, int rotation})?>
+      probeVideoOrientation(String path) async {
+    if (path.contains('://')) return null;
+    final Map<Object?, Object?>? map;
+    try {
+      map = await _channel.invokeMapMethod<Object?, Object?>(
+        'probeVideoOrientation',
+        {'path': path},
+      );
+    } catch (_) {
+      return null;
+    }
+    if (map == null) return null;
+    final width = (map['width'] as num?)?.toInt() ?? 0;
+    final height = (map['height'] as num?)?.toInt() ?? 0;
+    if (width <= 0 || height <= 0) return null;
+    return (
+      width: width,
+      height: height,
+      rotation: (map['rotation'] as num?)?.toInt() ?? 0,
+    );
+  }
+
   /// 打开「字体」系统文件选择器：MIME 含 font/*（.ttf/.otf 不再置灰）。
   static Future<String?> openFontPicker() async {    try {
       return await _channel.invokeMethod<String>('openFontPicker');

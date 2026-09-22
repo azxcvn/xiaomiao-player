@@ -414,6 +414,11 @@ class _PlayerPageState extends State<PlayerPage>
   /// 跟随（否则按下去会被重力立刻转回来）。
   bool _followPhoneRotation = false;
 
+  /// 本次进页在「自动」模式下由**预读**把窗口锁成了竖屏（见
+  /// [_applyInitialOrientation]）。预读与播放器判定不一致时用它兜底纠回横屏
+  /// （[_applyVideoOrientation]），否则用户会卡在竖屏窗口里播横屏视频。
+  bool _initialPortraitLocked = false;
+
   /// 播放器是否已销毁（退出路径先 await 销毁，widget dispose 兜底防重复）
   bool _playerDisposed = false;
 
@@ -526,11 +531,12 @@ class _PlayerPageState extends State<PlayerPage>
     // - 跟随手机方向（开关 + 「自动」+ 系统自动旋转）：不指定方向、交还系统，
     //   横竖屏由手机方向决定（竖屏窗口 → 竖屏播放页，见
     //   [_syncPageWithPhoneOrientation]）；
-    // - 锁定竖屏 → 直接竖屏；
-    // - 其余（自动/锁定横屏）先横屏，「自动」会在 open 完成后按视频方向
-    //   决定是否切竖屏。
+    // - 锁定竖屏 / 锁定横屏 → 按设置直接锁；
+    // - 自动 → 先**原生预读**本地文件头定方向（见 [_applyInitialOrientation]）。
+    //   历史做法是一上来先锁横屏、等 open 完成（0.5–1s）才发现视频是竖屏，
+    //   用户会看到「先横屏再转竖屏」的一次多余旋转（用户反馈）。
     _followPhoneRotation = _shouldFollowPhoneOrientation;
-    SystemChrome.setPreferredOrientations(_initialOrientations());
+    unawaited(_applyInitialOrientation());
     _enterFullscreen();
     // 系统「自动旋转」可能在 App 存活期间被改过（通知栏快捷开关不触发
     // 生命周期回调，缓存可能是旧的）：进入后异步刷新一次并纠正方向策略
@@ -958,8 +964,55 @@ class _PlayerPageState extends State<PlayerPage>
         systemAutoRotate: DeviceServices.cachedAutoRotateEnabled,
       );
 
-  /// 进入播放时的方向：跟随手机方向 → 交还系统；锁定竖屏 → 竖屏；
-  /// 其余（自动/锁定横屏）→ 先横屏（「自动」随后按视频方向决定是否切竖屏）
+  /// 进入播放页的方向（initState 发起，与 open 并行）。
+  ///
+  /// - 跟随手机方向 / 锁定竖屏 / 锁定横屏：设置说了算，直接锁；
+  /// - 自动：先**原生预读**本地文件头（宽高 + 旋转角），直接锁正确方向——
+  ///   这是「竖屏视频先横屏再转竖屏」的修法（参考实现 mpvRx 也是进页前先定）。
+  ///   预读期间**先把窗口钉在当前方向**：否则这几十毫秒里系统自动旋转 /
+  ///   重力可能把窗口转走，用户照样看到一次多余的旋转。
+  ///
+  /// 预读拿不到（网络存储 / 在线流 / 不支持的容器）就按老路先锁横屏，
+  /// open 完成后由 [_applyVideoOrientation] 用播放器上报的 videoParams 纠正。
+  Future<void> _applyInitialOrientation() async {
+    if (_followPhoneRotation ||
+        _settings.videoOrientation != VideoOrientationMode.auto) {
+      await SystemChrome.setPreferredOrientations(_initialOrientations());
+      return;
+    }
+    await SystemChrome.setPreferredOrientations(_currentWindowOrientations());
+    if (_disposed || !mounted || _exiting) return;
+    final probe = await DeviceServices.probeVideoOrientation(_path);
+    if (_disposed || !mounted || _exiting) return;
+    // 预读期间 [_refreshAutoRotateCache] 可能把「跟随手机方向」纠正为开启
+    // （启动时缓存的系统自动旋转开关可能是旧的）：那时方向已交还系统，
+    // 这里不能再钉一个方向，否则跟随会被这次预读悄悄按死
+    if (_followPhoneRotation) return;
+    final portrait = isPortraitDisplay(
+      width: probe?.width ?? 0,
+      height: probe?.height ?? 0,
+      rotation: probe?.rotation ?? 0,
+    );
+    _initialPortraitLocked = portrait ?? false;
+    await SystemChrome.setPreferredOrientations(
+      _initialPortraitLocked
+          ? PlayerOrientation.portrait
+          : PlayerOrientation.landscape,
+    );
+  }
+
+  /// 当前窗口方向对应的锁（预读期间钉住窗口用）。
+  /// 读不到窗口尺寸（极罕见）就交还系统，不硬钉一个方向。
+  List<DeviceOrientation> _currentWindowOrientations() {
+    final size =
+        WidgetsBinding.instance.platformDispatcher.implicitView?.physicalSize;
+    if (size == null || size.isEmpty) return PlayerOrientation.appDefault;
+    return size.height > size.width
+        ? PlayerOrientation.portrait
+        : PlayerOrientation.landscape;
+  }
+
+  /// 非「自动」模式（跟随手机方向 / 锁定竖屏 / 锁定横屏）的进入方向
   List<DeviceOrientation> _initialOrientations() {
     if (_followPhoneRotation) return PlayerOrientation.appDefault;
     return _settings.videoOrientation == VideoOrientationMode.portrait
@@ -1020,6 +1073,10 @@ class _PlayerPageState extends State<PlayerPage>
   /// - 锁定竖屏：自动进入竖屏播放页（共享同一 Player，音频零中断）；
   /// - 自动：按视频方向（宽高比）决定横/竖屏。
   ///
+  /// 正常情况下方向早在 [_applyInitialOrientation] 的预读里定好了，这里只做
+  /// **兜底与纠正**：预读拿不到（网络源 / 在线流）时按播放器上报定方向；
+  /// 预读与播放器判定相反时纠回（否则会卡在错的方向里）。
+  ///
   /// 防销毁竞态（risk_audit #2）：`_isPortraitVideo` 可能等待播放器
   /// videoParams 流，期间用户退出则播放器已销毁——抛 AssertionError 时
   /// 静默返回，不写假崩溃日志。
@@ -1034,7 +1091,11 @@ class _PlayerPageState extends State<PlayerPage>
       final portrait =
           _settings.videoOrientation == VideoOrientationMode.portrait ||
               await _isPortraitVideo();
-      if (!portrait) return;
+      if (!portrait) {
+        // 预读说竖屏、播放器说横屏（文件头与 mpv 不一致）：纠回横屏
+        await _relockLandscapeIfProbeWasWrong();
+        return;
+      }
       // 已在竖屏页（用户手动切过）或已开始退出时不再自动 push
       if (!mounted || _portraitActive || _exiting || _disposed) return;
       // 先切方向再进竖屏页，避免先横屏闪一下再旋转
@@ -1043,6 +1104,20 @@ class _PlayerPageState extends State<PlayerPage>
     } on AssertionError {
       // 播放器已被销毁（快速退出）：静默返回
     }
+  }
+
+  /// 预读把窗口锁成竖屏、但播放器判定是横屏时的兜底纠回（只在预读出错那
+  /// 条路上走到）：不纠的话用户会一直卡在竖屏窗口里播横屏视频。
+  ///
+  /// 用户已手动接管（竖屏页在栈顶 / 听视频页）或「视频方向」不再是自动
+  /// （用户明确指定了方向）时不动。
+  Future<void> _relockLandscapeIfProbeWasWrong() async {
+    if (!_initialPortraitLocked) return;
+    _initialPortraitLocked = false;
+    if (_settings.videoOrientation != VideoOrientationMode.auto) return;
+    if (!mounted || _disposed || _exiting) return;
+    if (_portraitActive || _audioActive.value) return;
+    await SystemChrome.setPreferredOrientations(PlayerOrientation.landscape);
   }
 
   /// 判断当前视频是否为竖屏，**结合旋转元数据**（工作.md 第 5 点，参考小喵 KT：
@@ -1059,12 +1134,8 @@ class _PlayerPageState extends State<PlayerPage>
   /// （MediaStore，无旋转信息，仅作近似）。
   Future<bool> _isPortraitVideo() async {
     final (w, h, rotate) = await _waitVideoSize();
-    if (w > 0 && h > 0) {
-      final swapped = rotate % 180 == 90;
-      // 显示宽高比 = 原始 w/h；rotate 90/270 时互换
-      final displayRatio = swapped ? h / w : w / h;
-      return displayRatio <= 1.0;
-    }
+    final portrait = isPortraitDisplay(width: w, height: h, rotation: rotate);
+    if (portrait != null) return portrait;
     final list = _playlist;
     for (final v in list) {
       if (v.path == _path && v.width > 0 && v.height > 0) {

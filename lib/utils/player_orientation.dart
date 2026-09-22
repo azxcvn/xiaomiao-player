@@ -34,6 +34,25 @@ class PlayerOrientation {
       SystemChrome.setPreferredOrientations(appDefault);
 }
 
+/// 由「编码宽高 + 旋转角」判断**显示方向**是否为竖屏；尺寸未知返回 null。
+///
+/// 手机竖拍视频常见「编码尺寸是横屏 + rotation 90/270」，显示方向要交换宽高，
+/// 只按 `width > height` 判会误判成横屏。算法与 mpv `video-params` 的判定一致
+/// （也同参考实现 mpvRx 的 `PlayerActivity.applyInitialVideoOrientation`）：
+/// 旋转 90/270 → 互换宽高；宽 ≤ 高即竖屏（正方形按竖屏处理，与历史行为一致）。
+bool? isPortraitDisplay({
+  required int width,
+  required int height,
+  int rotation = 0,
+}) {
+  if (width <= 0 || height <= 0) return null;
+  final normalized = ((rotation % 360) + 360) % 360;
+  final swapped = normalized == 90 || normalized == 270;
+  final displayWidth = swapped ? height : width;
+  final displayHeight = swapped ? width : height;
+  return displayWidth <= displayHeight;
+}
+
 /// 播放界面是否「跟随手机方向」（横竖屏由重力感应 / 系统自动旋转决定）。
 ///
 /// 三个条件同时成立才生效：

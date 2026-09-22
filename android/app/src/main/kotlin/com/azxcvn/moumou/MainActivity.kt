@@ -178,6 +178,18 @@ class MainActivity : FlutterActivity() {
                             }.start()
                         }
                     }
+                    // 播放页方向预读：只读文件头拿编码宽高 + 旋转角（详情见方法注释）
+                    "probeVideoOrientation" -> {
+                        val path = call.argument<String>("path")
+                        if (path == null) {
+                            result.error("INVALID_ARG", "path is null", null)
+                        } else {
+                            Thread {
+                                val info = probeVideoOrientation(path)
+                                runOnUiThread { result.success(info) }
+                            }.start()
+                        }
+                    }
                     // 媒体信息页：MediaInfoLib 完整解析（通用/视频/音频/字幕流）
                     "getMediaInfo" -> {
                         val path = call.argument<String>("path")
@@ -1968,6 +1980,43 @@ class MainActivity : FlutterActivity() {
      * 身份串 = 路径 + 修改时间（文件被替换/修改后自动失效）；抓 1/4 处帧；
      * 输出等比缩放 + 居中裁剪成 384×216 的 JPEG（质量 70）。
      */
+    /**
+     * 播放页方向预读：只读文件头，拿**编码宽高 + 旋转角**。
+     *
+     * 供 Dart 侧在进播放页时就定好横/竖屏（与参考实现 mpvRx 的
+     * `applyInitialVideoOrientation` 同一思路：[MediaMetadataRetriever] +
+     * `METADATA_KEY_VIDEO_ROTATION`，旋转 90/270 时显示方向要交换宽高），
+     * 不必等 mpv 上报 `video-params`（那条要 0.5-1s，用户会看到竖屏视频先
+     * 横屏再转竖屏）。
+     *
+     * 读不到（不支持的容器 / 路径不可读）返回全 0，Dart 侧回落到播放器上报。
+     */
+    private fun probeVideoOrientation(path: String): Map<String, Any> {
+        var width = 0
+        var height = 0
+        var rotation = 0
+        try {
+            val retriever = MediaMetadataRetriever()
+            try {
+                retriever.setDataSource(path)
+                width = retriever
+                    .extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)
+                    ?.toIntOrNull() ?: 0
+                height = retriever
+                    .extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)
+                    ?.toIntOrNull() ?: 0
+                rotation = retriever
+                    .extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)
+                    ?.toIntOrNull() ?: 0
+            } finally {
+                runCatching { retriever.release() }
+            }
+        } catch (e: Exception) {
+            Log.w("MainActivity", "probeVideoOrientation failed: ${e.message}")
+        }
+        return mapOf("width" to width, "height" to height, "rotation" to rotation)
+    }
+
     private fun getVideoInfo(path: String): Map<String, Any?> {
         val cacheFile = thumbFileFor("$path|${File(path).lastModified()}")
         // 磁盘缓存命中：直接返回，完全跳过解码
