@@ -20,6 +20,8 @@ import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.storage.StorageManager
+import android.os.storage.StorageVolume
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns
@@ -288,6 +290,11 @@ class MainActivity : FlutterActivity() {
                     // ── 字幕功能（工作.md 阶段1 第 3 点）────────────
                     "getSdkInt" -> result.success(Build.VERSION.SDK_INT)
                     "listDirectory" -> result.success(listDirectory(call.argument<String>("path") ?: ""))
+                    // 存储卷根列表（内部存储 + SD 卡 / U 盘）。选择器靠它跳卷：
+                    // `/storage` 目录本身在 Android 11+ 列不出来（开「所有文件访问」
+                    // 也只授权到各卷根，不含 `/storage` 这个挂载点容器），
+                    // 所以外置卡唯一的合法入口就是 StorageManager 的卷枚举。
+                    "getStorageRoots" -> result.success(getStorageRoots())
                     "getSystemFonts" -> result.success(getSystemFonts())
                     "copySubtitleFromUri" -> {
                         val path = copySubtitleFromUri(
@@ -1327,6 +1334,105 @@ class MainActivity : FlutterActivity() {
             null
         }
     }
+
+    /**
+     * 存储卷根列表（自建文件选择器的「卷跳转」入口用）：
+     * 返回 name/path/isPrimary/isRemovable，内部存储恒排第一。
+     *
+     * 走 `StorageManager.storageVolumes`（API 24+ 官方枚举接口，无需权限），
+     * 路径优先 `StorageVolume.directory`（API 30+，未挂载时为 null）；API 30
+     * 以下回退到隐藏的 `getPath()` 反射，再不行用 uuid 拼 `/storage/<uuid>`。
+     * **不列 `/storage` 目录本身**——该目录在 Android 11+ 上即使持有
+     * 「所有文件访问」也列不出来（授权只到各卷根），这正是「无法去往 TF 卡」
+     * 的根因（用户反馈 issue #3）。
+     *
+     * 只返回 `MEDIA_MOUNTED` 且路径真实存在的卷；枚举失败返回空列表
+     * （Dart 侧隐藏卷跳转行，行为退回「只能浏览内部存储」，不报错、不崩）。
+     */
+    private fun getStorageRoots(): List<Map<String, Any>> {
+        return try {
+            val manager = getSystemService(STORAGE_SERVICE) as? StorageManager
+                ?: return emptyList()
+            val roots = mutableListOf<Map<String, Any>>()
+
+            for (volume in manager.storageVolumes) {
+                if (volume.state != Environment.MEDIA_MOUNTED) continue
+                val path = storageVolumePath(volume) ?: continue
+                if (path.isEmpty() || !File(path).exists()) continue
+
+                val isPrimary = volume.isPrimary
+                val label = storageVolumeLabel(volume, isPrimary)
+
+                roots.add(
+                    mapOf(
+                        "name" to label,
+                        "path" to path,
+                        "isPrimary" to isPrimary,
+                        "isRemovable" to volume.isRemovable,
+                    )
+                )
+            }
+
+            // 内部存储恒排第一（卷跳转行顺序稳定，不随 ROM 返回顺序抖动）
+            roots.sortedByDescending { it["isPrimary"] == true }
+        } catch (e: Exception) {
+            // 个别 ROM 的 StorageManager 异常：返回空表，选择器退回默认行为
+            Log.w("MainActivity", "getStorageRoots failed: ${e.message}")
+            emptyList()
+        }
+    }
+
+    /** 取存储卷的展示名（系统描述优先，失败回退「内部存储 / SD 卡」） */
+    private fun storageVolumeLabel(
+        volume: StorageVolume,
+        isPrimary: Boolean,
+    ): String {
+        return try {
+            volume.getDescription(this)
+        } catch (_: Exception) {
+            null
+        } ?: if (isPrimary) "内部存储" else "SD 卡"
+    }
+
+    /** 取存储卷的真实挂载路径（内部存储统一收敛到规范路径） */
+    private fun storageVolumePath(volume: StorageVolume): String? {
+        val directory = storageVolumeDirectory(volume)
+
+        // 内部存储统一成 Environment 的规范路径：个别 ROM 的 volume.directory
+        // 会给出 /storage/self/primary 这类别名，与扫描器产出的路径不一致，
+        // 会导致「卷跳转后当前目录高亮不中」
+        if (volume.isPrimary) {
+            @Suppress("DEPRECATION")
+            return Environment.getExternalStorageDirectory()?.absolutePath
+                ?: directory?.absolutePath
+        }
+        directory?.absolutePath?.let { return it }
+
+        // 最后兜底：uuid 即 /storage/<uuid> 的卷名（SD 卡为 XXXX-XXXX）
+        return volume.uuid?.let { uuid ->
+            val candidate = File("/storage/$uuid")
+            if (candidate.exists()) candidate.absolutePath else null
+        }
+    }
+
+    /** 卷挂载目录：API 30+ 公开接口，以下回退到隐藏的 `getPath()` 反射 */
+    private fun storageVolumeDirectory(
+        volume: StorageVolume,
+    ): File? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            return storageVolumeDirectoryApi30(volume)
+        }
+        return try {
+            volume.javaClass.getMethod("getPath").invoke(volume) as? File
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    @android.annotation.TargetApi(Build.VERSION_CODES.R)
+    private fun storageVolumeDirectoryApi30(
+        volume: StorageVolume,
+    ): File? = volume.directory
 
     /**
      * 系统字体列表（字幕字体设置用）：扫描 /system/fonts 下的 .ttf/.otf/.ttc

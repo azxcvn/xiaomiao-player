@@ -80,6 +80,7 @@ lib/
 │   ├── player_diagnostics.dart # 播放诊断快照模型
 │   ├── bili_playlist.dart     # 番剧播放列表模型（整季剧集 + 按 epId 定位当前集）
 │   ├── subtitle_dir.dart      # 字幕目录条目 + 排序纯函数（目录恒在前）
+│   ├── storage_root.dart      # 存储卷根模型 + 路径归属判定（选择器卷跳转与高亮）
 │   └── subtitle_font_injection.dart # 字幕字体注入判定纯函数
 ├── services/                  # 业务逻辑 / 数据层（无 UI）
 │   ├── view_settings.dart     # 排序/字段/视图模式设置（ChangeNotifier + 持久化）
@@ -180,7 +181,8 @@ lib/
 │   ├── speed_dial_fab.dart    # 首页速拨（最近播放/打开链接/哔哩番剧/网络存储）
 │   ├── bili_cover_card.dart   # 番剧封面卡片（索引/推荐/时间表共用）
 │   ├── bili_episode_tile.dart # 番剧单集磁贴（内联选集/全屏选集页共用）
-│   ├── directory_picker_dialog.dart # 目录选择器弹窗（返回真实路径）
+│   ├── directory_picker_dialog.dart # 目录选择器弹窗（返回真实路径 + 存储卷跳转）
+│   ├── storage_root_selector.dart # 存储卷跳转胶囊行（内部存储 / SD 卡 / U 盘）
 │   ├── cast_device_dialog.dart # 投屏设备选择弹窗
 │   ├── privacy_policy_dialog.dart # 首次启动隐私门禁弹窗
 │   ├── update_dialog.dart       # 更新弹窗
@@ -376,6 +378,7 @@ utils（纯工具）    → 只依赖 models
 - **扫描**：`VideoScanner` 走原生 `getVideos`（MediaStore 全表查询 + 逐条校验 + `.nomedia` 祖先链判断），可配置包含隐藏目录 / `.nomedia` 目录；结果缓存于内存，文件操作后清缓存重扫。
 - **两种视图**：列表模式（`buildFolderList`：含直接视频的文件夹）与树状模式（`buildTree`：完整目录树），共用 `FolderCard` / `VideoCard`；建树与聚合在后台 isolate（`compute`）执行。
 - **首页**：`HomePage` 负责权限门禁（「允许管理所有文件」）、视图分发、搜索、多选与速拨入口。
+- **存储卷跳转**：自建目录选择器（媒体扫描黑白名单 / 下载目录 / 字幕与音频导入）顶部列出已挂载存储卷胶囊（`StorageRootSelector` + `StorageRoot`），点击即跳到该卷根。**外置卷只能由原生 `getStorageRoots` 枚举得到**——`/storage` 目录本身在 Android 11+ 上即使持有「所有文件访问」也列不出来（授权只到各卷根，不含 `/storage` 这个挂载点容器），此前选择器起点写死 `/storage/emulated/0` 导致 SD 卡/TF 卡完全无法进入。
 - **播放历史**：`PlaybackHistoryService` 记录可重放来源（本地路径 / 在线直链），去重置顶、上限淘汰，首页速拨「最近播放」直启。
 - **进度**：`PlaybackProgressService` 单例，`path → 毫秒` 映射，串行写盘 + 节流；播放页恢复进度走 `openAndRestore`（暂停加载 → 静音激活时间线 → seek → 位置确认）。
 
@@ -453,7 +456,7 @@ utils（纯工具）    → 只依赖 models
 
 | 文件 | 职责 |
 |---|---|
-| `MainActivity.kt` | MethodChannel `moumou/video_info` 的宿主：媒体库查询、视频信息与缩略图、媒体信息、杜比视界检测、设备能力、系统音量/亮度、画中画、外部 `content://` 三级解析、B 站双流合并（`mergeM4s`）、整应用重启、壁纸取色、目录列举 |
+| `MainActivity.kt` | MethodChannel `moumou/video_info` 的宿主：媒体库查询、视频信息与缩略图、媒体信息、杜比视界检测、设备能力、系统音量/亮度、画中画、外部 `content://` 三级解析、B 站双流合并（`mergeM4s`）、整应用重启、壁纸取色、目录列举、存储卷枚举（`getStorageRoots`） |
 | `MediaInfoHelper.kt` | MediaInfoLib 封装：快速元数据（帧率 / 内嵌字幕）、完整媒体信息、杜比视界检测（统一走 `withMediaInfo` 托管文件描述符） |
 | `DeviceCapabilities.kt` | 屏幕 HDR 能力、关键编码器、系统解码器清单 |
 | `BackgroundPlaybackService.kt` | 听视频后台播放的前台服务 |

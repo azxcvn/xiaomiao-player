@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:moumou/models/storage_root.dart';
 import 'package:moumou/models/subtitle_dir.dart';
 import 'package:moumou/services/fast_thumbnails.dart';
 import 'package:path_provider/path_provider.dart';
@@ -255,6 +256,32 @@ class DeviceServices {
       ];
     } catch (_) {
       return null;
+    }
+  }
+
+  /// 已挂载的存储卷根列表（内部存储 + SD 卡 / U 盘，内部存储恒排第一）；
+  /// 枚举失败/非 Android 返回空列表。
+  ///
+  /// 自建文件选择器的「卷跳转」靠它：`/storage` 目录在 Android 11+ 上列不出来
+  /// （「所有文件访问」只授权到各卷根），不枚举卷就永远发现不了外置卡
+  /// （用户反馈 issue #3「媒体扫描与过滤返回上级，无法去往 TF 卡」）。
+  /// 原生实现见 `MainActivity.getStorageRoots`。
+  static Future<List<StorageRoot>> getStorageRoots() async {
+    try {
+      final list = await _channel.invokeMethod<List<dynamic>>('getStorageRoots');
+      if (list == null) return const [];
+      return [
+        for (final item in list)
+          if (item is Map)
+            StorageRoot(
+              name: (item['name'] as String?) ?? '',
+              path: (item['path'] as String?) ?? '',
+              isPrimary: (item['isPrimary'] as bool?) ?? false,
+              isRemovable: (item['isRemovable'] as bool?) ?? false,
+            ),
+      ].where((r) => r.path.isNotEmpty).toList();
+    } catch (_) {
+      return const [];
     }
   }
 

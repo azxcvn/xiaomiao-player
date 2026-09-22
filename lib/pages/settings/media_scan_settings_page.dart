@@ -6,6 +6,7 @@ import 'package:moumou/services/media_scan_settings.dart';
 import 'package:moumou/services/video_scanner.dart';
 import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/widgets/settings_ui.dart';
+import 'package:moumou/widgets/storage_root_selector.dart';
 
 /// 媒体扫描与过滤设置页（对齐 mpvRx 与小喵 player）：
 /// - 扫描规则（.nomedia 目录 / .开头隐藏文件夹）；
@@ -479,6 +480,14 @@ class _FolderPickerSheetState extends State<_FolderPickerSheet> {
     _loadDirectory();
   }
 
+  /// 跳到某个存储卷根（卷跳转胶囊点击）：卷根是否存在/可读由 [_loadDirectory]
+  /// 统一裁决（不可读时为空列表，不落到死路径）
+  void _navigateToRoot(String rootPath) {
+    if (rootPath.isEmpty || rootPath == _currentPath) return;
+    _currentPath = rootPath;
+    _loadDirectory();
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -506,6 +515,13 @@ class _FolderPickerSheetState extends State<_FolderPickerSheet> {
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ],
+          ),
+
+          // 存储卷跳转（内部存储 / SD 卡 / U 盘）：`/storage` 在 Android 11+ 上
+          // 列不出来，外置卡只能靠这行进入（issue #3）
+          StorageRootSelector(
+            currentPath: _currentPath,
+            onRootSelected: _navigateToRoot,
           ),
 
           // 当前路径与上一级按钮

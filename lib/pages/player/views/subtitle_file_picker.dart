@@ -3,6 +3,7 @@ import 'package:moumou/models/subtitle_dir.dart';
 import 'package:moumou/models/subtitle_track.dart';
 import 'package:moumou/services/device_services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:moumou/widgets/storage_root_selector.dart';
 
 /// 外挂字幕文件选择（工作.md 阶段1 第 3 点）：
 ///
@@ -255,6 +256,16 @@ class _SubtitleFilePickerPanelState extends State<SubtitleFilePickerPanel> {
           ),
         ),
         const Divider(height: 1, color: Colors.white12),
+        // 存储卷跳转（内部存储 / SD 卡 / U 盘）：`/storage` 在 Android 11+ 上
+        // 列不出来，外置卡只能靠这行进入（issue #3）
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+          child: StorageRootSelector(
+            currentPath: _currentPath,
+            onRootSelected: (path) => _openFolder(path),
+            onDark: true,
+          ),
+        ),
         Expanded(
           child: Stack(
             children: [

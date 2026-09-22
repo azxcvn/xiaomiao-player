@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:moumou/models/subtitle_dir.dart';
 import 'package:moumou/services/device_services.dart';
 import 'package:moumou/utils/app_dialog.dart';
+import 'package:moumou/widgets/storage_root_selector.dart';
 
 /// 弹出目录选择器，返回用户选中的**真实目录路径**；取消返回 null。
 ///
@@ -80,6 +81,9 @@ class _DirectoryPickerDialogState extends State<_DirectoryPickerDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 存储卷跳转（内部存储 / SD 卡 / U 盘）：`/storage` 在 Android 11+
+            // 上列不出来，外置卡只能靠这行进入（issue #3）
+            StorageRootSelector(currentPath: _currentPath, onRootSelected: _load),
             Row(
               children: [
                 IconButton(
