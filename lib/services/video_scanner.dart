@@ -206,16 +206,36 @@ class VideoScanner {
     return i <= 0 ? '/' : path.substring(0, i);
   }
 
+  /// 目录 [path] 所属的**存储卷根**：`/storage/emulated/0`、`/storage/XXXX-XXXX`、
+  /// `/mnt/<x>/<y>`（模拟器共享目录、`/mnt/media_rw/<uuid>` 等）；识别不出返回 null。
+  ///
+  /// 与 [buildTree] 共用同一套「卷根段数」规则（[_rootSegCount]），避免两处各判一次
+  /// 而漂移。传**目录**路径（树节点都是目录；卷根下的直接视频归属要靠 [_dirOf] 先取父目录）。
+  static String? volumeRootOf(String path) {
+    if (path.isEmpty || !path.startsWith('/')) return null;
+    final segs = path.split('/').where((s) => s.isNotEmpty).toList();
+    if (segs.isEmpty) return null;
+    final rootSegs = _rootSegCount(segs);
+    if (rootSegs <= 0) return null;
+    return '/${segs.take(rootSegs).join('/')}';
+  }
+
   /// 识别存储卷根占用的段数：
-  /// - /storage/emulated/0 → 3 段
+  /// - /storage/emulated/0 → 3 段（内部存储）
   /// - /storage/XXXX-XXXX → 2 段（SD 卡 / U 盘）
-  /// - 其他 → 0（无法识别）
+  /// - `/mnt/<x>/<y>` → 3 段（模拟器共享目录、`/mnt/media_rw/<uuid>` 这类挂在 /mnt
+  ///   下的卷；原生侧非主卷扫描给出的正是这种路径）；不足 3 段的（如 /mnt/odd）
+  ///   按实际段数当卷根
+  /// - 其他 → 0（无法识别，视频作为顶层节点兜底）
   static int _rootSegCount(List<String> segs) {
     if (segs.length >= 3 && segs[0] == 'storage' && segs[1] == 'emulated') {
       return 3;
     }
     if (segs.length >= 2 && segs[0] == 'storage') {
       return 2;
+    }
+    if (segs.isNotEmpty && segs[0] == 'mnt') {
+      return segs.length >= 3 ? 3 : segs.length;
     }
     return 0;
   }

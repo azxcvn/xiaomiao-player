@@ -20,6 +20,7 @@ import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.SystemClock
 import android.os.storage.StorageManager
 import android.os.storage.StorageVolume
 import android.provider.DocumentsContract
@@ -1948,7 +1949,64 @@ class MainActivity : FlutterActivity() {
         return final
     }
 
-    /** 通过 MediaStore 查询所有本地视频（可配置是否包含 .nomedia 与隐藏文件夹） */
+    /**
+     * 「自己走文件系统」的补充扫描用视频扩展名（MediaStore 索引到的格式不受此表限制）。
+     * 与 Dart 侧 `FileOps.videoExtensions` 保持同源。
+     */
+    private val fsVideoExts = setOf(
+        "mp4", "mkv", "avi", "mov", "wmv", "flv", "ts", "m4v", "webm", "3gp", "mpg", "mpeg"
+    )
+
+    /**
+     * **非主**存储卷根（外置卡 / U 盘 / 模拟器共享目录等），供 [getVideos] 的文件系统
+     * 补充扫描使用。
+     *
+     * 与 [getStorageRoots] 同源（`StorageManager.storageVolumes` + [storageVolumePath]），
+     * 三点差异：
+     * 1. 只取非主卷——主卷由 MediaStore 覆盖，另有一条受开关控制的补充扫描（见 [getVideos] 4.1）；
+     * 2. **放宽挂载状态判断**：不要求 `MEDIA_MOUNTED`，路径存在且可读即算（个别 ROM /
+     *    模拟器把共享目录报成别的状态，卡状态会白白漏掉整卷）；
+     * 3. 返回 [File] 而不是 Map——调用方直接拿它 `listFiles()`。
+     *
+     * 枚举失败返回空表（退回「只有主卷」，不报错、不崩）。
+     */
+    private fun externalStorageRoots(): List<File> {
+        val primaryPath = try {
+            @Suppress("DEPRECATION")
+            val primary = Environment.getExternalStorageDirectory()
+            primary?.absolutePath
+        } catch (_: Exception) {
+            null
+        }
+        // 按绝对路径去重：个别 ROM 会把同一卷报两次
+        val roots = LinkedHashMap<String, File>()
+        try {
+            val manager = getSystemService(STORAGE_SERVICE) as? StorageManager
+                ?: return emptyList()
+            for (volume in manager.storageVolumes) {
+                if (volume.isPrimary) continue
+                val path = storageVolumePath(volume) ?: continue
+                if (path.isEmpty() || path == primaryPath) continue
+                val dir = File(path)
+                if (!dir.isDirectory || !dir.canRead()) continue
+                if (!roots.containsKey(dir.absolutePath)) {
+                    roots[dir.absolutePath] = dir
+                }
+            }
+        } catch (e: Exception) {
+            Log.w("MainActivity", "externalStorageRoots failed: ${e.message}")
+            return emptyList()
+        }
+        return roots.values.toList()
+    }
+
+    /**
+     * 通过 MediaStore 查询所有本地视频（可配置是否包含 .nomedia 与隐藏文件夹）。
+     *
+     * MediaStore 不认识的位置（外置卡上未被索引的目录、模拟器共享目录等）由末尾的
+     * **文件系统补充扫描**补齐：单靠 MediaStore 会整片漏掉这些位置（用户反馈：模拟器
+     * 共享目录里的视频文件夹不出现在首页）。
+     */
     private fun getVideos(
         includeNoMedia: Boolean = false,
         includeHidden: Boolean = false
@@ -2068,50 +2126,102 @@ class MainActivity : FlutterActivity() {
             }
         }
 
-        // 4. 如果开启了 includeNoMedia 或 includeHidden，针对文件系统进行补充扫描（因为 MediaStore 绝不会自动索引 .nomedia 目录）
-        if (includeNoMedia || includeHidden) {
-            val supportedExts = setOf("mp4", "mkv", "avi", "mov", "wmv", "flv", "ts", "m4v", "webm", "3gp", "mpg", "mpeg")
-            fun scanFsFolder(folder: File, depth: Int) {
-                if (depth > 6 || !folder.exists() || !folder.isDirectory || !folder.canRead()) return
-                val folderName = folder.name
-                val isHiddenFolder = folderName.startsWith(".")
-                if (!includeHidden && isHiddenFolder) return
-
-                val files = folder.listFiles() ?: return
-                for (f in files) {
-                    if (f.isDirectory) {
-                        scanFsFolder(f, depth + 1)
-                    } else if (f.isFile && f.length() > 0) {
-                        val ext = f.extension.lowercase()
-                        if (ext in supportedExts) {
-                            val fName = f.name
-                            if (!includeHidden && fName.startsWith(".")) continue
-                            val normPath = f.absolutePath
-                            if (visitedPaths.add(normPath)) {
-                                videos.add(
-                                    mapOf(
-                                        "path" to normPath,
-                                        "name" to fName,
-                                        "durationMs" to 0L,
-                                        "size" to f.length(),
-                                        "width" to 0,
-                                        "height" to 0,
-                                        "dateModifiedMs" to f.lastModified(),
-                                    )
-                                )
-                            }
-                        }
-                    }
+        // 4. 文件系统补充扫描（MediaStore 不认识的位置只能自己走文件系统）
+        //
+        // 4.1 主卷：仅在开启 includeNoMedia / includeHidden 时补扫（MediaStore 绝不会
+        //     自动索引 .nomedia 目录），深度与判定保持原样；
+        // 4.2 非主卷（外置卡 / U 盘 / 模拟器共享目录等）：**恒扫**——这些卷 MediaStore
+        //     根本不索引，不扫就永远看不到里面的视频。深度 4 对齐参考项目 mpvEx 的
+        //     shallow scan（MediaFileRepository.scanExternalVolumeShallow）。
+        fun scanFsFolder(
+            folder: File,
+            depth: Int,
+            maxDepth: Int,
+            extractDuration: Boolean,
+            durationDeadlineMs: Long,
+            noMediaSelfOnly: Boolean,
+        ) {
+            if (depth > maxDepth) return
+            if (!folder.exists() || !folder.isDirectory || !folder.canRead()) return
+            val folderName = folder.name
+            if (!includeHidden && folderName.startsWith(".")) return
+            if (!includeNoMedia) {
+                if (noMediaSelfOnly) {
+                    // 非主卷：只看目录**自身**的 .nomedia，不上溯到卷外（/mnt、/ 上的 .nomedia
+                    // 与这一卷无关，照算会让整卷消失）；卷根（depth 0）也豁免——模拟器 / 个别
+                    // ROM 会在共享目录根上放 .nomedia，那不是「用户不想扫这个目录」的意思
+                    if (depth > 0 && File(folder, ".nomedia").exists()) return
+                } else if (checkDirectoryHasNoMedia(folder)) {
+                    // 主卷：与上面 MediaStore 分支同一套祖先链判定（原先补充扫描漏了这一步，
+                    // 于是「只开隐藏文件夹」时 .nomedia 目录里的视频会从补充扫描漏进来）
+                    return
                 }
             }
 
+            val files = folder.listFiles() ?: return
+            for (f in files) {
+                if (f.isDirectory) {
+                    scanFsFolder(
+                        f, depth + 1, maxDepth, extractDuration, durationDeadlineMs,
+                        noMediaSelfOnly,
+                    )
+                } else if (f.isFile && f.length() > 0) {
+                    val ext = f.extension.lowercase()
+                    if (ext !in fsVideoExts) continue
+                    val fName = f.name
+                    if (!includeHidden && fName.startsWith(".")) continue
+                    val normPath = f.absolutePath
+                    if (!visitedPaths.add(normPath)) continue
+                    // MediaStore 没索引到 → 时长必为 0，而列表的进度条 / 已看状态全靠它，
+                    // 故兜底抽一次；非主卷可能整卷很大，给一个总时间预算，超预算就不再抽
+                    //（留 0 不影响列出与播放，只是这几条少了进度显示）
+                    val duration = if (extractDuration &&
+                        SystemClock.elapsedRealtime() < durationDeadlineMs
+                    ) {
+                        extractDurationMs(normPath)
+                    } else {
+                        0L
+                    }
+                    videos.add(
+                        mapOf(
+                            "path" to normPath,
+                            "name" to fName,
+                            "durationMs" to duration,
+                            "size" to f.length(),
+                            "width" to 0,
+                            "height" to 0,
+                            "dateModifiedMs" to f.lastModified(),
+                        )
+                    )
+                }
+            }
+        }
+
+        if (includeNoMedia || includeHidden) {
             try {
                 @Suppress("DEPRECATION")
                 val primaryStorage = Environment.getExternalStorageDirectory()
                 if (primaryStorage != null && primaryStorage.exists()) {
-                    scanFsFolder(primaryStorage, 0)
+                    // 主卷不抽时长：整盘补扫可能上千个文件，逐个开容器代价太大（保持原行为）
+                    scanFsFolder(
+                        primaryStorage, 0, 6,
+                        extractDuration = false,
+                        durationDeadlineMs = 0L,
+                        noMediaSelfOnly = false,
+                    )
                 }
             } catch (_: Exception) {}
+        }
+
+        // 非主卷恒扫。总时长抽取预算 4s：超了后面的文件留 0，避免整卷很大时首屏扫描被拖长
+        val externalDurationDeadlineMs = SystemClock.elapsedRealtime() + 4000L
+        for (root in externalStorageRoots()) {
+            scanFsFolder(
+                root, 0, 4,
+                extractDuration = true,
+                durationDeadlineMs = externalDurationDeadlineMs,
+                noMediaSelfOnly = true,
+            )
         }
 
         return videos

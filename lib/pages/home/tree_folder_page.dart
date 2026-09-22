@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/models/storage_root.dart';
 import 'package:moumou/models/tree_node.dart';
 import 'package:moumou/models/video_file.dart';
 import 'package:moumou/pages/media_info/media_info_page.dart';
 import 'package:moumou/pages/player/player_page.dart';
+import 'package:moumou/services/device_services.dart';
 import 'package:moumou/services/file_selection_controller.dart';
 import 'package:moumou/services/playback_progress_service.dart';
 import 'package:moumou/services/pinned_folders_settings.dart';
@@ -54,6 +56,10 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
 
+  /// 存储卷列表（与「卷跳转」同一个原生数据源），只用于面包屑第一级显示真实卷名。
+  /// 拿不到（通道异常 / 非 Android）时留空表：面包屑退回按路径推算的卷根。
+  List<StorageRoot> _roots = const [];
+
   /// 从顶层到当前节点的完整路径链（含当前节点）。首次进入取 push 时的值；
   /// 文件操作后由 [_reloadCurrentNode] 按真实路径重新定位刷新。
   late List<TreeNode> _path = widget.path.isNotEmpty
@@ -66,20 +72,60 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
   final FileSelectionController _selection = FileSelectionController();
 
   @override
+  void initState() {
+    super.initState();
+    _loadStorageRoots();
+  }
+
+  /// 载入存储卷列表（仅影响面包屑第一级的卷名显示）
+  Future<void> _loadStorageRoots() async {
+    try {
+      final roots = await DeviceServices.getStorageRoots();
+      if (!mounted || roots.isEmpty) return;
+      setState(() => _roots = roots);
+    } catch (_) {
+      // 卷枚举不可用：静默退回路径推算的卷根，不影响浏览 / 播放
+    }
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     _selection.dispose();
     super.dispose();
   }
 
-  /// 面包屑项：targetIndex 表示要跳回的路径层级（-1 = 首页）
-  List<({String label, int targetIndex})> get _crumbs {
+  /// 面包屑项：targetIndex 表示要跳回的路径层级（-1 = 当前树所在的存储卷）
+  ///
+  /// [path] 是该级的**真实绝对路径**（长按 / 悬停可见）：卷那一级给卷根，目录那一级给目录全路径。
+  List<({String label, String? path, int targetIndex})> get _crumbs {
     return [
-      (label: '小喵Player', targetIndex: -1),
+      (label: _volumeLabel, path: _volumeRootPath, targetIndex: -1),
       for (var i = 0; i < _path.length; i++)
-        (label: _path[i].name, targetIndex: i),
+        (label: _path[i].name, path: _path[i].path, targetIndex: i),
     ];
   }
+
+  /// 当前树所在位置用于判定存储卷的路径（顶层节点的路径；树节点都是目录）
+  String get _volumeLookupPath =>
+      _path.isNotEmpty ? _path.first.path : widget.node.path;
+
+  /// 面包屑第一级的**真实存储卷**（与「卷跳转」同一数据源）
+  StorageRoot? get _volumeRoot =>
+      storageRootOf(_volumeLookupPath, _roots);
+
+  /// 卷根绝对路径：优先原生卷列表给的路径，退化时按路径推算（如 `/mnt/shared/MuMuShared`）
+  String? get _volumeRootPath =>
+      _volumeRoot?.path ?? VideoScanner.volumeRootOf(_volumeLookupPath);
+
+  /// 面包屑第一级的展示名。
+  ///
+  /// 原先这一级是写死的「小喵Player」——看着像路径的一环，其实只是个「回首页」按钮；
+  /// 视频一旦在外置卡 / 模拟器共享目录下，整条路径里连卷都看不到（用户反馈）。
+  /// 现在优先取原生卷名（`StorageVolume.getDescription`，如「内部存储」「SD 卡」），
+  /// 卷列表拿不到时退回按路径推算的卷根，最后才退回应用名。
+  String get _volumeLabel =>
+      _volumeRoot?.name ?? _volumeRootPath ?? '小喵Player';
 
   void _jumpTo(int targetIndex) {
     if (targetIndex == _path.length - 1) return; // 当前页
@@ -398,10 +444,11 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
   }
 }
 
-/// 顶部面包屑导航栏：横向可滚动，显示「小喵Player → … → 当前目录」路径，
-/// 点击任意上级层级跳回对应页面（参考 mpvRx 的 BreadcrumbNavigation）。
+/// 顶部面包屑导航栏：横向可滚动，显示「存储卷 → … → 当前目录」路径，
+/// 点击任意上级层级跳回对应页面（参考 mpvRx 的 BreadcrumbNavigation）；
+/// 长按 / 悬停某一级显示它的真实绝对路径。
 class _BreadcrumbBar extends StatefulWidget {
-  final List<({String label, int targetIndex})> crumbs;
+  final List<({String label, String? path, int targetIndex})> crumbs;
   final void Function(int targetIndex) onTap;
 
   const _BreadcrumbBar({required this.crumbs, required this.onTap});
@@ -461,30 +508,37 @@ class _BreadcrumbBarState extends State<_BreadcrumbBar> {
 
   List<Widget> _buildCrumb(
     ColorScheme scheme,
-    ({String label, int targetIndex}) crumb,
+    ({String label, String? path, int targetIndex}) crumb,
     int index,
     int total,
   ) {
     final isCurrent = index == total - 1;
-    final widgets = <Widget>[
-      TextButton(
-        onPressed: isCurrent ? null : () => widget.onTap(crumb.targetIndex),
-        style: TextButton.styleFrom(
-          minimumSize: Size.zero,
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          foregroundColor: isCurrent
-              ? scheme.primary
-              : scheme.onSurfaceVariant,
-          disabledForegroundColor: scheme.primary,
-        ),
-        child: Text(
-          crumb.label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 14),
-        ),
+    final button = TextButton(
+      onPressed: isCurrent ? null : () => widget.onTap(crumb.targetIndex),
+      style: TextButton.styleFrom(
+        minimumSize: Size.zero,
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        foregroundColor: isCurrent
+            ? scheme.primary
+            : scheme.onSurfaceVariant,
+        disabledForegroundColor: scheme.primary,
       ),
+      child: Text(
+        crumb.label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontSize: 14),
+      ),
+    );
+    final path = crumb.path;
+    final widgets = <Widget>[
+      // 长按（移动端）/ 悬停（桌面端）显示这一级的真实绝对路径：
+      // 面包屑只放得下名字，路径得有个地方看得见
+      if (path == null || path.isEmpty)
+        button
+      else
+        Tooltip(message: path, child: button),
     ];
     if (!isCurrent) {
       widgets.add(
