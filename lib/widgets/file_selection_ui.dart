@@ -64,6 +64,10 @@ class SelectionMark extends StatelessWidget {
 ///
 /// 视频卡片「已看完置灰」与「已选中」可能同时成立，选中态优先级更高，
 /// 否则用户看不出自己选中了没有。
+///
+/// 壁纸模式下卡片底色只剩 [kWallpaperCardOpacity] 不透明，再往上混 14% 的
+/// primary 就几乎看不见了，所以那边换成一层**半透明主题色膜**
+/// （见 [wallpaperAwareSelectedCardColor]）。
 Color selectedCardColor(ColorScheme scheme) =>
     Color.alphaBlend(scheme.primary.withValues(alpha: 0.14), scheme.surfaceContainerLow);
 

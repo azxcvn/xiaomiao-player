@@ -3,6 +3,7 @@ package com.azxcvn.moumou
 import android.app.Activity
 import android.app.PictureInPictureParams
 import android.app.WallpaperManager
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -414,6 +415,24 @@ class MainActivity : FlutterActivity() {
                             } catch (e: Exception) {
                                 pendingDocumentPickerResult = null
                                 result.success(null)
+                            }
+                        }
+                    }
+                    // 壁纸图片选择器：Android 13+ 用系统 Photo Picker（缩略图网格，
+                    // 无需权限）；以下版本回退 SAF（ACTION_OPEN_DOCUMENT + image/*）。
+                    // 选中后**立即**把图拷进应用私有目录，直接返回真实绝对路径
+                    // （Dart 侧解码用 FileImage，content:// 读不了），取消返回 null。
+                    "pickWallpaperImage" -> {
+                        if (pendingDocumentPickerResult != null) {
+                            result.error("BUSY", "picker already open", null)
+                        } else {
+                            pendingDocumentPickerResult = result
+                            if (!launchImagePicker(buildImagePickerIntents(), 2005)) {
+                                // 所有候选都没有承接方（极罕见）：不静默失败，
+                                // 让 Dart 侧能区分「取消」与「这台设备没有选择器」
+                                pendingDocumentPickerResult = null
+                                Log.w("MainActivity", "pickWallpaperImage: no picker available")
+                                result.error("NO_PICKER", "no image picker available", null)
                             }
                         }
                     }
@@ -1213,6 +1232,14 @@ class MainActivity : FlutterActivity() {
         "*/*",
     )
 
+    // 壁纸图片选择器的 MIME 白名单（Android 13 以下走 SAF；.png/.jpg/.webp/.heic
+    // 等不置灰——部分 ROM 会把图片报成 application/octet-stream，白名单窄了会被置灰）
+    private val imagePickerMimeTypes = arrayOf(
+        "image/*",
+        "application/octet-stream",
+        "*/*",
+    )
+
     /**
      * 系统文件选择器 Intent（ACTION_OPEN_DOCUMENT，无需权限）。
      * @param mimeTypes 允许选择的文件类型白名单（默认字幕类型）。
@@ -1229,6 +1256,62 @@ class MainActivity : FlutterActivity() {
                 Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION,
         )
         return intent
+    }
+
+    /**
+     * 壁纸图片选择器的候选 Intent，按优先级排列：
+     * 1. Android 13+ 的系统 **Photo Picker**（`ACTION_PICK_IMAGES`，缩略图网格）；
+     * 2. SAF（`ACTION_OPEN_DOCUMENT` + 图片 MIME 白名单，DocumentsUI）；
+     * 3. `ACTION_GET_CONTENT`（相册 / 文件管理器，任何 Android 都有承接方）。
+     *
+     * Photo Picker 是**可选模块**：模拟器 / 精简 ROM 上可能根本没有这个 Activity
+     * （用户实测 MuMu 上点了没反应——`startActivityForResult` 直接抛
+     * ActivityNotFoundException）。所以这里不写死一个，而是列候选、依次尝试启动。
+     *
+     * 注意：KDoc 里**不能**写 `image` 加斜杠加星号那种 MIME 通配——Kotlin 的块注释
+     * 可以嵌套，那个斜杠星号会开一层新注释，把后面整个文件吞掉（踩过一次）。
+     */
+    private fun buildImagePickerIntents(): List<Intent> {
+        val intents = mutableListOf<Intent>()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intents.add(
+                Intent(MediaStore.ACTION_PICK_IMAGES).apply {
+                    type = "image/*"
+                    putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, 1)
+                }
+            )
+        }
+        intents.add(buildDocumentPickerIntent(imagePickerMimeTypes))
+        intents.add(
+            Intent(Intent.ACTION_GET_CONTENT).apply {
+                type = "image/*"
+                addCategory(Intent.CATEGORY_OPENABLE)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+        )
+        return intents
+    }
+
+    /**
+     * 依次尝试候选 Intent，**启动成功即返回 true**；某个候选没有承接方
+     * （`ActivityNotFoundException`，例如模拟器缺 Photo Picker 模块）就试下一个。
+     *
+     * 为什么不用 `resolveActivity` 预判：Android 11+ 的**包可见性**会让未在
+     * `<queries>` 里声明的隐式 Intent 查不到承接方（返回 null），预判会把真机上
+     * 明明能用的选择器误判成「没有」。直接试启动最可靠。
+     */
+    private fun launchImagePicker(candidates: List<Intent>, requestCode: Int): Boolean {
+        for (intent in candidates) {
+            try {
+                startActivityForResult(intent, requestCode)
+                return true
+            } catch (e: ActivityNotFoundException) {
+                Log.i("MainActivity", "image picker candidate unavailable: ${intent.action}")
+            } catch (e: Exception) {
+                Log.w("MainActivity", "image picker launch failed: ${e.message}")
+            }
+        }
+        return false
     }
 
     /**
@@ -1291,6 +1374,24 @@ class MainActivity : FlutterActivity() {
                     }
                 }
                 pending?.success(uri?.toString())
+            }
+            // 2005 = 壁纸图片选择器：选中即刻拷进私有目录，回传真实路径（取消回 null）
+            2005 -> {
+                val pending = pendingDocumentPickerResult
+                pendingDocumentPickerResult = null
+                // Photo Picker / SAF 都从 data.data 给 uri；个别实现只给 clipData，
+                // 兜一下（单选用第一项）
+                val uri = if (resultCode == Activity.RESULT_OK) {
+                    data?.data ?: data?.clipData?.getItemAt(0)?.uri
+                } else {
+                    null
+                }
+                if (uri == null) {
+                    pending?.success(null)
+                } else {
+                    val name = queryDisplayName(uri) ?: "wallpaper.png"
+                    pending?.success(copyWallpaperFromUri(uri, name))
+                }
             }
         }
     }
@@ -1549,6 +1650,37 @@ class MainActivity : FlutterActivity() {
             if (target.exists() && target.length() > 0) target.absolutePath else null
         } catch (e: Exception) {
             Log.w("MainActivity", "copyFontFromUri failed: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * 系统图片选择器选中的图拷进应用**导入目录**（`filesDir/wallpaper_import/`），
+     * 返回真实绝对路径；失败返回 null。
+     *
+     * 为什么不直接写进壁纸目录：壁纸文件的最终位置与命名（时间戳 + 参数落盘）
+     * 统一由 Dart 侧 [WallpaperSettings] 管，这里只负责把 `content://` 变成
+     * 真实路径（Dart 读不了 content://）。每次选择前清空导入目录，只留本次这张，
+     * 保存成功后 Dart 侧会把这张临时文件删掉。
+     */
+    private fun copyWallpaperFromUri(uri: Uri, name: String): String? {
+        return try {
+            val importDir = File(filesDir, "wallpaper_import")
+            if (importDir.exists()) {
+                importDir.listFiles()?.forEach { it.delete() }
+            } else {
+                importDir.mkdirs()
+            }
+            // 优先真实文件名（DISPLAY_NAME），回退 Dart 传/默认名；不确定的字符换下划线
+            val displayName = queryDisplayName(uri) ?: name
+            val safeName = displayName.replace(Regex("[^a-zA-Z0-9.\\-_]|\\s"), "_")
+            val target = File(importDir, "pick_$safeName")
+            contentResolver.openInputStream(uri)?.use { input ->
+                target.outputStream().use { output -> input.copyTo(output) }
+            }
+            if (target.exists() && target.length() > 0) target.absolutePath else null
+        } catch (e: Exception) {
+            Log.w("MainActivity", "copyWallpaperFromUri failed: ${e.message}")
             null
         }
     }

@@ -4,6 +4,7 @@ import 'package:moumou/services/view_settings.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/widgets/file_selection_ui.dart';
 import 'package:moumou/widgets/marquee_text.dart';
+import 'package:moumou/widgets/wallpaper_surface.dart';
 
 /// 文件夹卡片：列表模式与树状模式共用（字段驱动渲染）
 ///
@@ -46,7 +47,9 @@ class FolderCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
-      color: selected ? selectedCardColor(scheme) : scheme.surfaceContainerLow,
+      color: selected
+          ? wallpaperAwareSelectedCardColor(context, scheme)
+          : wallpaperAwareCardColor(context, scheme.surfaceContainerLow),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: selectedCardSide(scheme, selected),

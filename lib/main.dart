@@ -32,6 +32,7 @@ import 'package:moumou/services/super_resolution_service.dart';
 import 'package:moumou/services/update/update_service.dart';
 import 'package:moumou/services/update/update_settings.dart';
 import 'package:moumou/services/view_settings.dart';
+import 'package:moumou/services/wallpaper_settings.dart';
 import 'package:moumou/theme/app_theme.dart';
 import 'package:moumou/theme/theme_controller.dart';
 import 'package:moumou/utils/formatters.dart';
@@ -50,6 +51,14 @@ Future<void> main() async {
   // FlutterError（框架层）异常也写日志 —— 必须先于 runApp 挂钩子
   final oldError = FlutterError.onError;
   FlutterError.onError = (details) {
+    // 先**同步**打一行到控制台（logcat）：写崩溃文件走平台通道，一旦主线程被
+    // 死循环/长布局占住，通道就没人处理，异常正文会整个丢掉——排查壁纸卡死时就
+    // 是这个下场（文件里什么都没有，只能回头从 VM service 抠）
+    debugPrint(
+      '━━━ Flutter 异常 ${DateTime.now()} ━━━\n'
+      '${details.exception}\n${details.stack ?? ''}\n'
+      '━━━━━━━━━━━━━━━━━━━━━━━━',
+    );
     oldError?.call(details);
     CrashLogService.appendDartLog(
       '━━━ Flutter 异常 ${DateTime.now()} ━━━\n'
@@ -133,6 +142,14 @@ class _MoumouAppState extends State<MoumouApp> {
   String? _cacheFontFamily;
   FontWeight? _cacheFontWeight;
 
+  /// 上次构建 ThemeData 时的「壁纸是否生效」。
+  ///
+  /// 只有这个**布尔**进缓存键：壁纸生效时页面底色要透明（见 `AppTheme`）。
+  /// 缩放/位移/模糊/透明度这些滑杆数值**绝不能**进这里——它们每拖一帧都变，
+  /// 会把 ThemeData 重建拉到每帧一次（P2-39 缓存的意义就没了）；那些数值只
+  /// 影响 `WallpaperLayer`，由 AppFrame 侧监听 [WallpaperSettings] 重绘。
+  bool _cacheWallpaperActive = false;
+
   /// 缓存键是否仍然有效（任一输入变化 → 需要重建 ThemeData）
   bool _themeInputsChanged(
     Color seed,
@@ -140,13 +157,15 @@ class _MoumouAppState extends State<MoumouApp> {
     FlexSchemeVariant variant,
     String? fontFamily,
     FontWeight? fontWeight,
+    bool wallpaperActive,
   ) =>
       !_hasThemeCache ||
       _cacheSeed != seed ||
       _cacheMode != mode ||
       _cacheVariant != variant ||
       _cacheFontFamily != fontFamily ||
-      _cacheFontWeight != fontWeight;
+      _cacheFontWeight != fontWeight ||
+      _cacheWallpaperActive != wallpaperActive;
 
   @override
   void initState() {
@@ -156,6 +175,9 @@ class _MoumouAppState extends State<MoumouApp> {
     // load Future，防止「启动读盘未完成、用户刚选的主题/风格被 load 写回覆盖」
     // （§4.1/§7 的设置加载纪律；调色板风格迁移门控要求读到的启动期值可信）
     _themeController.ensureLoaded();
+    // 自定义壁纸：与主题同源（壁纸生效时主题底色要透明），也用 ensureLoaded
+    // 共享同一 load Future，避免「启动读盘未完成就渲染/切主题」
+    WallpaperSettings.instance.ensureLoaded();
     // 用 ensureLoaded 而非 load：setter 侧的 ensureLoaded 与这里共享同一
     // load Future，防止「启动读盘未完成、用户已改排序/字段/视图模式被覆盖」
     // （P1-31，§4.1/§7 的设置加载纪律）
@@ -328,22 +350,35 @@ class _MoumouAppState extends State<MoumouApp> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: Listenable.merge([_themeController, AppFontSettings.instance]),
+      listenable: Listenable.merge([
+        _themeController,
+        AppFontSettings.instance,
+        WallpaperSettings.instance,
+      ]),
       builder: (context, _) {
         final seed = _themeController.seedColor;
         final mode = _themeController.mode;
         final variant = _themeController.variant;
         final fontFamily = AppFontSettings.instance.effectiveFamily;
         final fontWeight = AppFontSettings.instance.effectiveFontWeight;
+        final wallpaperActive = WallpaperSettings.instance.active;
 
         // P2-39：输入未变则复用上次构建的 ThemeData（拖字号滑杆这类高频
         // rebuild 不再每帧重跑 flex_seed_scheme 的 HCT 派生）
-        if (_themeInputsChanged(seed, mode, variant, fontFamily, fontWeight)) {
+        if (_themeInputsChanged(
+          seed,
+          mode,
+          variant,
+          fontFamily,
+          fontWeight,
+          wallpaperActive,
+        )) {
           _cachedLight = AppTheme.light(
             seed,
             variant,
             fontFamily: fontFamily,
             fontWeight: fontWeight,
+            wallpaperActive: wallpaperActive,
           );
           // AMOLED 模式下深色主题换成纯黑版本
           _cachedDark = mode == AppThemeMode.amoled
@@ -352,18 +387,21 @@ class _MoumouAppState extends State<MoumouApp> {
                   variant,
                   fontFamily: fontFamily,
                   fontWeight: fontWeight,
+                  wallpaperActive: wallpaperActive,
                 )
               : AppTheme.dark(
                   seed,
                   variant,
                   fontFamily: fontFamily,
                   fontWeight: fontWeight,
+                  wallpaperActive: wallpaperActive,
                 );
           _cacheSeed = seed;
           _cacheMode = mode;
           _cacheVariant = variant;
           _cacheFontFamily = fontFamily;
           _cacheFontWeight = fontWeight;
+          _cacheWallpaperActive = wallpaperActive;
           _hasThemeCache = true;
         }
         final light = _cachedLight!;

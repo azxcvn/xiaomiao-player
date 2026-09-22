@@ -9,6 +9,7 @@ import 'package:moumou/services/view_settings.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/watch_state.dart';
 import 'package:moumou/widgets/file_selection_ui.dart';
+import 'package:moumou/widgets/wallpaper_surface.dart';
 
 /// 视频卡片：缩略图 + 名称 + 字段（列表视图与目录详情页共用）。
 ///
@@ -216,7 +217,9 @@ class _VideoCardState extends State<VideoCard> {
       elevation: 0,
       // 选中态优先于「已看完置灰」：置灰说的是「看过了」，选中说的是
       // 「现在要操作它」，后者是当下的意图，必须一眼看得见
-      color: widget.selected ? selectedCardColor(scheme) : cardColor,
+      color: widget.selected
+          ? wallpaperAwareSelectedCardColor(context, scheme)
+          : wallpaperAwareCardColor(context, cardColor),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: selectedCardSide(scheme, widget.selected),

@@ -147,7 +147,7 @@ class _FontSettingsPageState extends State<FontSettingsPage> {
                   child: Column(
                     children: [
                       if (hasFont) ...[
-                        _FontSlider(
+                        SettingsSliderRow(
                           label: '字体字号',
                           display: '${s.textScale.toStringAsFixed(2)}x',
                           value: s.textScale,
@@ -160,7 +160,7 @@ class _FontSettingsPageState extends State<FontSettingsPage> {
                           indent: 16,
                           endIndent: 16,
                         ),
-                        _FontSlider(
+                        SettingsSliderRow(
                           label: '字体字重',
                           display: _weightLabel(s.fontWeightIndex),
                           value: s.fontWeightIndex.toDouble(),
@@ -258,73 +258,6 @@ class _PreviewText extends StatelessWidget {
         fontWeight: weight,
         height: height,
         letterSpacing: letterSpacing,
-      ),
-    );
-  }
-}
-
-/// 设置页滑杆行（Kazumi 外观 + 右侧实时读数，改动实时写设置）
-class _FontSlider extends StatelessWidget {
-  final String label;
-  final String display;
-  final double value;
-  final double min;
-  final double max;
-  final int? divisions;
-  final ValueChanged<double> onChanged;
-
-  const _FontSlider({
-    required this.label,
-    required this.display,
-    required this.value,
-    required this.min,
-    required this.max,
-    required this.onChanged,
-    this.divisions,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    color: scheme.onSurface,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              Text(
-                display,
-                style: TextStyle(
-                  color: scheme.primary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ],
-          ),
-          SliderTheme(
-            data: kazumiSliderTheme(scheme),
-            child: Slider(
-              value: value.clamp(min, max),
-              min: min,
-              max: max,
-              divisions: divisions,
-              onChanged: onChanged,
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/widgets/wallpaper_surface.dart';
 
 /// 现代化设置界面的公共组件：分组标题 + 圆角卡片 + 设置项行。
 /// 供设置主页面、外观子页及后续新增的设置页复用。
@@ -147,7 +148,8 @@ class SettingsCard extends StatelessWidget {
     return Card(
       elevation: 0,
       margin: EdgeInsets.zero,
-      color: scheme.surfaceContainerLow,
+      // 壁纸生效时半透明（露出壁纸），否则原底色（见 wallpaper_surface.dart）
+      color: wallpaperAwareCardColor(context, scheme.surfaceContainerLow),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       clipBehavior: Clip.antiAlias,
       child: Padding(padding: padding, child: child),
@@ -291,6 +293,79 @@ class SettingsRadioTile extends StatelessWidget {
       trailing: selected
           ? Icon(Icons.check_circle, color: scheme.primary)
           : Icon(Icons.circle_outlined, color: scheme.outlineVariant),
+    );
+  }
+}
+
+/// 设置页滑杆行（Kazumi 外观 + 右侧实时读数，改动实时生效）。
+///
+/// 原先只存在于字体设置页（`font_page.dart` 的私有 `_FontSlider`）；壁纸调整页
+/// 需要同一套外观的 5 条滑杆，故提升到这里共用，避免同一观感在仓库里存两份。
+class SettingsSliderRow extends StatelessWidget {
+  final String label;
+
+  /// 右侧读数（如 `1.5x`、`12%`）；调用方负责格式化
+  final String display;
+  final double value;
+  final double min;
+  final double max;
+  final int? divisions;
+  final ValueChanged<double> onChanged;
+
+  const SettingsSliderRow({
+    super.key,
+    required this.label,
+    required this.display,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.onChanged,
+    this.divisions,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: scheme.onSurface,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              Text(
+                display,
+                style: TextStyle(
+                  color: scheme.primary,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+          SliderTheme(
+            data: kazumiSliderTheme(scheme),
+            child: Slider(
+              value: value.clamp(min, max),
+              min: min,
+              max: max,
+              divisions: divisions,
+              onChanged: onChanged,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,13 +1,18 @@
+import 'dart:io';
+
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_color_picker_plus/flutter_color_picker_plus.dart';
 import 'package:moumou/pages/settings/font_page.dart';
+import 'package:moumou/pages/settings/wallpaper_editor_page.dart';
 import 'package:moumou/services/device_services.dart';
+import 'package:moumou/services/wallpaper_settings.dart';
 import 'package:moumou/theme/theme_controller.dart';
 import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/widgets/settings_ui.dart';
 
-/// 外观设置子页：外观模式 / 主题色 / 调色板风格
+/// 外观设置子页：外观模式 / 主题色 / 调色板风格 / 字体 / 自定义壁纸
 ///
 /// 主题色：纯代表色块 + 名称，固定行列网格；调色板风格：固定网格按钮。
 /// 两者均无预览、无布局跳动（选中态用边框 + 角标，格子尺寸恒定）。
@@ -86,6 +91,10 @@ class AppearancePage extends StatelessWidget {
                   },
                 ),
               ),
+              const SizedBox(height: 20),
+              // ── 自定义壁纸 ──────────────────────────────
+              const SettingsGroupTitle(title: '壁纸'),
+              const _WallpaperCard(),
             ],
           );
         },
@@ -641,3 +650,167 @@ class _CustomColorDialogState extends State<_CustomColorDialog> {
 }
 
 enum _ValueKind { rgb, hsv, hsl }
+
+/// 自定义壁纸卡片：缩略图 + 选择/替换、调整、清除。
+///
+/// 流程（对齐参考实现 mpvRx）：选图 → **直接进调整页** → 点「保存壁纸」才生效；
+/// 无壁纸时只显示「选择壁纸」，有壁纸时显示「替换壁纸 / 调整 / 清除」。
+/// 「清除」同时删掉应用目录里的壁纸文件并复位全部参数（原图不受影响）。
+class _WallpaperCard extends StatelessWidget {
+  const _WallpaperCard();
+
+  Future<void> _pick(BuildContext context) async {
+    // 系统选择器（Android 13+ 的 Photo Picker 带缩略图网格；没有该模块的 ROM /
+    // 模拟器会依次退到 SAF、ACTION_GET_CONTENT）；原生已把选中的图拷进应用导入
+    // 目录并返回真实路径
+    String? picked;
+    try {
+      picked = await DeviceServices.pickWallpaperImage();
+    } on PlatformException {
+      // 这台设备没有任何可用的系统图片选择器：明确提示，别让用户以为点了没反应
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('这台设备没有可用的系统图片选择器'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      return;
+    }
+    if (picked == null || !context.mounted) return;
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => WallpaperEditorPage(sourcePath: picked)),
+    );
+    // 导入目录里那张临时文件已无用（保存时 Dart 侧已把它搬进壁纸目录）：清掉，
+    // 免得在应用私有目录里留一份；没保存也要清（用户重新选一次会覆盖）
+    try {
+      final temp = File(picked);
+      if (temp.existsSync()) await temp.delete();
+    } catch (_) {
+      // 删不掉不影响功能（下次选择前原生也会清空导入目录）
+    }
+  }
+
+  Future<void> _adjust(BuildContext context) async {
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const WallpaperEditorPage()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = WallpaperSettings.instance;
+    return ListenableBuilder(
+      listenable: settings,
+      builder: (context, _) {
+        final scheme = Theme.of(context).colorScheme;
+        final path = settings.path;
+        final hasWallpaper = settings.active;
+        return SettingsCard(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _thumbnail(scheme, path),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            '自定义壁纸',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            hasWallpaper
+                                ? '壁纸显示在页面内容与顶部栏之后'
+                                : '选一张图片，铺在页面内容与顶部栏之后',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.tonal(
+                        onPressed: () => _pick(context),
+                        child: Text(
+                          hasWallpaper ? '替换壁纸' : '选择壁纸',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    if (hasWallpaper) ...[
+                      const SizedBox(width: 8),
+                      OutlinedButton(
+                        onPressed: () => _adjust(context),
+                        child: const Text('调整'),
+                      ),
+                      const SizedBox(width: 4),
+                      TextButton(
+                        onPressed: settings.clear,
+                        child: const Text('清除'),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// 缩略预览（图片为空或文件丢失时退回图标，绝不抛异常）
+  Widget _thumbnail(ColorScheme scheme, String? path) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        width: 56,
+        height: 56,
+        child: path == null || path.isEmpty
+            ? ColoredBox(
+                color: scheme.surfaceContainerHighest,
+                child: Icon(
+                  Icons.wallpaper_outlined,
+                  color: scheme.onSurfaceVariant,
+                ),
+              )
+            : Image(
+                image: ResizeImage(
+                  FileImage(File(path)),
+                  width: 128,
+                  allowUpscaling: false,
+                ),
+                fit: BoxFit.cover,
+                errorBuilder: (context, _, _) => ColoredBox(
+                  color: scheme.surfaceContainerHighest,
+                  child: Icon(
+                    Icons.broken_image_outlined,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+      ),
+    );
+  }
+}
+

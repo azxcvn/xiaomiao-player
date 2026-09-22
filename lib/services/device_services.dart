@@ -390,9 +390,25 @@ class DeviceServices {
     }
   }
 
-  /// 打开「字体」系统文件选择器：MIME 含 font/*（.ttf/.otf 不再置灰）。
-  static Future<String?> openFontPicker() async {
+  /// 选一张壁纸图片：调用**系统选择器**，原生侧按候选链挑第一个有承接方的
+  /// （Android 13+ 的 Photo Picker → SAF → `ACTION_GET_CONTENT`），随即把图拷进
+  /// 应用私有目录，返回**真实绝对路径**；取消返回 null。
+  ///
+  /// 这台设备连系统选择器都没有时抛 `PlatformException(code: NO_PICKER)`——
+  /// 调用方要能区分「用户取消」和「没得选」，否则点了没反应会像卡死。
+  static Future<String?> pickWallpaperImage() async {
     try {
+      return await _channel.invokeMethod<String>('pickWallpaperImage');
+    } on PlatformException catch (e) {
+      if (e.code == 'NO_PICKER') rethrow;
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// 打开「字体」系统文件选择器：MIME 含 font/*（.ttf/.otf 不再置灰）。
+  static Future<String?> openFontPicker() async {    try {
       return await _channel.invokeMethod<String>('openFontPicker');
     } catch (_) {
       return null;
