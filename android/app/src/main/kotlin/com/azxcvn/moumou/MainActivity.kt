@@ -1265,19 +1265,23 @@ class MainActivity : FlutterActivity() {
      * 3. `ACTION_GET_CONTENT`（相册 / 文件管理器，任何 Android 都有承接方）。
      *
      * Photo Picker 是**可选模块**：模拟器 / 精简 ROM 上可能根本没有这个 Activity
-     * （用户实测 MuMu 上点了没反应——`startActivityForResult` 直接抛
-     * ActivityNotFoundException）。所以这里不写死一个，而是列候选、依次尝试启动。
+     * （`startActivityForResult` 会抛 ActivityNotFoundException），所以不写死一个，
+     * 而是列候选、依次尝试启动。
      *
-     * 注意：KDoc 里**不能**写 `image` 加斜杠加星号那种 MIME 通配——Kotlin 的块注释
-     * 可以嵌套，那个斜杠星号会开一层新注释，把后面整个文件吞掉（踩过一次）。
+     * 注意：KDoc 里**不能**写图片 MIME 的通配写法（星号紧跟斜杠）——Kotlin 的块注释
+     * 可以嵌套，那个组合会开一层新注释，把后面整个文件吞掉（踩过一次）。
      */
     private fun buildImagePickerIntents(): List<Intent> {
         val intents = mutableListOf<Intent>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // 单选**不要**传 EXTRA_PICK_IMAGES_MAX：该 extra 只在多选
+            // （EXTRA_ALLOW_MULTIPLE）时有意义，单选传 1 会被系统 Photo Picker 判为
+            // 非法（Android 15 实测抛 IllegalArgumentException: Invalid
+            // EXTRA_PICK_IMAGES_MAX value）→ 选择器一进 onCreate 就自己结束，
+            // 用户看到的就是「点了没反应」（启动没抛异常，所以下面那条候选链不会接管）
             intents.add(
                 Intent(MediaStore.ACTION_PICK_IMAGES).apply {
                     type = "image/*"
-                    putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, 1)
                 }
             )
         }
