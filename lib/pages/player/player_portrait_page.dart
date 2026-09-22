@@ -322,6 +322,11 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   bool _controlsVisible = true;
   Timer? _hideTimer;
 
+  /// 下一次「暂停」事件不呼出控制层（双击暂停专用，一次性）：
+  /// 用户双击只是想暂停，控制条不该跟着弹出来（用户反馈）。
+  /// 由 [_togglePlay] 置位、`playing` 流消费，任何一次状态变化后都清掉。
+  bool _suppressControlsOnNextPause = false;
+
   /// 手势指示器（音量/亮度共用，2 秒无操作自动隐藏）。
   /// 数值/boosting 来自共享会话状态（[_session]），本页只负责显示与自动隐藏。
   ({GestureIndicatorKind kind, double value, bool boosting})? _indicator;
@@ -522,8 +527,12 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         if (!mounted) return;
         setState(() {
           _playing = p;
+          // 双击暂停：这次不呼出控制层（见 [_suppressControlsOnNextPause]，
+          // 与横屏页同款）；一次性标志，任何一次状态变化后立即清掉
+          final suppress = !p && _suppressControlsOnNextPause;
+          _suppressControlsOnNextPause = false;
           // 暂停时总是显示控制层（含中央播放键）
-          if (!p) _controlsVisible = true;
+          if (!p && !suppress) _controlsVisible = true;
         });
       }),
     );
@@ -688,7 +697,12 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
 
   // ── 播放控制 ────────────────────────────────────────────
 
-  Future<void> _togglePlay() async {
+  /// 播放 / 暂停（中央按钮与双击手势共用）。
+  ///
+  /// [fromDoubleTap]：双击**暂停**时不呼出控制层（见
+  /// [_suppressControlsOnNextPause]）；双击恢复播放不受影响。
+  Future<void> _togglePlay({bool fromDoubleTap = false}) async {
+    if (fromDoubleTap && _playing) _suppressControlsOnNextPause = true;
     await _player.playOrPause();
     _resetHideTimer();
   }
@@ -719,7 +733,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       case null:
         return;
       case DoubleTapGesture.pauseToggle:
-        _togglePlay();
+        _togglePlay(fromDoubleTap: true);
       case DoubleTapGesture.seekBackward:
         _seekBy(-_settings.seekSeconds);
       case DoubleTapGesture.seekForward:

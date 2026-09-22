@@ -155,6 +155,11 @@ class _PlayerPageState extends State<PlayerPage>
   late String _title;
   bool _controlsVisible = true;
 
+  /// 下一次「暂停」事件不呼出控制层（双击暂停专用，一次性）：
+  /// 用户双击只是想暂停，控制条不该跟着弹出来（用户反馈）。
+  /// 由 [_togglePlay] 置位、`playing` 流消费，任何一次状态变化后都清掉。
+  bool _suppressControlsOnNextPause = false;
+
   /// 当前媒体的网络存储来源（null = 本地文件；切集/B 站播放会清空）。
   VideoFile? _networkSource;
 
@@ -554,9 +559,13 @@ class _PlayerPageState extends State<PlayerPage>
         if (!mounted) return;
         setState(() {
           _playing = p;
+          // 双击暂停：这次不呼出控制层（见 [_suppressControlsOnNextPause]）；
+          // 一次性标志，任何一次播放状态变化后立即清掉，不影响别的暂停路径
+          final suppress = !p && _suppressControlsOnNextPause;
+          _suppressControlsOnNextPause = false;
           // 暂停时总是显示控制层（含中央播放键）；
           // 退出期间 pause 冻结末帧不弹控制层（防退出时控制条闪现）
-          if (!p && !_locked && !_exiting) {
+          if (!p && !suppress && !_locked && !_exiting) {
             _controlsVisible = true;
             _controlsController.forward();
           }
@@ -1387,7 +1396,12 @@ class _PlayerPageState extends State<PlayerPage>
       );
   }
 
-  Future<void> _togglePlay() async {
+  /// 播放 / 暂停（中央按钮与双击手势共用）。
+  ///
+  /// [fromDoubleTap]：双击**暂停**时不呼出控制层（见
+  /// [_suppressControlsOnNextPause]）；双击恢复播放不受影响。
+  Future<void> _togglePlay({bool fromDoubleTap = false}) async {
+    if (fromDoubleTap && _playing) _suppressControlsOnNextPause = true;
     await _player.playOrPause();
     _resetHideTimer();
   }
@@ -1413,7 +1427,7 @@ class _PlayerPageState extends State<PlayerPage>
       case null:
         return;
       case DoubleTapGesture.pauseToggle:
-        _togglePlay();
+        _togglePlay(fromDoubleTap: true);
       case DoubleTapGesture.seekBackward:
         _seekBy(-_settings.seekSeconds);
       case DoubleTapGesture.seekForward:
