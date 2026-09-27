@@ -1242,7 +1242,7 @@ class SubtitleMiscPanel extends StatelessWidget {
                   const Divider(height: 1, indent: 16, endIndent: 16, color: Colors.white12),
                   _SettingSlider(
                     label: '垂直位置',
-                    display: (v) => '${v.round()}（100=底部）',
+                    display: (v) => '${v.round()}（100=窗口底部）',
                     value: settings.position,
                     min: SubtitleSettings.minPos,
                     max: SubtitleSettings.maxPos,

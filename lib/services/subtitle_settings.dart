@@ -83,9 +83,13 @@ class SubtitleSettings extends ChangeNotifier {
   static const double minScale = 0.5;
   static const double maxScale = 3.0;
 
-  /// 垂直位置范围（mpv sub-pos，100 = 屏幕底部）
+  /// 垂直位置范围（mpv sub-pos，0 – 150）
+  ///
+  /// 100 = **窗口**底部（mpv 排版字幕用的是整个窗口矩形，黑边算在内），
+  /// 100 以上把字幕压进下方黑边：源码 `options/options.c` 里
+  /// `{"sub-pos", OPT_FLOAT(sub_pos[0]), M_RANGE(0.0, 150.0)}`。
   static const double minPos = 0;
-  static const double maxPos = 100;
+  static const double maxPos = 150;
 
   /// 描边/阴影/间距等 0 – 20 的通用上限
   static const double maxStyleValue = 20;
