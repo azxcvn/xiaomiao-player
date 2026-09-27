@@ -11,8 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// ChangeNotifier + shared_preferences 持久化，播放页均衡器面板与
 /// [AudioController] 共同监听。
 ///
-/// 与小喵 player 一致，均衡器是**跨会话持久化**状态（区别于声道/音频处理
-/// 的会话级状态）；用户调节后立即写盘并重应用 mpv `af` 滤镜链。
+/// 与小喵 player 一致，均衡器是**跨会话持久化**状态（声道/音频处理的
+/// 持久化见 [AudioSettings]）；用户调节后立即写盘并重应用 mpv `af` 滤镜链。
 class EqualizerSettings extends ChangeNotifier {
   static final EqualizerSettings instance = EqualizerSettings._();
 

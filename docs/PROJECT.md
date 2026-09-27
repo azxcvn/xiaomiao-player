@@ -106,7 +106,8 @@ lib/
 │   ├── pinned_folders_settings.dart # 固定文件夹设置
 │   ├── file_operations_service.dart # 文件管理服务（复制/移动/重命名/删除 + 进度与取消）
 │   ├── file_selection_controller.dart # 页面级多选状态（非单例）
-│   ├── audio_service.dart     # 音频控制器（音轨列表/单选/外部音轨/声道/af 滤镜链 + 不可播放音轨回退）
+│   ├── audio_service.dart     # 音频控制器（音轨列表/单选/外部音轨/af 滤镜链 + 不可播放音轨回退；声道与音频处理的真值在 audio_settings）
+│   ├── audio_settings.dart    # 音频声道 / 音频处理设置（跨会话持久化）
 │   ├── subtitle_settings.dart # 字幕设置（延迟/大小/位置/颜色/描边/背景框/内嵌样式覆盖/自定义字体/外挂记忆）
 │   ├── subtitle_service.dart  # 字幕控制器（单选模型 + 同名自动加载 + 按字段样式写入 + 等待式轨道刷新 + 切轨钉回）
 │   ├── app_font_settings.dart # App 全局字体设置
@@ -380,7 +381,7 @@ utils（纯工具）    → 只依赖 models
 - **首页**：`HomePage` 负责权限门禁（「允许管理所有文件」）、视图分发、搜索、多选与速拨入口。
 - **存储卷跳转**：自建目录选择器（媒体扫描黑白名单 / 下载目录 / 字幕与音频导入）顶部列出已挂载存储卷胶囊（`StorageRootSelector` + `StorageRoot`），点击即跳到该卷根。**外置卷只能由原生 `getStorageRoots` 枚举得到**——`/storage` 目录本身在 Android 11+ 上即使持有「所有文件访问」也列不出来（授权只到各卷根，不含 `/storage` 这个挂载点容器），此前选择器起点写死 `/storage/emulated/0` 导致 SD 卡/TF 卡完全无法进入。
 - **播放历史**：`PlaybackHistoryService` 记录可重放来源（本地路径 / 在线直链），去重置顶、上限淘汰，首页速拨「最近播放」直启。
-- **进度**：`PlaybackProgressService` 单例，`path → 毫秒` 映射，串行写盘 + 节流；播放页恢复进度走 `openAndRestore`（暂停加载 → 静音激活时间线 → seek → 位置确认）。
+- **进度**：`PlaybackProgressService` 单例，`path → 毫秒` 映射，串行写盘 + 节流；播放页恢复进度走 `openAndRestore`（暂停加载 → 静音激活时间线 → seek → 位置确认）。卡片进度条与「未观看 / 观看中 / 已看完」按 `时长` 换算，而**扫描器对 `.nomedia` / 隐藏文件夹里的条目给不出时长**（原生文件系统补扫不为整盘逐个开容器）——`VideoCard` 对这些条目按需再调一次 `getVideoDuration`（只读容器元数据）补上，否则它们永远显示「未观看」。
 
 ### 5.2 播放器
 
@@ -410,7 +411,7 @@ utils（纯工具）    → 只依赖 models
 
 ### 5.5 音频与听视频
 
-- **控制器**：`AudioService` 管理音轨列表与单选、外部音轨导入/移除（临时）、音频声道、音频处理（音量标准化 / 动态范围压缩）与 `af` 滤镜链；声道与处理为会话级，随播放器生命周期重置。
+- **控制器**：`AudioService` 管理音轨列表与单选、外部音轨导入/移除（临时）、音频声道、音频处理（音量标准化 / 动态范围压缩）与 `af` 滤镜链；声道与音频处理的**唯一真值在 `AudioSettings`（跨会话持久化）**，控制器只订阅并下发 mpv。
 - **均衡器**：`EqualizerSettings` 全局持久化 5 频段 + 低音增强 + 虚拟环绕 + 预设，由 `AudioService` 订阅后重应用滤镜链。
 - **音轨回退**：换轨后在短窗口内消费 mpv 日志，命中音频失败特征时复核 `audio-params` 并自动回退到可用音轨。
 - **听视频**：`AudioPlayerPage` 复用共享 Player 只播音频，提供封面模糊背景、1:1 圆角封面、胶囊式倍速/列表、定时关闭、后台播放（前台服务）与时间刻随机播放。

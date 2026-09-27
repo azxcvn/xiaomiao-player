@@ -15,7 +15,7 @@ import 'package:moumou/widgets/player_panel.dart';
 /// - **音频处理**：音量标准化 / 动态范围压缩（胶囊开关）。
 ///
 /// 面板共用 [AudioController]（横竖屏共享同一实例）。声道/音频处理为
-/// 会话级状态（每次进播放器重置），直接由 [AudioController] 承载。
+/// **跨会话持久化**状态（[AudioSettings]，选一次即记住）。
 ///
 /// [onPushSubPage]：面板内二级页就地切换回调——横屏页传 [PlayerPanelNavigator]、
 /// 竖屏页传 [PlayerBottomPanelNavigator] 的 push（§4.5 约定，页面侧注入）。

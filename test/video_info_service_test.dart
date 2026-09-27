@@ -35,6 +35,9 @@ void main() {
           'subtitleCodec': 'subrip',
         };
       }
+      if (call.method == 'getVideoDuration') {
+        return 300000;
+      }
       if (call.method == 'clearCache' || call.method == 'clearAllCaches') {
         return null;
       }
@@ -123,6 +126,35 @@ void main() {
       await VideoInfoService.get('/video/a.mp4');
       // 3 + 1 (clearAllCaches invoke) + 1 (get again) = 5
       expect(callCount, 5);
+    });
+  });
+
+  group('VideoInfoService 时长兜底（.nomedia / 隐藏文件夹条目）', () {
+    test('读取时长并命中内存缓存，只调一次通道', () async {
+      final ms = await VideoInfoService.getDuration('/video/nomedia.mp4');
+      expect(ms, 300000);
+
+      final again = await VideoInfoService.getDuration('/video/nomedia.mp4');
+      expect(again, 300000);
+      expect(callCount, 1);
+    });
+
+    test('异常时不缓存失败结果（下次仍可重试）', () async {
+      shouldThrow = true;
+      expect(await VideoInfoService.getDuration('/video/x.mp4'), 0);
+
+      shouldThrow = false;
+      expect(await VideoInfoService.getDuration('/video/x.mp4'), 300000);
+      expect(callCount, 2);
+    });
+
+    test('clearCache(path) 同步失效时长缓存', () async {
+      await VideoInfoService.getDuration('/video/a.mp4');
+      expect(callCount, 1);
+
+      VideoInfoService.clearCache('/video/a.mp4');
+      await VideoInfoService.getDuration('/video/a.mp4');
+      expect(callCount, 2);
     });
   });
 }

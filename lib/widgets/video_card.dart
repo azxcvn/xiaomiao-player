@@ -63,6 +63,18 @@ class _VideoCardState extends State<VideoCard> {
   String? _thumbPath;
   VideoBasicMetadata? _meta;
 
+  /// 扫描器没给出时长时的兜底值（懒加载，见 [_loadDuration]）
+  int? _lazyDurationMs;
+
+  /// 本卡片使用的时长：优先扫描器的 `VideoFile.durationMs`，为空时用兜底值。
+  ///
+  /// `.nomedia` / 隐藏文件夹里的视频由原生文件系统补扫得到，那些条目
+  /// `durationMs` 恒为 0；不补的话进度条、「已看百分比」与「未观看」判定
+  /// 全部失效（`classifyWatchState` 时长 ≤ 0 直接判未观看）。
+  int get _durationMs => widget.video.durationMs > 0
+      ? widget.video.durationMs
+      : (_lazyDurationMs ?? 0);
+
   /// 是否需要加载基本元数据（帧率 / 字幕指示器字段启用时）
   bool get _needMeta =>
       widget.fields.contains(VideoField.frameRate) ||
@@ -72,6 +84,7 @@ class _VideoCardState extends State<VideoCard> {
   void initState() {
     super.initState();
     _loadThumb();
+    if (widget.video.durationMs <= 0) _loadDuration();
     if (_needMeta) _loadMeta();
   }
 
@@ -81,7 +94,9 @@ class _VideoCardState extends State<VideoCard> {
     if (oldWidget.video.path != widget.video.path) {
       _thumbPath = null;
       _meta = null;
+      _lazyDurationMs = null;
       _loadThumb();
+      if (widget.video.durationMs <= 0) _loadDuration();
       if (_needMeta) _loadMeta();
     } else if (_needMeta && _meta == null) {
       _loadMeta();
@@ -108,6 +123,16 @@ class _VideoCardState extends State<VideoCard> {
     setState(() => _meta = meta);
   }
 
+  /// 时长兜底：扫描器没给时长（`.nomedia` / 隐藏文件夹 / 补扫超预算的条目）
+  /// 时按需向原生要一次，拿到后刷新进度条与观看状态。
+  Future<void> _loadDuration() async {
+    // 网络来源视频没有本地文件，远端时长由播放页回报（见 NetworkViewSettings）
+    if (widget.video.source == VideoSource.network) return;
+    final ms = await VideoInfoService.getDuration(widget.video.path);
+    if (!mounted || ms <= 0 || _lazyDurationMs == ms) return;
+    setState(() => _lazyDurationMs = ms);
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -117,7 +142,7 @@ class _VideoCardState extends State<VideoCard> {
         PlaybackProgressService.instance.getProgress(widget.video.path);
 
     // ── 观看状态：未观看 / 观看中 / 已看完（看完置灰）────────
-    final durationMs = widget.video.durationMs;
+    final durationMs = _durationMs;
     final threshold = PlayerControlsSettings.instance.watchThreshold;
     final state = classifyWatchState(
       durationMs: durationMs,
@@ -269,7 +294,7 @@ class _VideoCardState extends State<VideoCard> {
                           left: 0,
                           right: 0,
                           bottom: 0,
-                          child: _buildProgressBar(scheme, progress),
+                          child: _buildProgressBar(scheme, progress, durationMs),
                         ),
                       // 大小：左下角
                       if (sizeText != null && sizeText.isNotEmpty)
@@ -336,11 +361,12 @@ class _VideoCardState extends State<VideoCard> {
     );
   }
 
-  Widget _buildProgressBar(ColorScheme scheme, Duration progress) {
-    final ratio = (progress.inMilliseconds / widget.video.durationMs).clamp(
-      0.0,
-      1.0,
-    );
+  Widget _buildProgressBar(
+    ColorScheme scheme,
+    Duration progress,
+    int durationMs,
+  ) {
+    final ratio = (progress.inMilliseconds / durationMs).clamp(0.0, 1.0);
     return Container(
       height: 3,
       color: Colors.black.withValues(alpha: 0.4),

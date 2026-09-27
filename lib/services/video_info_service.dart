@@ -35,6 +35,9 @@ class VideoInfoService {
   /// 基本元数据内存缓存（帧率 / 字幕）
   static final Map<String, VideoBasicMetadata> _metaCache = {};
 
+  /// 时长兜底内存缓存（`getVideoDuration`，见 [getDuration]）
+  static final Map<String, int> _durationCache = {};
+
   /// 在飞去重：同 path 的并发请求共享同一个 Future（列表首屏几十张卡片
   /// 同时发起时只发一次跨进程调用，见 risk_audit #5）。
   /// 走公共原语 [AsyncSingleFlight]（§4.29）。
@@ -44,15 +47,20 @@ class VideoInfoService {
   static final AsyncSingleFlight<VideoBasicMetadata> _metaFlight =
       AsyncSingleFlight();
 
+  /// 时长兜底在飞去重（同上）
+  static final AsyncSingleFlight<int> _durationFlight = AsyncSingleFlight();
+
   /// 清理视频信息与基本元数据内存缓存。
   /// 若指定 [path]，只清理该路径对应的缓存项；若为 null，则清空全部内存缓存。
   static void clearCache([String? path]) {
     if (path != null) {
       _cache.remove(path);
       _metaCache.remove(path);
+      _durationCache.remove(path);
     } else {
       _cache.clear();
       _metaCache.clear();
+      _durationCache.clear();
     }
   }
 
@@ -75,6 +83,35 @@ class VideoInfoService {
     } catch (_) {
       // 原生异常（文件不存在、权限或解析失败）：返回安全兜底，且不存入 _cache 允许后续重试
       return const VideoInfo(durationMs: 0, thumbPath: null);
+    }
+  }
+
+  /// 获取视频时长（毫秒；失败 / 未知返回 0）。
+  ///
+  /// 用途：`VideoScanner` 的时长来自 MediaStore，而 `.nomedia` / 隐藏文件夹
+  /// 里的视频只能靠原生**文件系统补扫**拿到，那些条目时长恒为 0（整盘补扫
+  /// 逐个开容器代价太大，见 MainActivity 的 `scanFsFolder`）。列表卡片的
+  /// 「未观看 / 进度条 / 时长标签」全靠时长判定，所以卡片对时长未知的视频
+  /// 按需调这里补一次——只读容器元数据、不抓帧/不解码。
+  ///
+  /// 缓存与 [get] 同纪律：成功才入内存缓存（失败允许下次重试）。
+  static Future<int> getDuration(String path) async {
+    final cached = _durationCache[path];
+    if (cached != null) return cached;
+    return _durationFlight.run(path, () => _fetchDuration(path));
+  }
+
+  static Future<int> _fetchDuration(String path) async {
+    try {
+      // 原生直接回毫秒整数（与 getVideoInfo 的 map 不同：这里只有一个值）
+      final ms = await _channel.invokeMethod<int>('getVideoDuration', {
+        'path': path,
+      });
+      final value = ms ?? 0;
+      if (value > 0) _durationCache[path] = value;
+      return value;
+    } catch (_) {
+      return 0;
     }
   }
 

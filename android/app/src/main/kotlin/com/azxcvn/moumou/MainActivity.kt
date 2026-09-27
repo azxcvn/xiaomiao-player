@@ -166,6 +166,21 @@ class MainActivity : FlutterActivity() {
                             }.start()
                         }
                     }
+                    // 卡片时长兜底：扫描器拿不到时长的视频（.nomedia / 隐藏文件夹 /
+                    // 外置卷补扫超时间预算）列表里会永远显示「未观看」且没有进度条
+                    // ——它只读容器元数据、不抓帧，由卡片按需对「时长未知」的可见项
+                    // 调用一次（不放进 getVideos 全盘扫描，避免整盘逐个开容器）
+                    "getVideoDuration" -> {
+                        val path = call.argument<String>("path")
+                        if (path == null) {
+                            result.error("INVALID_ARG", "path is null", null)
+                        } else {
+                            Thread {
+                                val durationMs = extractDurationMs(path)
+                                runOnUiThread { result.success(durationMs) }
+                            }.start()
+                        }
+                    }
                     // 列表字段「帧率 / 字幕指示器」：MediaInfoLib 快速解析 + 磁盘缓存
                     "getVideoBasicMetadata" -> {
                         val path = call.argument<String>("path")

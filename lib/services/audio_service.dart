@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart' hide AudioTrack;
 import 'package:moumou/models/audio_track.dart';
+import 'package:moumou/services/audio_settings.dart';
 import 'package:moumou/services/equalizer_settings.dart';
 
 /// 判断一条 mpv 日志是否代表「当前选中的音轨放不出来」。
@@ -81,9 +82,9 @@ AudioTrack? pickFallbackAudioTrack({
 /// - **单选模型**（只允许同时启用一条音轨，参考 mpv `aid`）；
 /// - 外部音轨**临时**（工作.md 音频功能：退出播放后不保留）——只存内存，
 ///   切集 mpv 自动卸载外部音轨，[clear] 清空内存状态，不做任何持久化；
-/// - **声道 / 音频处理为会话级状态**（工作.md 音频功能：每次进播放器重置）——
-///   控制器随播放器生命周期创建，字段初始化为默认值（安全自动 / 音量标准化关 /
-///   动态范围压缩关），不跨播放会话持久化；
+/// - **声道 / 音频处理跨会话持久化**（用户反馈「选好再进就回到默认」）——
+///   唯一真值在全局单例 [AudioSettings]（shared_preferences，同
+///   [EqualizerSettings] 模式），控制器只负责订阅 + 下发 mpv，不再自己存字段；
 /// - **不可播放音轨自动回退**：用户**显式换轨后的 4 秒窗口内**订阅 `Player.stream.log`，
 ///   命中 [isAudioPlaybackFailureLog] 时先读 `audio-params` 复核（真失败 = 无有效
 ///   输出格式），再切到 [pickFallbackAudioTrack] 选出的另一条音轨并回调
@@ -110,6 +111,11 @@ class AudioController extends ChangeNotifier {
     // 监听均衡器设置：用户调均衡器时自动重应用 af 滤镜链（均衡器为
     // 全局持久化状态，控制器随播放器生命周期，故在构造订阅、dispose 反订阅）
     EqualizerSettings.instance.addListener(_onEqualizerChanged);
+    // 监听声道 / 音频处理设置：同一套「全局持久化 + 控制器订阅」模式。
+    // 首次 [AudioSettings.ensureLoaded] 读盘完成时会通知一次，本次进播放器
+    // 即使早于读盘就 open，也能在读到持久化值后立刻重应用
+    AudioSettings.instance.addListener(_onAudioSettingsChanged);
+    unawaited(AudioSettings.instance.ensureLoaded());
   }
 
   final Player _player;
@@ -141,20 +147,18 @@ class AudioController extends ChangeNotifier {
     applyAudioOptions();
   }
 
-  // ── 会话级设置（每次进播放器重置，不持久化）────────────
+  /// 声道 / 音频处理设置变更（用户点选或首次读盘完成）→ 通知面板重绘 +
+  /// 重应用 `audio-channels` / `af`。
+  void _onAudioSettingsChanged() {
+    notifyListeners();
+    applyAudioOptions();
+  }
 
-  /// 音频声道（默认安全自动）
-  AudioChannels _channels = AudioChannels.autoSafe;
+  // ── 声道 / 音频处理（跨会话持久化，真值在 [AudioSettings]）────────
 
-  /// 音量标准化开关（默认关闭）
-  bool _volumeNormalization = false;
-
-  /// 动态范围压缩开关（默认关闭）
-  bool _drc = false;
-
-  AudioChannels get channels => _channels;
-  bool get volumeNormalization => _volumeNormalization;
-  bool get drc => _drc;
+  AudioChannels get channels => AudioSettings.instance.channels;
+  bool get volumeNormalization => AudioSettings.instance.volumeNormalization;
+  bool get drc => AudioSettings.instance.drc;
 
   /// 当前媒体的全部音轨（空 = 无音轨）
   List<AudioTrack> _tracks = const [];
@@ -180,28 +184,24 @@ class AudioController extends ChangeNotifier {
     return platform is NativePlayer ? platform : null;
   }
 
-  /// 设置音频声道并立即应用（会话级，不持久化）。
+  /// 设置音频声道并立即应用（写入 [AudioSettings]，跨会话生效）。
+  ///
+  /// 不做「值相同就跳过」的前置判断：设置单例内部先 await 读盘再比较，
+  /// 才是与持久化值一致的口径（本控制器字段只是转发）。
   Future<void> setChannels(AudioChannels v) async {
-    if (_channels == v) return;
-    _channels = v;
-    notifyListeners();
-    await applyAudioOptions();
+    // 落盘 + notifyListeners 由设置单例完成，本控制器经
+    // [_onAudioSettingsChanged] 重应用 mpv 属性
+    await AudioSettings.instance.setChannels(v);
   }
 
-  /// 设置音量标准化开关并立即应用（会话级，不持久化）。
+  /// 设置音量标准化开关并立即应用（写入 [AudioSettings]，跨会话生效）。
   Future<void> setVolumeNormalization(bool v) async {
-    if (_volumeNormalization == v) return;
-    _volumeNormalization = v;
-    notifyListeners();
-    await applyAudioOptions();
+    await AudioSettings.instance.setVolumeNormalization(v);
   }
 
-  /// 设置动态范围压缩开关并立即应用（会话级，不持久化）。
+  /// 设置动态范围压缩开关并立即应用（写入 [AudioSettings]，跨会话生效）。
   Future<void> setDrc(bool v) async {
-    if (_drc == v) return;
-    _drc = v;
-    notifyListeners();
-    await applyAudioOptions();
+    await AudioSettings.instance.setDrc(v);
   }
 
   /// 读取当前媒体的音轨列表（仅 audio 类型；'no' 等伪轨排除）。
@@ -474,24 +474,24 @@ class AudioController extends ChangeNotifier {
 
   /// 应用音频声道 + 音频处理 + 均衡器（`audio-channels` + `af` 滤镜链）。
   ///
-  /// 声道/音频处理值来自本控制器的会话级字段（每次进播放器重置为默认）；
-  /// 均衡器/低音/虚拟环绕值来自全局持久化的 [EqualizerSettings.instance]
-  /// （与小喵 player 的「均衡器跨会话恢复」一致）。
+  /// 声道/音频处理值来自全局持久化的 [AudioSettings.instance]，均衡器/低音/
+  /// 虚拟环绕值来自 [EqualizerSettings.instance]（两者都跨会话恢复）。
   Future<void> applyAudioOptions() async {
     final native = _native;
     if (native == null) return;
     try {
+      final audio = AudioSettings.instance;
       await native.setProperty(
         'audio-channels',
-        audioChannelsPropertyValue(_channels),
+        audioChannelsPropertyValue(audio.channels),
       );
       final eq = EqualizerSettings.instance;
       await native.setProperty(
         'af',
         buildAudioFilterChain(
-          channels: _channels,
-          volumeNormalization: _volumeNormalization,
-          drc: _drc,
+          channels: audio.channels,
+          volumeNormalization: audio.volumeNormalization,
+          drc: audio.drc,
           eqBands: eq.bands,
           eqEnabled: eq.enabled,
           // 与小喵 player 一致：「启用均衡器」开关同时门控低音增强与
@@ -516,6 +516,7 @@ class AudioController extends ChangeNotifier {
     _logSubscription?.cancel();
     _selectionProbeTimer?.cancel();
     EqualizerSettings.instance.removeListener(_onEqualizerChanged);
+    AudioSettings.instance.removeListener(_onAudioSettingsChanged);
     _tracks = const [];
     _primary = null;
     _externalPaths.clear();
