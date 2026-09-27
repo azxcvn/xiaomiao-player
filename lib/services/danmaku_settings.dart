@@ -63,6 +63,11 @@ class DanmakuSettings extends ChangeNotifier {
   static const double minTimeOffsetSeconds = -180;
   static const double maxTimeOffsetSeconds = 180;
 
+  /// 「指定颜色」调色板最多可选几种颜色（超过则无法再添加）。
+  ///
+  /// 8 是够用与「别把面板撑爆」的折中：预设色胶囊一行 4 个，最多两行。
+  static const int maxPaletteColors = 8;
+
   // ── 弹幕样式 ──
 
   /// 弹幕字号（px，canvas DanmakuOption.fontSize，默认 16）
@@ -81,9 +86,16 @@ class DanmakuSettings extends ChangeNotifier {
   /// 描边粗细（0–4，默认 1.5；0 = 无描边）
   double _strokeWidth = 1.5;
 
-  /// 弹幕**颜色值**（mpv 串 `#AARRGGBB`）：仅 [DanmakuColorMode.fixed] 生效。
-  /// 默认白色——用户原始诉求里「统一白色」就是这个模式的默认值。
-  String _colorValue = kDanmakuDefaultColor;
+  /// 弹幕**调色板**（mpv 串 `#AARRGGBB` 列表）：仅 [DanmakuColorMode.fixed]
+  /// 生效，每条弹幕从**已选色中随机取一个**（见 `utils/danmaku_palette_color.dart`）。
+  ///
+  /// 只选 1 种 = 原先「所有弹幕统一一个颜色」的行为；**空列表 = 该模式失效**，
+  /// [effectiveColorMode] 会回落「跟随弹幕颜色」（面板上三个单选也不会有
+  /// 「指定颜色」被选中，不会出现「选了指色但弹幕不变」的死状态）。
+  ///
+  /// 历史键 `danmaku_color_value`（单色）由 [_migrateColorPalette] 迁移成
+  /// 长度为 1 的列表，老用户升级无感。
+  List<String> _colorValues = const [kDanmakuDefaultColor];
 
   /// 弹幕颜色模式（默认**跟随弹幕自身颜色**——保留 B 站彩色/渐变彩色弹幕）
   DanmakuColorMode _colorMode = DanmakuColorMode.source;
@@ -135,8 +147,40 @@ class DanmakuSettings extends ChangeNotifier {
 
   DanmakuColorMode get colorMode => _colorMode;
 
-  /// 「指定颜色」模式使用的颜色（mpv 串 `#AARRGGBB`）
-  String get colorValue => _colorValue;
+  /// **实际生效**的颜色模式：`fixed` 且调色板为空时回落
+  /// [DanmakuColorMode.source]（跟随弹幕颜色）。
+  ///
+  /// 渲染取色与面板单选都必须看这个值，而不是裸的 [colorMode]——否则会出现
+  /// 「面板显示指定色、弹幕却没有颜色可用」的不一致状态。
+  DanmakuColorMode get effectiveColorMode =>
+      (_colorMode == DanmakuColorMode.fixed && _colorValues.isEmpty)
+      ? DanmakuColorMode.source
+      : _colorMode;
+
+  /// 「指定颜色」模式的调色板（mpv 串列表，只读；改值走 [setColorValues]）
+  List<String> get colorValues => List.unmodifiable(_colorValues);
+
+  /// 调色板是否为空（弹幕取不到色 → 模式回落跟随原色）
+  bool get hasColorValues => _colorValues.isNotEmpty;
+
+  /// 「指定颜色」模式的**首个**颜色（mpv 串 `#AARRGGBB`）。
+  ///
+  /// 兼容用途：调色板为空时返回默认白（供调色滑杆起点、旧调用方读取）。
+  String get colorValue => _colorValues.isEmpty
+      ? kDanmakuDefaultColor
+      : _colorValues.first;
+
+  /// 指定颜色调色板的默认可选色（空列表时的回退色，也是「恢复默认」值）
+  static const String kDefaultColorValue = kDanmakuDefaultColor;
+
+  /// 两个调色板是否等价（顺序敏感；面板/测试共用）
+  static bool sameColorValues(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
   double get fontSize => _fontSize;
   int get fontWeight => _fontWeight;
   double get scrollSeconds => _scrollSeconds;
@@ -224,7 +268,36 @@ class DanmakuSettings extends ChangeNotifier {
     } else {
       _colorMode = DanmakuColorMode.source;
     }
-    _colorValue = prefs.getString(_keyColorValue) ?? kDanmakuDefaultColor;
+    _colorValues = _migrateColorPalette(prefs);
+  }
+
+  /// 读调色板，并把**历史单色键**迁移过来。
+  ///
+  /// 老版本只存 `danmaku_color_value` 一个串。若新键不存在（老用户），就用旧
+  /// 键的值作为长度为 1 的调色板——升级后行为与升级前完全一致，设置不丢。
+  /// 旧键**保留不删**：万一用户回退到旧版本，旧版本的「指定颜色」还在。
+  static List<String> _migrateColorPalette(SharedPreferences prefs) {
+    final raw = prefs.getStringList(_keyColorValues);
+    if (raw != null) return _normalizePalette(raw);
+    final legacy = prefs.getString(_keyColorValue);
+    if (legacy != null && legacy.trim().isNotEmpty) {
+      return _normalizePalette([legacy]);
+    }
+    return const [kDanmakuDefaultColor];
+  }
+
+  /// 调色板归一化：去首尾空白、去空串、去重（保持顺序）、最多
+  /// [maxPaletteColors] 种（超出部分丢弃）。
+  static List<String> _normalizePalette(List<String> raw) {
+    final seen = <String>{};
+    final out = <String>[];
+    for (final item in raw) {
+      final t = item.trim();
+      if (t.isEmpty || !seen.add(t)) continue;
+      out.add(t);
+      if (out.length >= maxPaletteColors) break;
+    }
+    return out;
   }
 
   /// 屏蔽词归一化：去首尾空白、去空串、去重（保持原顺序）。
@@ -292,26 +365,73 @@ class DanmakuSettings extends ChangeNotifier {
   }
 
   /// 切换弹幕颜色模式（跟随弹幕颜色 / 随机渐变色 / 指定颜色）。
+  ///
+  /// **从空调色板切到「指定颜色」时自动补一个默认色（白）**：否则会落进
+  /// 「模式是 fixed、调色板为空」的状态——[effectiveColorMode] 会把它盖回
+  /// source，用户看到的是「点了指定颜色没反应」（真机反馈的 bug）。
   Future<void> setColorMode(DanmakuColorMode v) async {
     await ensureLoaded();
-    if (_colorMode == v) return;
+    final seedPalette = v == DanmakuColorMode.fixed && _colorValues.isEmpty;
+    if (_colorMode == v && !seedPalette) return;
     _colorMode = v;
+    if (seedPalette) _colorValues = const [kDanmakuDefaultColor];
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_keyColorMode, v.index);
+    if (seedPalette) {
+      await prefs.setStringList(_keyColorValues, _colorValues);
+    }
   }
 
-  /// 设置「指定颜色」模式的颜色（mpv 串 `#AARRGGBB`）。
+  /// 设置「指定颜色」模式的调色板（多色，弹幕随机取用）。
+  ///
+  /// 传空列表 = 用户取消了全部颜色 → 该模式随即**回落「跟随弹幕颜色」**
+  /// （[effectiveColorMode]），面板的单选也跟着回到「跟随弹幕颜色」，
+  /// 不会留下「选了指色却没有颜色」的死状态。
+  ///
+  /// 归一化：去空白/去重/截断到 [maxPaletteColors]。
+  Future<void> setColorValues(List<String> colors) async {
+    await ensureLoaded();
+    final next = _normalizePalette(colors);
+    if (sameColorValues(_colorValues, next)) return;
+    _colorValues = List.unmodifiable(next);
+    if (_colorValues.isEmpty) {
+      // 空调色板 → 模式回落跟随原色（与面板显示保持一致）
+      _colorMode = DanmakuColorMode.source;
+    }
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_keyColorValues, _colorValues);
+    await prefs.setInt(_keyColorMode, _colorMode.index);
+  }
+
+  /// 设置「指定颜色」模式的颜色（mpv 串 `#AARRGGBB`）——**单色快捷入口**，
+  /// 等价于把调色板整体替换成这一个颜色（旧调用方/旧测试沿用）。
   ///
   /// 颜色为空串/非法时回退默认白，避免把空值写进渲染层。
   Future<void> setColorValue(String hex) async {
-    await ensureLoaded();
     final v = hex.trim().isEmpty ? kDanmakuDefaultColor : hex.trim();
-    if (_colorValue == v) return;
-    _colorValue = v;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyColorValue, v);
+    await setColorValues([v]);
+  }
+
+  /// 在调色板里**追加**一种颜色（自定义调色「添加到调色板」用）。
+  ///
+  /// 已存在则不重复添加；已达 [maxPaletteColors] 上限则原样返回。
+  Future<void> addColorValue(String hex) async {
+    await ensureLoaded();
+    final v = hex.trim();
+    if (v.isEmpty || _colorValues.contains(v)) return;
+    if (_colorValues.length >= maxPaletteColors) return;
+    await setColorValues([..._colorValues, v]);
+  }
+
+  /// 从调色板**移除**一种颜色（面板上色点的 × 用）。
+  Future<void> removeColorValue(String hex) async {
+    await ensureLoaded();
+    if (!_colorValues.contains(hex)) return;
+    await setColorValues(
+      _colorValues.where((c) => c != hex).toList(growable: false),
+    );
   }
 
   // ── 配置 setter ──
@@ -482,7 +602,7 @@ class DanmakuSettings extends ChangeNotifier {
     _opacity = 1.0;
     _strokeWidth = 1.5;
     _colorMode = DanmakuColorMode.source;
-    _colorValue = kDanmakuDefaultColor;
+    _colorValues = const [kDanmakuDefaultColor];
     _area = 1.0;
     _lineHeight = 1.6;
     _showTop = true;
@@ -504,7 +624,10 @@ class DanmakuSettings extends ChangeNotifier {
     await prefs.setDouble(_keyOpacity, 1.0);
     await prefs.setDouble(_keyStrokeWidth, 1.5);
     await prefs.setInt(_keyColorMode, DanmakuColorMode.source.index);
-    await prefs.setString(_keyColorValue, kDanmakuDefaultColor);
+    await prefs.setStringList(
+      _keyColorValues,
+      const [kDanmakuDefaultColor],
+    );
     await prefs.setDouble(_keyArea, 1.0);
     await prefs.setDouble(_keyLineHeight, 1.6);
     await prefs.setBool(_keyShowTop, true);
@@ -527,7 +650,7 @@ class DanmakuSettings extends ChangeNotifier {
       _opacity == 1.0 &&
       _strokeWidth == 1.5 &&
       _colorMode == DanmakuColorMode.source &&
-      _colorValue == kDanmakuDefaultColor &&
+      sameColorValues(_colorValues, const [kDanmakuDefaultColor]) &&
       _area == 1.0 &&
       _lineHeight == 1.6 &&
       _showTop &&
@@ -553,8 +676,12 @@ class DanmakuSettings extends ChangeNotifier {
   /// 弹幕颜色模式（int，[DanmakuColorMode] 的 index）
   static const _keyColorMode = 'danmaku_color_mode';
 
-  /// 「指定颜色」模式的颜色值（mpv 串）
+  /// 「指定颜色」模式的**单色**（历史键，mpv 串）。仅用于迁移到
+  /// [_keyColorValues]（调色板），新代码不再写入。
   static const _keyColorValue = 'danmaku_color_value';
+
+  /// 「指定颜色」模式的调色板（`StringList`，mpv 串；弹幕随机取用）
+  static const _keyColorValues = 'danmaku_color_values';
 
   /// **历史键（只读，用于迁移）**：旧版「随机渐变色」布尔开关。
   /// 新代码不再写入；[_loadColorMode] 见其为 true 时迁移到
@@ -584,7 +711,7 @@ class DanmakuSettings extends ChangeNotifier {
     _opacity = 1.0;
     _strokeWidth = 1.5;
     _colorMode = DanmakuColorMode.source;
-    _colorValue = kDanmakuDefaultColor;
+    _colorValues = const [kDanmakuDefaultColor];
     _area = 1.0;
     _lineHeight = 1.6;
     _showTop = true;

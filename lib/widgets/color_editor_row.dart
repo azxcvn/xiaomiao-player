@@ -54,11 +54,26 @@ class ColorEditorRow extends StatefulWidget {
   /// 预设色列表（默认取字幕文字预设色，含白色）
   final List<SubtitlePresetColor> presetColors;
 
+  /// **多选模式**（弹幕「指定颜色」调色板用）：预设色胶囊变成可勾选的开关，
+  /// 选中态看 [selectedValues] 而不是 [value]；[onSelect] 收到的是**被点的
+  /// 那一个色**（由调用方决定是加进调色板还是从中移除）。
+  ///
+  /// 单选模式（默认，字幕颜色用）行为不变：点胶囊 = 直接替换当前色。
+  final bool multiSelect;
+
+  /// 多选模式下「已选中」的颜色集合（mpv 串）；单选模式下忽略
+  final List<String> selectedValues;
+
   /// 精确提交（点预设色 / 滑杆松手）
   final ValueChanged<String?> onSelect;
 
-  /// 拖动中实时提交（可选）
+  /// 拖动中实时提交（可选；**多选模式忽略此项**——调色板只在确认添加时写入）
   final ValueChanged<String?>? onSlide;
+
+  /// 拖动中/松手时的**预览回调**（可选）：把当前正在调的颜色原样报给调用方，
+  /// 供其同步自己的草稿状态（多选模式靠它实时刷新「添加」按钮的可用性）。
+  /// 与 [onSlide] 的区别：这个只是「告诉你现在是什么色」，不表示提交。
+  final ValueChanged<String>? onPreview;
 
   const ColorEditorRow({
     super.key,
@@ -67,8 +82,11 @@ class ColorEditorRow extends StatefulWidget {
     this.allowNone = false,
     this.defaultColor = const (r: 255, g: 255, b: 255, a: 255),
     this.presetColors = SubtitlePresetColor.textPresets,
+    this.multiSelect = false,
+    this.selectedValues = const [],
     required this.onSelect,
     this.onSlide,
+    this.onPreview,
   });
 
   @override
@@ -98,15 +116,31 @@ class _ColorEditorRowState extends State<ColorEditorRow> {
   ///
   /// 拖动中：[onSlide] 有实现时交给调用方（字幕面板直连 mpv 用），
   /// 否则至少更新本地预览，避免"盲拖"。
+  ///
+  /// **多选模式（弹幕调色板）只更新本地预览**：调色板由调用方在确认按钮上
+  /// 一次性写入，拖动/松手都不该往里加色（用户原话：滑到哪里哪里就算一种
+  /// 新颜色是错的，得先看清预览再点添加）。
   void _previewChannel(SubtitleRgba Function(SubtitleRgba base) update) {
     final next = rgbaToMpvColor(update(_base));
     if (_previewColor != next) setState(() => _previewColor = next);
+    widget.onPreview?.call(next);
+    if (widget.multiSelect) return;
     widget.onSlide?.call(next);
   }
 
-  /// 松手：清预览态 + 一次性提交（此后以 [widget.value] 为准）
+  /// 松手：单选取 [widget.onSelect] 提交；**多选只更新预览**——[onSelect]
+  /// 在多选里的语义是「用户点了某个预设色胶囊」，滑杆松手不该借它去加/减
+  /// 调色板（否则滑一次就动一次已选色，用户观感是「颜色被偷偷换掉」）。
+  /// 草稿色由调用方通过「添加」按钮确认，这里不回调。
+  ///
+  /// 多选**不清预览态**：预览点继续显示用户正在调的颜色，直到调用方确认。
   void _commitChannel(SubtitleRgba Function(SubtitleRgba base) update) {
     final next = rgbaToMpvColor(update(_base));
+    widget.onPreview?.call(next);
+    if (widget.multiSelect) {
+      setState(() => _previewColor = next);
+      return;
+    }
     setState(() => _previewColor = null);
     widget.onSelect(next);
   }
@@ -240,7 +274,9 @@ class _ColorEditorRowState extends State<ColorEditorRow> {
                       label: rows[i][j].label,
                       selected: rows[i][j].hex == null
                           ? widget.value == null
-                          : _matchesPreset(rows[i][j].hex!),
+                          : (widget.multiSelect
+                                ? _isSelectedMulti(rows[i][j].hex!)
+                                : _matchesPreset(rows[i][j].hex!)),
                       onTap: () => widget.onSelect(rows[i][j].hex),
                     ),
                   ),
@@ -255,9 +291,18 @@ class _ColorEditorRowState extends State<ColorEditorRow> {
 
   bool _matchesPreset(String hex) {
     if (widget.value == null) return false;
-    final a = mpvColorToRgba(widget.value!);
-    final b = mpvColorToRgba(hex);
-    return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a;
+    return _sameRgba(widget.value!, hex);
+  }
+
+  /// 多选模式：该预设色是否在已选集合里（按 RGBA 比，容忍 `#RRGGBB` /
+  /// `#AARRGGBB` 两种写法与大小写差异）
+  bool _isSelectedMulti(String hex) =>
+      widget.selectedValues.any((v) => _sameRgba(v, hex));
+
+  static bool _sameRgba(String a, String b) {
+    final x = mpvColorToRgba(a);
+    final y = mpvColorToRgba(b);
+    return x.r == y.r && x.g == y.g && x.b == y.b && x.a == y.a;
   }
 
   /// RGBA 四通道滑杆。

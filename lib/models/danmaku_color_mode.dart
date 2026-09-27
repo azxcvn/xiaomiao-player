@@ -22,7 +22,10 @@ enum DanmakuColorMode {
   /// （算法见 `utils/danmaku_random_color.dart`）。
   random('随机渐变色'),
 
-  /// 指定单一颜色：所有弹幕统一用 [DanmakuSettings.colorValue]，
+  /// 指定颜色：所有弹幕从用户选的**调色板**里随机取色（相邻两条不重色）；
+  /// 只选 1 种即「统一一个颜色」，全部取消则模式回落 [source]
+  /// （判定见 `DanmakuSettings.effectiveColorMode`；从空调色板切回本模式时
+  /// 会自动补一个默认色，避免出现「点了没反应」的空模式），
   /// 渐变彩色弹幕一并让位。
   fixed('指定颜色');
 

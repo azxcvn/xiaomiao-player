@@ -30,6 +30,12 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// 调色区标题的精确匹配（`find.textContaining('弹幕颜色')` 会连
+  /// 「跟随弹幕颜色」那个单选项一起匹配到，不能用它断言调色区是否展开）
+  final paletteTitle = find.byWidgetPredicate(
+    (w) => w is Text && (w.data ?? '').startsWith('弹幕颜色（'),
+  );
+
   testWidgets('两段式布局齐全：样式 + 配置 + 恢复默认', (tester) async {
     await pumpPanel(tester);
     expect(tester.takeException(), isNull);
@@ -82,14 +88,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(s.colorMode, DanmakuColorMode.random);
     // 选「指定颜色」后才展开调色区
-    expect(find.text('弹幕颜色'), findsNothing, reason: '未选指定色时不展开调色区');
+    expect(paletteTitle, findsNothing, reason: '未选指定色时不展开调色区');
     // 选中「随机渐变色」后其副标题变长、把下一项推出视口，先滚动到可见再点
     await ensureVisible(tester, find.text('指定颜色'));
     await tester.tap(find.text('指定颜色'));
     await tester.pumpAndSettle();
     expect(s.colorMode, DanmakuColorMode.fixed);
-    await ensureVisible(tester, find.text('弹幕颜色'));
-    expect(find.text('弹幕颜色'), findsOneWidget, reason: '选指定色后展开调色区');
+    await ensureVisible(tester, paletteTitle);
+    expect(paletteTitle, findsOneWidget, reason: '选指定色后展开调色区');
 
     // Switch 组件定位：颜色模式已不是 Switch，还剩 3 显隐 + 海量 + 去重 + 合并
     final switches = find.byType(Switch);
@@ -202,5 +208,156 @@ void main() {
     await tester.tap(find.byIcon(Icons.close));
     await tester.pumpAndSettle();
     expect(s.blockedKeywords, isEmpty);
+  });
+
+  // ── 「指定颜色」调色板（多色随机，方案 A）────────────────────────────
+
+  testWidgets('调色板：点胶囊是多选（加/减），不是整体替换', (tester) async {
+    await pumpPanel(tester);
+    final s = DanmakuSettings.instance;
+    await s.setColorMode(DanmakuColorMode.fixed);
+    await tester.pumpAndSettle();
+    expect(s.colorValues, [kDanmakuDefaultColor]);
+
+    // 加一种（黄）→ 两种
+    await ensureVisible(tester, find.text('黄色'));
+    await tester.tap(find.text('黄色'));
+    await tester.pumpAndSettle();
+    expect(s.colorValues.length, 2);
+    expect(find.text('已选 2/8 种'), findsOneWidget);
+
+    // 再点同一个（已选中）→ 从调色板**移除**，而不是替换
+    await tester.tap(find.text('黄色'));
+    await tester.pumpAndSettle();
+    expect(s.colorValues, [kDanmakuDefaultColor]);
+    expect(find.text('已选 1/8 种'), findsOneWidget);
+  });
+
+  testWidgets('调色板：全部取消后模式回落「跟随弹幕颜色」且调色区收起', (tester) async {
+    await pumpPanel(tester);
+    final s = DanmakuSettings.instance;
+    await s.setColorMode(DanmakuColorMode.fixed);
+    await s.setColorValues([kDanmakuDefaultColor, '#FFFFEB3B']);
+    await tester.pumpAndSettle();
+    expect(find.text('已选 2/8 种'), findsOneWidget);
+
+    // 预览条上的色块整块可点（× 在胶囊里）→ 逐个移除
+    final first = find.byKey(
+      const ValueKey('palette-tap-$kDanmakuDefaultColor'),
+    );
+    await ensureVisible(tester, first);
+    await tester.tap(first);
+    await tester.pumpAndSettle();
+    expect(s.colorValues, ['#FFFFEB3B']);
+    expect(find.text('已选 1/8 种'), findsOneWidget);
+
+    final second = find.byKey(const ValueKey('palette-tap-#FFFFEB3B'));
+    await ensureVisible(tester, second);
+    await tester.tap(second);
+    await tester.pumpAndSettle();
+
+    expect(s.colorValues, isEmpty);
+    expect(
+      s.colorMode,
+      DanmakuColorMode.source,
+      reason: '调色板空 → 回落跟随弹幕颜色（不留下选了没颜色的死状态）',
+    );
+    expect(paletteTitle, findsNothing, reason: '调色区随模式收起');
+  });
+
+  testWidgets('调色板：清空后再点「指定颜色」能进得去（自动补默认色）', (tester) async {
+    await pumpPanel(tester);
+    final s = DanmakuSettings.instance;
+
+    // 先清空调色板 → 模式回落「跟随弹幕颜色」
+    await s.setColorMode(DanmakuColorMode.fixed);
+    await s.setColorValues([kDanmakuDefaultColor, '#FFFFEB3B']);
+    await s.setColorValues(const []);
+    await tester.pumpAndSettle();
+    expect(s.colorMode, DanmakuColorMode.source);
+    expect(paletteTitle, findsNothing);
+
+    // 再点「指定颜色」：必须能进去（真机 bug：这里怎么点都没反应）
+    await ensureVisible(tester, find.text('指定颜色'));
+    await tester.tap(find.text('指定颜色'));
+    await tester.pumpAndSettle();
+    expect(
+      s.colorMode,
+      DanmakuColorMode.fixed,
+      reason: '空调色板切回指定颜色时自动补默认色，不能卡在 source',
+    );
+    expect(s.colorValues, [kDanmakuDefaultColor]);
+    await ensureVisible(tester, paletteTitle);
+    expect(paletteTitle, findsOneWidget, reason: '调色区重新展开');
+  });
+
+  testWidgets('调色板：预览条点色块移除该色，其余保留', (tester) async {
+    await pumpPanel(tester);
+    final s = DanmakuSettings.instance;
+    await s.setColorMode(DanmakuColorMode.fixed);
+    await s.setColorValues([kDanmakuDefaultColor, '#FFFFEB3B']);
+    await tester.pumpAndSettle();
+
+    final swatch = find.byKey(
+      const ValueKey('palette-tap-$kDanmakuDefaultColor'),
+    );
+    await ensureVisible(tester, swatch);
+    await tester.tap(swatch);
+    await tester.pumpAndSettle();
+    expect(
+      s.colorValues,
+      ['#FFFFEB3B'],
+      reason: '点预览条上的色块只移除该色，其余保留',
+    );
+  });
+
+  testWidgets('调色板：自定义调色要「调 → 预览 → 点添加」才入调色板', (tester) async {
+    await pumpPanel(tester);
+    final s = DanmakuSettings.instance;
+    await s.setColorMode(DanmakuColorMode.fixed);
+    await tester.pumpAndSettle();
+    expect(s.colorValues.length, 1);
+
+    await ensureVisible(tester, find.text('自定义调色'));
+    await tester.tap(find.text('自定义调色'));
+    await tester.pumpAndSettle();
+
+    // 草稿起点 = 调色板最后一色（白）→ 尚未产生新色，按钮提示「已在调色板中」
+    expect(find.text('该颜色已在调色板中'), findsOneWidget);
+    expect(s.colorValues.length, 1);
+
+    // 拖 A 通道：只改草稿（**不写入调色板**）
+    final slider = find.byType(Slider).at(8);
+    await ensureVisible(tester, slider);
+    await tester.drag(slider, const Offset(-60, 0));
+    await tester.pumpAndSettle();
+    expect(
+      s.colorValues.length,
+      1,
+      reason: '滑杆只改草稿，滑到哪就加一种颜色是错的',
+    );
+
+    // 确认添加才入调色板（草稿是半透明白，与纯白不同色）
+    await ensureVisible(tester, find.text('添加到调色板'));
+    await tester.tap(find.text('添加到调色板'));
+    await tester.pumpAndSettle();
+    expect(s.colorValues.length, 2);
+    expect(find.text('已选 2/8 种'), findsOneWidget);
+    // 草稿回到当前色 → 按钮重新变回「已添加」提示
+    expect(find.text('该颜色已在调色板中'), findsOneWidget);
+  });
+
+  testWidgets('调色板：草稿与已选色重复时不能重复添加', (tester) async {
+    await pumpPanel(tester);
+    final s = DanmakuSettings.instance;
+    await s.setColorMode(DanmakuColorMode.fixed);
+    await s.setColorValues([kDanmakuDefaultColor, '#FFFFEB3B']);
+    await tester.pumpAndSettle();
+
+    // 草稿起点 = 最后一色（黄，#FFEB3B）→ 与已选同色（写法不同），按钮禁用
+    expect(find.text('该颜色已在调色板中'), findsOneWidget);
+    final button = tester.widget<FilledButton>(find.byType(FilledButton));
+    expect(button.onPressed, isNull, reason: '同色不允许重复添加');
+    expect(s.colorValues.length, 2);
   });
 }

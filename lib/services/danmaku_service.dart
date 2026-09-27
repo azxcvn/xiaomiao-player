@@ -38,6 +38,7 @@ import 'package:moumou/services/danmaku_settings.dart';
 import 'package:moumou/utils/danmaku_episode.dart';
 import 'package:moumou/utils/danmaku_local_file.dart';
 import 'package:moumou/utils/danmaku_pipeline.dart';
+import 'package:moumou/utils/danmaku_palette_color.dart';
 import 'package:moumou/utils/danmaku_random_color.dart';
 import 'package:moumou/utils/danmaku_timeline.dart';
 import 'package:moumou/utils/danmaku_xml.dart';
@@ -101,7 +102,8 @@ class DanmakuController extends ChangeNotifier {
     _lastDedup = _settings.deduplication;
     _lastMerge = _settings.merge;
     // 颜色模式（构造时同步一次；模式变化由 [_onSettingsChanged] 处理）
-    _lastColorMode = _settings.colorMode;
+    _lastColorMode = _settings.effectiveColorMode;
+    _lastColorValues = _settings.colorValues;
     _syncColorWheel();
     _lastTimeOffset = _settings.timeOffsetSeconds;
     _lastBlocklist = _settings.blockedKeywords;
@@ -121,6 +123,9 @@ class DanmakuController extends ChangeNotifier {
   /// 随机渐变色推进器（随机色开启期间逐条生成；关闭→开启重建）
   DanmakuColorWheel? _colorWheel;
 
+  /// 「指定颜色」调色板抽色器（模式/[DanmakuSettings.colorValues] 变化时重建）
+  DanmakuPalettePicker? _palette;
+
   /// 上次同步的去重/合并/颜色模式开关（仅开关变化时才清屏重灌，
   /// 避免拖动其他滑杆时在屏弹幕被反复清掉闪屏）
   bool _lastDedup = false;
@@ -128,6 +133,9 @@ class DanmakuController extends ChangeNotifier {
 
   /// 上次同步的弹幕颜色模式（变化时重建色轮 + 清屏）
   DanmakuColorMode _lastColorMode = DanmakuColorMode.source;
+
+  /// 上次同步的「指定颜色」调色板（色表变化同样要重建抽色器 + 清屏）
+  List<String> _lastColorValues = const [];
 
   /// 上次同步的时间轴偏移（偏移变化时重锚定秒桶 + 清屏，弹幕按新偏移对齐）
   double _lastTimeOffset = 0;
@@ -245,7 +253,12 @@ class DanmakuController extends ChangeNotifier {
     _applyOption();
     final dedupChanged = _settings.deduplication != _lastDedup;
     final mergeChanged = _settings.merge != _lastMerge;
-    final colorModeChanged = _settings.colorMode != _lastColorMode;
+    final colorModeChanged =
+        _settings.effectiveColorMode != _lastColorMode;
+    final colorValuesChanged = !DanmakuSettings.sameColorValues(
+      _settings.colorValues,
+      _lastColorValues,
+    );
     final offsetChanged = _settings.timeOffsetSeconds != _lastTimeOffset;
     final blocklistChanged = !listEquals(
       _settings.blockedKeywords,
@@ -253,15 +266,17 @@ class DanmakuController extends ChangeNotifier {
     );
     _lastDedup = _settings.deduplication;
     _lastMerge = _settings.merge;
-    _lastColorMode = _settings.colorMode;
+    _lastColorMode = _settings.effectiveColorMode;
+    _lastColorValues = _settings.colorValues;
     _lastTimeOffset = _settings.timeOffsetSeconds;
     _lastBlocklist = _settings.blockedKeywords;
     if (dedupChanged || mergeChanged || blocklistChanged) {
       _refeedIfLoaded();
     }
-    if (colorModeChanged) {
-      // 颜色模式切换：随机色轮按需重建（开启时新建 = 新随机起点，其余释放）；
-      // 清屏让在屏弹幕立即按新着色规则重绘（指定色/原色同样需要）
+    if (colorModeChanged || colorValuesChanged) {
+      // 颜色模式/调色板变化：随机色轮与调色板抽色器按需重建（随机起点重置、
+      // 「相邻不重色」的记忆清空）；清屏让在屏弹幕立即按新着色规则重绘
+      // （指定色/原色/改配色同样需要）。
       _syncColorWheel();
       _clearLayers();
     }
@@ -272,12 +287,24 @@ class DanmakuController extends ChangeNotifier {
     }
   }
 
-  /// 随机色轮与颜色模式同步：只有 [DanmakuColorMode.random] 需要推进器。
+  /// 随机色轮与调色板抽色器同步（按**实际生效**的颜色模式）。
+  ///
+  /// - [DanmakuColorMode.random] 需要色轮推进器；
+  /// - [DanmakuColorMode.fixed] 需要调色板抽色器（多色随机，相邻不重色）；
+  /// - 其余模式两者都不需要（释放，省得留着上一次的随机状态）。
   ///
   /// 集中一处，避免「构造 / 设置变化 / 重灌」三处各写一遍三元表达式。
   void _syncColorWheel() {
-    _colorWheel = _settings.colorMode == DanmakuColorMode.random
+    final mode = _settings.effectiveColorMode;
+    _colorWheel = mode == DanmakuColorMode.random
         ? DanmakuColorWheel()
+        : null;
+    _palette = mode == DanmakuColorMode.fixed
+        ? DanmakuPalettePicker(
+            colors: [
+              for (final hex in _settings.colorValues) mpvColorToRgbInt(hex),
+            ],
+          )
         : null;
   }
 
@@ -797,8 +824,10 @@ class DanmakuController extends ChangeNotifier {
     // - source：用弹幕文件自带颜色，并保留会员渐变彩色；
     // - random：忽略文件颜色，逐条从色轮取色（随机色本身就是改色，
     //   渐变彩色必须让位，否则两者互相打架）;
-    // - fixed：统一用用户指定颜色，渐变彩色同样让位。
-    final mode = _settings.colorMode;
+    // - fixed：从用户选的调色板里**随机抽**一种（相邻两条不重色）；
+    //   调色板为空时该模式已被 [DanmakuSettings.effectiveColorMode] 回落
+    //   「跟随弹幕颜色」，这里取不到色就退回弹幕自身颜色兜底。
+    final mode = _settings.effectiveColorMode;
     final int color;
     switch (mode) {
       case DanmakuColorMode.source:
@@ -806,7 +835,7 @@ class DanmakuController extends ChangeNotifier {
       case DanmakuColorMode.random:
         color = _colorWheel?.nextColor() ?? entry.color;
       case DanmakuColorMode.fixed:
-        color = mpvColorToRgbInt(_settings.colorValue);
+        color = _palette?.next() ?? entry.color;
     }
     final item = canvas.DanmakuContentItem<void>(
       // 合并条目渲染为「文本 ×N」（count 由合并算法写入；文本本身保持原样）

@@ -233,6 +233,151 @@ void main() {
     expect(mpvColorToRgbInt('#FFFFFFFF'), 0xFFFFFF);
   });
 
+  // ── 「指定颜色」调色板（多色随机，方案 A）──────────────────────────
+
+  test('调色板：多色持久化 + 实际生效模式', () async {
+    await s.setColorMode(DanmakuColorMode.fixed);
+    await s.setColorValues(['#FFFF0000', '#FF00FF00', '#FF0000FF']);
+    expect(s.colorValues, ['#FFFF0000', '#FF00FF00', '#FF0000FF']);
+    expect(s.colorValue, '#FFFF0000', reason: '首色兼容旧读取口');
+    expect(s.hasColorValues, isTrue);
+    expect(s.effectiveColorMode, DanmakuColorMode.fixed);
+    await s.load();
+    expect(s.colorValues, ['#FFFF0000', '#FF00FF00', '#FF0000FF']);
+    expect(s.effectiveColorMode, DanmakuColorMode.fixed);
+  });
+
+  test('调色板：归一化去空白/去重/截断到上限', () async {
+    await s.setColorValues([
+      ' #FFFF0000 ',
+      '#FFFF0000', // 重复
+      '', // 空串
+      '   ', // 空白
+      '#FF00FF00',
+    ]);
+    expect(s.colorValues, ['#FFFF0000', '#FF00FF00']);
+
+    final many = [
+      for (var i = 0; i < DanmakuSettings.maxPaletteColors + 4; i++)
+        '#FF0000${i.toRadixString(16).padLeft(2, '0')}',
+    ];
+    await s.setColorValues(many);
+    expect(s.colorValues.length, DanmakuSettings.maxPaletteColors);
+  });
+
+  test('调色板清空 → 模式回落「跟随弹幕颜色」并持久化', () async {
+    await s.setColorMode(DanmakuColorMode.fixed);
+    await s.setColorValues(['#FFFF0000']);
+    expect(s.effectiveColorMode, DanmakuColorMode.fixed);
+    await s.setColorValues(const []);
+    expect(s.colorValues, isEmpty);
+    expect(s.hasColorValues, isFalse);
+    expect(
+      s.colorMode,
+      DanmakuColorMode.source,
+      reason: '清空调色板时裸模式也要回落，避免留下「选了指色却没颜色」的死状态',
+    );
+    expect(s.effectiveColorMode, DanmakuColorMode.source);
+    await s.load();
+    expect(s.colorMode, DanmakuColorMode.source);
+    expect(s.colorValues, isEmpty);
+  });
+
+  test('调色板：旧单色键迁移成长度 1 的调色板', () async {
+    SharedPreferences.setMockInitialValues({
+      'danmaku_color_mode': DanmakuColorMode.fixed.index,
+      'danmaku_color_value': '#FF123456',
+    });
+    s.resetForTest();
+    await s.load();
+    expect(s.colorValues, ['#FF123456'], reason: '升级后行为与升级前一致');
+    expect(s.effectiveColorMode, DanmakuColorMode.fixed);
+  });
+
+  test('调色板：新键优先于旧单色键', () async {
+    SharedPreferences.setMockInitialValues({
+      'danmaku_color_value': '#FF123456',
+      'danmaku_color_values': ['#FFAAAAAA', '#FFBBBBBB'],
+    });
+    s.resetForTest();
+    await s.load();
+    expect(s.colorValues, ['#FFAAAAAA', '#FFBBBBBB']);
+  });
+
+  test('调色板：空列表持久化时按「跟随弹幕颜色」写模式', () async {
+    SharedPreferences.setMockInitialValues({
+      'danmaku_color_mode': DanmakuColorMode.fixed.index,
+      'danmaku_color_values': ['#FFFF0000'],
+    });
+    s.resetForTest();
+    await s.load();
+    await s.setColorValues(const []);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getStringList('danmaku_color_values'), isEmpty);
+    expect(prefs.getInt('danmaku_color_mode'), DanmakuColorMode.source.index);
+  });
+
+  test('调色板：从空调色板切「指定颜色」自动补默认色（否则点了没反应）', () async {
+    await s.setColorMode(DanmakuColorMode.fixed);
+    await s.setColorValues(const []);
+    expect(s.colorValues, isEmpty);
+    expect(s.colorMode, DanmakuColorMode.source);
+
+    // 再切回指定颜色：必须真的生效（真机 bug：怎么点都没反应）
+    await s.setColorMode(DanmakuColorMode.fixed);
+    expect(s.colorMode, DanmakuColorMode.fixed);
+    expect(s.colorValues, [kDanmakuDefaultColor]);
+    expect(s.effectiveColorMode, DanmakuColorMode.fixed);
+
+    // 持久化确认：重载后仍是「指定颜色 + 1 色」
+    await s.load();
+    expect(s.colorMode, DanmakuColorMode.fixed);
+    expect(s.colorValues, [kDanmakuDefaultColor]);
+  });
+
+  test('调色板：非空时切「指定颜色」不动已选色', () async {
+    await s.setColorValues(['#FFFF0000', '#FF00FF00']);
+    await s.setColorMode(DanmakuColorMode.fixed);
+    expect(s.colorValues, ['#FFFF0000', '#FF00FF00']);
+  });
+
+  test('调色板：添加/移除是增量语义，重复添加与超上限幂等', () async {
+    await s.setColorValues(['#FFFF0000']);
+    await s.addColorValue('#FF00FF00');
+    expect(s.colorValues, ['#FFFF0000', '#FF00FF00']);
+    await s.addColorValue('#FF00FF00'); // 重复添加幂等
+    expect(s.colorValues, ['#FFFF0000', '#FF00FF00']);
+    await s.addColorValue('   '); // 空串忽略
+    expect(s.colorValues, ['#FFFF0000', '#FF00FF00']);
+    await s.removeColorValue('#FF0000FF'); // 不存在，幂等
+    expect(s.colorValues, ['#FFFF0000', '#FF00FF00']);
+    await s.removeColorValue('#FF00FF00');
+    expect(s.colorValues, ['#FFFF0000']);
+
+    // 加到上限后不再增长
+    for (var i = 0; i < DanmakuSettings.maxPaletteColors + 3; i++) {
+      await s.addColorValue('#FF0000${i.toRadixString(16).padLeft(2, '0')}');
+    }
+    expect(s.colorValues.length, DanmakuSettings.maxPaletteColors);
+  });
+
+  test('调色板：setColorValue 单色入口等价于「只有一个色的调色板」', () async {
+    await s.setColorValue('#FF00FF00');
+    expect(s.colorValues, ['#FF00FF00']);
+    await s.setColorValue('');
+    expect(s.colorValues, [kDanmakuDefaultColor]);
+  });
+
+  test('调色板：同色写入不重复通知（面板重建依据）', () async {
+    await s.setColorValues(['#FFFF0000']);
+    var notified = 0;
+    void listener() => notified++;
+    s.addListener(listener);
+    await s.setColorValues(['#FFFF0000']); // 同值
+    s.removeListener(listener);
+    expect(notified, 0);
+  });
+
   test('时间轴偏移：取整 / 持久化 / 钳制', () async {
     expect(s.timeOffsetSeconds, 0);
     await s.setTimeOffset(45.6); // 取整到整数秒

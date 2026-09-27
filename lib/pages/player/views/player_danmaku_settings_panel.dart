@@ -26,6 +26,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:moumou/models/danmaku_color_mode.dart';
 import 'package:moumou/models/danmaku_font_mode.dart';
+import 'package:moumou/models/subtitle_track.dart' show mpvColorToRgba;
 import 'package:moumou/services/app_font_settings.dart';
 import 'package:moumou/services/danmaku_settings.dart';
 import 'package:moumou/services/device_services.dart';
@@ -127,6 +128,11 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
                   for (final mode in DanmakuColorMode.values) ...[
                     _ColorModeTile(
                       mode: mode,
+                      // 单选状态看**裸模式**：面板要如实显示「用户选了哪个」。
+                      // （不能用 effectiveColorMode——调色板被清空时它会把
+                      // 「指定颜色」显示成未选中，用户再点也进不去，正是真机
+                      // 反馈的「点指定颜色没反应」；空调色板切进来时设置层会
+                      // 自动补一个默认色，见 DanmakuSettings.setColorMode）
                       selected: s.colorMode == mode,
                       onTap: () => s.setColorMode(mode),
                     ),
@@ -134,20 +140,10 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
                   ],
                   if (s.colorMode == DanmakuColorMode.fixed) ...[
                     _groupDivider(),
-                    // 复用字幕那套调色件（预设色点 + 可展开 RGBA 滑杆）。
-                    //
-                    // 拖动/松手的职责划分：
-                    // - 拖动中：`ColorEditorRow` 内部维护**本地预览色**，标题左侧
-                    //   预览点与滑杆读数实时跟随（不盲拖）——这一步**不经过设置
-                    //   单例**，因此不会触发本面板整棵重建（卡顿根因）；
-                    // - 松手：`onSelect` 一次性写设置（`notifyListeners`），
-                    //   与同面板的字号/字重/速度同一条纪律。
-                    ColorEditorRow(
-                      label: '弹幕颜色',
-                      value: s.colorValue,
-                      onSelect: (hex) =>
-                          s.setColorValue(hex ?? kDanmakuDefaultColor),
-                    ),
+                    // 不加 `const`：面板外部改设置（如测试里直接调 API、恢复默认）
+                    // 触发本面板重建时，const 实例会让这棵子树跳过重建，调色板停在
+                    // 旧快照上（实测：settings 已是 2 色，UI 仍显示「已选 1/8 种」）
+                    _ColorPaletteSection(),
                   ],
                 ],
               ),
@@ -506,7 +502,7 @@ class _ColorModeTile extends StatelessWidget {
   String get _hint => switch (mode) {
     DanmakuColorMode.source => '保留弹幕自带颜色（含会员渐变彩色）',
     DanmakuColorMode.random => '忽略文件颜色，按色轮逐条随机着色',
-    DanmakuColorMode.fixed => '所有弹幕统一使用下方指定的颜色',
+    DanmakuColorMode.fixed => '弹幕从下面已选颜色里随机取色',
   };
 
   @override
@@ -537,6 +533,214 @@ class _ColorModeTile extends StatelessWidget {
                 color: Colors.white24,
               ),
         onTap: onTap,
+      ),
+    );
+  }
+}
+
+/// 弹幕「指定颜色」的**调色板**区（多选，选中几种就随机用这几种）。
+///
+/// 与原先「统一一个颜色」的区别只在**已选数量**：
+/// - 选 1 种 = 旧行为（所有弹幕同一色）；
+/// - 选 ≥2 种 = 每条弹幕从已选中随机抽一个（相邻两条不重色，
+///   算法见 `utils/danmaku_palette_color.dart`）；
+/// - 全部取消 → 设置层落空调色板 + 模式回落「跟随弹幕颜色」（选项区那三行
+///   单选会立刻切回「跟随弹幕颜色」，不会留下选中了却没颜色的死状态）。
+///
+/// 交互仍是「点胶囊多选 + 自定义调色添加」，复用字幕那套 [ColorEditorRow]
+/// （§4.5 不另写外壳），仅把它切到多选模式。
+class _ColorPaletteSection extends StatefulWidget {
+  const _ColorPaletteSection();
+
+  @override
+  State<_ColorPaletteSection> createState() => _ColorPaletteSectionState();
+}
+
+class _ColorPaletteSectionState extends State<_ColorPaletteSection> {
+  /// 自定义调色的**草稿色**（已确认进调色板之前的候选）。
+  ///
+  /// 调色板本身是已确认的色；滑杆只动这个草稿，用户看预览点满意了点
+  /// 「添加到调色板」才真正入列（真机反馈：滑到哪算哪种色是错的）。
+  late String _draft = _initialDraft(DanmakuSettings.instance.colorValues);
+
+  /// 草稿起点 = 调色板最后一色（面板刚展开时它就是当前色），空则默认白
+  static String _initialDraft(List<String> values) =>
+      values.isEmpty ? kDanmakuDefaultColor : values.last;
+
+  /// 点胶囊 = 在调色板里加/减这一个色（不做「整体替换」，否则多选无从谈起）
+  Future<void> _toggle(String hex) async {
+    final s = DanmakuSettings.instance;
+    if (s.colorValues.any((v) => _sameColor(v, hex))) {
+      await s.removeColorValue(hex);
+      return;
+    }
+    if (s.colorValues.length >= DanmakuSettings.maxPaletteColors) {
+      _toast('最多选 ${DanmakuSettings.maxPaletteColors} 种颜色');
+      return;
+    }
+    await s.addColorValue(hex);
+  }
+
+  /// 确认把草稿色加进调色板；成功后草稿回到调色板最后一色（= 当前色），
+  /// 用户可以接着调下一个颜色。
+  Future<void> _confirmDraft() async {
+    final s = DanmakuSettings.instance;
+    final had = s.colorValues.length;
+    await s.addColorValue(_draft);
+    if (s.colorValues.length == had) return; // 已存在或已满，什么都没发生
+    if (!mounted) return;
+    setState(() => _draft = s.colorValues.last);
+  }
+
+  void _toast(String msg) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          duration: const Duration(milliseconds: 1500),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+  }
+
+  /// 同色判断按 RGBA 比（容忍 `#RRGGBB` / `#AARRGGBB` 写法与大小写差异）
+  static bool _sameColor(String a, String b) {
+    final x = mpvColorToRgba(a);
+    final y = mpvColorToRgba(b);
+    return x.r == y.r && x.g == y.g && x.b == y.b && x.a == y.a;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = DanmakuSettings.instance;
+    final values = s.colorValues;
+    final already = values.any((v) => _sameColor(v, _draft));
+    final full = values.length >= DanmakuSettings.maxPaletteColors;
+    final canAdd = !already && !full;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _PaletteStrip(
+          values: values,
+          // 点预览条上的色块即移除该色；移空后设置层会回落「跟随弹幕颜色」
+          onRemove: s.removeColorValue,
+        ),
+        // 复用字幕那套调色件（预设色点 + 可展开 RGBA 滑杆），切多选模式：
+        // 点胶囊 = 加/减该色；滑杆 = 只改「草稿色」，靠下面的按钮确认添加。
+        //
+        // `value` 传草稿色：预览点与滑杆起点都用它（自管状态，拖动不外泄）。
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: ColorEditorRow(
+            label: '弹幕颜色（可多选，随机使用）',
+            value: _draft,
+            multiSelect: true,
+            selectedValues: values,
+            // 拖动只更新草稿（实时刷新下面「添加」按钮的可用性）；
+            // 真正的入列动作在按钮上
+            onPreview: (hex) {
+              if (!mounted || hex == _draft) return;
+              setState(() => _draft = hex);
+            },
+            onSelect: (hex) {
+              if (hex != null) _toggle(hex);
+            },
+          ),
+        ),
+        // 自定义调色的确认按钮：滑杆只改草稿，点这里才入调色板
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: canAdd ? _confirmDraft : null,
+              style: FilledButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                textStyle: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              child: Text(
+                already
+                    ? '该颜色已在调色板中'
+                    : full
+                    ? '已选满 ${DanmakuSettings.maxPaletteColors} 种'
+                    : '添加到调色板',
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 调色板预览条：已选颜色圆点（点 × 移除）+ 「已选 N/M 种」计数。
+class _PaletteStrip extends StatelessWidget {
+  final List<String> values;
+  final ValueChanged<String> onRemove;
+
+  const _PaletteStrip({required this.values, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = playerPanelAccent(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          for (final hex in values) _swatch(hex, accent),
+          Text(
+            '已选 ${values.length}/${DanmakuSettings.maxPaletteColors} 种',
+            style: const TextStyle(color: Colors.white54, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 预览条上的一个色块：**整块可点**即移除该色（右侧带 × 提示）。
+  ///
+  /// 不给 × 单独做触点：那个图标只有 15px，真机手指很难点中，
+  /// 面板测试里点它也打不中（命中区域太小）。
+  Widget _swatch(String hex, Color accent) {
+    return GestureDetector(
+      key: ValueKey('palette-tap-$hex'),
+      onTap: () => onRemove(hex),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        key: ValueKey('palette-x-$hex'),
+        height: 28,
+        padding: const EdgeInsets.only(left: 10, right: 2),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: Colors.white12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 14,
+              height: 14,
+              decoration: BoxDecoration(
+                color: colorFromMpvHex(hex),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white38, width: 0.5),
+              ),
+            ),
+            const SizedBox(width: 2),
+            Padding(
+              padding: const EdgeInsets.all(4),
+              child: Icon(Icons.close, size: 15, color: accent),
+            ),
+          ],
+        ),
       ),
     );
   }
