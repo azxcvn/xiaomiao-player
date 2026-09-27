@@ -382,7 +382,8 @@ utils（纯工具）    → 只依赖 models
 
 ### 5.1 媒体库与首页
 
-- **扫描**：`VideoScanner` 走原生 `getVideos`（MediaStore 全表查询 + 逐条校验 + `.nomedia` 祖先链判断），可配置包含隐藏目录 / `.nomedia` 目录；结果缓存于内存，文件操作后清缓存重扫。
+- **扫描**：`VideoScanner` 走原生 `getVideos`（MediaStore 全表查询 + 逐条校验 + `.nomedia` 祖先链判断），可配置包含隐藏目录 / `.nomedia` 目录；结果缓存于内存，文件操作后重扫。MediaStore 覆盖不到的位置（`.nomedia` / 隐藏目录 / 外置卷 / 模拟器共享目录）由原生 **`FsVideoWalker`** 整盘补扫补齐：**1.5s 预算的广度优先递归 + 跳过名单（缩略图 / 缓存 / 临时 / 回收站 / obb）+ 黑白名单下推剪枝 + `filesDir` 持久化索引续扫**。
+- **扫描是「快结果先上屏 + 后台增量并入」两段**（对齐 mpvRx 的 `getAllVideoFoldersFast` / `getIndexedNoMediaFolders` + `scanNoMediaFoldersIncrementally`）：`getVideos` 同步只做「MediaStore 全表 + 索引里已知的补扫条目」（`FsVideoWalker.readCached`，**不递归**），返回后台线程再跑一轮预算内的 BFS（`walkInBackground`），边扫边通过 `onFsVideoBatch` 推增量批次、整轮结束用 `onFsScanDone` 推**完整快照**（权威值，顺带清掉这一轮消失的条目）。Dart 侧 `VideoScanner` 按**扫描代次 `scanId`** 只收最新代的推送，把「MediaStore 那份」与「补扫那份」（原生响应里带 `fs` 标记 + 推送，对齐 mpvRx 的 `mediaStoreFolders` / `indexedFolders` 两列表）分开维护、合并成 `cachedVideos`，并 `fsRevision`（`ValueNotifier`）通知页面；首页 / 树状文件夹页 / 文件夹列表页监听它**防抖 250ms 用缓存增量重建**，不重新查原生、不闪不转圈。索引（`fs_video_index_<key>.tsv`）记下「走过哪些目录（含时间）」与「在那里找到过哪些视频」，15 分钟重扫间隔、最旧优先；一轮没扫完就把待扫队列存下来，下次进 App 接着扫而不是从零重来；扫描条件（开关 / 名单）进 key，条件变了索引整体作废；**非主卷恒扫**（开关无关，这些卷 MediaStore 未必索引），**主卷只在两个开关之一打开时才进**，两种情形按 key 分开存索引，开关关掉不会端出旧的隐藏视频。**刷新语义**：`forceFsRescan`（下拉刷新 / 一键清缓存）＝**忽略 15 分钟重扫间隔重新走一遍，但不清索引**，所以刷新期间 `.nomedia` / 隐藏文件夹 / 外置卡那几项**原地保留**（清了就会出现「先少两个文件夹、扫完再回来」的视觉跳跃；对齐 mpvRx「先发布旧快照、扫完再 Replace」）；文件操作改动走**按路径失效**（`invalidatePaths` → `FsVideoIndex.removeSubtree` + 这一轮优先重扫那几个目录），只更新真正改了的地方。**行为变化如实说明**：补扫被预算截断时，深层目录里的条目要等后续几轮才出现（广度优先，视频通常在浅层）；索引条目按「每进程一次存活校验」清掉外部删除的条目（可能过一阵子才消失）。
 - **两种视图**：列表模式（`buildFolderList`：含直接视频的文件夹）与树状模式（`buildTree`：完整目录树），共用 `FolderCard` / `VideoCard`；建树与聚合在后台 isolate（`compute`）执行。
 - **首页**：`HomePage` 负责权限门禁（「允许管理所有文件」）、视图分发、搜索、多选与速拨入口。
 - **存储卷跳转**：自建目录选择器（媒体扫描黑白名单 / 下载目录 / 字幕与音频导入）顶部列出已挂载存储卷胶囊（`StorageRootSelector` + `StorageRoot`），点击即跳到该卷根。**外置卷只能由原生 `getStorageRoots` 枚举得到**——`/storage` 目录本身在 Android 11+ 上即使持有「所有文件访问」也列不出来（授权只到各卷根，不含 `/storage` 这个挂载点容器），此前选择器起点写死 `/storage/emulated/0` 导致 SD 卡/TF 卡完全无法进入。
@@ -467,6 +468,7 @@ utils（纯工具）    → 只依赖 models
 | `MainActivity.kt` | MethodChannel `moumou/video_info` 的宿主：媒体库查询、视频信息与缩略图、媒体信息、杜比视界检测、设备能力、系统音量/亮度、画中画、外部 `content://` 三级解析、B 站双流合并（`mergeM4s`）、整应用重启、壁纸取色、目录列举、存储卷枚举（`getStorageRoots`） |
 | `MediaInfoHelper.kt` | MediaInfoLib 封装：快速元数据（帧率 / 内嵌字幕）、完整媒体信息、杜比视界检测（统一走 `withMediaInfo` 托管文件描述符） |
 | `DeviceCapabilities.kt` | 屏幕 HDR 能力、关键编码器、系统解码器清单 |
+| `VideoFsWalker.kt` | 媒体库整盘文件系统补扫：**快结果只读索引、递归挪后台**（预算内 BFS + 跳过名单 + 黑白名单剪枝 + `filesDir` 持久化索引续扫），边扫边推 `onFsVideoBatch` 增量、结束推 `onFsScanDone` 完整快照；刷新只忽略重扫间隔、文件操作按路径失效（都**不清索引**，刷新期间列表不会跳）（issue #4） |
 | `BackgroundPlaybackService.kt` | 听视频后台播放的前台服务 |
 | `CrashHandler.kt` | 未捕获异常写入 `files/crash_logs/` |
 

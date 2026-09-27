@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/device_services.dart';
 import 'package:moumou/services/video_info_service.dart';
+import 'package:moumou/services/video_scanner.dart';
 
 /// 缓存类别（key 与原生 `getCacheSizes` / `clearCache` 对应；纯数据，无 UI 依赖）
 class CacheCategory {
@@ -77,6 +78,8 @@ class CacheManagerService {
       await _channel.invokeMethod<void>('clearAllCaches');
       DeviceServices.clearFrameCache();
       VideoInfoService.clearCache();
+      // 媒体库的整盘补扫索引也在 filesDir 里，一并让它下次扫描重建
+      VideoScanner.markFsIndexDirty();
       return true;
     } catch (_) {
       return false;

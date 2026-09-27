@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:moumou/models/storage_root.dart';
 import 'package:moumou/models/subtitle_dir.dart';
 import 'package:moumou/services/fast_thumbnails.dart';
+import 'package:moumou/services/video_scanner.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// 设备能力服务：系统音量 / 窗口亮度 / 任意时刻视频抓帧（本地文件）/ 画中画（PiP）。
@@ -466,13 +467,17 @@ class DeviceServices {
   /// 原生 → Dart 推送 handler 是否已安装（只装一次）
   static bool _nativeHandlerInstalled = false;
 
+  /// `moumou/video_info` 的推送统一入口：一条通道只能装一个 handler，
+  /// 所以外部打开视频与媒体库整盘补扫的增量推送都在这里分发。
   static void _ensureNativeCallHandler() {
     if (_nativeHandlerInstalled) return;
     _nativeHandlerInstalled = true;
     _channel.setMethodCallHandler((call) async {
       if (call.method == 'onExternalVideo') {
         onExternalVideo?.call();
+        return;
       }
+      VideoScanner.handleNativeCall(call);
     });
   }
 

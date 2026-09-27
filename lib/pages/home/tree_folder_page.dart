@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:moumou/models/storage_root.dart';
 import 'package:moumou/models/tree_node.dart';
@@ -74,6 +76,7 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
   @override
   void initState() {
     super.initState();
+    VideoScanner.fsRevision.addListener(_onFsRevision);
     _loadStorageRoots();
   }
 
@@ -90,9 +93,35 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
 
   @override
   void dispose() {
+    VideoScanner.fsRevision.removeListener(_onFsRevision);
+    _fsRebuildTimer?.cancel();
     _searchController.dispose();
     _selection.dispose();
     super.dispose();
+  }
+
+  /// 增量重建的防抖定时器（原生整盘补扫推送用）
+  Timer? _fsRebuildTimer;
+
+  void _onFsRevision() {
+    if (!mounted) return;
+    _fsRebuildTimer?.cancel();
+    _fsRebuildTimer = Timer(const Duration(milliseconds: 250), _rebuildFromCache);
+  }
+
+  /// 补扫增量推送：**不重新查原生**，只用当前缓存重建目录树。
+  ///
+  /// 与 [_reloadCurrentNode] 的关键差别：**当前节点定位不到时什么都不做**——
+  /// 后台刷新是自发的，不能因为中间态里少了当前节点就把用户踢出这一页。
+  void _rebuildFromCache() {
+    _fsRebuildTimer = null;
+    final videos = VideoScanner.cachedVideos;
+    if (!mounted || videos == null) return;
+    final located = _locateByPath(VideoScanner.buildTree(videos), _node.path);
+    if (located == null) return;
+    setState(() => _path = located);
+    // 重扫后剔除已被删除的选中项（否则批量操作会打到死路径）
+    _selection.retainExisting(indexTreeSelection(_node.children).keys);
   }
 
   /// 面包屑项：targetIndex 表示要跳回的路径层级（-1 = 当前树所在的存储卷）

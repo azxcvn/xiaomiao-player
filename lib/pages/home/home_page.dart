@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' show compute;
@@ -74,11 +75,14 @@ class _HomePageState extends State<HomePage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    VideoScanner.fsRevision.addListener(_onFsRevision);
     _load();
   }
 
   @override
   void dispose() {
+    VideoScanner.fsRevision.removeListener(_onFsRevision);
+    _fsRebuildTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _searchController.dispose();
     _selection.dispose();
@@ -93,7 +97,8 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  Future<void> _load() async {
+  /// [force] = 用户主动刷新（下拉刷新）：连原生整盘补扫索引一起重建
+  Future<void> _load({bool force = false}) async {
     final session = ++_loadSession;
     setState(() {
       _loading = true;
@@ -113,8 +118,11 @@ class _HomePageState extends State<HomePage>
         return;
       }
 
-      // 刷新时清缓存，重新查询 MediaStore（否则新增/删除的视频不生效）
+      // 刷新时清缓存，重新查询 MediaStore（否则新增/删除的视频不生效）；
+      // 原生整盘补扫索引只在用户主动刷新时才重建 —— 它自带续扫与 15 分钟重扫
+      // 间隔，每次进 App / 切回前台都重建就是「进去转圈十几秒」的老毛病
       VideoScanner.clearCache();
+      if (force) VideoScanner.markFsIndexDirty();
       final videos = await VideoScanner.scanVideos();
       if (session != _loadSession) return;
 
@@ -140,6 +148,46 @@ class _HomePageState extends State<HomePage>
           _loading = false;
         });
       }
+    }
+  }
+
+  /// 增量重建的防抖定时器：补扫推送可能连着来好几批
+  Timer? _fsRebuildTimer;
+
+  /// 是否有一次增量重建在飞（在飞时把新的通知顺延，避免丢最后一批）
+  bool _fsRebuilding = false;
+
+  /// 原生整盘补扫的增量推送（mpvRx 式增量上屏）：**不重新查原生**，
+  /// 只用 [VideoScanner.cachedVideos] 重建视图，因此不会闪、不会转圈。
+  void _onFsRevision() {
+    if (!mounted) return;
+    _fsRebuildTimer?.cancel();
+    _fsRebuildTimer = Timer(const Duration(milliseconds: 250), _rebuildFromCache);
+  }
+
+  Future<void> _rebuildFromCache() async {
+    _fsRebuildTimer = null;
+    final videos = VideoScanner.cachedVideos;
+    if (!mounted || _loading || videos == null) return;
+    if (_fsRebuilding) {
+      // 在飞：顺延一次，保证最后一批也能上屏
+      _onFsRevision();
+      return;
+    }
+    _fsRebuilding = true;
+    final session = _loadSession;
+    try {
+      final rootsFuture = compute(VideoScanner.buildTree, videos);
+      final foldersFuture = compute(VideoScanner.buildFolderList, videos);
+      final roots = await rootsFuture;
+      final folders = await foldersFuture;
+      if (!mounted || session != _loadSession) return;
+      setState(() {
+        _roots = roots;
+        _folders = folders;
+      });
+    } finally {
+      _fsRebuilding = false;
     }
   }
 
@@ -495,7 +543,7 @@ class _HomePageState extends State<HomePage>
             return const Center(child: Text('没有匹配的内容'));
           }
           return RefreshIndicator(
-            onRefresh: _load,
+            onRefresh: () => _load(force: true),
             child: TreeListView(
               roots: nodes,
               folderFields: widget.viewSettings.fields,
@@ -515,7 +563,7 @@ class _HomePageState extends State<HomePage>
           return const Center(child: Text('没有匹配的文件夹'));
         }
         return RefreshIndicator(
-          onRefresh: _load,
+          onRefresh: () => _load(force: true),
           child: FolderListView(
             folders: nodes,
             fields: widget.viewSettings.fields,

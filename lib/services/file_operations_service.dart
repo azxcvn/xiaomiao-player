@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:moumou/services/video_scanner.dart';
 import 'package:moumou/utils/file_ops.dart';
 
 /// 文件操作失败（复制/移动/重命名/删除）：[message] 为可直接展示的中文原因。
@@ -89,6 +90,12 @@ class FileOperationsService {
   static bool isDirectory(String path) =>
       Directory(FileOps.stripTrailingSlash(path)).existsSync();
 
+  /// 每次成功改动文件系统后调用：把这些路径（含目录整棵子树）的整盘补扫缓存
+  /// 失效掉，并让下次扫描优先重扫它们 —— 只失效真正改了的地方，列表不会整片消失
+  static void _markMediaChanged(List<String> paths) {
+    VideoScanner.invalidateFsPaths(paths);
+  }
+
   // ───────────────────────── 复制 / 移动 ─────────────────────────
 
   /// 复制 [sourcePath] 到 [destinationDir]。
@@ -172,6 +179,7 @@ class FileOperationsService {
           itemsDone: 1,
           itemsTotal: 1,
         ));
+        _markMediaChanged([src, target]);
         return target;
       } catch (_) {
         // 跨卷 / 权限差异 → 走通用路径
@@ -251,6 +259,7 @@ class FileOperationsService {
         throw const FileOpException('已复制到目标位置，但删除原文件失败，请手动清理');
       }
     }
+    _markMediaChanged([src, target]);
     return target;
   }
 
@@ -399,6 +408,7 @@ class FileOperationsService {
     } catch (e) {
       throw FileOpException('重命名失败：$e');
     }
+    _markMediaChanged([src, target]);
     return target;
   }
 
@@ -414,6 +424,7 @@ class FileOperationsService {
     } catch (e) {
       throw FileOpException('删除失败：$e');
     }
+    _markMediaChanged([src]);
   }
 
   /// 删除文件夹。两种语义由删除确认弹窗当场选择（对齐 mpvRx 的
@@ -436,6 +447,7 @@ class FileOperationsService {
       } catch (e) {
         throw FileOpException('删除失败：$e');
       }
+      _markMediaChanged([src]);
       return 1;
     }
 
@@ -453,6 +465,7 @@ class FileOperationsService {
     if (deleted == 0) {
       throw const FileOpException('该文件夹内没有可删除的视频文件');
     }
+    _markMediaChanged([src]);
     return deleted;
   }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -56,14 +57,38 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
   @override
   void initState() {
     super.initState();
+    VideoScanner.fsRevision.addListener(_onFsRevision);
     if (widget.folderPath != null) _reloadVideos();
   }
 
   @override
   void dispose() {
+    VideoScanner.fsRevision.removeListener(_onFsRevision);
+    _fsRebuildTimer?.cancel();
     _searchController.dispose();
     _selection.dispose();
     super.dispose();
+  }
+
+  /// 增量重建的防抖定时器（原生整盘补扫推送用）
+  Timer? _fsRebuildTimer;
+
+  void _onFsRevision() {
+    if (!mounted) return;
+    _fsRebuildTimer?.cancel();
+    _fsRebuildTimer = Timer(const Duration(milliseconds: 250), _rebuildFromCache);
+  }
+
+  /// 补扫增量推送：**不重新查原生**，只用当前缓存重算本文件夹的视频
+  /// （原生那边边扫边推，这里跟着增量上屏，不闪不转圈）。
+  void _rebuildFromCache() {
+    _fsRebuildTimer = null;
+    final path = widget.folderPath;
+    final videos = VideoScanner.cachedVideos;
+    if (!mounted || path == null || videos == null) return;
+    setState(() {
+      _videos = videos.where((v) => FileOps.parentOf(v.path) == path).toList();
+    });
   }
 
   /// 重新读取该文件夹内的视频（文件管理后调用；MediaStore 缓存先清）

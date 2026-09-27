@@ -21,7 +21,6 @@ import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.os.SystemClock
 import android.os.storage.StorageManager
 import android.os.storage.StorageVolume
 import android.provider.DocumentsContract
@@ -254,14 +253,31 @@ class MainActivity : FlutterActivity() {
                     }
                     // 媒体库全表扫描（MediaStore 全表 query + 逐条 exists/length +
                     // .nomedia 祖先链上溯 + MediaMetadataRetriever 时长兜底 + 可选的
-                    // 深度 6 全盘递归）：本文件体量最大的通道方法，必须与相邻分支一致
+                    // 整盘补扫）：本文件体量最大的通道方法，必须与相邻分支一致
                     // 放到后台线程，否则库大时主线程秒级阻塞 / ANR
                     "getVideos" -> {
                         val includeNoMedia = call.argument<Boolean>("includeNoMedia") ?: false
                         val includeHidden = call.argument<Boolean>("includeHidden") ?: false
+                        // 黑白名单下推到原生做剪枝（见 FsVideoWalker）：白名单模式下
+                        // 只走「白名单目录及其祖先」，不再整盘递归
+                        val whitelist = call.argument<List<String>>("whitelist") ?: emptyList()
+                        val blacklist = call.argument<List<String>>("blacklist") ?: emptyList()
+                        val forceFsRescan = call.argument<Boolean>("forceFsRescan") ?: false
+                        // 文件操作改动过的路径：只失效这些（含整棵子树），不清整份索引
+                        val invalidatePaths = call.argument<List<String>>("invalidatePaths") ?: emptyList()
+                        // 本次扫描代次：原样回传在补扫推送里，Dart 只认最新代次
+                        val scanId = call.argument<Int>("scanId") ?: -1
                         Thread {
                             try {
-                                val videos = getVideos(includeNoMedia, includeHidden)
+                                val videos = getVideos(
+                                    includeNoMedia,
+                                    includeHidden,
+                                    whitelist,
+                                    blacklist,
+                                    forceFsRescan,
+                                    invalidatePaths,
+                                    scanId,
+                                )
                                 runOnUiThread { result.success(videos) }
                             } catch (e: Throwable) {
                                 // 没有兜底时异常会逃到通道线程；回结构化错误让 Dart 侧
@@ -2150,14 +2166,6 @@ class MainActivity : FlutterActivity() {
     }
 
     /**
-     * 「自己走文件系统」的补充扫描用视频扩展名（MediaStore 索引到的格式不受此表限制）。
-     * 与 Dart 侧 `FileOps.videoExtensions` 保持同源。
-     */
-    private val fsVideoExts = setOf(
-        "mp4", "mkv", "avi", "mov", "wmv", "flv", "ts", "m4v", "webm", "3gp", "mpg", "mpeg"
-    )
-
-    /**
      * **非主**存储卷根（外置卡 / U 盘 / 模拟器共享目录等），供 [getVideos] 的文件系统
      * 补充扫描使用。
      *
@@ -2203,13 +2211,30 @@ class MainActivity : FlutterActivity() {
     /**
      * 通过 MediaStore 查询所有本地视频（可配置是否包含 .nomedia 与隐藏文件夹）。
      *
-     * MediaStore 不认识的位置（外置卡上未被索引的目录、模拟器共享目录等）由末尾的
-     * **文件系统补充扫描**补齐：单靠 MediaStore 会整片漏掉这些位置（用户反馈：模拟器
-     * 共享目录里的视频文件夹不出现在首页）。
+     * **不等文件系统遍历**（对齐 mpvRx 的「快结果先发布 + 隐藏目录后台增量并入」）：
+     * 本方法只做 MediaStore 全表 + 整盘补扫**索引里已知**的条目（[FsVideoWalker.readCached]），
+     * 返回后由原生再起后台线程跑一轮预算内的递归，边扫边通过
+     * `onFsVideoBatch` / `onFsScanDone` 把结果推给 Dart（见 [pushFsVideos]）。
+     *
+     * MediaStore 不认识的位置（外置卡上未被索引的目录、模拟器共享目录、`.nomedia`
+     * 与隐藏目录等）就靠这条补扫补齐。原来这里是同步「主卷深度 6、非主卷深度 4」
+     * 的整盘递归，成本跟**整个存储上的目录/文件数**成正比、跟视频库大小无关，且
+     * 每次进 App 从零重来 —— 用户存储上几十万个文件时就是「进 App 转圈十几秒」
+     * （issue #4）。
+     *
+     * [whitelist] / [blacklist] 是 Dart 侧的黑白名单目录（白名单为空 = 不剪枝）；
+     * [forceFsRescan] = 用户主动刷新（下拉刷新 / 一键清缓存）：忽略重扫间隔重新走
+     * 一遍，但**不清索引**；[invalidatePaths] = 文件操作改动过的路径，只失效这些
+     * （含整棵子树）并优先重扫。
      */
     private fun getVideos(
         includeNoMedia: Boolean = false,
-        includeHidden: Boolean = false
+        includeHidden: Boolean = false,
+        whitelist: List<String> = emptyList(),
+        blacklist: List<String> = emptyList(),
+        forceFsRescan: Boolean = false,
+        invalidatePaths: List<String> = emptyList(),
+        scanId: Int = -1,
     ): List<Map<String, Any>> {
         val videos = mutableListOf<Map<String, Any>>()
         val visitedPaths = mutableSetOf<String>()
@@ -2326,105 +2351,64 @@ class MainActivity : FlutterActivity() {
             }
         }
 
-        // 4. 文件系统补充扫描（MediaStore 不认识的位置只能自己走文件系统）
-        //
-        // 4.1 主卷：仅在开启 includeNoMedia / includeHidden 时补扫（MediaStore 绝不会
-        //     自动索引 .nomedia 目录），深度与判定保持原样；
-        // 4.2 非主卷（外置卡 / U 盘 / 模拟器共享目录等）：**恒扫**——这些卷 MediaStore
-        //     根本不索引，不扫就永远看不到里面的视频。深度 4 对齐参考项目 mpvEx 的
-        //     shallow scan（MediaFileRepository.scanExternalVolumeShallow）。
-        fun scanFsFolder(
-            folder: File,
-            depth: Int,
-            maxDepth: Int,
-            extractDuration: Boolean,
-            durationDeadlineMs: Long,
-            noMediaSelfOnly: Boolean,
-        ) {
-            if (depth > maxDepth) return
-            if (!folder.exists() || !folder.isDirectory || !folder.canRead()) return
-            val folderName = folder.name
-            if (!includeHidden && folderName.startsWith(".")) return
-            if (!includeNoMedia) {
-                if (noMediaSelfOnly) {
-                    // 非主卷：只看目录**自身**的 .nomedia，不上溯到卷外（/mnt、/ 上的 .nomedia
-                    // 与这一卷无关，照算会让整卷消失）；卷根（depth 0）也豁免——模拟器 / 个别
-                    // ROM 会在共享目录根上放 .nomedia，那不是「用户不想扫这个目录」的意思
-                    if (depth > 0 && File(folder, ".nomedia").exists()) return
-                } else if (checkDirectoryHasNoMedia(folder)) {
-                    // 主卷：与上面 MediaStore 分支同一套祖先链判定（原先补充扫描漏了这一步，
-                    // 于是「只开隐藏文件夹」时 .nomedia 目录里的视频会从补充扫描漏进来）
-                    return
-                }
-            }
-
-            val files = folder.listFiles() ?: return
-            for (f in files) {
-                if (f.isDirectory) {
-                    scanFsFolder(
-                        f, depth + 1, maxDepth, extractDuration, durationDeadlineMs,
-                        noMediaSelfOnly,
-                    )
-                } else if (f.isFile && f.length() > 0) {
-                    val ext = f.extension.lowercase()
-                    if (ext !in fsVideoExts) continue
-                    val fName = f.name
-                    if (!includeHidden && fName.startsWith(".")) continue
-                    val normPath = f.absolutePath
-                    if (!visitedPaths.add(normPath)) continue
-                    // MediaStore 没索引到 → 时长必为 0，而列表的进度条 / 已看状态全靠它，
-                    // 故兜底抽一次；非主卷可能整卷很大，给一个总时间预算，超预算就不再抽
-                    //（留 0 不影响列出与播放，只是这几条少了进度显示）
-                    val duration = if (extractDuration &&
-                        SystemClock.elapsedRealtime() < durationDeadlineMs
-                    ) {
-                        extractDurationMs(normPath)
-                    } else {
-                        0L
-                    }
-                    videos.add(
-                        mapOf(
-                            "path" to normPath,
-                            "name" to fName,
-                            "durationMs" to duration,
-                            "size" to f.length(),
-                            "width" to 0,
-                            "height" to 0,
-                            "dateModifiedMs" to f.lastModified(),
-                        )
-                    )
-                }
-            }
-        }
-
-        if (includeNoMedia || includeHidden) {
-            try {
-                @Suppress("DEPRECATION")
-                val primaryStorage = Environment.getExternalStorageDirectory()
-                if (primaryStorage != null && primaryStorage.exists()) {
-                    // 主卷不抽时长：整盘补扫可能上千个文件，逐个开容器代价太大（保持原行为）
-                    scanFsFolder(
-                        primaryStorage, 0, 6,
-                        extractDuration = false,
-                        durationDeadlineMs = 0L,
-                        noMediaSelfOnly = false,
-                    )
-                }
-            } catch (_: Exception) {}
-        }
-
-        // 非主卷恒扫。总时长抽取预算 4s：超了后面的文件留 0，避免整卷很大时首屏扫描被拖长
-        val externalDurationDeadlineMs = SystemClock.elapsedRealtime() + 4000L
-        for (root in externalStorageRoots()) {
-            scanFsFolder(
-                root, 0, 4,
-                extractDuration = true,
-                durationDeadlineMs = externalDurationDeadlineMs,
-                noMediaSelfOnly = true,
+        // 4. 文件系统补扫：MediaStore 不认识的位置（`.nomedia` 目录 / 隐藏目录 /
+        //    外置卷 / 模拟器共享目录）交给 FsVideoWalker —— 这里只取**索引里已知**
+        //    的条目（不递归），递归挪到后台边扫边推（见方法注释与 FsVideoWalker）。
+        try {
+            @Suppress("DEPRECATION")
+            val primaryStorage = Environment.getExternalStorageDirectory()
+            val request = FsScanRequest(
+                scanId = scanId,
+                includeNoMedia = includeNoMedia,
+                includeHidden = includeHidden,
+                allowedPrefixes = whitelist,
+                blockedPrefixes = blacklist,
+                forceRescan = forceFsRescan,
+                invalidatePaths = invalidatePaths,
+                primaryRoot = primaryStorage,
+                externalRoots = externalStorageRoots(),
+                extractDuration = { path -> extractDurationMs(path) },
             )
+            val cached = FsVideoWalker.readCached(this, request)
+            // 补扫条目可能与 MediaStore 重复（同一个视频两边都命中）：保留 MediaStore
+            // 那份（时长 / 宽高更全），补扫只补 MediaStore 没有的
+            for (item in cached) {
+                val path = item["path"] as? String ?: continue
+                if (!visitedPaths.add(path)) continue
+                videos.add(item)
+            }
+            // 快结果已经齐了：递归在后台跑，边扫边把增量推给 Dart
+            FsVideoWalker.walkInBackground(
+                this,
+                request,
+                onBatch = { id, batch -> pushFsVideos(id, batch, done = false) },
+                onDone = { id, all -> pushFsVideos(id, all, done = true) },
+            )
+        } catch (e: Exception) {
+            Log.w("MainActivity", "filesystem video scan failed: ${e.message}")
         }
 
         return videos
+    }
+
+    /**
+     * 原生 → Dart 推送整盘补扫结果（Dart 侧 `VideoScanner.handleNativeCall` 收）：
+     * - `onFsVideoBatch`：增量批次（边扫边推，首屏不用等整轮扫完）；
+     * - `onFsScanDone`：整轮结束的**完整快照**，Dart 用它覆盖增量累计，顺带清掉
+     *   这一轮里消失的条目。
+     */
+    private fun pushFsVideos(scanId: Int, videos: List<Map<String, Any>>, done: Boolean) {
+        val payload = mapOf<String, Any>("scanId" to scanId, "videos" to videos)
+        runOnUiThread {
+            try {
+                flutterChannel?.invokeMethod(
+                    if (done) "onFsScanDone" else "onFsVideoBatch",
+                    payload,
+                )
+            } catch (e: Exception) {
+                Log.w("MainActivity", "push fs videos failed: ${e.message}")
+            }
+        }
     }
 
     /** MediaStore 时长为 0 时兜底抽取（工作.md 第 5 点：下载产物直写导致元数据缺失）。 */
