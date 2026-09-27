@@ -3,8 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// 解码方式档位（对齐 mpvRx / 小喵生态「自动 / 硬解 / 硬解+ / 软解」习惯）。
 ///
-/// [hwdec] 为 mpv 的 `--hwdec` 值；「硬解+」为直通优先的有序回退链
-/// （`mediacodec` 在 `vo=gpu` 下会初始化失败，自动落到 `mediacodec-copy`）。
+/// [hwdec] 为 mpv 的 `--hwdec` 值；「硬解+」为直通优先的有序回退链。
 enum DecodeMode {
   autoSafe('自动', 'auto-safe', '自动选择安全硬解'),
   hwCopy('硬解', 'mediacodec-copy', '强制硬解，兼容字幕与超分'),
@@ -43,6 +42,11 @@ enum DecodePreset {
 ///
 /// 播放页创建 [VideoController] 时读取 [mode] 注入 `hwdec`/`vo`，并在初始化后
 /// 写入 [preset] 的 `profile` 属性；两者均**重启播放器（重开视频）后生效**。
+///
+/// **默认档位是「硬解+」**（直通优先 `mediacodec,mediacodec-copy,no`）：设备
+/// 不支持直通时由 mpv 落到硬解、连硬解也不可用时落到软解。播放页还会读 mpv
+/// 实际生效的 `hwdec-current` 做一次**可见的自动回退**（写回本设置 + toast），
+/// 见 `services/decode_fallback.dart`。
 class DecodeSettings extends ChangeNotifier {
   static final DecodeSettings instance = DecodeSettings._();
 
@@ -60,9 +64,9 @@ class DecodeSettings extends ChangeNotifier {
   static const _keyGpuNext = 'decode_gpu_next';
   static const _keyVulkan = 'decode_vulkan';
 
-  DecodeMode _mode = DecodeMode.autoSafe;
+  DecodeMode _mode = DecodeMode.hwPlus;
 
-  /// 当前解码档位（默认自动）
+  /// 当前解码档位（默认硬解+；用户改过则以持久化值为准）
   DecodeMode get mode => _mode;
 
   DecodePreset _preset = DecodePreset.fast;

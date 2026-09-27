@@ -91,7 +91,8 @@ lib/
 │   ├── playback_history_service.dart # 播放历史（记录/去重置顶/上限淘汰/删除/清空/开关）
 │   ├── playback_tuning.dart   # 每次 open 前的 mpv 缓存/网络调参（本地/在线两档）
 │   ├── player_controls_settings.dart   # 播放器控制设置（槽位/手势/倍速/比例/长按/方向/顶部信息等）
-│   ├── decode_settings.dart   # 解码设置（硬解/软解档位 + 解码预设）
+│   ├── decode_settings.dart   # 解码设置（硬解/软解档位 + 解码预设，默认硬解+）
+│   ├── decode_fallback.dart   # 解码档位自动回退（读 mpv hwdec-current → 硬解/软解 + 提示）
 │   ├── device_services.dart   # 设备能力（MethodChannel）：音量/亮度/画中画/电量/网络类型/后台服务/文件与目录操作 + 抓帧 + 设备能力检测 + 整应用重启 + 壁纸取色
 │   ├── dolby_vision_settings.dart # 杜比视界偏色提示「不再提示」记忆
 │   ├── fast_thumbnails.dart   # 快速缩略图引擎（FFI 直连自建 libmpv.so 的 mk_thumbnail_*，长驻 worker + 单飞顶旧调度）
@@ -393,6 +394,7 @@ utils（纯工具）    → 只依赖 models
 - **超分**：`SuperResolutionService` 管理 Anime4K 着色器链（安装期做精度注入与采样合并优化后再拷贝），7 档模式 × 3 质量档。
 - **章节与跳过**：`ChapterTracker` 读 mpv `chapter-list` 并跟踪当前位置与片段窗口；`ChapterSkipSettings`（六类片段）与 `IntroOutroSettings`（片头片尾秒数）分别驱动自动跳过。
 - **诊断**：`player_diagnostics` 纯函数 + 诊断面板按秒采样 mpv 属性（缓存/丢帧/渲染延迟/硬解/音画同步）。
+- **解码**：`DecodeSettings` 持久化档位（**默认「硬解+」**：`mediacodec,mediacodec-copy,no` 直通优先、失败由 mpv 依次落到硬解/软解）与解码预设；播放页 open 完成后由 `decode_fallback` 读 mpv 实际生效的 `hwdec-current` 做一次**可见的自动回退**——实际落到拷贝就写回「硬解」、连硬件解码都没起来则只在设备整机无硬解器时写回「软解」（否则仅提示，避免某个编码把整机降到软解），两种情况都 toast + 解码面板胶囊随之切换；`hwdec-current` 读不到或读到不认识的值一律不动。
 
 ### 5.3 字幕
 

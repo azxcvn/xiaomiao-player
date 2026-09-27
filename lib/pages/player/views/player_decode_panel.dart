@@ -8,7 +8,9 @@ import 'package:moumou/widgets/player_option_chip.dart';
 /// [showPlayerBottomPanel] 底部弹出，标题「解码」）。
 ///
 /// 分两组：
-/// - **解码方式**：自动 / 硬解 / 硬解+ / 软解 四档 2×2 等宽胶囊；
+/// - **解码方式**：自动 / 硬解 / 硬解+ / 软解 四档 2×2 等宽胶囊
+///   （默认「硬解+」；播放页会读 mpv 实际生效的 `hwdec-current`，
+///   实际档更低时自动写回本设置并 toast，本面板胶囊随之切换）；
 /// - **解码预设**：快速 / 标准（默认快速，vd-lavc-* 性能开关）。
 /// 两者均**重启播放器（重开视频）后生效**，面板底部有提示。
 ///
@@ -175,7 +177,16 @@ class _PlayerDecodePanelState extends State<PlayerDecodePanel> {
           ),
           const SizedBox(height: 4),
           Text(
-            '「硬解+」在直通不可用时自动回退',
+            '默认「硬解+」；实际生效档更低时自动降档并提示',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.45),
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '「硬解+」直通不可用时依次回退硬解 / 软解',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.45),

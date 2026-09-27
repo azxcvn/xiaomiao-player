@@ -54,6 +54,7 @@ import 'package:moumou/services/chapter_tracker.dart';
 import 'package:moumou/services/danmaku_service.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/danmaku_search_store.dart';
+import 'package:moumou/services/decode_fallback.dart';
 import 'package:moumou/services/decode_settings.dart';
 import 'package:moumou/services/bilibili/bili_danmaku_service.dart';
 import 'package:moumou/services/bilibili/bili_constants.dart';
@@ -766,6 +767,8 @@ class _PlayerPageState extends State<PlayerPage>
     unawaited(_audioController.reapplyForMedia(_path));
     // 弹幕功能：open 完成后加载同目录同名弹幕（无匹配静默跳过）
     unawaited(_danmakuController.loadForVideo(_path));
+    // 解码功能：读 mpv 实际生效的 hwdec，按需自动回退档位（硬解+ → 硬解 → 软解）
+    unawaited(_checkDecodeFallback());
     // ⚠️ 顺序要求：方向流程必须在前——锁定竖屏/自动竖屏时它会 push 竖屏页
     // （await 到竖屏页 pop），杜比检测要等 `_portraitActive` 落定后再决定
     // 「本页检测」还是「让位给竖屏页」，否则弹窗会压在被盖住的页上、
@@ -790,6 +793,28 @@ class _PlayerPageState extends State<PlayerPage>
     if (_portraitActive) return;
     if (!_session.claimDolbyCheck(_path)) return;
     await showDolbyVisionHintIfNeeded(context, _path);
+  }
+
+  /// 解码档位自动回退（用户反馈：默认「硬解+」，设备不支持时自动降档，
+  /// 并且要**看得见**——解码面板胶囊跟着切 + 本页 toast）。
+  ///
+  /// 判定与降档逻辑在 [autoFallbackDecodeMode]（纯函数可单测）：
+  /// 读 mpv 实际生效的 `hwdec-current`，硬解+ 只落到拷贝 → 回退「硬解」；
+  /// 连硬件解码都没起来 → 设备整机没硬解器才回退「软解」，否则只提示。
+  ///
+  /// 横竖屏两页各自在 open 完成后调用（同一次播放只有真正 open 的那一页跑），
+  /// 提示用 App 级 [ScaffoldMessenger]，压在竖屏页上时也能看到。
+  Future<void> _checkDecodeFallback() async {
+    final platform = _player.platform;
+    if (platform is! NativePlayer) return;
+    final message = await autoFallbackDecodeMode(
+      readProperty: (name) =>
+          platform.getProperty(name, waitForInitialization: false),
+      // 纯音频媒体 hwdec-current 会读成 no：没视频轨就不判定
+      hasVideoTrack: () => _player.state.tracks.video.isNotEmpty,
+    );
+    if (!mounted || message == null) return;
+    _toast(message);
   }
 
   // ── B 站在线播放（阶段三）──────────────────────────────
@@ -827,6 +852,9 @@ class _PlayerPageState extends State<PlayerPage>
     _introOutroTracker.reset();
     unawaited(_loadBiliDanmaku());
     _loadBiliChapters();
+    // 解码功能：B 站流同样按实际生效的 hwdec 判定一次自动回退（切画质会重开流，
+    // 已降过档时判定直接返回 null，不会重复提示）
+    unawaited(_checkDecodeFallback());
   }
 
   /// 注册 B 站流代理，返回视频本地 URL；音频本地 URL 存到 [_biliAudioUrl]。
@@ -2055,6 +2083,8 @@ class _PlayerPageState extends State<PlayerPage>
       // 弹幕功能：切集后重新加载新集的同名弹幕（loadForVideo 内部会先
       // 重置调度器并清屏，在途旧集弹幕不会灌入新集）
       unawaited(_danmakuController.loadForVideo(path));
+      // 解码功能：切集后新视频可能是别的编码，重新判定一次自动回退
+      unawaited(_checkDecodeFallback());
       // 杜比视界偏色检测 + 引导（切集后新视频重新检测）
       unawaited(_checkDolbyVision());
     } on AssertionError {

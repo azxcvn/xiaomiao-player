@@ -32,19 +32,19 @@ void main() {
       .byType(PlayerOptionChip)
       .at(DecodeMode.values.length + DecodePreset.values.indexOf(preset));
 
-  testWidgets('初始档位与预设为默认值（自动 / 快速）', (tester) async {
+  testWidgets('初始档位与预设为默认值（硬解+ / 快速）', (tester) async {
     await pumpPanel(tester);
-    expect(DecodeSettings.instance.mode, DecodeMode.autoSafe);
+    expect(DecodeSettings.instance.mode, DecodeMode.hwPlus);
     expect(DecodeSettings.instance.preset, DecodePreset.fast);
   });
 
   testWidgets('点当前已选解码档位：不弹「需重启应用」', (tester) async {
     await pumpPanel(tester);
 
-    await tester.tap(modeChip(DecodeMode.autoSafe));
+    await tester.tap(modeChip(DecodeMode.hwPlus));
     await tester.pumpAndSettle();
 
-    expect(DecodeSettings.instance.mode, DecodeMode.autoSafe);
+    expect(DecodeSettings.instance.mode, DecodeMode.hwPlus);
     expect(find.text('需重启应用'), findsNothing);
   });
 
