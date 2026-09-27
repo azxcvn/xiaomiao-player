@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:moumou/models/subtitle_dir.dart';
 import 'package:moumou/models/subtitle_track.dart';
 import 'package:moumou/services/device_services.dart';
+import 'package:moumou/widgets/marquee_text.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:moumou/widgets/storage_root_selector.dart';
 
@@ -177,7 +178,21 @@ class _SubtitleFilePickerPanelState extends State<SubtitleFilePickerPanel> {
     return norm.substring(0, idx);
   }
 
-  /// 路径显示：父路径省略 + 当前文件夹名高亮（始终可见当前层级）。
+  /// 路径行跑马灯速度：**故意比默认更慢**（用户明确要求「速度千万不要太快」）。
+  ///
+  /// 路径是标识性文本、往往很长（默认 30 像素/秒 下几百像素的名字也要滚十几秒，
+  /// 这里放到 20 像素/秒 ≈ 中文 1.7 字/秒，慢慢看清就够了）。
+  static const double _kPathMarqueeSpeed = 20;
+
+  /// 路径显示：父路径省略 + 当前文件夹名高亮。
+  ///
+  /// ⚠️ 当前文件夹名**必须参与 Flex 布局**（`Flexible`）：用户反馈「文件夹名
+  /// 特别长时这一行像素溢出」——旧实现这个名字是无约束的裸 [Text]，名字一长就把
+  /// Row 撑爆（黄黑溢出条）。
+  ///
+  /// 名字**不省略而是走跑马灯**（[MarqueeText]）：这一行最该看清的就是「我在哪个
+  /// 文件夹」，省略号会把后半截吞掉；装得下时跑马灯等同于普通静态文本，长名才滚动。
+  /// 父路径给 1 份、名字给 3 份空间（两边都装不下时优先保证名字可读）。
   Widget _buildPathLabel(String path) {
     final norm = path.endsWith('/') ? path.substring(0, path.length - 1) : path;
     final idx = norm.lastIndexOf('/');
@@ -197,13 +212,16 @@ class _SubtitleFilePickerPanelState extends State<SubtitleFilePickerPanel> {
               ),
             ),
           ),
-        Text(
-          name,
-          maxLines: 1,
-          style: const TextStyle(
-            color: Color(0xFF4FC3F7),
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+        Flexible(
+          flex: 3,
+          child: MarqueeText(
+            text: name,
+            pixelsPerSecond: _kPathMarqueeSpeed,
+            style: const TextStyle(
+              color: Color(0xFF4FC3F7),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],

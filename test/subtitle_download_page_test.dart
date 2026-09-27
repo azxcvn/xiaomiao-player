@@ -6,9 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:moumou/models/subtitle_entry.dart';
 import 'package:moumou/models/wyzie_models.dart';
 import 'package:moumou/pages/subtitle/subtitle_download_page.dart';
 import 'package:moumou/services/download/download_settings.dart';
+import 'package:moumou/services/subtitle/custom_subtitle_api.dart';
+import 'package:moumou/services/subtitle/subtitle_source_settings.dart';
 import 'package:moumou/services/wyzie/wyzie_api.dart';
 import 'package:moumou/services/wyzie/wyzie_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -50,6 +53,40 @@ class _FakeWyzieApi extends WyzieApi {
   }
 }
 
+/// 假自定义源 API（方案 A）：记录查询词与地址模板，直接回通用条目。
+class _FakeCustomApi extends CustomSubtitleApi {
+  _FakeCustomApi()
+      : super(client: MockClient((_) async => http.Response('[]', 200)));
+
+  final List<String> queries = [];
+  final List<String> templates = [];
+  int fetchCalls = 0;
+
+  @override
+  Future<List<SubtitleEntry>> search({
+    required String urlTemplate,
+    required String query,
+  }) async {
+    queries.add(query);
+    templates.add(urlTemplate);
+    return const [
+      SubtitleEntry(
+        url: 'https://custom.test/a.srt',
+        name: '自定义字幕',
+        language: 'zh',
+        format: 'srt',
+        source: '自定义',
+      ),
+    ];
+  }
+
+  @override
+  Future<Uint8List> fetchBytes(String url) async {
+    fetchCalls++;
+    return Uint8List.fromList([1, 2, 3]);
+  }
+}
+
 WyzieSubtitle _sub(String fileName, String display) => WyzieSubtitle(
       url: 'https://sub.wyzie.io/f/$fileName',
       fileName: fileName,
@@ -66,12 +103,19 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     WyzieSettings.instance.resetForTest();
+    SubtitleSourceSettings.instance.resetForTest();
   });
 
-  Future<void> pumpPage(WidgetTester tester, {WyzieApi? api, List<String>? written}) async {
+  Future<void> pumpPage(
+    WidgetTester tester, {
+    WyzieApi? api,
+    CustomSubtitleApi? custom,
+    List<String>? written,
+  }) async {
     await tester.pumpWidget(MaterialApp(
       home: SubtitleDownloadPage(
         api: api,
+        customApi: custom,
         writeBytes: written == null
             ? null
             : (path, bytes) async {
@@ -86,6 +130,7 @@ void main() {
   Future<Directory> prepareForSearch(
     WidgetTester tester,
     WyzieApi api, {
+    CustomSubtitleApi? custom,
     List<String>? written,
   }) async {
     final tmp = Directory.systemTemp.createTempSync('b12_sub_');
@@ -98,7 +143,7 @@ void main() {
     });
     await WyzieSettings.instance.setApiKey('test-key');
     await DownloadSettings.instance.setDirectory(tmp.path);
-    await pumpPage(tester, api: api, written: written);
+    await pumpPage(tester, api: api, custom: custom, written: written);
     return tmp;
   }
 
@@ -126,15 +171,121 @@ void main() {
     expect(find.text('WYZIE API 密钥'), findsNothing);
   });
 
-  testWidgets('字幕设置子页：五个设置项齐全', (tester) async {
+  testWidgets('字幕设置子页：来源单选 + Wyzie 五项齐全', (tester) async {
     await pumpPage(tester);
     await openSettings(tester);
 
+    // 来源单选（二选一）
+    expect(find.text('Wyzie 字幕服务'), findsOneWidget);
+    expect(find.text('自定义字幕地址'), findsOneWidget);
+    // Wyzie 参数（默认来源）：五项照旧
     expect(find.text('WYZIE API 密钥'), findsOneWidget);
-    expect(find.text('字幕来源'), findsOneWidget);
+    expect(find.text('Wyzie 来源'), findsOneWidget);
     expect(find.text('字幕语言'), findsOneWidget);
     expect(find.text('首选格式'), findsOneWidget);
     expect(find.text('首选编码'), findsOneWidget);
+  });
+
+  testWidgets('切到自定义来源：隐藏 Wyzie 五项，显示地址与测试连接', (tester) async {
+    await pumpPage(tester);
+    await openSettings(tester);
+
+    await tester.tap(find.text('自定义字幕地址'));
+    await tester.pumpAndSettle();
+
+    expect(SubtitleSourceSettings.instance.kind, SubtitleSourceKind.custom);
+    expect(find.text('WYZIE API 密钥'), findsNothing, reason: '互斥：非当前来源的参数不显示');
+    expect(find.text('接口地址'), findsOneWidget);
+    expect(find.text('未设置'), findsOneWidget);
+    expect(find.text('测试连接'), findsOneWidget);
+
+    // 切回 Wyzie
+    await tester.tap(find.text('Wyzie 字幕服务'));
+    await tester.pumpAndSettle();
+    expect(SubtitleSourceSettings.instance.kind, SubtitleSourceKind.wyzie);
+    expect(find.text('WYZIE API 密钥'), findsOneWidget);
+    expect(find.text('接口地址'), findsNothing);
+  });
+
+  testWidgets('自定义来源：地址弹窗保存后摘要显示地址', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    SubtitleSourceSettings.instance.resetForTest();
+    await SubtitleSourceSettings.instance.setKind(SubtitleSourceKind.custom);
+    await pumpPage(tester);
+    await openSettings(tester);
+
+    await tester.tap(find.text('接口地址'));
+    await tester.pumpAndSettle();
+    // 弹窗内带「如何自定义接口地址」教程入口（点了用外部浏览器打开；测试环境
+    // 无处理者 → 静默降级，不得崩）
+    expect(find.text('如何自定义接口地址'), findsOneWidget);
+    await tester.tap(find.text('如何自定义接口地址'));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byType(TextField),
+      ),
+      'https://example.com/sub?name={name}',
+    );
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('保存'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      SubtitleSourceSettings.instance.customUrlTemplate,
+      'https://example.com/sub?name={name}',
+    );
+    expect(find.text('接口地址'), findsOneWidget);
+  });
+
+  testWidgets('自定义来源未填地址点确定 → toast 提示填地址（不再提示密钥）', (tester) async {
+    SubtitleSourceSettings.instance.resetForTest();
+    await SubtitleSourceSettings.instance.setKind(SubtitleSourceKind.custom);
+    await pumpPage(tester);
+
+    await tester.enterText(find.byType(TextField), 'Inception');
+    await tester.tap(find.text('确定'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.text('请先设置自定义字幕地址'), findsOneWidget);
+  });
+
+  testWidgets('自定义来源搜索：走自定义 API 并渲染结果', (tester) async {
+    SubtitleSourceSettings.instance.resetForTest();
+    await SubtitleSourceSettings.instance.setKind(SubtitleSourceKind.custom);
+    await SubtitleSourceSettings.instance
+        .setCustomUrlTemplate('https://example.com/s?name={name}');
+    final custom = _FakeCustomApi();
+    final written = <String>[];
+    final dir = await prepareForSearch(
+      tester,
+      _FakeWyzieApi(),
+      custom: custom,
+      written: written,
+    );
+
+    await submit(tester, 'kw');
+    expect(custom.queries, ['kw']);
+    expect(custom.templates.single, 'https://example.com/s?name={name}');
+    expect(find.text('kw · 1 条'), findsOneWidget);
+    expect(find.text('自定义字幕'), findsOneWidget);
+
+    await tester.tap(find.text('自定义字幕'));
+    await tester.pump();
+    await tester.tap(find.text('下载字幕（1）'));
+    await tester.pumpAndSettle();
+
+    expect(custom.fetchCalls, 1);
+    expect(written.single, startsWith(dir.path));
+    expect(written.single, endsWith('自定义字幕.zh.srt'));
   });
 
   testWidgets('字幕语言弹窗勾选「全部」后摘要更新为全部语言', (tester) async {

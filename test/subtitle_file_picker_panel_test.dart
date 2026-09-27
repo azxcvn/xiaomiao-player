@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/pages/player/views/subtitle_file_picker.dart';
+import 'package:moumou/widgets/marquee_text.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 /// 自建文件选择器面板回归测试（字幕/音频/弹幕三处共用同一面板）：
 /// - 记忆文件夹已被删除（listDirectory 返回 null）→ 自动向上回退到最近
 ///   存活祖先打开（小喵 player 停在死路径卡死的教训，工作.md 弹幕阶段1）；
@@ -124,6 +124,41 @@ void main() {
     // 文件夹记忆：选中文件后写入其所在目录
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString('subtitle_picker_last_folder'), root);
+  });
+
+  testWidgets('超长文件夹名：路径行不溢出（当前目录名走跑马灯而不是撑爆 Row）',
+      (tester) async {
+    // 用户反馈：文件夹名特别长时顶栏路径行报像素溢出（黄黑条）。
+    // 60 个中文字 ≈ 700+ 逻辑像素，测试视口只有 800（还要减去「上级」与排序胶囊）。
+    final longName = '这是一个特别特别长的文件夹名称' * 4;
+    final longPath = '$root/$longName';
+    SharedPreferences.setMockInitialValues({
+      'subtitle_picker_last_folder': longPath,
+    });
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+      if (call.method != 'listDirectory') return null;
+      final path = call.arguments['path'] as String;
+      // 该目录可列出（空）：让面板停在这个超长名字的目录上
+      if (path == longPath) return <Map<String, dynamic>>[];
+      return null;
+    });
+
+    await tester.pumpWidget(buildPanel());
+    // 跑马灯是无限循环动画：只能定帧 pump（pumpAndSettle 会一直等下去）
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(
+      tester.takeException(),
+      isNull,
+      reason: '长文件夹名不得触发 RenderFlex 像素溢出',
+    );
+    // 当前目录名交给跑马灯（装得下时是静态文本，装不下才滚）
+    final marquee = tester.widget<MarqueeText>(find.byType(MarqueeText));
+    expect(marquee.text, longName);
+    // 路径行故意比默认更慢（用户要求「速度千万不要太快」）
+    expect(marquee.pixelsPerSecond, lessThan(kMarqueePixelsPerSecond));
   });
 }
 

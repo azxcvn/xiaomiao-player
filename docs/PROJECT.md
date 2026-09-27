@@ -77,6 +77,7 @@ lib/
 │   ├── update_info.dart       # 更新信息值对象（版本号 / 更新说明 / 下载站链接）
 │   ├── device_decoder.dart    # 设备解码器条目模型（能力详情页用）
 │   ├── wyzie_models.dart      # Wyzie 字幕 API 数据模型
+│   ├── subtitle_entry.dart    # 在线字幕通用条目模型（Wyzie / 自定义源共用）
 │   ├── player_diagnostics.dart # 播放诊断快照模型
 │   ├── bili_playlist.dart     # 番剧播放列表模型（整季剧集 + 按 epId 定位当前集）
 │   ├── subtitle_dir.dart      # 字幕目录条目 + 排序纯函数（目录恒在前）
@@ -166,6 +167,9 @@ lib/
 │   ├── wyzie/                   # 影视字幕下载域
 │   │   ├── wyzie_settings.dart  # 字幕下载设置（密钥/来源/语言/格式/编码）
 │   │   └── wyzie_api.dart       # Wyzie 字幕 API 客户端（搜索 / 下载）
+│   ├── subtitle/                # 在线字幕来源域
+│   │   ├── subtitle_source_settings.dart # 来源单选（Wyzie / 自定义地址）+ 自定义地址模板
+│   │   └── custom_subtitle_api.dart      # 自定义地址客户端（通用 GET + 自动嗅探解析）
 │   └── ...                    # 其余服务模块
 ├── widgets/                   # 可复用 UI 组件（跨页面）
 │   ├── app_frame.dart         # ★ 全局框架：安全区 + 播放页全屏检测
@@ -348,7 +352,8 @@ lib/
     ├── version_compare.dart   # 版本号比较纯函数
     ├── network_mime_types.dart # 文件名 → MIME 类型映射
     ├── wyzie_query.dart       # Wyzie 字幕查询纯函数
-    └── wyzie_filename.dart    # Wyzie 字幕落盘文件名纯函数
+    ├── wyzie_filename.dart    # 字幕落盘文件名纯函数（来源无关，Wyzie 侧为便捷入口）
+    ├── custom_subtitle_parser.dart # 自定义字幕源：地址模板展开 + 响应自动嗅探（纯函数）
 ```
 
 ---
@@ -402,7 +407,7 @@ utils（纯工具）    → 只依赖 models
 - **控制器**：`SubtitleService` 单选模型，同步 `track-list` / `sid`，支持增删轨道、按字段写入样式、等待式轨道刷新、切轨后按用户意图钉回、记忆路径失效清理。
 - **样式**：`SubtitleSettings` 管理延迟 / 大小 / 位置 / 颜色 / 描边 / 背景框 / 内嵌样式覆盖 / 自定义字体；字段到 mpv 属性的映射集中在 `subtitle_style_properties.dart`。
 - **字体**：自定义字体走 libass 原生渲染；字体目录在播放器构造期注入（运行期不改 `sub-fonts-dir`）。
-- **影视字幕下载**：`WyzieApi` + 字幕下载页（关键词搜索、勾选批量下载）。
+- **影视字幕下载**：字幕下载页支持**两种来源（单选互斥，`SubtitleSourceSettings`）**——`Wyzie` 走 `WyzieApi`（需 API 密钥，来源/语言/格式/编码偏好见 `WyzieSettings`）；`自定义字幕地址` 走 `CustomSubtitleApi`：用户自填地址模板（`{name}` 占位，无占位符则片名拼到末尾），响应由 `custom_subtitle_parser` **自动嗅探**常见列表键（顶层数组 / `data`·`subtitles`·`subs`·`results`·`list`·`items`）与字段名（名称 `name`·`title`·`filename`…、地址 `url`·`link`·`download_url`…、语言 `language`·`lang`·`languages`…、格式 `ext`·`format`…，缺格式从地址后缀推断），嗅不出来明确报错（不当成「没有字幕」）。两链路结果统一为 `SubtitleEntry`，按关键词搜索、勾选批量下载。**仓库不内置任何第三方字幕地址/密钥**，片名会发送到用户所选服务（隐私政策已披露）。
 
 ### 5.4 弹幕
 

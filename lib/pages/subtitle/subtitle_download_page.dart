@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:moumou/models/wyzie_models.dart';
+import 'package:moumou/models/subtitle_entry.dart';
 import 'package:moumou/pages/subtitle/subtitle_settings_page.dart';
 import 'package:moumou/services/download/download_settings.dart';
+import 'package:moumou/services/subtitle/custom_subtitle_api.dart';
+import 'package:moumou/services/subtitle/subtitle_source_settings.dart';
 import 'package:moumou/services/wyzie/wyzie_api.dart';
 import 'package:moumou/services/wyzie/wyzie_settings.dart';
 import 'package:moumou/utils/async_session.dart';
@@ -14,9 +16,15 @@ import 'package:moumou/widgets/settings_ui.dart';
 
 /// 影视字幕下载页。
 ///
-/// 顶部关键词输入 + 「确定」搜索；初始态展示「字幕设置」五入口与下载目录，
+/// 顶部关键词输入 + 「确定」搜索；初始态展示「字幕设置」入口与下载目录，
 /// 搜索后呈现字幕结果列表（勾选 + 全选），底部「下载字幕」批量落盘到目录。
-/// 字幕经 Wyzie 接口（sub.wyzie.io）搜索，独立直下（不进 B 站 DownloadManager）。
+///
+/// **来源可切**（[SubtitleSourceSettings] 单选，二选一）：
+/// - `Wyzie`：经 sub.wyzie.io 搜索（需 API 密钥，原有链路）；
+/// - `自定义地址`：请求用户自填的地址模板，响应自动嗅探解析
+///   （见 `utils/custom_subtitle_parser.dart`）。
+/// 两条链路都**独立直下**（不进 B 站 DownloadManager），结果统一为
+/// [SubtitleEntry]。
 ///
 /// 两条并发纪律（B12）：
 /// - **搜索以会话号裁决**：连按两次回车（Enter 曾绕过 `_busy`）也照常发起，结果与
@@ -24,10 +32,18 @@ import 'package:moumou/widgets/settings_ui.dart';
 /// - **下载对选中项做快照**：下载期间用户可改关键词重新搜索（结果列表被替换），
 ///   按索引取会在循环里越界（RangeError）并把「下载中」永久卡死（P2-36）。
 class SubtitleDownloadPage extends StatefulWidget {
-  const SubtitleDownloadPage({super.key, this.api, this.writeBytes});
+  const SubtitleDownloadPage({
+    super.key,
+    this.api,
+    this.customApi,
+    this.writeBytes,
+  });
 
-  /// 测试注入的 API（不传则自建，并在 [State.dispose] 关闭）。
+  /// 测试注入的 Wyzie API（不传则自建，并在 [State.dispose] 关闭）。
   final WyzieApi? api;
+
+  /// 测试注入的自定义源 API（不传则自建，并在 [State.dispose] 关闭）。
+  final CustomSubtitleApi? customApi;
 
   /// 测试注入的写盘实现（默认 `File.writeAsBytes`）。
   ///
@@ -45,6 +61,9 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
   /// 自建的 API 才由本页关闭（注入的归调用方，§4.21 / §4.36 同一约定）。
   late final bool _ownsApi = widget.api == null;
   late final WyzieApi _api = widget.api ?? WyzieApi();
+  late final bool _ownsCustomApi = widget.customApi == null;
+  late final CustomSubtitleApi _customApi =
+      widget.customApi ?? CustomSubtitleApi();
   late final Future<void> Function(String path, List<int> bytes) _writeBytes =
       widget.writeBytes ?? _writeFileBytes;
 
@@ -55,13 +74,21 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
   bool _downloading = false;
   bool _searched = false;
   String? _error;
-  List<WyzieSubtitle> _results = const [];
+  List<SubtitleEntry> _results = const [];
   final Set<int> _selected = {};
   String _query = '';
+
+  /// 当前结果是用哪个来源搜出来的（下载按它选客户端：搜索期间用户可能切了来源）
+  SubtitleSourceKind _resultKind = SubtitleSourceKind.wyzie;
+
+  SubtitleSourceSettings get _source => SubtitleSourceSettings.instance;
 
   @override
   void initState() {
     super.initState();
+    _source.ensureLoaded().then((_) {
+      if (mounted) setState(() {});
+    });
     WyzieSettings.instance.ensureLoaded().then((_) {
       if (mounted) setState(() {});
     });
@@ -74,6 +101,7 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
   void dispose() {
     _keywordCtrl.dispose();
     if (_ownsApi) _api.close();
+    if (_ownsCustomApi) _customApi.close();
     super.dispose();
   }
 
@@ -85,14 +113,28 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
     }
   }
 
+  /// 按当前来源校验前置配置：缺什么提示什么（不再一律提示 Wyzie 密钥）。
+  /// 返回 false = 前置条件未满足，调用方直接返回。
+  Future<bool> _ensureSourceReady() async {
+    await _source.ensureLoaded();
+    if (_source.kind == SubtitleSourceKind.wyzie) {
+      if (WyzieSettings.instance.apiKey.isEmpty) {
+        _toast('请先设置 WYZIE API 密钥');
+        return false;
+      }
+      return true;
+    }
+    if (!_source.customConfigured) {
+      _toast('请先设置自定义字幕地址');
+      return false;
+    }
+    return true;
+  }
+
   Future<void> _search() async {
     final keyword = _keywordCtrl.text.trim();
     if (keyword.isEmpty) return;
-    // 未设置 WYZIE API 密钥时先提示（工作.md：密钥为用户自行粘贴）。
-    if (WyzieSettings.instance.apiKey.isEmpty) {
-      _toast('请先设置 WYZIE API 密钥');
-      return;
-    }
+    if (!await _ensureSourceReady()) return;
     if (!DownloadSettings.instance.hasDirectory) {
       _toast('请先设置下载目录');
       await _pickDir();
@@ -100,6 +142,7 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
     }
     // 每次搜索开一个新会话：旧响应回来时既不能写结果、也不能提前复位转圈
     final session = _searchSession.start();
+    final kind = _source.kind;
     setState(() {
       _busy = true;
       _error = null;
@@ -107,22 +150,13 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
       _selected.clear();
       _searched = false;
       _query = keyword;
+      _resultKind = kind;
     });
     try {
-      final settings = WyzieSettings.instance;
-      final raw = await _api.search(
-        query: keyword,
-        apiKey: settings.apiKey,
-        language: wyzieCommaParam(settings.languages),
-        format: wyzieCommaParam(settings.formats),
-        encoding: wyzieCommaParam(settings.encodings),
-        source: wyzieSourceParam(settings.sources),
-      );
-      // Wyzie 常无视 language 参数返回全语言，本地按所选语言过滤兜底。
-      final filtered = filterWyzieByLanguages(raw, settings.languages);
+      final entries = await _searchBySource(kind, keyword);
       if (!mounted || !_searchSession.isCurrent(session)) return;
       setState(() {
-        _results = filtered;
+        _results = entries;
         _searched = true;
       });
     } catch (e) {
@@ -136,6 +170,31 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
     }
   }
 
+  /// 按来源发起搜索并统一成 [SubtitleEntry] 列表
+  Future<List<SubtitleEntry>> _searchBySource(
+    SubtitleSourceKind kind,
+    String keyword,
+  ) async {
+    if (kind == SubtitleSourceKind.custom) {
+      return _customApi.search(
+        urlTemplate: _source.customUrlTemplate,
+        query: keyword,
+      );
+    }
+    final settings = WyzieSettings.instance;
+    final raw = await _api.search(
+      query: keyword,
+      apiKey: settings.apiKey,
+      language: wyzieCommaParam(settings.languages),
+      format: wyzieCommaParam(settings.formats),
+      encoding: wyzieCommaParam(settings.encodings),
+      source: wyzieSourceParam(settings.sources),
+    );
+    // Wyzie 常无视 language 参数返回全语言，本地按所选语言过滤兜底。
+    final filtered = filterWyzieByLanguages(raw, settings.languages);
+    return filtered.map(SubtitleEntry.fromWyzie).toList();
+  }
+
   Future<void> _download() async {
     if (_selected.isEmpty || _downloading) return;
     if (!DownloadSettings.instance.directoryExists) {
@@ -147,7 +206,7 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
     // **先快照选中项**：下载期间用户可能改关键词重新搜索（`_results` 被整表替换），
     // 边下边按下标取会越界抛 RangeError，并把 `_downloading` 永久卡在 true（P2-36）
     final indices = _selected.toList()..sort();
-    final picked = <WyzieSubtitle>[
+    final picked = <SubtitleEntry>[
       for (final i in indices)
         if (i >= 0 && i < _results.length) _results[i],
     ];
@@ -159,8 +218,8 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
     try {
       for (final sub in picked) {
         try {
-          final bytes = await _api.fetchBytes(sub.url);
-          final base = wyzieSubtitleFileName(sub, fallbackTitle: _query);
+          final bytes = await _fetchBytes(sub.url);
+          final base = subtitleEntryFileName(sub, fallbackTitle: _query);
           final name = uniqueFileName(base, used);
           used.add(name);
           await _writeBytes('$dir/$name', bytes);
@@ -176,6 +235,15 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
     }
     if (!mounted) return;
     _toast(fail == 0 ? '已下载 $ok 个字幕' : '下载完成：成功 $ok，失败 $fail');
+  }
+
+  /// 下载字节：按**搜出这批结果的来源**选客户端（不按当前选择——
+  /// 用户可能搜完就切了来源，那批 url 仍属于原来源）
+  Future<List<int>> _fetchBytes(String url) {
+    if (_resultKind == SubtitleSourceKind.custom) {
+      return _customApi.fetchBytes(url);
+    }
+    return _api.fetchBytes(url);
   }
 
   void _resetSearch() {
@@ -194,14 +262,18 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
   @override
   Widget build(BuildContext context) {
     final hasResults = _results.isNotEmpty;
-    return Scaffold(
-      appBar: AppBar(title: const Text('字幕下载')),
-      body: Column(
-        children: [
-          _buildInput(),
-          Expanded(child: _buildBody()),
-          if (hasResults) _downloadBar(),
-        ],
+    // 监听来源设置：设置页里换了来源，返回本页时摘要/校验口径立刻跟着变
+    return ListenableBuilder(
+      listenable: _source,
+      builder: (context, _) => Scaffold(
+        appBar: AppBar(title: const Text('字幕下载')),
+        body: Column(
+          children: [
+            _buildInput(),
+            Expanded(child: _buildBody()),
+            if (hasResults) _downloadBar(),
+          ],
+        ),
       ),
     );
   }
@@ -292,7 +364,7 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
             child: SettingsTile(
               icon: Icons.tune,
               title: '字幕下载设置',
-              subtitle: const Text('API 密钥 / 字幕来源 / 语言 / 格式 / 编码'),
+              subtitle: Text('当前来源：${_source.kind.label}'),
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const SubtitleSettingsPage()),
@@ -475,5 +547,15 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
   static Future<void> _writeFileBytes(String path, List<int> bytes) =>
       File(path).writeAsBytes(bytes, flush: true);
 
-  String _errText(Object e) => e.toString().replaceFirst('WyzieApiException: ', '');
+  /// 去掉异常类名前缀，只把给用户看的那句话显示出来（两条来源链路共用）
+  String _errText(Object e) {
+    final text = e.toString();
+    for (final prefix in const [
+      'WyzieApiException: ',
+      'CustomSubtitleApiException: ',
+    ]) {
+      if (text.startsWith(prefix)) return text.substring(prefix.length);
+    }
+    return text;
+  }
 }

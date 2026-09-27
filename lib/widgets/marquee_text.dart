@@ -38,11 +38,18 @@ class MarqueeText extends StatefulWidget {
   /// 两份文本之间的间隔（无缝衔接的最小间隙）
   final double gap;
 
+  /// 滚动速度（逻辑像素 / 秒）；默认 [kMarqueePixelsPerSecond]。
+  ///
+  /// 需要更慢的场景（例如文件选择器的**路径行**：名字长、又是标识性文本）
+  /// 可单独调慢，不影响其它跑马灯。
+  final double pixelsPerSecond;
+
   const MarqueeText({
     super.key,
     required this.text,
     required this.style,
     this.gap = 48,
+    this.pixelsPerSecond = kMarqueePixelsPerSecond,
   });
 
   @override
@@ -118,7 +125,10 @@ class _MarqueeTextState extends State<MarqueeText>
         _overflow = textWidth > constraints.maxWidth;
         _scrollRange = _overflow ? textWidth + widget.gap : 0;
         // 按恒定速度换算本轮时长（跟文本长度无关），让长标题也看得清
-        final loop = marqueeLoopDuration(_scrollRange);
+        final loop = marqueeLoopDuration(
+          _scrollRange,
+          pixelsPerSecond: widget.pixelsPerSecond,
+        );
         _holdFraction = loop.inMicroseconds <= 0
             ? 0
             : (kMarqueeStartHold.inMicroseconds / loop.inMicroseconds).clamp(
