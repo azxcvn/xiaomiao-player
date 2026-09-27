@@ -105,6 +105,30 @@ void main() {
     expect(s.position, SubtitleSettings.maxPos);
   });
 
+  test('优先选中文字幕轨：默认开、可关、可持久化', () async {
+    final s = SubtitleSettings.instance;
+    expect(
+      s.preferChineseSubtitle,
+      isTrue,
+      reason: '默认开启（mpv 默认挑第一条轨，多字幕常落在英文轨）',
+    );
+    await s.setPreferChineseSubtitle(false);
+    expect(s.preferChineseSubtitle, isFalse);
+    await s.load(); // 模拟重启
+    expect(s.preferChineseSubtitle, isFalse);
+    await s.setPreferChineseSubtitle(true);
+    await s.load();
+    expect(s.preferChineseSubtitle, isTrue);
+  });
+
+  test('优先选中文字幕轨：旧用户无该键时也按开启处理', () async {
+    // 老版本没写过这个键 → getBool 返回 null → 默认 true
+    SharedPreferences.setMockInitialValues({});
+    SubtitleSettings.instance.reset();
+    await SubtitleSettings.instance.load();
+    expect(SubtitleSettings.instance.preferChineseSubtitle, isTrue);
+  });
+
   test('字幕字体：默认 auto 跟随系统字库 /system/fonts', () async {
     final s = SubtitleSettings.instance;
     expect(s.font, 'auto');

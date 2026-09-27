@@ -11,6 +11,7 @@ import 'package:moumou/services/subtitle_settings.dart';
 import 'package:moumou/utils/async_coalesced_reload.dart';
 import 'package:moumou/utils/network_subtitle_match.dart';
 import 'package:moumou/utils/subtitle_auto_match.dart';
+import 'package:moumou/utils/subtitle_language.dart';
 import 'package:moumou/utils/subtitle_memory.dart';
 import 'package:moumou/utils/subtitle_style_properties.dart';
 import 'package:path/path.dart' as p;
@@ -525,11 +526,34 @@ class SubtitleController extends ChangeNotifier {
       } else {
         // 该视频从未手动选过字幕：不留意图，尊重 mpv 自动选择的结果。
         _clearIntent();
+        // 中文优先：mpv 默认挑第一条字幕轨，多字幕的片子常常落在英文/非特效轨。
+        // 只在**这条从未被选过**的分支里动手，用户的选择与「关闭字幕」都不受影响。
+        // 外挂字幕已 select 时（autoLoadedPath != null）走不到这里，语义不变。
+        await _applyChinesePreferredTrack();
       }
     }
 
     await _syncActiveFromMpv();
     await applyAllSettings();
+  }
+
+  /// 把默认生效的字幕轨换成「中文优先」的那条（判定见 `utils/subtitle_language.dart`）。
+  ///
+  /// 前置条件（由调用点保证）：这个视频**从没被手动选过字幕**、也没有刚自动
+  /// 加载的外挂字幕——即当前生效轨完全来自 mpv 的默认挑选。
+  ///
+  /// 纪律：换轨走 [selectTrack]（锁住事件刷新 + 按意图钉回 sid），不自己裸写
+  /// `sid`，否则会与 `sub-reload` 重建期的轨道事件打架（B5 的三条链路纪律）。
+  /// 只有**内嵌**轨参与比较：外挂字幕是用户自己放的，优先级更高。
+  Future<void> _applyChinesePreferredTrack() async {
+    if (!_settings.preferChineseSubtitle) return;
+    final embedded = _tracks.where((t) => !t.external).toList(growable: false);
+    final best = bestChineseSubtitleTrack(embedded);
+    if (best == null) return;
+    final sid = await _readActiveSid();
+    final current = _primary ?? _resolveSelection(sid);
+    if (!shouldSwitchToChineseTrack(current: current, best: best)) return;
+    await selectTrack(best);
   }
 
   /// 扫描视频同目录下的同名字幕并自动加载最佳匹配（对齐小喵

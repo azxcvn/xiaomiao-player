@@ -93,7 +93,7 @@ lib/
 │   ├── playback_tuning.dart   # 每次 open 前的 mpv 缓存/网络调参（本地/在线两档）
 │   ├── player_controls_settings.dart   # 播放器控制设置（槽位/手势/倍速/比例/长按/方向/顶部信息等）
 │   ├── decode_settings.dart   # 解码设置（硬解/软解档位 + 解码预设，默认硬解+）
-│   ├── decode_fallback.dart   # 解码档位自动回退（读 mpv hwdec-current → 硬解/软解 + 提示）
+│   ├── player_renderer_settings.dart # open 前的渲染/seek/解码链属性注入
 │   ├── device_services.dart   # 设备能力（MethodChannel）：音量/亮度/画中画/电量/网络类型/后台服务/文件与目录操作 + 抓帧 + 设备能力检测 + 整应用重启 + 壁纸取色
 │   ├── dolby_vision_settings.dart # 杜比视界偏色提示「不再提示」记忆
 │   ├── fast_thumbnails.dart   # 快速缩略图引擎（FFI 直连自建 libmpv.so 的 mk_thumbnail_*，长驻 worker + 单飞顶旧调度）
@@ -401,12 +401,13 @@ utils（纯工具）    → 只依赖 models
 - **超分**：`SuperResolutionService` 管理 Anime4K 着色器链（安装期做精度注入与采样合并优化后再拷贝），7 档模式 × 3 质量档。
 - **章节与跳过**：`ChapterTracker` 读 mpv `chapter-list` 并跟踪当前位置与片段窗口；`ChapterSkipSettings`（六类片段）与 `IntroOutroSettings`（片头片尾秒数）分别驱动自动跳过。
 - **诊断**：`player_diagnostics` 纯函数 + 诊断面板按秒采样 mpv 属性（缓存/丢帧/渲染延迟/硬解/音画同步）。
-- **解码**：`DecodeSettings` 持久化档位（**默认「硬解+」**：`mediacodec,mediacodec-copy,no` 直通优先、失败由 mpv 依次落到硬解/软解）与解码预设；播放页 open 完成后由 `decode_fallback` 读 mpv 实际生效的 `hwdec-current` 做一次**可见的自动回退**——实际落到拷贝就写回「硬解」、连硬件解码都没起来则只在设备整机无硬解器时写回「软解」（否则仅提示，避免某个编码把整机降到软解），两种情况都 toast + 解码面板胶囊随之切换；`hwdec-current` 读不到或读到不认识的值一律不动。
+- **解码**：`DecodeSettings` 持久化档位（**默认「硬解+」**）与解码预设；解码链由 `utils/decode_policy.dart` 在**开播前**按「用户档位 + 渲染后端」定一次并随 `applyPlaybackTuning` 写入 mpv（OpenGL → `mediacodec,mediacodec-copy,no` 直通优先；Vulkan → `mediacodec-copy,no`，普通内核不支持 MediaCodec→Vulkan 帧映射）。**不做「读 `hwdec-current` 改档位」那套**：`hwdec-current` 是每部视频当下生效的方法名，mpv 自己会按链降级，拿它当设备结论会永久改写用户档位（对齐参照项目 MPVRX：档位只是标签，谁都不回写设置）；实际生效方法名在播放诊断面板如实显示。
 
 ### 5.3 字幕
 
 - **来源**：内嵌轨道（mpv `track-list`）、外挂导入（Android ≤11 用系统选择器；>11 用自建选择器，带排序与文件夹记忆）、同名字幕自动加载（简/繁后缀优先，只由 App 负责挂载；本地与**网络存储远端**走同一套匹配规则）。
 - **控制器**：`SubtitleService` 单选模型，同步 `track-list` / `sid`，支持增删轨道、按字段写入样式、等待式轨道刷新、切轨后按用户意图钉回、记忆路径失效清理。
+- **中文优先**：默认开启「优先选中文字幕轨」（`SubtitleSettings.preferChineseSubtitle`）——mpv 打开文件默认挑**第一条**字幕轨，多字幕片子常落在英文/非特效轨。仅当**该视频从没被手动选过字幕、也没有外挂字幕**时，把默认轨换成中文优先的那条：判定在 `utils/subtitle_language.dart`（`lang` 认 `zh/chi/zho/cn/chs/cht/sc/tc` 等，标题认「中文/中字/简体/繁体/简英…」；中文轨之间「特效/双语」优先）。用户的选择与「关闭字幕」永不被改；当前已是中文轨时不换；没有中文轨时保持内核原选择（**不做英文优先**）。
 - **样式**：`SubtitleSettings` 管理延迟 / 大小 / 位置 / 颜色 / 描边 / 背景框 / 内嵌样式覆盖 / 自定义字体；字段到 mpv 属性的映射集中在 `subtitle_style_properties.dart`。
 - **字体**：自定义字体走 libass 原生渲染；字体目录在播放器构造期注入（运行期不改 `sub-fonts-dir`）。
 - **影视字幕下载**：字幕下载页支持**两种来源（单选互斥，`SubtitleSourceSettings`）**——`Wyzie` 走 `WyzieApi`（需 API 密钥，来源/语言/格式/编码偏好见 `WyzieSettings`）；`自定义字幕地址` 走 `CustomSubtitleApi`：用户自填地址模板（`{name}` 占位，无占位符则片名拼到末尾），响应由 `custom_subtitle_parser` **自动嗅探**常见列表键（顶层数组 / `data`·`subtitles`·`subs`·`results`·`list`·`items`）与字段名（名称 `name`·`title`·`filename`…、地址 `url`·`link`·`download_url`…、语言 `language`·`lang`·`languages`…、格式 `ext`·`format`…，缺格式从地址后缀推断），嗅不出来明确报错（不当成「没有字幕」）。两链路结果统一为 `SubtitleEntry`，按关键词搜索、勾选批量下载。**仓库不内置任何第三方字幕地址/密钥**，片名会发送到用户所选服务（隐私政策已披露）。

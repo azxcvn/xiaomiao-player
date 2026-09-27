@@ -988,6 +988,26 @@ class SubtitleStylePanel extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+            // ── 优先选中文字幕轨 ─────────────────────
+            _PanelCard(
+              child: SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                activeThumbColor: _accentOf(context),
+                title: const Text(
+                  '优先选中文字幕轨',
+                  style: TextStyle(color: Colors.white, fontSize: 15),
+                ),
+                subtitle: Text(
+                  settings.preferChineseSubtitle
+                      ? '默认启用中文轨（含「特效/双语」优先）；手动选过的不改'
+                      : '交给内核默认挑选（通常是文件里的第一条）',
+                  style: const TextStyle(color: Colors.white38, fontSize: 12),
+                ),
+                value: settings.preferChineseSubtitle,
+                onChanged: (v) => settings.setPreferChineseSubtitle(v),
+              ),
+            ),
+            const SizedBox(height: 16),
             // ── 强制覆盖内嵌样式 ─────────────────────
             _PanelCard(
               child: SwitchListTile(

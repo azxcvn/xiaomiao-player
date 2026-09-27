@@ -177,16 +177,7 @@ class _PlayerDecodePanelState extends State<PlayerDecodePanel> {
           ),
           const SizedBox(height: 4),
           Text(
-            '默认「硬解+」；实际生效档更低时自动降档并提示',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.45),
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '「硬解+」直通不可用时依次回退硬解 / 软解',
+            '「硬解+」直通不可用时由内核依次回退硬解 / 软解',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.45),

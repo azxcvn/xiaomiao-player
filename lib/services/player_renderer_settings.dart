@@ -59,12 +59,18 @@ import 'package:media_kit/media_kit.dart';
 /// 不应用任何 profile）；[useVulkan] 只在 [gpuNext] 为真时才写——`gpu-api`
 /// 是「gpu-next 用哪个后端」的开关，`vo=gpu` 根本不认它。
 ///
+/// [hwdecChain] 是本次播放要用的解码链（`utils/decode_policy.dart` 按渲染后端
+/// 选出来）。这里在**每次 open 前**重写 `hwdec`，因为 `gpu-next`/Vulkan 是用户
+/// 运行时能改的开关，链必须跟着立即生效（对齐参照项目 MPVRX：在 `initOptions`
+/// 里按后端一次性写入，而不是开播后去读 `hwdec-current` 反推）。
+///
 /// 参数保持为纯值（不读单例）：本模块无状态、可直接单测调用契约。
 Future<void> applyPreOpenPlayerProperties(
   Player player, {
   required bool gpuNext,
   required bool useVulkan,
   required String presetProfile,
+  String? hwdecChain,
 }) async {
   try {
     final native = player.platform as NativePlayer;
@@ -87,6 +93,13 @@ Future<void> applyPreOpenPlayerProperties(
       await native.setProperty('gpu-api', 'vulkan,opengl');
       // 临时排查日志：确认这两条真的写进去了（`adb logcat -s flutter:I`）
       debugPrint('[渲染设置] 已写入 gpu-context=auto, gpu-api=vulkan,opengl');
+    }
+
+    // 解码链（硬解+ / 硬解）：按渲染后端选定的链，每次 open 前重写一次。
+    // 注意**不改用户的档位设置**——「硬解+」在 Vulkan 下写成拷贝链只是后端的
+    // 客观限制，用户看到的选择原样保留（见 utils/decode_policy.dart）。
+    if (hwdecChain != null && hwdecChain.isNotEmpty) {
+      await native.setProperty('hwdec', hwdecChain);
     }
 
     // 解码性能预设（mpv 内置 profile）

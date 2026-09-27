@@ -50,7 +50,6 @@ import 'package:moumou/services/chapter_tracker.dart';
 import 'package:moumou/services/danmaku_service.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/danmaku_search_store.dart';
-import 'package:moumou/services/decode_fallback.dart';
 import 'package:moumou/services/device_services.dart';
 import 'package:moumou/services/fast_thumbnails.dart';
 import 'package:moumou/services/intro_outro_settings.dart';
@@ -509,10 +508,9 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     //（横屏页那时被本页盖住，检测已让位给本页）
     unawaited(_checkDolbyVision());
 
-    // 解码档位自动回退（与横屏页同一套判定）：横屏页 open 后已经跑过一次，
-    // 这里再跑一次是兜底——本页是栈顶播放页，提示要能显示在本页上
-    //（App 级 ScaffoldMessenger）；已降过档时判定返回 null，不会重复提示。
-    unawaited(_checkDecodeFallback());
+    // 解码：链在 open **前**已由 `applyPlaybackTuning` → `preferredDecodeChain`
+    // 定好，这里不做任何事后判定（原先的 `_checkDecodeFallback` 已删除，理由见
+    // utils/decode_policy.dart：把 mpv 本次兜底当设备结论会永久改写用户档位）。
 
     // 竖屏 + 沉浸式全屏（状态栏/导航栏隐藏）。
     // 跟随手机方向进来的：**不锁竖屏**，方向仍交还系统——窗口转回横屏时本页
@@ -1073,8 +1071,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       // 弹幕功能：切集后重新加载新集的同名弹幕（共享控制器，与横屏
       // 切集同一条路径；在途旧集弹幕按加载会话号判废）
       unawaited(_danmakuController.loadForVideo(path));
-      // 解码功能：切集后新视频可能是别的编码，重新判定一次自动回退
-      unawaited(_checkDecodeFallback());
+      // 解码功能：切集时链已在 open 前重写（不做事后回退判定）
       // 杜比视界偏色检测 + 引导（B4/P1-6：竖屏切集原先不检测，
       // 竖屏连看剧集遇到杜比视界视频时画面偏色却无任何提示）
       unawaited(_checkDolbyVision());
@@ -1279,20 +1276,10 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     await showDolbyVisionHintIfNeeded(context, _path);
   }
 
-  /// 解码档位自动回退（用户反馈：默认「硬解+」，设备不支持时自动降档并提示）。
-  /// 判定/降档在 [autoFallbackDecodeMode]（与横屏页共用，纯函数可单测）。
-  Future<void> _checkDecodeFallback() async {
-    final platform = _player.platform;
-    if (platform is! NativePlayer) return;
-    final message = await autoFallbackDecodeMode(
-      readProperty: (name) =>
-          platform.getProperty(name, waitForInitialization: false),
-      // 纯音频媒体 hwdec-current 会读成 no：没视频轨就不判定
-      hasVideoTrack: () => _player.state.tracks.video.isNotEmpty,
-    );
-    if (!mounted || message == null) return;
-    _toast(message);
-  }
+  // 解码：原先这里有一个 `_checkDecodeFallback`（读 `hwdec-current` 后回退档位
+  // 并 toast），已删除——它会把 mpv 本次的兜底结果当成设备级结论，永久改写
+  // 用户选的档位。现在链在 open 前按「档位 + 渲染后端」一次定好，见
+  // `utils/decode_policy.dart`（对齐参照项目 MPVRX）。
 
   // ── 底部面板（倍速 / 超分 / 画面比例 / 更多 / 编辑控制栏）────
 

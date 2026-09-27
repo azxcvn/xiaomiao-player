@@ -3,7 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// 解码方式档位（对齐 mpvRx / 小喵生态「自动 / 硬解 / 硬解+ / 软解」习惯）。
 ///
-/// [hwdec] 为 mpv 的 `--hwdec` 值；「硬解+」为直通优先的有序回退链。
+/// [hwdec] 为 mpv 的 `--hwdec` 值；「硬解+」为直通优先的有序回退链
+/// （`mediacodec` 在 `vo=gpu` 下可用，直通没成时由 mpv 自己落到
+/// `mediacodec-copy`，**不由本 App 事后改写档位**）。
 enum DecodeMode {
   autoSafe('自动', 'auto-safe', '自动选择安全硬解'),
   hwCopy('硬解', 'mediacodec-copy', '强制硬解，兼容字幕与超分'),
@@ -43,10 +45,12 @@ enum DecodePreset {
 /// 播放页创建 [VideoController] 时读取 [mode] 注入 `hwdec`/`vo`，并在初始化后
 /// 写入 [preset] 的 `profile` 属性；两者均**重启播放器（重开视频）后生效**。
 ///
-/// **默认档位是「硬解+」**（直通优先 `mediacodec,mediacodec-copy,no`）：设备
-/// 不支持直通时由 mpv 落到硬解、连硬解也不可用时落到软解。播放页还会读 mpv
-/// 实际生效的 `hwdec-current` 做一次**可见的自动回退**（写回本设置 + toast），
-/// 见 `services/decode_fallback.dart`。
+/// **默认档位是「硬解+」**（直通优先 `mediacodec,mediacodec-copy,no`）：直通没成
+/// 时由 mpv 自己按这条链落到硬解拷贝、连硬解也不可用时落到软解。App 侧只在
+/// **开播前**按「用户档位 + 渲染后端」决定写入哪条链（`utils/decode_policy.dart`
+/// 的 `preferredDecodeChain`），**不会**在播放后读 `hwdec-current` 去改档位
+/// （对齐参照项目 MPVRX：`HW = mediacodec-copy` / `HWPlus = mediacodec` 只是
+/// 标签，谁都不回写设置）。当前实际生效的方法名可在播放诊断面板看到。
 class DecodeSettings extends ChangeNotifier {
   static final DecodeSettings instance = DecodeSettings._();
 

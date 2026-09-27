@@ -14,6 +14,7 @@ import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:moumou/services/decode_settings.dart';
 import 'package:moumou/services/player_renderer_settings.dart';
+import 'package:moumou/utils/decode_policy.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/mpv_tuning.dart';
 
@@ -39,6 +40,11 @@ Future<void> applyPlaybackTuning(Player player, String path) async {
     gpuNext: decode.gpuNext,
     useVulkan: decode.useVulkan,
     presetProfile: decode.preset.profile,
+    // 解码链按「档位 + 渲染后端」在开播前定一次（不再事后读 hwdec-current 改设置）
+    hwdecChain: preferredDecodeChain(
+      decode.mode,
+      usesVulkan: decode.gpuNext && decode.useVulkan,
+    ),
   );
 
   try {

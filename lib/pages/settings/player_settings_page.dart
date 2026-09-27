@@ -525,6 +525,8 @@ class PlayerSettingsPage extends StatelessWidget {
         content: const Text(
           '视频输出将优先使用 Vulkan 渲染，新建的上下文不再限定 OpenGL ES。\n\n'
           '若设备或驱动不支持，会自动回落 OpenGL，不会黑屏。\n\n'
+          '注意：普通内核下 MediaCodec 直通只对 OpenGL 生效，开 Vulkan 后'
+          '「硬解+」会直接走硬解拷贝（不再尝试直通）。\n\n'
           '切换后需重启播放器（重开视频）生效。',
           style: TextStyle(fontSize: 14, height: 1.5),
         ),

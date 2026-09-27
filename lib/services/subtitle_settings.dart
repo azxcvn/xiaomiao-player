@@ -55,6 +55,9 @@ class SubtitleSettings extends ChangeNotifier {
   static const _keyAlign = 'subtitle_settings_align';
   static const _keyColor = 'subtitle_settings_color';
   static const _keyOverride = 'subtitle_settings_override';
+
+  /// 「优先选中文字幕轨」开关（默认开：读不到键时按 true）
+  static const _keyPreferChinese = 'subtitle_settings_prefer_chinese';
   static const _keyBorderColor = 'subtitle_settings_border_color';
   static const _keyBorderSize = 'subtitle_settings_border_size';
   static const _keyShadowColor = 'subtitle_settings_shadow_color';
@@ -104,6 +107,13 @@ class SubtitleSettings extends ChangeNotifier {
   String _fontSourceDir = '';
   bool _overrideEmbeddedStyle = false;
 
+  /// 「优先选中文字幕轨」（默认**开启**）：mpv 打开文件时默认挑第一条字幕轨，
+  /// 多字幕的片子常常落在英文/非特效轨上。开启后，**只有当这个视频从没被
+  /// 手动选过字幕**（也没有外挂字幕）时，才把默认选择换成中文优先的那条
+  /// （判定见 `utils/subtitle_language.dart`：语言/标题命中中文，特效/双语优先）。
+  /// 用户自己的选择、以及「关闭字幕」，永远不会被它改掉。
+  bool _preferChineseSubtitle = true;
+
   // 扩展样式（工作.md 阶段1 第 3 点：补全小喵 player 的字幕样式项）
   String? _borderColor; // 描边颜色（null = 默认黑）
   double _borderSize = 2.5; // 描边粗细
@@ -144,6 +154,9 @@ class SubtitleSettings extends ChangeNotifier {
   String get fontSourceDir => _fontSourceDir;
   bool get overrideEmbeddedStyle => _overrideEmbeddedStyle;
 
+  /// 「优先选中文字幕轨」（默认开；只在用户没为这个视频选过字幕时生效）
+  bool get preferChineseSubtitle => _preferChineseSubtitle;
+
   String? get borderColor => _borderColor;
   double get borderSize => _borderSize;
   String? get shadowColor => _shadowColor;
@@ -167,6 +180,7 @@ class SubtitleSettings extends ChangeNotifier {
     _align = SubtitleAlign.byMpvValue(prefs.getString(_keyAlign) ?? 'center');
     _color = prefs.getString(_keyColor) ?? '#FFFFFF';
     _overrideEmbeddedStyle = prefs.getBool(_keyOverride) ?? false;
+    _preferChineseSubtitle = prefs.getBool(_keyPreferChinese) ?? true;
     _borderColor = prefs.getString(_keyBorderColor);
     _borderSize = (prefs.getDouble(_keyBorderSize) ?? 2.5)
         .clamp(0, maxStyleValue);
@@ -416,6 +430,16 @@ class SubtitleSettings extends ChangeNotifier {
     await prefs.setBool(_keyOverride, v);
   }
 
+  /// 切换「优先选中文字幕轨」（默认开；语义见 [_preferChineseSubtitle]）
+  Future<void> setPreferChineseSubtitle(bool v) async {
+    await ensureLoaded();
+    if (_preferChineseSubtitle == v) return;
+    _preferChineseSubtitle = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyPreferChinese, v);
+  }
+
   // ── 杂项 ──────────────────────────────────────────────
 
   Future<void> setPosition(double v) async {
@@ -661,6 +685,7 @@ class SubtitleSettings extends ChangeNotifier {
     _fontsDir = '';
     _fontSourceDir = '';
     _overrideEmbeddedStyle = false;
+    _preferChineseSubtitle = true; // 默认开
     _borderColor = null;
     _borderSize = 2.5;
     _shadowColor = null;
