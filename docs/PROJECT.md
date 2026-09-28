@@ -384,12 +384,15 @@ utils（纯工具）    → 只依赖 models
 ### 5.1 媒体库与首页
 
 - **扫描**：`VideoScanner` 走原生 `getVideos`（MediaStore 全表查询 + 逐条校验 + `.nomedia` 祖先链判断），可配置包含隐藏目录 / `.nomedia` 目录；结果缓存于内存，文件操作后重扫。MediaStore 覆盖不到的位置（`.nomedia` / 隐藏目录 / 外置卷 / 模拟器共享目录）由原生 **`FsVideoWalker`** 整盘补扫补齐：**1.5s 预算的广度优先递归 + 跳过名单（缩略图 / 缓存 / 临时 / 回收站 / obb）+ 黑白名单下推剪枝 + `filesDir` 持久化索引续扫**。
+- **补扫的时长兜底**（issue #4）：外置卷的补扫顺手抽时长（MediaStore 不索引那些位置，而列表的进度条 / 「未观看」全靠时长），取法改成 **MediaInfoLib**——它自己解析容器，**不经过系统的 `media.extractor`**（外置卡上逐个文件调系统抽取器正是「反复读同一批文件」的来源），结果既写进补扫索引、又与帧率/字幕**共用同一份磁盘缓存**（缓存带版本号，老缓存自动重解析）；只有 MediaInfoLib 拿不到时才退回 `MediaMetadataRetriever`。索引里的时长**跨轮复用**：文件大小 / 修改时间没变就直接沿用，不再每轮重开容器（原来每次重扫都对每个文件重抽一遍）；抽不到的记「试过、拿不到」，下一轮不再重试同一个坏文件。
+- **按目录更新**（issue #4 用户诉求）：树状目录页与文件夹列表页的**下拉刷新**只把当前目录**整棵子树**从原生补扫索引里摘掉、下一轮优先重扫，**不整盘重扫**（`VideoScanner.refreshPath`；与首页下拉 / 一键清缓存的全量 `forceFsRescan` 区分开）。空目录也能拉——`.nomedia` / 隐藏目录正是「看着是空的、盘里其实有视频」。
+- **列表封面抓帧按卷串行**（issue #4）：一屏十几张卡片原先各起一个线程并发随机读同一个存储，主存储扛得住，**外置卡 / U 盘直接被打成 I/O 风暴**。现在封面抓帧与卡片时长兜底共用一套队列——外置卷 1 路、主存储 2 路（按 `Environment.isExternalStorageEmulated` 判断所在卷），线程降到 `THREAD_PRIORITY_BACKGROUND`，不与前台 UI 抢 CPU 与 I/O；封面本身仍有磁盘缓存（384×216 JPEG），只有首轮会真正抓帧，代价是首屏封面一张张出。
 - **扫描是「快结果先上屏 + 后台增量并入」两段**（对齐 mpvRx 的 `getAllVideoFoldersFast` / `getIndexedNoMediaFolders` + `scanNoMediaFoldersIncrementally`）：`getVideos` 同步只做「MediaStore 全表 + 索引里已知的补扫条目」（`FsVideoWalker.readCached`，**不递归**），返回后台线程再跑一轮预算内的 BFS（`walkInBackground`），边扫边通过 `onFsVideoBatch` 推增量批次、整轮结束用 `onFsScanDone` 推**完整快照**（权威值，顺带清掉这一轮消失的条目）。Dart 侧 `VideoScanner` 按**扫描代次 `scanId`** 只收最新代的推送，把「MediaStore 那份」与「补扫那份」（原生响应里带 `fs` 标记 + 推送，对齐 mpvRx 的 `mediaStoreFolders` / `indexedFolders` 两列表）分开维护、合并成 `cachedVideos`，并 `fsRevision`（`ValueNotifier`）通知页面；首页 / 树状文件夹页 / 文件夹列表页监听它**防抖 250ms 用缓存增量重建**，不重新查原生、不闪不转圈。索引（`fs_video_index_<key>.tsv`）记下「走过哪些目录（含时间）」与「在那里找到过哪些视频」，15 分钟重扫间隔、最旧优先；一轮没扫完就把待扫队列存下来，下次进 App 接着扫而不是从零重来；扫描条件（开关 / 名单）进 key，条件变了索引整体作废；**非主卷恒扫**（开关无关，这些卷 MediaStore 未必索引），**主卷只在两个开关之一打开时才进**，两种情形按 key 分开存索引，开关关掉不会端出旧的隐藏视频。**刷新语义**：`forceFsRescan`（下拉刷新 / 一键清缓存）＝**忽略 15 分钟重扫间隔重新走一遍，但不清索引**，所以刷新期间 `.nomedia` / 隐藏文件夹 / 外置卡那几项**原地保留**（清了就会出现「先少两个文件夹、扫完再回来」的视觉跳跃；对齐 mpvRx「先发布旧快照、扫完再 Replace」）；文件操作改动走**按路径失效**（`invalidatePaths` → `FsVideoIndex.removeSubtree` + 这一轮优先重扫那几个目录），只更新真正改了的地方。**行为变化如实说明**：补扫被预算截断时，深层目录里的条目要等后续几轮才出现（广度优先，视频通常在浅层）；索引条目按「每进程一次存活校验」清掉外部删除的条目（可能过一阵子才消失）。
 - **两种视图**：列表模式（`buildFolderList`：含直接视频的文件夹）与树状模式（`buildTree`：完整目录树），共用 `FolderCard` / `VideoCard`；建树与聚合在后台 isolate（`compute`）执行。
 - **首页**：`HomePage` 负责权限门禁（「允许管理所有文件」）、视图分发、搜索、多选与速拨入口。
 - **存储卷跳转**：自建目录选择器（媒体扫描黑白名单 / 下载目录 / 字幕与音频导入）顶部列出已挂载存储卷胶囊（`StorageRootSelector` + `StorageRoot`），点击即跳到该卷根。**外置卷只能由原生 `getStorageRoots` 枚举得到**——`/storage` 目录本身在 Android 11+ 上即使持有「所有文件访问」也列不出来（授权只到各卷根，不含 `/storage` 这个挂载点容器），此前选择器起点写死 `/storage/emulated/0` 导致 SD 卡/TF 卡完全无法进入。
 - **播放历史**：`PlaybackHistoryService` 记录可重放来源（本地路径 / 在线直链），去重置顶、上限淘汰，首页速拨「最近播放」直启。
-- **进度**：`PlaybackProgressService` 单例，`path → 毫秒` 映射，串行写盘 + 节流；播放页恢复进度走 `openAndRestore`（暂停加载 → 静音激活时间线 → seek → 位置确认）。卡片进度条与「未观看 / 观看中 / 已看完」按 `时长` 换算，而**扫描器对 `.nomedia` / 隐藏文件夹里的条目给不出时长**（原生文件系统补扫不为整盘逐个开容器）——`VideoCard` 对这些条目按需再调一次 `getVideoDuration`（只读容器元数据）补上，否则它们永远显示「未观看」。
+- **进度**：`PlaybackProgressService` 单例，`path → 毫秒` 映射，串行写盘 + 节流；播放页恢复进度走 `openAndRestore`（暂停加载 → 静音激活时间线 → seek → 位置确认）。卡片进度条与「未观看 / 观看中 / 已看完」按 `时长` 换算，而**扫描器对部分条目给不出时长**（主卷的 `.nomedia` / 隐藏目录补扫不抽时长——整盘逐个开容器代价太大；外置卷现在抽，见上）——`VideoCard` 对这些条目按需再调一次 `getVideoDuration`（同样是 MediaInfoLib 优先、系统抽取器兜底）补上，否则它们永远显示「未观看」；查过仍拿不到的（损坏 / 非常规容器）Dart 侧记**负结果记忆**（只活在进程内，`clearCache` 可清），同一进程内不再重复问原生——不然卡片滚走再滚回来就再问一遍，又是一次没意义的系统抽取。
 
 ### 5.2 播放器
 
@@ -468,10 +471,10 @@ utils（纯工具）    → 只依赖 models
 
 | 文件 | 职责 |
 |---|---|
-| `MainActivity.kt` | MethodChannel `moumou/video_info` 的宿主：媒体库查询、视频信息与缩略图、媒体信息、杜比视界检测、设备能力、系统音量/亮度、画中画、外部 `content://` 三级解析、B 站双流合并（`mergeM4s`）、整应用重启、壁纸取色、目录列举、存储卷枚举（`getStorageRoots`） |
-| `MediaInfoHelper.kt` | MediaInfoLib 封装：快速元数据（帧率 / 内嵌字幕）、完整媒体信息、杜比视界检测（统一走 `withMediaInfo` 托管文件描述符） |
+| `MainActivity.kt` | MethodChannel `moumou/video_info` 的宿主：媒体库查询、视频信息与缩略图、媒体信息、杜比视界检测、设备能力、系统音量/亮度、画中画、外部 `content://` 三级解析、B 站双流合并（`mergeM4s`）、整应用重启、壁纸取色、目录列举、存储卷枚举（`getStorageRoots`）；列表封面抓帧与时长兜底走**按卷串行 + 后台优先级**的队列（外置卷 1 路 / 主存储 2 路，见 §5.1） |
+| `MediaInfoHelper.kt` | MediaInfoLib 封装：快速元数据（帧率 / 内嵌字幕 / **时长**）、完整媒体信息、杜比视界检测（统一走 `withMediaInfo` 托管文件描述符） |
 | `DeviceCapabilities.kt` | 屏幕 HDR 能力、关键编码器、系统解码器清单 |
-| `VideoFsWalker.kt` | 媒体库整盘文件系统补扫：**快结果只读索引、递归挪后台**（预算内 BFS + 跳过名单 + 黑白名单剪枝 + `filesDir` 持久化索引续扫），边扫边推 `onFsVideoBatch` 增量、结束推 `onFsScanDone` 完整快照；刷新只忽略重扫间隔、文件操作按路径失效（都**不清索引**，刷新期间列表不会跳）（issue #4） |
+| `VideoFsWalker.kt` | 媒体库整盘文件系统补扫：**快结果只读索引、递归挪后台**（预算内 BFS + 跳过名单 + 黑白名单剪枝 + `filesDir` 持久化索引续扫），边扫边推 `onFsVideoBatch` 增量、结束推 `onFsScanDone` 完整快照；刷新只忽略重扫间隔、文件操作按路径失效（都**不清索引**，刷新期间列表不会跳）；外置卷时长**跨轮复用**（文件没变不重抽）、抽不到的记失败不再重试（issue #4） |
 | `BackgroundPlaybackService.kt` | 听视频后台播放的前台服务 |
 | `CrashHandler.kt` | 未捕获异常写入 `files/crash_logs/` |
 

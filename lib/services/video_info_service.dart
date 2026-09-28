@@ -38,6 +38,17 @@ class VideoInfoService {
   /// 时长兜底内存缓存（`getVideoDuration`，见 [getDuration]）
   static final Map<String, int> _durationCache = {};
 
+  /// 「问过、拿不到」的**负结果记忆**（`getVideoDuration` 返回 0）。
+  ///
+  /// 有一类文件（损坏 / 非标准容器，真机日志里的 `csd0 too small`）抽时长必定
+  /// 失败：原生先试 MediaInfoLib、失败再退系统 `MediaMetadataRetriever`，两边都
+  /// 拿不到。不记住的话，卡片每次被重建（滚走再滚回来）都会再完整问一遍原生 ——
+  /// 滚动往返就是反复无意义的读取（issue #4）。
+  ///
+  /// 只活在进程内（不落盘），重开 App 或 [clearCache] 后允许再试；通道异常
+  /// **不**记负结果（那是原生还没起来之类的临时故障，下次该重试）。
+  static final Set<String> _durationMisses = {};
+
   /// 在飞去重：同 path 的并发请求共享同一个 Future（列表首屏几十张卡片
   /// 同时发起时只发一次跨进程调用，见 risk_audit #5）。
   /// 走公共原语 [AsyncSingleFlight]（§4.29）。
@@ -57,10 +68,12 @@ class VideoInfoService {
       _cache.remove(path);
       _metaCache.remove(path);
       _durationCache.remove(path);
+      _durationMisses.remove(path);
     } else {
       _cache.clear();
       _metaCache.clear();
       _durationCache.clear();
+      _durationMisses.clear();
     }
   }
 
@@ -95,9 +108,12 @@ class VideoInfoService {
   /// 按需调这里补一次——只读容器元数据、不抓帧/不解码。
   ///
   /// 缓存与 [get] 同纪律：成功才入内存缓存（失败允许下次重试）。
+  /// 另有一条**负结果记忆**：原生明确回 0（问过了、真拿不到）时记下来，
+  /// 同一进程内不再重复问（见 [_durationMisses]）；通道异常不记。
   static Future<int> getDuration(String path) async {
     final cached = _durationCache[path];
     if (cached != null) return cached;
+    if (_durationMisses.contains(path)) return 0;
     return _durationFlight.run(path, () => _fetchDuration(path));
   }
 
@@ -108,7 +124,12 @@ class VideoInfoService {
         'path': path,
       });
       final value = ms ?? 0;
-      if (value > 0) _durationCache[path] = value;
+      if (value > 0) {
+        _durationCache[path] = value;
+        _durationMisses.remove(path);
+      } else {
+        _durationMisses.add(path);
+      }
       return value;
     } catch (_) {
       return 0;

@@ -31,7 +31,10 @@ import 'package:moumou/widgets/video_card.dart';
 /// [path] 为从顶层到当前节点的完整路径链（不含首页），用于面包屑导航：
 /// 点击任意上级层级可 popUntil 跳回。
 ///
-/// 右上角从左到右：**搜索**（文件夹 + 视频）→ 排序与字段。
+/// 右上角从左到右：**搜索**（文件夹 + 视频）→ 排序与视图。
+///
+/// 下拉刷新 = **只更新当前目录整棵子树**（`VideoScanner.refreshPath`），不像首页
+/// 那样整盘重扫；空目录也能拉（`.nomedia` / 隐藏目录正是「看着是空的、其实有视频」）。
 ///
 /// 文件管理（文件夹与视频长按同一套菜单 + 多选批量）改动磁盘后本页会**重扫目录树**
 /// 并重新定位当前路径；当前文件夹被重命名/删除时自动退出本页。
@@ -175,11 +178,15 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
 
   /// 重扫目录树并按真实路径重新定位当前节点。
   ///
+  /// [onlyCurrentFolder] = 用户点「更新此目录」：只失效当前目录整棵子树后重查
+  /// （见 [VideoScanner.refreshPath]），不整盘重扫。
+  ///
   /// 路径已不存在（当前文件夹被重命名或删除）时退出本页。
-  Future<void> _reloadCurrentNode() async {
+  Future<void> _reloadCurrentNode({bool onlyCurrentFolder = false}) async {
     final currentPath = _node.path;
-    VideoScanner.clearCache();
-    final videos = await VideoScanner.scanVideos();
+    final videos = onlyCurrentFolder
+        ? await VideoScanner.refreshPath(currentPath)
+        : await _rescanAll();
     if (!mounted) return;
 
     final roots = VideoScanner.buildTree(videos);
@@ -192,6 +199,16 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
     // 重扫后剔除已被删除的选中项（否则批量操作会打到死路径）
     _selection.retainExisting(indexTreeSelection(_node.children).keys);
   }
+
+  /// 整盘重扫：只清 Dart 侧内存结果后重查，原生补扫索引原地保留
+  Future<List<VideoFile>> _rescanAll() {
+    VideoScanner.clearCache();
+    return VideoScanner.scanVideos();
+  }
+
+  /// 下拉刷新：只更新当前目录整棵子树（用户诉求，issue #4）
+  Future<void> _refreshCurrentFolder() =>
+      _reloadCurrentNode(onlyCurrentFolder: true);
 
   /// 在目录树里按绝对路径深搜出从顶层到目标的路径链
   List<TreeNode>? _locateByPath(List<TreeNode> nodes, String path) {
@@ -423,7 +440,7 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
 
   Widget _buildBody() {
     if (_node.children.isEmpty) {
-      return const Center(child: Text('该文件夹没有视频'));
+      return _emptyState('该文件夹没有视频');
     }
     return ListenableBuilder(
       listenable: Listenable.merge([
@@ -437,38 +454,63 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
         final selectedPaths = _selection.paths.toSet();
         final children = _visibleChildren();
         if (children.isEmpty && _query.isNotEmpty) {
-          return const Center(child: Text('没有匹配的内容'));
+          return _emptyState('没有匹配的内容');
         }
         // 底部安全区已由全局 SafeArea 处理
-        return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-          itemCount: children.length,
-          itemBuilder: (context, index) {
-            final child = children[index];
-            if (child.isFolder) {
-              return FolderCard(
-                node: child,
-                fields: widget.viewSettings.fields,
+        // 下拉刷新 = **只更新当前目录整棵子树**（与首页的下拉「整盘刷新」不同，
+        // 见 VideoScanner.refreshPath）：用户要的是「在哪个目录拉就更新哪个目录」
+        return RefreshIndicator(
+          onRefresh: _refreshCurrentFolder,
+          child: ListView.builder(
+            // 始终可滚动：只有一两个条目时也要能下拉
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+            itemCount: children.length,
+            itemBuilder: (context, index) {
+              final child = children[index];
+              if (child.isFolder) {
+                return FolderCard(
+                  node: child,
+                  fields: widget.viewSettings.fields,
+                  onTap: () => _onChildTap(child),
+                  onLongPress: () => _onFolderLongPress(child),
+                  isPinned: pinnedPaths.contains(child.path),
+                  selectionMode: _selection.selecting,
+                  selected: selectedPaths.contains(child.path),
+                );
+              }
+              return VideoCard(
+                key: ValueKey(child.path),
+                video: child.video!,
+                fields: widget.viewSettings.videoFields,
                 onTap: () => _onChildTap(child),
-                onLongPress: () => _onFolderLongPress(child),
-                isPinned: pinnedPaths.contains(child.path),
+                onInfoTap: () => _openMediaInfo(child.video!),
+                onLongPress: () => _onVideoLongPress(child.video!),
                 selectionMode: _selection.selecting,
                 selected: selectedPaths.contains(child.path),
               );
-            }
-            return VideoCard(
-              key: ValueKey(child.path),
-              video: child.video!,
-              fields: widget.viewSettings.videoFields,
-              onTap: () => _onChildTap(child),
-              onInfoTap: () => _openMediaInfo(child.video!),
-              onLongPress: () => _onVideoLongPress(child.video!),
-              selectionMode: _selection.selecting,
-              selected: selectedPaths.contains(child.path),
-            );
-          },
+            },
+          ),
         );
       },
+    );
+  }
+
+  /// 空状态也包一层下拉刷新：`.nomedia` / 隐藏目录正是「看着是空的、盘里其实有
+  /// 视频」，这时候最需要用户拉一把（issue #4）。[Center] 本身不可滚动，
+  /// 所以套一层「撑满高度的可滚动容器」，否则下拉手势收不到。
+  Widget _emptyState(String text) {
+    return RefreshIndicator(
+      onRefresh: _refreshCurrentFolder,
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: constraints.maxHeight,
+            child: Center(child: Text(text)),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -137,6 +137,57 @@ void main() {
     });
   });
 
+  group('按目录更新（refreshPath，issue #4 用户诉求）', () {
+    /// 先让原生回一份补扫快照，建立 Dart 侧镜像
+    Future<void> seedFsVideos() async {
+      await VideoScanner.scanVideos();
+      final scanId = lastArgs!['scanId'] as int;
+      VideoScanner.handleNativeCall(MethodCall('onFsScanDone', <String, Object?>{
+        'scanId': scanId,
+        'videos': [
+          <String, Object?>{
+            'path': '/storage/emulated/0/Movies/Show/01.mkv',
+            'name': '01.mkv',
+          },
+          <String, Object?>{
+            'path': '/storage/emulated/0/Other/02.mkv',
+            'name': '02.mkv',
+          },
+        ],
+      }));
+    }
+
+    test('只失效指定目录整棵子树，不整盘重建', () async {
+      await seedFsVideos();
+      expect(VideoScanner.cachedVideos!.length, 2);
+
+      await VideoScanner.refreshPath('/storage/emulated/0/Movies/Show');
+
+      final invalidated =
+          (lastArgs!['invalidatePaths'] as List?)?.cast<String>() ?? const [];
+      expect(invalidated, ['/storage/emulated/0/Movies/Show']);
+      expect(
+        lastArgs!['forceFsRescan'],
+        isFalse,
+        reason: '按目录更新只重扫那个目录；整盘重建（forceFsRescan）是下拉刷新的语义',
+      );
+      expect(
+        VideoScanner.cachedVideos!.map((v) => v.path),
+        ['/storage/emulated/0/Other/02.mkv'],
+        reason: '被更新目录下的条目先摘掉、等原生重扫推回；别的目录不受影响',
+      );
+    });
+
+    test('空路径只重查：不下发失效，也不整盘重建', () async {
+      await VideoScanner.refreshPath('');
+
+      final invalidated =
+          (lastArgs!['invalidatePaths'] as List?)?.cast<String>() ?? const [];
+      expect(invalidated, isEmpty);
+      expect(lastArgs!['forceFsRescan'], isFalse);
+    });
+  });
+
   group('补扫条目映射与过滤', () {
     test('字段映射为 VideoFile，且黑白名单在 Dart 侧仍然兜底生效', () async {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

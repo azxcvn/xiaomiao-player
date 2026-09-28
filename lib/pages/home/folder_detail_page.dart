@@ -21,6 +21,9 @@ import 'package:moumou/widgets/video_card.dart';
 /// 文件夹视频列表页：列表模式下点击文件夹进入，只显示该文件夹内的视频。
 /// 右上角从左到右：**搜索** → 排序与字段。
 ///
+/// 下拉刷新 = **只更新当前文件夹整棵子树**（`VideoScanner.refreshPath`），不像
+/// 首页那样整盘重扫；空文件夹也能拉。
+///
 /// [folderPath] 为文件夹真实绝对路径：文件管理（长按视频的复制/移动/重命名/删除、
 /// 多选批量操作）后据此**重新读取磁盘**，避免使用构造时传入的静态视频列表导致
 /// 改名/删除后列表不刷新。[videos] 仅作为首帧的初始数据（可省，省略时立即读盘）。
@@ -91,17 +94,29 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
     });
   }
 
-  /// 重新读取该文件夹内的视频（文件管理后调用；MediaStore 缓存先清）
-  Future<void> _reloadVideos() async {
+  /// 重新读取该文件夹内的视频（文件管理后调用；MediaStore 缓存先清）。
+  ///
+  /// [onlyCurrentFolder] = 用户点「更新此目录」：只失效本文件夹整棵子树后重查
+  /// （见 [VideoScanner.refreshPath]），不整盘重扫。
+  Future<void> _reloadVideos({bool onlyCurrentFolder = false}) async {
     final path = widget.folderPath;
     if (path == null) return;
-    VideoScanner.clearCache();
-    final all = await VideoScanner.scanVideos();
+    final List<VideoFile> all;
+    if (onlyCurrentFolder) {
+      all = await VideoScanner.refreshPath(path);
+    } else {
+      VideoScanner.clearCache();
+      all = await VideoScanner.scanVideos();
+    }
     if (!mounted) return;
     setState(() {
       _videos = all.where((v) => FileOps.parentOf(v.path) == path).toList();
     });
   }
+
+  /// 下拉刷新：只更新当前文件夹整棵子树（用户诉求，issue #4）
+  Future<void> _refreshCurrentFolder() =>
+      _reloadVideos(onlyCurrentFolder: true);
 
   /// 文件管理动作完成后的本地刷新：
   /// - **重命名/删除**当前文件夹 → 原路径已不存在，退出本页；
@@ -281,7 +296,7 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
 
   Widget _buildBody() {
     if (_videos.isEmpty) {
-      return const Center(child: Text('该文件夹没有视频'));
+      return _emptyState('该文件夹没有视频');
     }
     return ListenableBuilder(
       listenable: Listenable.merge([
@@ -292,28 +307,53 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
       builder: (context, _) {
         final videos = _visibleVideos();
         if (videos.isEmpty && _query.isNotEmpty) {
-          return const Center(child: Text('没有匹配的视频'));
+          return _emptyState('没有匹配的视频');
         }
         final selectedPaths = _selection.paths.toSet();
         // 底部安全区已由全局 SafeArea 处理
-        return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-          itemCount: videos.length,
-          itemBuilder: (context, index) {
-            final video = videos[index];
-            return VideoCard(
-              key: ValueKey(video.path),
-              video: video,
-              fields: widget.viewSettings.videoFields,
-              onTap: () => _onVideoTap(video),
-              onInfoTap: () => _openMediaInfo(video),
-              onLongPress: () => _onVideoLongPress(video),
-              selectionMode: _selection.selecting,
-              selected: selectedPaths.contains(video.path),
-            );
-          },
+        // 下拉刷新 = **只更新当前文件夹整棵子树**（与首页的下拉「整盘刷新」不同，
+        // 见 VideoScanner.refreshPath）
+        return RefreshIndicator(
+          onRefresh: _refreshCurrentFolder,
+          child: ListView.builder(
+            // 始终可滚动：只有一两个视频时也要能下拉
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+            itemCount: videos.length,
+            itemBuilder: (context, index) {
+              final video = videos[index];
+              return VideoCard(
+                key: ValueKey(video.path),
+                video: video,
+                fields: widget.viewSettings.videoFields,
+                onTap: () => _onVideoTap(video),
+                onInfoTap: () => _openMediaInfo(video),
+                onLongPress: () => _onVideoLongPress(video),
+                selectionMode: _selection.selecting,
+                selected: selectedPaths.contains(video.path),
+              );
+            },
+          ),
         );
       },
+    );
+  }
+
+  /// 空状态也包一层下拉刷新（`folderPath` 为空时本页无从刷新，直接给空态）：
+  /// [Center] 本身不可滚动，套一层「撑满高度的可滚动容器」，否则下拉手势收不到。
+  Widget _emptyState(String text) {
+    if (widget.folderPath == null) return Center(child: Text(text));
+    return RefreshIndicator(
+      onRefresh: _refreshCurrentFolder,
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: constraints.maxHeight,
+            child: Center(child: Text(text)),
+          ),
+        ),
+      ),
     );
   }
 }

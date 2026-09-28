@@ -9,10 +9,12 @@ void main() {
   const channel = MethodChannel('moumou/video_info');
   var callCount = 0;
   var shouldThrow = false;
+  var durationResult = 300000;
 
   setUp(() {
     callCount = 0;
     shouldThrow = false;
+    durationResult = 300000;
     VideoInfoService.clearCache();
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -36,7 +38,7 @@ void main() {
         };
       }
       if (call.method == 'getVideoDuration') {
-        return 300000;
+        return durationResult;
       }
       if (call.method == 'clearCache' || call.method == 'clearAllCaches') {
         return null;
@@ -155,6 +157,38 @@ void main() {
       VideoInfoService.clearCache('/video/a.mp4');
       await VideoInfoService.getDuration('/video/a.mp4');
       expect(callCount, 2);
+    });
+
+    test('原生回 0 记负结果：滚动往返不再重复问原生（issue #4）', () async {
+      durationResult = 0;
+
+      expect(await VideoInfoService.getDuration('/video/broken.mkv'), 0);
+      expect(callCount, 1);
+
+      // 卡片被重建（滚走再滚回来）会再问一次：这次必须命中负结果，不再走通道
+      expect(await VideoInfoService.getDuration('/video/broken.mkv'), 0);
+      expect(await VideoInfoService.getDuration('/video/broken.mkv'), 0);
+      expect(callCount, 1, reason: '坏文件抽不到时长，问过就不该再问');
+
+      // 别的文件不受影响（负结果按路径记）
+      durationResult = 300000;
+      expect(await VideoInfoService.getDuration('/video/ok.mkv'), 300000);
+      expect(callCount, 2);
+    });
+
+    test('负结果可被 clearCache 清掉（重开 App / 用户清缓存后允许再试）', () async {
+      durationResult = 0;
+      await VideoInfoService.getDuration('/video/broken.mkv');
+      expect(callCount, 1);
+
+      VideoInfoService.clearCache('/video/broken.mkv');
+      await VideoInfoService.getDuration('/video/broken.mkv');
+      expect(callCount, 2);
+
+      // 无参清空同样清负结果
+      VideoInfoService.clearCache();
+      await VideoInfoService.getDuration('/video/broken.mkv');
+      expect(callCount, 3);
     });
   });
 }

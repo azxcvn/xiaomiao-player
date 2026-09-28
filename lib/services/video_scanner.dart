@@ -102,6 +102,17 @@ class VideoScanner {
     if (changed && _cachedVideos != null) _rebuildMerged(notify: true);
   }
 
+  /// 只更新指定目录（含整棵子树）：把它从原生补扫索引里摘掉、下一轮优先重扫它，
+  /// 再重查一次列表。
+  ///
+  /// 用户诉求是「在哪个目录点更新就只更新那个目录」，所以**不**走
+  /// [markFsIndexDirty]（那条会忽略重扫间隔把全部目录重走一遍），避免整盘 IO。
+  static Future<List<VideoFile>> refreshPath(String path) async {
+    if (path.isNotEmpty) invalidateFsPaths([path]);
+    clearCache();
+    return scanVideos();
+  }
+
   /// 原生 → Dart 推送入口（由 `DeviceServices` 的统一 MethodCallHandler 转发）：
   /// - `onFsVideoBatch`：整盘补扫的增量批次（边扫边推）；
   /// - `onFsScanDone`：整轮结束的完整快照 → **替换**增量累计，清掉已删除的条目。

@@ -208,7 +208,12 @@ internal class FsVideoIndex(private val file: File) {
     }
 }
 
-/** 索引/结果里的一条视频（时长只有外置卷的补扫会抽，主卷恒为 0） */
+/**
+ * 索引/结果里的一条视频（时长只有外置卷的补扫会抽，主卷恒为 0）。
+ *
+ * [durationMs] 三种取值：`> 0` = 抽到了（会跨轮复用）；`0` = 还没抽（预算没轮到 /
+ * 主卷不抽，下一轮还会试）；`[DURATION_UNAVAILABLE]` = 试过但拿不到（不再重试）。
+ */
 internal class FsVideoEntry(
     val path: String,
     val size: Long,
@@ -269,6 +274,15 @@ internal object FsVideoWalker {
 
     /** 增量推送的批大小：扫到这么多新条目就先推一批，首屏不必等整轮扫完 */
     private const val BATCH_SIZE = 64
+
+    /**
+     * 时长抽取的「试过但拿不到」标记：写进索引，下一轮直接沿用、不再重试。
+     *
+     * 有些文件（损坏 / 非标准容器，真机日志里的 `csd0 too small`）抽取必定失败；
+     * 若不记住失败，每过 [DIR_RESCAN_INTERVAL_MS] 的那轮重扫都会把它们再抽一遍，
+     * 外置卡上就是无意义的反复随机读。对外（[videoMap]）一律归 0。
+     */
+    private const val DURATION_UNAVAILABLE = -1L
 
     /** 两轮补扫之间的最小间隔：防页面来回切时把递归打成一串 */
     private const val WALK_MIN_INTERVAL_MS = 2000L
@@ -653,6 +667,10 @@ internal object FsVideoWalker {
                 } ?: continue
 
                 val found = ArrayList<FsVideoEntry>()
+                // 索引里这个目录上一轮的结果：文件没变就复用时长的判定依据。
+                // 没有它的话，每次重扫（过了 15 分钟间隔、或用户下拉刷新）都会对
+                // 目录里每个视频再抽一次时长 —— 外置卡上就是无意义的反复随机读。
+                val known = index.videos[path]?.associateBy { it.path }
                 for (f in files) {
                     val name = f.name
                     if (f.isDirectory) {
@@ -670,15 +688,26 @@ internal object FsVideoWalker {
                         if (!f.isFile) continue
                         val size = f.length()
                         if (size <= 0L) continue
+                        val modifiedMs = f.lastModified()
+                        val old = known?.get(f.absolutePath)
                         // 非主卷抽时长（MediaStore 没索引到 → 列表进度条 / 已看状态全靠它，
-                        // 故兜底抽一次）；抽到的时长会写进索引，下一轮不必再抽。整轮预算
-                        // 到点就停，剩下的留 0 交给 Dart 侧按卡片懒加载补
-                        val duration = if (root.extractDuration && SystemClock.elapsedRealtime() < deadline) {
-                            request.extractDuration(f.absolutePath)
+                        // 故兜底抽一次）。三种情况：
+                        // 1. 索引里已有结论（> 0 抽到了 / < 0 抽过拿不到）且文件没变
+                        //    → 直接沿用，**不再开容器**；
+                        // 2. 新文件 / 文件变了 / 上轮没轮到 → 预算内抽一次，抽不到记
+                        //    [DURATION_UNAVAILABLE]，免得每轮重试同一个坏文件；
+                        // 3. 预算到点 → 留 0，下一轮接着抽。
+                        val duration = if (old != null && old.size == size &&
+                            old.modifiedMs == modifiedMs && old.durationMs != 0L
+                        ) {
+                            old.durationMs
+                        } else if (root.extractDuration && SystemClock.elapsedRealtime() < deadline) {
+                            val extracted = request.extractDuration(f.absolutePath)
+                            if (extracted > 0L) extracted else DURATION_UNAVAILABLE
                         } else {
                             0L
                         }
-                        found.add(FsVideoEntry(f.absolutePath, size, f.lastModified(), duration))
+                        found.add(FsVideoEntry(f.absolutePath, size, modifiedMs, duration))
                     }
                 }
                 index.applyDir(path, now, found)
@@ -727,7 +756,8 @@ internal object FsVideoWalker {
     private fun videoMap(v: FsVideoEntry): Map<String, Any> = mapOf(
         "path" to v.path,
         "name" to nameOf(v.path),
-        "durationMs" to v.durationMs,
+        // < 0 是「试过但拿不到」的内部标记，对外统一归 0（Dart 侧按未知时长处理）
+        "durationMs" to if (v.durationMs > 0L) v.durationMs else 0L,
         "size" to v.size,
         "width" to 0,
         "height" to 0,

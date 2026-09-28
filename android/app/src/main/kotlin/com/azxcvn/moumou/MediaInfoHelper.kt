@@ -77,13 +77,23 @@ object MediaInfoHelper {
     }
 
     /**
-     * 快速提取基本元数据：帧率 / 是否有内嵌字幕 / 字幕编码。
-     * 用于视频列表「帧率」「字幕指示器」字段（带磁盘缓存，见 MainActivity）。
+     * 快速提取基本元数据：帧率 / 是否有内嵌字幕 / 字幕编码 / 时长。
+     * 用于视频列表「帧率」「字幕指示器」字段，同时是**时长兜底的数据源**
+     * （带磁盘缓存，见 MainActivity）。
+     *
+     * 时长取 MediaInfo 的 `Duration`（毫秒）：本库自己解析容器，**不经过系统的
+     * `media.extractor`** —— 外置卡上逐个文件调系统抽取器拿属性是卡顿的来源之一
+     * （issue #4），这里改由 MediaInfo 出时长；调用方仍保留
+     * `MediaMetadataRetriever` 作兜底（个别非常规容器只有系统抽取器认得）。
      */
     fun extractBasicMetadata(context: Context, path: String): Map<String, Any> =
         withMediaInfo(context, path) { mi ->
             val fpsStr = mi.getInfo(MediaInfo.Stream.Video, 0, "FrameRate")
             val fps = fpsStr.toFloatOrNull() ?: 0f
+
+            // MediaInfo 的原始 Duration 字段单位是毫秒；拿不到（字段缺失/异常值）给 0
+            val durationMs = mi.getInfo(MediaInfo.Stream.General, 0, "Duration")
+                .toDoubleOrNull()?.toLong() ?: 0L
 
             val textCount = mi.Count_Get(MediaInfo.Stream.Text)
             val hasSubtitles = textCount > 0
@@ -117,6 +127,7 @@ object MediaInfoHelper {
                 "frameRate" to fps,
                 "hasSubtitles" to hasSubtitles,
                 "subtitleCodec" to subtitleCodec,
+                "durationMs" to if (durationMs > 0L) durationMs else 0L,
             )
         } ?: emptyMap()
 

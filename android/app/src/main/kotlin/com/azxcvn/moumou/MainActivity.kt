@@ -158,11 +158,12 @@ class MainActivity : FlutterActivity() {
                         if (path == null) {
                             result.error("INVALID_ARG", "path is null", null)
                         } else {
-                            // 耗时解码放到后台线程，避免阻塞 UI 线程
-                            Thread {
+                            // 耗时解码走「按卷串行 + 后台优先级」的队列，避免一屏卡片
+                            // 并发随机读同一个存储（见 submitThumbTask）
+                            submitThumbTask(path) {
                                 val info = getVideoInfo(path)
                                 runOnUiThread { result.success(info) }
-                            }.start()
+                            }
                         }
                     }
                     // 卡片时长兜底：扫描器拿不到时长的视频（.nomedia / 隐藏文件夹 /
@@ -174,10 +175,10 @@ class MainActivity : FlutterActivity() {
                         if (path == null) {
                             result.error("INVALID_ARG", "path is null", null)
                         } else {
-                            Thread {
+                            submitThumbTask(path) {
                                 val durationMs = extractDurationMs(path)
                                 runOnUiThread { result.success(durationMs) }
-                            }.start()
+                            }
                         }
                     }
                     // 列表字段「帧率 / 字幕指示器」：MediaInfoLib 快速解析 + 磁盘缓存
@@ -1929,7 +1930,16 @@ class MainActivity : FlutterActivity() {
         thumbsDir().listFiles()?.forEach { it.delete() }
     }
 
-    // ── 列表基本元数据（帧率 / 字幕，MediaInfoLib + 磁盘缓存）───────
+    // ── 列表基本元数据（帧率 / 字幕 / 时长，MediaInfoLib + 磁盘缓存）───────
+
+    /**
+     * 基本元数据磁盘缓存版本：**改动缓存内容时必须 +1**。
+     *
+     * 旧缓存没有 `v` 字段（读到 0）会被当成未命中重新解析：v2 起缓存里多了
+     * `durationMs`，不重解析的话老缓存永远给不出时长，[extractDurationMs]
+     * 就还得退回系统抽取器（等于白改）。
+     */
+    private val metaCacheVersion = 2
 
     /** 基本元数据磁盘缓存目录（JSON 按 path+lastModified 分文件） */
     private fun metaCacheFile(path: String): File {
@@ -1939,8 +1949,11 @@ class MainActivity : FlutterActivity() {
     }
 
     /**
-     * 列表字段「帧率 / 字幕指示器」数据：MediaInfoLib 快速解析，
-     * 结果落盘缓存（重开视频零解析）。失败返回空 Map（字段不显示）。
+     * 列表字段「帧率 / 字幕指示器」数据 + **时长兜底的数据源**：MediaInfoLib
+     * 快速解析，结果落盘缓存（重开视频零解析）。失败返回空 Map（字段不显示）。
+     *
+     * 同一个缓存也供 [extractDurationMs] 用：补扫抽时长与列表字段解析因此
+     * 只付一次解析成本。
      */
     private fun getVideoBasicMetadata(path: String): Map<String, Any> {
         val cacheFile = metaCacheFile(path)
@@ -1951,11 +1964,12 @@ class MainActivity : FlutterActivity() {
                 val parsed = runCatching {
                     org.json.JSONObject(cached)
                 }.getOrNull()
-                if (parsed != null) {
+                if (parsed != null && parsed.optInt("v", 0) >= metaCacheVersion) {
                     return mapOf(
                         "frameRate" to parsed.optDouble("frameRate", 0.0),
                         "hasSubtitles" to parsed.optBoolean("hasSubtitles", false),
                         "subtitleCodec" to parsed.optString("subtitleCodec", ""),
+                        "durationMs" to parsed.optLong("durationMs", 0L),
                     )
                 }
             }
@@ -1965,11 +1979,15 @@ class MainActivity : FlutterActivity() {
         if (meta.isNotEmpty()) {
             runCatching {
                 val obj = org.json.JSONObject()
+                obj.put("v", metaCacheVersion)
                 obj.put("frameRate", meta["frameRate"] as? Number ?: 0.0)
                 obj.put("hasSubtitles", meta["hasSubtitles"] as? Boolean ?: false)
                 obj.put("subtitleCodec", meta["subtitleCodec"] as? String ?: "")
-                // 原子写入：先写临时文件再改名
-                val tmp = File(cacheFile.parentFile, cacheFile.name + ".tmp")
+                obj.put("durationMs", meta["durationMs"] as? Number ?: 0L)
+                // 原子写入：先写临时文件再改名。临时名带上线程 id —— 同一个文件
+                // 可能被补扫线程与封面队列同时解析（缓存未命中时），共用
+                // `<名字>.tmp` 会两边互相踩
+                val tmp = File(cacheFile.parentFile, "${cacheFile.name}.${Thread.currentThread().id}.tmp")
                 java.io.FileOutputStream(tmp).use { o ->
                     o.write(obj.toString().toByteArray())
                     o.flush()
@@ -1994,6 +2012,42 @@ class MainActivity : FlutterActivity() {
      */
     private val coverThumbWidth = 384
     private val coverThumbHeight = 216
+
+    /**
+     * 封面抓帧 / 时长兜底的执行队列 —— **按所在卷决定串行度**（issue #4）。
+     *
+     * 列表一屏十几张卡片，原先每张各自 `Thread { }` 起一个线程：等于十几路并发
+     * 随机读同一个存储。内置存储扛得住，**外置卡 / U 盘这类随机读很差的介质
+     * 直接被打成 I/O 风暴**（用户实测：整个列表转圈、系统层 jank、`media.extractor`
+     * 满载）。所以外置卷**串行**（同一时刻只开一个容器），主存储留 2 路兼顾首屏。
+     *
+     * 两条通道共用同一套队列：抓帧与抽时长打的是同一批文件、同一个系统抽取器，
+     * 分开排队等于没排队。
+     */
+    private val thumbExecutorExternal: java.util.concurrent.ExecutorService =
+        java.util.concurrent.Executors.newSingleThreadExecutor { r ->
+            Thread(r, "moumou-thumb-external")
+        }
+
+    private val thumbExecutorInternal: java.util.concurrent.ExecutorService =
+        java.util.concurrent.Executors.newFixedThreadPool(2) { r ->
+            Thread(r, "moumou-thumb-internal")
+        }
+
+    /**
+     * 把封面/时长任务丢进对应卷的队列，并把线程降到后台优先级
+     * （`THREAD_PRIORITY_BACKGROUND`：不与前台 UI 抢 CPU 与 I/O，
+     * 用户滑动列表时抓帧不该让界面掉帧）。
+     */
+    private fun submitThumbTask(path: String, task: () -> Unit) {
+        val internal = runCatching { Environment.isExternalStorageEmulated(File(path)) }
+            .getOrDefault(true)
+        val pool = if (internal) thumbExecutorInternal else thumbExecutorExternal
+        pool.execute {
+            runCatching { android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND) }
+            task()
+        }
+    }
 
     /** 列表封面磁盘文件：按**身份串**命名（本地 = 路径+修改时间；远端 = 连接+远端路径+大小+时间）。
      *  `_v3` 是版本标记：v2 及以前抓的是第 0 秒帧，改名后旧封面自动失效重建。 */
@@ -2411,8 +2465,26 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    /** MediaStore 时长为 0 时兜底抽取（工作.md 第 5 点：下载产物直写导致元数据缺失）。 */
+    /**
+     * 时长兜底抽取：MediaStore 时长为 0 的条目（下载产物直写导致元数据缺失，
+     * 工作.md 第 5 点）与外置卷补扫的每个视频都走这里。
+     *
+     * **先问 MediaInfoLib** —— 它自己解析容器，不经过系统的 `media.extractor`
+     * （外置卡上逐个文件调系统抽取器正是 issue #4 里「反复读同一批文件」的来源），
+     * 而且结果与帧率/字幕共用同一个磁盘缓存，重复调用零解析。
+     *
+     * 它拿不到（缺 so 库 / 非常规容器）才退回 [retrieverDurationMs]：系统抽取器
+     * 对个别格式仍然是唯一认得的那个，留作兜底不让时长彻底缺档。
+     */
     private fun extractDurationMs(path: String): Long {
+        val fromLib = getVideoBasicMetadata(path)["durationMs"] as? Number
+        val libMs = fromLib?.toLong() ?: 0L
+        if (libMs > 0L) return libMs
+        return retrieverDurationMs(path)
+    }
+
+    /** MediaMetadataRetriever 兜底取时长（工作.md 第 5 点：下载产物直写导致元数据缺失）。 */
+    private fun retrieverDurationMs(path: String): Long {
         val retriever = MediaMetadataRetriever()
         return try {
             retriever.setDataSource(path)
