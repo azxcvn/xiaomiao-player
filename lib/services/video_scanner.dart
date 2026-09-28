@@ -113,6 +113,17 @@ class VideoScanner {
     return scanVideos();
   }
 
+  /// 停掉原生还在跑的那一轮整盘补扫（媒体库页面 dispose 时调用）。
+  ///
+  /// 用户诉求（issue #4）：退出目录后，还排着队的扫描进程要取消。原生那一轮的
+  /// 预算只有 1.5s，但用户已经离开媒体库时更没有理由继续读盘 —— 已扫到的结果
+  /// 照常落盘、照常推送，没扫到的留到下次接着扫。
+  ///
+  /// 原生没在跑时它是空操作；失败也无所谓（纯后台活），所以不返回 Future 给调用方。
+  static void cancelFsScan() {
+    _channel.invokeMethod<void>('cancelFsScan').catchError((Object _) {});
+  }
+
   /// 原生 → Dart 推送入口（由 `DeviceServices` 的统一 MethodCallHandler 转发）：
   /// - `onFsVideoBatch`：整盘补扫的增量批次（边扫边推）；
   /// - `onFsScanDone`：整轮结束的完整快照 → **替换**增量累计，清掉已删除的条目。

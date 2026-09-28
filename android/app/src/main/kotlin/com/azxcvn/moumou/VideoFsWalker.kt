@@ -30,13 +30,17 @@ private fun nameOf(path: String): String = path.substringAfterLast('/')
  * 目录和文件**成正比、跟视频库大小无关。原来每次进 App 都从零整盘递归一遍，用户
  * 存储上几十万个文件时就是十几秒。
  *
- * 这里把「已经走过哪些目录（lastScanned）」和「在那里找到过哪些视频」记下来：
+ * 这里把「已经走过哪些目录（lastScanned + 目录指纹）」和「在那里找到过哪些视频」
+ * 记下来：
  * - 视频直接从索引里出，不再重新走一遍树；
  * - 目录按 [FsVideoWalker] 的重扫间隔旧的重扫（最旧的优先），一轮没扫完就把
- *   待扫队列（frontier）存下来，下次接着扫。
+ *   待扫队列（frontier）存下来，下次接着扫；
+ * - 指纹是目录自身的 mtime，用来**提前**发现「刚扫完又被改」的目录（见
+ *   [probeChangedDirs]）；它不改变原来的时间戳重扫规则。
  *
- * 格式：TSV，首行版本号，其后每行 `类型 \t 字段…`。路径里含制表符/换行的条目不入
- * 索引（Android 上极罕见；这类条目仍然会在**当轮**扫描结果里出现，只是下次不记得）。
+ * 格式：TSV，首行版本号，其后每行 `类型 \t 字段…`（目录行多一列指纹，缺列读作 0）。
+ * 路径里含制表符/换行的条目不入索引（Android 上极罕见；这类条目仍然会在**当轮**
+ * 扫描结果里出现，只是下次不记得）。
  * 文件损坏 / 版本不符 / 扫描条件（key）变化 → 整体作废重扫，不会读到脏数据。
  */
 internal class FsVideoIndex(private val file: File) {
@@ -54,8 +58,13 @@ internal class FsVideoIndex(private val file: File) {
     /** 扫描条件指纹：不匹配说明开关/名单变了，索引直接作废 */
     var key: String = ""
 
-    /** 目录 → 上次列目录的时间（毫秒） */
-    val dirs = LinkedHashMap<String, Long>()
+    /**
+     * 目录 → 记录。
+     *
+     * 索引格式仍然是 `v1`（**不升版本**：老索引缺指纹列，读成 0 = 指纹未知，
+     * 探针跳过它、由 15 分钟时间戳照旧兜住；升版本会让所有人的索引作废重扫一遍）。
+     */
+    val dirs = LinkedHashMap<String, FsDirEntry>()
 
     /** 目录 → 该目录下的视频（索引里的唯一视频来源） */
     val videos = LinkedHashMap<String, MutableList<FsVideoEntry>>()
@@ -85,9 +94,20 @@ internal class FsVideoIndex(private val file: File) {
         return removedDirs || removedVideos
     }
 
-    /** 记下一个目录本轮的结果（[found] 为空表示这个目录现在没有视频，覆盖旧记录） */
-    fun applyDir(path: String, lastScannedMs: Long, found: List<FsVideoEntry>) {
-        dirs[path] = lastScannedMs
+    /**
+     * 记下一个目录本轮的结果（[found] 为空表示这个目录现在没有视频，覆盖旧记录）。
+     *
+     * [fingerprint] 是**列目录之前**取的目录自身 mtime（不是列完再取：列目录期间
+     * 刚好被改动时，存下「旧时间」才能让下一次探针把这次改动认出来）。取不到
+     * （stat 失败）记 0 = 指纹未知，探针会跳过它。
+     */
+    fun applyDir(
+        path: String,
+        lastScannedMs: Long,
+        fingerprint: Long,
+        found: List<FsVideoEntry>,
+    ) {
+        dirs[path] = FsDirEntry(lastScannedMs, fingerprint)
         if (found.isEmpty()) {
             videos.remove(path)
         } else {
@@ -98,13 +118,68 @@ internal class FsVideoIndex(private val file: File) {
     /** 早于 [scannedBeforeMs] 扫过的目录，最旧的先返回（重扫用） */
     fun staleDirs(scannedBeforeMs: Long, limit: Int): List<String> {
         val out = ArrayList<String>()
-        val sorted = dirs.entries.sortedBy { it.value }
+        val sorted = dirs.entries.sortedBy { it.value.lastScannedMs }
         for (entry in sorted) {
-            if (entry.value > scannedBeforeMs) break
+            if (entry.value.lastScannedMs > scannedBeforeMs) break
             out.add(entry.key)
             if (out.size >= limit) break
         }
         return out
+    }
+
+    /**
+     * 变更探针（P1-2）：对**还没到重扫间隔**的目录做一次 stat，目录自身 mtime
+     * 和记下的指纹不一致的返回给调用方 —— 说明这个目录的条目被增删/改名过。
+     *
+     * 为什么用「目录 mtime」而不是参考项目 mpvRx 的指纹（目录 mtime + 条目数 +
+     * 每条的 name/类型/length/mtime 混合哈希）：算 mpvRx 那种指纹**本身就要**
+     * `listFiles()` + 逐条目 stat（已核对其源码），只省下「重算聚合计数」——
+     * 而小喵的索引存的是「目录 → 视频列表」，没有聚合计数要重算，照抄等于付了
+     * 全部 stat 却什么都省不下；而且它的 15 分钟重扫仍然只按时间戳调度，指纹
+     * **不参与调度**，所以「时间戳法会漏掉刚扫完就被改」这个毛病它也没有解决。
+     *
+     * 所以这里把指纹（一次 stat）用在**提前发现变更**上：探到了就立刻重列该目录，
+     * 不必等 15 分钟。15 分钟的时间戳重扫照旧保留 —— 它兜的是「原地改写文件」
+     * （目录 mtime 不变）这类探针看不到的变化。
+     *
+     * 只探 [maxCount] 个、且不超过 [deadlineMs]：先探「刚扫过、离下次重扫最远」的
+     * （按 lastScanned 倒序），没探到的那些本来就更接近重扫间隔，由时间戳规则兜。
+     * 探针**不修改指纹**（只有真正列过目录的 [applyDir] 才更新），否则会把「有变更」
+     * 这件事自己抹掉。
+     */
+    fun probeChangedDirs(deadlineMs: Long, maxCount: Int): List<String> {
+        if (maxCount <= 0) return emptyList()
+        val out = ArrayList<String>()
+        val candidates = dirs.entries
+            .filter { it.value.fingerprint != 0L }
+            .sortedByDescending { it.value.lastScannedMs }
+        for (entry in candidates) {
+            if (out.size >= maxCount) break
+            if (SystemClock.elapsedRealtime() > deadlineMs) break
+            val dir = File(entry.key)
+            if (!dir.isDirectory) {
+                // 目录已经没了：交给这一轮 BFS 走一遍 removeDir（顺带把它的视频摘掉）
+                out.add(entry.key)
+                continue
+            }
+            if (dir.lastModified() != entry.value.fingerprint) out.add(entry.key)
+        }
+        return out
+    }
+
+    /**
+     * 已经顶到容量上限的部分（没顶到返回 null）。
+     *
+     * 上限存在的意义是「宁可截断也不能让索引撑爆内存」，但**截断了必须能看见** ——
+     * 原来只是静默地少记几条，用户看到的症状是「有些文件夹永远不出现」，从日志
+     * 上一眼看不出来（对齐 mpvRx 的 `Paused ... with N directories queued`）。
+     */
+    fun capacityNote(): String? {
+        val parts = ArrayList<String>(3)
+        if (dirs.size >= MAX_DIRS) parts.add("目录=${dirs.size}/$MAX_DIRS")
+        if (videos.size >= MAX_VIDEO_DIRS) parts.add("视频目录=${videos.size}/$MAX_VIDEO_DIRS")
+        if (frontier.size >= MAX_FRONTIER) parts.add("待扫队列=${frontier.size}/$MAX_FRONTIER")
+        return if (parts.isEmpty()) null else parts.joinToString("、")
     }
 
     /** 载入索引；[expectedKey] 不匹配或文件不可用 → 置空（下次全量重建） */
@@ -114,6 +189,10 @@ internal class FsVideoIndex(private val file: File) {
         frontier.clear()
         key = ""
         if (!file.isFile) return
+        // 顶到上限被丢掉的条数：静默截断会表现成「有些文件夹永远不出现」，必须留痕
+        var droppedDirs = 0
+        var droppedVideoDirs = 0
+        var droppedFrontier = 0
         try {
             file.bufferedReader(Charsets.UTF_8).use { reader ->
                 if (reader.readLine() != HEADER) return
@@ -123,22 +202,38 @@ internal class FsVideoIndex(private val file: File) {
                     val parts = line.split('\t')
                     when (parts[0]) {
                         TYPE_KEY -> key = parts.getOrNull(1) ?: ""
-                        TYPE_DIR -> if (parts.size >= 3 && dirs.size < MAX_DIRS) {
-                            dirs[parts[1]] = parts[2].toLongOrNull() ?: 0L
-                        }
-                        TYPE_VIDEO -> if (parts.size >= 5 && videos.size < MAX_VIDEO_DIRS) {
-                            val path = parts[1]
-                            videos.getOrPut(parentOf(path)) { ArrayList() }.add(
-                                FsVideoEntry(
-                                    path = path,
-                                    size = parts[2].toLongOrNull() ?: 0L,
-                                    modifiedMs = parts[3].toLongOrNull() ?: 0L,
-                                    durationMs = parts[4].toLongOrNull() ?: 0L,
+                        TYPE_DIR -> if (parts.size >= 3) {
+                            if (dirs.size < MAX_DIRS) {
+                                dirs[parts[1]] = FsDirEntry(
+                                    lastScannedMs = parts[2].toLongOrNull() ?: 0L,
+                                    // 老索引没有这一列 → 0 = 指纹未知，探针跳过它
+                                    fingerprint = parts.getOrNull(3)?.toLongOrNull() ?: 0L,
                                 )
-                            )
+                            } else {
+                                droppedDirs++
+                            }
                         }
-                        TYPE_FRONTIER -> if (parts.size >= 2 && frontier.size < MAX_FRONTIER) {
-                            frontier.add(parts[1])
+                        TYPE_VIDEO -> if (parts.size >= 5) {
+                            if (videos.size < MAX_VIDEO_DIRS) {
+                                val path = parts[1]
+                                videos.getOrPut(parentOf(path)) { ArrayList() }.add(
+                                    FsVideoEntry(
+                                        path = path,
+                                        size = parts[2].toLongOrNull() ?: 0L,
+                                        modifiedMs = parts[3].toLongOrNull() ?: 0L,
+                                        durationMs = parts[4].toLongOrNull() ?: 0L,
+                                    )
+                                )
+                            } else {
+                                droppedVideoDirs++
+                            }
+                        }
+                        TYPE_FRONTIER -> if (parts.size >= 2) {
+                            if (frontier.size < MAX_FRONTIER) {
+                                frontier.add(parts[1])
+                            } else {
+                                droppedFrontier++
+                            }
                         }
                     }
                 }
@@ -147,6 +242,14 @@ internal class FsVideoIndex(private val file: File) {
             Log.w(TAG, "fs index load failed: ${e.message}")
             clear()
             return
+        }
+        if (droppedDirs > 0 || droppedVideoDirs > 0 || droppedFrontier > 0) {
+            Log.w(
+                TAG,
+                "fs index load: 顶到上限被截断 —— 丢弃目录=$droppedDirs " +
+                    "丢弃视频记录=$droppedVideoDirs 丢弃待扫目录=$droppedFrontier " +
+                    "（上限 目录=$MAX_DIRS 视频目录=$MAX_VIDEO_DIRS 待扫=$MAX_FRONTIER）",
+            )
         }
         if (key != expectedKey) clear()
     }
@@ -165,8 +268,8 @@ internal class FsVideoIndex(private val file: File) {
                 writer.newLine()
                 writer.write("$TYPE_KEY\t$key")
                 writer.newLine()
-                for ((path, lastScanned) in dirs) {
-                    writer.write("$TYPE_DIR\t$path\t$lastScanned")
+                for ((path, dir) in dirs) {
+                    writer.write("$TYPE_DIR\t$path\t${dir.lastScannedMs}\t${dir.fingerprint}")
                     writer.newLine()
                 }
                 for (list in videos.values) {
@@ -209,10 +312,21 @@ internal class FsVideoIndex(private val file: File) {
 }
 
 /**
- * 索引/结果里的一条视频（时长只有外置卷的补扫会抽，主卷恒为 0）。
+ * 索引里的一条目录记录。
  *
- * [durationMs] 三种取值：`> 0` = 抽到了（会跨轮复用）；`0` = 还没抽（预算没轮到 /
- * 主卷不抽，下一轮还会试）；`[DURATION_UNAVAILABLE]` = 试过但拿不到（不再重试）。
+ * [fingerprint] = 上次**列这个目录之前**取到的目录自身 mtime（列目录期间有增删/
+ * 改名，mtime 就会变；0 = 没取到 / 老索引没这一列，探针跳过）。
+ */
+internal class FsDirEntry(
+    var lastScannedMs: Long,
+    var fingerprint: Long,
+)
+
+/**
+ * 索引/结果里的一条视频。
+ *
+ * [durationMs]：`> 0` = 已知时长（历史抽到的 / 卡片兜底拿到的，会跨轮复用）；
+ * `0` = 未知（补扫本身不抽时长，交给卡片按需懒加载）。
  */
 internal class FsVideoEntry(
     val path: String,
@@ -237,8 +351,21 @@ internal class FsScanRequest(
     val invalidatePaths: List<String>,
     val primaryRoot: File?,
     val externalRoots: List<File>,
-    /** 时长兜底抽取（主卷整盘补扫不抽：整盘逐个开容器代价太大，沿用原行为） */
-    val extractDuration: (String) -> Long,
+    /**
+     * MediaStore 这一轮**已经给过**的路径（绝对路径）。
+     *
+     * 补扫索引只负责「系统看不到的东西」，这些文件**不再记进索引**：同一个文件在
+     * MediaStore 与索引里各存一份是双份内存 + 双份落盘，取用时还会被 `getVideos`
+     * 按「MediaStore 优先」丢掉 —— 纯死重量。对「大容量外置卡 + 普通库」的用户，
+     * 这一条能把索引从「整张卡的文件表」缩到「几乎只剩系统看不到的那些文件」。
+     *
+     * 传的是**本次查询确实返回过**的集合，所以「MediaStore 一时查不到、靠索引兜底」
+     * 的能力不受影响：查不到就不会进这个集合，补扫照旧把那一条存下来。
+     *
+     * ⚠️ 后台那一轮会读这个集合（`FsVideoWalker.walkInBackground`），交给它之后
+     * **就不能再改动这个集合**。
+     */
+    val mediaStorePaths: Set<String>,
 )
 
 /** 扫描根的属性 */
@@ -246,43 +373,63 @@ private class FsRootInfo(
     val path: String,
     val isPrimary: Boolean,
     val maxDepth: Int,
-    val extractDuration: Boolean,
 )
 
 /**
  * 整盘文件系统补扫：**带预算、带跳过名单、带黑白名单剪枝、带续扫**的 BFS。
  *
  * 与参考项目 mpvRx 的做法对齐（`FolderViewScanner` + `DirectoryScanDao`）：
- * 1. **跳过名单**：缩略图/缓存/临时/回收站/obb 这类目录整棵不进；
- * 2. **预算**：单轮递归最多 [WALK_BUDGET_MS] 毫秒，超了就把待扫目录存进索引，
+ * 1. **只枚举、不解析**：一轮里只做目录列举 + `length()` + `lastModified()`，
+ *    **不开容器抽时长**（抽取交给卡片按需懒加载）—— 两者塞进同一个预算时，
+ *    抽取（贵）会把枚举（便宜）饿死，导致「每轮只能多枚举一个目录」；同时
+ *    **不重复记 MediaStore 已经给过的文件**（`FsScanRequest.mediaStorePaths`），
+ *    索引只留系统看不到的那部分；
+ * 2. **跳过名单**：缩略图/缓存/临时/回收站/obb 这类目录整棵不进；
+ * 3. **预算**：单轮递归最多 [WALK_BUDGET_MS] 毫秒，超了就把待扫目录存进索引，
  *    下次进 App 接着扫（不会为了扫完而转圈十几秒）；
- * 3. **重扫间隔**：[DIR_RESCAN_INTERVAL_MS] 内扫过的目录不重复列目录，过期的最旧优先；
- * 4. **黑白名单剪枝**：白名单模式下只走「白名单目录及其祖先」，黑名单整棵跳过
+ * 4. **重扫间隔**：[DIR_RESCAN_INTERVAL_MS] 内扫过的目录不重复列目录，过期的最旧优先；
+ * 5. **黑白名单剪枝**：白名单模式下只走「白名单目录及其祖先」，黑名单整棵跳过
  *    ——名单是用户意图，能省下的递归量最大（原来名单只在 Dart 侧过滤结果，
  *    整盘递归一个目录都没少）；
- * 5. **广度优先**：浅层目录先扫，视频通常就在浅层，首轮就能覆盖大部分。
+ * 6. **广度优先**：浅层目录先扫，视频通常就在浅层，首轮就能覆盖大部分。
  */
 internal object FsVideoWalker {
     private const val WALK_BUDGET_MS = 1500L
     private const val DIR_RESCAN_INTERVAL_MS = 15 * 60_000L
     private const val PRIMARY_MAX_DEPTH = 6
-    private const val EXTERNAL_MAX_DEPTH = 4
+
+    /**
+     * 非主卷最大递归深度。
+     *
+     * 原来只有 4 —— 深度判定卡的是**目录**（文件不判），所以 depth 4 的目录里
+     * 的视频能扫到，但 depth ≥ 5 的目录**整个不被列目录**，里面的视频永远不出现：
+     *
+     * ```
+     * /storage/CARD/Anime/2024/Season1/<番名>/Sub/ep01.mkv
+     *      ↑depth0  ↑1   ↑2     ↑3        ↑4   ↑5 ← 这个目录被跳过
+     * ```
+     *
+     * 番剧库常见的「番名/字幕组或分卷子目录」正好落在 depth 5 上。对齐参考项目
+     * mpvRx 的 20（它是所有卷根统一 20）。
+     */
+    private const val EXTERNAL_MAX_DEPTH = 20
     private const val VALIDATE_MAX_PER_RUN = 8000
     private const val STALE_SEED_MAX = 4000
+
+    /**
+     * 变更探针的单轮预算与探测上限（P1-2）。
+     *
+     * 只探「还没到 15 分钟重扫间隔、且离下次重扫最远」的那些目录，一次 stat 一个目录；
+     * 单轮最多花 [PROBE_BUDGET_MS] 毫秒 / [PROBE_MAX_PER_RUN] 个 —— 外置卡 stat 慢
+     * （U 盘 / 机械盘更慢）时靠时间预算兜住，不让探针把这一轮的枚举预算吃光。
+     */
+    private const val PROBE_BUDGET_MS = 200L
+    private const val PROBE_MAX_PER_RUN = 8000
     private const val KEEP_INDEX_FILES = 3
     private const val INDEX_PREFIX = "fs_video_index_"
 
     /** 增量推送的批大小：扫到这么多新条目就先推一批，首屏不必等整轮扫完 */
     private const val BATCH_SIZE = 64
-
-    /**
-     * 时长抽取的「试过但拿不到」标记：写进索引，下一轮直接沿用、不再重试。
-     *
-     * 有些文件（损坏 / 非标准容器，真机日志里的 `csd0 too small`）抽取必定失败；
-     * 若不记住失败，每过 [DIR_RESCAN_INTERVAL_MS] 的那轮重扫都会把它们再抽一遍，
-     * 外置卡上就是无意义的反复随机读。对外（[videoMap]）一律归 0。
-     */
-    private const val DURATION_UNAVAILABLE = -1L
 
     /** 两轮补扫之间的最小间隔：防页面来回切时把递归打成一串 */
     private const val WALK_MIN_INTERVAL_MS = 2000L
@@ -345,6 +492,33 @@ internal object FsVideoWalker {
     private var validatedCachedOnce = false
 
     /**
+     * 正在跑的那一轮的代次（没有在跑时为 -1）；配合 [cancelRequested] 判断
+     * 「新请求来了，旧那一轮已经没人要了」。
+     */
+    @Volatile
+    private var runningScanId = -1
+
+    /**
+     * 取消标志：置位后 BFS 在下一个目录边界收尾 —— 已扫到的结果照常落盘、照常推给
+     * Dart，没扫到的进 frontier 下次接着扫（与预算截断同一条收尾路径）。
+     *
+     * 由 [walkInBackground] 起新的一轮时清掉，所以「现在没在跑」时置位是空操作。
+     */
+    @Volatile
+    private var cancelRequested = false
+
+    /**
+     * 请求停掉当前这一轮（用户离开媒体库页面 → Dart 侧 `cancelFsScan`；
+     * 或新的扫描请求到了 → [readCached]）。
+     *
+     * 参考项目 mpvRx 靠 `currentScanJob?.cancel()` + 页面 viewModelScope 做到
+     * 同一件事；小喵的扫描器是静态 object，没有生命周期，所以留这个显式入口。
+     */
+    fun requestCancel() {
+        cancelRequested = true
+    }
+
+    /**
      * 快速路径（同步、不递归）：只把**索引里已知**的补扫条目读出来。
      *
      * 这是「不等文件系统遍历」的延迟边界（对齐 mpvRx 的 `getAllVideoFoldersFast`
@@ -358,6 +532,9 @@ internal object FsVideoWalker {
      */
     fun readCached(context: Context, request: FsScanRequest): List<Map<String, Any>> {
         val handle = openIndex(context, request)
+        // 新的扫描请求 = 正在跑的那一轮的推送已经没人要了（Dart 只认自己那代）：
+        // 让它别再占着 IO 往下扫（对齐 mpvRx 的 `currentScanJob?.cancel()`）
+        if (walkRunning && request.scanId != runningScanId) requestCancel()
         // 记下最新代次：后台补扫推送按它回，Dart 只认自己那代
         latestScanId = request.scanId
         latestScanKey = handle.key
@@ -391,6 +568,9 @@ internal object FsVideoWalker {
      * [onBatch] / [onDone] 在后台线程上执行，带的是**当前最新**代次；期间条件变了
      * （开关 / 名单 / 代次）就不推 —— Dart 只认自己那代，推旧的没意义。
      *
+     * 起这一轮时清掉取消标志、记下代次：期间的 [requestCancel] 只作用于这一轮，
+     * 不会把下一轮一起取消掉。
+     *
      * 返回是否真的起了线程（已有补扫在跑 / 距上轮太近 → false，不是错误）。
      */
     fun walkInBackground(
@@ -407,6 +587,8 @@ internal object FsVideoWalker {
                 return false
             }
             walkRunning = true
+            runningScanId = request.scanId
+            cancelRequested = false
         }
 
         // 后台线程可能比 Activity 活得久：只抓 Application 上下文，别把 Activity 拖住
@@ -431,11 +613,16 @@ internal object FsVideoWalker {
                     Log.d(TAG, "fs walk: skip save (索引期间被失效过)")
                 }
                 pruneIndexFiles(appContext, handle.file)
+                // frontier = 这一轮没扫完、留到下次接着扫的目录数（「暂停了、还剩多少」
+                // 的可观测点，对齐 mpvRx 的 "Paused hidden-folder indexing with N
+                // directories queued"）
                 Log.d(
                     TAG,
                     "fs walk: elapsed=${SystemClock.elapsedRealtime() - startedAt}ms truncated=$truncated " +
-                        "dirs=${index.dirs.size} videos=${index.videos.values.sumOf { it.size }}",
+                        "dirs=${index.dirs.size} videos=${index.videos.values.sumOf { it.size }} " +
+                        "frontier=${index.frontier.size}",
                 )
+                index.capacityNote()?.let { Log.w(TAG, "fs index 顶到容量上限：$it（超出部分会被丢弃）") }
 
                 val scanId = if (latestScanKey == key) latestScanId else -1
                 if (scanId >= 0) onDone(scanId, toMaps(index, handle.allowed, handle.blocked))
@@ -444,6 +631,7 @@ internal object FsVideoWalker {
             } finally {
                 synchronized(WALK_LOCK) {
                     walkRunning = false
+                    runningScanId = -1
                     lastWalkFinishedAt = SystemClock.elapsedRealtime()
                 }
             }
@@ -570,7 +758,6 @@ internal object FsVideoWalker {
                         path = it.absolutePath,
                         isPrimary = true,
                         maxDepth = PRIMARY_MAX_DEPTH,
-                        extractDuration = false,
                     )
                 )
             }
@@ -581,7 +768,6 @@ internal object FsVideoWalker {
                     path = root.absolutePath,
                     isPrimary = false,
                     maxDepth = EXTERNAL_MAX_DEPTH,
-                    extractDuration = true,
                 )
             )
         }
@@ -592,7 +778,7 @@ internal object FsVideoWalker {
         // 「先发布旧快照、扫完再 Replace」），所以刷新时不会少东西
         val staleBefore = if (request.forceRescan) Long.MAX_VALUE else now - DIR_RESCAN_INTERVAL_MS
         var level: List<String> = if (!request.forceRescan && index.frontier.isNotEmpty()) {
-            // 上一轮没扫完：接着扫，不从根重来
+            // 上一轮没扫完：接着扫，不从根重来（这一轮不跑变更探针，先把欠的扫完）
             val pending = index.frontier.toList()
             index.frontier.clear()
             pending
@@ -601,6 +787,16 @@ internal object FsVideoWalker {
             val seed = ArrayList<String>()
             for (root in roots) seed.add(root.path)
             seed.addAll(index.staleDirs(staleBefore, STALE_SEED_MAX))
+            // 还没到重扫间隔、但目录 mtime 变了的（刚扫完又被改）也一起排进来：
+            // 有它就等于「新增/删除/改名的视频最多等一轮就能看见」，不必等 15 分钟
+            if (!request.forceRescan) {
+                seed.addAll(
+                    index.probeChangedDirs(
+                        SystemClock.elapsedRealtime() + PROBE_BUDGET_MS,
+                        PROBE_MAX_PER_RUN,
+                    )
+                )
+            }
             // 强制刷新时别丢下没扫完的部分
             seed.addAll(index.frontier)
             index.frontier.clear()
@@ -624,6 +820,14 @@ internal object FsVideoWalker {
             var cutAt = -1
             for (i in level.indices) {
                 if (SystemClock.elapsedRealtime() > deadline) {
+                    cutAt = i
+                    break
+                }
+                if (cancelRequested) {
+                    // 用户已经离开媒体库 / 换了一轮扫描：不再往下走。已扫到的结果
+                    // 照常落盘、照常推给 Dart，剩下的进 frontier 下次接着扫
+                    // （与预算截断走同一条收尾路径）
+                    Log.d(TAG, "fs walk: cancelled（用户离开 / 换了扫描代次）")
                     cutAt = i
                     break
                 }
@@ -660,6 +864,10 @@ internal object FsVideoWalker {
                     }
                 }
 
+                // 指纹要在**列目录之前**取：列目录期间刚好有增删/改名的话，存下的是
+                // 改动前的 mtime，下一次探针就能把这次改动认出来（宁可多走一遍，
+                // 也不能把一次变更永久漏掉）
+                val dirMtime = dir.lastModified()
                 val files = try {
                     dir.listFiles()
                 } catch (_: Exception) {
@@ -667,9 +875,8 @@ internal object FsVideoWalker {
                 } ?: continue
 
                 val found = ArrayList<FsVideoEntry>()
-                // 索引里这个目录上一轮的结果：文件没变就复用时长的判定依据。
-                // 没有它的话，每次重扫（过了 15 分钟间隔、或用户下拉刷新）都会对
-                // 目录里每个视频再抽一次时长 —— 外置卡上就是无意义的反复随机读。
+                // 索引里这个目录上一轮的结果：文件没变就沿用已知时长的判定依据
+                // （补扫自己**不抽**时长，只把历史抽到过的正面结果传下去，不白丢）
                 val known = index.videos[path]?.associateBy { it.path }
                 for (f in files) {
                     val name = f.name
@@ -686,31 +893,29 @@ internal object FsVideoWalker {
                         if (dot <= 0 || dot == name.length - 1) continue
                         if (!VIDEO_EXTS.contains(name.substring(dot + 1).lowercase(Locale.ROOT))) continue
                         if (!f.isFile) continue
+                        // MediaStore 这一轮已经给过 → 不记进索引（索引只管系统看不到的
+                        // 东西）。放在两次 stat **之前**：这类文件连大小/修改时间都不必读，
+                        // 外置卡上每个文件省两次系统调用
+                        if (request.mediaStorePaths.contains(f.absolutePath)) continue
                         val size = f.length()
                         if (size <= 0L) continue
                         val modifiedMs = f.lastModified()
                         val old = known?.get(f.absolutePath)
-                        // 非主卷抽时长（MediaStore 没索引到 → 列表进度条 / 已看状态全靠它，
-                        // 故兜底抽一次）。三种情况：
-                        // 1. 索引里已有结论（> 0 抽到了 / < 0 抽过拿不到）且文件没变
-                        //    → 直接沿用，**不再开容器**；
-                        // 2. 新文件 / 文件变了 / 上轮没轮到 → 预算内抽一次，抽不到记
-                        //    [DURATION_UNAVAILABLE]，免得每轮重试同一个坏文件；
-                        // 3. 预算到点 → 留 0，下一轮接着抽。
-                        val duration = if (old != null && old.size == size &&
-                            old.modifiedMs == modifiedMs && old.durationMs != 0L
+                        // **这一轮不开容器**：只枚举（目录列举 + 上面两次 stat）。
+                        // 时长沿用索引里已有的正面结果（size + mtime 都没变才敢用），
+                        // 否则留 0；0 的条目由卡片按需调 getVideoDuration 补，补不到
+                        // 也只是列表上没有进度条，不会把枚举拖慢（P0-2）。
+                        val duration = if (old != null && old.durationMs > 0L &&
+                            old.size == size && old.modifiedMs == modifiedMs
                         ) {
                             old.durationMs
-                        } else if (root.extractDuration && SystemClock.elapsedRealtime() < deadline) {
-                            val extracted = request.extractDuration(f.absolutePath)
-                            if (extracted > 0L) extracted else DURATION_UNAVAILABLE
                         } else {
                             0L
                         }
                         found.add(FsVideoEntry(f.absolutePath, size, modifiedMs, duration))
                     }
                 }
-                index.applyDir(path, now, found)
+                index.applyDir(path, now, dirMtime, found)
                 // 边扫边推：够一批就先给 Dart，首屏不必等整轮扫完
                 if (found.isNotEmpty()) {
                     for (entry in found) pending.add(videoMap(entry))
@@ -756,7 +961,7 @@ internal object FsVideoWalker {
     private fun videoMap(v: FsVideoEntry): Map<String, Any> = mapOf(
         "path" to v.path,
         "name" to nameOf(v.path),
-        // < 0 是「试过但拿不到」的内部标记，对外统一归 0（Dart 侧按未知时长处理）
+        // 时长未知（补扫不抽）就是 0，Dart 侧按「未知」处理、由卡片按需补
         "durationMs" to if (v.durationMs > 0L) v.durationMs else 0L,
         "size" to v.size,
         "width" to 0,

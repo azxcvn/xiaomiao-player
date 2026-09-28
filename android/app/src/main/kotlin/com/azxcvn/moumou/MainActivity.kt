@@ -166,10 +166,11 @@ class MainActivity : FlutterActivity() {
                             }
                         }
                     }
-                    // 卡片时长兜底：扫描器拿不到时长的视频（.nomedia / 隐藏文件夹 /
-                    // 外置卷补扫超时间预算）列表里会永远显示「未观看」且没有进度条
-                    // ——它只读容器元数据、不抓帧，由卡片按需对「时长未知」的可见项
-                    // 调用一次（不放进 getVideos 全盘扫描，避免整盘逐个开容器）
+                    // 卡片时长兜底：整盘补扫只做枚举、**不抽时长**（抽取会把枚举
+                    // 饿死，见 FsVideoWalker），所以 .nomedia / 隐藏文件夹 / 外置卷
+                    // 那些条目时长恒为 0，列表里会永远显示「未观看」且没有进度条
+                    // ——由卡片按需对「时长未知」的可见项调用一次：它只读容器元数据、
+                    // 不抓帧，且带磁盘缓存 + 单文件超时 + 失败 TTL
                     "getVideoDuration" -> {
                         val path = call.argument<String>("path")
                         if (path == null) {
@@ -290,6 +291,13 @@ class MainActivity : FlutterActivity() {
                                 }
                             }
                         }.start()
+                    }
+                    // 用户离开媒体库页面（Dart 侧页面 dispose）：停掉还在跑的那一轮
+                    // 整盘补扫。那轮本来就只有 1.5s 预算，但用户已经明确离开了，
+                    // 更没有理由继续读盘（issue #4：报告者要的「退出目录后取消」）
+                    "cancelFsScan" -> {
+                        FsVideoWalker.requestCancel()
+                        result.success(null)
                     }
                     "getSystemVolume" -> result.success(getSystemVolume())
                     "setSystemVolume" -> {
@@ -1930,16 +1938,69 @@ class MainActivity : FlutterActivity() {
         thumbsDir().listFiles()?.forEach { it.delete() }
     }
 
-    // ── 列表基本元数据（帧率 / 字幕 / 时长，MediaInfoLib + 磁盘缓存）───────
+    // ── 列表基本元数据（帧率 / 字幕 / 时长，MediaInfoLib + 磁盘缓存 + 单文件超时）──
+
+    /**
+     * 单文件解析超时（毫秒）。
+     *
+     * 原来 1500ms 的预算只在**文件之间**检查（`FsVideoWalker`），一个病态文件
+     * （容器头损坏 / 要 seek 到文件尾读索引 / 卡正处于忙状态）能顶穿整个预算，
+     * 把后面所有等待的文件一起拖住。参考项目 mpvRx 也缺这条（批量解析的
+     * `awaitAll()` 没有 `withTimeout`，任一文件卡住阻塞整批）—— 这是 issue #4
+     * 报告者少数经查证成立的建议之一。
+     */
+    private val parseTimeoutMs = 1500L
+
+    /**
+     * 解析任务的执行池：**必须与调用方分开** —— 卡片时长队列（[submitThumbTask]）
+     * 就在池外等结果，共用一个池会让「超时取消」把自己所在的线程一起关掉。
+     * 池不设上限：native 解析不响应中断，真卡死的那个线程只能留给它自己跑完
+     * （每有一个这样的文件最多多留一个线程），换来的是调用方不再被拖住；同一个
+     * 文件随后会被记上失败 TTL（[durationFailureTtlMs]），24 小时内不会重复提交。
+     */
+    private val parseTimeoutExecutor: java.util.concurrent.ExecutorService =
+        java.util.concurrent.Executors.newCachedThreadPool { r ->
+            Thread(r, "moumou-parse-timeout")
+        }
+
+    /**
+     * 跑一次解析，**最多等 [parseTimeoutMs]**：超时 / 抛异常一律返回 null，
+     * 调用方按「拿不到」处理（不会拿到半截结果）。
+     */
+    private fun <T> runWithParseTimeout(block: () -> T): T? {
+        val future = parseTimeoutExecutor.submit(java.util.concurrent.Callable { block() })
+        return try {
+            future.get(parseTimeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS)
+        } catch (_: java.util.concurrent.TimeoutException) {
+            // 放弃这个文件：cancel(true) 只中断阻塞在 Java 层的等待，native 解析
+            // 不响应中断 —— 但调用方（卡片队列 / 列表扫描）已经不再被它拖住
+            future.cancel(true)
+            null
+        } catch (_: Exception) {
+            null
+        }
+    }
 
     /**
      * 基本元数据磁盘缓存版本：**改动缓存内容时必须 +1**。
      *
-     * 旧缓存没有 `v` 字段（读到 0）会被当成未命中重新解析：v2 起缓存里多了
-     * `durationMs`，不重解析的话老缓存永远给不出时长，[extractDurationMs]
-     * 就还得退回系统抽取器（等于白改）。
+     * - v2 起缓存里多了 `durationMs`：不重解析老缓存永远给不出时长，
+     *   [extractDurationMs] 就还得退回系统抽取器（等于白改）；
+     * - v3 起多了 `parsedAtMs` / `durationFailedAtMs`：时长「拿不到」改成
+     *   **带时间戳、有 TTL** 的负面结论（见 [durationFailureTtlMs]）。老缓存
+     *   一律当未命中重解析一次，把历史上被永久钉死的零时长结论作废重试。
      */
-    private val metaCacheVersion = 2
+    private val metaCacheVersion = 3
+
+    /**
+     * 「时长拿不到」这个负面结论的沿用时长（P0-1）：TTL 内不重复开容器，过期再试。
+     *
+     * 原来补扫抽不到时长一律记成 `-1` 并**永久沿用**，于是「卡一时忙 / 读失败 /
+     * native 库缺失」这类**瞬时**失败会被钉成永久结论 —— 表现为「这部片子永远
+     * 显示未观看」，属于静默数据损坏。参考项目 mpvRx 明确避免这种 sticky 失败：
+     * "Do not make a transient open/parse failure sticky."
+     */
+    private val durationFailureTtlMs = 24 * 60 * 60 * 1000L
 
     /** 基本元数据磁盘缓存目录（JSON 按 path+lastModified 分文件） */
     private fun metaCacheFile(path: String): File {
@@ -1948,60 +2009,116 @@ class MainActivity : FlutterActivity() {
         return File(dir, "${path.hashCode()}_${File(path).lastModified()}.json")
     }
 
+    /** 读缓存 JSON，**不看版本**（写回时要保留里面已有的字段）；没有 / 损坏 → null */
+    private fun readMetaCacheRaw(cacheFile: File): org.json.JSONObject? {
+        if (!cacheFile.exists()) return null
+        val text = runCatching { cacheFile.readText() }.getOrNull()
+        if (text.isNullOrEmpty()) return null
+        return runCatching { org.json.JSONObject(text) }.getOrNull()
+    }
+
+    /** 读缓存 JSON，版本不符视为未命中（老格式不端出来用） */
+    private fun readMetaCache(cacheFile: File): org.json.JSONObject? {
+        val parsed = readMetaCacheRaw(cacheFile) ?: return null
+        return if (parsed.optInt("v", 0) >= metaCacheVersion) parsed else null
+    }
+
+    /** 缓存 JSON → 对外 Map */
+    private fun metaMapOf(obj: org.json.JSONObject): Map<String, Any> = mapOf(
+        "frameRate" to obj.optDouble("frameRate", 0.0),
+        "hasSubtitles" to obj.optBoolean("hasSubtitles", false),
+        "subtitleCodec" to obj.optString("subtitleCodec", ""),
+        "durationMs" to obj.optLong("durationMs", 0L),
+    )
+
+    /**
+     * 写缓存 JSON，**原子写**：先写临时文件再改名。临时名带上线程 id —— 同一个
+     * 文件可能被补扫线程与封面队列同时解析（缓存未命中时），共用 `<名字>.tmp`
+     * 会两边互相踩。
+     */
+    private fun writeMetaCache(cacheFile: File, obj: org.json.JSONObject) {
+        runCatching {
+            val bytes = obj.toString().toByteArray()
+            val tmp = File(
+                cacheFile.parentFile,
+                "${cacheFile.name}.${Thread.currentThread().id}.tmp",
+            )
+            java.io.FileOutputStream(tmp).use { o ->
+                o.write(bytes)
+                o.flush()
+            }
+            if (!tmp.renameTo(cacheFile)) {
+                tmp.delete()
+                java.io.FileOutputStream(cacheFile).use { o ->
+                    o.write(bytes)
+                    o.flush()
+                }
+            }
+        }
+    }
+
     /**
      * 列表字段「帧率 / 字幕指示器」数据 + **时长兜底的数据源**：MediaInfoLib
      * 快速解析，结果落盘缓存（重开视频零解析）。失败返回空 Map（字段不显示）。
      *
-     * 同一个缓存也供 [extractDurationMs] 用：补扫抽时长与列表字段解析因此
-     * 只付一次解析成本。
+     * **不带超时**，调用方一律走 [runWithParseTimeout]（[getVideoBasicMetadata]
+     * 与 [extractDurationMs] 都是这么包的）。
      */
-    private fun getVideoBasicMetadata(path: String): Map<String, Any> {
+    private fun getVideoBasicMetadataBlocking(path: String): Map<String, Any> {
         val cacheFile = metaCacheFile(path)
-        if (cacheFile.exists()) {
-            val cached = runCatching { cacheFile.readText() }.getOrNull()
-            if (cached != null && cached.isNotEmpty()) {
-                // 缓存是 JSON：反序列化为 Map
-                val parsed = runCatching {
-                    org.json.JSONObject(cached)
-                }.getOrNull()
-                if (parsed != null && parsed.optInt("v", 0) >= metaCacheVersion) {
-                    return mapOf(
-                        "frameRate" to parsed.optDouble("frameRate", 0.0),
-                        "hasSubtitles" to parsed.optBoolean("hasSubtitles", false),
-                        "subtitleCodec" to parsed.optString("subtitleCodec", ""),
-                        "durationMs" to parsed.optLong("durationMs", 0L),
-                    )
-                }
+        readMetaCache(cacheFile)?.let { cached ->
+            val durationMs = cached.optLong("durationMs", 0L)
+            val parsedAt = cached.optLong("parsedAtMs", 0L)
+            // 命中条件：有正面时长，或者「上一个 TTL 窗口内真的解析过」。
+            // `parsedAtMs` 为 0 的条目只记了失败时刻、没解析过，不算命中 ——
+            // 否则会把一份零字段的占位缓存当成解析结果端出去。
+            if (durationMs > 0L ||
+                (parsedAt > 0L && System.currentTimeMillis() - parsedAt < durationFailureTtlMs)
+            ) {
+                return metaMapOf(cached)
             }
         }
 
         val meta = MediaInfoHelper.extractBasicMetadata(this, path)
         if (meta.isNotEmpty()) {
-            runCatching {
-                val obj = org.json.JSONObject()
-                obj.put("v", metaCacheVersion)
-                obj.put("frameRate", meta["frameRate"] as? Number ?: 0.0)
-                obj.put("hasSubtitles", meta["hasSubtitles"] as? Boolean ?: false)
-                obj.put("subtitleCodec", meta["subtitleCodec"] as? String ?: "")
-                obj.put("durationMs", meta["durationMs"] as? Number ?: 0L)
-                // 原子写入：先写临时文件再改名。临时名带上线程 id —— 同一个文件
-                // 可能被补扫线程与封面队列同时解析（缓存未命中时），共用
-                // `<名字>.tmp` 会两边互相踩
-                val tmp = File(cacheFile.parentFile, "${cacheFile.name}.${Thread.currentThread().id}.tmp")
-                java.io.FileOutputStream(tmp).use { o ->
-                    o.write(obj.toString().toByteArray())
-                    o.flush()
-                }
-                if (!tmp.renameTo(cacheFile)) {
-                    tmp.delete()
-                    java.io.FileOutputStream(cacheFile).use { o ->
-                        o.write(obj.toString().toByteArray())
-                        o.flush()
-                    }
-                }
-            }
+            // 解析成功就落盘（哪怕字段全是 0）：下次开这个文件不再解析。
+            // `durationFailedAtMs` 原样保留 —— 时长兜底那条路刚记下的失败结论，
+            // 不该被一次「拿到字段但没时长」的解析抹掉
+            val obj = readMetaCacheRaw(cacheFile) ?: org.json.JSONObject()
+            obj.put("v", metaCacheVersion)
+            obj.put("frameRate", meta["frameRate"] as? Number ?: 0.0)
+            obj.put("hasSubtitles", meta["hasSubtitles"] as? Boolean ?: false)
+            obj.put("subtitleCodec", meta["subtitleCodec"] as? String ?: "")
+            obj.put("durationMs", meta["durationMs"] as? Number ?: 0L)
+            obj.put("parsedAtMs", System.currentTimeMillis())
+            writeMetaCache(cacheFile, obj)
         }
         return meta
+    }
+
+    /** 列表字段通道用：带单文件超时（超时按「拿不到」返回空 Map） */
+    private fun getVideoBasicMetadata(path: String): Map<String, Any> =
+        runWithParseTimeout { getVideoBasicMetadataBlocking(path) } ?: emptyMap()
+
+    /**
+     * 把时长结论并进元数据缓存：[durationMs] > 0 写正面结果（顺带清掉失败记录），
+     * 否则记下**这次**拿不到的时刻（[durationFailureTtlMs] 内不再重试）。
+     * 已解析出的帧率 / 字幕字段原样保留。
+     */
+    private fun updateCachedDuration(cacheFile: File, durationMs: Long) {
+        val obj = readMetaCacheRaw(cacheFile) ?: org.json.JSONObject()
+        obj.put("v", metaCacheVersion)
+        if (!obj.has("frameRate")) obj.put("frameRate", 0.0)
+        if (!obj.has("hasSubtitles")) obj.put("hasSubtitles", false)
+        if (!obj.has("subtitleCodec")) obj.put("subtitleCodec", "")
+        if (durationMs > 0L) {
+            obj.put("durationMs", durationMs)
+            obj.put("durationFailedAtMs", 0L)
+        } else {
+            if (!obj.has("durationMs")) obj.put("durationMs", 0L)
+            obj.put("durationFailedAtMs", System.currentTimeMillis())
+        }
+        writeMetaCache(cacheFile, obj)
     }
 
     // ── 列表缩略图（优化：等比缩放 + 16:9 居中裁剪 + 低质量 JPEG）──────
@@ -2276,6 +2393,10 @@ class MainActivity : FlutterActivity() {
      * 每次进 App 从零重来 —— 用户存储上几十万个文件时就是「进 App 转圈十几秒」
      * （issue #4）。
      *
+     * 补扫索引**只留 MediaStore 看不到的条目**：本轮 MediaStore 返回过的路径下推给
+     * 补扫（[FsScanRequest.mediaStorePaths]），它不再把这些文件重复记一份（否则是
+     * 双份内存 + 双份落盘，而取用时还要被这里按「MediaStore 优先」丢掉）。
+     *
      * [whitelist] / [blacklist] 是 Dart 侧的黑白名单目录（白名单为空 = 不剪枝）；
      * [forceFsRescan] = 用户主动刷新（下拉刷新 / 一键清缓存）：忽略重扫间隔重新走
      * 一遍，但**不清索引**；[invalidatePaths] = 文件操作改动过的路径，只失效这些
@@ -2291,7 +2412,11 @@ class MainActivity : FlutterActivity() {
         scanId: Int = -1,
     ): List<Map<String, Any>> {
         val videos = mutableListOf<Map<String, Any>>()
-        val visitedPaths = mutableSetOf<String>()
+        // MediaStore 这一轮返回过的路径：既用来去重，也**下推给补扫**（FsScanRequest）
+        // 让补扫不再把系统已经给过的文件重复记进索引。补扫那份自己的去重另用一个
+        // 局部集合（不能往这个集合里塞补扫路径，否则补扫会把它们当成「系统已给过」
+        // 而不入库，`.nomedia` 里的视频就会从列表里消失）
+        val mediaStorePaths = mutableSetOf<String>()
         val noMediaDirCache = mutableMapOf<String, Boolean>()
 
         fun checkDirectoryHasNoMedia(dir: File): Boolean {
@@ -2389,7 +2514,7 @@ class MainActivity : FlutterActivity() {
                 // 「未观看」。duration==0 时用 MediaMetadataRetriever 兜底抽一次。
                 val finalDuration = if (duration > 0) duration else extractDurationMs(normPath)
 
-                if (visitedPaths.add(normPath)) {
+                if (mediaStorePaths.add(normPath)) {
                     videos.add(
                         mapOf(
                             "path" to normPath,
@@ -2421,14 +2546,17 @@ class MainActivity : FlutterActivity() {
                 invalidatePaths = invalidatePaths,
                 primaryRoot = primaryStorage,
                 externalRoots = externalStorageRoots(),
-                extractDuration = { path -> extractDurationMs(path) },
+                // 系统已经给过的路径下推给补扫：它只枚举、不再重复记进索引（见 FsScanRequest）
+                mediaStorePaths = mediaStorePaths,
             )
             val cached = FsVideoWalker.readCached(this, request)
             // 补扫条目可能与 MediaStore 重复（同一个视频两边都命中）：保留 MediaStore
-            // 那份（时长 / 宽高更全），补扫只补 MediaStore 没有的
+            // 那份（时长 / 宽高更全），补扫只补 MediaStore 没有的。
+            // 索引内部同一个路径只会在它父目录的列表里出现一次，这里的自去重是兜底
+            val fromIndexSeen = HashSet<String>()
             for (item in cached) {
                 val path = item["path"] as? String ?: continue
-                if (!visitedPaths.add(path)) continue
+                if (mediaStorePaths.contains(path) || !fromIndexSeen.add(path)) continue
                 videos.add(item)
             }
             // 快结果已经齐了：递归在后台跑，边扫边把增量推给 Dart
@@ -2467,7 +2595,7 @@ class MainActivity : FlutterActivity() {
 
     /**
      * 时长兜底抽取：MediaStore 时长为 0 的条目（下载产物直写导致元数据缺失，
-     * 工作.md 第 5 点）与外置卷补扫的每个视频都走这里。
+     * 工作.md 第 5 点）与卡片按需补的「时长未知」可见项都走这里。
      *
      * **先问 MediaInfoLib** —— 它自己解析容器，不经过系统的 `media.extractor`
      * （外置卡上逐个文件调系统抽取器正是 issue #4 里「反复读同一批文件」的来源），
@@ -2475,13 +2603,38 @@ class MainActivity : FlutterActivity() {
      *
      * 它拿不到（缺 so 库 / 非常规容器）才退回 [retrieverDurationMs]：系统抽取器
      * 对个别格式仍然是唯一认得的那个，留作兜底不让时长彻底缺档。
+     *
+     * **不带超时**，调用方一律走 [runWithParseTimeout]。
      */
-    private fun extractDurationMs(path: String): Long {
-        val fromLib = getVideoBasicMetadata(path)["durationMs"] as? Number
+    private fun extractDurationMsBlocking(path: String): Long {
+        val cacheFile = metaCacheFile(path)
+        readMetaCache(cacheFile)?.let { cached ->
+            val cachedDuration = cached.optLong("durationMs", 0L)
+            if (cachedDuration > 0L) return cachedDuration
+            // 「拿不到时长」的结论还在 TTL 内 → 连系统抽取器也不再问：否则每次
+            // 卡片挂载都会对同一个坏文件做一次随机读（外置卡上尤其明显）
+            val failedAt = cached.optLong("durationFailedAtMs", 0L)
+            if (failedAt > 0L && System.currentTimeMillis() - failedAt < durationFailureTtlMs) {
+                return 0L
+            }
+        }
+
+        val fromLib = getVideoBasicMetadataBlocking(path)["durationMs"] as? Number
         val libMs = fromLib?.toLong() ?: 0L
         if (libMs > 0L) return libMs
-        return retrieverDurationMs(path)
+
+        val retrieverMs = retrieverDurationMs(path)
+        updateCachedDuration(cacheFile, retrieverMs)
+        return retrieverMs
     }
+
+    /**
+     * 时长抽取（对外）：整段包一次超时 —— 单个病态文件最多占用 [parseTimeoutMs]，
+     * 不会顶穿预算把后面的文件一起拖住（P0-3）；两条路都拿不到就记一条带 TTL
+     * 的失败结论，而不是永久钉死（P0-1）。
+     */
+    private fun extractDurationMs(path: String): Long =
+        runWithParseTimeout { extractDurationMsBlocking(path) } ?: 0L
 
     /** MediaMetadataRetriever 兜底取时长（工作.md 第 5 点：下载产物直写导致元数据缺失）。 */
     private fun retrieverDurationMs(path: String): Long {

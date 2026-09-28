@@ -81,6 +81,8 @@ class _HomePageState extends State<HomePage>
 
   @override
   void dispose() {
+    // 离开媒体库：让原生别再往下扫那一轮整盘补扫（用户诉求，issue #4）
+    VideoScanner.cancelFsScan();
     VideoScanner.fsRevision.removeListener(_onFsRevision);
     _fsRebuildTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);

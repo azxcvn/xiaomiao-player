@@ -190,5 +190,25 @@ void main() {
       await VideoInfoService.getDuration('/video/broken.mkv');
       expect(callCount, 3);
     });
+
+    test('负结果带 TTL：过期后重试，不会把瞬时失败钉成永久结论（P0-1）', () async {
+      final originalTtl = VideoInfoService.durationMissTtlMs;
+      addTearDown(() => VideoInfoService.durationMissTtlMs = originalTtl);
+
+      durationResult = 0;
+      await VideoInfoService.getDuration('/video/busy.mkv');
+      expect(callCount, 1);
+
+      // TTL 内：沿用负结果，不再问原生
+      VideoInfoService.durationMissTtlMs = 60 * 1000;
+      expect(await VideoInfoService.getDuration('/video/busy.mkv'), 0);
+      expect(callCount, 1, reason: 'TTL 内不该重复问原生');
+
+      // 卡不忙了（同一个文件现在能拿到时长）：TTL 过期后必须再试一次并拿到
+      VideoInfoService.durationMissTtlMs = 0;
+      durationResult = 300000;
+      expect(await VideoInfoService.getDuration('/video/busy.mkv'), 300000);
+      expect(callCount, 2, reason: 'TTL 过期必须允许重试');
+    });
   });
 }
