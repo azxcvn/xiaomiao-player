@@ -55,6 +55,15 @@ android {
             signingConfig = signingConfigs.getByName("release")
         }
     }
+
+    // 原生库改为压缩存储：下载体积显著减小（arm64 release 实测 58.12 MB → 约 26 MB）。
+    // 代价是安装时系统会解压出一份 so 放进应用 lib 目录，手机占用随之变大
+    // （约 58 MB → 约 82 MB），首装/更新也多花几秒。
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
 }
 
 kotlin {
