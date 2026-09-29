@@ -25,7 +25,7 @@ LicenseRegistry / showLicensePage）会自动汇总并展示已随包分发的�
 | [media_kit](https://pub.dev/packages/media_kit)（本地 fork：新增 `libassAndroidFontsDir` 支持运行时字体目录，见 third_party/media_kit/FORK.md） | 1.2.6 | MIT |
 | [media_kit_video](https://pub.dev/packages/media_kit_video) | 1.3.1 | MIT |
 | [media_kit_libs_video](https://pub.dev/packages/media_kit_libs_video)（含 ios/linux/macos/windows video 四个平台包，均 MIT） | 1.0.7 | MIT |
-| [media_kit_libs_android_video](https://pub.dev/packages/media_kit_libs_android_video)（本地 fork：自建 Android 内核，内含 **mpv v0.41.0-110-g32a164cc**（LGPL-2.1+）+ **FFmpeg 7.1.3**（LGPL-3.0+）+ `mk_thumbnail_*` 导出符号；构建开关见文末「说明」） | 1.3.8-mk.1 | MIT（包本身；捆绑库见文末说明） |
+| [media_kit_libs_android_video](https://pub.dev/packages/media_kit_libs_android_video)（本地 fork：自建 Android 内核，内含 **mpv v0.41.0-1088-g178242c75**（LGPL-2.1+）+ **FFmpeg 9.0**（LGPL-3.0+）+ `mk_thumbnail_*` 导出符号；构建开关见文末「说明」） | 1.3.8-mk.1 | MIT（包本身；捆绑库见文末说明） |
 | [permission_handler](https://pub.dev/packages/permission_handler) | 11.4.0 | MIT |
 | [shared_preferences](https://pub.dev/packages/shared_preferences) | 2.5.5 | BSD-3-Clause |
 | [path_provider](https://pub.dev/packages/path_provider) | 2.1.6 | BSD-3-Clause |
@@ -71,7 +71,7 @@ LicenseRegistry / showLicensePage）会自动汇总并展示已随包分发的�
   （`libavcodec/avformat/avutil/swscale/swresample license: LGPL version 3 or later`）
   与「不存在 `ff_libx264_encoder` / `ff_libx265_encoder` 等 GPL-only 符号」交叉验证。
 - **随包分发的原生库清单与版本**（每个 ABI 一个 `libmpv.so`；FFmpeg 静态链入其中）：
-  mpv `v0.41.0-110-g32a164cc`（**LGPL-2.1-or-later**）· FFmpeg `7.1.3`（**LGPL-3.0-or-later**）·
+  mpv `v0.41.0-1088-g178242c75`（**LGPL-2.1-or-later**）· FFmpeg `9.0`（**LGPL-3.0-or-later**）·
   libass `0.17.1`（ISC）· libplacebo（LGPL-2.1+）· dav1d（BSD-2-Clause）· libxml2 `2.10.3`（MIT）·
   mbedTLS `3.4.0`（Apache-2.0）· MediaInfoLib / ZenLib（**BSD-2-Clause**）·
   media-kit-android-helper（MIT）。构建脚本、补丁与依赖版本表见内核仓库的 `buildscripts/`
