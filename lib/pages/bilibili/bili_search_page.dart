@@ -5,6 +5,7 @@ import 'package:moumou/services/bilibili/bili_bangumi_service.dart';
 import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/services/common_list_controller.dart';
 import 'package:moumou/utils/loading_state.dart';
+import 'package:moumou/widgets/bili_cover_image.dart';
 
 /// 番剧搜索页：顶部搜索框 + 结果列表（media_bangumi 分类，分页加载），
 /// 点击结果进入季详情页。
@@ -242,19 +243,22 @@ class _SearchItemCard extends StatelessWidget {
       child: SizedBox(
         width: 64,
         height: 84,
-        child: cover.isEmpty
-            ? ColoredBox(
-                color: scheme.surfaceContainerHighest,
-                child: Icon(Icons.live_tv_outlined, color: scheme.onSurfaceVariant, size: 26),
-              )
-            : Image.network(
-                cover,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => ColoredBox(
-                  color: scheme.surfaceContainerHighest,
-                  child: Icon(Icons.broken_image_outlined, color: scheme.onSurfaceVariant, size: 26),
-                ),
-              ),
+        // 封面走磁盘缓存 + 图床裁剪（3:4 预设 @320w_400h_1c.webp）
+        child: BiliCoverImage(
+          url: cover,
+          width: 64,
+          height: 84,
+          emptyPlaceholder: ColoredBox(
+            color: scheme.surfaceContainerHighest,
+            child: Icon(Icons.live_tv_outlined,
+                color: scheme.onSurfaceVariant, size: 26),
+          ),
+          errorPlaceholder: ColoredBox(
+            color: scheme.surfaceContainerHighest,
+            child: Icon(Icons.broken_image_outlined,
+                color: scheme.onSurfaceVariant, size: 26),
+          ),
+        ),
       ),
     );
   }

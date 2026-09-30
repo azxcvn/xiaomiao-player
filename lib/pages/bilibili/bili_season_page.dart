@@ -5,6 +5,7 @@ import 'package:moumou/pages/bilibili/bili_episode_picker_page.dart';
 import 'package:moumou/pages/bilibili/bili_play_launcher.dart';
 import 'package:moumou/services/bilibili/bili_bangumi_service.dart';
 import 'package:moumou/services/bilibili/bili_http.dart';
+import 'package:moumou/widgets/bili_cover_image.dart';
 import 'package:moumou/widgets/bili_episode_tile.dart';
 
 /// 番剧详情页（对齐 PiliPlus `PgcIntroPage`）：
@@ -231,21 +232,22 @@ class _Header extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            detail.cover.isEmpty
-                ? ColoredBox(
-                    color: scheme.surfaceContainerHighest,
-                    child: Icon(Icons.live_tv_outlined,
-                        color: scheme.onSurfaceVariant, size: 36),
-                  )
-                : Image.network(
-                    detail.cover,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => ColoredBox(
-                      color: scheme.surfaceContainerHighest,
-                      child: Icon(Icons.broken_image_outlined,
-                          color: scheme.onSurfaceVariant, size: 36),
-                    ),
-                  ),
+            // 封面走磁盘缓存 + 图床裁剪（原图约 330 KB → 裁剪后约 10-17 KB）
+            BiliCoverImage(
+              url: detail.cover,
+              width: 115,
+              height: 153,
+              errorPlaceholder: ColoredBox(
+                color: scheme.surfaceContainerHighest,
+                child: Icon(Icons.broken_image_outlined,
+                    color: scheme.onSurfaceVariant, size: 36),
+              ),
+              emptyPlaceholder: ColoredBox(
+                color: scheme.surfaceContainerHighest,
+                child: Icon(Icons.live_tv_outlined,
+                    color: scheme.onSurfaceVariant, size: 36),
+              ),
+            ),
             if (detail.ratingScore > 0)
               Positioned(
                 right: 6,
@@ -503,14 +505,13 @@ class _SeasonSwitcherState extends State<_SeasonSwitcher> {
                               const BorderRadius.vertical(top: Radius.circular(7)),
                           child: SizedBox(
                             width: double.infinity,
-                            child: s.cover.isEmpty
-                                ? ColoredBox(color: scheme.surfaceContainerHighest)
-                                : Image.network(
-                                    s.cover,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, _, _) =>
-                                        ColoredBox(color: scheme.surfaceContainerHighest),
-                                  ),
+                            child: BiliCoverImage(
+                              url: s.cover,
+                              errorPlaceholder:
+                                  ColoredBox(color: scheme.surfaceContainerHighest),
+                              emptyPlaceholder:
+                                  ColoredBox(color: scheme.surfaceContainerHighest),
+                            ),
                           ),
                         ),
                       ),

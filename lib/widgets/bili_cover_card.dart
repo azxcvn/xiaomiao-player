@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/widgets/bili_cover_image.dart';
 
 /// 哔哩番剧封面卡片（对齐 PiliPlus `PgcCardV` 系列）：竖版封面（3:4）+
 /// 右上角标 + 左下角灰标 + 标题 + 副标题。索引网格 / 推荐网格 / 追番时间表共用。
@@ -102,12 +103,14 @@ class BiliCoverCard extends StatelessWidget {
         child: Icon(Icons.live_tv_outlined, color: scheme.onSurfaceVariant, size: 28),
       );
     }
-    return Image.network(
-      cover,
-      fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => ColoredBox(
+    // 封面走磁盘缓存 + 图床裁剪：网格单元尺寸由 LayoutBuilder 实测，
+    // 不写死像素（不同屏宽/像素比下都能取到刚好的图）。
+    return BiliCoverImage.auto(
+      url: cover,
+      errorPlaceholder: ColoredBox(
         color: scheme.surfaceContainerHighest,
-        child: Icon(Icons.broken_image_outlined, color: scheme.onSurfaceVariant, size: 28),
+        child: Icon(Icons.broken_image_outlined,
+            color: scheme.onSurfaceVariant, size: 28),
       ),
     );
   }
