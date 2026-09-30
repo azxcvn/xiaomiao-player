@@ -124,7 +124,12 @@ class _LicensePageState extends State<LicensePage> {
   }
 }
 
-/// 紧凑卡片式头部：水平排列 小图标 + 应用名 + 版本号，尾部为许可数量角标。
+/// 紧凑卡片式头部（设计稿见 docs/archive/design-license-header.html，方案 B）：
+/// 左「App 图标」+ 右两行——名称一行，下面并排两枚胶囊（版本 / 项数）。
+///
+/// 与旧版的差别：版本号从名称后面拆出来、项数从右侧实心角标改为弱化胶囊。
+/// 原先角标占约 90dp 且颜色最重，会把注意力从应用名上抢走；改成两枚胶囊后
+/// 信息全在左侧，横向（名称）可用宽度也从约 110dp 涨到约 180dp。
 class _LicenseHeaderCard extends StatelessWidget {
   final String? version;
   final int licenseCount;
@@ -140,67 +145,103 @@ class _LicenseHeaderCard extends StatelessWidget {
       color: scheme.surfaceContainerLow,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        // 13/14 与设计稿一致（旧的 12/14 在图标 44dp 下上留白显小）
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // 小图标（主题色容器）
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: scheme.primaryContainer,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.play_circle_fill_rounded,
-                size: 26,
-                color: scheme.primary,
+            // App 图标（与关于页/桌面图标同源）：assets/icon/app_icon_display.png
+            // 是 1024 源图的 256px 缩放版，只作展示用，避免把 621 KB 的图标源文件
+            // 打进包体。
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                'assets/icon/app_icon_display.png',
+                width: 44,
+                height: 44,
+                fit: BoxFit.cover,
               ),
             ),
-            const SizedBox(width: 12),
-            // 名称 + 版本号：同一水平基线，紧凑排布
+            const SizedBox(width: 14),
             Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
                     '小喵Player',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                   ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      version == null ? '版本读取中…' : 'v$version',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: scheme.onSurfaceVariant,
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: _LicenseChip(
+                          // 版本只显示版本名（与关于页一致，不带构建号）
+                          label: version == null ? '版本读取中' : 'v$version',
+                          background: scheme.primary,
+                          foreground: scheme.onPrimary,
+                          bold: true,
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: _LicenseChip(
+                          label: '$licenseCount 项许可',
+                          background: scheme.surfaceContainerHigh,
+                          foreground: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
-            // 尾部：许可数量角标
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: scheme.primaryContainer,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                '$licenseCount 项许可',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: scheme.onPrimaryContainer,
-                ),
-              ),
-            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 头部卡片里的一枚胶囊：圆角全包、字号 11.5，长文本省略。
+class _LicenseChip extends StatelessWidget {
+  final String label;
+  final Color background;
+  final Color foreground;
+  final bool bold;
+
+  const _LicenseChip({
+    required this.label,
+    required this.background,
+    required this.foreground,
+    this.bold = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 25,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(13),
+      ),
+      child: Center(
+        widthFactor: 1,
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 11.5,
+            height: 1.1,
+            color: foreground,
+            fontWeight: bold ? FontWeight.w600 : FontWeight.w400,
+          ),
         ),
       ),
     );

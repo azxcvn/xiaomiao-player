@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>许可证书页头部 · 重新设计稿</title>
+<style>
+  /* ── 主题色板：与 docs/archive/design-about-info-card.html 同一套
+        （seed #00A1D6 / Material 3 tonalSpot，浅色 + 深色） ── */
+  :root{
+    --primary:#006781;
+    --on-primary:#ffffff;
+    --primary-container:#b7eaff;
+    --on-primary-container:#001f29;
+    --surface:#f5fafc;
+    --on-surface:#171c1e;
+    --on-surface-variant:#3f484b;
+    --surface-container-lowest:#ffffff;
+    --surface-container-low:#eff4f7;
+    --surface-container:#e9eff1;
+    --surface-container-high:#e3e9ec;
+    --outline-variant:#bfc8cc;
+    --tertiary-container:#d5e3ff;
+    --on-tertiary-container:#001c38;
+    --page:#eef4f6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --primary:#5cd5f8;
+      --on-primary:#003544;
+      --primary-container:#004e62;
+      --on-primary-container:#b7eaff;
+      --surface:#0e1416;
+      --on-surface:#dee3e6;
+      --on-surface-variant:#bfc8cc;
+      --surface-container-lowest:#090f11;
+      --surface-container-low:#171d1f;
+      --surface-container:#1b2123;
+      --surface-container-high:#262c2e;
+      --outline-variant:#3f484b;
+      --tertiary-container:#00497a;
+      --on-tertiary-container:#d3e4ff;
+      --page:#070c0e;
+    }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;padding:28px 16px 60px;background:var(--page);color:var(--on-surface);
+    font-family:"HarmonyOS Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    display:flex;flex-direction:column;align-items:center;gap:34px;
+  }
+  .doc-title{max-width:820px;width:100%;text-align:center}
+  .doc-title h1{font-size:20px;margin:0 0 6px}
+  .doc-title p{margin:0;font-size:13px;color:var(--on-surface-variant);line-height:1.7}
+  .phone{
+    width:360px;max-width:100%;background:var(--surface);
+    border-radius:26px;padding:14px 12px 22px;box-shadow:0 10px 34px rgba(0,0,0,.16);
+  }
+  .variant{max-width:820px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .variant-head{width:100%;text-align:center}
+  .variant-head h2{font-size:16px;margin:0 0 4px}
+  .variant-head p{margin:0;font-size:12.5px;color:var(--on-surface-variant);line-height:1.65}
+  .tagline{
+    display:inline-block;font-size:11px;padding:2px 9px;border-radius:99px;
+    background:var(--primary-container);color:var(--on-primary-container);margin-bottom:7px;letter-spacing:.4px;
+  }
+  .tagline.now{background:var(--surface-container-high);color:var(--on-surface-variant)}
+  .appbar{display:flex;align-items:center;gap:14px;padding:10px 6px 18px}
+  .appbar .back{font-size:19px;color:var(--on-surface-variant)}
+  .appbar .t{font-size:20px;font-weight:600}
+  .group-title{font-size:13px;color:var(--primary);font-weight:600;margin:0 0 8px 6px}
+  .list{display:flex;flex-direction:column;gap:8px}
+  .tile{display:flex;align-items:center;gap:14px;padding:13px 16px;background:var(--surface-container-low);border-radius:14px}
+  .tile .ic{width:36px;height:36px;border-radius:10px;background:var(--primary-container);color:var(--on-primary-container);display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .tile .tt{font-size:15px;font-weight:600}
+  .tile .sub{font-size:12px;color:var(--on-surface-variant);margin-top:2px}
+  .tile .arrow{margin-left:auto;color:var(--on-surface-variant);font-size:17px}
+  .icon{width:44px;height:44px;border-radius:12px;flex:0 0 auto;
+    background:linear-gradient(150deg,#ffe6d5 0%,#ffd0e4 55%,#e5d6ff 100%);
+    display:flex;align-items:center;justify-content:center;font-size:22px}
+  .chip{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 11px;border-radius:99px;
+    font-size:12px;line-height:1;white-space:nowrap;background:var(--surface-container-high);color:var(--on-surface-variant)}
+  .chip.pill{background:var(--primary-container);color:var(--on-primary-container);font-weight:600}
+  .chip.ver{background:var(--primary);color:var(--on-primary);font-weight:600}
+  .chip.mono{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.3px}
+  .chip.ghost{background:transparent;border:1px solid var(--outline-variant)}
+  .annot{width:100%;max-width:820px;font-size:12.5px;line-height:1.85;color:var(--on-surface-variant);
+    background:var(--surface-container-lowest);border:1px solid var(--outline-variant);border-radius:14px;padding:14px 16px}
+  .annot b{color:var(--on-surface)}
+  .annot ul{margin:8px 0 0;padding-left:18px}
+  .annot li{margin:3px 0}
+  kbd{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;background:var(--surface-container-high);border-radius:5px;padding:1px 5px}
+
+  /* ══ 现状（红框那版） ══ */
+  .now-card{
+    display:flex;align-items:center;gap:12px;padding:12px 14px;
+    background:var(--surface-container-low);border-radius:16px;
+  }
+  .now-card .icon{width:44px;height:44px;font-size:22px}
+  .now-mid{flex:1 1 auto;min-width:0;display:flex;align-items:baseline;gap:6px}
+  .now-name{font-size:16px;font-weight:700;white-space:nowrap}
+  .now-ver{font-size:13px;color:var(--on-surface-variant)}
+  .now-badge{background:var(--primary-container);color:var(--on-primary-container);
+    font-size:12px;font-weight:600;padding:5px 10px;border-radius:99px;white-space:nowrap}
+
+  /* ══ A：对齐关于页（图标 + 名称/版本两行 + 角标右移） ══ */
+  .a-card{display:flex;align-items:center;gap:14px;padding:13px 14px;
+    background:var(--surface-container-low);border-radius:16px}
+  .a-mid{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:4px}
+  .a-name{font-size:17px;font-weight:700;letter-spacing:.2px}
+  .a-sub{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--on-surface-variant)}
+  .a-dot{width:3px;height:3px;border-radius:50%;background:var(--outline-variant)}
+
+  /* ══ B：图标 + 名称 / 两枚胶囊（版本 · 项数）—— 已选定 ══ */
+  .b-card{display:flex;align-items:center;gap:14px;padding:13px 14px;
+    background:var(--surface-container-low);border-radius:16px}
+  .b-mid{flex:1 1 auto;min-width:0}
+  .b-name{font-size:17px;font-weight:700;line-height:1.2}
+  .b-chips{margin-top:8px;display:flex;align-items:center;gap:8px}
+  .b-chips .chip{height:25px;padding:0 10px;font-size:11.5px}
+
+  /* ══ C：大图标居中标题 + 下方两枚胶囊 ══ */
+  .c-card{padding:16px 14px 14px;background:var(--surface-container-low);border-radius:16px;text-align:center}
+  .c-icon{width:56px;height:56px;border-radius:16px;font-size:28px;margin:0 auto 10px}
+  .c-name{font-size:18px;font-weight:700}
+  .c-chips{display:flex;justify-content:center;gap:8px;margin-top:10px}
+
+  /* ══ D：通栏色条头部（图标出框 + 角标） ══ */
+  .d-card{background:var(--surface-container-low);border-radius:16px;overflow:hidden}
+  .d-band{height:6px;background:linear-gradient(90deg,var(--primary),var(--tertiary-container))}
+  .d-body{display:flex;align-items:center;gap:14px;padding:12px 14px}
+</style>
+</head>
+<body>
+
+<div class="doc-title">
+  <h1>许可证书页 · 头部卡片 重新设计</h1>
+  <p><b>已定：按方案 B 实现</b>（版本与项数各一枚胶囊，文案「206 项许可」）。页面其余部分（「开源许可」分组 + 包名列表）保持不动。<br>
+  四版都在 360dp 宽度下画，颜色对齐 App 默认主题（seed #00A1D6 / tonalSpot），随系统深浅色切换。</p>
+</div>
+
+<!-- ══════════ 现状 ══════════ -->
+<section class="variant">
+  <div class="variant-head">
+    <span class="tagline now">现状（你圈的那张）</span>
+    <h2>图标贴左缘、版本号跟在名称后、右侧一枚实心角标</h2>
+    <p>问题：图标 44dp 与卡片上边距不匹配（上留白明显大于左）；「小喵Player v1.3.6」两个字号挤在同一基线，视觉不齐；右侧角标颜色最重，抢了名称的注意力。</p>
+  </div>
+  <div class="phone">
+    <div class="appbar"><span class="back">←</span><span class="t">许可证书</span></div>
+    <div class="now-card">
+      <div class="icon">🐾</div>
+      <div class="now-mid"><span class="now-name">小喵Player</span><span class="now-ver">v1.3.6</span></div>
+      <div class="now-badge">206 项许可</div>
+    </div>
+    <div style="height:20px"></div>
+    <div class="group-title">开源许可</div>
+    <div class="list">
+      <div class="tile"><div class="ic">&lt;/&gt;</div><div><div class="tt">abseil-cpp</div><div class="sub">1 个许可段落</div></div><div class="arrow">›</div></div>
+      <div class="tile"><div class="ic">&lt;/&gt;</div><div><div class="tt">accessibility</div><div class="sub">1 个许可段落</div></div><div class="arrow">›</div></div>
+      <div class="tile"><div class="ic">&lt;/&gt;</div><div><div class="tt">angle</div><div class="sub">1 个许可段落</div></div><div class="arrow">›</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ A ══════════ -->
+<section class="variant">
+  <div class="variant-head">
+    <span class="tagline">方案 A · 与关于页统一</span>
+    <h2>图标 + 「名称 / 版本」两行 + 尾部角标</h2>
+    <p>把版本号从名称后面拆到第二行（和关于页同一套层级：大字名称在上、小字元信息在下），角标改为浅色描边弱化。</p>
+  </div>
+  <div class="phone">
+    <div class="appbar"><span class="back">←</span><span class="t">许可证书</span></div>
+    <div class="a-card">
+      <div class="icon">🐾</div>
+      <div class="a-mid">
+        <div class="a-name">小喵Player</div>
+        <div class="a-sub"><span>v1.3.6</span><span class="a-dot"></span><span>开源许可 206 项</span></div>
+      </div>
+    </div>
+    <div style="height:20px"></div>
+    <div class="group-title">开源许可</div>
+    <div class="list">
+      <div class="tile"><div class="ic">&lt;/&gt;</div><div><div class="tt">abseil-cpp</div><div class="sub">1 个许可段落</div></div><div class="arrow">›</div></div>
+      <div class="tile"><div class="ic">&lt;/&gt;</div><div><div class="tt">accessibility</div><div class="sub">1 个许可段落</div></div><div class="arrow">›</div></div>
+      <div class="tile"><div class="ic">&lt;/&gt;</div><div><div class="tt">angle</div><div class="sub">1 个许可段落</div></div><div class="arrow">›</div></div>
+    </div>
+  </div>
+  <div class="annot"><b>特点</b>
+    <ul>
+      <li>和「关于」页卡片同一套信息层级，两页看着像一家人</li>
+      <li>版本与项数用 <kbd>·</kbd> 分隔放一行，眼睛一次扫完，不再有孤立的角标</li>
+      <li>卡片高度基本不变（约 70dp）</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══════════ B（已选定） ══════════ -->
+<section class="variant">
+  <div class="variant-head">
+    <span class="tagline">方案 B · 已选定</span>
+    <h2>图标 + 「名称 / 版本胶囊 + 项数胶囊」两行</h2>
+    <p>信息全在左侧两行里：名称一行，下面并排两枚胶囊（<b>v1.3.6</b> 与 <b>206 项许可</b>）。横向不再被角标吃掉约 90dp，视觉重心回到应用名上。</p>
+  </div>
+  <div class="phone">
+    <div class="appbar"><span class="back">←</span><span class="t">许可证书</span></div>
+    <div class="b-card">
+      <div class="icon">🐾</div>
+      <div class="b-mid">
+        <div class="b-name">小喵Player</div>
+        <div class="b-chips">
+          <span class="chip ver">v1.3.6</span>
+          <span class="chip pill">206 项许可</span>
+        </div>
+      </div>
+    </div>
+    <div style="height:20px"></div>
+    <div class="group-title">开源许可</div>
+    <div class="list">
+      <div class="tile"><div class="ic">&lt;/&gt;</div><div><div class="tt">abseil-cpp</div><div class="sub">1 个许可段落</div></div><div class="arrow">›</div></div>
+      <div class="tile"><div class="ic">&lt;/&gt;</div><div><div class="tt">accessibility</div><div class="sub">1 个许可段落</div></div><div class="arrow">›</div></div>
+      <div class="tile"><div class="ic">&lt;/&gt;</div><div><div class="tt">angle</div><div class="sub">1 个许可段落</div></div><div class="arrow">›</div></div>
+    </div>
+  </div>
+  <div class="annot"><b>要点与尺寸</b>
+    <ul>
+      <li>图标 44dp（圆角 12）不变；名称 17sp/700；胶囊高 25dp、字号 11.5sp</li>
+      <li>版本胶囊：主题色实心 + 白字；项数胶囊：浅色底 + 深字（弱化，不抢名称）</li>
+      <li>卡片高约 <b>76dp</b>（现状约 70dp，多 6dp）</li>
+      <li>下方「开源许可」分组标题<b>保持不动</b>；两枚胶囊不可点（如需可点我再加）</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══════════ C ══════════ -->
+<section class="variant">
+  <div class="variant-head">
+    <span class="tagline">方案 C · 居中版</span>
+    <h2>大图标居中 + 名称 + 下方两枚胶囊（版本 / 项数）</h2>
+    <p>把这页当成「证书封面」来做：图标 56dp 居中、名称居中，下面两枚等宽胶囊。视觉最讲究，但占高最多。</p>
+  </div>
+  <div class="phone">
+    <div class="appbar"><span class="back">←</span><span class="t">许可证书</span></div>
+    <div class="c-card">
+      <div class="icon c-icon">🐾</div>
+      <div class="c-name">小喵Player</div>
+      <div class="c-chips">
+        <span class="chip ver">v1.3.6</span>
+        <span class="chip pill">206 项许可</span>
+      </div>
+    </div>
+    <div style="height:20px"></div>
+    <div class="group-title">开源许可</div>
+    <div class="list">
+      <div class="tile"><div class="ic">&lt;/&gt;</div><div><div class="tt">abseil-cpp</div><div class="sub">1 个许可段落</div></div><div class="arrow">›</div></div>
+      <div class="tile"><div class="ic">&lt;/&gt;</div><div><div class="tt">accessibility</div><div class="sub">1 个许可段落</div></div><div class="arrow">›</div></div>
+      <div class="tile"><div class="ic">&lt;/&gt;</div><div><div class="tt">angle</div><div class="sub">1 个许可段落</div></div><div class="arrow">›</div></div>
+    </div>
+  </div>
+  <div class="annot"><b>特点</b>
+    <ul>
+      <li>最像「证书封面」，和下面「包名列表」的反差最大，页面层次清楚</li>
+      <li>代价：头部从约 70dp 涨到约 130dp，首屏能看到的包名少两三行</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══════════ D ══════════ -->
+<section class="variant">
+  <div class="variant-head">
+    <span class="tagline">方案 D · 加一条主题色顶带</span>
+    <h2>卡片顶部一道渐变色条 + A 的两行结构</h2>
+    <p>在 A 的基础上给卡片加一条 6dp 主题色渐变顶带，把「这是一张有身份的卡」表达出来，其余不动。</p>
+  </div>
+  <div class="phone">
+    <div class="appbar"><span class="back">←</span><span class="t">许可证书</span></div>
+    <div class="d-card">
+      <div class="d-band"></div>
+      <div class="d-body">
+        <div class="icon">🐾</div>
+        <div class="a-mid">
+          <div class="a-name">小喵Player</div>
+          <div class="a-sub"><span>v1.3.6</span><span class="a-dot"></span><span>开源许可 206 项</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="height:20px"></div>
+    <div class="group-title">开源许可</div>
+    <div class="list">
+      <div class="tile"><div class="ic">&lt;/&gt;</div><div><div class="tt">abseil-cpp</div><div class="sub">1 个许可段落</div></div><div class="arrow">›</div></div>
+      <div class="tile"><div class="ic">&lt;/&gt;</div><div><div class="tt">accessibility</div><div class="sub">1 个许可段落</div></div><div class="arrow">›</div></div>
+      <div class="tile"><div class="ic">&lt;/&gt;</div><div><div class="tt">angle</div><div class="sub">1 个许可段落</div></div><div class="arrow">›</div></div>
+    </div>
+  </div>
+  <div class="annot"><b>特点</b>
+    <ul>
+      <li>多一条色带就有了「封面感」，而高度只比 A 多 6dp</li>
+      <li>注意：深色模式下渐变要压暗，否则会显得刺眼（稿子里已按深色调整）</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══════════ 说明 ══════════ -->
+<section class="variant">
+  <div class="annot">
+    <b>四版共同的取舍（先说清楚，免得选完再返工）</b>
+    <ul>
+      <li><b>版本号</b>：四版都只显示 <kbd>v1.3.6</kbd>（与刚改好的关于页一致，不带构建号）</li>
+      <li><b>项数文案</b>：定为 <kbd>206 项许可</kbd>（与现状一致）；下方分组标题仍叫「开源许可」，两处不算重复</li>
+      <li><b>可点性</b>：B 版两枚胶囊默认不可点（纯展示）。要改成「点项数胶囊滚到列表 / 刷新计数」我再加</li>
+      <li><b>图标尺寸</b>：都用 <kbd>assets/icon/app_icon_display.png</kbd>（44dp 圆角 12），与桌面图标同源</li>
+    </ul>
+  </div>
+</section>
+
+</body>
+</html>

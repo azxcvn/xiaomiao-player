@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>关于页信息卡片 · 重新设计稿</title>
+<style>
+  /* ── 主题色板：对齐 App 默认（seed #00A1D6 / Material 3 tonalSpot 浅色） ── */
+  :root{
+    --primary:#006781;
+    --on-primary:#ffffff;
+    --primary-container:#b7eaff;
+    --on-primary-container:#001f29;
+    --surface:#f5fafc;
+    --on-surface:#171c1e;
+    --surface-variant:#dbe4e8;
+    --on-surface-variant:#3f484b;
+    --surface-container-lowest:#ffffff;
+    --surface-container-low:#eff4f7;
+    --surface-container:#e9eff1;
+    --surface-container-high:#e3e9ec;
+    --outline-variant:#bfc8cc;
+    --tertiary-container:#d5e3ff;
+    --on-tertiary-container:#001c38;
+    --warn:#8a5300;
+    --warn-container:#ffddb4;
+    --code-bg:#e9eff1;
+    --page:#eef4f6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --primary:#5cd5f8;
+      --on-primary:#003544;
+      --primary-container:#004e62;
+      --on-primary-container:#b7eaff;
+      --surface:#0e1416;
+      --on-surface:#dee3e6;
+      --surface-variant:#3f484b;
+      --on-surface-variant:#bfc8cc;
+      --surface-container-lowest:#090f11;
+      --surface-container-low:#171d1f;
+      --surface-container:#1b2123;
+      --surface-container-high:#262c2e;
+      --outline-variant:#3f484b;
+      --tertiary-container:#00497a;
+      --on-tertiary-container:#d3e4ff;
+      --warn:#ffb95c;
+      --warn-container:#5c3d00;
+      --code-bg:#1b2123;
+      --page:#070c0e;
+    }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    margin:0;padding:28px 16px 60px;
+    background:var(--page);color:var(--on-surface);
+    font-family:"HarmonyOS Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    display:flex;flex-direction:column;align-items:center;gap:34px;
+  }
+  .doc-title{max-width:820px;width:100%;text-align:center}
+  .doc-title h1{font-size:20px;margin:0 0 6px}
+  .doc-title p{margin:0;font-size:13px;color:var(--on-surface-variant);line-height:1.7}
+  .phone{
+    width:360px;max-width:100%;
+    background:var(--surface);
+    border-radius:26px;padding:14px 12px 22px;
+    box-shadow:0 10px 34px rgba(0,0,0,.16);
+  }
+  .variant{max-width:820px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .variant-head{width:100%;text-align:center}
+  .variant-head h2{font-size:16px;margin:0 0 4px}
+  .variant-head p{margin:0;font-size:12.5px;color:var(--on-surface-variant);line-height:1.65}
+  .tagline{
+    display:inline-block;font-size:11px;padding:2px 9px;border-radius:99px;
+    background:var(--primary-container);color:var(--on-primary-container);margin-bottom:7px;
+    letter-spacing:.4px;
+  }
+  /* ── 页面外壳模拟：标题栏 + 分组标题 + 设置卡 ── */
+  .appbar{display:flex;align-items:center;gap:14px;padding:10px 6px 18px}
+  .appbar .back{font-size:19px;color:var(--on-surface-variant)}
+  .appbar .t{font-size:20px;font-weight:600}
+  .group-title{font-size:13px;color:var(--primary);font-weight:600;margin:0 0 8px 6px;letter-spacing:.3px}
+  .settings-card{background:var(--surface-container-low);border-radius:16px;overflow:hidden}
+  .tile{display:flex;align-items:center;gap:14px;padding:14px 16px}
+  .tile .ic{width:34px;height:34px;border-radius:10px;background:var(--tertiary-container);color:var(--on-tertiary-container);display:flex;align-items:center;justify-content:center;font-size:17px;flex:0 0 auto}
+  .tile .tt{font-size:15.5px;font-weight:500}
+  .tile .sub{font-size:12.5px;color:var(--on-surface-variant);margin-top:2px}
+  .tile .arrow{margin-left:auto;color:var(--outline-variant);font-size:17px}
+  .divider{height:1px;background:var(--outline-variant);opacity:.5;margin:0 16px}
+  /* ── 卡片基线 ── */
+  .info-card{
+    background:var(--surface-container-low);
+    border-radius:20px;
+    padding:14px 16px;
+  }
+  .app-icon{
+    width:64px;height:64px;border-radius:18px;flex:0 0 auto;
+    background:linear-gradient(150deg,#ffe6d5 0%,#ffd0e4 55%,#e5d6ff 100%);
+    display:flex;align-items:center;justify-content:center;font-size:30px;
+    position:relative;overflow:hidden;
+  }
+  .app-name{font-size:24px;font-weight:700;line-height:1.15;white-space:nowrap}
+  .icons-row{display:flex;flex-direction:column;gap:2px}
+  .icon-btn{
+    width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+    color:var(--on-surface-variant);font-size:18px;cursor:pointer;
+  }
+  .icon-btn:hover{background:var(--surface-container-high)}
+  .icon-btn svg{width:20px;height:20px;fill:currentColor}
+  /* ── 胶囊 ── */
+  .chip{
+    display:inline-flex;align-items:center;gap:5px;
+    height:26px;padding:0 11px;border-radius:99px;
+    font-size:12px;line-height:1;white-space:nowrap;
+    background:var(--surface-container-high);color:var(--on-surface-variant);
+  }
+  .chip.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.3px}
+  .chip.ver{background:var(--primary);color:var(--on-primary);font-weight:600}
+  .chip.rel{background:var(--primary-container);color:var(--on-primary-container);font-weight:600}
+  .chip.dbg{background:var(--warn-container);color:var(--warn);font-weight:600}
+  .chip.wide{flex:1 1 0;justify-content:center;padding:0 8px}
+  .chip-row{display:flex;gap:8px;width:100%}
+  .dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.85}
+
+  /* ═══ 方案 A：贴原结构，最小改动 ═══ */
+  .a-row{display:flex;align-items:center;gap:14px}
+  .a-mid{flex:1 1 auto;min-width:0}
+  .a-name-line{display:flex;align-items:center;gap:8px}
+  .a-chips{display:flex;gap:7px;margin-top:9px}
+  /* ═══ 方案 B：通栏等宽胶囊（对齐设置项风格） ═══ */
+  .b-top{display:flex;align-items:center;gap:14px;height:56px}
+  .b-name{flex:1 1 auto;min-width:0;font-size:25px;padding-left:13px}
+  .b-chips{display:flex;gap:8px;margin-top:14px}
+  /* ═══ 方案 C：图标叠角标 + 元信息两行 ═══ */
+  .c-wrap{display:flex;gap:14px}
+  .c-icon-box{position:relative;flex:0 0 auto}
+  .c-badge{
+    position:absolute;left:-4px;bottom:-4px;
+    font-size:10px;font-weight:700;letter-spacing:.4px;
+    padding:2px 7px;border-radius:99px;
+    background:var(--primary);color:var(--on-primary);
+    border:2px solid var(--surface-container-low);
+  }
+  .c-badge.debug{background:var(--warn);color:#3a2400}
+  .c-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:center}
+  .c-line1{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .c-ver{font-size:13px;font-weight:600;color:var(--primary)}
+  .c-line2{margin-top:6px;display:flex;align-items:center;gap:8px;color:var(--on-surface-variant);font-size:12.5px}
+  .c-icons{display:flex;gap:4px;align-items:flex-start}
+  .c-note{margin-top:12px;padding-top:11px;border-top:1px dashed var(--outline-variant);font-size:12px;color:var(--on-surface-variant);display:flex;align-items:center;gap:6px}
+  /* 标注 */
+  .annot{width:100%;max-width:820px;font-size:12.5px;line-height:1.85;color:var(--on-surface-variant);
+    background:var(--surface-container-lowest);border:1px solid var(--outline-variant);border-radius:14px;padding:14px 16px}
+  .annot b{color:var(--on-surface)}
+  .annot ul{margin:8px 0 0;padding-left:18px}
+  .annot li{margin:3px 0}
+  kbd{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;background:var(--code-bg);border-radius:5px;padding:1px 5px}
+  .swatches{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .sw{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--on-surface-variant)}
+  .sw i{width:14px;height:14px;border-radius:5px;display:block;border:1px solid rgba(0,0,0,.08)}
+</style>
+</head>
+<body>
+
+<div class="doc-title">
+  <h1>关于页 · 顶部信息卡片 重新设计</h1>
+  <p><b>已定：按方案 B 实现</b>（去掉副标题）。三个方案都保持「横向卡片」框架：左图标 · 中间名称 · 右联系按钮。<br>
+  新增三枚字段：<b>版本</b>、<b>构建类型（release / debug）</b>、<b>构建哈希</b>。颜色对齐 App 默认主题（seed #00A1D6 / tonalSpot，随系统深浅色切换）。</p>
+</div>
+
+<!-- ══════════════ 方案 A ══════════════ -->
+<section class="variant">
+  <div class="variant-head">
+    <span class="tagline">方案 A · 改动最小</span>
+    <h2>名称行右侧挂「版本 + 构建类型」，哈希单独一行</h2>
+    <p>最贴现有结构：图标、名称、右侧按钮位置全不变，只在名称右边加两枚小胶囊；哈希用等宽字放在版本行位置，占满剩余宽度。</p>
+  </div>
+  <div class="phone">
+    <div class="appbar"><span class="back">←</span><span class="t">关于</span></div>
+    <div class="info-card">
+      <div class="a-row">
+        <div class="app-icon">🐾</div>
+        <div class="a-mid">
+          <div class="a-name-line">
+            <span class="app-name">小喵Player</span>
+            <span class="chip ver">v1.3.6</span>
+            <span class="chip rel">release</span>
+          </div>
+          <div class="a-chips">
+            <span class="chip mono wide">b7734f1</span>
+          </div>
+        </div>
+        <div class="icons-row">
+          <div class="icon-btn"><svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></div>
+          <div class="icon-btn"><svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4.2-8 5-8-5V6l8 5 8-5v2.2z"/></svg></div>
+        </div>
+      </div>
+    </div>
+    <div style="height:18px"></div>
+    <div class="group-title">信息</div>
+    <div class="settings-card">
+      <div class="tile"><div class="ic">⚖</div><div><div class="tt">许可证书</div><div class="sub">查看本应用使用的全部开源许可</div></div><div class="arrow">›</div></div>
+      <div class="divider"></div>
+      <div class="tile"><div class="ic">📄</div><div><div class="tt">用户协议</div><div class="sub">预览用户服务协议与隐私政策</div></div><div class="arrow">›</div></div>
+    </div>
+  </div>
+  <div class="annot">
+    <b>特点</b>
+    <ul>
+      <li>名称行：<b>小喵Player + v1.3.6 + release</b> 三件并排，一眼看到「这是什么版本、什么构建」</li>
+      <li>哈希独占一行且<b>撑满</b>，点击可复制完整 40 位 SHA</li>
+      <li>风险：360dp 屏上名称行较挤（约 250dp 可用），长名称或大字号可能折行</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══════════════ 方案 B ══════════════ -->
+<section class="variant">
+  <div class="variant-head">
+    <span class="tagline">方案 B · 已选定</span>
+    <h2>上排「图标 + 名称 + 两个图标按钮」，下排三枚通栏等宽胶囊</h2>
+    <p>名称与图标垂直居中（不再有副标题）；三个功能按钮并到同排，三枚字段在下排等宽均分——和外观页「调色板风格」、设置页数值胶囊是同一套视觉语言，右缘绝对齐平、没有参差。</p>
+  </div>
+  <div class="phone">
+    <div class="appbar"><span class="back">←</span><span class="t">关于</span></div>
+    <div class="info-card">
+      <div class="b-top">
+        <div class="app-icon" style="width:56px;height:56px;border-radius:16px;font-size:26px">🐾</div>
+        <div class="app-name b-name">小喵Player</div>
+        <div class="icons-row" style="flex-direction:row;gap:2px">
+          <div class="icon-btn"><svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></div>
+          <div class="icon-btn"><svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4.2-8 5-8-5V6l8 5 8-5v2.2z"/></svg></div>
+        </div>
+      </div>
+      <div class="b-chips">
+        <span class="chip ver wide">v1.3.6</span>
+        <span class="chip rel wide"><span class="dot"></span>release</span>
+        <span class="chip mono wide">b7734f1</span>
+      </div>
+    </div>
+    <div style="height:18px"></div>
+    <div class="group-title">信息</div>
+    <div class="settings-card">
+      <div class="tile"><div class="ic">⚖</div><div><div class="tt">许可证书</div><div class="sub">查看本应用使用的全部开源许可</div></div><div class="arrow">›</div></div>
+      <div class="divider"></div>
+      <div class="tile"><div class="ic">📄</div><div><div class="tt">用户协议</div><div class="sub">预览用户服务协议与隐私政策</div></div><div class="arrow">›</div></div>
+    </div>
+  </div>
+  <div class="annot">
+    <b>尺寸与实现要点（都已对齐现有代码，可直接落地）</b>
+    <ul>
+      <li><b>上排</b>：固定高 56dp —— 图标 56dp（原 64dp）、名称 25sp/700、右侧两个 42dp 图标按钮改为<b>横排</b></li>
+      <li><b>下排</b>：<kbd>Row</kbd> + 三个都包 <kbd>Expanded</kbd>，间距 8dp，上间距 14dp</li>
+      <li><b>卡片高度约 123dp</b>：现状卡片约 124dp，改完<b>基本等高</b>（去掉副标题省下的高度正好抵消新增胶囊行）</li>
+      <li>实测可用宽度（360dp 屏）：360 − 左右页边距 24 − 卡片内边距 32 = <b>304dp</b>；减去图标 56 + 间距 14 + 两按钮 88 = <b>名称区 146dp</b>，「小喵Player」25sp 约 132dp，放得下</li>
+      <li>三枚胶囊（各约 96dp）：<kbd>v1.3.6</kbd>(主题色实心) · <kbd>release</kbd>(浅色) · <kbd>b7734f1</kbd>(等宽字体灰色)</li>
+      <li>哈希胶囊<b>点击复制完整 40 位 SHA</b>（复用现有 <kbd>_toast</kbd> 提示）</li>
+      <li>未注入哈希时该胶囊显示 <kbd>dev build</kbd>，不显示假值</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══════════════ 方案 C ══════════════ -->
+<section class="variant">
+  <div class="variant-head">
+    <span class="tagline">方案 C · 信息最全</span>
+    <h2>图标挂构建角标，主区两行纯文字 + 底部哈希行</h2>
+    <p>不走胶囊路线：构建类型做成图标左下角的角标（像商店里的「BETA」），版本跟名称同行，哈希沉到底部虚线行——哈希最长，独占一行反而最不挤。</p>
+  </div>
+  <div class="phone">
+    <div class="appbar"><span class="back">←</span><span class="t">关于</span></div>
+    <div class="info-card">
+      <div class="c-wrap">
+        <div class="c-icon-box">
+          <div class="app-icon">🐾</div>
+          <div class="c-badge">RELEASE</div>
+        </div>
+        <div class="c-main">
+          <div class="c-line1">
+            <span class="app-name" style="font-size:22px">小喵Player</span>
+            <span class="c-ver">v1.3.6</span>
+          </div>
+          <div class="c-line2">面向 Android 的本地视频播放器</div>
+        </div>
+        <div class="c-icons">
+          <div class="icon-btn"><svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></div>
+          <div class="icon-btn"><svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4.2-8 5-8-5V6l8 5 8-5v2.2z"/></svg></div>
+        </div>
+      </div>
+      <div class="c-note">
+        <span>构建</span>
+        <span class="chip mono" style="height:22px">b7734f1</span>
+        <span style="opacity:.7">· 点击复制完整哈希</span>
+      </div>
+    </div>
+    <div style="height:18px"></div>
+    <div class="group-title">信息</div>
+    <div class="settings-card">
+      <div class="tile"><div class="ic">⚖</div><div><div class="tt">许可证书</div><div class="sub">查看本应用使用的全部开源许可</div></div><div class="arrow">›</div></div>
+      <div class="divider"></div>
+      <div class="tile"><div class="ic">📄</div><div><div class="tt">用户协议</div><div class="sub">预览用户服务协议与隐私政策</div></div><div class="arrow">›</div></div>
+    </div>
+  </div>
+  <div class="annot">
+    <b>特点</b>
+    <ul>
+      <li>三枚字段退掉两枚胶囊，用<b>角标 + 彩色版本号 + 底部虚线行</b>表达，信息层级更清楚，不像 A/B 有「一排小药丸」的碎片感</li>
+      <li>哈希独占一行，长度再长也不挤；<b>卡片高度比 A/B 略高</b>（约多 10~12dp）</li>
+      <li>角标会盖住图标左下角一小块（图标四周有留白，实测可接受；若不愿意盖，可改放到名称行右端）</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══════════════ debug 态对照 ══════════════ -->
+<section class="variant">
+  <div class="variant-head">
+    <span class="tagline">对照 · debug 构建</span>
+    <h2>同一个方案 B，切到 debug 构建时的样子</h2>
+    <p>构建类型用颜色区分（release 主题色 / debug 琥珀色），不需要用户去读文字。</p>
+  </div>
+  <div class="phone" style="max-width:360px">
+    <div class="info-card">
+      <div class="b-top">
+        <div class="app-icon" style="width:56px;height:56px;border-radius:16px;font-size:26px">🐾</div>
+        <div class="app-name b-name">小喵Player</div>
+        <div class="icons-row" style="flex-direction:row;gap:2px">
+          <div class="icon-btn"><svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></div>
+          <div class="icon-btn"><svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4.2-8 5-8-5V6l8 5 8-5v2.2z"/></svg></div>
+        </div>
+      </div>
+      <div class="b-chips">
+        <span class="chip ver wide">v1.3.6</span>
+        <span class="chip dbg wide"><span class="dot"></span>debug</span>
+        <span class="chip mono wide">b7734f1<span style="opacity:.6">-dirty</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 实现说明 ══════════════ -->
+<section class="variant">
+  <div class="annot">
+    <b>三项需求的数据从哪来（已核实）</b>
+    <ul>
+      <li><b>版本号</b>：现成 —— 关于页已用 <kbd>PackageInfo.fromPlatform()</kbd> 取 <kbd>info.version</kbd>（当前 v1.3.6）。构建号 <kbd>info.buildNumber</kbd>（=4）也能顺带拿到。</li>
+      <li><b>release / debug</b>：现成 —— <kbd>kReleaseMode</kbd> / <kbd>kDebugMode</kbd>（<kbd>package:flutter/foundation.dart</kbd>），零成本、零配置。</li>
+      <li><b>构建哈希</b>：<b>Flutter 侧没有现成来源</b>（不像 Android 原生有 BuildConfig），必须二选一：
+        <ul>
+          <li><b>B1 构建脚本注入</b>（推荐）：在 <kbd>tools/build_*.ps1</kbd> 里加 <kbd>--dart-define=GIT_HASH=$(git rev-parse --short HEAD)</kbd>，Dart 侧用 <kbd>String.fromEnvironment('GIT_HASH', defaultValue:'unknown')</kbd> 读。改动小、结论准；代价是必须走脚本构建，用 Android Studio 直接跑时显示 unknown。</li>
+          <li><b>B2 Gradle 注入 + 原生通道</b>：Gradle 里加一个生成 <kbd>buildInfo</kbd> 资源/字段的任务，经现有 <kbd>moumou/video_info</kbd> 通道多暴露一个 <kbd>getBuildInfo</kbd> 方法（和 <kbd>getSdkInt</kbd> 同款写法）。任何构建方式都准，但要多动 <kbd>android/app/build.gradle.kts</kbd> 与 <kbd>MainActivity.kt</kbd>。</li>
+        </ul>
+      </li>
+    </ul>
+    <div class="swatches">
+      <span class="sw"><i style="background:#006781"></i>primary #006781</span>
+      <span class="sw"><i style="background:#b7eaff"></i>primaryContainer</span>
+      <span class="sw"><i style="background:#eff4f7"></i>surfaceContainerLow（卡片底）</span>
+      <span class="sw"><i style="background:#e3e9ec"></i>surfaceContainerHigh（灰胶囊）</span>
+      <span class="sw"><i style="background:#ffddb4"></i>warnContainer（debug）</span>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
