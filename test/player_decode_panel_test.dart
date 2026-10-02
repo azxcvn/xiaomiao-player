@@ -5,6 +5,8 @@ import 'package:moumou/services/decode_settings.dart';
 import 'package:moumou/widgets/player_option_chip.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 解码面板测试（P3）：点「当前已选档位 / 预设」不该弹「需重启应用」
 /// —— 没有改动就没有需要重启的东西。
 ///
@@ -19,7 +21,12 @@ void main() {
 
   Future<void> pumpPanel(WidgetTester tester) async {
     await tester.pumpWidget(
-      const MaterialApp(home: Scaffold(body: PlayerDecodePanel())),
+      MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
+        home: const Scaffold(body: PlayerDecodePanel()),
+      ),
     );
     await tester.pumpAndSettle();
   }

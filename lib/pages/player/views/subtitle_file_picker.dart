@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/subtitle_dir.dart';
 import 'package:moumou/models/subtitle_track.dart';
 import 'package:moumou/services/device_services.dart';
@@ -373,11 +375,14 @@ class _SortMenu extends StatelessWidget {
     required this.onSelect,
   });
 
-  String get _label => '${sort.label}${ascending ? '升序' : '降序'}';
+  String _label(AppLocalizations l10n) =>
+      '${subtitleDirSortLabel(l10n, sort)}'
+      '${ascending ? l10n.commonAscending : l10n.commonDescending}';
 
   @override
   Widget build(BuildContext context) {
     const accent = Color(0xFF4FC3F7);
+    final l10n = AppLocalizations.of(context);
     const options = <(SubtitleDirSort, bool)>[
       (SubtitleDirSort.name, true),
       (SubtitleDirSort.name, false),
@@ -404,7 +409,8 @@ class _SortMenu extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '${o.$1.label}${o.$2 ? '升序' : '降序'}',
+                  '${subtitleDirSortLabel(l10n, o.$1)}'
+                  '${o.$2 ? l10n.commonAscending : l10n.commonDescending}',
                   style: TextStyle(
                     color: o == (sort, ascending) ? accent : Colors.white,
                     fontSize: 13,
@@ -424,7 +430,7 @@ class _SortMenu extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              _label,
+              _label(AppLocalizations.of(context)),
               style: const TextStyle(color: Colors.white, fontSize: 12),
             ),
             const SizedBox(width: 2),

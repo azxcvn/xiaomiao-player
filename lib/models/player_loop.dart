@@ -7,12 +7,7 @@
 /// 持久化按枚举 index（与 DoubleTapMode / PlayerVideoFit 同一约定，
 /// 见 PlayerControlsSettings），新增模式只能追加到末尾，勿改已有顺序。
 enum LoopMode {
-  off('关闭'),
-  loopAll('列表循环'),
-  repeatOne('单集循环');
-
-  /// 设置界面展示名
-  final String label;
-
-  const LoopMode(this.label);
+  off,
+  loopAll,
+  repeatOne,
 }

@@ -5,8 +5,13 @@ import 'package:moumou/pages/settings/appearance_page.dart';
 import 'package:moumou/theme/theme_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 外观页测试（工作.md 迁移功能：主题色网格 + 动态色 + 自定义色 + 调色板胶囊化）：
 /// 网格渲染、动态色 toast（Android<12）、自定义色弹窗、调色板重排与胶囊。
+///
+/// 表改造后页面的名称来自 l10n，因此 pump 时必须接上本地化三件套并钉简体中文
+/// （夹具见 `test/l10n_test_helper.dart`）。
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const channel = MethodChannel('moumou/video_info');
@@ -26,6 +31,9 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: AppearancePage(controller: controller ?? ThemeController()),
       ),
     );

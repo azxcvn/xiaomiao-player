@@ -24,6 +24,8 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/danmaku_color_mode.dart';
 import 'package:moumou/models/danmaku_font_mode.dart';
 import 'package:moumou/models/subtitle_track.dart' show mpvColorToRgba;
@@ -514,7 +516,7 @@ class _ColorModeTile extends StatelessWidget {
         dense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         title: Text(
-          mode.label,
+          danmakuColorModeLabel(AppLocalizations.of(context), mode),
           style: TextStyle(
             color: selected ? accent : Colors.white,
             fontSize: 14,
@@ -1099,23 +1101,24 @@ class _DanmakuFontSectionState extends State<_DanmakuFontSection> {
     final s = DanmakuSettings.instance;
     final mode = s.fontMode;
     final appFamily = AppFontSettings.instance.effectiveFamily;
+    final l10n = AppLocalizations.of(context);
     return _SettingsGroup(
       children: [
         _FontRadioTile(
-          label: DanmakuFontMode.followSystem.label,
+          label: danmakuFontModeLabel(l10n, DanmakuFontMode.followSystem),
           selected: mode == DanmakuFontMode.followSystem,
           onTap: () => s.setFontMode(DanmakuFontMode.followSystem),
         ),
         PlayerDanmakuSettingsPanel._groupDivider(),
         _FontRadioTile(
-          label: DanmakuFontMode.followApp.label,
+          label: danmakuFontModeLabel(l10n, DanmakuFontMode.followApp),
           subtitle: appFamily,
           selected: mode == DanmakuFontMode.followApp,
           onTap: () => s.setFontMode(DanmakuFontMode.followApp),
         ),
         PlayerDanmakuSettingsPanel._groupDivider(),
         _FontRadioTile(
-          label: DanmakuFontMode.custom.label,
+          label: danmakuFontModeLabel(l10n, DanmakuFontMode.custom),
           selected: mode == DanmakuFontMode.custom,
           onTap: () => s.setFontMode(DanmakuFontMode.custom),
         ),

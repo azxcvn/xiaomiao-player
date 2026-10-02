@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/super_resolution_mode.dart';
 import 'package:moumou/services/super_resolution_service.dart';
 import 'package:moumou/widgets/player_option_chip.dart';
@@ -70,7 +72,7 @@ class _PlayerSuperResolutionPanelState
 
   Widget _buildModeChip(SuperResolutionMode mode) {
     return PlayerOptionChip(
-      label: mode.label,
+      label: superResolutionModeLabel(AppLocalizations.of(context), mode),
       selected: _service.mode == mode,
       onTap: () => _service.setMode(mode, player: widget.player),
       textAlign: TextAlign.center,
@@ -90,7 +92,10 @@ class _PlayerSuperResolutionPanelState
 
   Widget _buildQualityChip(SuperResolutionQuality quality) {
     return PlayerOptionChip(
-      label: quality.label,
+      label: superResolutionQualityLabel(
+        AppLocalizations.of(context),
+        quality,
+      ),
       selected: _service.quality == quality,
       onTap: () => _service.setQuality(quality, player: widget.player),
       textAlign: TextAlign.center,
@@ -126,7 +131,10 @@ class _PlayerSuperResolutionPanelState
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              _service.mode.description,
+              superResolutionModeDescription(
+                AppLocalizations.of(context),
+                _service.mode,
+              ),
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 13,

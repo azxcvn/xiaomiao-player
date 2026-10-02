@@ -5,21 +5,20 @@ import 'dart:ui';
 /// 颜色方案对齐参考项目（小喵 player / mpvRx 的 SkipSegmentType）：
 /// 每个类型一个专属色，用于进度条色段标记与跳过胶囊底色，
 /// 颜色透明度在绘制/UI 层再调整（见 PlayerSeekBar / ChapterSkipChip）。
+///
+/// 胶囊文案在 `lib/l10n/label_maps.dart` 的 [chapterSkipTypeLabel]。
 enum ChapterSkipType {
-  intro('跳过片头', Color(0xFFFF7A00)),
-  recap('跳过前情提要', Color(0xFF2F80FF)),
-  outro('跳过片尾', Color(0xFFE05666)),
-  credits('跳过制作人员', Color(0xFFA64DFF)),
-  coldOpen('跳过正片前段', Color(0xFFFFB300)),
-  preview('跳过下集预告', Color(0xFF00D4C7));
-
-  /// 胶囊按钮文案（如「跳过片头」）
-  final String label;
+  intro(Color(0xFFFF7A00)),
+  recap(Color(0xFF2F80FF)),
+  outro(Color(0xFFE05666)),
+  credits(Color(0xFFA64DFF)),
+  coldOpen(Color(0xFFFFB300)),
+  preview(Color(0xFF00D4C7));
 
   /// 类型专属色（进度条色段 / 胶囊底色）
   final Color color;
 
-  const ChapterSkipType(this.label, this.color);
+  const ChapterSkipType(this.color);
 }
 
 /// 单个章节（来自 mpv 的 chapter-list 子属性）。

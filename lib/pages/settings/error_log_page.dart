@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/services/crash_log_service.dart';
 import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/utils/formatters.dart';
@@ -71,68 +72,90 @@ class _ErrorLogPageState extends State<ErrorLogPage> {
   }
 
   Future<void> _copyLog(CrashLogFile log) async {
+    final l10n = AppLocalizations.of(context);
     final content = await CrashLogService.readLog(log.path);
     if (!mounted) return;
     await Clipboard.setData(ClipboardData(text: content));
-    if (mounted) _toast('日志内容已复制到剪贴板');
+    if (mounted) _toast(l10n.settingsErrorLogCopied);
   }
 
   Future<void> _exportLog(CrashLogFile log) async {
+    final l10n = AppLocalizations.of(context);
     final dst = await CrashLogService.exportLog(log.path);
     if (!mounted) return;
     if (dst == null) {
-      _toast('导出失败');
+      _toast(l10n.settingsErrorLogExportFailed);
       return;
     }
-    _toast('已导出到\n$dst');
+    _toast(l10n.settingsErrorLogExportedTo(dst));
   }
 
   Future<bool> _confirm(String title, String content) async {
     final ok = await showAppDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(content),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('确定'),
-          ),
-        ],
-      ),
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(title),
+          content: Text(content),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.commonCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.commonConfirm),
+            ),
+          ],
+        );
+      },
     );
     return ok ?? false;
   }
 
   Future<void> _deleteLog(CrashLogFile log) async {
-    final confirmed = await _confirm('删除日志', '确定删除「${log.name}」吗？');
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await _confirm(
+      l10n.settingsErrorLogDeleteTitle,
+      l10n.settingsErrorLogDeleteConfirm(log.name),
+    );
     if (!confirmed) return;
     final ok = await CrashLogService.deleteLog(log.path);
-    _toast(ok ? '已删除' : '删除失败');
+    if (!mounted) return;
+    _toast(
+      ok ? l10n.settingsErrorLogDeleted : l10n.settingsErrorLogDeleteFailed,
+    );
     _refresh();
   }
 
   Future<void> _clearAll() async {
-    final first = await _confirm('清空全部日志', '将删除全部 ${_logs.length} 个日志文件，此操作不可恢复。');
+    final l10n = AppLocalizations.of(context);
+    final first = await _confirm(
+      l10n.settingsErrorLogClearAll,
+      l10n.settingsErrorLogClearAllConfirm(_logs.length),
+    );
     if (!first) return;
     final ok = await CrashLogService.clearLogs();
-    _toast(ok ? '已清空全部日志' : '清空失败');
+    if (!mounted) return;
+    _toast(
+      ok
+          ? l10n.settingsErrorLogClearedAll
+          : l10n.settingsErrorLogClearFailed,
+    );
     _refresh();
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('错误日志'),
+        title: Text(l10n.settingsErrorLogTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: '刷新',
+            tooltip: l10n.settingsErrorLogRefresh,
             onPressed: _refreshing
                 ? null
                 : () {
@@ -150,6 +173,7 @@ class _ErrorLogPageState extends State<ErrorLogPage> {
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context);
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -172,7 +196,7 @@ class _ErrorLogPageState extends State<ErrorLogPage> {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    '日志保存路径：\n$_logDir',
+                    l10n.settingsErrorLogSavePath(_logDir!),
                     style: TextStyle(
                       fontSize: 12,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -182,7 +206,9 @@ class _ErrorLogPageState extends State<ErrorLogPage> {
               ],
             ),
           ),
-        SettingsGroupTitle(title: '崩溃日志（${_logs.length}）'),
+        SettingsGroupTitle(
+          title: l10n.settingsErrorLogGroupCount(_logs.length),
+        ),
         if (_logs.isEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 48),
@@ -198,7 +224,7 @@ class _ErrorLogPageState extends State<ErrorLogPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    '暂无错误日志',
+                    l10n.settingsErrorLogEmpty,
                     style: TextStyle(
                       fontSize: 15,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -206,7 +232,7 @@ class _ErrorLogPageState extends State<ErrorLogPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '应用崩溃时日志会自动记录到这里',
+                    l10n.settingsErrorLogEmptyDesc,
                     style: TextStyle(
                       fontSize: 12,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -244,9 +270,9 @@ class _ErrorLogPageState extends State<ErrorLogPage> {
               ),
               onPressed: _logs.isEmpty ? null : _clearAll,
               icon: const Icon(Icons.delete_sweep_outlined),
-              label: const Text(
-                '清空全部日志',
-                style: TextStyle(fontWeight: FontWeight.w600),
+              label: Text(
+                l10n.settingsErrorLogClearAll,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -275,6 +301,7 @@ class _LogTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     final dt = log.modifiedAt;
     final date =
         '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
@@ -315,19 +342,19 @@ class _LogTile extends StatelessWidget {
             ),
             IconButton(
               icon: const Icon(Icons.copy, size: 18),
-              tooltip: '一键复制',
+              tooltip: l10n.settingsErrorLogCopy,
               visualDensity: VisualDensity.compact,
               onPressed: onCopy,
             ),
             IconButton(
               icon: const Icon(Icons.ios_share, size: 18),
-              tooltip: '导出',
+              tooltip: l10n.settingsErrorLogExport,
               visualDensity: VisualDensity.compact,
               onPressed: onExport,
             ),
             IconButton(
               icon: const Icon(Icons.delete_outline, size: 18),
-              tooltip: '删除',
+              tooltip: l10n.settingsErrorLogDelete,
               visualDensity: VisualDensity.compact,
               color: scheme.error,
               onPressed: onDelete,
@@ -368,14 +395,15 @@ class _LogDetailPageState extends State<_LogDetailPage> {
   }
 
   Future<void> _copy() async {
+    final l10n = AppLocalizations.of(context);
     await Clipboard.setData(ClipboardData(text: _content));
     if (mounted) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
-            content: Text('日志内容已复制到剪贴板'),
-            duration: Duration(milliseconds: 1500),
+          SnackBar(
+            content: Text(l10n.settingsErrorLogCopied),
+            duration: const Duration(milliseconds: 1500),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -383,13 +411,18 @@ class _LogDetailPageState extends State<_LogDetailPage> {
   }
 
   Future<void> _export() async {
+    final l10n = AppLocalizations.of(context);
     final dst = await CrashLogService.exportLog(widget.log.path);
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(dst == null ? '导出失败' : '已导出到\n$dst'),
+          content: Text(
+            dst == null
+                ? l10n.settingsErrorLogExportFailed
+                : l10n.settingsErrorLogExportedTo(dst),
+          ),
           duration: const Duration(milliseconds: 2000),
           behavior: SnackBarBehavior.floating,
         ),
@@ -399,6 +432,7 @@ class _LogDetailPageState extends State<_LogDetailPage> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -409,7 +443,7 @@ class _LogDetailPageState extends State<_LogDetailPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: '刷新（实时查看）',
+            tooltip: l10n.settingsErrorLogRefreshRealtime,
             onPressed: _reload,
           ),
         ],
@@ -441,14 +475,14 @@ class _LogDetailPageState extends State<_LogDetailPage> {
             heroTag: 'copy',
             onPressed: _copy,
             icon: const Icon(Icons.copy),
-            label: const Text('一键复制'),
+            label: Text(l10n.settingsErrorLogCopy),
           ),
           const SizedBox(width: 12),
           FloatingActionButton.extended(
             heroTag: 'export',
             onPressed: _export,
             icon: const Icon(Icons.ios_share),
-            label: const Text('导出'),
+            label: Text(l10n.settingsErrorLogExport),
           ),
         ],
       ),

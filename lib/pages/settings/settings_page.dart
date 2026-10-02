@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/pages/bilibili/bili_danmaku_download_page.dart';
 import 'package:moumou/pages/bilibili/bili_login_page.dart';
 import 'package:moumou/pages/bilibili/bili_user_page.dart';
@@ -13,7 +14,9 @@ import 'package:moumou/pages/settings/playback_history_page.dart';
 import 'package:moumou/pages/settings/player_settings_page.dart';
 import 'package:moumou/pages/subtitle/subtitle_download_page.dart';
 import 'package:moumou/services/bilibili/bili_account.dart';
+import 'package:moumou/services/app_locale_settings.dart';
 import 'package:moumou/theme/theme_controller.dart';
+import 'package:moumou/widgets/language_picker_dialog.dart';
 import 'package:moumou/widgets/settings_ui.dart';
 
 /// 「我的」页（原设置主页）：按大类分组展示设置项，点击进入对应子页。
@@ -32,8 +35,9 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('我的')),
+      appBar: AppBar(title: Text(l10n.navMine)),
       body: ListenableBuilder(
         listenable: controller,
         builder: (context, _) {
@@ -69,8 +73,8 @@ class SettingsPage extends StatelessWidget {
                   return SettingsCard(
                     child: SettingsTile(
                       icon: Icons.account_circle_outlined,
-                      title: '登录',
-                      subtitle: const Text('哔哩哔哩账号'),
+                      title: l10n.commonLogin,
+                      subtitle: Text(l10n.biliAccount),
                       onTap: () => _openLogin(context),
                     ),
                   );
@@ -78,12 +82,12 @@ class SettingsPage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               // ── 第一组：外观 ──────────────────────────────
-              const SettingsGroupTitle(title: '外观'),
+              SettingsGroupTitle(title: l10n.settingsGroupAppearance),
               SettingsCard(
                 child: SettingsTile(
                   icon: Icons.palette_outlined,
-                  title: '外观与字体',
-                  subtitle: const Text('调整应用外观与字体'),
+                  title: l10n.settingsAppearanceAndFont,
+                  subtitle: Text(l10n.settingsAppearanceAndFontDesc),
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -95,14 +99,14 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               // ── 播放（工作.md 第 6 点：原「播放器」改名）──
-              const SettingsGroupTitle(title: '播放'),
+              SettingsGroupTitle(title: l10n.settingsGroupPlayback),
               SettingsCard(
                 child: Column(
                   children: [
                     SettingsTile(
                       icon: Icons.play_circle_outline,
-                      title: '播放设置',
-                      subtitle: const Text('调整播放相关设置'),
+                      title: l10n.settingsPlayerSettings,
+                      subtitle: Text(l10n.settingsPlayerSettingsDesc),
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
@@ -116,8 +120,8 @@ class SettingsPage extends StatelessWidget {
                     // 关闭记录；首页速拨「最近播放」直启最后一条
                     SettingsTile(
                       icon: Icons.history,
-                      title: '历史记录',
-                      subtitle: const Text('查看与管理播放历史'),
+                      title: l10n.settingsPlaybackHistory,
+                      subtitle: Text(l10n.settingsPlaybackHistoryDesc),
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
@@ -130,12 +134,12 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               // ── 媒体扫描与过滤（工作.md：App 内文件管理；固定文件夹走长按菜单，无独立设置页）──
-              const SettingsGroupTitle(title: '媒体库'),
+              SettingsGroupTitle(title: l10n.settingsGroupMediaLibrary),
               SettingsCard(
                 child: SettingsTile(
                   icon: Icons.folder_outlined,
-                  title: '媒体扫描与过滤',
-                  subtitle: const Text('扫描规则与文件夹过滤'),
+                  title: l10n.settingsMediaScan,
+                  subtitle: Text(l10n.settingsMediaScanDesc),
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -146,12 +150,12 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               // ── 弹幕（工作.md 第 6 点：弹幕服务器管理）────────
-              const SettingsGroupTitle(title: '弹幕'),
+              SettingsGroupTitle(title: l10n.commonDanmaku),
               SettingsCard(
                 child: SettingsTile(
                   icon: Icons.dns_outlined,
-                  title: '弹幕服务器',
-                  subtitle: const Text('网络弹幕服务器与切集自动匹配'),
+                  title: l10n.settingsDanmakuServer,
+                  subtitle: Text(l10n.settingsDanmakuServerDesc),
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -161,31 +165,47 @@ class SettingsPage extends StatelessWidget {
                   },
                 ),
               ),
+              // ── 语言（用户已拍板：位置在「弹幕」组下方、「下载」组上方）──
+              SettingsGroupTitle(title: l10n.settingsGroupLanguage),
+              SettingsCard(
+                child: SettingsTile(
+                  icon: Icons.translate_outlined,
+                  title: l10n.settingsLanguage,
+                  // 副标题显示**当前语言**：语言名用自称，不翻译
+                  subtitle: Text(
+                    AppLocaleSettings.instance.rawValue ==
+                            AppLocaleSettings.enCode
+                        ? l10n.languageNameEn
+                        : l10n.languageNameZh,
+                  ),
+                  onTap: () => showLanguagePickerDialog(context),
+                ),
+              ),
               // ── 下载（哔哩生态阶段四：弹幕/视频下载）────────
-              const SettingsGroupTitle(title: '下载'),
+              SettingsGroupTitle(title: l10n.commonDownload),
               SettingsCard(
                 child: Column(
                   children: [
                     SettingsTile(
                       icon: Icons.subtitles_outlined,
-                      title: '弹幕下载',
-                      subtitle: const Text('B 站弹幕下载'),
+                      title: l10n.settingsDanmakuDownload,
+                      subtitle: Text(l10n.settingsDanmakuDownloadDesc),
                       onTap: () =>
                           _openBiliDownload(context, const BiliDanmakuDownloadPage()),
                     ),
                     const Divider(height: 1),
                     SettingsTile(
                       icon: Icons.download_outlined,
-                      title: '视频下载',
-                      subtitle: const Text('B 站视频下载'),
+                      title: l10n.settingsVideoDownload,
+                      subtitle: Text(l10n.settingsVideoDownloadDesc),
                       onTap: () =>
                           _openBiliDownload(context, const BiliVideoDownloadPage()),
                     ),
                     const Divider(height: 1),
                     SettingsTile(
                       icon: Icons.closed_caption_outlined,
-                      title: '字幕下载',
-                      subtitle: const Text('影视字幕下载'),
+                      title: l10n.settingsSubtitleDownload,
+                      subtitle: Text(l10n.settingsSubtitleDownloadDesc),
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
@@ -197,8 +217,8 @@ class SettingsPage extends StatelessWidget {
                     const Divider(height: 1),
                     SettingsTile(
                       icon: Icons.list_alt_outlined,
-                      title: '下载管理',
-                      subtitle: const Text('查看下载任务进度'),
+                      title: l10n.settingsDownloadManager,
+                      subtitle: Text(l10n.settingsDownloadManagerDesc),
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
@@ -211,14 +231,14 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               // ── 其他（后续在此追加更多项）──────────────
-              const SettingsGroupTitle(title: '其他'),
+              SettingsGroupTitle(title: l10n.settingsGroupOther),
               SettingsCard(
                 child: Column(
                   children: [
                     SettingsTile(
                       icon: Icons.memory_outlined,
-                      title: '设备信息',
-                      subtitle: const Text('硬件与编解码能力检测'),
+                      title: l10n.settingsDeviceInfo,
+                      subtitle: Text(l10n.settingsDeviceInfoDesc),
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
@@ -230,8 +250,8 @@ class SettingsPage extends StatelessWidget {
                     const Divider(height: 1),
                     SettingsTile(
                       icon: Icons.info_outline,
-                      title: '关于',
-                      subtitle: const Text('版本信息与工具'),
+                      title: l10n.settingsAbout,
+                      subtitle: Text(l10n.settingsAboutDesc),
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
@@ -273,7 +293,9 @@ class SettingsPage extends StatelessWidget {
     if (!BiliAccount.instance.isLogin) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(const SnackBar(content: Text('需要登录哔哩哔哩账号')));
+        ..showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).settingsLoginRequired)),
+        );
       return;
     }
     Navigator.of(context).push(

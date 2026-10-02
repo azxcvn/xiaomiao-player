@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/audio_track.dart';
 import 'package:moumou/pages/player/views/subtitle_file_picker.dart';
 import 'package:moumou/services/audio_service.dart';
@@ -108,7 +110,10 @@ class PlayerAudioPanel extends StatelessWidget {
                         if (i > 0) const SizedBox(width: 8),
                         Expanded(
                           child: PlayerOptionChip(
-                            label: row1[i].label,
+                            label: audioChannelsLabel(
+                              AppLocalizations.of(context),
+                              row1[i],
+                            ),
                             selected: controller.channels == row1[i],
                             onTap: () => controller.setChannels(row1[i]),
                             textAlign: TextAlign.center,
@@ -126,7 +131,10 @@ class PlayerAudioPanel extends StatelessWidget {
                         if (i > 0) const SizedBox(width: 8),
                         Expanded(
                           child: PlayerOptionChip(
-                            label: row2[i].label,
+                            label: audioChannelsLabel(
+                              AppLocalizations.of(context),
+                              row2[i],
+                            ),
                             selected: controller.channels == row2[i],
                             onTap: () => controller.setChannels(row2[i]),
                             textAlign: TextAlign.center,
@@ -265,6 +273,8 @@ class _TrackTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const accent = Color(0xFF4FC3F7);
+    final l10n = AppLocalizations.of(context);
+    final title = _trackTitle(l10n, track);
     return ListTile(
       dense: true,
       leading: Icon(
@@ -278,7 +288,7 @@ class _TrackTile extends StatelessWidget {
         children: [
           Flexible(
             child: Text(
-              _trackTitle(track),
+              title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
@@ -295,7 +305,7 @@ class _TrackTile extends StatelessWidget {
             _TrackTag(track.channels!.trim()),
           if (track.language != null &&
               track.language!.trim().isNotEmpty &&
-              track.language!.trim() != track.displayTitle)
+              track.language!.trim() != title)
             _TrackTag(track.language!.trim()),
         ],
       ),
@@ -314,8 +324,10 @@ class _TrackTile extends StatelessWidget {
 }
 
 /// 轨道标题：外挂音轨的 title 通常是文件名，去掉扩展名（如 `xxx.m4a` → `xxx`）。
-String _trackTitle(AudioTrack track) {
-  final t = track.displayTitle;
+///
+/// 名称取本地化展示名（标题 → 语言 → 「音轨 N」兜底），模型层只给纯数据。
+String _trackTitle(AppLocalizations l10n, AudioTrack track) {
+  final t = audioTrackDisplayName(l10n, track);
   if (track.external && isSupportedAudioFile(t)) {
     return t.substring(0, t.lastIndexOf('.'));
   }

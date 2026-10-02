@@ -9,7 +9,13 @@ import 'package:moumou/utils/file_ops.dart';
 class FileOpException implements Exception {
   final String message;
 
-  const FileOpException(this.message);
+  /// 本次失败是不是**用户取消**。
+  ///
+  /// 调用方一律按这个标记判断，**不要拿 [message] 比字符串**（取消路径的
+  /// message 只是给界面兜底的一段话，不是判据；哨兵值因此不再参与逻辑）。
+  final bool cancelled;
+
+  const FileOpException(this.message, {this.cancelled = false});
 
   @override
   String toString() => message;
@@ -212,7 +218,7 @@ class FileOperationsService {
 
     for (final entry in entries) {
       if (cancelToken?.isCancelled ?? false) {
-        throw const FileOpException('已取消');
+        throw const FileOpException('已取消', cancelled: true);
       }
       final rel = entry.relPath;
       final outPath = rel.isEmpty ? target : '$target/$rel';
@@ -289,7 +295,9 @@ class FileOperationsService {
         if (cancelToken?.isCancelled ?? false) {
           subscription.cancel();
           if (!completer.isCompleted) {
-            completer.completeError(const FileOpException('已取消'));
+            completer.completeError(
+              const FileOpException('已取消', cancelled: true),
+            );
           }
           return;
         }

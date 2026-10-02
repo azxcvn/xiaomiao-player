@@ -1,0 +1,1300 @@
+{
+  "@@locale": "zh",
+  "appTitle": "小喵Player",
+  "@appTitle": {
+    "description": "应用名（任务切换器 / 窗口标题）；英文侧固定 Meow Player"
+  },
+  "commonCancel": "取消",
+  "@commonCancel": {
+    "description": "通用按钮：取消"
+  },
+  "settingsThemeModeSystem": "跟随系统",
+  "@settingsThemeModeSystem": {
+    "description": "外观页 · 主题模式"
+  },
+  "settingsThemeModeLight": "浅色",
+  "@settingsThemeModeLight": {
+    "description": "外观页 · 主题模式"
+  },
+  "settingsThemeModeDark": "深色",
+  "@settingsThemeModeDark": {
+    "description": "外观页 · 主题模式"
+  },
+  "settingsThemeModeAmoled": "AMOLED 纯黑",
+  "@settingsThemeModeAmoled": {
+    "description": "外观页 · 主题模式"
+  },
+  "settingsThemeColorSkyBlue": "天蓝色",
+  "@settingsThemeColorSkyBlue": {
+    "description": "外观页 · 预设主题色（名称与 3 字中文对应，英文按色名直译）"
+  },
+  "settingsThemeColorBlue": "蓝色",
+  "settingsThemeColorLightBlue": "浅蓝色",
+  "settingsThemeColorIndigo": "靛蓝色",
+  "settingsThemeColorTeal": "蓝绿色",
+  "settingsThemeColorCyan": "青色",
+  "settingsThemeColorGreen": "绿色",
+  "settingsThemeColorMint": "薄荷绿",
+  "settingsThemeColorLightGreen": "浅绿色",
+  "settingsThemeColorLime": "酸橙色",
+  "settingsThemeColorYellow": "黄色",
+  "settingsThemeColorAmber": "琥珀色",
+  "settingsThemeColorOrange": "橙色",
+  "settingsThemeColorDeepOrange": "橙红色",
+  "settingsThemeColorRed": "红色",
+  "settingsThemeColorPink": "粉红色",
+  "settingsThemeColorHotPink": "亮粉色",
+  "settingsThemeColorViolet": "紫罗兰",
+  "settingsThemeColorPurple": "紫色",
+  "settingsThemeColorDeepPurple": "深紫色",
+  "settingsThemeColorBlueGrey": "蓝灰色",
+  "settingsThemeColorBrown": "棕色",
+  "settingsThemeColorGrey": "灰色",
+  "settingsPaletteTonalSpot": "标准型",
+  "@settingsPaletteTonalSpot": {
+    "description": "外观页 · 调色板风格（flex_seed_scheme 的 FlexSchemeVariant）"
+  },
+  "settingsPaletteFidelity": "保真型",
+  "settingsPaletteMonochrome": "单色型",
+  "settingsPaletteNeutral": "中性型",
+  "settingsPaletteVibrant": "鲜艳型",
+  "settingsPaletteExpressive": "鲜明型",
+  "settingsPaletteContent": "柔和型",
+  "settingsPaletteRainbow": "彩虹型",
+  "settingsPaletteFruitSalad": "果味型",
+  "settingsPaletteCandyPop": "糖果型",
+  "settingsPaletteChroma": "饱和型",
+  "settingsPaletteHighContrast": "对比型",
+  "settingsPaletteJolly": "欢快型",
+  "settingsPaletteMaterial": "经典型",
+  "settingsPaletteMaterial3Legacy": "旧版型",
+  "settingsPaletteOneHue": "单色相",
+  "settingsPaletteSoft": "淡雅型",
+  "settingsPaletteUltraContrast": "超对比",
+  "settingsPaletteVivid": "生动型",
+  "settingsPaletteVividBackground": "亮背景",
+  "settingsPaletteVividSurfaces": "亮表面",
+  "playerDoubleTapPause": "双击暂停/播放",
+  "@playerDoubleTapPause": {
+    "description": "播放器设置 · 双击手势模式"
+  },
+  "playerDoubleTapSeek": "双击左退右进",
+  "playerDoubleTapMixed": "混合模式",
+  "playerOrientationAuto": "自动",
+  "@playerOrientationAuto": {
+    "description": "播放器设置 · 视频方向"
+  },
+  "playerOrientationPortrait": "锁定竖屏",
+  "playerOrientationLandscape": "锁定横屏",
+  "playerVideoFitFill": "拉伸",
+  "@playerVideoFitFill": {
+    "description": "播放器 · 画面比例（4:3 / 16:9 两个比例项不自造文案，保持原样）"
+  },
+  "playerVideoFitContain": "自动",
+  "playerVideoFitCover": "裁剪",
+  "playerVideoFitFitWidth": "等宽",
+  "playerVideoFitFitHeight": "等高",
+  "playerVideoFitNone": "原始",
+  "playerVideoFitScaleDown": "限制",
+  "playerActionSubtitle": "字幕",
+  "@playerActionSubtitle": {
+    "description": "播放器顶栏可自定义按钮动作名"
+  },
+  "playerActionAudio": "音频",
+  "playerActionAspect": "比例",
+  "playerActionDecode": "解码",
+  "playerActionChapter": "章节",
+  "playerActionCast": "投屏",
+  "playerActionPip": "画中画",
+  "playerActionListen": "听视频",
+  "playerActionLoop": "循环播放",
+  "playerActionIntroOutro": "片头片尾",
+  "playerActionDiagnostics": "播放诊断",
+  "playerActionEqualizer": "音频均衡器",
+  "commonName": "名称",
+  "@commonName": {
+    "description": "通用：排序维度 / 字段名（多处复用，同一句中文只留一个键）"
+  },
+  "commonDate": "日期",
+  "commonSize": "大小",
+  "commonCount": "数量",
+  "commonDuration": "时长",
+  "commonAscending": "升序",
+  "commonDescending": "降序",
+  "commonPath": "路径",
+  "commonResolution": "分辨率",
+  "commonProgress": "进度",
+  "commonSubtitleIndicator": "字幕指示器",
+  "commonFrameRate": "帧率",
+  "commonFullName": "完整名称",
+  "viewModeTree": "树状模式",
+  "@viewModeTree": {
+    "description": "首页视图模式"
+  },
+  "viewModeList": "列表模式",
+  "superResolutionQualityFast": "流畅",
+  "@superResolutionQualityFast": {
+    "description": "超分 · 质量档（名称 + 说明）"
+  },
+  "superResolutionQualityFastDesc": "低 GPU 占用，速度优先",
+  "superResolutionQualityBalanced": "均衡",
+  "superResolutionQualityBalancedDesc": "速度与画质平衡，推荐",
+  "superResolutionQualityHigh": "高清",
+  "superResolutionQualityHighDesc": "高 GPU 占用，画质最佳",
+  "superResolutionModeOffDesc": "不启用超分辨率，输出原始画面",
+  "superResolutionModeA": "模式A",
+  "superResolutionModeADesc": "优化 1080p 动画\n高模糊度、重采样伪影",
+  "superResolutionModeB": "模式B",
+  "superResolutionModeBDesc": "优化 720p 动画\n低模糊度、下采样振铃",
+  "superResolutionModeC": "模式C",
+  "superResolutionModeCDesc": "优化 480p 动画\n最高 PSNR、低感知质量",
+  "superResolutionModeAPlus": "模式A+",
+  "superResolutionModeAPlusDesc": "A+A 双段放大\n最高感知质量，更强的线条重建（较慢）",
+  "superResolutionModeBPlus": "模式B+",
+  "superResolutionModeBPlusDesc": "B+B 双段放大\n高感知质量，更好的 720p 效果（较慢）",
+  "superResolutionModeCPlus": "模式C+",
+  "superResolutionModeCPlusDesc": "C+A 双段放大\n略高感知质量，改进的 480p 效果（较慢）",
+  "decodeModeAutoSafeDesc": "自动选择安全硬解",
+  "decodeModeHwCopy": "硬解",
+  "decodeModeHwCopyDesc": "强制硬解，兼容字幕与超分",
+  "decodeModeHwPlus": "硬解+",
+  "decodeModeHwPlusDesc": "直通优先，失败自动回退",
+  "decodeModeSw": "软解",
+  "decodeModeSwDesc": "纯 CPU 解码",
+  "decodePresetFast": "快速",
+  "@decodePresetFast": {
+    "description": "解码性能预设（名称 + 说明）"
+  },
+  "decodePresetFastDesc": "性能优先",
+  "decodePresetStandard": "默认",
+  "decodePresetStandardDesc": "标准配置",
+  "decodePresetHighQuality": "高质量",
+  "decodePresetHighQualityDesc": "画质优先",
+  "decodePresetGpuHq": "GPU 高质量",
+  "decodePresetGpuHqDesc": "高画质渲染",
+  "decodePresetLowLatency": "低延迟",
+  "decodePresetLowLatencyDesc": "减少缓冲",
+  "decodePresetSwFast": "软解快速",
+  "decodePresetSwFastDesc": "软解加速",
+  "chapterSkipIntro": "跳过片头",
+  "@chapterSkipIntro": {
+    "description": "章节跳段类型胶囊文案"
+  },
+  "chapterSkipRecap": "跳过前情提要",
+  "chapterSkipOutro": "跳过片尾",
+  "chapterSkipCredits": "跳过制作人员",
+  "chapterSkipColdOpen": "跳过正片前段",
+  "chapterSkipPreview": "跳过下集预告",
+  "playlistSortNameAsc": "名称升序",
+  "@playlistSortNameAsc": {
+    "description": "播放列表排序胶囊"
+  },
+  "playlistSortNameDesc": "名称降序",
+  "playlistSortDateAsc": "日期升序",
+  "playlistSortDateDesc": "日期降序",
+  "subtitleAlignLeft": "左对齐",
+  "subtitleAlignRight": "右对齐",
+  "subtitleBorderNone": "无",
+  "@subtitleBorderNone": {
+    "description": "字幕描边/背景模式（本 App 不提供选择器，枚举保留三态）"
+  },
+  "subtitleBorderOutline": "描边",
+  "subtitleBorderBox": "背景框",
+  "subtitlePresetWhite": "白色",
+  "@subtitlePresetWhite": {
+    "description": "字幕颜色预设名（按 hex 取；同一颜色多处复用同一个键）"
+  },
+  "subtitlePresetYellow": "黄色",
+  "subtitlePresetCyan": "青色",
+  "subtitlePresetGreen": "绿色",
+  "subtitlePresetBlack": "黑色",
+  "subtitlePresetTranslucentBlack": "半透明黑",
+  "subtitlePresetOpaqueBlack": "纯黑",
+  "subtitlePresetTranslucentWhite": "半透明白",
+  "subtitlePresetTranslucentBlue": "半透明蓝",
+  "commonExternalTag": "外挂",
+  "@commonExternalTag": {
+    "description": "外挂轨道标记（字幕/音轨标签行共用，同一句中文只留一个键）"
+  },
+  "commonAuto": "自动",
+  "@commonAuto": {
+    "description": "通用：自动（解码档位 / 音频声道共用）"
+  },
+  "audioChannelAutoSafe": "安全自动",
+  "@audioChannelAutoSafe": {
+    "description": "音频声道（mpv audio-channels）"
+  },
+  "audioChannelMono": "单声道",
+  "audioChannelStereo": "立体声",
+  "audioChannelReverseStereo": "反向立体声",
+  "audioTrackFallbackName": "音轨 {id}",
+  "@audioTrackFallbackName": {
+    "description": "音轨既无标题也无语言时的回退名",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "subtitleTrackFallbackName": "轨道 {id}",
+  "@subtitleTrackFallbackName": {
+    "description": "字幕轨既无标题也无语言时的回退名",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "networkTierApi": "常规 API",
+  "@networkTierApi": {
+    "description": "网络请求超时分级档位名"
+  },
+  "networkTierText": "文本响应",
+  "networkTierDownload": "文件下载",
+  "networkTierStream": "媒体流",
+  "commonOff": "关闭",
+  "@commonOff": {
+    "description": "通用：关闭（超分模式 / 循环模式共用）"
+  },
+  "danmakuColorModeSource": "跟随弹幕颜色",
+  "@danmakuColorModeSource": {
+    "description": "弹幕颜色三态"
+  },
+  "danmakuColorModeRandom": "随机渐变色",
+  "danmakuColorModeFixed": "指定颜色",
+  "danmakuFontModeFollowSystem": "跟随系统字体",
+  "@danmakuFontModeFollowSystem": {
+    "description": "弹幕字体三态"
+  },
+  "danmakuFontModeFollowApp": "跟随App字体",
+  "danmakuFontModeCustom": "自定义字体",
+  "loopModeLoopAll": "列表循环",
+  "@loopModeLoopAll": {
+    "description": "循环播放模式（关闭复用 commonOff）"
+  },
+  "loopModeRepeatOne": "单集循环",
+  "wallpaperScaleFit": "适应",
+  "@wallpaperScaleFit": {
+    "description": "自定义壁纸缩放模式"
+  },
+  "wallpaperScaleFill": "填充",
+  "subtitleSourceWyzie": "Wyzie 字幕服务",
+  "@subtitleSourceWyzie": {
+    "description": "影视字幕下载来源（单选互斥）"
+  },
+  "subtitleSourceCustom": "自定义字幕地址",
+  "navHome": "首页",
+  "@navHome": {
+    "description": "底部导航项"
+  },
+  "navMine": "我的",
+  "commonLogin": "登录",
+  "@commonLogin": {
+    "description": "通用：登录"
+  },
+  "commonConfirm": "确定",
+  "@commonConfirm": {
+    "description": "通用按钮：确定"
+  },
+  "commonDanmaku": "弹幕",
+  "@commonDanmaku": {
+    "description": "通用：弹幕（设置组 / 播放器动作名共用）"
+  },
+  "commonDownload": "下载",
+  "@commonDownload": {
+    "description": "通用：下载（设置组名）"
+  },
+  "biliAccount": "哔哩哔哩账号",
+  "@biliAccount": {
+    "description": "「我的」页账号入口 / 登录页"
+  },
+  "settingsGroupAppearance": "外观",
+  "@settingsGroupAppearance": {
+    "description": "设置页分组标题"
+  },
+  "settingsAppearanceAndFont": "外观与字体",
+  "settingsAppearanceAndFontDesc": "调整应用外观与字体",
+  "settingsGroupPlayback": "播放",
+  "settingsPlayerSettings": "播放设置",
+  "settingsPlayerSettingsDesc": "调整播放相关设置",
+  "settingsPlaybackHistory": "历史记录",
+  "settingsPlaybackHistoryDesc": "查看与管理播放历史",
+  "settingsGroupMediaLibrary": "媒体库",
+  "settingsMediaScan": "媒体扫描与过滤",
+  "settingsMediaScanDesc": "扫描规则与文件夹过滤",
+  "settingsDanmakuServer": "弹幕服务器",
+  "settingsDanmakuServerDesc": "网络弹幕服务器与切集自动匹配",
+  "settingsDanmakuDownload": "弹幕下载",
+  "settingsDanmakuDownloadDesc": "B 站弹幕下载",
+  "settingsVideoDownload": "视频下载",
+  "settingsVideoDownloadDesc": "B 站视频下载",
+  "settingsSubtitleDownload": "字幕下载",
+  "settingsSubtitleDownloadDesc": "影视字幕下载",
+  "settingsDownloadManager": "下载管理",
+  "settingsDownloadManagerDesc": "查看下载任务进度",
+  "settingsGroupOther": "其他",
+  "settingsDeviceInfo": "设备信息",
+  "settingsDeviceInfoDesc": "硬件与编解码能力检测",
+  "settingsAbout": "关于",
+  "settingsAboutDesc": "版本信息与工具",
+  "settingsLoginRequired": "需要登录哔哩哔哩账号",
+  "@settingsLoginRequired": {
+    "description": "未登录时打开 B 站下载页的提示"
+  },
+  "settingsGroupLanguage": "语言",
+  "@settingsGroupLanguage": {
+    "description": "设置页「语言」组（在弹幕组下方、下载组上方）"
+  },
+  "settingsLanguage": "语言设置",
+  "languageNameZh": "简体中文",
+  "@languageNameZh": {
+    "description": "语言自称，**中英两版内容相同**（不翻译；弹窗与设置页共用）"
+  },
+  "languageNameEn": "English",
+  "@languageNameEn": {
+    "description": "语言自称，**中英两版内容相同**（不翻译；弹窗与设置页共用）"
+  },
+  "languagePickerTitle": "选择语言 / Choose Language",
+  "@languagePickerTitle": {
+    "description": "首启语言弹窗标题：**中英两版内容相同**（刻意双语，让任何用户都看得懂）"
+  },
+  "mainVideoOpenFailed": "无法打开该视频",
+  "@mainVideoOpenFailed": {
+    "description": "外部打开视频失败提示"
+  },
+  "commonTime": "时间",
+  "@commonTime": {
+    "description": "通用：时间"
+  },
+  "settingsPlayerGroupGesture": "手势",
+  "@settingsPlayerGroupGesture": {
+    "description": "播放设置页：分组标题"
+  },
+  "settingsPlayerVolumeSensitivity": "音量灵敏度",
+  "settingsPlayerBrightnessSensitivity": "亮度灵敏度",
+  "settingsPlayerGroupOrientation": "视频方向",
+  "settingsPlayerOrientationFollowVideo": "跟随视频方向",
+  "settingsPlayerOrientationAlwaysPortrait": "始终竖屏",
+  "settingsPlayerOrientationAlwaysLandscape": "始终横屏",
+  "settingsPlayerUiFollowGravity": "界面跟随重力旋转",
+  "settingsPlayerGroupTopInfo": "顶部信息",
+  "settingsPlayerShowTimeDesc": "显示当前时间",
+  "settingsPlayerBattery": "电量",
+  "settingsPlayerShowBatteryDesc": "显示当前电量",
+  "settingsPlayerNetSpeed": "网速",
+  "settingsPlayerShowNetSpeedDesc": "显示实时网速",
+  "settingsPlayerDataType": "数据类型",
+  "settingsPlayerShowDataTypeDesc": "显示 WiFi / 移动数据",
+  "settingsPlayerGroupBehavior": "播放行为",
+  "settingsPlayerPersistentProgressBar": "常驻进度线",
+  "settingsPlayerPersistentProgressBarDesc": "隐藏控制层后底部显示细线",
+  "settingsPlayerChapterProgressBar": "显示章节进度条",
+  "settingsPlayerChapterProgressBarDesc": "进度条标记章节并显示章节名",
+  "settingsPlayerThumbnailPreview": "进度条缩略图",
+  "settingsPlayerThumbnailPreviewDesc": "拖动进度条时预览画面",
+  "settingsPlayerRememberSpeed": "记住上次倍速",
+  "settingsPlayerRememberSpeedDesc": "自动恢复上次倍速",
+  "settingsPlayerSaveVolumeToSystem": "保存音量到系统",
+  "settingsPlayerSaveVolumeToSystemDesc": "退出时把音量写回系统",
+  "settingsPlayerPinchToZoom": "双指缩小视频",
+  "settingsPlayerPinchToZoomDesc": "双指缩放画面",
+  "settingsPlayerButtonBackground": "按钮背景",
+  "settingsPlayerButtonBackgroundDesc": "为控制按钮加半透明背景",
+  "settingsPlayerAutoNext": "自动连播",
+  "settingsPlayerAutoNextDesc": "播完自动放下一集",
+  "settingsPlayerAutoExit": "播放完毕自动退出",
+  "settingsPlayerAutoExitDesc": "最后一个播完自动退出",
+  "settingsPlayerSpeedIndicator": "倍速播放指示器",
+  "settingsPlayerSpeedIndicatorDesc": "长按时顶部显示倍速提示",
+  "settingsPlayerUiAnimations": "启用播放界面动画",
+  "settingsPlayerUiAnimationsDesc": "控制层与面板的进出场动画",
+  "settingsPlayerLockExemptDoubleTap": "锁定状态豁免双击",
+  "settingsPlayerLockExemptDoubleTapDesc": "启用锁定状态下双击屏幕播放/暂停的功能",
+  "settingsPlayerVolumeBoost": "音量增强",
+  "settingsPlayerVolumeBoostDesc": "系统音量满后继续放大",
+  "settingsPlayerWatchThreshold": "已观看进度阈值",
+  "@settingsPlayerWatchThreshold": {
+    "description": "播放设置页：分组标题（解码组标题复用 playerActionDecode）"
+  },
+  "settingsPlayerEnableGpuNext": "启用 GPU-next",
+  "settingsPlayerGpuNextDesc": "使用 libplacebo 新渲染器",
+  "settingsPlayerEnableVulkan": "启用 Vulkan",
+  "settingsPlayerVulkanDesc": "优先使用 Vulkan 渲染",
+  "settingsPlayerVulkanNeedsGpuNext": "需先启用上方的「GPU-next」：Vulkan 只对 GPU-next 渲染器生效",
+  "settingsPlayerRestartHint": "切换后需重启播放器（重开视频）生效；",
+  "settingsPlayerNoBlackScreenHint": "设备或驱动不支持时会自动回落 OpenGL，不会黑屏",
+  "commonEnable": "确定启用",
+  "@commonEnable": {
+    "description": "通用按钮：确定启用（二次确认弹窗）"
+  },
+  "commonTurnOn": "确定开启",
+  "@commonTurnOn": {
+    "description": "通用按钮：确定开启（二次确认弹窗）"
+  },
+  "settingsPlayerLockExemptDialogTitle": "启用锁定状态豁免双击",
+  "@settingsPlayerLockExemptDialogTitle": {
+    "description": "播放设置：二次确认弹窗（标题 + 正文，正文里的换行在 ARB 写 \\n）"
+  },
+  "settingsPlayerLockExemptDialogBody": "开启后，控制层锁定期间双击屏幕即可暂停/播放。\n\n只豁免这一个手势：左右滑动快进快退、上下滑动音量与亮度、长按倍速在锁定状态下依然不会生效；单击呼出解锁按钮也不受影响。\n\n锁定本是防误触用的，若视频会在口袋/包里误暂停，请保持关闭。",
+  "settingsPlayerGravityDialogTitle": "开启界面跟随重力旋转",
+  "settingsPlayerGravityDialogBody": "生效前提（两个都要满足）：\n① 手机系统设置里已开启「自动旋转」；\n② 本页「视频方向」设为「自动」。\n\n两个前提满足后，再开启本开关，播放界面的横竖屏才会跟随手机方向（竖起来进竖屏播放页，横过来回横屏播放页）。前提不满足时仍按「视频方向」的设置播放，本开关不生效。\n\n「锁定竖屏 / 锁定横屏」是明确指定的方向，不受本开关影响。",
+  "settingsPlayerGpuNextWarning": "启用后超分辨率功能将无法使用；\n可尝试配合软解播放杜比视界视频。\n\n是否继续？",
+  "settingsPlayerVulkanWarning": "视频输出将优先使用 Vulkan 渲染，新建的上下文不再限定 OpenGL ES。\n\n若设备或驱动不支持，会自动回落 OpenGL，不会黑屏。\n\n注意：普通内核下 MediaCodec 直通只对 OpenGL 生效，开 Vulkan 后「硬解+」会直接走硬解拷贝（不再尝试直通）。\n\n切换后需重启播放器（重开视频）生效。",
+  "commonSeconds": "秒",
+  "@commonSeconds": {
+    "description": "通用单位：秒"
+  },
+  "commonSecondsValue": "{value} 秒",
+  "@commonSecondsValue": {
+    "description": "通用：N 秒（数值 + 单位）",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsPlayerLongPressSpeed": "长按倍速",
+  "@settingsPlayerLongPressSpeed": {
+    "description": "播放设置：长按倍速 / 快进时长 / 已观看阈值 / 增强上限 四个滑杆项"
+  },
+  "settingsPlayerLongPressSpeedDesc": "长按临时倍速，可左右滑动调速",
+  "settingsPlayerSeekRange": "1 – {max} 秒",
+  "@settingsPlayerSeekRange": {
+    "description": "快进/快退时长输入框的越界提示",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsPlayerSeekSeconds": "快进/快退时长",
+  "settingsPlayerTapValueHint": "点击数值可自定义秒数",
+  "settingsPlayerWatchThresholdTitle": "「已观看」进度阈值",
+  "settingsPlayerWatchThresholdDesc": "进度达到该比例即视为已看完",
+  "settingsPlayerBoostCap": "增强上限",
+  "settingsPlayerBoostCapDesc": "最高增强至 {percent}%音量",
+  "@settingsPlayerBoostCapDesc": {
+    "description": "音量增强上限说明（percent = 100 + 上限值）",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "commonDelete": "删除",
+  "@commonDelete": {
+    "description": "通用按钮：删除"
+  },
+  "commonEdit": "编辑",
+  "@commonEdit": {
+    "description": "通用：编辑"
+  },
+  "commonAdd": "添加",
+  "@commonAdd": {
+    "description": "通用按钮：添加"
+  },
+  "commonSave": "保存",
+  "@commonSave": {
+    "description": "通用按钮：保存"
+  },
+  "commonMoreActions": "更多操作",
+  "@commonMoreActions": {
+    "description": "通用：更多操作（菜单 tooltip）"
+  },
+  "commonDontAskAgain": "不再提示",
+  "@commonDontAskAgain": {
+    "description": "通用：不再提示（二次确认勾选框）"
+  },
+  "commonTurnOnShort": "开启",
+  "@commonTurnOnShort": {
+    "description": "通用按钮：开启（区别于「确定开启」）"
+  },
+  "danmakuServerAdd": "添加服务器",
+  "@danmakuServerAdd": {
+    "description": "弹幕服务器页（页面标题复用 settingsDanmakuServer）"
+  },
+  "danmakuServerIntro": "启用的服务器将同时用于弹幕搜索与自动匹配，搜索结果按各服务器返回顺序实时呈现",
+  "danmakuServerGroupServers": "服务器",
+  "danmakuServerDelete": "删除服务器",
+  "danmakuServerDeleteConfirm": "确定删除「{name}」吗？此操作不可撤销。",
+  "@danmakuServerDeleteConfirm": {
+    "description": "删除服务器二次确认",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "danmakuServerDedupe": "搜索结果自动去重",
+  "danmakuServerDedupeOnDesc": "重复番剧合并为一条，保留集数最全的",
+  "danmakuServerDedupeOffDesc": "每台服务器的结果各自展示，可自行挑选来源",
+  "danmakuServerDedupeDialogTitle": "开启搜索结果自动去重？",
+  "danmakuServerDedupeDialogBody": "各服务器返回的结果仍然立刻显示，不会等全部返回。\n同一部番剧只保留一条；如果后续服务器返回的集数更全，会自动替换成更全的那条。\n因此某台服务器的结果可能不单独出现——那不代表它没搜到，而是被去重合并了。",
+  "danmakuServerAutoMatch": "切集自动匹配弹幕",
+  "danmakuServerAutoMatchDesc": "切集时自动匹配并加载对应集弹幕",
+  "danmakuServerBuiltIn": "内置服务器，不可编辑、删除",
+  "danmakuServerEdit": "编辑服务器",
+  "danmakuServerNameLabel": "服务器名称",
+  "danmakuServerNameHint": "例：我的服务器",
+  "danmakuServerUrlLabel": "服务器地址",
+  "danmakuServerNoBrowser": "未找到可用的浏览器",
+  "danmakuServerHelpLink": "如何获取服务器地址",
+  "mediaScanGroupRules": "扫描规则",
+  "@mediaScanGroupRules": {
+    "description": "媒体扫描与过滤页（页面标题复用 settingsMediaScan）"
+  },
+  "mediaScanNoMedia": "扫描包含 .nomedia 的文件夹",
+  "mediaScanNoMediaDesc": "扫描系统忽略的目录",
+  "mediaScanHiddenFolders": "扫描以 . 开头的隐藏文件夹",
+  "mediaScanHiddenFoldersDesc": "扫描隐藏文件",
+  "mediaScanGroupFilterMode": "文件夹过滤模式",
+  "mediaScanAll": "全部扫描",
+  "mediaScanAllDesc": "扫描所有未跳过的文件夹",
+  "mediaScanBlacklist": "黑名单模式",
+  "mediaScanBlacklistDesc": "排除指定文件夹",
+  "mediaScanWhitelist": "白名单模式",
+  "mediaScanWhitelistDesc": "仅扫描指定文件夹",
+  "mediaScanBlacklistList": "黑名单文件夹列表",
+  "mediaScanWhitelistList": "白名单文件夹列表",
+  "mediaScanAddFolder": "添加文件夹",
+  "mediaScanBlacklistEmpty": "暂无黑名单文件夹（未排除任何目录）",
+  "mediaScanWhitelistEmpty": "暂无白名单文件夹（未添加时默认显示全部）",
+  "mediaScanNoMediaDialogTitle": "开启提示",
+  "mediaScanNoMediaDialogBody": "此功能将扫描系统默认忽略的 .nomedia 文件夹。\n\n开启后，某些应用程序的缓存视频、临时文件或表情包也可能被展示在媒体列表中。是否继续？",
+  "mediaScanAddBlacklistFolder": "添加黑名单文件夹",
+  "mediaScanAddWhitelistFolder": "添加白名单文件夹",
+  "mediaScanPickBlacklistHint": "选择要排除的媒体文件夹（点击直接添加）：",
+  "mediaScanPickWhitelistHint": "选择要仅保留扫描的媒体文件夹（点击直接添加）：",
+  "mediaScanNoMoreFolders": "未发现更多媒体文件夹",
+  "mediaScanFolderItemSubtitle": "{path}\n{count, plural, other{{count} 个视频}}",
+  "@mediaScanFolderItemSubtitle": {
+    "description": "候选文件夹条目副标题：路径 + 视频个数",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaScanBrowseOther": "浏览设备其他目录...",
+  "mediaScanPickFolder": "选择文件夹",
+  "mediaScanGoUp": "上一级",
+  "mediaScanNoSubfolders": "当前目录下无子文件夹",
+  "mediaScanPickCurrentFolder": "选择当前文件夹 ({name})",
+  "@mediaScanPickCurrentFolder": {
+    "description": "自建目录选择器的确认按钮",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsErrorLogTitle": "错误日志",
+  "@settingsErrorLogTitle": {
+    "description": "错误日志页（设置 → 关于 → 工具 → 错误日志）页面标题"
+  },
+  "settingsErrorLogRefresh": "刷新",
+  "@settingsErrorLogRefresh": {
+    "description": "错误日志页：刷新按钮 tooltip"
+  },
+  "settingsErrorLogRefreshRealtime": "刷新（实时查看）",
+  "@settingsErrorLogRefreshRealtime": {
+    "description": "错误日志详情页：刷新按钮 tooltip（进入即读最新内容）"
+  },
+  "settingsErrorLogSavePath": "日志保存路径：\n{path}",
+  "@settingsErrorLogSavePath": {
+    "description": "错误日志页顶部：日志保存路径（path = 目录绝对路径）",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsErrorLogGroupCount": "崩溃日志（{count}）",
+  "@settingsErrorLogGroupCount": {
+    "description": "错误日志页分组标题（count = 日志文件个数）",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsErrorLogEmpty": "暂无错误日志",
+  "@settingsErrorLogEmpty": {
+    "description": "错误日志页：列表为空时的占位标题"
+  },
+  "settingsErrorLogEmptyDesc": "应用崩溃时日志会自动记录到这里",
+  "@settingsErrorLogEmptyDesc": {
+    "description": "错误日志页：列表为空时的占位说明"
+  },
+  "settingsErrorLogCopy": "一键复制",
+  "@settingsErrorLogCopy": {
+    "description": "错误日志：复制日志内容按钮（列表 tooltip 与详情页按钮共用）"
+  },
+  "settingsErrorLogExport": "导出",
+  "@settingsErrorLogExport": {
+    "description": "错误日志：导出日志按钮（列表 tooltip 与详情页按钮共用）"
+  },
+  "settingsErrorLogDelete": "删除",
+  "@settingsErrorLogDelete": {
+    "description": "错误日志列表：删除单个日志按钮 tooltip"
+  },
+  "settingsErrorLogCopied": "日志内容已复制到剪贴板",
+  "@settingsErrorLogCopied": {
+    "description": "错误日志：复制成功的 toast"
+  },
+  "settingsErrorLogExportFailed": "导出失败",
+  "@settingsErrorLogExportFailed": {
+    "description": "错误日志：导出失败的 toast"
+  },
+  "settingsErrorLogExportedTo": "已导出到\n{path}",
+  "@settingsErrorLogExportedTo": {
+    "description": "错误日志：导出成功的 toast（path = 导出目标路径）",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsErrorLogDeleteTitle": "删除日志",
+  "@settingsErrorLogDeleteTitle": {
+    "description": "错误日志：删除单个日志的二次确认标题"
+  },
+  "settingsErrorLogDeleteConfirm": "确定删除「{name}」吗？",
+  "@settingsErrorLogDeleteConfirm": {
+    "description": "错误日志：删除单个日志的二次确认正文",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsErrorLogDeleted": "已删除",
+  "@settingsErrorLogDeleted": {
+    "description": "错误日志：删除成功的 toast"
+  },
+  "settingsErrorLogDeleteFailed": "删除失败",
+  "@settingsErrorLogDeleteFailed": {
+    "description": "错误日志：删除失败的 toast"
+  },
+  "settingsErrorLogClearAll": "清空全部日志",
+  "@settingsErrorLogClearAll": {
+    "description": "错误日志页底部：清空全部日志按钮"
+  },
+  "settingsErrorLogClearAllConfirm": "将删除全部 {count} 个日志文件，此操作不可恢复。",
+  "@settingsErrorLogClearAllConfirm": {
+    "description": "错误日志：清空全部日志的二次确认正文（count = 日志文件个数）",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsErrorLogClearedAll": "已清空全部日志",
+  "@settingsErrorLogClearedAll": {
+    "description": "错误日志：清空全部成功的 toast"
+  },
+  "settingsErrorLogClearFailed": "清空失败",
+  "@settingsErrorLogClearFailed": {
+    "description": "错误日志：清空全部失败的 toast"
+  },
+  "settingsFontTitle": "App字体设置",
+  "@settingsFontTitle": {
+    "description": "App 字体设置页页面标题"
+  },
+  "settingsFontEnable": "启用自定义字体",
+  "@settingsFontEnable": {
+    "description": "App 字体设置页顶部：启用自定义字体开关标题"
+  },
+  "settingsFontEnabledDesc": "已开启：使用下方导入的字体",
+  "@settingsFontEnabledDesc": {
+    "description": "App 字体设置页：开关已开启时的副标题"
+  },
+  "settingsFontDisabledDesc": "已关闭：跟随系统字体",
+  "@settingsFontDisabledDesc": {
+    "description": "App 字体设置页：开关已关闭时的副标题"
+  },
+  "settingsFontPreviewText": "生如夏花之绚烂，死如秋叶之静美。\n我把你的名字写在树叶上，风把它吹走了；\n我把你的名字写在沙滩上，浪把它冲走了；",
+  "@settingsFontPreviewText": {
+    "description": "App 字体设置页：中文字体预览示例文字（三行，换行在 ARB 写 \\n；纯展示用）"
+  },
+  "settingsFontPreviewHint": "部分字体可能不生效",
+  "@settingsFontPreviewHint": {
+    "description": "App 字体设置页：预览区下方的说明小字"
+  },
+  "settingsFontGroupFont": "字体",
+  "@settingsFontGroupFont": {
+    "description": "App 字体设置页：字体分组标题"
+  },
+  "settingsFontSizeLabel": "字体字号",
+  "@settingsFontSizeLabel": {
+    "description": "App 字体设置页：字号滑杆标题"
+  },
+  "settingsFontWeightLabel": "字体字重",
+  "@settingsFontWeightLabel": {
+    "description": "App 字体设置页：字重滑杆标题"
+  },
+  "settingsFontWeightNone": "默认",
+  "@settingsFontWeightNone": {
+    "description": "App 字体设置页：字重未自定义（滑杆 -1 档）时的显示值"
+  },
+  "settingsFontWeightThin": "极细",
+  "@settingsFontWeightThin": {
+    "description": "App 字体设置页：字重档位 w100"
+  },
+  "settingsFontWeightExtraLight": "很细",
+  "@settingsFontWeightExtraLight": {
+    "description": "App 字体设置页：字重档位 w200"
+  },
+  "settingsFontWeightLight": "细",
+  "@settingsFontWeightLight": {
+    "description": "App 字体设置页：字重档位 w300"
+  },
+  "settingsFontWeightRegular": "常规",
+  "@settingsFontWeightRegular": {
+    "description": "App 字体设置页：字重档位 w400"
+  },
+  "settingsFontWeightMedium": "中等",
+  "@settingsFontWeightMedium": {
+    "description": "App 字体设置页：字重档位 w500"
+  },
+  "settingsFontWeightSemiBold": "较粗",
+  "@settingsFontWeightSemiBold": {
+    "description": "App 字体设置页：字重档位 w600"
+  },
+  "settingsFontWeightBold": "粗",
+  "@settingsFontWeightBold": {
+    "description": "App 字体设置页：字重档位 w700"
+  },
+  "settingsFontWeightExtraBold": "很粗",
+  "@settingsFontWeightExtraBold": {
+    "description": "App 字体设置页：字重档位 w800"
+  },
+  "settingsFontWeightBlack": "极粗",
+  "@settingsFontWeightBlack": {
+    "description": "App 字体设置页：字重档位 w900"
+  },
+  "settingsFontImport": "导入字体",
+  "@settingsFontImport": {
+    "description": "App 字体设置页：导入字体行标题"
+  },
+  "settingsFontImporting": "正在导入...",
+  "@settingsFontImporting": {
+    "description": "App 字体设置页：导入进行中的行标题"
+  },
+  "settingsFontCurrent": "当前字体：{name}",
+  "@settingsFontCurrent": {
+    "description": "App 字体设置页：导入行副标题（name = 当前字体文件族名）",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsFontPickHint": "点击选择 .ttf/.otf 字体文件",
+  "@settingsFontPickHint": {
+    "description": "App 字体设置页：未导入字体时导入行副标题"
+  },
+  "settingsFontReselect": "重新选择",
+  "@settingsFontReselect": {
+    "description": "App 字体设置页：重新选择字体按钮 tooltip"
+  },
+  "settingsFontReset": "重置字号与字重",
+  "@settingsFontReset": {
+    "description": "App 字体设置页：重置字号与字重按钮"
+  },
+  "settingsFontParseFailed": "字体解析失败，请更换字体文件",
+  "@settingsFontParseFailed": {
+    "description": "App 字体设置页：导入的字体解析不出族名时的 toast"
+  },
+  "settingsFontApplied": "已应用字体：{name}",
+  "@settingsFontApplied": {
+    "description": "App 字体设置页：导入成功的 toast（name = 字体文件族名）",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAboutGroupInfo": "信息",
+  "@settingsAboutGroupInfo": {
+    "description": "关于页：「信息」分组标题"
+  },
+  "settingsAboutGroupTools": "工具",
+  "@settingsAboutGroupTools": {
+    "description": "关于页：「工具」分组标题"
+  },
+  "settingsAboutGroupUpdate": "更新",
+  "@settingsAboutGroupUpdate": {
+    "description": "关于页：「更新」分组标题"
+  },
+  "settingsAboutLicenses": "许可证书",
+  "@settingsAboutLicenses": {
+    "description": "关于页：许可证书入口标题"
+  },
+  "settingsAboutLicensesDesc": "查看本应用使用的全部开源许可",
+  "@settingsAboutLicensesDesc": {
+    "description": "关于页：许可证书入口副标题"
+  },
+  "settingsAboutUserAgreement": "用户协议",
+  "@settingsAboutUserAgreement": {
+    "description": "关于页：用户协议入口标题"
+  },
+  "settingsAboutUserAgreementDesc": "预览用户服务协议与隐私政策",
+  "@settingsAboutUserAgreementDesc": {
+    "description": "关于页：用户协议入口副标题"
+  },
+  "settingsAboutCacheManagement": "缓存管理",
+  "@settingsAboutCacheManagement": {
+    "description": "关于页：缓存管理入口标题"
+  },
+  "settingsAboutCacheManagementDesc": "查看与清除各类缓存",
+  "@settingsAboutCacheManagementDesc": {
+    "description": "关于页：缓存管理入口副标题"
+  },
+  "settingsAboutErrorLogDesc": "查看 / 导出 / 复制崩溃日志",
+  "@settingsAboutErrorLogDesc": {
+    "description": "关于页：错误日志入口副标题"
+  },
+  "settingsAboutCheckUpdate": "手动检查更新",
+  "@settingsAboutCheckUpdate": {
+    "description": "关于页：手动检查更新项标题"
+  },
+  "settingsAboutCheckUpdateDesc": "检查是否有新版本",
+  "@settingsAboutCheckUpdateDesc": {
+    "description": "关于页：手动检查更新项副标题"
+  },
+  "settingsAboutAutoCheckUpdate": "自动检查更新",
+  "@settingsAboutAutoCheckUpdate": {
+    "description": "关于页：自动检查更新项标题"
+  },
+  "settingsAboutAutoCheckUpdateDesc": "启动后自动检查新版本",
+  "@settingsAboutAutoCheckUpdateDesc": {
+    "description": "关于页：自动检查更新项副标题"
+  },
+  "settingsAboutFeedbackSubject": "播放器使用反馈",
+  "@settingsAboutFeedbackSubject": {
+    "description": "关于页：邮件反馈的默认主题"
+  },
+  "settingsAboutNoEmailApp": "未找到可用的邮件应用",
+  "@settingsAboutNoEmailApp": {
+    "description": "关于页：跳转邮件失败时的 toast"
+  },
+  "settingsAboutGithubPending": "GitHub 主页地址待接入",
+  "@settingsAboutGithubPending": {
+    "description": "关于页：GitHub 地址未配置时的 toast"
+  },
+  "settingsAboutCannotOpenLink": "无法打开链接",
+  "@settingsAboutCannotOpenLink": {
+    "description": "关于页：链接打不开时的 toast"
+  },
+  "settingsAboutUpToDate": "已是最新版本",
+  "@settingsAboutUpToDate": {
+    "description": "关于页：手动检查更新时没有新版本的 toast"
+  },
+  "settingsAboutCheckUpdateFailed": "检查更新失败，请稍后重试",
+  "@settingsAboutCheckUpdateFailed": {
+    "description": "关于页：手动检查更新失败的 toast"
+  },
+  "settingsAboutSendFeedback": "发送使用反馈",
+  "@settingsAboutSendFeedback": {
+    "description": "关于页：顶部卡片邮箱按钮的 tooltip"
+  },
+  "settingsAboutAppNameLoading": "读取中",
+  "@settingsAboutAppNameLoading": {
+    "description": "关于页：构建信息还没读完时版本胶囊的占位文案"
+  },
+  "settingsLicenseTitle": "许可证书",
+  "@settingsLicenseTitle": {
+    "description": "许可证书页：页面标题"
+  },
+  "settingsLicenseOpenSource": "开源许可",
+  "@settingsLicenseOpenSource": {
+    "description": "许可证书页：列表分组标题"
+  },
+  "settingsLicenseEmpty": "暂无许可信息",
+  "@settingsLicenseEmpty": {
+    "description": "许可证书页：没有收集到任何许可时的空态"
+  },
+  "settingsLicenseVersionLoading": "版本读取中",
+  "@settingsLicenseVersionLoading": {
+    "description": "许可证书页：版本号还没读到时胶囊的占位文案"
+  },
+  "settingsLicenseCount": "{count} 项许可",
+  "@settingsLicenseCount": {
+    "description": "许可证书页：头部卡片的许可包数量胶囊",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsLicenseParagraphCount": "{count, plural, =1{1 个许可段落} other{{count} 个许可段落}}",
+  "@settingsLicenseParagraphCount": {
+    "description": "许可证书页：某个包包含的许可段落数（列表行副标题与详情页摘要卡片共用）",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsLicenseCopy": "复制许可文本",
+  "@settingsLicenseCopy": {
+    "description": "许可证书详情页：复制按钮 tooltip"
+  },
+  "settingsLicenseCopied": "许可文本已复制",
+  "@settingsLicenseCopied": {
+    "description": "许可证书详情页：复制成功的 toast"
+  },
+  "settingsLicenseLoadFailed": "许可信息加载失败",
+  "@settingsLicenseLoadFailed": {
+    "description": "许可证书页：许可收集失败的提示"
+  },
+  "settingsAppearanceTitle": "外观",
+  "@settingsAppearanceTitle": {
+    "description": "外观设置子页：页面标题"
+  },
+  "settingsAppearanceMode": "外观模式",
+  "@settingsAppearanceMode": {
+    "description": "外观设置子页：主题模式分组标题"
+  },
+  "settingsAppearanceThemeColor": "主题色",
+  "@settingsAppearanceThemeColor": {
+    "description": "外观设置子页：主题色分组标题"
+  },
+  "settingsAppearancePaletteVariant": "调色板风格",
+  "@settingsAppearancePaletteVariant": {
+    "description": "外观设置子页：调色板风格分组标题"
+  },
+  "settingsAppearanceGroupFont": "字体",
+  "@settingsAppearanceGroupFont": {
+    "description": "外观设置子页：字体分组标题"
+  },
+  "settingsAppearanceCustomFontDesc": "自定义全局字体",
+  "@settingsAppearanceCustomFontDesc": {
+    "description": "外观设置子页：App 字体设置项副标题"
+  },
+  "settingsAppearanceGroupWallpaper": "壁纸",
+  "@settingsAppearanceGroupWallpaper": {
+    "description": "外观设置子页：壁纸分组标题"
+  },
+  "settingsAppearanceDynamicColor": "动态色",
+  "@settingsAppearanceDynamicColor": {
+    "description": "外观设置子页：主题色网格第 24 格（取系统壁纸主色）"
+  },
+  "settingsAppearanceCustomColor": "自定义",
+  "@settingsAppearanceCustomColor": {
+    "description": "外观设置子页：主题色网格下方的自定义色通栏"
+  },
+  "settingsAppearanceSdkTooLow": "安卓版本过低，不支持该功能",
+  "@settingsAppearanceSdkTooLow": {
+    "description": "外观设置子页：Android 12 以下点动态色的 toast"
+  },
+  "settingsAppearanceReadWallpaperFailed": "无法读取壁纸颜色",
+  "@settingsAppearanceReadWallpaperFailed": {
+    "description": "外观设置子页：取不到壁纸主色时的 toast"
+  },
+  "settingsAppearanceCustomColorTitle": "自定义主题色",
+  "@settingsAppearanceCustomColorTitle": {
+    "description": "外观设置子页：自定义选色弹窗标题"
+  },
+  "settingsAppearanceNoImagePicker": "这台设备没有可用的系统图片选择器",
+  "@settingsAppearanceNoImagePicker": {
+    "description": "外观设置子页：选壁纸时系统没有可用图片选择器的 toast"
+  },
+  "settingsAppearanceWallpaperTitle": "自定义壁纸",
+  "@settingsAppearanceWallpaperTitle": {
+    "description": "外观设置子页：壁纸卡片标题"
+  },
+  "settingsAppearanceWallpaperActiveDesc": "壁纸显示在页面内容与顶部栏之后",
+  "@settingsAppearanceWallpaperActiveDesc": {
+    "description": "外观设置子页：已设置壁纸时的说明"
+  },
+  "settingsAppearanceWallpaperPickDesc": "选一张图片，铺在页面内容与顶部栏之后",
+  "@settingsAppearanceWallpaperPickDesc": {
+    "description": "外观设置子页：未设置壁纸时的说明"
+  },
+  "settingsAppearanceReplaceWallpaper": "替换壁纸",
+  "@settingsAppearanceReplaceWallpaper": {
+    "description": "外观设置子页：已有壁纸时的选择按钮"
+  },
+  "settingsAppearanceChooseWallpaper": "选择壁纸",
+  "@settingsAppearanceChooseWallpaper": {
+    "description": "外观设置子页：没有壁纸时的选择按钮"
+  },
+  "settingsAppearanceAdjustWallpaper": "调整",
+  "@settingsAppearanceAdjustWallpaper": {
+    "description": "外观设置子页：进入壁纸编辑页的按钮"
+  },
+  "settingsDecoderBasicInfo": "基本信息",
+  "@settingsDecoderBasicInfo": {
+    "description": "解码器详情页：基本信息分组标题"
+  },
+  "settingsDecoderMimeType": "MIME 类型",
+  "@settingsDecoderMimeType": {
+    "description": "解码器详情页：MIME 类型字段名"
+  },
+  "settingsDecoderCanonicalName": "规范名",
+  "@settingsDecoderCanonicalName": {
+    "description": "解码器详情页：规范名字段名"
+  },
+  "settingsDecoderType": "类型",
+  "@settingsDecoderType": {
+    "description": "解码器详情页：编解码器类型字段名"
+  },
+  "settingsDecoderVideoCodec": "视频解码器",
+  "@settingsDecoderVideoCodec": {
+    "description": "解码器详情页：类型为视频时的取值"
+  },
+  "settingsDecoderAudioCodec": "音频解码器",
+  "@settingsDecoderAudioCodec": {
+    "description": "解码器详情页：类型为音频时的取值"
+  },
+  "settingsDecoderAcceleration": "加速方式",
+  "@settingsDecoderAcceleration": {
+    "description": "解码器详情页：加速方式字段名"
+  },
+  "settingsDecoderHardwareAcceleration": "硬件加速",
+  "@settingsDecoderHardwareAcceleration": {
+    "description": "解码器详情页：硬件解码时的取值"
+  },
+  "settingsDecoderSoftware": "软件",
+  "@settingsDecoderSoftware": {
+    "description": "解码器详情页：软件解码时的取值"
+  },
+  "settingsDecoderAlias": "别名",
+  "@settingsDecoderAlias": {
+    "description": "解码器详情页：别名字段名"
+  },
+  "settingsDecoderYes": "是",
+  "@settingsDecoderYes": {
+    "description": "解码器详情页：是 / 否布尔字段的肯定取值"
+  },
+  "settingsDecoderBitrateRange": "码率范围",
+  "@settingsDecoderBitrateRange": {
+    "description": "解码器详情页：码率范围字段名"
+  },
+  "settingsDecoderResolutionCapability": "分辨率与能力",
+  "@settingsDecoderResolutionCapability": {
+    "description": "解码器详情页：分辨率与能力分组标题"
+  },
+  "settingsDecoderMaxResolution": "最大分辨率",
+  "@settingsDecoderMaxResolution": {
+    "description": "解码器详情页：最大分辨率字段名"
+  },
+  "settingsDecoderMinResolution": "最小分辨率",
+  "@settingsDecoderMinResolution": {
+    "description": "解码器详情页：最小分辨率字段名"
+  },
+  "settingsDecoderAlignment": "对齐",
+  "@settingsDecoderAlignment": {
+    "description": "解码器详情页：对齐字段名"
+  },
+  "settingsDecoderMaxInstances": "最大实例数",
+  "@settingsDecoderMaxInstances": {
+    "description": "解码器详情页：最大实例数字段名"
+  },
+  "settingsDecoderAudioCapability": "音频能力",
+  "@settingsDecoderAudioCapability": {
+    "description": "解码器详情页：音频能力分组标题"
+  },
+  "settingsDecoderMaxChannels": "最大声道数",
+  "@settingsDecoderMaxChannels": {
+    "description": "解码器详情页：最大声道数字段名"
+  },
+  "settingsDecoderHardwareFeatures": "硬件特性",
+  "@settingsDecoderHardwareFeatures": {
+    "description": "解码器详情页：硬件特性胶囊分组标题"
+  },
+  "settingsDecoderSampleRates": "采样率",
+  "@settingsDecoderSampleRates": {
+    "description": "解码器详情页：采样率胶囊分组标题"
+  },
+  "settingsDecoderColorFormats": "色彩格式",
+  "@settingsDecoderColorFormats": {
+    "description": "解码器详情页：色彩格式胶囊分组标题"
+  },
+  "settingsDecoderProfiles": "支持的 Profile / Level",
+  "@settingsDecoderProfiles": {
+    "description": "解码器详情页：supported profiles / levels 胶囊分组标题"
+  },
+  "settingsCacheTitle": "缓存管理",
+  "@settingsCacheTitle": {
+    "description": "缓存管理页：页面标题（本页自有键，未复用 settingsAboutCacheManagement）"
+  },
+  "settingsCacheGroupTitle": "缓存",
+  "@settingsCacheGroupTitle": {
+    "description": "缓存管理页：缓存类别分组标题"
+  },
+  "settingsCacheReading": "读取中…",
+  "@settingsCacheReading": {
+    "description": "缓存管理页：缓存大小尚未读出时的占位文字"
+  },
+  "settingsCacheClearCategoryTitle": "清除{label}",
+  "@settingsCacheClearCategoryTitle": {
+    "description": "缓存管理页：单类清除确认弹窗标题（label = 缓存类别名）",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheClearCategoryBody": "将删除「{label}」缓存（{size}），确定？",
+  "@settingsCacheClearCategoryBody": {
+    "description": "缓存管理页：单类清除确认弹窗正文（label = 缓存类别名；size = 已格式化的大小）",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheCategoryCleared": "已清除{label}",
+  "@settingsCacheCategoryCleared": {
+    "description": "缓存管理页：单类清除成功的 toast（label = 缓存类别名）",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheClearFailed": "清除失败",
+  "@settingsCacheClearFailed": {
+    "description": "缓存管理页：清除失败的 toast（单类与一键清除共用）"
+  },
+  "settingsCacheClearAllTitle": "清除所有缓存",
+  "@settingsCacheClearAllTitle": {
+    "description": "缓存管理页：一键清除的首次确认弹窗标题"
+  },
+  "settingsCacheClearAllBody": "将删除全部缓存（当前共 {size}）：\n· 视频列表封面缩略图\n· 其他缓存\n\n此操作不可恢复。",
+  "@settingsCacheClearAllBody": {
+    "description": "缓存管理页：一键清除的首次确认弹窗正文（size = 已格式化的总大小；两条类别名为举例，与 service 层 CacheCategory.label 同串）",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheConfirmAgainTitle": "再次确认",
+  "@settingsCacheConfirmAgainTitle": {
+    "description": "缓存管理页：一键清除的二次确认弹窗标题"
+  },
+  "settingsCacheConfirmAgainBody": "确定要清除所有缓存吗？",
+  "@settingsCacheConfirmAgainBody": {
+    "description": "缓存管理页：一键清除的二次确认弹窗正文"
+  },
+  "settingsCacheAllCleared": "已清除全部缓存",
+  "@settingsCacheAllCleared": {
+    "description": "缓存管理页：一键清除成功的 toast"
+  },
+  "settingsCacheClearAllButton": "一键清除所有缓存（{size}）",
+  "@settingsCacheClearAllButton": {
+    "description": "缓存管理页：一键清除按钮（size = 已格式化的总大小）",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheFooterNote": "列表封面缩略图会在下次扫描时重新生成；进度条缩略图为纯内存缓存，随播放页退出自动清空，不占用存储。",
+  "@settingsCacheFooterNote": {
+    "description": "缓存管理页：底部说明文字"
+  },
+  "commonRetry": "重试",
+  "@commonRetry": {
+    "description": "通用按钮：重试（原 settingsLicenseRetry 归并到此）"
+  },
+  "commonVideo": "视频",
+  "@commonVideo": {
+    "description": "通用：视频（解码器清单筛选胶囊等）"
+  },
+  "commonAll": "全部",
+  "@commonAll": {
+    "description": "通用：全部"
+  },
+  "settingsDeviceUnsupported": "不支持",
+  "@settingsDeviceUnsupported": {
+    "description": "设备信息页（页面标题复用 settingsDeviceInfo；硬解/软解复用 decodeModeHwCopy/decodeModeSw，音频复用 playerActionAudio）"
+  },
+  "settingsDeviceUnknown": "未知设备",
+  "settingsDeviceHdrCapability": "屏幕 HDR 能力",
+  "settingsDeviceHdrUnsupported": "当前屏幕不支持 HDR（或系统未报告 HDR 能力）",
+  "settingsDeviceKeyVideoEncoders": "关键视频编码器",
+  "settingsDeviceDecoderList": "解码器清单",
+  "settingsDeviceDecoderSummary": "硬解 {hw} · 软解 {sw} · 视频 {video} · 音频 {audio}",
+  "@settingsDeviceDecoderSummary": {
+    "description": "解码器清单标题右侧的统计",
+    "placeholders": {
+      "hw": {
+        "type": "int"
+      },
+      "sw": {
+        "type": "int"
+      },
+      "video": {
+        "type": "int"
+      },
+      "audio": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsDeviceSearchHint": "搜索解码器（名称 / MIME / 格式 / Profile）",
+  "settingsDeviceNoMatchingDecoder": "无匹配的解码器",
+  "settingsDeviceChannels": "{count} 声道",
+  "@settingsDeviceChannels": {
+    "description": "解码器声道数标签",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsDeviceCapabilityError": "无法读取设备能力（可能为不支持的原生通道）",
+  "commonClear": "清除",
+  "@commonClear": {
+    "description": "通用按钮：清除（历史记录 / 壁纸等）"
+  },
+  "commonReset": "重置",
+  "@commonReset": {
+    "description": "通用按钮：重置"
+  },
+  "commonCenter": "居中",
+  "@commonCenter": {
+    "description": "通用：居中（字幕对齐 / 壁纸位置）"
+  },
+  "settingsHistoryClearAllTitle": "清除历史记录",
+  "@settingsHistoryClearAllTitle": {
+    "description": "播放历史页（页面标题复用 settingsPlaybackHistory）"
+  },
+  "settingsHistoryClearAllBodyWithProgress": "确定要清除全部播放历史吗？\n\n同时会清除全部播放进度（含「已看完」标记），此操作不可恢复。",
+  "settingsHistoryClearAllBody": "确定要清除全部播放历史吗？此操作不可恢复。",
+  "settingsHistoryClearAllTooltip": "清除全部历史",
+  "settingsHistoryEnabled": "播放历史记录",
+  "settingsHistoryEnabledDesc": "关闭后不再记录新的播放",
+  "settingsHistoryClearProgressOnDelete": "删除历史时清除进度",
+  "settingsHistoryClearProgressOnDeleteDesc": "关闭时两套数据互相独立",
+  "settingsHistoryClearProgressOnDesc": "开启后，删除历史记录会同时清除该视频的播放进度",
+  "settingsHistoryClearProgressBlocked": "需先开启上方的「播放历史记录」；关闭时不记录历史，但播放进度会一直保留",
+  "settingsHistoryEmpty": "暂无播放历史",
+  "settingsHistoryEmptyDisabled": "暂无播放历史（记录已关闭）",
+  "settingsHistoryDeleteEntryWithProgress": "删除该条记录（同时清除播放进度）",
+  "settingsHistoryDeleteEntry": "删除该条记录",
+  "settingsWallpaperSaveFailed": "无法保存壁纸，请重新选择图片",
+  "@settingsWallpaperSaveFailed": {
+    "description": "壁纸编辑页（页面标题 + 各滑杆标签）"
+  },
+  "settingsWallpaperAdjustTitle": "调整壁纸",
+  "settingsWallpaperSave": "保存壁纸",
+  "settingsWallpaperDragHint": "拖动以调整位置，双指捏合以缩放。",
+  "settingsWallpaperScale": "缩放",
+  "settingsWallpaperOffsetX": "水平位置",
+  "settingsWallpaperOffsetY": "垂直位置",
+  "settingsWallpaperBlur": "模糊",
+  "settingsWallpaperOpacity": "透明度",
+  "settingsWallpaperImageUnavailable": "图片已不可用，请重新选择"
+}

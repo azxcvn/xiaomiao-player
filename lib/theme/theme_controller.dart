@@ -3,14 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 主题模式
+///
+/// 只留稳定值：名称（跟随系统/浅色/深色/AMOLED 纯黑）在
+/// `lib/l10n/label_maps.dart` 的 [appThemeModeLabel] 里按 l10n 取。
+/// **顺序即持久化语义**（`theme_mode` 存 index），一个都不许动。
 enum AppThemeMode {
-  system('跟随系统'),
-  light('浅色'),
-  dark('深色'),
-  amoled('AMOLED 纯黑');
-
-  final String label;
-  const AppThemeMode(this.label);
+  system,
+  light,
+  dark,
+  amoled,
 }
 
 /// 主题控制器：管理主题模式与主题色，并持久化到本地
@@ -51,57 +52,64 @@ class ThemeController extends ChangeNotifier {
   /// 当前是否正在使用动态色（壁纸取色）
   bool get usingDynamicColor => _usingDynamicColor;
 
-  /// 预设主题色（23 种：默认天蓝置首，其余按色相排列，名称统一 3 字）
-  static const List<({Color color, String label})> presetColors = [
-    (color: Color(0xFF00A1D6), label: '天蓝色'),
-    (color: Color(0xFF2196F3), label: '蓝色'),
-    (color: Color(0xFF03A9F4), label: '浅蓝色'),
-    (color: Color(0xFF3F51B5), label: '靛蓝色'),
-    (color: Color(0xFF00BCD4), label: '蓝绿色'),
-    (color: Color(0xFF009688), label: '青色'),
-    (color: Color(0xFF4CAF50), label: '绿色'),
-    (color: Color(0xFF5CB67B), label: '薄荷绿'),
-    (color: Color(0xFF8BC34A), label: '浅绿色'),
-    (color: Color(0xFFCDDC39), label: '酸橙色'),
-    (color: Color(0xFFFFEB3B), label: '黄色'),
-    (color: Color(0xFFFFC107), label: '琥珀色'),
-    (color: Color(0xFFFF9800), label: '橙色'),
-    (color: Color(0xFFF57C00), label: '橙红色'),
-    (color: Color(0xFFF44336), label: '红色'),
-    (color: Color(0xFFFF7299), label: '粉红色'),
-    (color: Color(0xFFFF6699), label: '亮粉色'),
-    (color: Color(0xFF6750A4), label: '紫罗兰'),
-    (color: Color(0xFF9C27B0), label: '紫色'),
-    (color: Color(0xFF673AB7), label: '深紫色'),
-    (color: Color(0xFF607D8B), label: '蓝灰色'),
-    (color: Color(0xFF795548), label: '棕色'),
-    (color: Color(0xFF9E9E9E), label: '灰色'),
+  /// 预设主题色（23 种：默认天蓝置首，其余按色相排列）。
+  ///
+  /// 名称不在代码里：`lib/l10n/label_maps.dart` 的 `themeColorLabel(l10n, index)`
+  /// 按**下标**取中文/英文。**顺序即语义**（下标与名称一一对应），不许调整。
+  static const List<Color> presetColors = [
+    Color(0xFF00A1D6), // 天蓝色
+    Color(0xFF2196F3), // 蓝色
+    Color(0xFF03A9F4), // 浅蓝色
+    Color(0xFF3F51B5), // 靛蓝色
+    Color(0xFF00BCD4), // 蓝绿色
+    Color(0xFF009688), // 青色
+    Color(0xFF4CAF50), // 绿色
+    Color(0xFF5CB67B), // 薄荷绿
+    Color(0xFF8BC34A), // 浅绿色
+    Color(0xFFCDDC39), // 酸橙色
+    Color(0xFFFFEB3B), // 黄色
+    Color(0xFFFFC107), // 琥珀色
+    Color(0xFFFF9800), // 橙色
+    Color(0xFFF57C00), // 橙红色
+    Color(0xFFF44336), // 红色
+    Color(0xFFFF7299), // 粉红色
+    Color(0xFFFF6699), // 亮粉色
+    Color(0xFF6750A4), // 紫罗兰
+    Color(0xFF9C27B0), // 紫色
+    Color(0xFF673AB7), // 深紫色
+    Color(0xFF607D8B), // 蓝灰色
+    Color(0xFF795548), // 棕色
+    Color(0xFF9E9E9E), // 灰色
   ];
 
-  /// 调色板风格（flex_seed_scheme 的 21 种 FlexSchemeVariant，名称统一 3 字）
-  static const Map<FlexSchemeVariant, String> variantLabels = {
-    FlexSchemeVariant.tonalSpot: '标准型',
-    FlexSchemeVariant.fidelity: '保真型',
-    FlexSchemeVariant.monochrome: '单色型',
-    FlexSchemeVariant.neutral: '中性型',
-    FlexSchemeVariant.vibrant: '鲜艳型',
-    FlexSchemeVariant.expressive: '鲜明型',
-    FlexSchemeVariant.content: '柔和型',
-    FlexSchemeVariant.rainbow: '彩虹型',
-    FlexSchemeVariant.fruitSalad: '果味型',
-    FlexSchemeVariant.candyPop: '糖果型',
-    FlexSchemeVariant.chroma: '饱和型',
-    FlexSchemeVariant.highContrast: '对比型',
-    FlexSchemeVariant.jolly: '欢快型',
-    FlexSchemeVariant.material: '经典型',
-    FlexSchemeVariant.material3Legacy: '旧版型',
-    FlexSchemeVariant.oneHue: '单色相',
-    FlexSchemeVariant.soft: '淡雅型',
-    FlexSchemeVariant.ultraContrast: '超对比',
-    FlexSchemeVariant.vivid: '生动型',
-    FlexSchemeVariant.vividBackground: '亮背景',
-    FlexSchemeVariant.vividSurfaces: '亮表面',
-  };
+  /// 调色板风格的**展示顺序**（flex_seed_scheme 的 21 种 FlexSchemeVariant）。
+  ///
+  /// 名称在 `lib/l10n/label_maps.dart` 的 `paletteVariantLabel(l10n, variant)`。
+  /// 注意：这个顺序与 `FlexSchemeVariant.values` **不同**（历史顺序），
+  /// 改它会让外观页网格排列变化。
+  static const List<FlexSchemeVariant> variantOrder = [
+    FlexSchemeVariant.tonalSpot,
+    FlexSchemeVariant.fidelity,
+    FlexSchemeVariant.monochrome,
+    FlexSchemeVariant.neutral,
+    FlexSchemeVariant.vibrant,
+    FlexSchemeVariant.expressive,
+    FlexSchemeVariant.content,
+    FlexSchemeVariant.rainbow,
+    FlexSchemeVariant.fruitSalad,
+    FlexSchemeVariant.candyPop,
+    FlexSchemeVariant.chroma,
+    FlexSchemeVariant.highContrast,
+    FlexSchemeVariant.jolly,
+    FlexSchemeVariant.material,
+    FlexSchemeVariant.material3Legacy,
+    FlexSchemeVariant.oneHue,
+    FlexSchemeVariant.soft,
+    FlexSchemeVariant.ultraContrast,
+    FlexSchemeVariant.vivid,
+    FlexSchemeVariant.vividBackground,
+    FlexSchemeVariant.vividSurfaces,
+  ];
 
   /// 旧版持久化迁移：Flutter DynamicSchemeVariant 的 index（0-7）→
   /// FlexSchemeVariant 对应值（枚举顺序不同，必须显式映射）

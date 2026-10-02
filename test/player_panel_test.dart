@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/player_action.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/widgets/marquee_text.dart';
 import 'package:moumou/widgets/player_panel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'l10n_test_helper.dart';
 
 /// 右侧面板（showPlayerPanel）回归测试：
 /// - 面板内 ListTile/SwitchListTile 需要 Material 外壳（历史红底黄字崩溃）；
@@ -32,6 +36,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Scaffold(
           body: Builder(
             builder: (context) => Center(
@@ -108,6 +115,7 @@ Widget _buildMockMorePanel() {
     builder: (panelContext) => ListenableBuilder(
       listenable: PlayerControlsSettings.instance,
       builder: (context, _) {
+        final l10n = AppLocalizations.of(context);
         final actions = PlayerControlsSettings.instance.topActions;
         return ListView(
           padding: const EdgeInsets.symmetric(vertical: 4),
@@ -116,7 +124,7 @@ Widget _buildMockMorePanel() {
               ListTile(
                 leading: Icon(a.icon, color: Colors.white),
                 title: Text(
-                  a.label,
+                  playerTopActionLabel(l10n, a),
                   style: const TextStyle(color: Colors.white),
                 ),
                 onTap: () {},

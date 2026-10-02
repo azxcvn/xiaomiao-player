@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/services/cache_manager_service.dart';
 import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/utils/formatters.dart';
@@ -56,6 +57,7 @@ class _CacheManagementPageState extends State<CacheManagementPage> {
 
   /// 统一确认弹窗（返回是否确认）
   Future<bool> _confirm(String title, String content) async {
+    final l10n = AppLocalizations.of(context);
     final ok = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -64,11 +66,11 @@ class _CacheManagementPageState extends State<CacheManagementPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('确定'),
+            child: Text(l10n.commonConfirm),
           ),
         ],
       ),
@@ -77,41 +79,55 @@ class _CacheManagementPageState extends State<CacheManagementPage> {
   }
 
   Future<void> _clearCategory(CacheCategory category) async {
+    final l10n = AppLocalizations.of(context);
     final size = _sizes[category.key] ?? 0;
     final confirmed = await _confirm(
-      '清除${category.label}',
-      '将删除「${category.label}」缓存（${formatFileSize(size)}），确定？',
+      l10n.settingsCacheClearCategoryTitle(category.label),
+      l10n.settingsCacheClearCategoryBody(
+        category.label,
+        formatFileSize(size),
+      ),
     );
     if (!confirmed) return;
     final ok = await CacheManagerService.clearCategory(category);
-    _toast(ok ? '已清除${category.label}' : '清除失败');
+    _toast(
+      ok
+          ? l10n.settingsCacheCategoryCleared(category.label)
+          : l10n.settingsCacheClearFailed,
+    );
     _refresh();
   }
 
   /// 一键清除所有缓存：二次弹窗确认
   Future<void> _clearAll() async {
+    final l10n = AppLocalizations.of(context);
     final first = await _confirm(
-      '清除所有缓存',
-      '将删除全部缓存（当前共 ${formatFileSize(_totalBytes)}）：\n'
-      '· 视频列表封面缩略图\n· 其他缓存\n\n此操作不可恢复。',
+      l10n.settingsCacheClearAllTitle,
+      l10n.settingsCacheClearAllBody(formatFileSize(_totalBytes)),
     );
     if (!first) return;
-    final second = await _confirm('再次确认', '确定要清除所有缓存吗？');
+    final second = await _confirm(
+      l10n.settingsCacheConfirmAgainTitle,
+      l10n.settingsCacheConfirmAgainBody,
+    );
     if (!second) return;
     final ok = await CacheManagerService.clearAll();
-    _toast(ok ? '已清除全部缓存' : '清除失败');
+    _toast(
+      ok ? l10n.settingsCacheAllCleared : l10n.settingsCacheClearFailed,
+    );
     _refresh();
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('缓存管理'),
+        title: Text(l10n.settingsCacheTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: '刷新',
+            tooltip: l10n.settingsErrorLogRefresh,
             onPressed: _loading ? null : _refresh,
           ),
         ],
@@ -122,7 +138,7 @@ class _CacheManagementPageState extends State<CacheManagementPage> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
           children: [
-            const SettingsGroupTitle(title: '缓存'),
+            SettingsGroupTitle(title: l10n.settingsCacheGroupTitle),
             SettingsCard(
               child: Column(
                 children: [
@@ -142,7 +158,9 @@ class _CacheManagementPageState extends State<CacheManagementPage> {
                         ),
                       ),
                       subtitle: Text(
-                        _loading ? '读取中…' : formatFileSize(_sizes[category.key] ?? 0),
+                        _loading
+                            ? l10n.settingsCacheReading
+                            : formatFileSize(_sizes[category.key] ?? 0),
                         style: TextStyle(
                           fontSize: 12,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -151,7 +169,7 @@ class _CacheManagementPageState extends State<CacheManagementPage> {
                       trailing: TextButton(
                         onPressed:
                             _loading ? null : () => _clearCategory(category),
-                        child: const Text('清除'),
+                        child: Text(l10n.commonClear),
                       ),
                     ),
                   ],
@@ -170,7 +188,7 @@ class _CacheManagementPageState extends State<CacheManagementPage> {
                 onPressed: _loading ? null : _clearAll,
                 icon: const Icon(Icons.delete_sweep_outlined),
                 label: Text(
-                  '一键清除所有缓存（${formatFileSize(_totalBytes)}）',
+                  l10n.settingsCacheClearAllButton(formatFileSize(_totalBytes)),
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
@@ -179,8 +197,7 @@ class _CacheManagementPageState extends State<CacheManagementPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
-                '列表封面缩略图会在下次扫描时重新生成；进度条缩略图为纯内存缓存，'
-                '随播放页退出自动清空，不占用存储。',
+                l10n.settingsCacheFooterNote,
                 style: TextStyle(
                   fontSize: 12,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,

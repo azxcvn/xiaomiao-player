@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/services/wallpaper_settings.dart';
 import 'package:moumou/widgets/settings_ui.dart';
 import 'package:moumou/widgets/wallpaper_layer.dart';
@@ -101,8 +103,10 @@ class _WallpaperEditorPageState extends State<WallpaperEditorPage> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(
-          content: Text('无法保存壁纸，请重新选择图片'),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).settingsWallpaperSaveFailed,
+          ),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -111,15 +115,16 @@ class _WallpaperEditorPageState extends State<WallpaperEditorPage> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     final path = _imagePath;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('调整壁纸'),
+        title: Text(l10n.settingsWallpaperAdjustTitle),
         actions: [
           TextButton(
             // 图还没就绪（路径为空）时不给保存
             onPressed: (path == null || _saving) ? null : _save,
-            child: const Text('保存壁纸'),
+            child: Text(l10n.settingsWallpaperSave),
           ),
           const SizedBox(width: 4),
         ],
@@ -132,7 +137,15 @@ class _WallpaperEditorPageState extends State<WallpaperEditorPage> {
             child: SegmentedButton<WallpaperScaleMode>(
               segments: [
                 for (final mode in WallpaperScaleMode.values)
-                  ButtonSegment(value: mode, label: Text(mode.label)),
+                  ButtonSegment(
+                    value: mode,
+                    label: Text(
+                      wallpaperScaleModeLabel(
+                        AppLocalizations.of(context),
+                        mode,
+                      ),
+                    ),
+                  ),
               ],
               selected: {_scaleMode},
               showSelectedIcon: false,
@@ -155,12 +168,12 @@ class _WallpaperEditorPageState extends State<WallpaperEditorPage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
             child: Text(
-              '拖动以调整位置，双指捏合以缩放。',
+              l10n.settingsWallpaperDragHint,
               style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
             ),
           ),
           SettingsSliderRow(
-            label: '缩放',
+            label: l10n.settingsWallpaperScale,
             display: '${_scale.toStringAsFixed(2)}x',
             value: _scale,
             min: WallpaperSettings.minScale,
@@ -168,7 +181,7 @@ class _WallpaperEditorPageState extends State<WallpaperEditorPage> {
             onChanged: (v) => setState(() => _scale = v),
           ),
           SettingsSliderRow(
-            label: '水平位置',
+            label: l10n.settingsWallpaperOffsetX,
             display: _offsetLabel(_offsetX),
             value: _offsetX,
             min: WallpaperSettings.minOffset,
@@ -176,7 +189,7 @@ class _WallpaperEditorPageState extends State<WallpaperEditorPage> {
             onChanged: (v) => setState(() => _offsetX = v),
           ),
           SettingsSliderRow(
-            label: '垂直位置',
+            label: l10n.settingsWallpaperOffsetY,
             display: _offsetLabel(_offsetY),
             value: _offsetY,
             min: WallpaperSettings.minOffset,
@@ -184,7 +197,7 @@ class _WallpaperEditorPageState extends State<WallpaperEditorPage> {
             onChanged: (v) => setState(() => _offsetY = v),
           ),
           SettingsSliderRow(
-            label: '模糊',
+            label: l10n.settingsWallpaperBlur,
             display: _blur.round().toString(),
             value: _blur,
             min: WallpaperSettings.minBlur,
@@ -192,7 +205,7 @@ class _WallpaperEditorPageState extends State<WallpaperEditorPage> {
             onChanged: (v) => setState(() => _blur = v),
           ),
           SettingsSliderRow(
-            label: '透明度',
+            label: l10n.settingsWallpaperOpacity,
             display: '${(_opacity * 100).round()}%',
             value: _opacity,
             min: WallpaperSettings.minOpacity,
@@ -206,7 +219,7 @@ class _WallpaperEditorPageState extends State<WallpaperEditorPage> {
               child: OutlinedButton.icon(
                 onPressed: _reset,
                 icon: const Icon(Icons.settings_backup_restore, size: 18),
-                label: const Text('重置'),
+                label: Text(l10n.commonReset),
               ),
             ),
           ),
@@ -218,7 +231,7 @@ class _WallpaperEditorPageState extends State<WallpaperEditorPage> {
   /// 位移读数：显示成「相对屏幕的百分比」（offset × 行程 35%），
   /// 比裸浮点数更能说明画面实际挪了多少
   String _offsetLabel(double offset) {
-    if (offset.abs() < 0.005) return '居中';
+    if (offset.abs() < 0.005) return AppLocalizations.of(context).commonCenter;
     final percent = (offset * WallpaperSettings.offsetTravel * 100).round();
     return percent > 0 ? '+$percent%' : '$percent%';
   }
@@ -274,7 +287,8 @@ class _WallpaperEditorPageState extends State<WallpaperEditorPage> {
             child: (path == null || path.isEmpty)
                 ? Center(
                     child: Text(
-                      '图片已不可用，请重新选择',
+                      AppLocalizations.of(context)
+                          .settingsWallpaperImageUnavailable,
                       style: TextStyle(color: scheme.onSurfaceVariant),
                     ),
                   )

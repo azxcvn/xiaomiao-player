@@ -1,6 +1,9 @@
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/super_resolution_mode.dart';
 
 /// 超分辨率模型测试：
@@ -8,6 +11,9 @@ import 'package:moumou/models/super_resolution_mode.dart';
 /// - 质量枚举：流畅/均衡/高清，index 反查回退均衡；
 /// - buildAnime4KChain：mode × quality 生成正确着色器链（纯函数）。
 void main() {
+  // 表改造后名称由 l10n 提供（代码里不再有中文标签）
+  final zh = lookupAppLocalizations(const Locale('zh'));
+
   group('SuperResolutionMode', () {
     test('共 7 种模式（关闭 + 6 档超分）', () {
       expect(SuperResolutionMode.values.length, 7);
@@ -33,7 +39,10 @@ void main() {
       expect(SuperResolutionQuality.values.length, 3);
       expect(SuperResolutionQuality.values.map((q) => q.suffix).toList(),
           ['S', 'M', 'L']);
-      expect(SuperResolutionQuality.balanced.label, '均衡');
+      expect(
+        superResolutionQualityLabel(zh, SuperResolutionQuality.balanced),
+        '均衡',
+      );
     });
 
     test('fromIndex 越界/空回退均衡', () {
@@ -120,7 +129,7 @@ void main() {
             expect(
               File('assets/shaders/$shader').existsSync(),
               isTrue,
-              reason: '缺少着色器文件：$shader（${m.label} × ${q.label}）',
+              reason: '缺少着色器文件：$shader（${m.id} × ${q.suffix}）',
             );
           }
         }

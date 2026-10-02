@@ -3,17 +3,13 @@ import 'package:moumou/utils/natural_compare.dart';
 
 /// 播放列表排序模式（名称 × 升/降序，日期 × 升/降序，共 4 种）。
 ///
-/// 播放列表面板的 4 个排序胶囊直接映射本枚举。
+/// 播放列表面板的 4 个排序胶囊直接映射本枚举；
+/// 胶囊文案在 `lib/l10n/label_maps.dart` 的 [playlistSortModeLabel]。
 enum PlaylistSortMode {
-  nameAsc('名称升序'),
-  nameDesc('名称降序'),
-  dateAsc('日期升序'),
-  dateDesc('日期降序');
-
-  /// 胶囊展示名
-  final String label;
-
-  const PlaylistSortMode(this.label);
+  nameAsc,
+  nameDesc,
+  dateAsc,
+  dateDesc,
 }
 
 /// 播放列表排序纯函数：返回**新列表**（不改动入参 [videos]）。

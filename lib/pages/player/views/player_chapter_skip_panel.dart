@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/chapter_info.dart';
 import 'package:moumou/services/chapter_skip_settings.dart';
 
@@ -125,7 +127,7 @@ class _TypeToggleRow extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              type.label,
+              chapterSkipTypeLabel(AppLocalizations.of(context), type),
               style: const TextStyle(color: Colors.white, fontSize: 14),
             ),
           ),

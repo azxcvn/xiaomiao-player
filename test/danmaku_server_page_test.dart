@@ -5,6 +5,8 @@ import 'package:moumou/pages/settings/danmaku_server_page.dart';
 import 'package:moumou/services/danmaku_server_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 弹幕服务器设置页 UI 测试（工作.md 第 7 点收尾：互斥限制的呈现，
 /// 以及服务器卡片的「更多操作」编辑 / 删除，对齐网络存储账户列表）：
 /// 默认弹弹Play 服务器启用时「切集自动匹配弹幕」开关变灰 + 副标题给出原因 +
@@ -18,7 +20,14 @@ void main() {
   });
 
   Future<void> pumpPage(WidgetTester tester) async {
-    await tester.pumpWidget(const MaterialApp(home: DanmakuServerPage()));
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
+        home: const DanmakuServerPage(),
+      ),
+    );
     await tester.pumpAndSettle();
   }
 

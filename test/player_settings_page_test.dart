@@ -4,6 +4,8 @@ import 'package:moumou/pages/settings/player_settings_page.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 「播放设置 → 播放行为 → 锁定状态豁免双击」测试（issue #2 需求）：
 /// 位置（启用播放界面动画之后、音量增强之前）、默认关闭、开启前的二次确认
 /// （取消不写设置）、关闭直接生效。
@@ -22,7 +24,14 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(const MaterialApp(home: PlayerSettingsPage()));
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
+        home: const PlayerSettingsPage(),
+      ),
+    );
     await tester.pumpAndSettle();
   }
 

@@ -9,19 +9,13 @@ import 'package:moumou/models/network_file.dart';
 import 'package:moumou/utils/natural_compare.dart';
 
 enum NetworkSortField {
-  name('名称'),
-  date('日期');
-
-  final String label;
-  const NetworkSortField(this.label);
+  name,
+  date,
 }
 
 enum NetworkSortOrder {
-  asc('升序'),
-  desc('降序');
-
-  final String label;
-  const NetworkSortOrder(this.label);
+  asc,
+  desc,
 }
 
 class NetworkSort {

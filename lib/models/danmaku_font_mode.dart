@@ -7,12 +7,9 @@
 library;
 
 enum DanmakuFontMode {
-  followSystem('跟随系统字体'),
-  followApp('跟随App字体'),
-  custom('自定义字体');
-
-  final String label;
-  const DanmakuFontMode(this.label);
+  followSystem,
+  followApp,
+  custom,
 }
 
 /// 解析弹幕实际生效的字体族名（null = 跟随系统默认字体）。

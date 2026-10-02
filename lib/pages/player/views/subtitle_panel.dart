@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/subtitle_track.dart';
 import 'package:moumou/pages/player/views/subtitle_file_picker.dart';
 import 'package:moumou/services/device_services.dart';
@@ -249,6 +251,8 @@ class _TrackTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = _accentOf(context);
+    final l10n = AppLocalizations.of(context);
+    final title = _trackTitle(l10n, track);
     return ListTile(
       dense: true,
       leading: Icon(
@@ -262,7 +266,7 @@ class _TrackTile extends StatelessWidget {
         children: [
           Flexible(
             child: Text(
-              _trackTitle(track),
+              title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
@@ -277,7 +281,7 @@ class _TrackTile extends StatelessWidget {
             _TrackTag(track.codec!.trim().toUpperCase()),
           if (track.language != null &&
               track.language!.trim().isNotEmpty &&
-              track.language!.trim() != track.displayTitle)
+              track.language!.trim() != title)
             _TrackTag(track.language!.trim()),
         ],
       ),
@@ -296,8 +300,10 @@ class _TrackTile extends StatelessWidget {
 }
 
 /// 轨道标题：外挂字幕的 title 通常是文件名，去掉扩展名（如 `xxx.ass` → `xxx`）。
-String _trackTitle(SubtitleTrack track) {
-  final t = track.displayTitle;
+///
+/// 名称取本地化展示名（标题 → 语言 → 「轨道 N」兜底），模型层只给纯数据。
+String _trackTitle(AppLocalizations l10n, SubtitleTrack track) {
+  final t = subtitleTrackDisplayName(l10n, track);
   if (track.external && isSupportedSubtitleFile(t)) {
     return t.substring(0, t.lastIndexOf('.'));
   }

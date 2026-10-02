@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/services/view_settings.dart';
 import 'package:moumou/utils/app_dialog.dart';
 
@@ -50,6 +52,7 @@ class _SortOptionsSheet extends StatelessWidget {
         child: ListenableBuilder(
           listenable: viewSettings,
           builder: (context, _) {
+            final l10n = AppLocalizations.of(context);
             final sections = <Widget>[];
             if (hasFolders) {
               // 上半区：文件夹相关
@@ -59,7 +62,10 @@ class _SortOptionsSheet extends StatelessWidget {
                   showSelectedIcon: false,
                   segments: SortField.values
                       .map(
-                        (e) => ButtonSegment(value: e, label: Text(e.label)),
+                        (e) => ButtonSegment(
+                          value: e,
+                          label: Text(sortFieldLabel(l10n, e)),
+                        ),
                       )
                       .toList(),
                   selected: {viewSettings.sortField},
@@ -72,7 +78,10 @@ class _SortOptionsSheet extends StatelessWidget {
                   showSelectedIcon: false,
                   segments: SortOrder.values
                       .map(
-                        (e) => ButtonSegment(value: e, label: Text(e.label)),
+                        (e) => ButtonSegment(
+                          value: e,
+                          label: Text(sortOrderLabel(l10n, e)),
+                        ),
                       )
                       .toList(),
                   selected: {viewSettings.sortOrder},
@@ -86,7 +95,7 @@ class _SortOptionsSheet extends StatelessWidget {
                   FolderField.values.map((f) {
                     final selected = viewSettings.fields.contains(f);
                     return (
-                      label: f.label,
+                      label: folderFieldLabel(l10n, f),
                       selected: selected,
                       onToggle: () => viewSettings.toggleField(f),
                     );
@@ -110,7 +119,10 @@ class _SortOptionsSheet extends StatelessWidget {
                   showSelectedIcon: false,
                   segments: VideoSortField.values
                       .map(
-                        (e) => ButtonSegment(value: e, label: Text(e.label)),
+                        (e) => ButtonSegment(
+                          value: e,
+                          label: Text(videoSortFieldLabel(l10n, e)),
+                        ),
                       )
                       .toList(),
                   selected: {viewSettings.videoSortField},
@@ -123,7 +135,10 @@ class _SortOptionsSheet extends StatelessWidget {
                   showSelectedIcon: false,
                   segments: SortOrder.values
                       .map(
-                        (e) => ButtonSegment(value: e, label: Text(e.label)),
+                        (e) => ButtonSegment(
+                          value: e,
+                          label: Text(sortOrderLabel(l10n, e)),
+                        ),
                       )
                       .toList(),
                   selected: {viewSettings.videoSortOrder},
@@ -151,7 +166,10 @@ class _SortOptionsSheet extends StatelessWidget {
                   // 列表模式在前、树状模式在后
                   segments: [ViewMode.list, ViewMode.tree]
                       .map(
-                        (e) => ButtonSegment(value: e, label: Text(e.label)),
+                        (e) => ButtonSegment(
+                          value: e,
+                          label: Text(viewModeLabel(l10n, e)),
+                        ),
                       )
                       .toList(),
                   selected: {viewSettings.viewMode},
@@ -215,7 +233,7 @@ class _SortOptionsSheet extends StatelessWidget {
       VideoField f,
     ) {
       return (
-        label: f.label,
+        label: videoFieldLabel(AppLocalizations.of(context), f),
         selected: viewSettings.videoFields.contains(f),
         onToggle: () => viewSettings.toggleVideoField(f),
       );

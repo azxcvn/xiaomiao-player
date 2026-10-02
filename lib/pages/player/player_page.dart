@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/player_action.dart';
 import 'package:moumou/models/playlist_sort.dart';
 import 'package:moumou/models/bili_media.dart';
@@ -2147,6 +2149,7 @@ class _PlayerPageState extends State<PlayerPage>
       builder: (panelContext) => ListenableBuilder(
         listenable: _settings,
         builder: (context, _) {
+          final l10n = AppLocalizations.of(context);
           final notPlaced = PlayerTopAction.values
               .where((a) => !_settings.topActions.contains(a))
               .toList();
@@ -2172,7 +2175,7 @@ class _PlayerPageState extends State<PlayerPage>
                 for (final a in notPlaced)
                   _PanelActionTile(
                     icon: a.icon,
-                    label: a.label,
+                    label: playerTopActionLabel(l10n, a),
                     subtitle: a.implemented ? null : '功能即将上线',
                     onTap: () => _handlePanelAction(panelContext, a),
                   ),
@@ -2202,6 +2205,7 @@ class _PlayerPageState extends State<PlayerPage>
     return ListenableBuilder(
       listenable: _settings,
       builder: (context, _) {
+        final l10n = AppLocalizations.of(context);
         final enabled = _settings.topActions;
         final disabled = PlayerTopAction.values
             .where((a) => !enabled.contains(a))
@@ -2246,7 +2250,7 @@ class _PlayerPageState extends State<PlayerPage>
                     key: ValueKey(a.id),
                     leading: Icon(a.icon, color: Colors.white),
                     title: Text(
-                      a.label,
+                      playerTopActionLabel(l10n, a),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 15,
@@ -2283,7 +2287,7 @@ class _PlayerPageState extends State<PlayerPage>
                 ListTile(
                   leading: Icon(a.icon, color: Colors.white),
                   title: Text(
-                    a.label,
+                    playerTopActionLabel(l10n, a),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 15,

@@ -23,13 +23,12 @@ class SubtitleDirEntry {
 }
 
 /// 自建字幕文件选择器的排序字段（工作.md 阶段1 第 3 点）
+///
+/// 名称在 `lib/l10n/label_maps.dart` 的 [subtitleDirSortLabel]。
 enum SubtitleDirSort {
-  name('名称'),
-  size('大小'),
-  date('日期');
-
-  final String label;
-  const SubtitleDirSort(this.label);
+  name,
+  size,
+  date,
 }
 
 /// 排序目录条目（纯函数，可单测）：

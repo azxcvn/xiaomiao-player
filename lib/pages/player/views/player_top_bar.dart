@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/player_action.dart';
 import 'package:moumou/pages/player/player_metrics.dart';
 import 'package:moumou/pages/player/views/player_pressable.dart';
@@ -66,6 +68,7 @@ class PlayerTopBar extends StatelessWidget {
             ListenableBuilder(
               listenable: PlayerControlsSettings.instance,
               builder: (context, _) {
+                final l10n = AppLocalizations.of(context);
                 final actions = PlayerControlsSettings.instance.topActions;
                 if (actions.isEmpty) return const SizedBox.shrink();
                 return Row(
@@ -74,7 +77,7 @@ class PlayerTopBar extends StatelessWidget {
                     for (final a in actions)
                       _TopIconButton(
                         icon: a.icon,
-                        tooltip: a.label,
+                        tooltip: playerTopActionLabel(l10n, a),
                         showBackground: showBg,
                         onPressed: () => onActionTap(a),
                       ),

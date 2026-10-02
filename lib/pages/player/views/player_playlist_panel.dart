@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/playlist_sort.dart';
 import 'package:moumou/models/video_file.dart';
 import 'package:moumou/widgets/player_option_chip.dart';
@@ -129,7 +131,7 @@ class _PlayerPlaylistPanelState extends State<PlayerPlaylistPanel> {
               const SizedBox(width: 6),
             Expanded(
               child: PlayerOptionChip(
-                label: mode.label,
+                label: playlistSortModeLabel(AppLocalizations.of(context), mode),
                 selected: _sortMode == mode,
                 textAlign: TextAlign.center,
                 padding: const EdgeInsets.symmetric(

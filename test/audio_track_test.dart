@@ -1,9 +1,15 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/audio_track.dart';
 
 void main() {
+  // 表改造后名称由 l10n 提供（代码里不再有中文标签）
+  final zh = lookupAppLocalizations(const Locale('zh'));
+
   group('AudioTrack 展示名', () {
-    test('优先标题，其次语言，回退「音轨 N」', () {
+    test('优先标题，其次语言；都没有时是空串（回退名在 UI 层）', () {
       expect(
         const AudioTrack(id: '1', title: '国语', language: 'zh').displayTitle,
         '国语',
@@ -12,7 +18,11 @@ void main() {
         const AudioTrack(id: '2', language: 'jpn').displayTitle,
         'jpn',
       );
-      expect(const AudioTrack(id: '3').displayTitle, '音轨 3');
+      expect(const AudioTrack(id: '3').displayTitle, '');
+      expect(
+        audioTrackDisplayName(zh, const AudioTrack(id: '3')),
+        '音轨 3',
+      );
       // 空白标题按无标题处理
       expect(
         const AudioTrack(id: '4', title: '  ', language: 'eng').displayTitle,
@@ -24,11 +34,11 @@ void main() {
   group('AudioChannels 枚举', () {
     test('五个声道选项与标签', () {
       expect(AudioChannels.values.length, 5);
-      expect(AudioChannels.auto.label, '自动');
-      expect(AudioChannels.autoSafe.label, '安全自动');
-      expect(AudioChannels.mono.label, '单声道');
-      expect(AudioChannels.stereo.label, '立体声');
-      expect(AudioChannels.reverseStereo.label, '反向立体声');
+      expect(audioChannelsLabel(zh, AudioChannels.auto), '自动');
+      expect(audioChannelsLabel(zh, AudioChannels.autoSafe), '安全自动');
+      expect(audioChannelsLabel(zh, AudioChannels.mono), '单声道');
+      expect(audioChannelsLabel(zh, AudioChannels.stereo), '立体声');
+      expect(audioChannelsLabel(zh, AudioChannels.reverseStereo), '反向立体声');
     });
 
     test('byName 反查与默认回退', () {
@@ -232,10 +242,13 @@ void main() {
     });
   });
 
-  group('audioTrackLabel', () {
+  group('audioTrackLabel（UI 层映射）', () {
     test('内嵌音轨：标题 + 格式', () {
       expect(
-        audioTrackLabel(const AudioTrack(id: '1', title: '国语', codec: 'aac')),
+        audioTrackLabel(
+          zh,
+          const AudioTrack(id: '1', title: '国语', codec: 'aac'),
+        ),
         '国语 · aac',
       );
     });
@@ -243,6 +256,7 @@ void main() {
     test('外挂音轨：标题 + 外挂 + 格式', () {
       expect(
         audioTrackLabel(
+          zh,
           const AudioTrack(
             id: '2',
             title: 'bgm.m4a',
@@ -255,7 +269,7 @@ void main() {
     });
 
     test('无标题无语言：回退「音轨 N」', () {
-      expect(audioTrackLabel(const AudioTrack(id: '5')), '音轨 5');
+      expect(audioTrackLabel(zh, const AudioTrack(id: '5')), '音轨 5');
     });
   });
 }

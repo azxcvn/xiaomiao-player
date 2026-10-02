@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/player_action.dart';
 import 'package:moumou/models/bili_playlist.dart';
 import 'package:moumou/models/playlist_sort.dart';
@@ -1373,6 +1375,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       builder: (panelContext) => ListenableBuilder(
         listenable: _settings,
         builder: (context, _) {
+          final l10n = AppLocalizations.of(context);
           final notPlaced = PlayerTopAction.values
               .where((a) => !_settings.topActions.contains(a))
               .toList();
@@ -1385,7 +1388,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
                 for (final a in notPlaced)
                   PortraitPanelActionTile(
                     icon: a.icon,
-                    label: a.label,
+                    label: playerTopActionLabel(l10n, a),
                     subtitle: !a.implemented ? '功能即将上线' : null,
                     onTap: () => _handlePanelAction(panelContext, a),
                   ),

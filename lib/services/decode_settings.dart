@@ -6,17 +6,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// [hwdec] 为 mpv 的 `--hwdec` 值；「硬解+」为直通优先的有序回退链
 /// （`mediacodec` 在 `vo=gpu` 下可用，直通没成时由 mpv 自己落到
 /// `mediacodec-copy`，**不由本 App 事后改写档位**）。
+///
+/// 名称与说明在 `lib/l10n/label_maps.dart` 的 [decodeModeLabel] /
+/// [decodeModeDescription]；**顺序即持久化语义**（按 hwdec 字符串存），不许调整。
 enum DecodeMode {
-  autoSafe('自动', 'auto-safe', '自动选择安全硬解'),
-  hwCopy('硬解', 'mediacodec-copy', '强制硬解，兼容字幕与超分'),
-  hwPlus('硬解+', 'mediacodec,mediacodec-copy,no', '直通优先，失败自动回退'),
-  sw('软解', 'no', '纯 CPU 解码');
+  autoSafe('auto-safe'),
+  hwCopy('mediacodec-copy'),
+  hwPlus('mediacodec,mediacodec-copy,no'),
+  sw('no');
 
-  final String label;
   final String hwdec;
-  final String description;
 
-  const DecodeMode(this.label, this.hwdec, this.description);
+  const DecodeMode(this.hwdec);
 }
 
 /// 解码性能预设（对齐 mpvRx / 小喵生态的 MPV Profile 六档）。
@@ -25,19 +26,19 @@ enum DecodeMode {
 /// `setOptionString("profile", ...)` 完全一致）；应用时写入 mpv 的 `profile`
 /// 属性（重启播放器后生效）。「default」在 mpv 内置 profile 中不存在，设为
 /// 空串表示不应用任何 profile（回到 mpv 默认行为）。
+///
+/// 名称与说明在 [decodePresetLabel] / [decodePresetDescription]。
 enum DecodePreset {
-  fast('快速', '性能优先', 'fast'),
-  standard('默认', '标准配置', ''),
-  highQuality('高质量', '画质优先', 'high-quality'),
-  gpuHq('GPU 高质量', '高画质渲染', 'gpu-hq'),
-  lowLatency('低延迟', '减少缓冲', 'low-latency'),
-  swFast('软解快速', '软解加速', 'sw-fast');
+  fast('fast'),
+  standard(''),
+  highQuality('high-quality'),
+  gpuHq('gpu-hq'),
+  lowLatency('low-latency'),
+  swFast('sw-fast');
 
-  final String label;
-  final String description;
   final String profile;
 
-  const DecodePreset(this.label, this.description, this.profile);
+  const DecodePreset(this.profile);
 }
 
 /// 解码设置：全局单例，ChangeNotifier + shared_preferences 持久化。

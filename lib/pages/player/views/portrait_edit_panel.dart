@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/player_action.dart';
 import 'package:moumou/pages/player/views/portrait_player_top_bar.dart';
 import 'package:moumou/services/player_controls_settings.dart';
@@ -26,6 +28,7 @@ class PortraitEditControlPanel extends StatelessWidget {
     return ListenableBuilder(
       listenable: PlayerControlsSettings.instance,
       builder: (context, _) {
+        final l10n = AppLocalizations.of(context);
         final settings = PlayerControlsSettings.instance;
         final enabled = settings.topActions;
         final disabled = PlayerTopAction.values
@@ -69,7 +72,7 @@ class PortraitEditControlPanel extends StatelessWidget {
                     key: ValueKey(a.id),
                     leading: Icon(a.icon, color: Colors.white),
                     title: Text(
-                      a.label,
+                      playerTopActionLabel(l10n, a),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 15,
@@ -98,7 +101,7 @@ class PortraitEditControlPanel extends StatelessWidget {
                 ListTile(
                   leading: Icon(a.icon, color: Colors.white),
                   title: Text(
-                    a.label,
+                    playerTopActionLabel(l10n, a),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 15,

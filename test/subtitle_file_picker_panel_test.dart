@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/pages/player/views/subtitle_file_picker.dart';
 import 'package:moumou/widgets/marquee_text.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'l10n_test_helper.dart';
 /// 自建文件选择器面板回归测试（字幕/音频/弹幕三处共用同一面板）：
 /// - 记忆文件夹已被删除（listDirectory 返回 null）→ 自动向上回退到最近
 ///   存活祖先打开（小喵 player 停在死路径卡死的教训，工作.md 弹幕阶段1）；
@@ -55,8 +57,11 @@ void main() {
   });
 
   Widget buildPanel() {
-    return const MaterialApp(
-      home: Scaffold(
+    return MaterialApp(
+      locale: kTestLocaleZh,
+      localizationsDelegates: kTestLocalizationDelegates,
+      supportedLocales: kTestSupportedLocales,
+      home: const Scaffold(
         body: SubtitleFilePickerPanel(
           onPicked: _noopPicked,
           onClose: _noopClose,
@@ -109,6 +114,9 @@ void main() {
     String? picked;
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Scaffold(
           body: SubtitleFilePickerPanel(
             onPicked: (path) async => picked = path,

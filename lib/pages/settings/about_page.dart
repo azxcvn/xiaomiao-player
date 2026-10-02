@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/pages/settings/cache_management_page.dart';
 import 'package:moumou/pages/settings/error_log_page.dart';
 // 前缀导入：本文件自定义 LicensePage 与 material 内置 LicensePage 同名
@@ -48,39 +49,42 @@ class _AboutPageState extends State<AboutPage> {
 
   /// 跳转手机邮件并进入写邮件界面（收件人 + 主题「播放器使用反馈」）
   Future<void> _openEmail() async {
+    final l10n = AppLocalizations.of(context);
     final uri = Uri(
       scheme: 'mailto',
       path: _feedbackEmail,
-      query: 'subject=${Uri.encodeComponent('播放器使用反馈')}',
+      query: 'subject=${Uri.encodeComponent(l10n.settingsAboutFeedbackSubject)}',
     );
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      _toast('未找到可用的邮件应用');
+      _toast(l10n.settingsAboutNoEmailApp);
     }
   }
 
   /// 跳转浏览器访问 GitHub（地址暂时留空，接入前提示）
   Future<void> _openGitHub() async {
+    final l10n = AppLocalizations.of(context);
     if (_githubUrl.isEmpty) {
-      _toast('GitHub 主页地址待接入');
+      _toast(l10n.settingsAboutGithubPending);
       return;
     }
     final uri = Uri.parse(_githubUrl);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      _toast('无法打开链接');
+      _toast(l10n.settingsAboutCannotOpenLink);
     }
   }
 
   /// 手动检查更新：有更新弹窗，已是最新 Toast，失败 Toast。
   Future<void> _checkForUpdate() async {
+    final l10n = AppLocalizations.of(context);
     try {
       final info = await UpdateService.checkForUpdate();
       if (info == null) {
         if (!mounted) return;
-        _toast('已是最新版本');
+        _toast(l10n.settingsAboutUpToDate);
         return;
       }
       if (!mounted) return;
@@ -91,7 +95,7 @@ class _AboutPageState extends State<AboutPage> {
       );
     } catch (_) {
       if (!mounted) return;
-      _toast('检查更新失败，请稍后重试');
+      _toast(l10n.settingsAboutCheckUpdateFailed);
     }
   }
 
@@ -120,8 +124,9 @@ class _AboutPageState extends State<AboutPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('关于')),
+      appBar: AppBar(title: Text(l10n.settingsAbout)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
         children: [
@@ -139,14 +144,14 @@ class _AboutPageState extends State<AboutPage> {
           ),
           const SizedBox(height: 24),
           // ── 信息组（第一位）─────────────────────────────
-          const SettingsGroupTitle(title: '信息'),
+          SettingsGroupTitle(title: l10n.settingsAboutGroupInfo),
           SettingsCard(
             child: Column(
               children: [
                 SettingsTile(
                   icon: Icons.gavel_outlined,
-                  title: '许可证书',
-                  subtitle: const Text('查看本应用使用的全部开源许可'),
+                  title: l10n.settingsAboutLicenses,
+                  subtitle: Text(l10n.settingsAboutLicensesDesc),
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -160,8 +165,8 @@ class _AboutPageState extends State<AboutPage> {
                 // 用户协议并入信息组（工作.md：隐私政策功能）
                 SettingsTile(
                   icon: Icons.description_outlined,
-                  title: '用户协议',
-                  subtitle: const Text('预览用户服务协议与隐私政策'),
+                  title: l10n.settingsAboutUserAgreement,
+                  subtitle: Text(l10n.settingsAboutUserAgreementDesc),
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -175,14 +180,14 @@ class _AboutPageState extends State<AboutPage> {
           ),
           const SizedBox(height: 16),
           // ── 工具组（正中间）─────────────────────────────
-          const SettingsGroupTitle(title: '工具'),
+          SettingsGroupTitle(title: l10n.settingsAboutGroupTools),
           SettingsCard(
             child: Column(
               children: [
                 SettingsTile(
                   icon: Icons.cleaning_services_outlined,
-                  title: '缓存管理',
-                  subtitle: const Text('查看与清除各类缓存'),
+                  title: l10n.settingsAboutCacheManagement,
+                  subtitle: Text(l10n.settingsAboutCacheManagementDesc),
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -194,8 +199,8 @@ class _AboutPageState extends State<AboutPage> {
                 const Divider(height: 1, indent: 16, endIndent: 16),
                 SettingsTile(
                   icon: Icons.receipt_long_outlined,
-                  title: '错误日志',
-                  subtitle: const Text('查看 / 导出 / 复制崩溃日志'),
+                  title: l10n.settingsErrorLogTitle,
+                  subtitle: Text(l10n.settingsAboutErrorLogDesc),
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -209,7 +214,7 @@ class _AboutPageState extends State<AboutPage> {
           ),
           const SizedBox(height: 16),
           // ── 更新组（最后一位）────────────────────────────
-          const SettingsGroupTitle(title: '更新'),
+          SettingsGroupTitle(title: l10n.settingsAboutGroupUpdate),
           ListenableBuilder(
             listenable: UpdateSettings.instance,
             builder: (context, _) {
@@ -219,15 +224,15 @@ class _AboutPageState extends State<AboutPage> {
                   children: [
                     SettingsTile(
                       icon: Icons.system_update_outlined,
-                      title: '手动检查更新',
-                      subtitle: const Text('检查是否有新版本'),
+                      title: l10n.settingsAboutCheckUpdate,
+                      subtitle: Text(l10n.settingsAboutCheckUpdateDesc),
                       onTap: _checkForUpdate,
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsSwitchTile(
                       icon: Icons.update_outlined,
-                      title: '自动检查更新',
-                      subtitle: const Text('启动后自动检查新版本'),
+                      title: l10n.settingsAboutAutoCheckUpdate,
+                      subtitle: Text(l10n.settingsAboutAutoCheckUpdateDesc),
                       value: update.autoUpdateEnabled,
                       onChanged: (v) => update.setAutoUpdateEnabled(v),
                     ),
@@ -268,6 +273,7 @@ class _AppInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Card(
       elevation: 0,
       color: scheme.surfaceContainerLow,
@@ -299,7 +305,7 @@ class _AppInfoCard extends StatelessWidget {
                       // 名称整体右移一点（设计稿微调定稿值）
                       padding: const EdgeInsets.only(left: 13),
                       child: Text(
-                        '小喵Player',
+                        l10n.appTitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -325,7 +331,7 @@ class _AppInfoCard extends StatelessWidget {
                     ),
                   ),
                   _HeaderIconButton(
-                    tooltip: '发送使用反馈',
+                    tooltip: l10n.settingsAboutSendFeedback,
                     dense: true,
                     onTap: onEmail,
                     child: SvgPicture.asset(
@@ -347,7 +353,7 @@ class _AppInfoCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _InfoChip(
-                    label: info?.versionLabel ?? '读取中',
+                    label: info?.versionLabel ?? l10n.settingsAboutAppNameLoading,
                     background: scheme.primary,
                     foreground: scheme.onPrimary,
                     bold: true,

@@ -5,77 +5,45 @@ import 'package:moumou/utils/natural_compare.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 排序维度
-enum SortField {
-  name('名称'),
-  date('日期'),
-  size('大小'),
-  count('数量');
+///
+/// 名称在 `lib/l10n/label_maps.dart` 的 [sortFieldLabel]；**顺序即持久化语义**
+/// （`view_sort_field` 存 index），不许调整。
+enum SortField { name, date, size, count }
 
-  final String label;
-  const SortField(this.label);
-}
+/// 排序方向（名称见 [sortOrderLabel]）
+enum SortOrder { asc, desc }
 
-/// 排序方向
-enum SortOrder {
-  asc('升序'),
-  desc('降序');
-
-  final String label;
-  const SortOrder(this.label);
-}
-
-/// 文件夹列表显示模式
-enum ViewMode {
-  tree('树状模式'),
-  list('列表模式');
-
-  final String label;
-  const ViewMode(this.label);
-}
+/// 文件夹列表显示模式（名称见 [viewModeLabel]）
+enum ViewMode { tree, list }
 
 /// 文件夹列表可显示的字段（名称固定显示，不在此列）
-enum FolderField {
-  path('路径'),
-  count('数量'),
-  size('大小'),
-  date('日期');
-
-  final String label;
-  const FolderField(this.label);
-}
+///
+/// 名称见 [folderFieldLabel]；**顺序即持久化语义**（存 index），不许调整。
+enum FolderField { path, count, size, date }
 
 /// 视频列表可显示的字段（名称固定显示，不在此列）
 /// 一共 8 个字段：时长 / 大小 / 日期 / 分辨率 / 进度 / 字幕指示器 / 帧率 /
 /// 完整名称。
 /// 面板内按三行胶囊布局：第一行 3 个、第二行 3 个，
 /// 第三行 2 个（字幕指示器 + 完整名称，横向两个）。
+///
+/// 名称见 [videoFieldLabel]。
 enum VideoField {
-  duration('时长'),
-  size('大小'),
-  date('日期'),
-  resolution('分辨率'),
-  progress('进度'),
-  subtitle('字幕指示器'),
-  frameRate('帧率'),
+  duration,
+  size,
+  date,
+  resolution,
+  progress,
+  subtitle,
+  frameRate,
   // 完整名称（默认选中）：标题不截断、整名换行显示，卡片高度随标题行数变化。
   // ⚠️ 新字段一律追加在枚举末尾——[ViewSettings] 按 index 持久化字段集合，
   // 插在中间会让老用户已保存的字段全部错位
-  fullName('完整名称');
-
-  final String label;
-  const VideoField(this.label);
+  fullName,
 }
 
-/// 视频列表排序维度
-enum VideoSortField {
-  name('名称'),
-  date('日期'),
-  size('大小'),
-  duration('时长');
-
-  final String label;
-  const VideoSortField(this.label);
-}
+/// 视频列表排序维度（名称见 [videoSortFieldLabel]）
+enum VideoSortField { name, date, size, duration }
 
 /// 视图设置控制器：管理排序偏好，并持久化
 class ViewSettings extends ChangeNotifier {

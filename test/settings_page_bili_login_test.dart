@@ -5,6 +5,8 @@ import 'package:moumou/services/bilibili/bili_account.dart';
 import 'package:moumou/theme/theme_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 「我的」页 B 站下载入口登录门禁测试：未登录哔哩哔哩账号时点击
 /// 弹幕下载 / 视频下载 → toast「需要登录哔哩哔哩账号」，不进入页面
 /// （与首页速拨「哔哩番剧」同一处理）。
@@ -15,7 +17,12 @@ void main() {
 
   Future<void> pumpSettings(WidgetTester tester) async {
     await tester.pumpWidget(
-      MaterialApp(home: SettingsPage(controller: ThemeController())),
+      MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
+        home: SettingsPage(controller: ThemeController()),
+      ),
     );
     await tester.pumpAndSettle();
   }

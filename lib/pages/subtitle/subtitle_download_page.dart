@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/subtitle_entry.dart';
 import 'package:moumou/pages/subtitle/subtitle_settings_page.dart';
 import 'package:moumou/services/download/download_settings.dart';
@@ -364,7 +366,12 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
             child: SettingsTile(
               icon: Icons.tune,
               title: '字幕下载设置',
-              subtitle: Text('当前来源：${_source.kind.label}'),
+              subtitle: Text(
+                '当前来源：${subtitleSourceKindLabel(
+                  AppLocalizations.of(context),
+                  _source.kind,
+                )}',
+              ),
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const SubtitleSettingsPage()),

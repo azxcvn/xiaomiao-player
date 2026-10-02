@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/player_action.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/widgets/player_option_chip.dart';
@@ -67,7 +69,7 @@ class _PlayerFitPanelState extends State<PlayerFitPanel> {
 
   Widget _buildFitChip(PlayerVideoFit fit) {
     return PlayerOptionChip(
-      label: fit.label,
+      label: playerVideoFitLabel(AppLocalizations.of(context), fit),
       selected: _settings.videoFit == fit,
       onTap: () => _settings.setVideoFit(fit),
       textAlign: TextAlign.center,

@@ -10,6 +10,8 @@ import 'package:moumou/services/network/network_view_settings.dart';
 import 'package:moumou/widgets/video_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 网络浏览页：
 /// 1. 加载会话号（P2-22）：快速「进目录 → 返回」时，先发出的请求后回来不能再把
 ///    新列表覆盖掉，否则会出现「父目录标题 + 子目录内容」的错位；
@@ -41,6 +43,9 @@ void main() {
     }
 
     await tester.pumpWidget(MaterialApp(
+      locale: kTestLocaleZh,
+      localizationsDelegates: kTestLocalizationDelegates,
+      supportedLocales: kTestSupportedLocales,
       home: NetworkBrowserPage(
         connection: connection,
         browse: browse,
@@ -82,6 +87,9 @@ void main() {
     }
 
     await tester.pumpWidget(MaterialApp(
+      locale: kTestLocaleZh,
+      localizationsDelegates: kTestLocalizationDelegates,
+      supportedLocales: kTestSupportedLocales,
       home: NetworkBrowserPage(
         connection: connection,
         browse: browse,
@@ -110,6 +118,9 @@ void main() {
         ];
 
     await tester.pumpWidget(MaterialApp(
+      locale: kTestLocaleZh,
+      localizationsDelegates: kTestLocalizationDelegates,
+      supportedLocales: kTestSupportedLocales,
       home: NetworkBrowserPage(
         connection: connection,
         browse: browse,
@@ -154,6 +165,9 @@ void main() {
         ];
 
     await tester.pumpWidget(MaterialApp(
+      locale: kTestLocaleZh,
+      localizationsDelegates: kTestLocalizationDelegates,
+      supportedLocales: kTestSupportedLocales,
       home: NetworkBrowserPage(
         connection: connection,
         browse: browse,
@@ -190,6 +204,9 @@ void main() {
         ];
 
     await tester.pumpWidget(MaterialApp(
+      locale: kTestLocaleZh,
+      localizationsDelegates: kTestLocalizationDelegates,
+      supportedLocales: kTestSupportedLocales,
       home: NetworkBrowserPage(
         connection: connection,
         browse: browse,
@@ -204,6 +221,9 @@ void main() {
     await NetworkViewSettings.instance
         .rememberDuration('$connectionId|/01.mkv', 5025000); // 1:23:45
     await tester.pumpWidget(MaterialApp(
+      locale: kTestLocaleZh,
+      localizationsDelegates: kTestLocalizationDelegates,
+      supportedLocales: kTestSupportedLocales,
       home: NetworkBrowserPage(
         connection: connection,
         browse: browse,
@@ -229,6 +249,9 @@ void main() {
         ];
 
     await tester.pumpWidget(MaterialApp(
+      locale: kTestLocaleZh,
+      localizationsDelegates: kTestLocalizationDelegates,
+      supportedLocales: kTestSupportedLocales,
       home: NetworkBrowserPage(
         connection: connection,
         browse: browse,

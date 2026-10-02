@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/services/app_font_settings.dart';
 import 'package:moumou/services/device_services.dart';
 import 'package:moumou/widgets/settings_ui.dart';
@@ -21,23 +23,8 @@ class FontSettingsPage extends StatefulWidget {
 class _FontSettingsPageState extends State<FontSettingsPage> {
   bool _importing = false;
 
-  /// 字体字重档位名（w100~w900，对齐弹幕字重滑杆）
-  static const List<String> _weightNames = [
-    '极细',
-    '很细',
-    '细',
-    '常规',
-    '中等',
-    '较粗',
-    '粗',
-    '很粗',
-    '极粗',
-  ];
-
-  static String _weightLabel(int index) =>
-      index < 0 ? '默认' : _weightNames[index];
-
   Future<void> _pickFont() async {
+    final l10n = AppLocalizations.of(context);
     final uri = await DeviceServices.openFontPicker();
     if (uri == null || !mounted) return;
     setState(() => _importing = true);
@@ -50,12 +37,12 @@ class _FontSettingsPageState extends State<FontSettingsPage> {
     if (!mounted) return;
     setState(() => _importing = false);
     if (family.isEmpty) {
-      _toast('字体解析失败，请更换字体文件');
+      _toast(l10n.settingsFontParseFailed);
       return;
     }
     await AppFontSettings.instance.setFont(family, p.basename(path));
     if (!mounted) return;
-    _toast('已应用字体：$family');
+    _toast(l10n.settingsFontApplied(family));
   }
 
   void _toast(String msg) {
@@ -73,8 +60,9 @@ class _FontSettingsPageState extends State<FontSettingsPage> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('App字体设置')),
+      appBar: AppBar(title: Text(l10n.settingsFontTitle)),
       body: ListenableBuilder(
         listenable: AppFontSettings.instance,
         builder: (context, _) {
@@ -88,9 +76,11 @@ class _FontSettingsPageState extends State<FontSettingsPage> {
               SettingsCard(
                 child: SettingsSwitchTile(
                   icon: Icons.font_download_outlined,
-                  title: '启用自定义字体',
+                  title: l10n.settingsFontEnable,
                   subtitle: Text(
-                    enabled ? '已开启：使用下方导入的字体' : '已关闭：跟随系统字体',
+                    enabled
+                        ? l10n.settingsFontEnabledDesc
+                        : l10n.settingsFontDisabledDesc,
                   ),
                   value: enabled,
                   onChanged: (v) => AppFontSettings.instance.setEnabled(v),
@@ -123,15 +113,13 @@ class _FontSettingsPageState extends State<FontSettingsPage> {
                       ),
                       const SizedBox(height: 4),
                       _PreviewText(
-                        '生如夏花之绚烂，死如秋叶之静美。\n'
-                        '我把你的名字写在树叶上，风把它吹走了；\n'
-                        '我把你的名字写在沙滩上，浪把它冲走了；',
+                        l10n.settingsFontPreviewText,
                         fontSize: 12,
                         height: 1.6,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '部分字体可能不生效',
+                        l10n.settingsFontPreviewHint,
                         style: TextStyle(
                           fontSize: 11,
                           color: scheme.onSurfaceVariant,
@@ -141,14 +129,14 @@ class _FontSettingsPageState extends State<FontSettingsPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const SettingsGroupTitle(title: '字体'),
+                SettingsGroupTitle(title: l10n.settingsFontGroupFont),
                 SettingsCard(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Column(
                     children: [
                       if (hasFont) ...[
                         SettingsSliderRow(
-                          label: '字体字号',
+                          label: l10n.settingsFontSizeLabel,
                           display: '${s.textScale.toStringAsFixed(2)}x',
                           value: s.textScale,
                           min: AppFontSettings.minTextScale,
@@ -161,8 +149,11 @@ class _FontSettingsPageState extends State<FontSettingsPage> {
                           endIndent: 16,
                         ),
                         SettingsSliderRow(
-                          label: '字体字重',
-                          display: _weightLabel(s.fontWeightIndex),
+                          label: l10n.settingsFontWeightLabel,
+                          display: appFontWeightLabel(
+                            l10n,
+                            s.fontWeightIndex,
+                          ),
                           value: s.fontWeightIndex.toDouble(),
                           min: -1,
                           max: 8,
@@ -178,11 +169,13 @@ class _FontSettingsPageState extends State<FontSettingsPage> {
                       // 导入字体放在字重下方：拖动滑杆时无需上下滑动即可换字体
                       SettingsTile(
                         icon: Icons.upload_file_outlined,
-                        title: _importing ? '正在导入...' : '导入字体',
+                        title: _importing
+                            ? l10n.settingsFontImporting
+                            : l10n.settingsFontImport,
                         subtitle: Text(
                           hasFont
-                              ? '当前字体：${s.family}'
-                              : '点击选择 .ttf/.otf 字体文件',
+                              ? l10n.settingsFontCurrent(s.family!)
+                              : l10n.settingsFontPickHint,
                         ),
                         trailing: hasFont
                             ? IconButton(
@@ -190,7 +183,7 @@ class _FontSettingsPageState extends State<FontSettingsPage> {
                                   Icons.refresh,
                                   color: Colors.grey,
                                 ),
-                                tooltip: '重新选择',
+                                tooltip: l10n.settingsFontReselect,
                                 onPressed: _importing ? null : _pickFont,
                               )
                             : null,
@@ -212,7 +205,7 @@ class _FontSettingsPageState extends State<FontSettingsPage> {
                                 await s.setFontWeightIndex(-1);
                               },
                               icon: const Icon(Icons.restart_alt, size: 16),
-                              label: const Text('重置字号与字重'),
+                              label: Text(l10n.settingsFontReset),
                               style: TextButton.styleFrom(
                                 foregroundColor: scheme.primary,
                                 visualDensity: VisualDensity.compact,

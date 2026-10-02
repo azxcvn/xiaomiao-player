@@ -22,26 +22,25 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 /// 超时分级（每条请求按用途选档，不再各客户端各自为政）。
+///
+/// 档位名在 `lib/l10n/label_maps.dart` 的 [networkTimeoutTierLabel]。
 enum NetworkTimeoutTier {
   /// 常规 API（JSON 接口）
-  api(Duration(seconds: 12), '常规 API'),
+  api(Duration(seconds: 12)),
 
   /// 文本响应（m3u8 清单 / 短链展开 / 关键词搜索）
-  text(Duration(seconds: 15), '文本响应'),
+  text(Duration(seconds: 15)),
 
   /// 文件下载（字幕等）
-  download(Duration(seconds: 30), '文件下载'),
+  download(Duration(seconds: 30)),
 
   /// 媒体流（直链视频，允许长时间空闲）
-  stream(Duration(minutes: 30), '媒体流');
+  stream(Duration(minutes: 30));
 
-  const NetworkTimeoutTier(this.timeout, this.label);
+  const NetworkTimeoutTier(this.timeout);
 
   /// 该档位对应的超时时长
   final Duration timeout;
-
-  /// 展示名（日志/提示用）
-  final String label;
 }
 
 /// 文本响应体上限（2MB）：超过即判定「不是文本/清单」并快速失败。

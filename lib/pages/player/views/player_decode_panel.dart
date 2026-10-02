@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/services/decode_settings.dart';
 import 'package:moumou/services/device_services.dart';
 import 'package:moumou/utils/app_dialog.dart';
@@ -99,7 +101,7 @@ class _PlayerDecodePanelState extends State<PlayerDecodePanel> {
           if (i > 0) const SizedBox(width: 8),
           Expanded(
             child: PlayerOptionChip(
-              label: modes[i].label,
+              label: decodeModeLabel(AppLocalizations.of(context), modes[i]),
               selected: _settings.mode == modes[i],
               onTap: () => _setMode(modes[i]),
               textAlign: TextAlign.center,
@@ -122,7 +124,10 @@ class _PlayerDecodePanelState extends State<PlayerDecodePanel> {
                 if (j > 0) const SizedBox(width: 8),
                 Expanded(
                   child: PlayerOptionChip(
-                    label: presets[i + j].label,
+                    label: decodePresetLabel(
+                      AppLocalizations.of(context),
+                      presets[i + j],
+                    ),
                     selected: _settings.preset == presets[i + j],
                     onTap: () => _setPreset(presets[i + j]),
                     textAlign: TextAlign.center,

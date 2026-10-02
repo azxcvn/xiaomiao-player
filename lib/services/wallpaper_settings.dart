@@ -8,12 +8,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// 壁纸缩放模式（对齐参考实现 mpvRx 的 `WallpaperScaleMode`）：
 /// - [fit]（适应）：整图可见，留边由同图虚化背景填；
 /// - [fill]（填充）：等比放大铺满并裁切。
+///
+/// 名称在 `lib/l10n/label_maps.dart` 的 [wallpaperScaleModeLabel]。
 enum WallpaperScaleMode {
-  fit('适应'),
-  fill('填充');
-
-  final String label;
-  const WallpaperScaleMode(this.label);
+  fit,
+  fill;
 
   /// 解析持久化字符串，未知值回退 [fit]
   static WallpaperScaleMode parse(String? name) => WallpaperScaleMode.values

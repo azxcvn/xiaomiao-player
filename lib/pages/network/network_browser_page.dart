@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/network_connection.dart';
 import 'package:moumou/models/network_file.dart';
 import 'package:moumou/models/tree_node.dart';
@@ -314,6 +316,7 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
   /// 已废弃）。
   Future<void> _showSortSheet() async {
     final current = _netSettings.sort;
+    final l10n = AppLocalizations.of(context);
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -333,7 +336,10 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
               for (final order in NetworkSortOrder.values)
                 ListTile(
                   dense: true,
-                  title: Text('按${field.label}${order.label}'),
+                  title: Text(
+                    '按${networkSortFieldLabel(l10n, field)}'
+                    '${networkSortOrderLabel(l10n, order)}',
+                  ),
                   trailing: current.field == field && current.order == order
                       ? Icon(Icons.check, color: Theme.of(sheetContext).colorScheme.primary)
                       : null,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/device_decoder.dart';
 import 'package:moumou/pages/settings/decoder_detail_page.dart';
 import 'package:moumou/services/device_services.dart';
@@ -24,7 +25,13 @@ class DeviceInfoPage extends StatefulWidget {
 
 class _DeviceInfoPageState extends State<DeviceInfoPage> {
   bool _loading = true;
-  String? _error;
+
+  /// 原生通道读失败（**只存状态，不存文案**）：错误文案在 build 里用 l10n 取。
+  ///
+  /// 不能在 [_load] 里取 `AppLocalizations.of(context)`——[_load] 是从
+  /// `initState` 调的，而 initState 期间查 InheritedWidget 是非法的（会断言失败、
+  /// 页面永远停在 loading，测试里表现为 `pumpAndSettle` 超时）。
+  bool _failed = false;
 
   String _manufacturer = '';
   String _model = '';
@@ -55,14 +62,14 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
   Future<void> _load() async {
     setState(() {
       _loading = true;
-      _error = null;
+      _failed = false;
     });
     final caps = await DeviceServices.getDeviceCapabilities();
     if (!mounted) return;
     if (caps == null) {
       setState(() {
         _loading = false;
-        _error = '无法读取设备能力（可能为不支持的原生通道）';
+        _failed = true;
       });
       return;
     }
@@ -137,10 +144,10 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('设备信息')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context).settingsDeviceInfo)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : _error != null
+          : _failed
           ? _errorView(scheme)
           // CustomScrollView：卡片区 + 解码器清单表头是固定几块，清单本体走
           // SliverList 懒构建（P2-38）
@@ -177,9 +184,15 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
         children: [
           Icon(Icons.error_outline, size: 48, color: scheme.onSurfaceVariant),
           const SizedBox(height: 12),
-          Text(_error!, style: TextStyle(color: scheme.onSurfaceVariant)),
+          Text(
+            AppLocalizations.of(context).settingsDeviceCapabilityError,
+            style: TextStyle(color: scheme.onSurfaceVariant),
+          ),
           const SizedBox(height: 16),
-          FilledButton(onPressed: _load, child: const Text('重试')),
+          FilledButton(
+            onPressed: _load,
+            child: Text(AppLocalizations.of(context).commonRetry),
+          ),
         ],
       ),
     );
@@ -195,7 +208,9 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              deviceName.trim().isEmpty ? '未知设备' : deviceName.trim(),
+              deviceName.trim().isEmpty
+                  ? AppLocalizations.of(context).settingsDeviceUnknown
+                  : deviceName.trim(),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 4),
@@ -213,13 +228,15 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SettingsGroupTitle(title: '屏幕 HDR 能力'),
+        SettingsGroupTitle(
+          title: AppLocalizations.of(context).settingsDeviceHdrCapability,
+        ),
         SettingsCard(
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: _hdrTypes.isEmpty
                 ? Text(
-                    '当前屏幕不支持 HDR（或系统未报告 HDR 能力）',
+                    AppLocalizations.of(context).settingsDeviceHdrUnsupported,
                     style: TextStyle(
                       fontSize: 14,
                       color: scheme.onSurfaceVariant,
@@ -242,7 +259,9 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SettingsGroupTitle(title: '关键视频编码器'),
+        SettingsGroupTitle(
+          title: AppLocalizations.of(context).settingsDeviceKeyVideoEncoders,
+        ),
         SettingsCard(
           child: Column(
             children: [
@@ -258,16 +277,17 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
   }
 
   Widget _keyCodecTile(ColorScheme scheme, _KeyCodec k) {
+    final l10n = AppLocalizations.of(context);
     final String label;
     final Color color;
     if (k.hasHardware) {
-      label = '硬解';
+      label = l10n.decodeModeHwCopy;
       color = scheme.primary;
     } else if (k.hasSoftware) {
-      label = '软解';
+      label = l10n.decodeModeSw;
       color = scheme.tertiary;
     } else {
-      label = '不支持';
+      label = l10n.settingsDeviceUnsupported;
       color = scheme.error;
     }
     return ListTile(
@@ -349,9 +369,16 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const SettingsGroupTitle(title: '解码器清单'),
+            SettingsGroupTitle(
+              title: AppLocalizations.of(context).settingsDeviceDecoderList,
+            ),
             Text(
-              '硬解 $hwCount · 软解 $swCount · 视频 $videoCount · 音频 $audioCount',
+              AppLocalizations.of(context).settingsDeviceDecoderSummary(
+                hwCount,
+                swCount,
+                videoCount,
+                audioCount,
+              ),
               style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
             ),
           ],
@@ -365,7 +392,9 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
                 // 搜索
                 TextField(
                   decoration: InputDecoration(
-                    hintText: '搜索解码器（名称 / MIME / 格式 / Profile）',
+                    hintText: AppLocalizations.of(
+                      context,
+                    ).settingsDeviceSearchHint,
                     prefixIcon: const Icon(Icons.search, size: 20),
                     isDense: true,
                     border: OutlineInputBorder(
@@ -385,7 +414,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
                           child: _filterChip(
                             scheme,
                             _DecoderFilter.audio,
-                            '音频',
+                            AppLocalizations.of(context).playerActionAudio,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -393,7 +422,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
                           child: _filterChip(
                             scheme,
                             _DecoderFilter.hardware,
-                            '硬解',
+                            AppLocalizations.of(context).decodeModeHwCopy,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -401,7 +430,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
                           child: _filterChip(
                             scheme,
                             _DecoderFilter.software,
-                            '软解',
+                            AppLocalizations.of(context).decodeModeSw,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -409,7 +438,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
                           child: _filterChip(
                             scheme,
                             _DecoderFilter.video,
-                            '视频',
+                            AppLocalizations.of(context).commonVideo,
                           ),
                         ),
                       ],
@@ -417,7 +446,11 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
                     const SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,
-                      child: _filterChip(scheme, _DecoderFilter.all, '全部'),
+                      child: _filterChip(
+                        scheme,
+                        _DecoderFilter.all,
+                        AppLocalizations.of(context).commonAll,
+                      ),
                     ),
                   ],
                 ),
@@ -441,7 +474,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
           padding: const EdgeInsets.symmetric(vertical: 32),
           child: Center(
             child: Text(
-              '无匹配的解码器',
+              AppLocalizations.of(context).settingsDeviceNoMatchingDecoder,
               style: TextStyle(fontSize: 14, color: scheme.onSurfaceVariant),
             ),
           ),
@@ -536,7 +569,10 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
                     Text(
                       [
                         if (d.maxResolution.isNotEmpty) d.maxResolution,
-                        if (d.maxChannels > 0) '${d.maxChannels} 声道',
+                        if (d.maxChannels > 0)
+                          AppLocalizations.of(
+                            context,
+                          ).settingsDeviceChannels(d.maxChannels),
                         if (d.profiles.isNotEmpty) d.profiles.join(' / '),
                         if (d.isHdrSupported) 'HDR',
                       ].join(' · '),

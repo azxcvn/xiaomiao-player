@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/subtitle_dir.dart';
 import 'package:moumou/models/tree_node.dart';
 import 'package:moumou/services/device_services.dart';
@@ -24,10 +25,11 @@ class _MediaScanSettingsPageState extends State<MediaScanSettingsPage> {
   Widget build(BuildContext context) {
     final settings = MediaScanSettings.instance;
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('媒体扫描与过滤'),
+        title: Text(l10n.settingsMediaScan),
       ),
       body: ListenableBuilder(
         listenable: settings,
@@ -43,14 +45,14 @@ class _MediaScanSettingsPageState extends State<MediaScanSettingsPage> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
             children: [
               // ── 扫描规则 ──────────────────────────────────────────
-              const SettingsGroupTitle(title: '扫描规则'),
+              SettingsGroupTitle(title: l10n.mediaScanGroupRules),
               SettingsCard(
                 child: Column(
                   children: [
                     SettingsSwitchTile(
                       icon: Icons.visibility_off_outlined,
-                      title: '扫描包含 .nomedia 的文件夹',
-                      subtitle: const Text('扫描系统忽略的目录'),
+                      title: l10n.mediaScanNoMedia,
+                      subtitle: Text(l10n.mediaScanNoMediaDesc),
                       value: settings.scanNoMedia,
                       onChanged: (val) async {
                         if (val) {
@@ -64,8 +66,8 @@ class _MediaScanSettingsPageState extends State<MediaScanSettingsPage> {
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsSwitchTile(
                       icon: Icons.folder_special_outlined,
-                      title: '扫描以 . 开头的隐藏文件夹',
-                      subtitle: const Text('扫描隐藏文件'),
+                      title: l10n.mediaScanHiddenFolders,
+                      subtitle: Text(l10n.mediaScanHiddenFoldersDesc),
                       value: settings.scanHiddenFolders,
                       onChanged: (val) async {
                         await settings.setScanHiddenFolders(val);
@@ -79,14 +81,14 @@ class _MediaScanSettingsPageState extends State<MediaScanSettingsPage> {
               const SizedBox(height: 16),
 
               // ── 文件夹过滤模式 ────────────────────────────────────
-              const SettingsGroupTitle(title: '文件夹过滤模式'),
+              SettingsGroupTitle(title: l10n.mediaScanGroupFilterMode),
               SettingsCard(
                 child: Column(
                   children: [
                     SettingsRadioTile(
                       icon: Icons.all_inclusive,
-                      title: '全部扫描',
-                      subtitle: const Text('扫描所有未跳过的文件夹'),
+                      title: l10n.mediaScanAll,
+                      subtitle: Text(l10n.mediaScanAllDesc),
                       selected: mode == FolderFilterMode.none,
                       onTap: () async {
                         await settings.setFilterMode(FolderFilterMode.none);
@@ -96,8 +98,8 @@ class _MediaScanSettingsPageState extends State<MediaScanSettingsPage> {
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsRadioTile(
                       icon: Icons.block_outlined,
-                      title: '黑名单模式',
-                      subtitle: const Text('排除指定文件夹'),
+                      title: l10n.mediaScanBlacklist,
+                      subtitle: Text(l10n.mediaScanBlacklistDesc),
                       selected: mode == FolderFilterMode.blacklist,
                       onTap: () async {
                         await settings.setFilterMode(FolderFilterMode.blacklist);
@@ -107,8 +109,8 @@ class _MediaScanSettingsPageState extends State<MediaScanSettingsPage> {
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsRadioTile(
                       icon: Icons.check_box_outlined,
-                      title: '白名单模式',
-                      subtitle: const Text('仅扫描指定文件夹'),
+                      title: l10n.mediaScanWhitelist,
+                      subtitle: Text(l10n.mediaScanWhitelistDesc),
                       selected: mode == FolderFilterMode.whitelist,
                       onTap: () async {
                         await settings.setFilterMode(FolderFilterMode.whitelist);
@@ -126,12 +128,14 @@ class _MediaScanSettingsPageState extends State<MediaScanSettingsPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     SettingsGroupTitle(
-                      title: isBlacklist ? '黑名单文件夹列表' : '白名单文件夹列表',
+                      title: isBlacklist
+                          ? l10n.mediaScanBlacklistList
+                          : l10n.mediaScanWhitelistList,
                     ),
                     FilledButton.tonalIcon(
                       onPressed: () => _openFolderPicker(context, isBlacklist),
                       icon: const Icon(Icons.add, size: 18),
-                      label: const Text('添加文件夹'),
+                      label: Text(l10n.mediaScanAddFolder),
                       style: FilledButton.styleFrom(
                         visualDensity: VisualDensity.compact,
                         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -146,8 +150,8 @@ class _MediaScanSettingsPageState extends State<MediaScanSettingsPage> {
                     child: Center(
                       child: Text(
                         isBlacklist
-                            ? '暂无黑名单文件夹（未排除任何目录）'
-                            : '暂无白名单文件夹（未添加时默认显示全部）',
+                            ? l10n.mediaScanBlacklistEmpty
+                            : l10n.mediaScanWhitelistEmpty,
                         style: TextStyle(
                           color: scheme.onSurfaceVariant,
                           fontSize: 14,
@@ -233,20 +237,19 @@ class _MediaScanSettingsPageState extends State<MediaScanSettingsPage> {
     final result = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('开启提示'),
-        content: const Text(
-          '此功能将扫描系统默认忽略的 .nomedia 文件夹。\n\n'
-          '开启后，某些应用程序的缓存视频、临时文件或表情包也可能被展示在媒体列表中。是否继续？',
-          style: TextStyle(fontSize: 14, height: 1.5),
+        title: Text(AppLocalizations.of(ctx).mediaScanNoMediaDialogTitle),
+        content: Text(
+          AppLocalizations.of(ctx).mediaScanNoMediaDialogBody,
+          style: const TextStyle(fontSize: 14, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
+            child: Text(AppLocalizations.of(ctx).commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('确定开启'),
+            child: Text(AppLocalizations.of(ctx).commonTurnOn),
           ),
         ],
       ),
@@ -347,7 +350,13 @@ class _CandidateFoldersSheetState extends State<_CandidateFoldersSheet> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  widget.isBlacklist ? '添加黑名单文件夹' : '添加白名单文件夹',
+                  widget.isBlacklist
+                      ? AppLocalizations.of(
+                          context,
+                        ).mediaScanAddBlacklistFolder
+                      : AppLocalizations.of(
+                          context,
+                        ).mediaScanAddWhitelistFolder,
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -360,8 +369,8 @@ class _CandidateFoldersSheetState extends State<_CandidateFoldersSheet> {
           const SizedBox(height: 8),
           Text(
             widget.isBlacklist
-                ? '选择要排除的媒体文件夹（点击直接添加）：'
-                : '选择要仅保留扫描的媒体文件夹（点击直接添加）：',
+                ? AppLocalizations.of(context).mediaScanPickBlacklistHint
+                : AppLocalizations.of(context).mediaScanPickWhitelistHint,
             style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
           ),
           const SizedBox(height: 8),
@@ -371,7 +380,7 @@ class _CandidateFoldersSheetState extends State<_CandidateFoldersSheet> {
                 : filteredCandidates.isEmpty
                     ? Center(
                         child: Text(
-                          '未发现更多媒体文件夹',
+                          AppLocalizations.of(context).mediaScanNoMoreFolders,
                           style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 14),
                         ),
                       )
@@ -395,7 +404,9 @@ class _CandidateFoldersSheetState extends State<_CandidateFoldersSheet> {
                               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                             ),
                             subtitle: Text(
-                              '${f.path}\n${f.videoCount} 个视频',
+                              AppLocalizations.of(
+                                context,
+                              ).mediaScanFolderItemSubtitle(f.path, f.videoCount),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: scheme.onSurfaceVariant,
@@ -422,7 +433,7 @@ class _CandidateFoldersSheetState extends State<_CandidateFoldersSheet> {
               }
             },
             icon: const Icon(Icons.drive_folder_upload_outlined, size: 18),
-            label: const Text('浏览设备其他目录...'),
+            label: Text(AppLocalizations.of(context).mediaScanBrowseOther),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),
@@ -504,10 +515,10 @@ class _FolderPickerSheetState extends State<_FolderPickerSheet> {
             children: [
               const Icon(Icons.create_new_folder_outlined, size: 22),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  '选择文件夹',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  AppLocalizations.of(context).mediaScanPickFolder,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
               IconButton(
@@ -537,7 +548,7 @@ class _FolderPickerSheetState extends State<_FolderPickerSheet> {
                 IconButton(
                   icon: const Icon(Icons.arrow_upward, size: 20),
                   onPressed: isRoot ? null : _navigateUp,
-                  tooltip: '上一级',
+                  tooltip: AppLocalizations.of(context).mediaScanGoUp,
                   visualDensity: VisualDensity.compact,
                 ),
                 const SizedBox(width: 4),
@@ -559,7 +570,7 @@ class _FolderPickerSheetState extends State<_FolderPickerSheet> {
                 : _subFolders.isEmpty
                     ? Center(
                         child: Text(
-                          '当前目录下无子文件夹',
+                          AppLocalizations.of(context).mediaScanNoSubfolders,
                           style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
                         ),
                       )
@@ -584,7 +595,11 @@ class _FolderPickerSheetState extends State<_FolderPickerSheet> {
           FilledButton.icon(
             onPressed: () => Navigator.of(context).pop(_currentPath),
             icon: const Icon(Icons.check),
-            label: Text('选择当前文件夹 (${_folderNameOf(_currentPath)})'),
+            label: Text(
+              AppLocalizations.of(context).mediaScanPickCurrentFolder(
+                _folderNameOf(_currentPath),
+              ),
+            ),
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),

@@ -10,26 +10,23 @@
 library;
 
 /// 超分质量档（决定链内着色器变体 S/M/L）
+///
+/// 名称与说明在 `lib/l10n/label_maps.dart` 的 [superResolutionQualityLabel] /
+/// [superResolutionQualityDescription]；**顺序即持久化语义**，不许调整。
 enum SuperResolutionQuality {
   /// 流畅（Small 变体，低 GPU 占用）
-  fast('S', '流畅', '低 GPU 占用，速度优先'),
+  fast('S'),
 
   /// 均衡（Medium 变体，推荐）
-  balanced('M', '均衡', '速度与画质平衡，推荐'),
+  balanced('M'),
 
   /// 高清（Large 变体，高 GPU 占用）
-  high('L', '高清', '高 GPU 占用，画质最佳');
+  high('L');
 
-  const SuperResolutionQuality(this.suffix, this.label, this.description);
+  const SuperResolutionQuality(this.suffix);
 
   /// 着色器文件名中的变体后缀（S / M / L）
   final String suffix;
-
-  /// 设置界面展示名
-  final String label;
-
-  /// 说明文字
-  final String description;
 
   /// 按持久化 index 反查（越界回退均衡）
   static SuperResolutionQuality fromIndex(int? index) {
@@ -41,62 +38,34 @@ enum SuperResolutionQuality {
 }
 
 /// Anime4K 模式（播放器面板内切换）
+///
+/// 名称与说明在 [superResolutionModeLabel] / [superResolutionModeDescription]。
 enum SuperResolutionMode {
   /// 关闭超分辨率
-  off('off', '关闭', '不启用超分辨率，输出原始画面'),
+  off('off'),
 
   /// 模式 A：优化 1080p 动画
-  a(
-    'a',
-    '模式A',
-    '优化 1080p 动画\n高模糊度、重采样伪影',
-  ),
+  a('a'),
 
   /// 模式 B：优化 720p 动画
-  b(
-    'b',
-    '模式B',
-    '优化 720p 动画\n低模糊度、下采样振铃',
-  ),
+  b('b'),
 
   /// 模式 C：优化 480p 动画
-  c(
-    'c',
-    '模式C',
-    '优化 480p 动画\n最高 PSNR、低感知质量',
-  ),
+  c('c'),
 
   /// 模式 A+（A+A 双段链）：最高感知质量
-  aPlus(
-    'a_plus',
-    '模式A+',
-    'A+A 双段放大\n最高感知质量，更强的线条重建（较慢）',
-  ),
+  aPlus('a_plus'),
 
   /// 模式 B+（B+B 双段链）：高感知质量
-  bPlus(
-    'b_plus',
-    '模式B+',
-    'B+B 双段放大\n高感知质量，更好的 720p 效果（较慢）',
-  ),
+  bPlus('b_plus'),
 
   /// 模式 C+（C+A 双段链）：略高感知质量
-  cPlus(
-    'c_plus',
-    '模式C+',
-    'C+A 双段放大\n略高感知质量，改进的 480p 效果（较慢）',
-  );
+  cPlus('c_plus');
 
-  const SuperResolutionMode(this.id, this.label, this.description);
+  const SuperResolutionMode(this.id);
 
   /// 持久化标识（稳定，勿改）
   final String id;
-
-  /// 面板 / 按钮展示名
-  final String label;
-
-  /// 模式说明（面板内展示）
-  final String description;
 
   /// 按持久化 id 反查模式（找不到返回关闭）
   static SuperResolutionMode byId(String? id) {

@@ -30,6 +30,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # 多语言：官方 gen_l10n（ARB → AppLocalizations）；intl 交给 pub 解析版本
+  flutter_localizations:
+    sdk: flutter
+  intl: any
 
   # 本地播放器
   media_kit: ^1.1.11
@@ -109,6 +113,9 @@ dependency_overrides:
 
 # The following section is specific to Flutter packages.
 flutter:
+
+  # 多语言：每次构建/生成时由 gen_l10n 读 l10n.yaml 生成 AppLocalizations
+  generate: true
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

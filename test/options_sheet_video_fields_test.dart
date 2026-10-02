@@ -4,6 +4,8 @@ import 'package:moumou/services/view_settings.dart';
 import 'package:moumou/widgets/options_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 「排序与字段」面板 - 视频显示字段布局测试：
 /// 新增的「完整名称」胶囊与「字幕指示器」**同一行**（原来是字幕指示器独占
 /// 一整行），该行由 1 个胶囊变成 2 个，且「完整名称」默认选中。
@@ -25,6 +27,9 @@ void main() {
     await settings.ensureLoaded();
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Builder(
           builder: (context) => Scaffold(
             body: Center(

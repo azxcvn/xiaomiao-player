@@ -8,6 +8,8 @@ import 'package:moumou/services/playback_history_service.dart';
 import 'package:moumou/services/playback_progress_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 历史记录页测试（工作.md：播放历史记录功能）：
 /// 空态提示、条目渲染、删除单条、一键清空二次确认，以及两个开关
 /// （播放历史记录 / 删除历史时清除进度）。
@@ -78,7 +80,14 @@ void main() {
   ///
   /// 用有限次 `pump()`（见 [tapSwitch] 的说明）。
   Future<void> pumpPage(WidgetTester tester) async {
-    await tester.pumpWidget(const MaterialApp(home: PlaybackHistoryPage()));
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
+        home: const PlaybackHistoryPage(),
+      ),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
   }

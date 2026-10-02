@@ -53,8 +53,11 @@ bool isBiliImageHost(String url) {
 String normalizeBiliImageUrl(String url) {
   final trimmed = url.trim();
   if (trimmed.isEmpty) return trimmed;
+  // 非图床地址原样返回：不改协议、不剥参数。那些 query 可能是鉴权令牌
+  // （剥了图就 403），`@` 也可能是合法路径字符，都不是我们该动的东西。
+  if (!isBiliImageHost(trimmed)) return trimmed;
   var result = trimmed;
-  if (result.startsWith('http://') && isBiliImageHost(result)) {
+  if (result.startsWith('http://')) {
     result = 'https://${result.substring('http://'.length)}';
   }
   for (final marker in const ['@', '?', '#']) {

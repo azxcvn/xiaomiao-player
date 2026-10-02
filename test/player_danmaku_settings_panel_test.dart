@@ -5,6 +5,8 @@ import 'package:moumou/pages/player/views/player_danmaku_settings_panel.dart';
 import 'package:moumou/services/danmaku_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 弹幕设置面板回归测试（阶段2）：
 /// - 三段式布局齐全：弹幕样式（滑杆 + 颜色三态单选）、弹幕配置、
 ///   弹幕偏移；
@@ -19,7 +21,12 @@ void main() {
 
   Future<void> pumpPanel(WidgetTester tester) async {
     await tester.pumpWidget(
-      const MaterialApp(home: Scaffold(body: PlayerDanmakuSettingsPanel())),
+      MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
+        home: const Scaffold(body: PlayerDanmakuSettingsPanel()),
+      ),
     );
     await tester.pumpAndSettle();
   }

@@ -11,6 +11,8 @@ library;
 
 import 'package:flutter/material.dart';
 
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/subtitle_track.dart';
 import 'package:moumou/widgets/settings_ui.dart';
 
@@ -247,9 +249,11 @@ class _ColorEditorRowState extends State<ColorEditorRow> {
 
   /// 预设色胶囊（多行自适应等宽）
   Widget _buildPresets() {
+    final l10n = AppLocalizations.of(context);
     final allItems = <({String? hex, String label})>[
       if (widget.allowNone) (hex: null, label: '无'),
-      for (final c in widget.presetColors) (hex: c.hex, label: c.label),
+      for (final c in widget.presetColors)
+        (hex: c.hex, label: subtitlePresetColorLabel(l10n, c.hex)),
     ];
 
     // 一行最多 4 项，超过则 3 + 剩余 换行。

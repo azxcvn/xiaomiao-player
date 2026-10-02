@@ -234,6 +234,8 @@ Future<bool> _transfer(
   final handle = _ProgressHandle.show(context, move ? '正在移动…' : '正在复制…');
   String? failure;
   String? target;
+  // 取消不靠比字符串：文件操作服务在取消路径上给异常打 cancelled 标记
+  var cancelled = false;
   try {
     target = move
         ? await FileOperationsService.move(
@@ -250,6 +252,7 @@ Future<bool> _transfer(
           );
   } on FileOpException catch (e) {
     failure = e.message;
+    cancelled = e.cancelled;
   } catch (e) {
     failure = '$e';
   } finally {
@@ -257,7 +260,7 @@ Future<bool> _transfer(
     handle.dispose();
   }
 
-  if (failure == '已取消') {
+  if (cancelled) {
     if (!context.mounted) return false;
     await _notify(context, '已取消');
     return false;
@@ -377,7 +380,7 @@ Future<bool> _batchTransfer(
         }
         done++;
       } on FileOpException catch (e) {
-        if (e.message == '已取消') break;
+        if (e.cancelled) break;
         failures.add('${item.name}：${e.message}');
       } catch (e) {
         failures.add('${item.name}：$e');

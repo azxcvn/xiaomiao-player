@@ -1,0 +1,15 @@
+# gen_l10n 配置（flutter gen-l10n 读本文件）
+# 源语言是中文：键的权威定义在 app_zh.arb，app_en.arb 缺键会在
+# l10n_untranslated.json 里列出（阶段收口的硬门禁）。
+arb-dir: lib/l10n
+template-arb-file: app_zh.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+# 生成物落地工程目录并入库（--synthetic-package 已废弃）
+output-dir: lib/l10n
+# 调用处不写 !
+nullable-getter: false
+# 设备语言不在支持列表时回落简体中文，不改变老用户现状
+preferred-supported-locales: [zh]
+# 未翻译键清单（阶段收口必须为空）
+untranslated-messages-file: l10n_untranslated.json

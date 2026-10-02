@@ -1,10 +1,15 @@
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/theme/theme_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  // 表改造后名称由 l10n 提供（代码里不再有中文标签），测试直接用中文语言包取
+  final zh = lookupAppLocalizations(const Locale('zh'));
+
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
@@ -20,13 +25,16 @@ void main() {
 
   test('预设主题色数量 23、首色天蓝', () {
     expect(ThemeController.presetColors.length, 23);
-    expect(ThemeController.presetColors.first.label, '天蓝色');
-    expect(ThemeController.presetColors.first.color, const Color(0xFF00A1D6));
+    expect(themeColorLabel(zh, 0), '天蓝色');
+    expect(ThemeController.presetColors.first, const Color(0xFF00A1D6));
   });
 
   test('调色板风格标签 21 种、含标准型', () {
-    expect(ThemeController.variantLabels.length, 21);
-    expect(ThemeController.variantLabels[FlexSchemeVariant.tonalSpot], '标准型');
+    expect(ThemeController.variantOrder.length, 21);
+    expect(
+      paletteVariantLabel(zh, FlexSchemeVariant.tonalSpot),
+      '标准型',
+    );
   });
 
   test('setCustomColor：持久化并作为 seed 立即生效', () async {
@@ -82,9 +90,9 @@ void main() {
   // ---- B2 调色板风格持久化收口（P0-3 / P1-37）----
 
   test('set 全部 21 个风格 → load 往返一致（含 index<8 的旧映射重灾区）', () async {
-    // 标签表覆盖库内全部枚举（外观页 4×5+通栏 = 21 个胶囊）
+    // 展示顺序表覆盖库内全部枚举（外观页 4×5+通栏 = 21 个胶囊）
     expect(
-      ThemeController.variantLabels.length,
+      ThemeController.variantOrder.length,
       FlexSchemeVariant.values.length,
     );
     final c = ThemeController();
