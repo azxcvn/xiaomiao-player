@@ -42,6 +42,7 @@ class PlayerAudioPanel extends StatelessWidget {
     return ListenableBuilder(
       listenable: controller,
       builder: (context, _) {
+        final l10n = AppLocalizations.of(context);
         final tracks = controller.tracks;
         final primary = controller.primary;
         // 音频声道两行布局：第一行 3 个短文本、第二行 2 个长文本（等宽均分，
@@ -60,13 +61,13 @@ class PlayerAudioPanel extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 4),
           children: [
             // ── 音轨（单选）──────────────────────────────
-            const _SectionLabel('音轨'),
+            _SectionLabel(l10n.playerAudioTrack),
             if (tracks.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: Text(
-                  '当前视频没有音轨，可在下方导入外部音轨',
-                  style: TextStyle(color: Colors.white38, fontSize: 13),
+                  l10n.playerNoAudioTrackHint,
+                  style: const TextStyle(color: Colors.white38, fontSize: 13),
                 ),
               )
             else
@@ -81,24 +82,24 @@ class PlayerAudioPanel extends StatelessWidget {
                 ),
             // ── 外部音轨 ────────────────────────────────
             const Divider(height: 1, color: Colors.white12),
-            const _SectionLabel('外部音轨'),
+            _SectionLabel(l10n.playerExternalAudioTrack),
             ListTile(
               dense: true,
               leading: const Icon(Icons.file_upload_outlined,
                   color: Colors.white, size: 22),
-              title: const Text(
-                '导入外部音轨',
-                style: TextStyle(color: Colors.white, fontSize: 15),
+              title: Text(
+                l10n.playerImportExternalAudioTrack,
+                style: const TextStyle(color: Colors.white, fontSize: 15),
               ),
-              subtitle: const Text(
-                '临时生效，退出播放后不保留',
-                style: TextStyle(color: Colors.white38, fontSize: 11),
+              subtitle: Text(
+                l10n.playerTempEffectHint,
+                style: const TextStyle(color: Colors.white38, fontSize: 11),
               ),
               onTap: () => _importExternalAudio(context),
             ),
             // ── 音频声道 ────────────────────────────────
             const Divider(height: 1, color: Colors.white12),
-            const _SectionLabel('音频声道'),
+            _SectionLabel(l10n.playerAudioChannel),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
               child: Column(
@@ -149,7 +150,7 @@ class PlayerAudioPanel extends StatelessWidget {
             ),
             // ── 音频处理 ────────────────────────────────
             const Divider(height: 1, color: Colors.white12),
-            const _SectionLabel('音频处理'),
+            _SectionLabel(l10n.playerAudioProcessing),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: Wrap(
@@ -157,14 +158,14 @@ class PlayerAudioPanel extends StatelessWidget {
                 runSpacing: 8,
                 children: [
                   PlayerOptionChip(
-                    label: '音量标准化',
+                    label: l10n.playerVolumeNormalize,
                     selected: controller.volumeNormalization,
                     onTap: () => controller.setVolumeNormalization(
                       !controller.volumeNormalization,
                     ),
                   ),
                   PlayerOptionChip(
-                    label: '动态范围压缩',
+                    label: l10n.playerDynamicRangeCompress,
                     selected: controller.drc,
                     onTap: () => controller.setDrc(!controller.drc),
                   ),
@@ -206,7 +207,7 @@ class PlayerAudioPanel extends StatelessWidget {
     // 只换文件过滤器/图标/记忆键，对齐 §4.5「不得另写一套面板外壳」）
     _pushSubPage(
       context,
-      '选择音频文件',
+      AppLocalizations.of(context).playerPickAudioFile,
       SubtitleFilePickerPanel(
         fileFilter: isSupportedAudioFile,
         folderKey: AudioFileService.lastFolderKey,
@@ -223,11 +224,16 @@ class PlayerAudioPanel extends StatelessWidget {
   Future<void> _importPath(BuildContext context, String path) async {
     final ok = await controller.addExternalAudio(path);
     if (!context.mounted) return;
+    final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(ok ? '已导入外部音轨' : '导入失败，请检查文件格式'),
+          content: Text(
+            ok
+                ? l10n.playerExternalAudioImported
+                : l10n.playerImportFailedCheckFormat,
+          ),
           duration: const Duration(milliseconds: 1500),
           behavior: SnackBarBehavior.floating,
         ),
@@ -298,7 +304,7 @@ class _TrackTile extends StatelessWidget {
               ),
             ),
           ),
-          if (track.external) const _TrackTag('外挂'),
+          if (track.external) _TrackTag(l10n.commonExternalTag),
           if (track.codec != null && track.codec!.trim().isNotEmpty)
             _TrackTag(track.codec!.trim().toUpperCase()),
           if (track.channels != null && track.channels!.trim().isNotEmpty)
@@ -313,7 +319,7 @@ class _TrackTile extends StatelessWidget {
           ? IconButton(
               icon: const Icon(Icons.delete_outline,
                   color: Colors.white38, size: 20),
-              tooltip: '移除已导入的音轨',
+              tooltip: l10n.playerRemoveAudioTrack,
               visualDensity: VisualDensity.compact,
               onPressed: onRemove,
             )

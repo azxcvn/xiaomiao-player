@@ -13,6 +13,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/pages/player/views/player_pressable.dart';
 
 /// 弹幕开启图标（带对勾；对勾色 `#00AEEC` 运行时替换为主题色）。
@@ -61,18 +62,21 @@ class PlayerDanmakuButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         _DanmakuIconButton(
-          tooltip: danmakuOn ? '关闭弹幕' : '打开弹幕',
+          tooltip: danmakuOn
+              ? l10n.playerDanmakuClose
+              : l10n.playerDanmakuOpen,
           padding: buttonPadding,
           onTap: onToggle,
           icon: _toggleIcon(context),
         ),
         SizedBox(width: gap),
         _DanmakuIconButton(
-          tooltip: '弹幕设置',
+          tooltip: l10n.playerDanmakuSettings,
           padding: buttonPadding,
           onTap: onSettings,
           icon: _cachedSvg(

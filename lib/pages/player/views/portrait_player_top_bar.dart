@@ -46,6 +46,7 @@ class PortraitPlayerTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final showBg = PlayerControlsSettings.instance.showButtonBackground;
     return SafeArea(
       left: false,
@@ -64,7 +65,7 @@ class PortraitPlayerTopBar extends StatelessWidget {
               children: [
                 _PortraitTopIconButton(
                   icon: Icons.arrow_back,
-                  tooltip: '返回',
+                  tooltip: l10n.commonBack,
                   showBackground: showBg,
                   onPressed: onBack,
                 ),
@@ -95,7 +96,7 @@ class PortraitPlayerTopBar extends StatelessWidget {
                     children: [
                       _PortraitTopIconButton(
                         icon: Icons.more_vert,
-                        tooltip: '更多',
+                        tooltip: l10n.commonMore,
                         showBackground: showBg,
                         onPressed: onMore,
                       ),
@@ -119,7 +120,7 @@ class PortraitPlayerTopBar extends StatelessWidget {
                       child: Center(
                         child: _PortraitTopIconButton(
                           icon: Icons.more_vert,
-                          tooltip: '更多',
+                          tooltip: l10n.commonMore,
                           showBackground: showBg,
                           onPressed: onMore,
                         ),

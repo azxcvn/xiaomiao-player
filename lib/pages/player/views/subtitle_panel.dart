@@ -47,6 +47,7 @@ class PlayerSubtitlePanel extends StatelessWidget {
     return ListenableBuilder(
       listenable: Listenable.merge([controller, SubtitleSettings.instance]),
       builder: (context, _) {
+        final l10n = AppLocalizations.of(context);
         final tracks = controller.tracks;
         final primary = controller.primary;
         final hasSelection = primary != null;
@@ -55,13 +56,16 @@ class PlayerSubtitlePanel extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 4),
           children: [
             // ── 字幕轨道（单选）──────────────────────────
-            const _SectionLabel('字幕轨道'),
+            _SectionLabel(l10n.playerSubtitleTracks),
             if (tracks.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 child: Text(
-                  '当前视频没有字幕，可在下方导入外挂字幕',
-                  style: TextStyle(color: Colors.white38, fontSize: 13),
+                  l10n.playerNoSubtitleHint,
+                  style: const TextStyle(color: Colors.white38, fontSize: 13),
                 ),
               )
             else
@@ -106,7 +110,7 @@ class PlayerSubtitlePanel extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '关闭字幕',
+                        l10n.playerSubtitleOff,
                         style: TextStyle(
                           color:
                               hasSelection ? Colors.white70 : Colors.white24,
@@ -120,53 +124,53 @@ class PlayerSubtitlePanel extends StatelessWidget {
             ),
             // ── 外挂字幕 ────────────────────────────────
             const Divider(height: 1, color: Colors.white12),
-            const _SectionLabel('外挂字幕'),
+            _SectionLabel(l10n.playerExternalSubtitle),
             ListTile(
               dense: true,
               leading: const Icon(Icons.file_upload_outlined,
                   color: Colors.white, size: 22),
-              title: const Text(
-                '导入外部字幕',
-                style: TextStyle(color: Colors.white, fontSize: 15),
+              title: Text(
+                l10n.playerImportExternalSubtitle,
+                style: const TextStyle(color: Colors.white, fontSize: 15),
               ),
               onTap: () => _importExternalSubtitle(context),
             ),
             // ── 字幕设置 ────────────────────────────────
             const Divider(height: 1, color: Colors.white12),
-            const _SectionLabel('字幕设置'),
+            _SectionLabel(l10n.playerSubtitleSettings),
             _SubtitleSettingsEntry(
               icon: Icons.timer_outlined,
-              label: '字幕延迟',
+              label: l10n.playerSubtitleDelay,
               onTap: () => _pushSubPage(
                 context,
-                '字幕延迟',
+                l10n.playerSubtitleDelay,
                 SubtitleDelayPanel(controller: controller),
               ),
             ),
             _SubtitleSettingsEntry(
               icon: Icons.format_size,
-              label: '字幕样式',
+              label: l10n.playerSubtitleStyle,
               onTap: () => _pushSubPage(
                 context,
-                '字幕样式',
+                l10n.playerSubtitleStyle,
                 SubtitleStylePanel(controller: controller),
               ),
             ),
             _SubtitleSettingsEntry(
               icon: Icons.vertical_align_center,
-              label: '字幕杂项',
+              label: l10n.playerSubtitleMisc,
               onTap: () => _pushSubPage(
                 context,
-                '字幕杂项',
+                l10n.playerSubtitleMisc,
                 SubtitleMiscPanel(controller: controller),
               ),
             ),
             _SubtitleSettingsEntry(
               icon: Icons.font_download_outlined,
-              label: '字幕字体',
+              label: l10n.playerSubtitleFont,
               onTap: () => _pushSubPage(
                 context,
-                '字幕字体',
+                l10n.playerSubtitleFont,
                 SubtitleFontPanel(controller: controller),
               ),
             ),
@@ -195,6 +199,7 @@ class PlayerSubtitlePanel extends StatelessWidget {
   /// - Android 11 及以上（SDK ≥ 30）：自建选择器（[SubtitleFilePickerPanel]，
   ///   右侧面板二级页）。分派规则与理由见 [DeviceServices.shouldUseSystemPicker]。
   Future<void> _importExternalSubtitle(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     final sdk = await DeviceServices.getSdkInt();
     if (!context.mounted || sdk <= 0) return;
     if (DeviceServices.shouldUseSystemPicker(sdk)) {
@@ -206,7 +211,7 @@ class PlayerSubtitlePanel extends StatelessWidget {
     // 自建选择器：作为右侧面板二级页就地切换（不再从底部弹出）
     _pushSubPage(
       context,
-      '选择字幕文件',
+      l10n.playerPickSubtitleFile,
       SubtitleFilePickerPanel(
         onPicked: (path) async {
           await controller.addExternalSubtitle(path);
@@ -218,13 +223,18 @@ class PlayerSubtitlePanel extends StatelessWidget {
 
   /// 导入并给出轻提示（系统选择器路径用；自建选择器返回后由轨道列表刷新体现）
   Future<void> _importPath(BuildContext context, String path) async {
+    final l10n = AppLocalizations.of(context);
     final ok = await controller.addExternalSubtitle(path);
     if (!context.mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(ok ? '已导入外挂字幕' : '导入失败，请检查文件格式'),
+          content: Text(
+            ok
+                ? l10n.playerExternalSubtitleImported
+                : l10n.playerImportFailedCheckFormat,
+          ),
           duration: const Duration(milliseconds: 1500),
           behavior: SnackBarBehavior.floating,
         ),
@@ -276,7 +286,7 @@ class _TrackTile extends StatelessWidget {
               ),
             ),
           ),
-          if (track.external) const _TrackTag('外挂'),
+          if (track.external) _TrackTag(l10n.commonExternalTag),
           if (track.codec != null && track.codec!.trim().isNotEmpty)
             _TrackTag(track.codec!.trim().toUpperCase()),
           if (track.language != null &&
@@ -289,7 +299,7 @@ class _TrackTile extends StatelessWidget {
           ? IconButton(
               icon: const Icon(Icons.delete_outline,
                   color: Colors.white38, size: 20),
-              tooltip: '移除已导入的字幕',
+              tooltip: l10n.playerRemoveSubtitle,
               visualDensity: VisualDensity.compact,
               onPressed: onRemove,
             )
@@ -475,6 +485,7 @@ class _SettingSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Column(
@@ -521,7 +532,7 @@ class _SettingSlider extends StatelessWidget {
                 GestureDetector(
                   onTap: onReset,
                   child: Text(
-                    '重置',
+                    l10n.commonReset,
                     style: TextStyle(
                       color: _accentOf(context),
                       fontSize: 12,
@@ -596,10 +607,19 @@ class _SubtitleDelayPanelState extends State<SubtitleDelayPanel> {
   final TextEditingController _input = TextEditingController();
   final FocusNode _focus = FocusNode();
 
+  /// 输入框初始文本只需写一次（此时才能安全取 l10n：initState 里取会拿不到
+  /// 已注册的 Localizations 依赖，故放到 didChangeDependencies）
+  bool _inputInitialized = false;
+
   @override
-  void initState() {
-    super.initState();
-    _input.text = _delayText(SubtitleSettings.instance.delay);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_inputInitialized) return;
+    _inputInitialized = true;
+    _input.text = _delayText(
+      AppLocalizations.of(context),
+      SubtitleSettings.instance.delay,
+    );
   }
 
   @override
@@ -637,9 +657,10 @@ class _SubtitleDelayPanelState extends State<SubtitleDelayPanel> {
     return ListenableBuilder(
       listenable: settings,
       builder: (context, _) {
+        final l10n = AppLocalizations.of(context);
         // 外部改动（快捷按键/重置）时同步输入框文本（输入中不打断）
         if (!_focus.hasFocus) {
-          final text = _delayText(settings.delay);
+          final text = _delayText(l10n, settings.delay);
           if (_input.text != text) _input.text = text;
         }
         final delay = settings.delay;
@@ -668,7 +689,7 @@ class _SubtitleDelayPanelState extends State<SubtitleDelayPanel> {
                     const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.10),
-                hintText: _delayText(delay),
+                hintText: _delayText(l10n, delay),
                 hintStyle: const TextStyle(color: Colors.white70),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(999),
@@ -686,7 +707,7 @@ class _SubtitleDelayPanelState extends State<SubtitleDelayPanel> {
               onSubmitted: (_) => _applyInput(),
             ),
             const SizedBox(height: 18),
-            const _SectionLabel('快捷调整'),
+            _SectionLabel(l10n.playerQuickAdjust),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -700,7 +721,7 @@ class _SubtitleDelayPanelState extends State<SubtitleDelayPanel> {
             TextButton.icon(
               onPressed: delay == 0 ? null : _reset,
               icon: const Icon(Icons.restart_alt, size: 18),
-              label: const Text('重置为 0 秒'),
+              label: Text(l10n.playerResetToZeroSeconds),
               style: TextButton.styleFrom(foregroundColor: Colors.white70),
             ),
           ],
@@ -709,12 +730,12 @@ class _SubtitleDelayPanelState extends State<SubtitleDelayPanel> {
     );
   }
 
-  static String _delayText(double delay) {
+  static String _delayText(AppLocalizations l10n, double delay) {
     final sign = delay > 0 ? '+' : '';
     final text = delay == delay.roundToDouble()
         ? delay.toInt().toString()
         : delay.toStringAsFixed(1);
-    return '$sign$text 秒';
+    return l10n.playerDelaySeconds('$sign$text');
   }
 }
 
@@ -797,6 +818,7 @@ class SubtitleStylePanel extends StatelessWidget {
     return ListenableBuilder(
       listenable: settings,
       builder: (context, _) {
+        final l10n = AppLocalizations.of(context);
         final hasBorder = settings.borderColor != null;
         // 「背景框大小」滑杆只在真的设了背景色（= mpv 处于 background-box 模式）时才显示，
         // 与「设了描边颜色才显示描边粗细」同一套纪律。
@@ -811,7 +833,7 @@ class SubtitleStylePanel extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _ColorEditorRow(
-                    label: '文字颜色',
+                    label: l10n.playerTextColor,
                     value: settings.color,
                     allowNone: false,
                     presetColors: SubtitlePresetColor.textPresets,
@@ -828,7 +850,7 @@ class SubtitleStylePanel extends StatelessWidget {
                   ),
                   const Divider(height: 1, indent: 16, endIndent: 16, color: Colors.white12),
                   _ColorEditorRow(
-                    label: '描边颜色',
+                    label: l10n.playerStrokeColor,
                     value: settings.borderColor,
                     allowNone: true,
                     defaultColor: const (r: 0, g: 0, b: 0, a: 255),
@@ -847,7 +869,7 @@ class SubtitleStylePanel extends StatelessWidget {
                   // 描边粗细：紧跟描边颜色（设置了描边颜色时才显示）
                   if (hasBorder)
                     _SettingSlider(
-                      label: '描边粗细',
+                      label: l10n.playerStrokeWidth,
                       display: (v) => v.toStringAsFixed(1),
                       value: settings.borderSize,
                       min: 0,
@@ -873,7 +895,7 @@ class SubtitleStylePanel extends StatelessWidget {
                     ),
                   const Divider(height: 1, indent: 16, endIndent: 16, color: Colors.white12),
                   _ColorEditorRow(
-                    label: '背景颜色',
+                    label: l10n.playerBackgroundColor,
                     value: settings.backColor,
                     allowNone: true,
                     defaultColor: const (r: 0, g: 0, b: 0, a: 128),
@@ -895,7 +917,7 @@ class SubtitleStylePanel extends StatelessWidget {
                   // 这个滑杆管的是**额外内边距**，文案按用户视角叫「背景框大小」。
                   if (hasBackground)
                     _SettingSlider(
-                      label: '背景框大小',
+                      label: l10n.playerBackgroundBoxSize,
                       display: (v) => v.toStringAsFixed(1),
                       value: settings.shadowOffset,
                       min: 0,
@@ -923,13 +945,13 @@ class SubtitleStylePanel extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const _CardLabel('文字效果'),
+                  _CardLabel(l10n.playerTextEffects),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
                     child: Row(
                       children: [
                         _LabelSwitch(
-                          label: '粗体',
+                          label: l10n.playerBold,
                           value: settings.bold,
                           onChanged: (v) async {
                             await settings.setBold(v);
@@ -939,7 +961,7 @@ class SubtitleStylePanel extends StatelessWidget {
                         ),
                         const SizedBox(width: 28),
                         _LabelSwitch(
-                          label: '斜体',
+                          label: l10n.playerItalic,
                           value: settings.italic,
                           onChanged: (v) async {
                             await settings.setItalic(v);
@@ -952,7 +974,7 @@ class SubtitleStylePanel extends StatelessWidget {
                   ),
                   const Divider(height: 1, indent: 16, endIndent: 16, color: Colors.white12),
                   _SettingSlider(
-                    label: '字间距',
+                    label: l10n.playerLetterSpacing,
                     display: (v) => v.toStringAsFixed(1),
                     value: settings.spacing,
                     min: 0,
@@ -972,7 +994,7 @@ class SubtitleStylePanel extends StatelessWidget {
                   ),
                   const Divider(height: 1, indent: 16, endIndent: 16, color: Colors.white12),
                   _SettingSlider(
-                    label: '模糊',
+                    label: l10n.commonBlur,
                     display: (v) => v.toStringAsFixed(1),
                     value: settings.blur,
                     min: 0,
@@ -999,14 +1021,14 @@ class SubtitleStylePanel extends StatelessWidget {
               child: SwitchListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                 activeThumbColor: _accentOf(context),
-                title: const Text(
-                  '优先选中文字幕轨',
-                  style: TextStyle(color: Colors.white, fontSize: 15),
+                title: Text(
+                  l10n.playerPreferChineseSubtitle,
+                  style: const TextStyle(color: Colors.white, fontSize: 15),
                 ),
                 subtitle: Text(
                   settings.preferChineseSubtitle
-                      ? '默认启用中文轨（含「特效/双语」优先）；手动选过的不改'
-                      : '交给内核默认挑选（通常是文件里的第一条）',
+                      ? l10n.playerPreferChineseSubtitleDesc
+                      : l10n.playerSubtitleTrackAutoDesc,
                   style: const TextStyle(color: Colors.white38, fontSize: 12),
                 ),
                 value: settings.preferChineseSubtitle,
@@ -1019,16 +1041,16 @@ class SubtitleStylePanel extends StatelessWidget {
               child: SwitchListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                 activeThumbColor: _accentOf(context),
-                title: const Text(
-                  '强制覆盖内嵌样式',
-                  style: TextStyle(color: Colors.white, fontSize: 15),
+                title: Text(
+                  l10n.playerForceOverrideStyle,
+                  style: const TextStyle(color: Colors.white, fontSize: 15),
                 ),
                 // 副标题只描述**当前状态的含义**，不写「已开启/已关闭」（开关本身就是状态，
                 // 前缀是废话）；关闭时的表述也不再只说「内嵌字幕」——外挂字幕同理。
                 subtitle: Text(
                   settings.overrideEmbeddedStyle
-                      ? '使用上方设置渲染字幕样式'
-                      : '字幕使用自带的样式与字体',
+                      ? l10n.playerForceOverrideStyleDesc
+                      : l10n.playerStyleFromSubtitleDesc,
                   style: const TextStyle(color: Colors.white38, fontSize: 12),
                 ),
                 value: settings.overrideEmbeddedStyle,
@@ -1053,7 +1075,7 @@ class SubtitleStylePanel extends StatelessWidget {
                 await controller.applyAllSettings();
               },
               icon: const Icon(Icons.restart_alt, size: 18),
-              label: const Text('重置所有样式'),
+              label: Text(l10n.playerResetAllStyles),
               style: FilledButton.styleFrom(
                 foregroundColor: Colors.white,
                 backgroundColor: Colors.white.withValues(alpha: 0.10),
@@ -1082,6 +1104,7 @@ class _AssLimitNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -1092,14 +1115,14 @@ class _AssLimitNote extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
+        children: [
           Row(
             children: [
-              Icon(Icons.info_outline, size: 15, color: _title),
-              SizedBox(width: 6),
+              const Icon(Icons.info_outline, size: 15, color: _title),
+              const SizedBox(width: 6),
               Text(
-                'ASS 内嵌字幕的限制',
-                style: TextStyle(
+                l10n.playerAssLimitTitle,
+                style: const TextStyle(
                   color: _title,
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
@@ -1107,10 +1130,19 @@ class _AssLimitNote extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 8),
-          _AssLimitItem('粗体 / 斜体 / 模糊', '开启覆盖也不生效（mpv 渲染限制）'),
-          _AssLimitItem('颜色 / 描边 / 背景 / 大小 / 位置 / 字间距', '开启覆盖后生效'),
-          _AssLimitItem('SRT / VTT 等文本字幕', '所有样式都直接生效'),
+          const SizedBox(height: 8),
+          _AssLimitItem(
+            l10n.playerAssLimitBoldItalicBlur,
+            l10n.playerAssLimitNoEffect,
+          ),
+          _AssLimitItem(
+            l10n.playerAssLimitStyleItems,
+            l10n.playerAssLimitTakesEffect,
+          ),
+          _AssLimitItem(
+            l10n.playerAssLimitTextFormats,
+            l10n.playerAssLimitAllEffective,
+          ),
         ],
       ),
     );
@@ -1237,6 +1269,7 @@ class SubtitleMiscPanel extends StatelessWidget {
     return ListenableBuilder(
       listenable: settings,
       builder: (context, _) {
+        final l10n = AppLocalizations.of(context);
         return ListView(
           key: const PageStorageKey('subtitle_misc'),
           padding: const EdgeInsets.all(16),
@@ -1245,9 +1278,9 @@ class SubtitleMiscPanel extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const _CardLabel('字幕缩放与位置'),
+                  _CardLabel(l10n.playerSubtitleScalePosition),
                   _SettingSlider(
-                    label: '缩放比例',
+                    label: l10n.playerScaleRatio,
                     display: (v) => '${v.toStringAsFixed(2)}x',
                     value: settings.scale,
                     min: SubtitleSettings.minScale,
@@ -1267,8 +1300,8 @@ class SubtitleMiscPanel extends StatelessWidget {
                   ),
                   const Divider(height: 1, indent: 16, endIndent: 16, color: Colors.white12),
                   _SettingSlider(
-                    label: '垂直位置',
-                    display: (v) => '${v.round()}（100=窗口底部）',
+                    label: l10n.playerVerticalPosition,
+                    display: (v) => l10n.playerVerticalPositionValue(v.round()),
                     value: settings.position,
                     min: SubtitleSettings.minPos,
                     max: SubtitleSettings.maxPos,
@@ -1296,7 +1329,7 @@ class SubtitleMiscPanel extends StatelessWidget {
                           await controller.applyAllSettings();
                         },
                         icon: const Icon(Icons.restart_alt, size: 16),
-                        label: const Text('重置缩放与位置'),
+                        label: Text(l10n.playerResetScalePosition),
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.white70,
                           visualDensity: VisualDensity.compact,
@@ -1357,6 +1390,7 @@ class _SubtitleFontPanelState extends State<SubtitleFontPanel> {
 
   /// 选择字体目录 → 一次性拷贝全部字体 → 列出可选字体。
   Future<void> _pickDirectory() async {
+    final l10n = AppLocalizations.of(context);
     final uri = await DeviceServices.openFontDirectoryPicker();
     if (uri == null || !mounted) return;
     setState(() => _loading = true);
@@ -1370,11 +1404,12 @@ class _SubtitleFontPanelState extends State<SubtitleFontPanel> {
       _fontsDir = dir;
       _entries = entries;
     });
-    _showMessage('已导入 $count 个字体文件，共 ${entries.length} 种字体');
+    _showMessage(l10n.playerFontsImported(count, entries.length));
   }
 
   /// 刷新：从已记录的字体目录重新拷贝（目录里新增字体后点此）。
   Future<void> _refresh() async {
+    final l10n = AppLocalizations.of(context);
     final uri = SubtitleSettings.instance.fontSourceDir;
     if (uri.isEmpty) return;
     setState(() => _loading = true);
@@ -1385,7 +1420,7 @@ class _SubtitleFontPanelState extends State<SubtitleFontPanel> {
       _loading = false;
       _entries = entries;
     });
-    _showMessage('已刷新，共 ${entries.length} 种字体');
+    _showMessage(l10n.playerFontsRefreshed(entries.length));
   }
 
   /// 清除：清空私有 fonts/ + 忘记源目录 + 回退默认字体。
@@ -1399,7 +1434,7 @@ class _SubtitleFontPanelState extends State<SubtitleFontPanel> {
       _fontsDir = '';
       _expanded = false;
     });
-    _showMessage('已清除字体目录');
+    _showMessage(AppLocalizations.of(context).playerFontDirCleared);
   }
 
   Future<void> _selectFont(SubtitleFontEntry entry) async {
@@ -1422,9 +1457,9 @@ class _SubtitleFontPanelState extends State<SubtitleFontPanel> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(
-          content: Text('字体更改需退出播放器并重新进入后生效'),
-          duration: Duration(milliseconds: 2000),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).playerFontChangeHint),
+          duration: const Duration(milliseconds: 2000),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -1448,6 +1483,7 @@ class _SubtitleFontPanelState extends State<SubtitleFontPanel> {
     return ListenableBuilder(
       listenable: settings,
       builder: (context, _) {
+        final l10n = AppLocalizations.of(context);
         final hasCustom = settings.font != 'auto';
         final hasSource = settings.fontSourceDir.isNotEmpty;
         return ListView(
@@ -1459,23 +1495,23 @@ class _SubtitleFontPanelState extends State<SubtitleFontPanel> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const _CardLabel('字体目录'),
+                  _CardLabel(l10n.playerFontDir),
                   Material(
                     type: MaterialType.transparency,
                     child: ListTile(
                       dense: true,
                       leading: const Icon(Icons.folder_open,
                           color: Colors.white, size: 22),
-                      title: const Text(
-                        '选择字体目录',
-                        style: TextStyle(color: Colors.white, fontSize: 15),
+                      title: Text(
+                        l10n.playerPickFontDir,
+                        style: const TextStyle(color: Colors.white, fontSize: 15),
                       ),
                       subtitle: Text(
                         _loading
-                            ? '正在加载...'
+                            ? l10n.commonLoadingDots
                             : (hasSource
-                                ? '已加载 ${_entries.length} 种字体'
-                                : '点击选择包含 .ttf/.otf 字体的目录'),
+                                ? l10n.playerFontsLoaded(_entries.length)
+                                : l10n.playerFontDirPickHint),
                         style: TextStyle(
                           color: _entries.isNotEmpty
                               ? const Color(0xFF81C784)
@@ -1490,14 +1526,14 @@ class _SubtitleFontPanelState extends State<SubtitleFontPanel> {
                                 IconButton(
                                   icon: const Icon(Icons.refresh,
                                       color: Color(0xFF64B5F6), size: 22),
-                                  tooltip: '刷新',
+                                  tooltip: l10n.commonRefresh,
                                   visualDensity: VisualDensity.compact,
                                   onPressed: _loading ? null : _refresh,
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.close,
                                       color: Color(0xFFEF5350), size: 22),
-                                  tooltip: '清除目录',
+                                  tooltip: l10n.playerFontDirClear,
                                   visualDensity: VisualDensity.compact,
                                   onPressed: _loading ? null : _clear,
                                 ),
@@ -1517,7 +1553,7 @@ class _SubtitleFontPanelState extends State<SubtitleFontPanel> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const _CardLabel('当前字体'),
+                  _CardLabel(l10n.playerCurrentFont),
                   Material(
                     type: MaterialType.transparency,
                     child: ListTile(
@@ -1525,7 +1561,7 @@ class _SubtitleFontPanelState extends State<SubtitleFontPanel> {
                       leading: const Icon(Icons.text_fields,
                           color: Colors.white, size: 22),
                       title: Text(
-                        hasCustom ? settings.font : '默认字体',
+                        hasCustom ? settings.font : l10n.playerDefaultFont,
                         style: const TextStyle(
                             color: Colors.white, fontSize: 15),
                       ),
@@ -1536,9 +1572,9 @@ class _SubtitleFontPanelState extends State<SubtitleFontPanel> {
                                   : Icons.expand_more,
                               color: Colors.white54,
                             )
-                          : const Text(
-                              '请先选择字体目录',
-                              style: TextStyle(
+                          : Text(
+                              l10n.playerPickFontDirFirst,
+                              style: const TextStyle(
                                   color: Colors.white38, fontSize: 11),
                             ),
                       onTap: _entries.isNotEmpty
@@ -1560,8 +1596,8 @@ class _SubtitleFontPanelState extends State<SubtitleFontPanel> {
                                   endIndent: 16,
                                   color: Colors.white12),
                               _FontOptionTile(
-                                label: '默认字体',
-                                subtitle: '跟随系统字库',
+                                label: l10n.playerDefaultFont,
+                                subtitle: l10n.playerFollowSystemFonts,
                                 selected: !hasCustom,
                                 onTap: _selectDefault,
                               ),
@@ -1589,9 +1625,9 @@ class _SubtitleFontPanelState extends State<SubtitleFontPanel> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: const Color(0xFF6B5618)),
               ),
-              child: const Text(
-                '字体更改需退出播放器并重新进入后生效；内嵌 ASS 字幕需开启「强制覆盖内嵌样式」后字体设置才会生效。',
-                style: TextStyle(
+              child: Text(
+                l10n.playerFontChangeHintFull,
+                style: const TextStyle(
                     color: Color(0xFFFFE082), fontSize: 12, height: 1.4),
               ),
             ),

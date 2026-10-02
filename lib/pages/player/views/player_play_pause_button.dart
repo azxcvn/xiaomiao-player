@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 
 /// 播放/暂停图标：PiliPlus 风格的两态形变动画（AnimatedIcon.play_pause）。
 ///
@@ -46,8 +47,9 @@ class _PlayerPlayPauseButtonState extends State<PlayerPlayPauseButton>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AnimatedIcon(
-      semanticLabel: widget.playing ? '暂停' : '播放',
+      semanticLabel: widget.playing ? l10n.commonPause : l10n.commonPlay,
       progress: _controller,
       icon: AnimatedIcons.play_pause,
       color: Colors.white,

@@ -3217,6 +3217,1716 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'图片已不可用，请重新选择'**
   String get settingsWallpaperImageUnavailable;
+
+  /// 通用按钮：返回（播放器顶栏 / 听视频页）
+  ///
+  /// In zh, this message translates to:
+  /// **'返回'**
+  String get commonBack;
+
+  /// 通用按钮：更多（播放器顶栏「更多」面板入口）
+  ///
+  /// In zh, this message translates to:
+  /// **'更多'**
+  String get commonMore;
+
+  /// 通用：播放（播放/暂停按钮、诊断面板分组名）
+  ///
+  /// In zh, this message translates to:
+  /// **'播放'**
+  String get commonPlay;
+
+  /// 通用：暂停（播放/暂停按钮）
+  ///
+  /// In zh, this message translates to:
+  /// **'暂停'**
+  String get commonPause;
+
+  /// 通用：播放中（列表当前项标记）
+  ///
+  /// In zh, this message translates to:
+  /// **'播放中'**
+  String get commonPlaying;
+
+  /// 通用按钮：搜索
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索'**
+  String get commonSearch;
+
+  /// 通用按钮：清空（输入框 / 屏蔽词列表）
+  ///
+  /// In zh, this message translates to:
+  /// **'清空'**
+  String get commonClearAll;
+
+  /// 通用：无（数值为 0 时的读数）
+  ///
+  /// In zh, this message translates to:
+  /// **'无'**
+  String get commonNone;
+
+  /// 通用：未设置（空态读数）
+  ///
+  /// In zh, this message translates to:
+  /// **'未设置'**
+  String get commonNotSet;
+
+  /// 通用：自定义（定时关闭预设）
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义'**
+  String get commonCustom;
+
+  /// 通用按钮：跳转（弹幕集数跳转）
+  ///
+  /// In zh, this message translates to:
+  /// **'跳转'**
+  String get commonJump;
+
+  /// 通用：排序方式（字幕文件选择器）
+  ///
+  /// In zh, this message translates to:
+  /// **'排序方式'**
+  String get commonSortBy;
+
+  /// 通用按钮：上级目录（字幕文件选择器）
+  ///
+  /// In zh, this message translates to:
+  /// **'上级'**
+  String get commonGoUp;
+
+  /// 通用按钮：刷新（字体目录）
+  ///
+  /// In zh, this message translates to:
+  /// **'刷新'**
+  String get commonRefresh;
+
+  /// 通用按钮：一键重置（均衡器 / 片头片尾）
+  ///
+  /// In zh, this message translates to:
+  /// **'一键重置'**
+  String get commonOneKeyReset;
+
+  /// 通用按钮：恢复默认设置（弹幕设置）
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复默认设置'**
+  String get commonRestoreDefaults;
+
+  /// 通用：正在加载（字体目录读取中）
+  ///
+  /// In zh, this message translates to:
+  /// **'正在加载...'**
+  String get commonLoadingDots;
+
+  /// 通用字段名：标题（诊断面板）
+  ///
+  /// In zh, this message translates to:
+  /// **'标题'**
+  String get commonTitle;
+
+  /// 通用：模糊（字幕文字效果）
+  ///
+  /// In zh, this message translates to:
+  /// **'模糊'**
+  String get commonBlur;
+
+  /// 通用：集（弹幕集数跳转输入框后缀）
+  ///
+  /// In zh, this message translates to:
+  /// **'集'**
+  String get commonEpisodeUnit;
+
+  /// 播放页提示：自动匹配到并加载了外挂字幕
+  ///
+  /// In zh, this message translates to:
+  /// **'已自动加载字幕：{fileName}'**
+  String playerAutoLoadedSubtitle(String fileName);
+
+  /// 播放页提示：自动匹配到并加载了弹幕文件
+  ///
+  /// In zh, this message translates to:
+  /// **'已自动加载弹幕：{fileName}'**
+  String playerAutoLoadedDanmaku(String fileName);
+
+  /// 播放页提示：加载弹幕成功（附加来源说明）
+  ///
+  /// In zh, this message translates to:
+  /// **'已加载弹幕：{message}'**
+  String playerDanmakuLoaded(String message);
+
+  /// 播放页提示：所选清晰度不可用后自动切换
+  ///
+  /// In zh, this message translates to:
+  /// **'该清晰度不可用，已切换到 {name}'**
+  String playerQualityUnavailableSwitched(String name);
+
+  /// 播放页提示：切换清晰度异常
+  ///
+  /// In zh, this message translates to:
+  /// **'切换画质失败：{error}'**
+  String playerQualitySwitchFailed(String error);
+
+  /// 播放器「更多」面板 / 清晰度面板：清晰度
+  ///
+  /// In zh, this message translates to:
+  /// **'清晰度'**
+  String get playerQuality;
+
+  /// 播放页提示：截图异常
+  ///
+  /// In zh, this message translates to:
+  /// **'截图失败：{error}'**
+  String playerScreenshotFailed(String error);
+
+  /// 播放页提示：截图拿到空数据
+  ///
+  /// In zh, this message translates to:
+  /// **'截图失败：未获取到图像'**
+  String get playerScreenshotNoImage;
+
+  /// 播放页提示：截图保存成功
+  ///
+  /// In zh, this message translates to:
+  /// **'已保存到相册'**
+  String get playerSavedToGallery;
+
+  /// 播放页提示：截图保存到相册失败
+  ///
+  /// In zh, this message translates to:
+  /// **'截图保存失败：{error}'**
+  String playerScreenshotSaveFailed(String error);
+
+  /// 播放器面板：弹幕设置入口 / 页标题
+  ///
+  /// In zh, this message translates to:
+  /// **'弹幕设置'**
+  String get playerDanmakuSettings;
+
+  /// 播放页提示：已跳过片头
+  ///
+  /// In zh, this message translates to:
+  /// **'已跳过片头'**
+  String get playerSkippedIntro;
+
+  /// 播放页提示：已跳过片尾
+  ///
+  /// In zh, this message translates to:
+  /// **'已跳过片尾'**
+  String get playerSkippedOutro;
+
+  /// 播放页提示：离线时无法切集
+  ///
+  /// In zh, this message translates to:
+  /// **'网络连接不存在，无法切换'**
+  String get playerNoNetworkCannotSwitch;
+
+  /// 播放页提示：切集/切换失败
+  ///
+  /// In zh, this message translates to:
+  /// **'切换失败：{error}'**
+  String playerSwitchFailed(String error);
+
+  /// 播放页错误卡片：播放地址解析失败
+  ///
+  /// In zh, this message translates to:
+  /// **'解析播放地址失败'**
+  String get playerResolveUrlFailed;
+
+  /// 播放页提示：B 站切集失败
+  ///
+  /// In zh, this message translates to:
+  /// **'切集失败：{error}'**
+  String playerSwitchEpisodeFailed(String error);
+
+  /// 播放器面板：倍速（横竖屏一致）
+  ///
+  /// In zh, this message translates to:
+  /// **'播放倍速'**
+  String get playerPlaybackSpeed;
+
+  /// 播放器：超分辨率（面板标题 / 底栏按钮 / 记忆项）
+  ///
+  /// In zh, this message translates to:
+  /// **'超分辨率'**
+  String get playerSuperResolution;
+
+  /// 播放器面板：画面比例
+  ///
+  /// In zh, this message translates to:
+  /// **'画面比例'**
+  String get playerAspectRatio;
+
+  /// 播放页提示：该来源不支持投屏
+  ///
+  /// In zh, this message translates to:
+  /// **'暂不支持投屏该来源'**
+  String get playerCastUnsupportedSource;
+
+  /// 播放器「编辑控制栏」：未放置区标题
+  ///
+  /// In zh, this message translates to:
+  /// **'未放置的功能'**
+  String get playerFeatureNotPlaced;
+
+  /// 播放器「更多」面板：未实现动作的副标题
+  ///
+  /// In zh, this message translates to:
+  /// **'功能即将上线'**
+  String get playerFeatureComingSoon;
+
+  /// 播放器：编辑控制栏入口 / 页标题
+  ///
+  /// In zh, this message translates to:
+  /// **'编辑控制栏'**
+  String get playerEditControlBar;
+
+  /// 播放器「编辑控制栏」：已启用区标题
+  ///
+  /// In zh, this message translates to:
+  /// **'已启用（长按拖拽排序）'**
+  String get playerActionsEnabledHint;
+
+  /// 播放器「编辑控制栏」：已启用区空态
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无已启用动作，从下方添加'**
+  String get playerNoEnabledActions;
+
+  /// 播放器「编辑控制栏」：可添加区标题
+  ///
+  /// In zh, this message translates to:
+  /// **'可添加'**
+  String get playerAddable;
+
+  /// 播放器「编辑控制栏」：槽位已满提示
+  ///
+  /// In zh, this message translates to:
+  /// **'{max, plural, other{最多允许放 {max} 个}}'**
+  String playerMaxActions(int max);
+
+  /// 播放器「编辑控制栏」：重置按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'重置控制栏'**
+  String get playerResetControlBar;
+
+  /// 播放器：网络弹幕（弹幕面板入口 / 面板标题）
+  ///
+  /// In zh, this message translates to:
+  /// **'网络弹幕'**
+  String get playerDanmakuNetwork;
+
+  /// 播放器：弹幕加载失败（错误卡片标题）
+  ///
+  /// In zh, this message translates to:
+  /// **'弹幕加载失败'**
+  String get playerDanmakuLoadFailed;
+
+  /// 播放器：网络弹幕匹配中
+  ///
+  /// In zh, this message translates to:
+  /// **'正在匹配弹幕，请稍候…'**
+  String get playerDanmakuMatching;
+
+  /// 播放器：网络弹幕无匹配结果
+  ///
+  /// In zh, this message translates to:
+  /// **'未找到匹配的弹幕'**
+  String get playerDanmakuNoMatch;
+
+  /// 播放器：选择弹幕匹配结果弹窗
+  ///
+  /// In zh, this message translates to:
+  /// **'选择匹配结果'**
+  String get playerDanmakuPickMatch;
+
+  /// 播放页提示：设备不支持画中画
+  ///
+  /// In zh, this message translates to:
+  /// **'当前设备不支持画中画'**
+  String get playerPipUnsupported;
+
+  /// 播放页提示：进入画中画异常
+  ///
+  /// In zh, this message translates to:
+  /// **'进入画中画失败'**
+  String get playerPipFailed;
+
+  /// 播放器：播放列表（面板标题 / 底栏按钮）
+  ///
+  /// In zh, this message translates to:
+  /// **'播放列表'**
+  String get playerPlaylist;
+
+  /// 播放器：锁定控制层（按钮语义）
+  ///
+  /// In zh, this message translates to:
+  /// **'锁定'**
+  String get playerLock;
+
+  /// 播放器：解锁控制层（按钮语义）
+  ///
+  /// In zh, this message translates to:
+  /// **'解锁'**
+  String get playerUnlock;
+
+  /// 播放器：截图按钮语义
+  ///
+  /// In zh, this message translates to:
+  /// **'截图'**
+  String get playerScreenshot;
+
+  /// 播放器：缩放后还原画面胶囊
+  ///
+  /// In zh, this message translates to:
+  /// **'还原画面'**
+  String get playerRestoreView;
+
+  /// 播放器音轨面板：音轨分组标题
+  ///
+  /// In zh, this message translates to:
+  /// **'音轨'**
+  String get playerAudioTrack;
+
+  /// 播放器音轨面板：无音轨空态
+  ///
+  /// In zh, this message translates to:
+  /// **'当前视频没有音轨，可在下方导入外部音轨'**
+  String get playerNoAudioTrackHint;
+
+  /// 播放器音轨面板：外部音轨分组
+  ///
+  /// In zh, this message translates to:
+  /// **'外部音轨'**
+  String get playerExternalAudioTrack;
+
+  /// 播放器音轨面板：导入外部音轨入口
+  ///
+  /// In zh, this message translates to:
+  /// **'导入外部音轨'**
+  String get playerImportExternalAudioTrack;
+
+  /// 播放器音轨面板：外部音轨临时生效说明
+  ///
+  /// In zh, this message translates to:
+  /// **'临时生效，退出播放后不保留'**
+  String get playerTempEffectHint;
+
+  /// 播放器音轨面板：音频声道
+  ///
+  /// In zh, this message translates to:
+  /// **'音频声道'**
+  String get playerAudioChannel;
+
+  /// 播放器音轨面板：音频处理分组
+  ///
+  /// In zh, this message translates to:
+  /// **'音频处理'**
+  String get playerAudioProcessing;
+
+  /// 播放器音轨面板：音量标准化开关
+  ///
+  /// In zh, this message translates to:
+  /// **'音量标准化'**
+  String get playerVolumeNormalize;
+
+  /// 播放器音轨面板：动态范围压缩开关
+  ///
+  /// In zh, this message translates to:
+  /// **'动态范围压缩'**
+  String get playerDynamicRangeCompress;
+
+  /// 播放器音轨面板：选择音频文件
+  ///
+  /// In zh, this message translates to:
+  /// **'选择音频文件'**
+  String get playerPickAudioFile;
+
+  /// 播放器音轨面板：导入成功提示
+  ///
+  /// In zh, this message translates to:
+  /// **'已导入外部音轨'**
+  String get playerExternalAudioImported;
+
+  /// 播放器：导入外挂音轨/字幕失败提示
+  ///
+  /// In zh, this message translates to:
+  /// **'导入失败，请检查文件格式'**
+  String get playerImportFailedCheckFormat;
+
+  /// 播放器音轨面板：移除外部音轨按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'移除已导入的音轨'**
+  String get playerRemoveAudioTrack;
+
+  /// 听视频：倍速面板标题
+  ///
+  /// In zh, this message translates to:
+  /// **'播放速度'**
+  String get audioPlaybackSpeed;
+
+  /// 听视频：循环模式（关闭）
+  ///
+  /// In zh, this message translates to:
+  /// **'循环关闭'**
+  String get audioRepeatOff;
+
+  /// 听视频：循环模式（单曲循环）；列表循环复用 loopModeLoopAll
+  ///
+  /// In zh, this message translates to:
+  /// **'单曲循环'**
+  String get audioRepeatSingle;
+
+  /// 听视频：定时关闭
+  ///
+  /// In zh, this message translates to:
+  /// **'定时关闭'**
+  String get audioSleepTimer;
+
+  /// 听视频：定时关闭（播完当前曲目）
+  ///
+  /// In zh, this message translates to:
+  /// **'播完当前'**
+  String get audioSleepEndOfTrack;
+
+  /// 听视频：定时关闭（播完当前）说明
+  ///
+  /// In zh, this message translates to:
+  /// **'将在当前曲目播放结束后停止'**
+  String get audioSleepEndOfTrackHint;
+
+  /// 听视频：定时关闭剩余时间
+  ///
+  /// In zh, this message translates to:
+  /// **'剩余 {time}'**
+  String audioSleepRemaining(String time);
+
+  /// 听视频：自定义定时关闭弹窗
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义定时关闭'**
+  String get audioSleepCustomTitle;
+
+  /// 听视频：定时关闭分钟档位（15 / 30 / 60 / 自定义输入）
+  ///
+  /// In zh, this message translates to:
+  /// **'{minutes, plural, other{{minutes} 分钟}}'**
+  String audioSleepMinutes(int minutes);
+
+  /// 听视频：随机播放
+  ///
+  /// In zh, this message translates to:
+  /// **'随机播放'**
+  String get audioShuffle;
+
+  /// 听视频：播放列表面板标题（带曲目数）
+  ///
+  /// In zh, this message translates to:
+  /// **'播放列表（{count}）'**
+  String playerPlaylistWithCount(int count);
+
+  /// 播放器均衡器面板：总开关
+  ///
+  /// In zh, this message translates to:
+  /// **'启用均衡器'**
+  String get playerEqualizerEnable;
+
+  /// 播放器均衡器面板：总开关说明
+  ///
+  /// In zh, this message translates to:
+  /// **'调节频段增益、低音增强和虚拟环绕'**
+  String get playerEqualizerDesc;
+
+  /// 播放器：预设（均衡器 / 倍速面板分组标题）
+  ///
+  /// In zh, this message translates to:
+  /// **'预设'**
+  String get playerPreset;
+
+  /// 播放器均衡器面板：频段调节分组
+  ///
+  /// In zh, this message translates to:
+  /// **'频段调节'**
+  String get playerEqualizerBands;
+
+  /// 播放器均衡器面板：低音增强
+  ///
+  /// In zh, this message translates to:
+  /// **'低音增强'**
+  String get playerEqualizerBass;
+
+  /// 播放器均衡器面板：虚拟环绕
+  ///
+  /// In zh, this message translates to:
+  /// **'虚拟环绕'**
+  String get playerEqualizerSurround;
+
+  /// 播放器 B 站剧集面板：空态
+  ///
+  /// In zh, this message translates to:
+  /// **'没有获取到剧集列表'**
+  String get playerBiliNoEpisodes;
+
+  /// 播放器 B 站剧集面板：总集数
+  ///
+  /// In zh, this message translates to:
+  /// **'{total, plural, other{共 {total} 集}}'**
+  String playerBiliTotalEpisodes(int total);
+
+  /// 播放器 B 站剧集面板：当前集 / 总集数
+  ///
+  /// In zh, this message translates to:
+  /// **'第 {current} 集 / 共 {total, plural, other{{total} 集}}'**
+  String playerBiliCurrentOfTotal(int current, int total);
+
+  /// 播放器 B 站剧集面板：限免集标记
+  ///
+  /// In zh, this message translates to:
+  /// **'限免'**
+  String get playerBiliFreeLimited;
+
+  /// 播放器 B 站剧集面板：预告标记
+  ///
+  /// In zh, this message translates to:
+  /// **'预告'**
+  String get playerBiliPreview;
+
+  /// 播放器底栏：下一集按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'下一集'**
+  String get playerNextEpisode;
+
+  /// 播放器底栏：选择投屏设备
+  ///
+  /// In zh, this message translates to:
+  /// **'选择屏幕'**
+  String get playerCastSelectScreen;
+
+  /// 播放器手势提示：双击左侧快退
+  ///
+  /// In zh, this message translates to:
+  /// **'快退 {seconds} 秒'**
+  String playerSeekBackSeconds(int seconds);
+
+  /// 播放器手势提示：双击右侧快进
+  ///
+  /// In zh, this message translates to:
+  /// **'快进 {seconds} 秒'**
+  String playerSeekForwardSeconds(int seconds);
+
+  /// 播放器章节面板：标题
+  ///
+  /// In zh, this message translates to:
+  /// **'章节跳段'**
+  String get playerChapterPanelTitle;
+
+  /// 播放器章节面板：空态
+  ///
+  /// In zh, this message translates to:
+  /// **'当前视频无章节信息'**
+  String get playerNoChapters;
+
+  /// 播放器章节面板：章节总数
+  ///
+  /// In zh, this message translates to:
+  /// **'{count, plural, other{共 {count} 章}}'**
+  String playerChapterCount(int count);
+
+  /// 播放器章节跳段面板：自动跳过开关
+  ///
+  /// In zh, this message translates to:
+  /// **'自动跳过'**
+  String get playerChapterSkipAuto;
+
+  /// 播放器章节跳段面板：自动跳过说明
+  ///
+  /// In zh, this message translates to:
+  /// **'进入对应片段时自动跳到片段结束；关闭则仅弹出跳过胶囊'**
+  String get playerChapterSkipAutoDesc;
+
+  /// 播放器章节跳段面板：自定义关键词分组
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义关键词'**
+  String get playerChapterSkipCustomKeywords;
+
+  /// 播放器章节跳段面板：关键词输入说明
+  ///
+  /// In zh, this message translates to:
+  /// **'按章节标题匹配，支持逗号 / 分号 / 换行分隔'**
+  String get playerChapterSkipKeywordsHint;
+
+  /// 播放器章节跳段面板：片头关键词
+  ///
+  /// In zh, this message translates to:
+  /// **'片头关键词'**
+  String get playerIntroKeywords;
+
+  /// 播放器章节跳段面板：片头关键词提示
+  ///
+  /// In zh, this message translates to:
+  /// **'如 ap、op、开场'**
+  String get playerIntroKeywordsHint;
+
+  /// 播放器章节跳段面板：片尾关键词
+  ///
+  /// In zh, this message translates to:
+  /// **'片尾关键词'**
+  String get playerOutroKeywords;
+
+  /// 播放器章节跳段面板：片尾关键词提示
+  ///
+  /// In zh, this message translates to:
+  /// **'如 ed、ending、结尾'**
+  String get playerOutroKeywordsHint;
+
+  /// 播放器章节跳段面板：关键词归属说明（多行拼接）
+  ///
+  /// In zh, this message translates to:
+  /// **'关键词归属由你填入的位置决定：填进「片头关键词」即判为片头、填进「片尾关键词」即判为片尾；同一标题命中多类时按固定优先级（前情提要 > 正片前段 > 制作人员 > 下集预告 > 片尾 > 片头）取一类。'**
+  String get playerChapterSkipKeywordOwnerHint;
+
+  /// 播放器弹幕按钮：关闭弹幕
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭弹幕'**
+  String get playerDanmakuClose;
+
+  /// 播放器弹幕按钮：打开弹幕
+  ///
+  /// In zh, this message translates to:
+  /// **'打开弹幕'**
+  String get playerDanmakuOpen;
+
+  /// 播放器弹幕集数跳转：非法输入提示
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入集数（数字）'**
+  String get playerEpisodeInvalidInput;
+
+  /// 播放器弹幕集数跳转：集数不存在
+  ///
+  /// In zh, this message translates to:
+  /// **'没有第 {number} 集'**
+  String playerEpisodeNotFound(int number);
+
+  /// 播放器弹幕集数面板：某台服务器的集数
+  ///
+  /// In zh, this message translates to:
+  /// **'{total, plural, other{共 {total} 集 · 来自 {server}}}'**
+  String playerEpisodeTotalFromServer(int total, String server);
+
+  /// 播放器弹幕集数跳转：输入行前缀
+  ///
+  /// In zh, this message translates to:
+  /// **'跳至第'**
+  String get playerJumpToEpisode;
+
+  /// 播放器弹幕集数跳转：输入框标签
+  ///
+  /// In zh, this message translates to:
+  /// **'集数'**
+  String get playerEpisodeNumber;
+
+  /// 播放器网络弹幕面板：搜索框提示
+  ///
+  /// In zh, this message translates to:
+  /// **'输入番剧名称'**
+  String get playerDanmakuNetworkSearchHint;
+
+  /// 播放器网络弹幕面板：停止搜索
+  ///
+  /// In zh, this message translates to:
+  /// **'停止搜索'**
+  String get playerDanmakuStopSearch;
+
+  /// 播放器网络弹幕面板：搜索结果数（部）
+  ///
+  /// In zh, this message translates to:
+  /// **'{count, plural, other{{count} 部}}'**
+  String playerDanmakuResultCountUnit(int count);
+
+  /// 播放器网络弹幕面板：搜索中状态
+  ///
+  /// In zh, this message translates to:
+  /// **'正在搜索 · 已获得 {count, plural, other{{count} 部}}'**
+  String playerDanmakuSearchingWithCount(int count);
+
+  /// 播放器网络弹幕面板：已停止搜索状态
+  ///
+  /// In zh, this message translates to:
+  /// **'已停止搜索 · 共 {count, plural, other{{count} 部}}'**
+  String playerDanmakuSearchStoppedCount(int count);
+
+  /// 播放器网络弹幕面板：部分服务器失败
+  ///
+  /// In zh, this message translates to:
+  /// **'部分服务器搜索失败：{errors}'**
+  String playerDanmakuPartialServerFailed(String errors);
+
+  /// 播放器网络弹幕面板：搜索中
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索中…'**
+  String get playerDanmakuSearching;
+
+  /// 播放器网络弹幕面板：空态提示
+  ///
+  /// In zh, this message translates to:
+  /// **'输入关键词搜索网络弹幕'**
+  String get playerDanmakuNetworkInputHint;
+
+  /// 播放器网络弹幕面板：番剧集数（集）
+  ///
+  /// In zh, this message translates to:
+  /// **'{count, plural, other{{count} 集}}'**
+  String playerEpisodeCountUnit(int count);
+
+  /// 播放器弹幕面板：本地弹幕入口
+  ///
+  /// In zh, this message translates to:
+  /// **'本地弹幕'**
+  String get playerDanmakuLocal;
+
+  /// 播放器弹幕面板：网络弹幕未实现提示
+  ///
+  /// In zh, this message translates to:
+  /// **'「网络弹幕」功能即将上线'**
+  String get playerDanmakuNetworkComingSoon;
+
+  /// 播放器弹幕面板：自动匹配入口
+  ///
+  /// In zh, this message translates to:
+  /// **'自动匹配'**
+  String get playerDanmakuAutoMatch;
+
+  /// 播放器弹幕面板：自动匹配未实现提示
+  ///
+  /// In zh, this message translates to:
+  /// **'「自动匹配」功能即将上线'**
+  String get playerDanmakuAutoMatchComingSoon;
+
+  /// 播放器弹幕面板：选择文件
+  ///
+  /// In zh, this message translates to:
+  /// **'选择弹幕文件'**
+  String get playerPickDanmakuFile;
+
+  /// 播放器弹幕面板：本地弹幕导入成功
+  ///
+  /// In zh, this message translates to:
+  /// **'已加载本地弹幕（{count, plural, other{{count} 条}}）'**
+  String playerLocalDanmakuLoaded(int count);
+
+  /// 播放器弹幕面板：导入失败提示
+  ///
+  /// In zh, this message translates to:
+  /// **'弹幕加载失败，请检查文件格式'**
+  String get playerDanmakuLoadFailedCheckFormat;
+
+  /// 播放器弹幕设置：弹幕样式分组
+  ///
+  /// In zh, this message translates to:
+  /// **'弹幕样式'**
+  String get playerDanmakuStyle;
+
+  /// 播放器弹幕设置：弹幕字号
+  ///
+  /// In zh, this message translates to:
+  /// **'弹幕字号'**
+  String get playerDanmakuFontSize;
+
+  /// 播放器弹幕设置：弹幕速度
+  ///
+  /// In zh, this message translates to:
+  /// **'弹幕速度'**
+  String get playerDanmakuSpeed;
+
+  /// 播放器弹幕设置：弹幕速度说明
+  ///
+  /// In zh, this message translates to:
+  /// **'数值越小弹幕越快'**
+  String get playerDanmakuSpeedDesc;
+
+  /// 播放器：描边粗细（弹幕设置 / 字幕样式）
+  ///
+  /// In zh, this message translates to:
+  /// **'描边粗细'**
+  String get playerStrokeWidth;
+
+  /// 播放器弹幕设置：不透明度
+  ///
+  /// In zh, this message translates to:
+  /// **'不透明度'**
+  String get playerOpacity;
+
+  /// 播放器弹幕设置：弹幕配置分组
+  ///
+  /// In zh, this message translates to:
+  /// **'弹幕配置'**
+  String get playerDanmakuConfig;
+
+  /// 播放器弹幕设置：显示区域
+  ///
+  /// In zh, this message translates to:
+  /// **'显示区域'**
+  String get playerDanmakuDisplayArea;
+
+  /// 播放器弹幕设置：弹幕行高
+  ///
+  /// In zh, this message translates to:
+  /// **'弹幕行高'**
+  String get playerDanmakuLineHeight;
+
+  /// 播放器弹幕设置：顶部弹幕
+  ///
+  /// In zh, this message translates to:
+  /// **'顶部弹幕'**
+  String get playerDanmakuTop;
+
+  /// 播放器弹幕设置：底部弹幕
+  ///
+  /// In zh, this message translates to:
+  /// **'底部弹幕'**
+  String get playerDanmakuBottom;
+
+  /// 播放器弹幕设置：滚动弹幕
+  ///
+  /// In zh, this message translates to:
+  /// **'滚动弹幕'**
+  String get playerDanmakuScroll;
+
+  /// 播放器弹幕设置：海量弹幕
+  ///
+  /// In zh, this message translates to:
+  /// **'海量弹幕'**
+  String get playerDanmakuMassive;
+
+  /// 播放器弹幕设置：海量弹幕说明
+  ///
+  /// In zh, this message translates to:
+  /// **'轨道占满时叠加绘制，弹幕过多不再丢弃'**
+  String get playerDanmakuMassiveDesc;
+
+  /// 播放器弹幕设置：弹幕去重
+  ///
+  /// In zh, this message translates to:
+  /// **'弹幕去重'**
+  String get playerDanmakuDedupe;
+
+  /// 播放器弹幕设置：弹幕去重说明
+  ///
+  /// In zh, this message translates to:
+  /// **'相同时间下相同弹幕合并为一条'**
+  String get playerDanmakuDedupeDesc;
+
+  /// 播放器弹幕设置：弹幕合并
+  ///
+  /// In zh, this message translates to:
+  /// **'弹幕合并'**
+  String get playerDanmakuMerge;
+
+  /// 播放器弹幕设置：弹幕合并说明
+  ///
+  /// In zh, this message translates to:
+  /// **'不同时间内相同弹幕合并且计数'**
+  String get playerDanmakuMergeDesc;
+
+  /// 播放器弹幕设置：弹幕偏移分组
+  ///
+  /// In zh, this message translates to:
+  /// **'弹幕偏移'**
+  String get playerDanmakuOffset;
+
+  /// 播放器弹幕设置：时间轴偏移
+  ///
+  /// In zh, this message translates to:
+  /// **'时间轴偏移'**
+  String get playerDanmakuTimelineOffset;
+
+  /// 播放器弹幕设置：时间轴提前 1 秒
+  ///
+  /// In zh, this message translates to:
+  /// **'提前 1 秒'**
+  String get playerDanmakuAdvanceOneSecond;
+
+  /// 播放器弹幕设置：时间轴延后 1 秒
+  ///
+  /// In zh, this message translates to:
+  /// **'延后 1 秒'**
+  String get playerDanmakuDelayOneSecond;
+
+  /// 播放器弹幕设置：重置偏移
+  ///
+  /// In zh, this message translates to:
+  /// **'重置偏移'**
+  String get playerDanmakuResetOffset;
+
+  /// 播放器弹幕设置：弹幕字体分组
+  ///
+  /// In zh, this message translates to:
+  /// **'弹幕字体'**
+  String get playerDanmakuFont;
+
+  /// 播放器弹幕设置：跟随弹幕颜色说明
+  ///
+  /// In zh, this message translates to:
+  /// **'保留弹幕自带颜色（含会员渐变彩色）'**
+  String get danmakuColorModeSourceDesc;
+
+  /// 播放器弹幕设置：随机渐变色说明
+  ///
+  /// In zh, this message translates to:
+  /// **'忽略文件颜色，按色轮逐条随机着色'**
+  String get danmakuColorModeRandomDesc;
+
+  /// 播放器弹幕设置：指定颜色说明
+  ///
+  /// In zh, this message translates to:
+  /// **'弹幕从下面已选颜色里随机取色'**
+  String get danmakuColorModeFixedDesc;
+
+  /// 播放器弹幕设置：调色板上限提示
+  ///
+  /// In zh, this message translates to:
+  /// **'{max, plural, other{最多选 {max} 种颜色}}'**
+  String playerDanmakuPaletteMaxHint(int max);
+
+  /// 播放器弹幕设置：调色板标题
+  ///
+  /// In zh, this message translates to:
+  /// **'弹幕颜色（可多选，随机使用）'**
+  String get playerDanmakuPaletteTitle;
+
+  /// 播放器弹幕设置：重复添加颜色提示
+  ///
+  /// In zh, this message translates to:
+  /// **'该颜色已在调色板中'**
+  String get playerDanmakuColorExists;
+
+  /// 播放器弹幕设置：调色板已满提示
+  ///
+  /// In zh, this message translates to:
+  /// **'{max, plural, other{已选满 {max} 种}}'**
+  String playerDanmakuPaletteFull(int max);
+
+  /// 播放器弹幕设置：添加到调色板按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'添加到调色板'**
+  String get playerDanmakuAddToPalette;
+
+  /// 播放器弹幕设置：已选颜色数
+  ///
+  /// In zh, this message translates to:
+  /// **'已选 {selected}/{max, plural, other{{max} 种}}'**
+  String playerDanmakuPaletteSelected(int selected, int max);
+
+  /// 播放器弹幕设置：屏蔽词分组
+  ///
+  /// In zh, this message translates to:
+  /// **'屏蔽词'**
+  String get playerDanmakuBlockWords;
+
+  /// 播放器弹幕设置：屏蔽词输入提示
+  ///
+  /// In zh, this message translates to:
+  /// **'输入要屏蔽的关键词'**
+  String get playerDanmakuBlockWordsHint;
+
+  /// 播放器：字体目录导入成功提示
+  ///
+  /// In zh, this message translates to:
+  /// **'已导入 {count} 个字体文件，共 {total, plural, other{{total} 种字体}}'**
+  String playerFontsImported(int count, int total);
+
+  /// 播放器：选择字体目录
+  ///
+  /// In zh, this message translates to:
+  /// **'选择字体目录'**
+  String get playerPickFontDir;
+
+  /// 播放器：导入字体目录提示
+  ///
+  /// In zh, this message translates to:
+  /// **'点击导入包含 .ttf/.otf 字体的目录'**
+  String get playerFontDirImportHint;
+
+  /// 播放器：字体目录已加载数量
+  ///
+  /// In zh, this message translates to:
+  /// **'已加载 {count, plural, other{{count} 种字体}}'**
+  String playerFontsLoaded(int count);
+
+  /// 播放器弹幕设置：选择字体
+  ///
+  /// In zh, this message translates to:
+  /// **'选择字体'**
+  String get playerPickFont;
+
+  /// 播放器解码面板：重启提示标题
+  ///
+  /// In zh, this message translates to:
+  /// **'需重启应用'**
+  String get playerRestartRequired;
+
+  /// 播放器解码面板：重启提示正文
+  ///
+  /// In zh, this message translates to:
+  /// **'解码配置已修改，重启应用后生效。\n\n是否立即重启？'**
+  String get playerDecodeRestartBody;
+
+  /// 播放器解码面板：稍后重启
+  ///
+  /// In zh, this message translates to:
+  /// **'稍后重启'**
+  String get playerRestartLater;
+
+  /// 播放器解码面板：立即重启
+  ///
+  /// In zh, this message translates to:
+  /// **'立即重启'**
+  String get playerRestartNow;
+
+  /// 播放器解码面板：解码预设分组
+  ///
+  /// In zh, this message translates to:
+  /// **'解码预设'**
+  String get playerDecodePreset;
+
+  /// 播放器解码面板：解码预设分组说明
+  ///
+  /// In zh, this message translates to:
+  /// **'切换后需重启应用生效，可选立即重启'**
+  String get playerDecodePresetDesc;
+
+  /// 播放器解码面板：硬解+ 档说明
+  ///
+  /// In zh, this message translates to:
+  /// **'「硬解+」直通不可用时由内核依次回退硬解 / 软解'**
+  String get playerDecodeHwPlusDesc;
+
+  /// 播放器诊断面板：容器格式
+  ///
+  /// In zh, this message translates to:
+  /// **'容器'**
+  String get playerDiagnosticsContainer;
+
+  /// 播放器诊断面板：音频编码
+  ///
+  /// In zh, this message translates to:
+  /// **'音频编码'**
+  String get playerDiagnosticsAudioCodec;
+
+  /// 播放器诊断面板：视频输出
+  ///
+  /// In zh, this message translates to:
+  /// **'视频输出'**
+  String get playerDiagnosticsVideoOutput;
+
+  /// 播放器诊断面板：同步方式
+  ///
+  /// In zh, this message translates to:
+  /// **'同步方式'**
+  String get playerDiagnosticsSyncMode;
+
+  /// 播放器诊断面板：像素格式
+  ///
+  /// In zh, this message translates to:
+  /// **'像素格式'**
+  String get playerDiagnosticsPixelFormat;
+
+  /// 播放器诊断面板：容器帧率
+  ///
+  /// In zh, this message translates to:
+  /// **'容器帧率'**
+  String get playerDiagnosticsContainerFps;
+
+  /// 播放器诊断面板：实际帧率
+  ///
+  /// In zh, this message translates to:
+  /// **'实际帧率'**
+  String get playerDiagnosticsActualFps;
+
+  /// 播放器诊断面板：视频码率
+  ///
+  /// In zh, this message translates to:
+  /// **'视频码率'**
+  String get playerDiagnosticsVideoBitrate;
+
+  /// 播放器诊断面板：音频参数
+  ///
+  /// In zh, this message translates to:
+  /// **'音频参数'**
+  String get playerDiagnosticsAudioParams;
+
+  /// 播放器诊断面板：音频码率
+  ///
+  /// In zh, this message translates to:
+  /// **'音频码率'**
+  String get playerDiagnosticsAudioBitrate;
+
+  /// 播放器诊断面板：音画同步
+  ///
+  /// In zh, this message translates to:
+  /// **'音画同步'**
+  String get playerDiagnosticsAvSync;
+
+  /// 播放器诊断面板：缓存与丢帧分组
+  ///
+  /// In zh, this message translates to:
+  /// **'缓存与丢帧'**
+  String get playerDiagnosticsCacheGroup;
+
+  /// 播放器诊断面板：缓冲时长
+  ///
+  /// In zh, this message translates to:
+  /// **'缓冲时长'**
+  String get playerDiagnosticsBufferDuration;
+
+  /// 播放器诊断面板：可播时长
+  ///
+  /// In zh, this message translates to:
+  /// **'可播时长'**
+  String get playerDiagnosticsPlayableDuration;
+
+  /// 播放器诊断面板：缓存占用
+  ///
+  /// In zh, this message translates to:
+  /// **'缓存占用'**
+  String get playerDiagnosticsCacheUsage;
+
+  /// 播放器诊断面板：下行速率
+  ///
+  /// In zh, this message translates to:
+  /// **'下行速率'**
+  String get playerDiagnosticsDownlinkRate;
+
+  /// 播放器诊断面板：丢帧
+  ///
+  /// In zh, this message translates to:
+  /// **'丢帧'**
+  String get playerDiagnosticsDroppedFrames;
+
+  /// 播放器诊断面板：解码丢帧
+  ///
+  /// In zh, this message translates to:
+  /// **'解码丢帧'**
+  String get playerDiagnosticsDecodeDropped;
+
+  /// 播放器诊断面板：延迟帧
+  ///
+  /// In zh, this message translates to:
+  /// **'延迟帧'**
+  String get playerDiagnosticsDelayedFrames;
+
+  /// 播放器诊断面板：刷新说明
+  ///
+  /// In zh, this message translates to:
+  /// **'每秒自动刷新 · 数据来自 mpv 运行时属性'**
+  String get playerDiagnosticsAutoRefreshHint;
+
+  /// 播放器诊断面板：全部读取失败警告
+  ///
+  /// In zh, this message translates to:
+  /// **'无法读取播放器属性（播放器可能未就绪或已卡住）'**
+  String get playerDiagnosticsReadFailed;
+
+  /// 播放器诊断面板：部分属性读取失败警告
+  ///
+  /// In zh, this message translates to:
+  /// **'读取失败：{keys}（显示的是上一次成功值）'**
+  String playerDiagnosticsFailedValue(String keys);
+
+  /// 播放器诊断面板：部分属性读取失败警告（其余折成计数）
+  ///
+  /// In zh, this message translates to:
+  /// **'读取失败：{keys} 等 {count} 项（显示的是上一次成功值）'**
+  String playerDiagnosticsFailedValueMore(String keys, int count);
+
+  /// 播放器片头片尾面板：片头范围
+  ///
+  /// In zh, this message translates to:
+  /// **'片头范围'**
+  String get playerIntroRange;
+
+  /// 播放器片头片尾面板：片尾范围
+  ///
+  /// In zh, this message translates to:
+  /// **'片尾范围'**
+  String get playerOutroRange;
+
+  /// 播放器片头片尾面板：范围设置说明
+  ///
+  /// In zh, this message translates to:
+  /// **'拖动或输入设置时间，可按需调整上方范围'**
+  String get playerRangeHint;
+
+  /// 播放器片头片尾面板：设为当前时间
+  ///
+  /// In zh, this message translates to:
+  /// **'设为当前时间'**
+  String get playerSetToCurrentTime;
+
+  /// 播放器片头片尾面板：设为当前剩余时间
+  ///
+  /// In zh, this message translates to:
+  /// **'设为当前剩余时间'**
+  String get playerSetToRemainingTime;
+
+  /// 播放器片头片尾面板：总开关
+  ///
+  /// In zh, this message translates to:
+  /// **'启用跳过片头片尾'**
+  String get playerEnableIntroOutroSkip;
+
+  /// 播放器片头片尾面板：总开关说明
+  ///
+  /// In zh, this message translates to:
+  /// **'通过手动设置秒数来跳过片头片尾'**
+  String get playerIntroOutroSkipDesc;
+
+  /// 播放器播放列表面板：空态
+  ///
+  /// In zh, this message translates to:
+  /// **'当前文件夹没有其他视频'**
+  String get playerNoOtherVideos;
+
+  /// 播放器画质面板：空态
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无可用画质'**
+  String get playerNoQuality;
+
+  /// 播放器画质面板：切换说明
+  ///
+  /// In zh, this message translates to:
+  /// **'切换画质会重开播放并保持进度'**
+  String get playerQualitySwitchHint;
+
+  /// 播放器进度恢复胶囊：提示
+  ///
+  /// In zh, this message translates to:
+  /// **'已恢复上次播放进度'**
+  String get playerResumeIndicator;
+
+  /// 播放器进度恢复胶囊：重头开始
+  ///
+  /// In zh, this message translates to:
+  /// **'重头开始'**
+  String get playerRestartFromBeginning;
+
+  /// 播放器倍速指示器：当前倍速
+  ///
+  /// In zh, this message translates to:
+  /// **'正在 {speed} 倍速播放'**
+  String playerSpeedPlaying(String speed);
+
+  /// 播放器倍速指示器：滑动调节说明
+  ///
+  /// In zh, this message translates to:
+  /// **'左右滑动可临时调节长按倍数'**
+  String get playerSpeedSwipeHint;
+
+  /// 播放器倍速面板：重复添加提示
+  ///
+  /// In zh, this message translates to:
+  /// **'该倍速已在预设中'**
+  String get playerSpeedAlreadyInPresets;
+
+  /// 播放器倍速面板：自定义预设上限提示
+  ///
+  /// In zh, this message translates to:
+  /// **'{max, plural, other{自定义预设已达上限（{max} 个）}}'**
+  String playerSpeedPresetLimit(int max);
+
+  /// 播放器倍速面板：我的预设分组
+  ///
+  /// In zh, this message translates to:
+  /// **'我的预设'**
+  String get playerMyPresets;
+
+  /// 播放器倍速面板：精确调速
+  ///
+  /// In zh, this message translates to:
+  /// **'精确调速'**
+  String get playerPreciseSpeed;
+
+  /// 播放器倍速面板：临时应用按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'临时应用'**
+  String get playerApplyTemporarily;
+
+  /// 播放器倍速面板：添加到预设
+  ///
+  /// In zh, this message translates to:
+  /// **'添加到预设'**
+  String get playerAddToPresets;
+
+  /// 播放器倍速面板：倍速归位（回到 1x）
+  ///
+  /// In zh, this message translates to:
+  /// **'归位'**
+  String get playerSpeedReset;
+
+  /// 播放器倍速面板：重置预设
+  ///
+  /// In zh, this message translates to:
+  /// **'重置预设'**
+  String get playerResetPresets;
+
+  /// 播放器超分面板：模式
+  ///
+  /// In zh, this message translates to:
+  /// **'模式'**
+  String get playerMode;
+
+  /// 播放器超分面板：超分质量
+  ///
+  /// In zh, this message translates to:
+  /// **'超分质量'**
+  String get playerSuperResolutionQuality;
+
+  /// 播放器超分面板：记忆超分模式开关
+  ///
+  /// In zh, this message translates to:
+  /// **'记忆超分模式'**
+  String get playerRememberSuperResolution;
+
+  /// 播放器超分面板：记忆超分模式说明
+  ///
+  /// In zh, this message translates to:
+  /// **'开启后自动应用上次的超分模式与质量'**
+  String get playerRememberSuperResolutionDesc;
+
+  /// 播放器字幕面板：字幕轨道分组
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕轨道'**
+  String get playerSubtitleTracks;
+
+  /// 播放器字幕面板：无字幕空态
+  ///
+  /// In zh, this message translates to:
+  /// **'当前视频没有字幕，可在下方导入外挂字幕'**
+  String get playerNoSubtitleHint;
+
+  /// 播放器字幕面板：关闭字幕
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭字幕'**
+  String get playerSubtitleOff;
+
+  /// 播放器字幕面板：外挂字幕分组
+  ///
+  /// In zh, this message translates to:
+  /// **'外挂字幕'**
+  String get playerExternalSubtitle;
+
+  /// 播放器字幕面板：导入外部字幕入口
+  ///
+  /// In zh, this message translates to:
+  /// **'导入外部字幕'**
+  String get playerImportExternalSubtitle;
+
+  /// 播放器字幕面板：字幕设置分组
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕设置'**
+  String get playerSubtitleSettings;
+
+  /// 播放器字幕面板：字幕延迟入口 / 页标题
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕延迟'**
+  String get playerSubtitleDelay;
+
+  /// 播放器字幕面板：字幕样式入口 / 页标题
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕样式'**
+  String get playerSubtitleStyle;
+
+  /// 播放器字幕面板：字幕杂项入口 / 页标题
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕杂项'**
+  String get playerSubtitleMisc;
+
+  /// 播放器字幕面板：字幕字体入口 / 页标题
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕字体'**
+  String get playerSubtitleFont;
+
+  /// 播放器字幕面板：选择字幕文件
+  ///
+  /// In zh, this message translates to:
+  /// **'选择字幕文件'**
+  String get playerPickSubtitleFile;
+
+  /// 播放器字幕面板：导入成功提示
+  ///
+  /// In zh, this message translates to:
+  /// **'已导入外挂字幕'**
+  String get playerExternalSubtitleImported;
+
+  /// 播放器字幕面板：移除外部字幕按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'移除已导入的字幕'**
+  String get playerRemoveSubtitle;
+
+  /// 播放器字幕延迟面板：快捷调整分组
+  ///
+  /// In zh, this message translates to:
+  /// **'快捷调整'**
+  String get playerQuickAdjust;
+
+  /// 播放器字幕延迟面板：重置为 0 秒
+  ///
+  /// In zh, this message translates to:
+  /// **'重置为 0 秒'**
+  String get playerResetToZeroSeconds;
+
+  /// 播放器字幕延迟面板：带正负号的延迟读数
+  ///
+  /// In zh, this message translates to:
+  /// **'{value} 秒'**
+  String playerDelaySeconds(String value);
+
+  /// 播放器字幕样式面板：文字颜色
+  ///
+  /// In zh, this message translates to:
+  /// **'文字颜色'**
+  String get playerTextColor;
+
+  /// 播放器字幕样式面板：描边颜色
+  ///
+  /// In zh, this message translates to:
+  /// **'描边颜色'**
+  String get playerStrokeColor;
+
+  /// 播放器字幕样式面板：背景颜色
+  ///
+  /// In zh, this message translates to:
+  /// **'背景颜色'**
+  String get playerBackgroundColor;
+
+  /// 播放器字幕样式面板：背景框大小
+  ///
+  /// In zh, this message translates to:
+  /// **'背景框大小'**
+  String get playerBackgroundBoxSize;
+
+  /// 播放器字幕样式面板：文字效果分组
+  ///
+  /// In zh, this message translates to:
+  /// **'文字效果'**
+  String get playerTextEffects;
+
+  /// 播放器字幕样式面板：粗体
+  ///
+  /// In zh, this message translates to:
+  /// **'粗体'**
+  String get playerBold;
+
+  /// 播放器字幕样式面板：斜体
+  ///
+  /// In zh, this message translates to:
+  /// **'斜体'**
+  String get playerItalic;
+
+  /// 播放器字幕样式面板：字间距
+  ///
+  /// In zh, this message translates to:
+  /// **'字间距'**
+  String get playerLetterSpacing;
+
+  /// 播放器字幕杂项面板：优先选中文字幕轨
+  ///
+  /// In zh, this message translates to:
+  /// **'优先选中文字幕轨'**
+  String get playerPreferChineseSubtitle;
+
+  /// 播放器字幕杂项面板：优先选中文字幕轨说明
+  ///
+  /// In zh, this message translates to:
+  /// **'默认启用中文轨（含「特效/双语」优先）；手动选过的不改'**
+  String get playerPreferChineseSubtitleDesc;
+
+  /// 播放器字幕杂项面板：不优先中文时的说明
+  ///
+  /// In zh, this message translates to:
+  /// **'交给内核默认挑选（通常是文件里的第一条）'**
+  String get playerSubtitleTrackAutoDesc;
+
+  /// 播放器字幕杂项面板：强制覆盖内嵌样式
+  ///
+  /// In zh, this message translates to:
+  /// **'强制覆盖内嵌样式'**
+  String get playerForceOverrideStyle;
+
+  /// 播放器字幕杂项面板：覆盖开启说明
+  ///
+  /// In zh, this message translates to:
+  /// **'使用上方设置渲染字幕样式'**
+  String get playerForceOverrideStyleDesc;
+
+  /// 播放器字幕杂项面板：覆盖关闭说明
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕使用自带的样式与字体'**
+  String get playerStyleFromSubtitleDesc;
+
+  /// 播放器字幕样式面板：重置所有样式
+  ///
+  /// In zh, this message translates to:
+  /// **'重置所有样式'**
+  String get playerResetAllStyles;
+
+  /// 播放器字幕样式面板：ASS 限制说明标题
+  ///
+  /// In zh, this message translates to:
+  /// **'ASS 内嵌字幕的限制'**
+  String get playerAssLimitTitle;
+
+  /// 播放器字幕样式面板：ASS 限制项（不生效）
+  ///
+  /// In zh, this message translates to:
+  /// **'粗体 / 斜体 / 模糊'**
+  String get playerAssLimitBoldItalicBlur;
+
+  /// 播放器字幕样式面板：ASS 限制项说明
+  ///
+  /// In zh, this message translates to:
+  /// **'开启覆盖也不生效（mpv 渲染限制）'**
+  String get playerAssLimitNoEffect;
+
+  /// 播放器字幕样式面板：ASS 可覆盖项
+  ///
+  /// In zh, this message translates to:
+  /// **'颜色 / 描边 / 背景 / 大小 / 位置 / 字间距'**
+  String get playerAssLimitStyleItems;
+
+  /// 播放器字幕样式面板：ASS 可覆盖项说明
+  ///
+  /// In zh, this message translates to:
+  /// **'开启覆盖后生效'**
+  String get playerAssLimitTakesEffect;
+
+  /// 播放器字幕样式面板：文本字幕
+  ///
+  /// In zh, this message translates to:
+  /// **'SRT / VTT 等文本字幕'**
+  String get playerAssLimitTextFormats;
+
+  /// 播放器字幕样式面板：文本字幕说明
+  ///
+  /// In zh, this message translates to:
+  /// **'所有样式都直接生效'**
+  String get playerAssLimitAllEffective;
+
+  /// 播放器字幕样式面板：缩放与位置分组
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕缩放与位置'**
+  String get playerSubtitleScalePosition;
+
+  /// 播放器字幕样式面板：缩放比例
+  ///
+  /// In zh, this message translates to:
+  /// **'缩放比例'**
+  String get playerScaleRatio;
+
+  /// 播放器字幕样式面板：垂直位置
+  ///
+  /// In zh, this message translates to:
+  /// **'垂直位置'**
+  String get playerVerticalPosition;
+
+  /// 播放器字幕样式面板：垂直位置读数
+  ///
+  /// In zh, this message translates to:
+  /// **'{value}（100=窗口底部）'**
+  String playerVerticalPositionValue(int value);
+
+  /// 播放器字幕样式面板：重置缩放与位置
+  ///
+  /// In zh, this message translates to:
+  /// **'重置缩放与位置'**
+  String get playerResetScalePosition;
+
+  /// 播放器字幕字体面板：刷新字体目录提示
+  ///
+  /// In zh, this message translates to:
+  /// **'已刷新，共 {count, plural, other{{count} 种字体}}'**
+  String playerFontsRefreshed(int count);
+
+  /// 播放器字幕字体面板：清除字体目录提示
+  ///
+  /// In zh, this message translates to:
+  /// **'已清除字体目录'**
+  String get playerFontDirCleared;
+
+  /// 播放器字幕字体面板：字体更改说明
+  ///
+  /// In zh, this message translates to:
+  /// **'字体更改需退出播放器并重新进入后生效'**
+  String get playerFontChangeHint;
+
+  /// 播放器字幕字体面板：字体目录
+  ///
+  /// In zh, this message translates to:
+  /// **'字体目录'**
+  String get playerFontDir;
+
+  /// 播放器字幕字体面板：选择字体目录提示
+  ///
+  /// In zh, this message translates to:
+  /// **'点击选择包含 .ttf/.otf 字体的目录'**
+  String get playerFontDirPickHint;
+
+  /// 播放器字幕字体面板：清除目录
+  ///
+  /// In zh, this message translates to:
+  /// **'清除目录'**
+  String get playerFontDirClear;
+
+  /// 播放器字幕字体面板：当前字体
+  ///
+  /// In zh, this message translates to:
+  /// **'当前字体'**
+  String get playerCurrentFont;
+
+  /// 播放器字幕字体面板：默认字体
+  ///
+  /// In zh, this message translates to:
+  /// **'默认字体'**
+  String get playerDefaultFont;
+
+  /// 播放器字幕字体面板：未选目录提示
+  ///
+  /// In zh, this message translates to:
+  /// **'请先选择字体目录'**
+  String get playerPickFontDirFirst;
+
+  /// 播放器字幕字体面板：跟随系统字库
+  ///
+  /// In zh, this message translates to:
+  /// **'跟随系统字库'**
+  String get playerFollowSystemFonts;
+
+  /// 播放器字幕字体面板：字体更改完整说明
+  ///
+  /// In zh, this message translates to:
+  /// **'字体更改需退出播放器并重新进入后生效；内嵌 ASS 字幕需开启「强制覆盖内嵌样式」后字体设置才会生效。'**
+  String get playerFontChangeHintFull;
 }
 
 class _AppLocalizationsDelegate

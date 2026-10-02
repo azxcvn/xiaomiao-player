@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 
 /// 手势指示器类型（音量 / 亮度）
 enum GestureIndicatorKind { volume, brightness }
@@ -141,7 +142,7 @@ class PlayerGestureIndicator extends StatelessWidget {
             ),
             if (boosting)
               Text(
-                '音量增强',
+                AppLocalizations.of(context).settingsPlayerVolumeBoost,
                 style: TextStyle(
                   color: const Color(0xFFFF5252).withValues(alpha: 0.9),
                   fontSize: 10,

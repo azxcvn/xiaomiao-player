@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/widgets/player_option_chip.dart';
@@ -117,14 +118,19 @@ class _PlayerSpeedPanelState extends State<PlayerSpeedPanel> {
   }
 
   void _addToPresets() {
+    final l10n = AppLocalizations.of(context);
     final s = PlayerControlsSettings.instance;
     if (s.customSpeedPresets.any((e) => (e - _draft).abs() < 0.01)) {
-      _toast('该倍速已在预设中');
+      _toast(l10n.playerSpeedAlreadyInPresets);
       return;
     }
     if (s.customSpeedPresets.length >=
         PlayerControlsSettings.maxCustomSpeedPresets) {
-      _toast('自定义预设已达上限（${PlayerControlsSettings.maxCustomSpeedPresets} 个）');
+      _toast(
+        l10n.playerSpeedPresetLimit(
+          PlayerControlsSettings.maxCustomSpeedPresets,
+        ),
+      );
       return;
     }
     s.addCustomSpeedPreset(_draft);
@@ -179,6 +185,7 @@ class _PlayerSpeedPanelState extends State<PlayerSpeedPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final s = PlayerControlsSettings.instance;
     final scheme = Theme.of(context).colorScheme;
     final clamped = _draft.clamp(
@@ -191,7 +198,7 @@ class _PlayerSpeedPanelState extends State<PlayerSpeedPanel> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── 系统预设（第一眼）──
-          const _SectionLabel('预设'),
+          _SectionLabel(l10n.playerPreset),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -215,7 +222,7 @@ class _PlayerSpeedPanelState extends State<PlayerSpeedPanel> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  const _SectionLabel('我的预设'),
+                  _SectionLabel(l10n.playerMyPresets),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -237,7 +244,7 @@ class _PlayerSpeedPanelState extends State<PlayerSpeedPanel> {
           ),
           const SizedBox(height: 20),
           // ── 精确调速（只选值，不生效）──
-          const _SectionLabel('精确调速'),
+          _SectionLabel(l10n.playerPreciseSpeed),
           const SizedBox(height: 4),
           Row(
             children: [
@@ -342,7 +349,7 @@ class _PlayerSpeedPanelState extends State<PlayerSpeedPanel> {
                       children: [
                         Expanded(
                           child: _ActionPill(
-                            label: '临时应用',
+                            label: l10n.playerApplyTemporarily,
                             active: _tempActive,
                             onTap: _toggleTemporary,
                           ),
@@ -350,24 +357,27 @@ class _PlayerSpeedPanelState extends State<PlayerSpeedPanel> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: _ActionPill(
-                            label: '添加到预设',
+                            label: l10n.playerAddToPresets,
                             enabled: !inPresets,
                             onTap: _addToPresets,
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: _ActionPill(label: '归位', onTap: () {
-                            setState(() => _draft = 1.0);
-                            _applyPreset(1.0);
-                          }),
+                          child: _ActionPill(
+                            label: l10n.playerSpeedReset,
+                            onTap: () {
+                              setState(() => _draft = 1.0);
+                              _applyPreset(1.0);
+                            },
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
                     // 重置预设：独占一行，红色文字
                     _DangerPill(
-                      label: '重置预设',
+                      label: l10n.playerResetPresets,
                       onTap: s.resetCustomSpeedPresets,
                     ),
                   ],

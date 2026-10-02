@@ -1705,4 +1705,1088 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsWallpaperImageUnavailable =>
       'The image is no longer available, please pick it again';
+
+  @override
+  String get commonBack => 'Back';
+
+  @override
+  String get commonMore => 'More';
+
+  @override
+  String get commonPlay => 'Play';
+
+  @override
+  String get commonPause => 'Pause';
+
+  @override
+  String get commonPlaying => 'Playing';
+
+  @override
+  String get commonSearch => 'Search';
+
+  @override
+  String get commonClearAll => 'Clear';
+
+  @override
+  String get commonNone => 'None';
+
+  @override
+  String get commonNotSet => 'Not set';
+
+  @override
+  String get commonCustom => 'Custom';
+
+  @override
+  String get commonJump => 'Go';
+
+  @override
+  String get commonSortBy => 'Sort by';
+
+  @override
+  String get commonGoUp => 'Up';
+
+  @override
+  String get commonRefresh => 'Refresh';
+
+  @override
+  String get commonOneKeyReset => 'Reset all';
+
+  @override
+  String get commonRestoreDefaults => 'Restore defaults';
+
+  @override
+  String get commonLoadingDots => 'Loading...';
+
+  @override
+  String get commonTitle => 'Title';
+
+  @override
+  String get commonBlur => 'Blur';
+
+  @override
+  String get commonEpisodeUnit => 'ep';
+
+  @override
+  String playerAutoLoadedSubtitle(String fileName) {
+    return 'Subtitles auto-loaded: $fileName';
+  }
+
+  @override
+  String playerAutoLoadedDanmaku(String fileName) {
+    return 'Danmaku auto-loaded: $fileName';
+  }
+
+  @override
+  String playerDanmakuLoaded(String message) {
+    return 'Danmaku loaded: $message';
+  }
+
+  @override
+  String playerQualityUnavailableSwitched(String name) {
+    return 'That quality is unavailable; switched to $name';
+  }
+
+  @override
+  String playerQualitySwitchFailed(String error) {
+    return 'Failed to switch quality: $error';
+  }
+
+  @override
+  String get playerQuality => 'Quality';
+
+  @override
+  String playerScreenshotFailed(String error) {
+    return 'Screenshot failed: $error';
+  }
+
+  @override
+  String get playerScreenshotNoImage => 'Screenshot failed: no image captured';
+
+  @override
+  String get playerSavedToGallery => 'Saved to gallery';
+
+  @override
+  String playerScreenshotSaveFailed(String error) {
+    return 'Failed to save screenshot: $error';
+  }
+
+  @override
+  String get playerDanmakuSettings => 'Danmaku settings';
+
+  @override
+  String get playerSkippedIntro => 'Intro skipped';
+
+  @override
+  String get playerSkippedOutro => 'Outro skipped';
+
+  @override
+  String get playerNoNetworkCannotSwitch =>
+      'No network connection; cannot switch';
+
+  @override
+  String playerSwitchFailed(String error) {
+    return 'Switch failed: $error';
+  }
+
+  @override
+  String get playerResolveUrlFailed => 'Failed to resolve the playback URL';
+
+  @override
+  String playerSwitchEpisodeFailed(String error) {
+    return 'Failed to switch episode: $error';
+  }
+
+  @override
+  String get playerPlaybackSpeed => 'Playback speed';
+
+  @override
+  String get playerSuperResolution => 'Super resolution';
+
+  @override
+  String get playerAspectRatio => 'Aspect ratio';
+
+  @override
+  String get playerCastUnsupportedSource =>
+      'Casting this source is not supported yet';
+
+  @override
+  String get playerFeatureNotPlaced => 'Not placed';
+
+  @override
+  String get playerFeatureComingSoon => 'Coming soon';
+
+  @override
+  String get playerEditControlBar => 'Edit control bar';
+
+  @override
+  String get playerActionsEnabledHint =>
+      'Enabled (long-press to drag and reorder)';
+
+  @override
+  String get playerNoEnabledActions => 'No actions enabled yet; add one below';
+
+  @override
+  String get playerAddable => 'Available';
+
+  @override
+  String playerMaxActions(int max) {
+    String _temp0 = intl.Intl.pluralLogic(
+      max,
+      locale: localeName,
+      other: 'Up to $max actions',
+      one: 'Up to 1 action',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerResetControlBar => 'Reset control bar';
+
+  @override
+  String get playerDanmakuNetwork => 'Online danmaku';
+
+  @override
+  String get playerDanmakuLoadFailed => 'Failed to load danmaku';
+
+  @override
+  String get playerDanmakuMatching => 'Matching danmaku, please wait…';
+
+  @override
+  String get playerDanmakuNoMatch => 'No matching danmaku found';
+
+  @override
+  String get playerDanmakuPickMatch => 'Choose a match';
+
+  @override
+  String get playerPipUnsupported =>
+      'Picture-in-picture is not supported on this device';
+
+  @override
+  String get playerPipFailed => 'Failed to enter picture-in-picture';
+
+  @override
+  String get playerPlaylist => 'Playlist';
+
+  @override
+  String get playerLock => 'Lock';
+
+  @override
+  String get playerUnlock => 'Unlock';
+
+  @override
+  String get playerScreenshot => 'Screenshot';
+
+  @override
+  String get playerRestoreView => 'Restore view';
+
+  @override
+  String get playerAudioTrack => 'Audio track';
+
+  @override
+  String get playerNoAudioTrackHint =>
+      'This video has no audio track; you can import an external one below';
+
+  @override
+  String get playerExternalAudioTrack => 'External audio track';
+
+  @override
+  String get playerImportExternalAudioTrack => 'Import external audio track';
+
+  @override
+  String get playerTempEffectHint =>
+      'Temporary; not kept after you leave the player';
+
+  @override
+  String get playerAudioChannel => 'Audio channel';
+
+  @override
+  String get playerAudioProcessing => 'Audio processing';
+
+  @override
+  String get playerVolumeNormalize => 'Volume normalization';
+
+  @override
+  String get playerDynamicRangeCompress => 'Dynamic range compression';
+
+  @override
+  String get playerPickAudioFile => 'Choose an audio file';
+
+  @override
+  String get playerExternalAudioImported => 'External audio track imported';
+
+  @override
+  String get playerImportFailedCheckFormat =>
+      'Import failed; check the file format';
+
+  @override
+  String get playerRemoveAudioTrack => 'Remove the imported audio track';
+
+  @override
+  String get audioPlaybackSpeed => 'Playback speed';
+
+  @override
+  String get audioRepeatOff => 'Repeat off';
+
+  @override
+  String get audioRepeatSingle => 'Repeat one';
+
+  @override
+  String get audioSleepTimer => 'Sleep timer';
+
+  @override
+  String get audioSleepEndOfTrack => 'After current track';
+
+  @override
+  String get audioSleepEndOfTrackHint =>
+      'Will stop after the current track ends';
+
+  @override
+  String audioSleepRemaining(String time) {
+    return '$time left';
+  }
+
+  @override
+  String get audioSleepCustomTitle => 'Custom sleep timer';
+
+  @override
+  String audioSleepMinutes(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes minutes',
+      one: '1 minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get audioShuffle => 'Shuffle';
+
+  @override
+  String playerPlaylistWithCount(int count) {
+    return 'Playlist ($count)';
+  }
+
+  @override
+  String get playerEqualizerEnable => 'Enable equalizer';
+
+  @override
+  String get playerEqualizerDesc =>
+      'Adjust band gain, bass boost and virtual surround';
+
+  @override
+  String get playerPreset => 'Preset';
+
+  @override
+  String get playerEqualizerBands => 'Band adjustment';
+
+  @override
+  String get playerEqualizerBass => 'Bass boost';
+
+  @override
+  String get playerEqualizerSurround => 'Virtual surround';
+
+  @override
+  String get playerBiliNoEpisodes => 'No episode list available';
+
+  @override
+  String playerBiliTotalEpisodes(int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total episodes',
+      one: '1 episode',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playerBiliCurrentOfTotal(int current, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'Episode $current of $total',
+      one: 'Episode $current of 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerBiliFreeLimited => 'Free for a limited time';
+
+  @override
+  String get playerBiliPreview => 'Preview';
+
+  @override
+  String get playerNextEpisode => 'Next episode';
+
+  @override
+  String get playerCastSelectScreen => 'Choose a screen';
+
+  @override
+  String playerSeekBackSeconds(int seconds) {
+    return 'Rewind ${seconds}s';
+  }
+
+  @override
+  String playerSeekForwardSeconds(int seconds) {
+    return 'Forward ${seconds}s';
+  }
+
+  @override
+  String get playerChapterPanelTitle => 'Chapter skip';
+
+  @override
+  String get playerNoChapters => 'This video has no chapter info';
+
+  @override
+  String playerChapterCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count chapters',
+      one: '1 chapter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerChapterSkipAuto => 'Auto skip';
+
+  @override
+  String get playerChapterSkipAutoDesc =>
+      'Jump to the end of the segment automatically; when off, only the skip chip appears';
+
+  @override
+  String get playerChapterSkipCustomKeywords => 'Custom keywords';
+
+  @override
+  String get playerChapterSkipKeywordsHint =>
+      'Matched against chapter titles; separate with commas, semicolons or new lines';
+
+  @override
+  String get playerIntroKeywords => 'Intro keywords';
+
+  @override
+  String get playerIntroKeywordsHint => 'e.g. ap, op, opening';
+
+  @override
+  String get playerOutroKeywords => 'Outro keywords';
+
+  @override
+  String get playerOutroKeywordsHint => 'e.g. ed, ending, credits';
+
+  @override
+  String get playerChapterSkipKeywordOwnerHint =>
+      'Which slot you type a keyword into decides its type: in \"Intro keywords\" it counts as an intro, in \"Outro keywords\" as an outro. When a title matches several types, a fixed priority decides (recap > cold open > credits > preview > outro > intro).';
+
+  @override
+  String get playerDanmakuClose => 'Turn off danmaku';
+
+  @override
+  String get playerDanmakuOpen => 'Turn on danmaku';
+
+  @override
+  String get playerEpisodeInvalidInput => 'Enter an episode number (digits)';
+
+  @override
+  String playerEpisodeNotFound(int number) {
+    return 'There is no episode $number';
+  }
+
+  @override
+  String playerEpisodeTotalFromServer(int total, String server) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total episodes · from $server',
+      one: '1 episode · from $server',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerJumpToEpisode => 'Jump to';
+
+  @override
+  String get playerEpisodeNumber => 'Episode number';
+
+  @override
+  String get playerDanmakuNetworkSearchHint => 'Enter an anime title';
+
+  @override
+  String get playerDanmakuStopSearch => 'Stop search';
+
+  @override
+  String playerDanmakuResultCountUnit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count titles',
+      one: '1 title',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playerDanmakuSearchingWithCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count titles',
+      one: '1 title',
+    );
+    return 'Searching · $_temp0 found';
+  }
+
+  @override
+  String playerDanmakuSearchStoppedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count titles',
+      one: '1 title',
+    );
+    return 'Search stopped · $_temp0 in total';
+  }
+
+  @override
+  String playerDanmakuPartialServerFailed(String errors) {
+    return 'Some servers failed to search: $errors';
+  }
+
+  @override
+  String get playerDanmakuSearching => 'Searching…';
+
+  @override
+  String get playerDanmakuNetworkInputHint =>
+      'Enter keywords to search online danmaku';
+
+  @override
+  String playerEpisodeCountUnit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count episodes',
+      one: '1 episode',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerDanmakuLocal => 'Local danmaku';
+
+  @override
+  String get playerDanmakuNetworkComingSoon =>
+      '\"Online danmaku\" is coming soon';
+
+  @override
+  String get playerDanmakuAutoMatch => 'Auto match';
+
+  @override
+  String get playerDanmakuAutoMatchComingSoon =>
+      '\"Auto match\" is coming soon';
+
+  @override
+  String get playerPickDanmakuFile => 'Choose a danmaku file';
+
+  @override
+  String playerLocalDanmakuLoaded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return 'Local danmaku loaded ($_temp0)';
+  }
+
+  @override
+  String get playerDanmakuLoadFailedCheckFormat =>
+      'Failed to load danmaku; check the file format';
+
+  @override
+  String get playerDanmakuStyle => 'Danmaku style';
+
+  @override
+  String get playerDanmakuFontSize => 'Danmaku font size';
+
+  @override
+  String get playerDanmakuSpeed => 'Danmaku speed';
+
+  @override
+  String get playerDanmakuSpeedDesc =>
+      'The smaller the value, the faster the danmaku';
+
+  @override
+  String get playerStrokeWidth => 'Stroke width';
+
+  @override
+  String get playerOpacity => 'Opacity';
+
+  @override
+  String get playerDanmakuConfig => 'Danmaku config';
+
+  @override
+  String get playerDanmakuDisplayArea => 'Display area';
+
+  @override
+  String get playerDanmakuLineHeight => 'Danmaku line height';
+
+  @override
+  String get playerDanmakuTop => 'Top danmaku';
+
+  @override
+  String get playerDanmakuBottom => 'Bottom danmaku';
+
+  @override
+  String get playerDanmakuScroll => 'Scrolling danmaku';
+
+  @override
+  String get playerDanmakuMassive => 'Massive danmaku';
+
+  @override
+  String get playerDanmakuMassiveDesc =>
+      'Draw overlapping when tracks are full so excess danmaku is no longer dropped';
+
+  @override
+  String get playerDanmakuDedupe => 'Deduplicate danmaku';
+
+  @override
+  String get playerDanmakuDedupeDesc =>
+      'Identical danmaku at the same time merge into one';
+
+  @override
+  String get playerDanmakuMerge => 'Merge danmaku';
+
+  @override
+  String get playerDanmakuMergeDesc =>
+      'Merge identical danmaku at different times and count them';
+
+  @override
+  String get playerDanmakuOffset => 'Danmaku offset';
+
+  @override
+  String get playerDanmakuTimelineOffset => 'Timeline offset';
+
+  @override
+  String get playerDanmakuAdvanceOneSecond => '1 s earlier';
+
+  @override
+  String get playerDanmakuDelayOneSecond => '1 s later';
+
+  @override
+  String get playerDanmakuResetOffset => 'Reset offset';
+
+  @override
+  String get playerDanmakuFont => 'Danmaku font';
+
+  @override
+  String get danmakuColorModeSourceDesc =>
+      'Keep each danmaku\'s own color (including VIP gradient colors)';
+
+  @override
+  String get danmakuColorModeRandomDesc =>
+      'Ignore file colors; color each danmaku randomly from the color wheel';
+
+  @override
+  String get danmakuColorModeFixedDesc =>
+      'Pick randomly from the colors selected below';
+
+  @override
+  String playerDanmakuPaletteMaxHint(int max) {
+    String _temp0 = intl.Intl.pluralLogic(
+      max,
+      locale: localeName,
+      other: 'Up to $max colors',
+      one: 'Up to 1 color',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerDanmakuPaletteTitle =>
+      'Danmaku colors (multi-select, used at random)';
+
+  @override
+  String get playerDanmakuColorExists => 'This color is already in the palette';
+
+  @override
+  String playerDanmakuPaletteFull(int max) {
+    String _temp0 = intl.Intl.pluralLogic(
+      max,
+      locale: localeName,
+      other: 'All $max colors selected',
+      one: 'All 1 color selected',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerDanmakuAddToPalette => 'Add to palette';
+
+  @override
+  String playerDanmakuPaletteSelected(int selected, int max) {
+    String _temp0 = intl.Intl.pluralLogic(
+      max,
+      locale: localeName,
+      other: '$max colors',
+      one: '1 color',
+    );
+    return '$selected of $_temp0 selected';
+  }
+
+  @override
+  String get playerDanmakuBlockWords => 'Blocked words';
+
+  @override
+  String get playerDanmakuBlockWordsHint => 'Enter keywords to block';
+
+  @override
+  String playerFontsImported(int count, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total typefaces',
+      one: '1 typeface',
+    );
+    return 'Imported $count font files, $_temp0 in total';
+  }
+
+  @override
+  String get playerPickFontDir => 'Choose a font folder';
+
+  @override
+  String get playerFontDirImportHint =>
+      'Tap to import a folder containing .ttf/.otf fonts';
+
+  @override
+  String playerFontsLoaded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count typefaces loaded',
+      one: '1 typeface loaded',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerPickFont => 'Choose a font';
+
+  @override
+  String get playerRestartRequired => 'Restart required';
+
+  @override
+  String get playerDecodeRestartBody =>
+      'Decode settings changed. They take effect after restarting the app.\n\nRestart now?';
+
+  @override
+  String get playerRestartLater => 'Restart later';
+
+  @override
+  String get playerRestartNow => 'Restart now';
+
+  @override
+  String get playerDecodePreset => 'Decode preset';
+
+  @override
+  String get playerDecodePresetDesc =>
+      'Takes effect after restarting the app; you can restart now';
+
+  @override
+  String get playerDecodeHwPlusDesc =>
+      'When \"HW+\" passthrough is unavailable, the core falls back to HW decode, then SW decode';
+
+  @override
+  String get playerDiagnosticsContainer => 'Container';
+
+  @override
+  String get playerDiagnosticsAudioCodec => 'Audio codec';
+
+  @override
+  String get playerDiagnosticsVideoOutput => 'Video output';
+
+  @override
+  String get playerDiagnosticsSyncMode => 'Sync mode';
+
+  @override
+  String get playerDiagnosticsPixelFormat => 'Pixel format';
+
+  @override
+  String get playerDiagnosticsContainerFps => 'Container frame rate';
+
+  @override
+  String get playerDiagnosticsActualFps => 'Actual frame rate';
+
+  @override
+  String get playerDiagnosticsVideoBitrate => 'Video bitrate';
+
+  @override
+  String get playerDiagnosticsAudioParams => 'Audio parameters';
+
+  @override
+  String get playerDiagnosticsAudioBitrate => 'Audio bitrate';
+
+  @override
+  String get playerDiagnosticsAvSync => 'A/V sync';
+
+  @override
+  String get playerDiagnosticsCacheGroup => 'Cache & dropped frames';
+
+  @override
+  String get playerDiagnosticsBufferDuration => 'Buffer duration';
+
+  @override
+  String get playerDiagnosticsPlayableDuration => 'Playable duration';
+
+  @override
+  String get playerDiagnosticsCacheUsage => 'Cache usage';
+
+  @override
+  String get playerDiagnosticsDownlinkRate => 'Downlink rate';
+
+  @override
+  String get playerDiagnosticsDroppedFrames => 'Dropped frames';
+
+  @override
+  String get playerDiagnosticsDecodeDropped => 'Decode dropped frames';
+
+  @override
+  String get playerDiagnosticsDelayedFrames => 'Delayed frames';
+
+  @override
+  String get playerDiagnosticsAutoRefreshHint =>
+      'Refreshes every second · data comes from mpv runtime properties';
+
+  @override
+  String get playerDiagnosticsReadFailed =>
+      'Cannot read player properties (the player may not be ready or may be stuck)';
+
+  @override
+  String playerDiagnosticsFailedValue(String keys) {
+    return 'Read failed: $keys (showing the last successful value)';
+  }
+
+  @override
+  String playerDiagnosticsFailedValueMore(String keys, int count) {
+    return 'Read failed: $keys and $count items in total (showing the last successful values)';
+  }
+
+  @override
+  String get playerIntroRange => 'Intro range';
+
+  @override
+  String get playerOutroRange => 'Outro range';
+
+  @override
+  String get playerRangeHint =>
+      'Drag or type to set the time; adjust the range above as needed';
+
+  @override
+  String get playerSetToCurrentTime => 'Set to current time';
+
+  @override
+  String get playerSetToRemainingTime => 'Set to current remaining time';
+
+  @override
+  String get playerEnableIntroOutroSkip => 'Enable intro/outro skipping';
+
+  @override
+  String get playerIntroOutroSkipDesc =>
+      'Skip intro/outro by setting the seconds manually';
+
+  @override
+  String get playerNoOtherVideos => 'No other videos in this folder';
+
+  @override
+  String get playerNoQuality => 'No quality available';
+
+  @override
+  String get playerQualitySwitchHint =>
+      'Switching quality restarts playback and keeps your progress';
+
+  @override
+  String get playerResumeIndicator => 'Resumed from your last position';
+
+  @override
+  String get playerRestartFromBeginning => 'Start over';
+
+  @override
+  String playerSpeedPlaying(String speed) {
+    return 'Playing at ${speed}x';
+  }
+
+  @override
+  String get playerSpeedSwipeHint =>
+      'Swipe left or right to adjust the temporary speed';
+
+  @override
+  String get playerSpeedAlreadyInPresets => 'This speed is already a preset';
+
+  @override
+  String playerSpeedPresetLimit(int max) {
+    String _temp0 = intl.Intl.pluralLogic(
+      max,
+      locale: localeName,
+      other: 'Custom presets are limited to $max',
+      one: 'Custom presets are limited to 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerMyPresets => 'My presets';
+
+  @override
+  String get playerPreciseSpeed => 'Precise speed';
+
+  @override
+  String get playerApplyTemporarily => 'Apply temporarily';
+
+  @override
+  String get playerAddToPresets => 'Add to presets';
+
+  @override
+  String get playerSpeedReset => 'Reset';
+
+  @override
+  String get playerResetPresets => 'Reset presets';
+
+  @override
+  String get playerMode => 'Mode';
+
+  @override
+  String get playerSuperResolutionQuality => 'Super resolution quality';
+
+  @override
+  String get playerRememberSuperResolution => 'Remember super resolution mode';
+
+  @override
+  String get playerRememberSuperResolutionDesc =>
+      'Automatically apply the last super resolution mode and quality';
+
+  @override
+  String get playerSubtitleTracks => 'Subtitle tracks';
+
+  @override
+  String get playerNoSubtitleHint =>
+      'This video has no subtitles; you can import an external one below';
+
+  @override
+  String get playerSubtitleOff => 'Turn off subtitles';
+
+  @override
+  String get playerExternalSubtitle => 'External subtitle';
+
+  @override
+  String get playerImportExternalSubtitle => 'Import external subtitle';
+
+  @override
+  String get playerSubtitleSettings => 'Subtitle settings';
+
+  @override
+  String get playerSubtitleDelay => 'Subtitle delay';
+
+  @override
+  String get playerSubtitleStyle => 'Subtitle style';
+
+  @override
+  String get playerSubtitleMisc => 'Subtitle misc';
+
+  @override
+  String get playerSubtitleFont => 'Subtitle font';
+
+  @override
+  String get playerPickSubtitleFile => 'Choose a subtitle file';
+
+  @override
+  String get playerExternalSubtitleImported => 'External subtitle imported';
+
+  @override
+  String get playerRemoveSubtitle => 'Remove the imported subtitle';
+
+  @override
+  String get playerQuickAdjust => 'Quick adjust';
+
+  @override
+  String get playerResetToZeroSeconds => 'Reset to 0 s';
+
+  @override
+  String playerDelaySeconds(String value) {
+    return '$value s';
+  }
+
+  @override
+  String get playerTextColor => 'Text color';
+
+  @override
+  String get playerStrokeColor => 'Stroke color';
+
+  @override
+  String get playerBackgroundColor => 'Background color';
+
+  @override
+  String get playerBackgroundBoxSize => 'Background box size';
+
+  @override
+  String get playerTextEffects => 'Text effects';
+
+  @override
+  String get playerBold => 'Bold';
+
+  @override
+  String get playerItalic => 'Italic';
+
+  @override
+  String get playerLetterSpacing => 'Letter spacing';
+
+  @override
+  String get playerPreferChineseSubtitle => 'Prefer Chinese subtitle tracks';
+
+  @override
+  String get playerPreferChineseSubtitleDesc =>
+      'Enable Chinese tracks by default (signs/songs and bilingual ones take priority); manual picks are kept';
+
+  @override
+  String get playerSubtitleTrackAutoDesc =>
+      'Let the core pick (usually the first track in the file)';
+
+  @override
+  String get playerForceOverrideStyle => 'Force override embedded styles';
+
+  @override
+  String get playerForceOverrideStyleDesc =>
+      'Render subtitles using the settings above';
+
+  @override
+  String get playerStyleFromSubtitleDesc =>
+      'Use the subtitle\'s own styles and fonts';
+
+  @override
+  String get playerResetAllStyles => 'Reset all styles';
+
+  @override
+  String get playerAssLimitTitle => 'Limitations of embedded ASS subtitles';
+
+  @override
+  String get playerAssLimitBoldItalicBlur => 'Bold / italic / blur';
+
+  @override
+  String get playerAssLimitNoEffect =>
+      'No effect even with override on (mpv rendering limit)';
+
+  @override
+  String get playerAssLimitStyleItems =>
+      'Color / stroke / background / size / position / letter spacing';
+
+  @override
+  String get playerAssLimitTakesEffect => 'Takes effect with override on';
+
+  @override
+  String get playerAssLimitTextFormats => 'Text subtitles such as SRT / VTT';
+
+  @override
+  String get playerAssLimitAllEffective => 'All styles apply directly';
+
+  @override
+  String get playerSubtitleScalePosition => 'Subtitle scale & position';
+
+  @override
+  String get playerScaleRatio => 'Scale';
+
+  @override
+  String get playerVerticalPosition => 'Vertical position';
+
+  @override
+  String playerVerticalPositionValue(int value) {
+    return '$value (100 = bottom of the window)';
+  }
+
+  @override
+  String get playerResetScalePosition => 'Reset scale & position';
+
+  @override
+  String playerFontsRefreshed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count typefaces',
+      one: '1 typeface',
+    );
+    return 'Refreshed, $_temp0 in total';
+  }
+
+  @override
+  String get playerFontDirCleared => 'Font folder cleared';
+
+  @override
+  String get playerFontChangeHint =>
+      'Font changes take effect after leaving and re-entering the player';
+
+  @override
+  String get playerFontDir => 'Font folder';
+
+  @override
+  String get playerFontDirPickHint =>
+      'Tap to choose a folder containing .ttf/.otf fonts';
+
+  @override
+  String get playerFontDirClear => 'Clear folder';
+
+  @override
+  String get playerCurrentFont => 'Current font';
+
+  @override
+  String get playerDefaultFont => 'Default font';
+
+  @override
+  String get playerPickFontDirFirst => 'Choose a font folder first';
+
+  @override
+  String get playerFollowSystemFonts => 'Follow system fonts';
+
+  @override
+  String get playerFontChangeHintFull =>
+      'Font changes take effect after leaving and re-entering the player; for embedded ASS subtitles, font settings only take effect when \"Force override embedded styles\" is on.';
 }

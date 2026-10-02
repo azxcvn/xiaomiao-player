@@ -246,6 +246,7 @@ class _SubtitleFilePickerPanelState extends State<SubtitleFilePickerPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -257,7 +258,7 @@ class _SubtitleFilePickerPanelState extends State<SubtitleFilePickerPanel> {
               TextButton.icon(
                 onPressed: _goUp,
                 icon: const Icon(Icons.arrow_back_rounded, size: 16),
-                label: const Text('上级'),
+                label: Text(l10n.commonGoUp),
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.white70,
                   visualDensity: VisualDensity.compact,
@@ -391,7 +392,7 @@ class _SortMenu extends StatelessWidget {
     ];
     return PopupMenuButton<(SubtitleDirSort, bool)>(
       onSelected: (v) => onSelect(v.$1, v.$2),
-      tooltip: '排序方式',
+      tooltip: l10n.commonSortBy,
       color: const Color(0xFF242424),
       itemBuilder: (context) => [
         for (final o in options)

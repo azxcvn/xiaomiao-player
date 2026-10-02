@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/chapter_info.dart';
 import 'package:moumou/services/intro_outro_settings.dart';
 import 'package:moumou/utils/formatters.dart';
@@ -33,6 +34,7 @@ class PlayerIntroOutroPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return ListenableBuilder(
       listenable: IntroOutroSettings.instance,
       builder: (context, _) {
@@ -48,13 +50,13 @@ class PlayerIntroOutroPanel extends StatelessWidget {
                 const Divider(height: 1, color: Colors.white12),
                 const SizedBox(height: 16),
                 _SkipSection(
-                  label: '跳过片头',
+                  label: l10n.chapterSkipIntro,
                   accent: ChapterSkipType.intro.color,
                   seconds: s.introSeconds,
                   range: s.introRange,
-                  rangeLabel: '片头范围',
-                  hint: '拖动或输入设置时间，可按需调整上方范围',
-                  snapButtonText: '设为当前时间',
+                  rangeLabel: l10n.playerIntroRange,
+                  hint: l10n.playerRangeHint,
+                  snapButtonText: l10n.playerSetToCurrentTime,
                   snapSeconds: () => positionListenable.value.inSeconds
                       .clamp(0, s.introRange),
                   onSecondsChanged: s.setIntroSeconds,
@@ -64,13 +66,13 @@ class PlayerIntroOutroPanel extends StatelessWidget {
                 const Divider(height: 1, color: Colors.white10),
                 const SizedBox(height: 16),
                 _SkipSection(
-                  label: '跳过片尾',
+                  label: l10n.chapterSkipOutro,
                   accent: ChapterSkipType.outro.color,
                   seconds: s.outroSeconds,
                   range: s.outroRange,
-                  rangeLabel: '片尾范围',
-                  hint: '拖动或输入设置时间，可按需调整上方范围',
-                  snapButtonText: '设为当前剩余时间',
+                  rangeLabel: l10n.playerOutroRange,
+                  hint: l10n.playerRangeHint,
+                  snapButtonText: l10n.playerSetToRemainingTime,
                   snapSeconds: () {
                     final dur = durationListenable.value.inSeconds;
                     final pos = positionListenable.value.inSeconds;
@@ -90,15 +92,16 @@ class PlayerIntroOutroPanel extends StatelessWidget {
   }
 
   Widget _buildToggleRow(BuildContext context, IntroOutroSettings s) {
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '启用跳过片头片尾',
-                style: TextStyle(
+              Text(
+                l10n.playerEnableIntroOutroSkip,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
@@ -106,7 +109,7 @@ class PlayerIntroOutroPanel extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '通过手动设置秒数来跳过片头片尾',
+                l10n.playerIntroOutroSkipDesc,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.53),
                   fontSize: 12,
@@ -223,6 +226,7 @@ class _SkipSectionState extends State<_SkipSection> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,7 +252,10 @@ class _SkipSectionState extends State<_SkipSection> {
               onChanged: _handleSecondsInput,
             ),
             const SizedBox(width: 6),
-            const Text('秒', style: TextStyle(color: Colors.white60, fontSize: 13)),
+            Text(
+              l10n.commonSeconds,
+              style: const TextStyle(color: Colors.white60, fontSize: 13),
+            ),
             const SizedBox(width: 8),
             SizedBox(
               width: 44,
@@ -399,6 +406,7 @@ class _ResetButtonState extends State<_ResetButton> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: _handleTap,
@@ -413,7 +421,7 @@ class _ResetButtonState extends State<_ResetButton> {
           borderRadius: BorderRadius.circular(18),
         ),
         child: Text(
-          '一键重置',
+          l10n.commonOneKeyReset,
           textAlign: TextAlign.center,
           style: TextStyle(
             color: _flash ? scheme.onError : scheme.error,

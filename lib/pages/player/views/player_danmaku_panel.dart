@@ -15,6 +15,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/services/device_services.dart';
 import 'package:moumou/services/danmaku_service.dart';
 import 'package:moumou/pages/player/views/subtitle_file_picker.dart';
@@ -77,27 +78,32 @@ class PlayerDanmakuPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 4),
       children: [
         _DanmakuOptionTile(
           icon: Icons.file_open_outlined,
-          label: '本地弹幕',
+          label: l10n.playerDanmakuLocal,
           onTap: () => _importLocalDanmaku(context),
         ),
         _DanmakuOptionTile(
           icon: Icons.cloud_outlined,
-          label: '网络弹幕',
-          onTap: onNetworkTap ?? () => _toast(context, '「网络弹幕」功能即将上线'),
+          label: l10n.playerDanmakuNetwork,
+          onTap:
+              onNetworkTap ??
+              () => _toast(context, l10n.playerDanmakuNetworkComingSoon),
         ),
         _DanmakuOptionTile(
           icon: Icons.auto_fix_high,
-          label: '自动匹配',
-          onTap: onAutoMatchTap ?? () => _toast(context, '「自动匹配」功能即将上线'),
+          label: l10n.playerDanmakuAutoMatch,
+          onTap:
+              onAutoMatchTap ??
+              () => _toast(context, l10n.playerDanmakuAutoMatchComingSoon),
         ),
         _DanmakuOptionTile(
           icon: Icons.settings_outlined,
-          label: '弹幕设置',
+          label: l10n.playerDanmakuSettings,
           onTap: onSettingsTap,
         ),
       ],
@@ -124,6 +130,7 @@ class PlayerDanmakuPanel extends StatelessWidget {
   /// - Android 11 及以上（SDK ≥ 30）：自建选择器（复用 [SubtitleFilePickerPanel]，
   ///   面板二级页）。分派规则与理由见 [DeviceServices.shouldUseSystemPicker]。
   Future<void> _importLocalDanmaku(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     final sdk = await DeviceServices.getSdkInt();
     if (!context.mounted || sdk <= 0) return;
     if (DeviceServices.shouldUseSystemPicker(sdk)) {
@@ -136,7 +143,7 @@ class PlayerDanmakuPanel extends StatelessWidget {
     // 只换文件过滤器/图标/记忆键——与音频选择器同款复用方式）
     _pushSubPage(
       context,
-      '选择弹幕文件',
+      l10n.playerPickDanmakuFile,
       SubtitleFilePickerPanel(
         fileFilter: isSupportedDanmakuFile,
         folderKey: DanmakuFileService.lastFolderKey,
@@ -151,11 +158,14 @@ class PlayerDanmakuPanel extends StatelessWidget {
 
   /// 加载所选弹幕文件并给出轻提示（成功带条数；空文件/解析失败视为失败）
   Future<void> _loadPickedFile(BuildContext context, String path) async {
+    final l10n = AppLocalizations.of(context);
     final ok = await controller.loadDanmakuFromFile(path);
     if (!context.mounted) return;
     _toast(
       context,
-      ok ? '已加载本地弹幕（${controller.danmakuCount} 条）' : '弹幕加载失败，请检查文件格式',
+      ok
+          ? l10n.playerLocalDanmakuLoaded(controller.danmakuCount)
+          : l10n.playerDanmakuLoadFailedCheckFormat,
     );
   }
 

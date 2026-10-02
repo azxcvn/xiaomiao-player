@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 
 /// 双指缩放后「还原画面」胶囊在调用方 Stack 里的**竖向位置**（`Align` 的 y 分量）。
 ///
@@ -27,6 +28,7 @@ class PlayerZoomRestoreChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -35,14 +37,18 @@ class PlayerZoomRestoreChip extends StatelessWidget {
           color: Colors.black.withValues(alpha: 0.55),
           borderRadius: BorderRadius.circular(22),
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.zoom_out_map_rounded, color: Colors.white, size: 20),
-            SizedBox(width: 6),
+            const Icon(
+              Icons.zoom_out_map_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 6),
             Text(
-              '还原画面',
-              style: TextStyle(
+              l10n.playerRestoreView,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 15,
                 fontWeight: FontWeight.w600,

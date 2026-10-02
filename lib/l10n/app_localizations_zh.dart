@@ -1637,4 +1637,1027 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsWallpaperImageUnavailable => '图片已不可用，请重新选择';
+
+  @override
+  String get commonBack => '返回';
+
+  @override
+  String get commonMore => '更多';
+
+  @override
+  String get commonPlay => '播放';
+
+  @override
+  String get commonPause => '暂停';
+
+  @override
+  String get commonPlaying => '播放中';
+
+  @override
+  String get commonSearch => '搜索';
+
+  @override
+  String get commonClearAll => '清空';
+
+  @override
+  String get commonNone => '无';
+
+  @override
+  String get commonNotSet => '未设置';
+
+  @override
+  String get commonCustom => '自定义';
+
+  @override
+  String get commonJump => '跳转';
+
+  @override
+  String get commonSortBy => '排序方式';
+
+  @override
+  String get commonGoUp => '上级';
+
+  @override
+  String get commonRefresh => '刷新';
+
+  @override
+  String get commonOneKeyReset => '一键重置';
+
+  @override
+  String get commonRestoreDefaults => '恢复默认设置';
+
+  @override
+  String get commonLoadingDots => '正在加载...';
+
+  @override
+  String get commonTitle => '标题';
+
+  @override
+  String get commonBlur => '模糊';
+
+  @override
+  String get commonEpisodeUnit => '集';
+
+  @override
+  String playerAutoLoadedSubtitle(String fileName) {
+    return '已自动加载字幕：$fileName';
+  }
+
+  @override
+  String playerAutoLoadedDanmaku(String fileName) {
+    return '已自动加载弹幕：$fileName';
+  }
+
+  @override
+  String playerDanmakuLoaded(String message) {
+    return '已加载弹幕：$message';
+  }
+
+  @override
+  String playerQualityUnavailableSwitched(String name) {
+    return '该清晰度不可用，已切换到 $name';
+  }
+
+  @override
+  String playerQualitySwitchFailed(String error) {
+    return '切换画质失败：$error';
+  }
+
+  @override
+  String get playerQuality => '清晰度';
+
+  @override
+  String playerScreenshotFailed(String error) {
+    return '截图失败：$error';
+  }
+
+  @override
+  String get playerScreenshotNoImage => '截图失败：未获取到图像';
+
+  @override
+  String get playerSavedToGallery => '已保存到相册';
+
+  @override
+  String playerScreenshotSaveFailed(String error) {
+    return '截图保存失败：$error';
+  }
+
+  @override
+  String get playerDanmakuSettings => '弹幕设置';
+
+  @override
+  String get playerSkippedIntro => '已跳过片头';
+
+  @override
+  String get playerSkippedOutro => '已跳过片尾';
+
+  @override
+  String get playerNoNetworkCannotSwitch => '网络连接不存在，无法切换';
+
+  @override
+  String playerSwitchFailed(String error) {
+    return '切换失败：$error';
+  }
+
+  @override
+  String get playerResolveUrlFailed => '解析播放地址失败';
+
+  @override
+  String playerSwitchEpisodeFailed(String error) {
+    return '切集失败：$error';
+  }
+
+  @override
+  String get playerPlaybackSpeed => '播放倍速';
+
+  @override
+  String get playerSuperResolution => '超分辨率';
+
+  @override
+  String get playerAspectRatio => '画面比例';
+
+  @override
+  String get playerCastUnsupportedSource => '暂不支持投屏该来源';
+
+  @override
+  String get playerFeatureNotPlaced => '未放置的功能';
+
+  @override
+  String get playerFeatureComingSoon => '功能即将上线';
+
+  @override
+  String get playerEditControlBar => '编辑控制栏';
+
+  @override
+  String get playerActionsEnabledHint => '已启用（长按拖拽排序）';
+
+  @override
+  String get playerNoEnabledActions => '暂无已启用动作，从下方添加';
+
+  @override
+  String get playerAddable => '可添加';
+
+  @override
+  String playerMaxActions(int max) {
+    String _temp0 = intl.Intl.pluralLogic(
+      max,
+      locale: localeName,
+      other: '最多允许放 $max 个',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerResetControlBar => '重置控制栏';
+
+  @override
+  String get playerDanmakuNetwork => '网络弹幕';
+
+  @override
+  String get playerDanmakuLoadFailed => '弹幕加载失败';
+
+  @override
+  String get playerDanmakuMatching => '正在匹配弹幕，请稍候…';
+
+  @override
+  String get playerDanmakuNoMatch => '未找到匹配的弹幕';
+
+  @override
+  String get playerDanmakuPickMatch => '选择匹配结果';
+
+  @override
+  String get playerPipUnsupported => '当前设备不支持画中画';
+
+  @override
+  String get playerPipFailed => '进入画中画失败';
+
+  @override
+  String get playerPlaylist => '播放列表';
+
+  @override
+  String get playerLock => '锁定';
+
+  @override
+  String get playerUnlock => '解锁';
+
+  @override
+  String get playerScreenshot => '截图';
+
+  @override
+  String get playerRestoreView => '还原画面';
+
+  @override
+  String get playerAudioTrack => '音轨';
+
+  @override
+  String get playerNoAudioTrackHint => '当前视频没有音轨，可在下方导入外部音轨';
+
+  @override
+  String get playerExternalAudioTrack => '外部音轨';
+
+  @override
+  String get playerImportExternalAudioTrack => '导入外部音轨';
+
+  @override
+  String get playerTempEffectHint => '临时生效，退出播放后不保留';
+
+  @override
+  String get playerAudioChannel => '音频声道';
+
+  @override
+  String get playerAudioProcessing => '音频处理';
+
+  @override
+  String get playerVolumeNormalize => '音量标准化';
+
+  @override
+  String get playerDynamicRangeCompress => '动态范围压缩';
+
+  @override
+  String get playerPickAudioFile => '选择音频文件';
+
+  @override
+  String get playerExternalAudioImported => '已导入外部音轨';
+
+  @override
+  String get playerImportFailedCheckFormat => '导入失败，请检查文件格式';
+
+  @override
+  String get playerRemoveAudioTrack => '移除已导入的音轨';
+
+  @override
+  String get audioPlaybackSpeed => '播放速度';
+
+  @override
+  String get audioRepeatOff => '循环关闭';
+
+  @override
+  String get audioRepeatSingle => '单曲循环';
+
+  @override
+  String get audioSleepTimer => '定时关闭';
+
+  @override
+  String get audioSleepEndOfTrack => '播完当前';
+
+  @override
+  String get audioSleepEndOfTrackHint => '将在当前曲目播放结束后停止';
+
+  @override
+  String audioSleepRemaining(String time) {
+    return '剩余 $time';
+  }
+
+  @override
+  String get audioSleepCustomTitle => '自定义定时关闭';
+
+  @override
+  String audioSleepMinutes(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes 分钟',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get audioShuffle => '随机播放';
+
+  @override
+  String playerPlaylistWithCount(int count) {
+    return '播放列表（$count）';
+  }
+
+  @override
+  String get playerEqualizerEnable => '启用均衡器';
+
+  @override
+  String get playerEqualizerDesc => '调节频段增益、低音增强和虚拟环绕';
+
+  @override
+  String get playerPreset => '预设';
+
+  @override
+  String get playerEqualizerBands => '频段调节';
+
+  @override
+  String get playerEqualizerBass => '低音增强';
+
+  @override
+  String get playerEqualizerSurround => '虚拟环绕';
+
+  @override
+  String get playerBiliNoEpisodes => '没有获取到剧集列表';
+
+  @override
+  String playerBiliTotalEpisodes(int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '共 $total 集',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playerBiliCurrentOfTotal(int current, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 集',
+    );
+    return '第 $current 集 / 共 $_temp0';
+  }
+
+  @override
+  String get playerBiliFreeLimited => '限免';
+
+  @override
+  String get playerBiliPreview => '预告';
+
+  @override
+  String get playerNextEpisode => '下一集';
+
+  @override
+  String get playerCastSelectScreen => '选择屏幕';
+
+  @override
+  String playerSeekBackSeconds(int seconds) {
+    return '快退 $seconds 秒';
+  }
+
+  @override
+  String playerSeekForwardSeconds(int seconds) {
+    return '快进 $seconds 秒';
+  }
+
+  @override
+  String get playerChapterPanelTitle => '章节跳段';
+
+  @override
+  String get playerNoChapters => '当前视频无章节信息';
+
+  @override
+  String playerChapterCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '共 $count 章',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerChapterSkipAuto => '自动跳过';
+
+  @override
+  String get playerChapterSkipAutoDesc => '进入对应片段时自动跳到片段结束；关闭则仅弹出跳过胶囊';
+
+  @override
+  String get playerChapterSkipCustomKeywords => '自定义关键词';
+
+  @override
+  String get playerChapterSkipKeywordsHint => '按章节标题匹配，支持逗号 / 分号 / 换行分隔';
+
+  @override
+  String get playerIntroKeywords => '片头关键词';
+
+  @override
+  String get playerIntroKeywordsHint => '如 ap、op、开场';
+
+  @override
+  String get playerOutroKeywords => '片尾关键词';
+
+  @override
+  String get playerOutroKeywordsHint => '如 ed、ending、结尾';
+
+  @override
+  String get playerChapterSkipKeywordOwnerHint =>
+      '关键词归属由你填入的位置决定：填进「片头关键词」即判为片头、填进「片尾关键词」即判为片尾；同一标题命中多类时按固定优先级（前情提要 > 正片前段 > 制作人员 > 下集预告 > 片尾 > 片头）取一类。';
+
+  @override
+  String get playerDanmakuClose => '关闭弹幕';
+
+  @override
+  String get playerDanmakuOpen => '打开弹幕';
+
+  @override
+  String get playerEpisodeInvalidInput => '请输入集数（数字）';
+
+  @override
+  String playerEpisodeNotFound(int number) {
+    return '没有第 $number 集';
+  }
+
+  @override
+  String playerEpisodeTotalFromServer(int total, String server) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '共 $total 集 · 来自 $server',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerJumpToEpisode => '跳至第';
+
+  @override
+  String get playerEpisodeNumber => '集数';
+
+  @override
+  String get playerDanmakuNetworkSearchHint => '输入番剧名称';
+
+  @override
+  String get playerDanmakuStopSearch => '停止搜索';
+
+  @override
+  String playerDanmakuResultCountUnit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 部',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playerDanmakuSearchingWithCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 部',
+    );
+    return '正在搜索 · 已获得 $_temp0';
+  }
+
+  @override
+  String playerDanmakuSearchStoppedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 部',
+    );
+    return '已停止搜索 · 共 $_temp0';
+  }
+
+  @override
+  String playerDanmakuPartialServerFailed(String errors) {
+    return '部分服务器搜索失败：$errors';
+  }
+
+  @override
+  String get playerDanmakuSearching => '搜索中…';
+
+  @override
+  String get playerDanmakuNetworkInputHint => '输入关键词搜索网络弹幕';
+
+  @override
+  String playerEpisodeCountUnit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 集',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerDanmakuLocal => '本地弹幕';
+
+  @override
+  String get playerDanmakuNetworkComingSoon => '「网络弹幕」功能即将上线';
+
+  @override
+  String get playerDanmakuAutoMatch => '自动匹配';
+
+  @override
+  String get playerDanmakuAutoMatchComingSoon => '「自动匹配」功能即将上线';
+
+  @override
+  String get playerPickDanmakuFile => '选择弹幕文件';
+
+  @override
+  String playerLocalDanmakuLoaded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 条',
+    );
+    return '已加载本地弹幕（$_temp0）';
+  }
+
+  @override
+  String get playerDanmakuLoadFailedCheckFormat => '弹幕加载失败，请检查文件格式';
+
+  @override
+  String get playerDanmakuStyle => '弹幕样式';
+
+  @override
+  String get playerDanmakuFontSize => '弹幕字号';
+
+  @override
+  String get playerDanmakuSpeed => '弹幕速度';
+
+  @override
+  String get playerDanmakuSpeedDesc => '数值越小弹幕越快';
+
+  @override
+  String get playerStrokeWidth => '描边粗细';
+
+  @override
+  String get playerOpacity => '不透明度';
+
+  @override
+  String get playerDanmakuConfig => '弹幕配置';
+
+  @override
+  String get playerDanmakuDisplayArea => '显示区域';
+
+  @override
+  String get playerDanmakuLineHeight => '弹幕行高';
+
+  @override
+  String get playerDanmakuTop => '顶部弹幕';
+
+  @override
+  String get playerDanmakuBottom => '底部弹幕';
+
+  @override
+  String get playerDanmakuScroll => '滚动弹幕';
+
+  @override
+  String get playerDanmakuMassive => '海量弹幕';
+
+  @override
+  String get playerDanmakuMassiveDesc => '轨道占满时叠加绘制，弹幕过多不再丢弃';
+
+  @override
+  String get playerDanmakuDedupe => '弹幕去重';
+
+  @override
+  String get playerDanmakuDedupeDesc => '相同时间下相同弹幕合并为一条';
+
+  @override
+  String get playerDanmakuMerge => '弹幕合并';
+
+  @override
+  String get playerDanmakuMergeDesc => '不同时间内相同弹幕合并且计数';
+
+  @override
+  String get playerDanmakuOffset => '弹幕偏移';
+
+  @override
+  String get playerDanmakuTimelineOffset => '时间轴偏移';
+
+  @override
+  String get playerDanmakuAdvanceOneSecond => '提前 1 秒';
+
+  @override
+  String get playerDanmakuDelayOneSecond => '延后 1 秒';
+
+  @override
+  String get playerDanmakuResetOffset => '重置偏移';
+
+  @override
+  String get playerDanmakuFont => '弹幕字体';
+
+  @override
+  String get danmakuColorModeSourceDesc => '保留弹幕自带颜色（含会员渐变彩色）';
+
+  @override
+  String get danmakuColorModeRandomDesc => '忽略文件颜色，按色轮逐条随机着色';
+
+  @override
+  String get danmakuColorModeFixedDesc => '弹幕从下面已选颜色里随机取色';
+
+  @override
+  String playerDanmakuPaletteMaxHint(int max) {
+    String _temp0 = intl.Intl.pluralLogic(
+      max,
+      locale: localeName,
+      other: '最多选 $max 种颜色',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerDanmakuPaletteTitle => '弹幕颜色（可多选，随机使用）';
+
+  @override
+  String get playerDanmakuColorExists => '该颜色已在调色板中';
+
+  @override
+  String playerDanmakuPaletteFull(int max) {
+    String _temp0 = intl.Intl.pluralLogic(
+      max,
+      locale: localeName,
+      other: '已选满 $max 种',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerDanmakuAddToPalette => '添加到调色板';
+
+  @override
+  String playerDanmakuPaletteSelected(int selected, int max) {
+    String _temp0 = intl.Intl.pluralLogic(
+      max,
+      locale: localeName,
+      other: '$max 种',
+    );
+    return '已选 $selected/$_temp0';
+  }
+
+  @override
+  String get playerDanmakuBlockWords => '屏蔽词';
+
+  @override
+  String get playerDanmakuBlockWordsHint => '输入要屏蔽的关键词';
+
+  @override
+  String playerFontsImported(int count, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 种字体',
+    );
+    return '已导入 $count 个字体文件，共 $_temp0';
+  }
+
+  @override
+  String get playerPickFontDir => '选择字体目录';
+
+  @override
+  String get playerFontDirImportHint => '点击导入包含 .ttf/.otf 字体的目录';
+
+  @override
+  String playerFontsLoaded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 种字体',
+    );
+    return '已加载 $_temp0';
+  }
+
+  @override
+  String get playerPickFont => '选择字体';
+
+  @override
+  String get playerRestartRequired => '需重启应用';
+
+  @override
+  String get playerDecodeRestartBody => '解码配置已修改，重启应用后生效。\n\n是否立即重启？';
+
+  @override
+  String get playerRestartLater => '稍后重启';
+
+  @override
+  String get playerRestartNow => '立即重启';
+
+  @override
+  String get playerDecodePreset => '解码预设';
+
+  @override
+  String get playerDecodePresetDesc => '切换后需重启应用生效，可选立即重启';
+
+  @override
+  String get playerDecodeHwPlusDesc => '「硬解+」直通不可用时由内核依次回退硬解 / 软解';
+
+  @override
+  String get playerDiagnosticsContainer => '容器';
+
+  @override
+  String get playerDiagnosticsAudioCodec => '音频编码';
+
+  @override
+  String get playerDiagnosticsVideoOutput => '视频输出';
+
+  @override
+  String get playerDiagnosticsSyncMode => '同步方式';
+
+  @override
+  String get playerDiagnosticsPixelFormat => '像素格式';
+
+  @override
+  String get playerDiagnosticsContainerFps => '容器帧率';
+
+  @override
+  String get playerDiagnosticsActualFps => '实际帧率';
+
+  @override
+  String get playerDiagnosticsVideoBitrate => '视频码率';
+
+  @override
+  String get playerDiagnosticsAudioParams => '音频参数';
+
+  @override
+  String get playerDiagnosticsAudioBitrate => '音频码率';
+
+  @override
+  String get playerDiagnosticsAvSync => '音画同步';
+
+  @override
+  String get playerDiagnosticsCacheGroup => '缓存与丢帧';
+
+  @override
+  String get playerDiagnosticsBufferDuration => '缓冲时长';
+
+  @override
+  String get playerDiagnosticsPlayableDuration => '可播时长';
+
+  @override
+  String get playerDiagnosticsCacheUsage => '缓存占用';
+
+  @override
+  String get playerDiagnosticsDownlinkRate => '下行速率';
+
+  @override
+  String get playerDiagnosticsDroppedFrames => '丢帧';
+
+  @override
+  String get playerDiagnosticsDecodeDropped => '解码丢帧';
+
+  @override
+  String get playerDiagnosticsDelayedFrames => '延迟帧';
+
+  @override
+  String get playerDiagnosticsAutoRefreshHint => '每秒自动刷新 · 数据来自 mpv 运行时属性';
+
+  @override
+  String get playerDiagnosticsReadFailed => '无法读取播放器属性（播放器可能未就绪或已卡住）';
+
+  @override
+  String playerDiagnosticsFailedValue(String keys) {
+    return '读取失败：$keys（显示的是上一次成功值）';
+  }
+
+  @override
+  String playerDiagnosticsFailedValueMore(String keys, int count) {
+    return '读取失败：$keys 等 $count 项（显示的是上一次成功值）';
+  }
+
+  @override
+  String get playerIntroRange => '片头范围';
+
+  @override
+  String get playerOutroRange => '片尾范围';
+
+  @override
+  String get playerRangeHint => '拖动或输入设置时间，可按需调整上方范围';
+
+  @override
+  String get playerSetToCurrentTime => '设为当前时间';
+
+  @override
+  String get playerSetToRemainingTime => '设为当前剩余时间';
+
+  @override
+  String get playerEnableIntroOutroSkip => '启用跳过片头片尾';
+
+  @override
+  String get playerIntroOutroSkipDesc => '通过手动设置秒数来跳过片头片尾';
+
+  @override
+  String get playerNoOtherVideos => '当前文件夹没有其他视频';
+
+  @override
+  String get playerNoQuality => '暂无可用画质';
+
+  @override
+  String get playerQualitySwitchHint => '切换画质会重开播放并保持进度';
+
+  @override
+  String get playerResumeIndicator => '已恢复上次播放进度';
+
+  @override
+  String get playerRestartFromBeginning => '重头开始';
+
+  @override
+  String playerSpeedPlaying(String speed) {
+    return '正在 $speed 倍速播放';
+  }
+
+  @override
+  String get playerSpeedSwipeHint => '左右滑动可临时调节长按倍数';
+
+  @override
+  String get playerSpeedAlreadyInPresets => '该倍速已在预设中';
+
+  @override
+  String playerSpeedPresetLimit(int max) {
+    String _temp0 = intl.Intl.pluralLogic(
+      max,
+      locale: localeName,
+      other: '自定义预设已达上限（$max 个）',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerMyPresets => '我的预设';
+
+  @override
+  String get playerPreciseSpeed => '精确调速';
+
+  @override
+  String get playerApplyTemporarily => '临时应用';
+
+  @override
+  String get playerAddToPresets => '添加到预设';
+
+  @override
+  String get playerSpeedReset => '归位';
+
+  @override
+  String get playerResetPresets => '重置预设';
+
+  @override
+  String get playerMode => '模式';
+
+  @override
+  String get playerSuperResolutionQuality => '超分质量';
+
+  @override
+  String get playerRememberSuperResolution => '记忆超分模式';
+
+  @override
+  String get playerRememberSuperResolutionDesc => '开启后自动应用上次的超分模式与质量';
+
+  @override
+  String get playerSubtitleTracks => '字幕轨道';
+
+  @override
+  String get playerNoSubtitleHint => '当前视频没有字幕，可在下方导入外挂字幕';
+
+  @override
+  String get playerSubtitleOff => '关闭字幕';
+
+  @override
+  String get playerExternalSubtitle => '外挂字幕';
+
+  @override
+  String get playerImportExternalSubtitle => '导入外部字幕';
+
+  @override
+  String get playerSubtitleSettings => '字幕设置';
+
+  @override
+  String get playerSubtitleDelay => '字幕延迟';
+
+  @override
+  String get playerSubtitleStyle => '字幕样式';
+
+  @override
+  String get playerSubtitleMisc => '字幕杂项';
+
+  @override
+  String get playerSubtitleFont => '字幕字体';
+
+  @override
+  String get playerPickSubtitleFile => '选择字幕文件';
+
+  @override
+  String get playerExternalSubtitleImported => '已导入外挂字幕';
+
+  @override
+  String get playerRemoveSubtitle => '移除已导入的字幕';
+
+  @override
+  String get playerQuickAdjust => '快捷调整';
+
+  @override
+  String get playerResetToZeroSeconds => '重置为 0 秒';
+
+  @override
+  String playerDelaySeconds(String value) {
+    return '$value 秒';
+  }
+
+  @override
+  String get playerTextColor => '文字颜色';
+
+  @override
+  String get playerStrokeColor => '描边颜色';
+
+  @override
+  String get playerBackgroundColor => '背景颜色';
+
+  @override
+  String get playerBackgroundBoxSize => '背景框大小';
+
+  @override
+  String get playerTextEffects => '文字效果';
+
+  @override
+  String get playerBold => '粗体';
+
+  @override
+  String get playerItalic => '斜体';
+
+  @override
+  String get playerLetterSpacing => '字间距';
+
+  @override
+  String get playerPreferChineseSubtitle => '优先选中文字幕轨';
+
+  @override
+  String get playerPreferChineseSubtitleDesc => '默认启用中文轨（含「特效/双语」优先）；手动选过的不改';
+
+  @override
+  String get playerSubtitleTrackAutoDesc => '交给内核默认挑选（通常是文件里的第一条）';
+
+  @override
+  String get playerForceOverrideStyle => '强制覆盖内嵌样式';
+
+  @override
+  String get playerForceOverrideStyleDesc => '使用上方设置渲染字幕样式';
+
+  @override
+  String get playerStyleFromSubtitleDesc => '字幕使用自带的样式与字体';
+
+  @override
+  String get playerResetAllStyles => '重置所有样式';
+
+  @override
+  String get playerAssLimitTitle => 'ASS 内嵌字幕的限制';
+
+  @override
+  String get playerAssLimitBoldItalicBlur => '粗体 / 斜体 / 模糊';
+
+  @override
+  String get playerAssLimitNoEffect => '开启覆盖也不生效（mpv 渲染限制）';
+
+  @override
+  String get playerAssLimitStyleItems => '颜色 / 描边 / 背景 / 大小 / 位置 / 字间距';
+
+  @override
+  String get playerAssLimitTakesEffect => '开启覆盖后生效';
+
+  @override
+  String get playerAssLimitTextFormats => 'SRT / VTT 等文本字幕';
+
+  @override
+  String get playerAssLimitAllEffective => '所有样式都直接生效';
+
+  @override
+  String get playerSubtitleScalePosition => '字幕缩放与位置';
+
+  @override
+  String get playerScaleRatio => '缩放比例';
+
+  @override
+  String get playerVerticalPosition => '垂直位置';
+
+  @override
+  String playerVerticalPositionValue(int value) {
+    return '$value（100=窗口底部）';
+  }
+
+  @override
+  String get playerResetScalePosition => '重置缩放与位置';
+
+  @override
+  String playerFontsRefreshed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 种字体',
+    );
+    return '已刷新，共 $_temp0';
+  }
+
+  @override
+  String get playerFontDirCleared => '已清除字体目录';
+
+  @override
+  String get playerFontChangeHint => '字体更改需退出播放器并重新进入后生效';
+
+  @override
+  String get playerFontDir => '字体目录';
+
+  @override
+  String get playerFontDirPickHint => '点击选择包含 .ttf/.otf 字体的目录';
+
+  @override
+  String get playerFontDirClear => '清除目录';
+
+  @override
+  String get playerCurrentFont => '当前字体';
+
+  @override
+  String get playerDefaultFont => '默认字体';
+
+  @override
+  String get playerPickFontDirFirst => '请先选择字体目录';
+
+  @override
+  String get playerFollowSystemFonts => '跟随系统字库';
+
+  @override
+  String get playerFontChangeHintFull =>
+      '字体更改需退出播放器并重新进入后生效；内嵌 ASS 字幕需开启「强制覆盖内嵌样式」后字体设置才会生效。';
 }

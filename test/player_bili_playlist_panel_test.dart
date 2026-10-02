@@ -4,6 +4,8 @@ import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/models/bili_playlist.dart';
 import 'package:moumou/pages/player/views/player_bili_playlist_panel.dart';
 
+import 'l10n_test_helper.dart';
+
 /// B 站番剧播放列表面板测试：
 /// - 头部显示「第 X 集 / 共 N 集」与番剧名；
 /// - 条目渲染集号 + 集名 + 角标；当前集高亮「播放中」；
@@ -31,6 +33,9 @@ void main() {
     ValueChanged<BiliPlaylistItem>? onSelect,
   }) async {
     await tester.pumpWidget(MaterialApp(
+      locale: kTestLocaleZh,
+      localizationsDelegates: kTestLocalizationDelegates,
+      supportedLocales: kTestSupportedLocales,
       home: Scaffold(
         backgroundColor: Colors.black,
         body: PlayerBiliPlaylistPanel(
@@ -88,6 +93,9 @@ void main() {
   testWidgets('点击条目回调并关闭面板', (tester) async {
     BiliPlaylistItem? tapped;
     await tester.pumpWidget(MaterialApp(
+      locale: kTestLocaleZh,
+      localizationsDelegates: kTestLocalizationDelegates,
+      supportedLocales: kTestSupportedLocales,
       home: Builder(
         builder: (context) => Scaffold(
           backgroundColor: Colors.black,

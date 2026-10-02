@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/playlist_sort.dart';
 import 'package:moumou/models/video_file.dart';
 import 'package:moumou/pages/player/views/audio_player_panels.dart';
@@ -653,14 +654,14 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
                             color: Colors.white70,
                             size: 26,
                           ),
-                          tooltip: '返回',
+                          tooltip: AppLocalizations.of(context).commonBack,
                           onPressed: _exit,
                         ),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            '听视频',
+                            AppLocalizations.of(context).playerActionListen,
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 14,
                               fontWeight: FontWeight.w500,

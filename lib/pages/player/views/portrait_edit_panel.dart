@@ -40,7 +40,7 @@ class PortraitEditControlPanel extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 4),
           children: [
             if (enabled.isNotEmpty) ...[
-              const PortraitPanelSectionLabel('已启用（长按拖拽排序）'),
+              PortraitPanelSectionLabel(l10n.playerActionsEnabledHint),
               ReorderableListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -88,7 +88,7 @@ class PortraitEditControlPanel extends StatelessWidget {
                         ),
                       ),
                       onPressed: () => settings.removeTopAction(a),
-                      child: const Text('删除'),
+                      child: Text(l10n.commonDelete),
                     ),
                   );
                 },
@@ -96,7 +96,7 @@ class PortraitEditControlPanel extends StatelessWidget {
               const Divider(height: 1, color: Colors.white12),
             ],
             if (disabled.isNotEmpty) ...[
-              const PortraitPanelSectionLabel('可添加'),
+              PortraitPanelSectionLabel(l10n.playerAddable),
               for (final a in disabled)
                 ListTile(
                   leading: Icon(a.icon, color: Colors.white),
@@ -118,19 +118,24 @@ class PortraitEditControlPanel extends StatelessWidget {
                     ),
                     onPressed: () {
                       if (full) {
-                        _showToast(context, '最多允许放 5 个');
+                        _showToast(
+                          context,
+                          l10n.playerMaxActions(
+                            PlayerControlsSettings.maxTopActions,
+                          ),
+                        );
                       } else {
                         settings.addTopAction(a);
                       }
                     },
-                    child: const Text('添加'),
+                    child: Text(l10n.commonAdd),
                   ),
                 ),
               const Divider(height: 1, color: Colors.white12),
             ],
             PortraitPanelActionTile(
               icon: Icons.restart_alt,
-              label: '重置控制栏',
+              label: l10n.playerResetControlBar,
               onTap: settings.resetTopActions,
             ),
           ],

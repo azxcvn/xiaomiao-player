@@ -106,6 +106,7 @@ class _PlayerSuperResolutionPanelState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
@@ -113,7 +114,7 @@ class _PlayerSuperResolutionPanelState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── 模式（第一眼）──
-          const _SectionLabel('模式'),
+          _SectionLabel(l10n.playerMode),
           const SizedBox(height: 8),
           for (final row in _modeRows) ...[
             _buildModeRow(row),
@@ -144,7 +145,7 @@ class _PlayerSuperResolutionPanelState
           ),
           const SizedBox(height: 16),
           // ── 超分质量（一行三个胶囊）──
-          const _SectionLabel('超分质量'),
+          _SectionLabel(l10n.playerSuperResolutionQuality),
           const SizedBox(height: 8),
           _buildQualityRow(),
           const SizedBox(height: 16),
@@ -157,13 +158,13 @@ class _PlayerSuperResolutionPanelState
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 14),
               leading: Icon(Icons.history, color: Colors.white70, size: 22),
-              title: const Text(
-                '记忆超分模式',
-                style: TextStyle(color: Colors.white, fontSize: 15),
+              title: Text(
+                l10n.playerRememberSuperResolution,
+                style: const TextStyle(color: Colors.white, fontSize: 15),
               ),
-              subtitle: const Text(
-                '开启后自动应用上次的超分模式与质量',
-                style: TextStyle(color: Colors.white54, fontSize: 12),
+              subtitle: Text(
+                l10n.playerRememberSuperResolutionDesc,
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
               ),
               trailing: Switch(
                 value: _service.remember,

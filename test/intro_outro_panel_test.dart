@@ -4,6 +4,8 @@ import 'package:moumou/pages/player/views/player_intro_outro_panel.dart';
 import 'package:moumou/services/intro_outro_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 片头片尾面板回归测试：
 /// - 开关关闭时只显示开关行，开启后展开片头/片尾设置段；
 /// - 秒数输入实时写入设置并换算 mm:ss；
@@ -29,6 +31,9 @@ void main() {
     addTearDown(duration.dispose);
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Scaffold(
           backgroundColor: Colors.black,
           body: SingleChildScrollView(

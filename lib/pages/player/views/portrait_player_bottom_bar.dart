@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/chapter_info.dart';
 import 'package:moumou/pages/player/player_metrics.dart';
 import 'package:moumou/pages/player/views/player_chapter_bar.dart';
@@ -92,6 +93,7 @@ class PortraitPlayerBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -185,7 +187,7 @@ class PortraitPlayerBottomBar extends StatelessWidget {
                   PlayerPressable(
                     onTap: hasNext ? onNext : null,
                     child: Tooltip(
-                      message: '下一集',
+                      message: l10n.playerNextEpisode,
                       child: SizedBox(
                         width: 38,
                         height: 40,
@@ -235,7 +237,7 @@ class PortraitPlayerBottomBar extends StatelessWidget {
                   _PortraitBottomIconButton(
                     icon: Icons.playlist_play,
                     showBackground: showListButtonBackground,
-                    tooltip: '播放列表',
+                    tooltip: l10n.playerPlaylist,
                     onTap: onPlaylistTap,
                   ),
                   const SizedBox(width: 6),
@@ -248,7 +250,7 @@ class PortraitPlayerBottomBar extends StatelessWidget {
                   _PortraitBottomIconButton(
                     icon: Icons.screen_rotation,
                     showBackground: showScreenSwitchBackground,
-                    tooltip: '选择屏幕',
+                    tooltip: l10n.playerCastSelectScreen,
                     onTap: onScreenSwitchTap,
                   ),
                 ],

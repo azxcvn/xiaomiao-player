@@ -7,6 +7,8 @@ import 'package:moumou/pages/player/views/player_danmaku_panel.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/danmaku_service.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 弹幕二级界面回归测试（阶段1+3）：
 /// - 四个入口齐全：本地弹幕 / 网络弹幕 / 自动匹配 / 弹幕设置；
 /// - 网络弹幕 / 自动匹配点击触发注入回调（阶段3 实现）；
@@ -20,6 +22,9 @@ void main() {
     VoidCallback? onAutoMatchTap,
   }) {
     return MaterialApp(
+      locale: kTestLocaleZh,
+      localizationsDelegates: kTestLocalizationDelegates,
+      supportedLocales: kTestSupportedLocales,
       home: Scaffold(
         body: PlayerDanmakuPanel(
           controller: controller,

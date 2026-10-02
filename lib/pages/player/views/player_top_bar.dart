@@ -33,6 +33,7 @@ class PlayerTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     // 顶栏已随控制设置自动重建（槽位变化/背景开关共用同一监听）
     final showBg = PlayerControlsSettings.instance.showButtonBackground;
     return SafeArea(
@@ -48,7 +49,7 @@ class PlayerTopBar extends StatelessWidget {
             children: [
               _TopIconButton(
                 icon: Icons.arrow_back,
-                tooltip: '返回',
+                tooltip: l10n.commonBack,
                 showBackground: showBg,
                 onPressed: onBack,
               ),
@@ -90,7 +91,7 @@ class PlayerTopBar extends StatelessWidget {
               padding: const EdgeInsets.only(right: 12),
               child: _TopIconButton(
                 icon: Icons.more_vert,
-                tooltip: '更多',
+                tooltip: l10n.commonMore,
                 showBackground: showBg,
                 onPressed: onMore,
               ),

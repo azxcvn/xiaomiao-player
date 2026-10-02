@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/pages/player/views/player_center_cluster.dart';
 import 'package:moumou/pages/player/views/player_zoom_restore_chip.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 「还原画面」胶囊的位置回归：
 /// 1. 它必须落在**中央控制簇（快退/播放/快进）下沿之下**，留出足够间距——
 ///    原值 `Alignment(0, 0.34)` 与本页播放键只差约 0.01 倍屏高，真机上与播放
@@ -19,6 +21,9 @@ void main() {
   Future<({Rect cluster, Rect chip, Size page})> layout(WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Scaffold(
           body: Stack(
             children: [

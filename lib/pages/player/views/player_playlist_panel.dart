@@ -96,16 +96,20 @@ class _PlayerPlaylistPanelState extends State<PlayerPlaylistPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         _buildSortRow(),
         const Divider(height: 1, color: Colors.white12),
         Expanded(
           child: _sorted.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text(
-                    '当前文件夹没有其他视频',
-                    style: TextStyle(color: Colors.white38, fontSize: 13),
+                    l10n.playerNoOtherVideos,
+                    style: const TextStyle(
+                      color: Colors.white38,
+                      fontSize: 13,
+                    ),
                   ),
                 )
               : ListView.builder(
@@ -149,6 +153,7 @@ class _PlayerPlaylistPanelState extends State<PlayerPlaylistPanel> {
 
   /// 列表项：序号 + 文件名 +（当前项）主题色高亮与「播放中」徽标
   Widget _buildItem(BuildContext context, int index) {
+    final l10n = AppLocalizations.of(context);
     final video = _sorted[index];
     final isCurrent = video.path == widget.currentPath;
     final scheme = Theme.of(context).colorScheme;
@@ -191,7 +196,7 @@ class _PlayerPlaylistPanelState extends State<PlayerPlaylistPanel> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  '播放中',
+                  l10n.commonPlaying,
                   style: TextStyle(
                     color: scheme.onPrimary,
                     fontSize: 11,

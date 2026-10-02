@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/equalizer_preset.dart';
 import 'package:moumou/services/equalizer_settings.dart';
 
@@ -68,6 +69,7 @@ class _PlayerEqualizerPanelState extends State<PlayerEqualizerPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final enabled = _settings.enabled;
     return ListView(
       key: const PageStorageKey('equalizer_main'),
@@ -76,20 +78,20 @@ class _PlayerEqualizerPanelState extends State<PlayerEqualizerPanel> {
         // ── 开关 ──────────────────────────────────────────
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text(
-            '启用均衡器',
-            style: TextStyle(color: Colors.white, fontSize: 15),
+          title: Text(
+            l10n.playerEqualizerEnable,
+            style: const TextStyle(color: Colors.white, fontSize: 15),
           ),
-          subtitle: const Text(
-            '调节频段增益、低音增强和虚拟环绕',
-            style: TextStyle(color: Colors.white38, fontSize: 11),
+          subtitle: Text(
+            l10n.playerEqualizerDesc,
+            style: const TextStyle(color: Colors.white38, fontSize: 11),
           ),
           value: enabled,
           onChanged: (v) => _settings.setEnabled(v),
         ),
         const Divider(height: 1, color: Colors.white12),
         // ── 预设 ──────────────────────────────────────────
-        const _SectionLabel('预设'),
+        _SectionLabel(l10n.playerPreset),
         SizedBox(
           height: 40,
           child: ListView.separated(
@@ -111,7 +113,7 @@ class _PlayerEqualizerPanelState extends State<PlayerEqualizerPanel> {
         ),
         const Divider(height: 1, color: Colors.white12),
         // ── 5 段 ──────────────────────────────────────────
-        const _SectionLabel('频段调节'),
+        _SectionLabel(l10n.playerEqualizerBands),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -139,7 +141,7 @@ class _PlayerEqualizerPanelState extends State<PlayerEqualizerPanel> {
         const Divider(height: 1, color: Colors.white12),
         // ── 低音增强 ──────────────────────────────────────
         _BoostSlider(
-          title: '低音增强',
+          title: l10n.playerEqualizerBass,
           value: _bass,
           enabled: enabled,
           onChanged: (v) {
@@ -155,7 +157,7 @@ class _PlayerEqualizerPanelState extends State<PlayerEqualizerPanel> {
         const SizedBox(height: 4),
         // ── 虚拟环绕 ──────────────────────────────────────
         _BoostSlider(
-          title: '虚拟环绕',
+          title: l10n.playerEqualizerSurround,
           value: _virt,
           enabled: enabled,
           onChanged: (v) {
@@ -177,7 +179,7 @@ class _PlayerEqualizerPanelState extends State<PlayerEqualizerPanel> {
             foregroundColor: const Color(0xFF4FC3F7),
           ),
           icon: const Icon(Icons.refresh, size: 18),
-          label: const Text('一键重置'),
+          label: Text(l10n.commonOneKeyReset),
         ),
       ],
     );
