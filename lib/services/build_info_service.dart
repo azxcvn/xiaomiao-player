@@ -1,6 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+/// 复制哈希后的提示**码**（文案在 UI 层，见 `about_page.dart` 的
+/// `switch` → `l10n.buildInfoNoRevision` / `buildInfoCopied` / `buildInfoCopiedDirty`）。
+enum BuildInfoCopyHint {
+  /// 本次构建没有注入提交哈希
+  noRevision,
+
+  /// 已复制提交哈希
+  copied,
+
+  /// 已复制提交哈希（工作区有未提交改动）
+  copiedDirty,
+}
+
 /// 构建信息（关于页顶部卡片的三枚字段：版本 / 构建类型 / 提交哈希）。
 ///
 /// 数据来源分三处：
@@ -102,10 +115,10 @@ class BuildInfo {
     return r;
   }
 
-  /// 提示文案：点击哈希胶囊时给出反馈（未注入时说明为什么没有）
-  String copyHint() {
-    if (!hasRevision) return '本次构建未注入提交哈希（需用 tools/ 里的构建脚本编译）';
-    return isDirty ? '已复制 $revisionLabel（工作区有未提交改动）' : '已复制 $revisionLabel';
+  /// 提示码：点击哈希胶囊时给出反馈（未注入时说明为什么没有）
+  BuildInfoCopyHint copyHint() {
+    if (!hasRevision) return BuildInfoCopyHint.noRevision;
+    return isDirty ? BuildInfoCopyHint.copiedDirty : BuildInfoCopyHint.copied;
   }
 
   /// 是否拿到了构建期注入的哈希

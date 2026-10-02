@@ -18,15 +18,21 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
 import 'package:moumou/models/wyzie_models.dart';
+import 'package:moumou/utils/error_codes.dart';
 import 'package:moumou/utils/retry_policy.dart';
 
 /// API 请求失败异常（网络错误 / 非 2xx / 无匹配媒体统一抛出）。
 class WyzieApiException implements Exception {
-  final String message;
-  const WyzieApiException(this.message);
+  /// 错误码
+  final WyzieApiErrorCode code;
+
+  /// 参数（键名与 ARB placeholder 一致：`status` / `received` / `max` / `error`）
+  final Map<String, Object?> args;
+
+  const WyzieApiException(this.code, {this.args = const {}});
 
   @override
-  String toString() => 'WyzieApiException: $message';
+  String toString() => 'WyzieApiException(${code.name})';
 }
 
 class WyzieApi {
@@ -112,7 +118,10 @@ class WyzieApi {
         onRetry: _logRetry,
       );
     } catch (e) {
-      throw WyzieApiException('网络请求失败: $e');
+      throw WyzieApiException(
+        WyzieApiErrorCode.networkFailed,
+        args: {'error': '$e'},
+      );
     }
     // Wyzie 对合法参数但无字幕时返回 400 + No subtitles found，视为空结果。
     if (response.statusCode == 400) {
@@ -120,11 +129,14 @@ class WyzieApi {
       if (text.toLowerCase().contains('no subtitles found')) {
         return const [];
       }
-      throw WyzieApiException('搜索失败（HTTP 400）');
+      throw const WyzieApiException(WyzieApiErrorCode.searchNoSubtitles);
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       await drainStreamCapped(response.stream).catchError((Object _) {});
-      throw WyzieApiException('搜索失败（HTTP ${response.statusCode}）');
+      throw WyzieApiException(
+        WyzieApiErrorCode.searchHttpFailed,
+        args: {'status': '${response.statusCode}'},
+      );
     }
     // 结果列表可能较长：JSON 用较大上限（仍为硬上限，§4.28）
     final text = await _readText(response, maxBytes: kMaxJsonResponseBytes);
@@ -157,16 +169,25 @@ class WyzieApi {
         onRetry: _logRetry,
       );
     } catch (e) {
-      throw WyzieApiException('下载失败: $e');
+      throw WyzieApiException(
+        WyzieApiErrorCode.downloadFailed,
+        args: {'error': '$e'},
+      );
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       await drainStreamCapped(response.stream).catchError((Object _) {});
-      throw WyzieApiException('下载失败（HTTP ${response.statusCode}）');
+      throw WyzieApiException(
+        WyzieApiErrorCode.downloadHttpFailed,
+        args: {'status': '${response.statusCode}'},
+      );
     }
     try {
       return await readBodyCapped(response, maxBytes: kMaxDownloadBytes);
     } on ResponseTooLargeException catch (e) {
-      throw WyzieApiException('下载失败：文件过大（${e.receivedBytes} 字节）');
+      throw WyzieApiException(
+        WyzieApiErrorCode.downloadTooLarge,
+        args: {'received': '${e.receivedBytes}'},
+      );
     }
   }
 
@@ -180,7 +201,11 @@ class WyzieApi {
       bytes = await readBodyCapped(response, maxBytes: maxBytes);
     } on ResponseTooLargeException catch (e) {
       throw WyzieApiException(
-        '响应异常（已读 ${e.receivedBytes} 字节，超过 ${e.maxBytes} 上限）',
+        WyzieApiErrorCode.responseTooLarge,
+        args: {
+          'received': '${e.receivedBytes}',
+          'max': '${e.maxBytes}',
+        },
       );
     }
     return utf8.decode(bytes, allowMalformed: true);
@@ -194,7 +219,7 @@ class WyzieApi {
     if (isImdbId || isNumeric) return query;
     final results = await _tmdbSearch(query);
     if (results.isEmpty) {
-      throw const WyzieApiException('未找到匹配的影视，请换个关键词');
+      throw const WyzieApiException(WyzieApiErrorCode.noMatch);
     }
     return results.first.id.toString();
   }
@@ -229,11 +254,17 @@ class WyzieApi {
         onRetry: _logRetry,
       );
     } catch (e) {
-      throw WyzieApiException('网络请求失败: $e');
+      throw WyzieApiException(
+        WyzieApiErrorCode.networkFailed,
+        args: {'error': '$e'},
+      );
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       await drainStreamCapped(response.stream).catchError((Object _) {});
-      throw WyzieApiException('请求失败（HTTP ${response.statusCode}）');
+      throw WyzieApiException(
+        WyzieApiErrorCode.httpFailed,
+        args: {'status': '${response.statusCode}'},
+      );
     }
     return _readText(response);
   }

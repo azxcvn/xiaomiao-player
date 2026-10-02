@@ -11,6 +11,7 @@ import 'package:moumou/services/bilibili/bili_danmaku_service.dart';
 import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/services/bilibili/bili_video_service.dart';
 import 'package:moumou/services/device_services.dart';
+import 'package:moumou/utils/error_codes.dart';
 import 'package:moumou/utils/file_ops.dart';
 import 'package:path/path.dart' as p;
 
@@ -79,13 +80,15 @@ class DownloadTask extends ChangeNotifier {
   DownloadStatus _status = DownloadStatus.pending;
   double _progress = 0; // 0~1
   double _speedBps = 0;
-  String? _error;
+  Object? _error;
   String? _outputPath;
 
   DownloadStatus get status => _status;
   double get progress => _progress;
   double get speedBps => _speedBps;
-  String? get error => _error;
+
+  /// 失败原因（服务层异常对象，文案由 UI 层翻译；见 `l10n/error_texts.dart`）。
+  Object? get error => _error;
 
   /// 最终产物路径（mp4 / xml）。
   String? get outputPath => _outputPath;
@@ -120,6 +123,9 @@ class DownloadTask extends ChangeNotifier {
       _sanitizeFileName(title, maxBytes: kMaxFileNameBytes - 11);
 
   /// 序列化（供 [DownloadManager] 跨重启持久化下载记录，工作.md 第 2 点）。
+  ///
+  /// 失败原因以「错误码 + 参数」落盘（**文案由 UI 层翻译**，不带中文）；
+  /// 非 B 站异常（无码可存）不落盘，恢复后由 UI 显示通用失败文案。
   Map<String, dynamic> toJson() => {
         'id': id,
         'title': title,
@@ -136,9 +142,23 @@ class DownloadTask extends ChangeNotifier {
         'withDanmaku': withDanmaku,
         'status': _status.name,
         'progress': _progress,
-        'error': _error,
+        'errorCode': _persistedErrorCode,
+        'errorArgs': _persistedErrorArgs,
         'outputPath': _outputPath,
       };
+
+  /// 落盘的失败错误码名（无错误 / 非 B 站异常为 null）
+  String? get _persistedErrorCode {
+    final error = _error;
+    return error is BiliApiException ? error.code.name : null;
+  }
+
+  /// 落盘的失败参数（键值统一转字符串，保证 JSON 可编码）
+  Map<String, String>? get _persistedErrorArgs {
+    final error = _error;
+    if (error is! BiliApiException) return null;
+    return error.args.map((k, v) => MapEntry(k, '$v'));
+  }
 
   /// 从持久化 JSON 恢复任务（未完成的任务由 [DownloadManager] 归位为暂停，
   /// 不会在重启后自动续跑）。
@@ -160,9 +180,27 @@ class DownloadTask extends ChangeNotifier {
     );
     task._status = _statusFromName(json['status'] as String?);
     task._progress = ((json['progress'] as num?)?.toDouble() ?? 0).clamp(0.0, 1.0);
-    task._error = json['error'] as String?;
+    task._error = _errorFromJson(json);
     task._outputPath = json['outputPath'] as String?;
     return task;
+  }
+
+  /// 读回落盘的失败原因；码名缺失 / 已不认识（旧存档的 `error` 中文串）→ null。
+  static Object? _errorFromJson(Map<String, dynamic> json) {
+    final name = json['errorCode'];
+    if (name is! String || name.isEmpty) return null;
+    try {
+      final rawArgs = json['errorArgs'];
+      return BiliApiException(
+        BiliApiErrorCode.values.byName(name),
+        args: {
+          if (rawArgs is Map)
+            for (final e in rawArgs.entries) '${e.key}': e.value,
+        },
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   static DownloadStatus _statusFromName(String? name) {
@@ -232,7 +270,7 @@ class DownloadTask extends ChangeNotifier {
       }
     } catch (e) {
       _setStatus(DownloadStatus.failed);
-      _error = e is BiliApiException ? e.message : e.toString();
+      _error = e;
     } finally {
       if (identical(_activeRun, done)) _activeRun = null;
       if (!done.isCompleted) done.complete();
@@ -275,7 +313,7 @@ class DownloadTask extends ChangeNotifier {
     final entries = await _danmaku.fetchDanmaku(cid: cid, aid: aid);
     _ensureActive();
     if (entries.isEmpty) {
-      throw const BiliApiException('该集没有弹幕');
+      throw const BiliApiException(BiliApiErrorCode.downloadNoDanmaku);
     }
     final xml = danmakuEntriesToBiliXml(entries);
     final file = await _writeText('$_safeTitle.xml', xml);
@@ -295,7 +333,7 @@ class DownloadTask extends ChangeNotifier {
     final videoStream = result.defaultVideo;
     final audioStream = result.defaultAudio;
     if (videoStream == null) {
-      throw const BiliApiException('未获取到视频流');
+      throw const BiliApiException(BiliApiErrorCode.downloadNoVideoStream);
     }
 
     // 1) 可选：同步下载弹幕（先下，避免视频失败白下弹幕）
@@ -323,7 +361,7 @@ class DownloadTask extends ChangeNotifier {
         : await tmpVideo.rename(mergeTmp.path).then((_) => true);
     if (!merged) {
       await _deleteQuietly(mergeTmp); // 半截中间产物不留；原成品没被碰过
-      throw const BiliApiException('音视频合并失败');
+      throw const BiliApiException(BiliApiErrorCode.downloadMergeFailed);
     }
     // 成品名不与已有文件冲突：同名标题的其它集 / 重复下载各自留一份，不互相覆盖
     final output = _uniqueOutputFile();
@@ -406,12 +444,15 @@ class DownloadTask extends ChangeNotifier {
       try {
         resp = await client.send(req);
       } catch (_) {
-        throw const BiliApiException('网络请求失败');
+        throw const BiliApiException(BiliApiErrorCode.downloadNetworkFailed);
       }
       // 416：Range 超出（文件已完整，可能是合并失败后的重试），直接跳过。
       if (resp.statusCode == 416) return;
       if (resp.statusCode != 200 && resp.statusCode != 206) {
-        throw BiliApiException('下载失败（HTTP ${resp.statusCode}）');
+        throw BiliApiException(
+          BiliApiErrorCode.httpFailed,
+          args: {'status': '${resp.statusCode}'},
+        );
       }
 
       // 服务器忽略 Range（返回 200 而非 206）时不能续传，需从头重下。
@@ -435,7 +476,7 @@ class DownloadTask extends ChangeNotifier {
       await for (final chunk in resp.stream) {
         if (_cancelled) throw _Cancelled();
         if (writeFailed) {
-          throw const BiliApiException('写入文件失败（磁盘空间或权限）');
+          throw const BiliApiException(BiliApiErrorCode.downloadWriteFailed);
         }
         sink.add(chunk);
         received += chunk.length;
@@ -456,7 +497,10 @@ class DownloadTask extends ChangeNotifier {
       try {
         await sink.flush();
       } catch (e) {
-        throw BiliApiException('写入文件失败（磁盘空间或权限）：$e');
+        throw BiliApiException(
+          BiliApiErrorCode.downloadWriteFailedDetail,
+          args: {'error': '$e'},
+        );
       }
     } finally {
       // 先关 sink（吞掉二次关闭/写盘异常，**不覆盖**真正的失败原因），再关 client

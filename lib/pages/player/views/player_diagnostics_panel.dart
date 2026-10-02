@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/player_diagnostics.dart';
 import 'package:moumou/utils/player_diagnostics.dart';
 
@@ -118,7 +119,7 @@ class _PlayerDiagnosticsPanelState extends State<PlayerDiagnosticsPanel> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final s = _snapshot;
-    final warnings = diagnosticsWarnings(s);
+    final warnings = diagnosticWarnings(l10n, s);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
       child: Column(
@@ -174,7 +175,7 @@ class _PlayerDiagnosticsPanelState extends State<PlayerDiagnosticsPanel> {
                   formatDiagnosticText(s.audioParams)),
               (l10n.playerDiagnosticsAudioBitrate,
                   formatDiagnosticBitrate(s.audioBitrate)),
-              (l10n.playerDiagnosticsAvSync, formatDiagnosticAvsync(s.avsync)),
+              (l10n.playerDiagnosticsAvSync, diagnosticAvsyncText(l10n, s.avsync)),
             ],
           ),
           const SizedBox(height: 12),
@@ -182,9 +183,9 @@ class _PlayerDiagnosticsPanelState extends State<PlayerDiagnosticsPanel> {
             title: l10n.playerDiagnosticsCacheGroup,
             rows: [
               (l10n.playerDiagnosticsBufferDuration,
-                  formatDiagnosticSeconds(s.demuxerCacheDurationSec)),
+                  diagnosticSecondsText(l10n, s.demuxerCacheDurationSec)),
               (l10n.playerDiagnosticsPlayableDuration,
-                  formatDiagnosticSeconds(s.demuxerCacheTimeSec)),
+                  diagnosticSecondsText(l10n, s.demuxerCacheTimeSec)),
               (l10n.playerDiagnosticsCacheUsage,
                   formatDiagnosticBytes(s.cacheUsedBytes)),
               (l10n.playerDiagnosticsDownlinkRate,

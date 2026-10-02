@@ -4,6 +4,22 @@
 /// （根为 `/`），`relative` 去掉前导 `/` 供协议客户端拼 URL 用。
 library;
 
+import 'package:moumou/utils/error_codes.dart';
+
+/// 网络路径校验失败：[code]，文案在 UI 层（见 `lib/l10n/error_texts.dart`）。
+///
+/// 原先抛 `ArgumentError`（消息是中文），已无法翻译，故改为携带错误码的自有异常；
+/// 调用方本来就按 `catch (e)` 兜底（`_childOrNull` / 流代理），行为等价。
+class NetworkPathException implements Exception {
+  /// 错误码
+  final NetworkPathErrorCode code;
+
+  const NetworkPathException(this.code);
+
+  @override
+  String toString() => 'NetworkPathException(${code.name})';
+}
+
 class NetworkPath {
   final String value;
 
@@ -46,14 +62,14 @@ class NetworkPath {
   /// 规范化 + 校验用户/客户端提供的原始路径（不做 URL 解码）。
   static NetworkPath from(String raw) {
     if (raw.contains('://')) {
-      throw ArgumentError('网络路径不能包含 URI scheme');
+      throw const NetworkPathException(NetworkPathErrorCode.scheme);
     }
     if (raw.length > _maxPathChars) {
-      throw ArgumentError('网络路径过长');
+      throw const NetworkPathException(NetworkPathErrorCode.tooLong);
     }
     final segments = raw.split('/').where((s) => s.isNotEmpty).toList();
     if (segments.length > _maxSegments) {
-      throw ArgumentError('网络路径段数过多');
+      throw const NetworkPathException(NetworkPathErrorCode.tooManySegments);
     }
     for (final s in segments) {
       _validateSegment(s);
@@ -63,16 +79,20 @@ class NetworkPath {
   }
 
   static void _validateSegment(String segment) {
-    if (segment.isEmpty) throw ArgumentError('路径段不能为空');
-    if (segment.length > _maxSegmentChars) throw ArgumentError('路径段过长');
+    if (segment.isEmpty) {
+      throw const NetworkPathException(NetworkPathErrorCode.segmentEmpty);
+    }
+    if (segment.length > _maxSegmentChars) {
+      throw const NetworkPathException(NetworkPathErrorCode.segmentTooLong);
+    }
     if (segment == '.' || segment == '..') {
-      throw ArgumentError('网络路径不能包含 . 或 ..');
+      throw const NetworkPathException(NetworkPathErrorCode.dotSegment);
     }
     if (segment.contains('/') || segment.contains(r'\')) {
-      throw ArgumentError('路径段不能包含分隔符');
+      throw const NetworkPathException(NetworkPathErrorCode.segmentSeparator);
     }
     if (segment.codeUnits.any((c) => c == 0 || (c >= 1 && c <= 31) || c == 127)) {
-      throw ArgumentError('路径段不能包含控制字符');
+      throw const NetworkPathException(NetworkPathErrorCode.segmentControlChar);
     }
   }
 }

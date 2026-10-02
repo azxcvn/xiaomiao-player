@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/pages/bilibili/bili_season_page.dart';
 import 'package:moumou/services/bilibili/bili_bangumi_service.dart';
-import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/services/common_list_controller.dart';
 import 'package:moumou/utils/loading_state.dart';
 import 'package:moumou/widgets/bili_cover_card.dart';
@@ -32,7 +32,7 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
   BiliIndexCondition? _condition;
   Map<String, String> _params = {};
   bool _conditionLoading = true;
-  String? _conditionError;
+  Object? _conditionError;
   bool _expanded = false;
 
   late final AnimationController _expandController;
@@ -49,7 +49,6 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
       );
       return PageResult(result.list, hasMore: result.hasNext);
     },
-    describeError: _errorText,
   );
 
   @override
@@ -104,7 +103,7 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _conditionError = _errorText(e);
+        _conditionError = e;
         _conditionLoading = false;
       });
     }
@@ -152,7 +151,10 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Text(_conditionError!, textAlign: TextAlign.center),
+              child: Text(
+                serviceErrorText(l10n, _conditionError!),
+                textAlign: TextAlign.center,
+              ),
             ),
             const SizedBox(height: 12),
             FilledButton.icon(
@@ -283,7 +285,10 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Text(message, textAlign: TextAlign.center),
+                  child: Text(
+                    serviceErrorText(l10n, message),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 FilledButton.icon(
@@ -340,7 +345,4 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
       ),
     );
   }
-
-  static String _errorText(Object e) =>
-      e is BiliApiException ? e.message : e.toString();
 }

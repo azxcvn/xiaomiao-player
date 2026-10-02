@@ -107,7 +107,13 @@ class _AboutPageState extends State<AboutPage> {
       await Clipboard.setData(ClipboardData(text: info.revisionLabel));
     }
     if (!mounted) return;
-    _toast(info.copyHint());
+    final l10n = AppLocalizations.of(context);
+    _toast(switch (info.copyHint()) {
+      BuildInfoCopyHint.noRevision => l10n.buildInfoNoRevision,
+      BuildInfoCopyHint.copied => l10n.buildInfoCopied(info.revisionLabel),
+      BuildInfoCopyHint.copiedDirty =>
+        l10n.buildInfoCopiedDirty(info.revisionLabel),
+    });
   }
 
   void _toast(String message) {

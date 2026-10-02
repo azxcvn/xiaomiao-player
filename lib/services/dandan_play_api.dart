@@ -25,15 +25,21 @@ import 'package:http/http.dart' as http;
 import 'package:moumou/models/dandan_models.dart';
 import 'package:moumou/services/dandan_play_keys.dart';
 import 'package:moumou/utils/dandan_signature.dart';
+import 'package:moumou/utils/error_codes.dart';
 import 'package:moumou/utils/retry_policy.dart';
 
 /// API 请求失败异常（网络错误 / 非 200 / 业务错误统一抛出）
 class DandanApiException implements Exception {
-  final String message;
-  const DandanApiException(this.message);
+  /// 错误码
+  final DandanApiErrorCode code;
+
+  /// 参数（键名与 ARB placeholder 一致：`url` / `status` / `received` / `error` / `message`）
+  final Map<String, Object?> args;
+
+  const DandanApiException(this.code, {this.args = const {}});
 
   @override
-  String toString() => 'DandanApiException: $message';
+  String toString() => 'DandanApiException(${code.name})';
 }
 
 class DandanPlayApi {
@@ -73,7 +79,10 @@ class DandanPlayApi {
     final url = baseUrl?.trim();
     if (url == null || url.isEmpty) return defaultBaseUrl;
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      throw DandanApiException('服务器地址无效（需以 http/https 开头）: $url');
+      throw DandanApiException(
+        DandanApiErrorCode.invalidServerUrl,
+        args: {'url': url},
+      );
     }
     return url.endsWith('/') ? url.substring(0, url.length - 1) : url;
   }
@@ -108,7 +117,10 @@ class DandanPlayApi {
         onRetry: _logRetry,
       );
     } catch (e) {
-      throw DandanApiException('网络请求失败: $e');
+      throw DandanApiException(
+        DandanApiErrorCode.networkFailed,
+        args: {'error': '$e'},
+      );
     }
     return _decode(response);
   }
@@ -132,7 +144,10 @@ class DandanPlayApi {
         onRetry: _logRetry,
       );
     } catch (e) {
-      throw DandanApiException('网络请求失败: $e');
+      throw DandanApiException(
+        DandanApiErrorCode.networkFailed,
+        args: {'error': '$e'},
+      );
     }
     return _decode(response);
   }
@@ -141,7 +156,8 @@ class DandanPlayApi {
   String _decode(http.Response response) {
     if (response.bodyBytes.length > kMaxJsonResponseBytes) {
       throw DandanApiException(
-        '响应过大（${response.bodyBytes.length} 字节），已放弃解析',
+        DandanApiErrorCode.responseTooLarge,
+        args: {'received': '${response.bodyBytes.length}'},
       );
     }
     // ⚠️ 解码必须在 try 内且 `allowMalformed`：服务端偶发返回畸形 UTF-8 时
@@ -151,17 +167,30 @@ class DandanPlayApi {
     try {
       text = utf8.decode(response.bodyBytes, allowMalformed: true);
     } catch (e) {
-      throw DandanApiException('响应解码失败：$e');
+      throw DandanApiException(
+        DandanApiErrorCode.decodeFailed,
+        args: {'error': '$e'},
+      );
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw DandanApiException('请求失败（HTTP ${response.statusCode}）');
+      throw DandanApiException(
+        DandanApiErrorCode.httpFailed,
+        args: {'status': '${response.statusCode}'},
+      );
     }
     // 业务错误：{ "success": false, "errorCode": .., "errorMessage": .. }
     try {
       final decoded = jsonDecode(text);
       if (decoded is Map && decoded['success'] == false) {
         final msg = decoded['errorMessage'];
-        throw DandanApiException(msg is String && msg.isNotEmpty ? msg : '服务器返回错误');
+        // 第三方自带 message 优先（数据，直接透传显示）
+        if (msg is String && msg.isNotEmpty) {
+          throw DandanApiException(
+            DandanApiErrorCode.serverMessage,
+            args: {'message': msg},
+          );
+        }
+        throw const DandanApiException(DandanApiErrorCode.serverError);
       }
     } catch (e) {
       if (e is DandanApiException) rethrow;
@@ -179,7 +208,10 @@ class DandanPlayApi {
     try {
       return jsonDecode(text);
     } catch (e) {
-      throw DandanApiException('响应解析失败：$e');
+      throw DandanApiException(
+        DandanApiErrorCode.parseFailed,
+        args: {'error': '$e'},
+      );
     }
   }
 

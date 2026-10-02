@@ -18,14 +18,17 @@ library;
 import 'dart:convert';
 
 import 'package:moumou/models/subtitle_entry.dart';
+import 'package:moumou/utils/error_codes.dart';
 
 /// 自定义源响应解析失败（与 [FormatException] 区分开，便于页面提示）
 class CustomSubtitleParseException implements Exception {
-  final String message;
-  const CustomSubtitleParseException(this.message);
+  /// 错误码
+  final CustomSubtitleParseErrorCode code;
+
+  const CustomSubtitleParseException(this.code);
 
   @override
-  String toString() => 'CustomSubtitleParseException: $message';
+  String toString() => 'CustomSubtitleParseException(${code.name})';
 }
 
 /// 展开地址模板：模板里的 `{name}` 会替换成 URL 编码后的关键词；
@@ -58,20 +61,25 @@ const Set<String> kCustomSubtitleFormats = {
 
 /// 解析自定义源响应体 → 通用字幕条目列表（自动嗅探；见文件头注释）。
 ///
-/// [sourceLabel] 为结果条目里显示的来源名（默认「自定义」）。
+/// [sourceLabel] 为结果条目里显示的来源标识：默认 `custom`（ASCII 稳定值），
+/// 界面文案由 UI 侧映射（见 `label_maps.subtitleEntrySourceLabel`）。
 List<SubtitleEntry> parseCustomSubtitleResponse(
   String body, {
-  String sourceLabel = '自定义',
+  String sourceLabel = 'custom',
 }) {
   final Object? decoded;
   try {
     decoded = jsonDecode(body);
   } catch (_) {
-    throw const CustomSubtitleParseException('响应不是合法 JSON');
+    throw const CustomSubtitleParseException(
+      CustomSubtitleParseErrorCode.notJson,
+    );
   }
   final list = _findList(decoded);
   if (list == null) {
-    throw const CustomSubtitleParseException('响应里找不到字幕列表');
+    throw const CustomSubtitleParseException(
+      CustomSubtitleParseErrorCode.noList,
+    );
   }
   final out = <SubtitleEntry>[];
   final seen = <String>{};

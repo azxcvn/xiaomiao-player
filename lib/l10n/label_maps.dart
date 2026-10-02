@@ -10,21 +10,32 @@ library;
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/audio_track.dart';
+import 'package:moumou/models/bili_playlist.dart';
+import 'package:moumou/models/bilibili_user.dart';
 import 'package:moumou/models/chapter_info.dart';
 import 'package:moumou/models/danmaku_color_mode.dart';
 import 'package:moumou/models/danmaku_font_mode.dart';
+import 'package:moumou/models/danmaku_server.dart';
+import 'package:moumou/models/equalizer_preset.dart';
 import 'package:moumou/models/player_action.dart';
+import 'package:moumou/models/player_diagnostics.dart';
 import 'package:moumou/models/player_loop.dart';
 import 'package:moumou/models/playlist_sort.dart';
 import 'package:moumou/models/subtitle_dir.dart';
+import 'package:moumou/models/subtitle_entry.dart';
 import 'package:moumou/models/super_resolution_mode.dart';
 import 'package:moumou/models/subtitle_track.dart';
+import 'package:moumou/services/audio_service.dart';
+import 'package:moumou/services/cache_manager_service.dart';
 import 'package:moumou/services/decode_settings.dart';
 import 'package:moumou/services/subtitle/subtitle_source_settings.dart';
 import 'package:moumou/services/view_settings.dart';
 import 'package:moumou/services/wallpaper_settings.dart';
 import 'package:moumou/theme/theme_controller.dart';
+import 'package:moumou/utils/danmaku_episode.dart';
+import 'package:moumou/utils/danmaku_timeline.dart';
 import 'package:moumou/utils/network_sort.dart';
+import 'package:moumou/utils/player_diagnostics.dart';
 import 'package:moumou/utils/retry_policy.dart';
 
 /// 主题模式（外观页「主题模式」）
@@ -496,3 +507,136 @@ String appFontWeightLabel(AppLocalizations l10n, int index) => switch (index) {
   8 => l10n.settingsFontWeightBlack,
   _ => l10n.settingsFontWeightNone,
 };
+
+// ── 阶段 6：服务 / 模型 / 工具层产出的显示名与结果文案 ──────────
+
+/// 均衡器预设名：按 [EqualizerPreset.id] 映射（id 是持久化用的稳定标识，
+/// 未知 id 原样显示，不做兜底文案）。
+String equalizerPresetLabel(AppLocalizations l10n, EqualizerPreset preset) =>
+    switch (preset.id) {
+      'flat' => l10n.playerEqualizerPresetFlat,
+      'dialogue' => l10n.playerEqualizerPresetDialogue,
+      'cinema' => l10n.playerEqualizerPresetCinema,
+      'bass' => l10n.playerEqualizerPresetBass,
+      'treble' => l10n.playerEqualizerPresetTreble,
+      'night' => l10n.playerEqualizerPresetNight,
+      _ => preset.id,
+    };
+
+/// B 站账号会员状态名（服务端 `vip_label.text` 优先，属数据不翻译）
+String biliUserVipLabel(AppLocalizations l10n, BiliUser user) {
+  final isVip = user.vipStatus > 0 && user.vipType > 0;
+  if (!isVip) return l10n.biliVipNormal;
+  if (user.vipLabelText.isNotEmpty) return user.vipLabelText;
+  return user.vipType >= 2 ? l10n.biliVipAnnual : l10n.biliVipMember;
+}
+
+/// 番剧播放列表条目名（长短标题都缺失时回落「第 N 集」）
+String biliPlaylistItemTitle(AppLocalizations l10n, BiliPlaylistItem item) =>
+    item.title.isNotEmpty ? item.title : l10n.biliPlaylistEpisode('${item.index}');
+
+/// 缓存类别名：按 [CacheCategory.key] 映射（key 是 ASCII 稳定标识）
+String cacheCategoryLabel(AppLocalizations l10n, CacheCategory category) =>
+    switch (category.key) {
+      'listThumbs' => l10n.cacheCategoryListThumbs,
+      'networkDanmaku' => l10n.cacheCategoryNetworkDanmaku,
+      'biliCovers' => l10n.cacheCategoryBiliCovers,
+      'other' => l10n.cacheCategoryOther,
+      _ => category.key,
+    };
+
+/// 弹幕服务器显示名：内置默认服务器走 l10n，自建服务器用用户填的名字
+/// （持久化里存的仍是原值，见 `DanmakuServer.defaultName`）
+String danmakuServerDisplayName(AppLocalizations l10n, DanmakuServer server) =>
+    server.isDefault ? l10n.danmakuServerDefaultName : server.name;
+
+/// 字幕条目展示名（缺失占位）
+String subtitleEntryDisplayName(AppLocalizations l10n, SubtitleEntry entry) =>
+    entry.name.isNotEmpty ? entry.name : l10n.subtitleUnknownName;
+
+/// 字幕条目语言展示名（缺失占位）
+String subtitleEntryDisplayLanguage(AppLocalizations l10n, SubtitleEntry entry) =>
+    entry.language.isNotEmpty ? entry.language : l10n.subtitleUnknownLanguage;
+
+/// 字幕条目来源展示名：自定义源在服务层存 ASCII 码 `custom`
+String subtitleEntrySourceLabel(AppLocalizations l10n, SubtitleEntry entry) =>
+    entry.source == 'custom' ? l10n.commonCustom : entry.source;
+
+/// 弹幕时间轴偏移文本（0 → 无偏移；正延后 / 负提前）
+String danmakuOffsetText(AppLocalizations l10n, double value) {
+  if (value == 0) return l10n.danmakuOffsetNone;
+  final time = formatDanmakuOffsetDuration(value);
+  return value > 0
+      ? l10n.danmakuOffsetDelay(time)
+      : l10n.danmakuOffsetAdvance(time);
+}
+
+/// 诊断：秒 → 文本（<60 秒保留一位小数，≥60 秒走 l10n 的「X 分 Y 秒」）
+String diagnosticSecondsText(AppLocalizations l10n, double? seconds) {
+  if (seconds == null || seconds < 0) return kDiagnosticPlaceholder;
+  if (seconds < 60) return '${seconds.toStringAsFixed(1)} s';
+  final m = seconds ~/ 60;
+  final s = (seconds - m * 60).toStringAsFixed(0);
+  return l10n.playerDiagnosticsDuration('$m', s);
+}
+
+/// 诊断：音画同步偏差（秒）→ `+12 ms 音频超前` / `-8 ms 视频超前`
+String diagnosticAvsyncText(AppLocalizations l10n, double? seconds) {
+  if (seconds == null) return kDiagnosticPlaceholder;
+  final ms = seconds * 1000;
+  final value = '${ms >= 0 ? '+' : '-'}${ms.abs().toStringAsFixed(0)} ms';
+  return ms >= 0
+      ? l10n.playerDiagnosticsAvsyncAudioAhead(value)
+      : l10n.playerDiagnosticsAvsyncVideoAhead(value);
+}
+
+/// 诊断：健康提示（按优先级返回需要用户注意的现象，无异常返回空列表）。
+///
+/// 原 `utils/player_diagnostics.dart` 的纯函数版因需要 l10n 而移到本层；
+/// 阈值 [kAvsyncWarnSec] 仍是 utils 的纯常量。
+List<String> diagnosticWarnings(
+  AppLocalizations l10n,
+  PlayerDiagnosticsSnapshot s,
+) {
+  final warnings = <String>[];
+  final dropped = s.droppedFrames ?? 0;
+  if (dropped > 0) {
+    warnings.add(l10n.playerDiagnosticsWarnDroppedFrames(dropped));
+  }
+  if (s.hwdec.trim().toLowerCase() == 'no') {
+    warnings.add(l10n.playerDiagnosticsWarnSoftwareDecode);
+  }
+  final avsync = s.avsync;
+  if (avsync != null && avsync.abs() > kAvsyncWarnSec) {
+    warnings.add(
+      l10n.playerDiagnosticsWarnAvsync(diagnosticAvsyncText(l10n, avsync)),
+    );
+  }
+  return warnings;
+}
+
+/// 音轨自动回退原因文案（[fallback] 为空表示无路可退）
+String audioFallbackReasonText(
+  AppLocalizations l10n,
+  AudioFallbackReason reason,
+  AudioTrack? fallback,
+) =>
+    switch (reason) {
+      AudioFallbackReason.noAlternative => l10n.playerAudioFallbackNoTrack,
+      AudioFallbackReason.switched => l10n.playerAudioFallbackSwitched(
+          fallback == null ? '' : audioTrackDisplayName(l10n, fallback),
+        ),
+    };
+
+/// 网络弹幕集数面板「自动定位失败」的提示（[number] 为识别出的集数，可空）
+String danmakuEpisodeLocateHint(
+  AppLocalizations l10n,
+  DanmakuEpisodeLocateHint hint,
+  double? number,
+) =>
+    switch (hint) {
+      DanmakuEpisodeLocateHint.noEpisodeNumber =>
+        l10n.playerDanmakuLocateNoEpisode,
+      DanmakuEpisodeLocateHint.episodeMissing =>
+        l10n.playerDanmakuLocateEpisodeMissing('${number?.toInt()}'),
+    };

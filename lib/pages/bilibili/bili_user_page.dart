@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/bilibili_user.dart';
 import 'package:moumou/services/bilibili/bili_account.dart';
 import 'package:moumou/utils/app_dialog.dart';
@@ -147,6 +148,7 @@ class _HeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return SettingsCard(
       padding: const EdgeInsets.all(20),
       child: Row(
@@ -176,7 +178,7 @@ class _HeaderCard extends StatelessWidget {
                     _Badge(text: user.levelLabel, color: scheme.primary),
                     const SizedBox(width: 8),
                     _Badge(
-                      text: user.vipLabel,
+                      text: biliUserVipLabel(l10n, user),
                       color: user.vipType > 0
                           ? const Color(0xFFFB7299)
                           : scheme.onSurfaceVariant,

@@ -20,7 +20,10 @@ sealed class LoadingState<T> {
   const factory LoadingState.loaded(T data) = Loaded<T>;
 
   /// 首次加载失败（无数据）
-  const factory LoadingState.error(String message) = LoadError<T>;
+  ///
+  /// [message] 是服务层错误对象（异常 / 码），**文案由 UI 层翻译**：
+  /// 见 `l10n/error_texts.dart` 的 `serviceErrorText`。
+  const factory LoadingState.error(Object message) = LoadError<T>;
 
   /// 是否有数据可展示
   bool get hasData => this is Loaded<T>;
@@ -31,8 +34,8 @@ sealed class LoadingState<T> {
         _ => null,
       };
 
-  /// 错误文案（非失败态返回 null）
-  String? get errorOrNull => switch (this) {
+  /// 错误对象（非失败态返回 null；文案由 UI 层翻译）
+  Object? get errorOrNull => switch (this) {
         LoadError<T>(:final message) => message,
         _ => null,
       };
@@ -51,7 +54,8 @@ final class Loaded<T> extends LoadingState<T> {
 
 /// 首次加载失败
 final class LoadError<T> extends LoadingState<T> {
-  final String message;
+  /// 服务层错误对象（文案由 UI 层翻译）
+  final Object message;
   const LoadError(this.message);
 }
 

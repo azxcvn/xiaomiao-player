@@ -12,18 +12,6 @@ enum FolderFilterMode {
   /// 白名单模式：仅扫描指定文件夹及其子目录
   whitelist;
 
-  String get label => switch (this) {
-        FolderFilterMode.none => '全部扫描',
-        FolderFilterMode.blacklist => '黑名单模式（排除以下文件夹）',
-        FolderFilterMode.whitelist => '白名单模式（仅扫描以下文件夹）',
-      };
-
-  String get subtitle => switch (this) {
-        FolderFilterMode.none => '扫描设备上所有未被规则跳过的媒体文件夹',
-        FolderFilterMode.blacklist => '指定文件夹内的视频将不会显示在媒体列表中',
-        FolderFilterMode.whitelist => '仅显示指定文件夹内的视频，其他文件夹将被忽略',
-      };
-
   static FolderFilterMode byName(String? name) {
     return FolderFilterMode.values.firstWhere(
       (m) => m.name == name,

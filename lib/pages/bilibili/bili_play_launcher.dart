@@ -10,13 +10,13 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/models/bili_dash.dart';
 import 'package:moumou/models/bili_media.dart';
 import 'package:moumou/models/bili_playlist.dart';
 import 'package:moumou/pages/player/player_page.dart';
 import 'package:moumou/services/bilibili/bili_bangumi_service.dart';
-import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/services/bilibili/bili_video_service.dart';
 import 'package:moumou/utils/app_dialog.dart';
 
@@ -60,7 +60,7 @@ Future<void> playBiliEpisode(
     if (context.mounted) {
       _dismissLoading(context);
       final l10n = AppLocalizations.of(context);
-      _toast(context, l10n.biliPlayFailed(_errText(e)));
+      _toast(context, l10n.biliPlayFailed(serviceErrorText(l10n, e)));
     }
   }
 }
@@ -120,7 +120,7 @@ Future<void> playBiliUgc(
     if (context.mounted) {
       _dismissLoading(context);
       final l10n = AppLocalizations.of(context);
-      _toast(context, l10n.biliPlayFailed(_errText(e)));
+      _toast(context, l10n.biliPlayFailed(serviceErrorText(l10n, e)));
     }
   }
 }
@@ -188,6 +188,3 @@ void _toast(BuildContext context, String message) {
     ..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(content: Text(message)));
 }
-
-String _errText(Object e) =>
-    e is BiliApiException ? e.message : e.toString();

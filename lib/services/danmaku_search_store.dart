@@ -23,6 +23,15 @@ import 'package:flutter/foundation.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/utils/async_session.dart';
 
+/// 整条搜索的失败种类（文案由 UI 层按 l10n 翻译）。
+enum DanmakuSearchError {
+  /// 所有服务器都正常返回，但一条结果都没有
+  noResult,
+
+  /// 有服务器失败（且一条结果都没有）
+  serverErrors,
+}
+
 class DanmakuSearchStore extends ChangeNotifier {
   /// 注入网络服务（测试用假服务）；不传则自建一个（本类持有到进程结束——
   /// 单例场景下比"每开一次面板新建/释放一个 http.Client"更省）。
@@ -43,8 +52,8 @@ class DanmakuSearchStore extends ChangeNotifier {
   List<DanmakuSearchItem> _results = [];
   bool _searching = false;
   bool _stopped = false;
-  List<String> _serverErrors = [];
-  String? _error;
+  List<DanmakuServerFailure> _serverErrors = [];
+  DanmakuSearchError? _errorKind;
   bool _keepOnClose = false;
 
   /// 最近一次搜索的关键词（面板输入框与折叠条都读它）
@@ -59,11 +68,12 @@ class DanmakuSearchStore extends ChangeNotifier {
   /// 用户手动停止了本次搜索
   bool get stopped => _stopped;
 
-  /// 各服务器失败原因（有结果时以状态条提示）
-  List<String> get serverErrors => UnmodifiableListView(_serverErrors);
+  /// 各服务器失败原因（服务器名 + 异常对象；文案由 UI 层翻译）
+  List<DanmakuServerFailure> get serverErrors =>
+      UnmodifiableListView(_serverErrors);
 
-  /// 一条结果都没有时的整条错误文案
-  String? get error => _error;
+  /// 一条结果都没有时的失败种类（有结果时为 null；文案由 UI 层翻译）
+  DanmakuSearchError? get errorKind => _errorKind;
 
   /// 结果列表滚动位置（返回面板时原地复原）。
   ///
@@ -85,7 +95,7 @@ class DanmakuSearchStore extends ChangeNotifier {
     _searching = true;
     _stopped = false;
     _serverErrors = [];
-    _error = null;
+    _errorKind = null;
     listOffset = 0;
     notifyListeners();
     _sub = _network
@@ -97,7 +107,7 @@ class DanmakuSearchStore extends ChangeNotifier {
             DanmakuServerSearchOutcome(
               serverName: '',
               serverUrl: null,
-              error: '$error',
+              error: error,
             ),
           ),
           onDone: () => _onDone(session),
@@ -124,7 +134,10 @@ class DanmakuSearchStore extends ChangeNotifier {
       _keepOnClose = false;
       return;
     }
-    if (_keyword.isEmpty && _results.isEmpty && !_searching && _error == null) {
+    if (_keyword.isEmpty &&
+        _results.isEmpty &&
+        !_searching &&
+        _errorKind == null) {
       return; // 本来就没有东西要清
     }
     clear();
@@ -155,7 +168,7 @@ class DanmakuSearchStore extends ChangeNotifier {
     _searching = false;
     _stopped = false;
     _serverErrors = [];
-    _error = null;
+    _errorKind = null;
     listOffset = 0;
     notifyListeners();
   }
@@ -169,7 +182,9 @@ class DanmakuSearchStore extends ChangeNotifier {
   void _onOutcome(int session, DanmakuServerSearchOutcome outcome) {
     if (!_session.isCurrent(session)) return;
     final error = outcome.error;
-    if (error != null && error.isNotEmpty) _serverErrors.add(error);
+    if (error != null) {
+      _serverErrors.add((serverName: outcome.serverName, error: error));
+    }
     _results.addAll(outcome.items);
     // 同一 animeId 若这台集数更全 → 就地覆盖旧卡（不新增重复项）
     for (final upgraded in outcome.upgrades) {
@@ -189,10 +204,11 @@ class DanmakuSearchStore extends ChangeNotifier {
     if (!_session.isCurrent(session)) return;
     _sub = null;
     _searching = false;
-    _error = _results.isEmpty
+    // 只记种类，文案由 UI 层按 l10n 组装
+    _errorKind = _results.isEmpty
         ? (_serverErrors.isEmpty
-              ? '未找到相关番剧，请尝试其他关键词'
-              : '搜索失败：${_serverErrors.join('；')}')
+              ? DanmakuSearchError.noResult
+              : DanmakuSearchError.serverErrors)
         : null;
     notifyListeners();
   }

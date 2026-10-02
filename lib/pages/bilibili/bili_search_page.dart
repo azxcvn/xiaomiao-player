@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/pages/bilibili/bili_season_page.dart';
 import 'package:moumou/services/bilibili/bili_bangumi_service.dart';
-import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/services/common_list_controller.dart';
 import 'package:moumou/utils/loading_state.dart';
 import 'package:moumou/widgets/bili_cover_image.dart';
@@ -40,7 +40,6 @@ class _BiliSearchPageState extends State<BiliSearchPage> {
         hasMore: page * _pageSize < result.numResults,
       );
     },
-    describeError: _errorText,
   );
 
   String _keyword = '';
@@ -121,7 +120,7 @@ class _BiliSearchPageState extends State<BiliSearchPage> {
     };
   }
 
-  Widget _errorView(String message) {
+  Widget _errorView(Object message) {
     final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
@@ -129,7 +128,10 @@ class _BiliSearchPageState extends State<BiliSearchPage> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(message, textAlign: TextAlign.center),
+            child: Text(
+              serviceErrorText(l10n, message),
+              textAlign: TextAlign.center,
+            ),
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
@@ -165,9 +167,6 @@ class _BiliSearchPageState extends State<BiliSearchPage> {
       },
     );
   }
-
-  static String _errorText(Object e) =>
-      e is BiliApiException ? e.message : e.toString();
 }
 
 /// 搜索结果条目：封面 + 标题 + 元信息。

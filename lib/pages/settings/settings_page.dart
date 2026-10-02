@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/pages/bilibili/bili_danmaku_download_page.dart';
 import 'package:moumou/pages/bilibili/bili_login_page.dart';
 import 'package:moumou/pages/bilibili/bili_user_page.dart';
@@ -65,7 +66,9 @@ class SettingsPage extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        subtitle: Text('${user.levelLabel} · ${user.vipLabel}'),
+                        subtitle: Text(
+                          '${user.levelLabel} · ${biliUserVipLabel(l10n, user)}',
+                        ),
                         trailing: const Icon(Icons.chevron_right),
                       ),
                     );

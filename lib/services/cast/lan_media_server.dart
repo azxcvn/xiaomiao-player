@@ -10,6 +10,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:moumou/utils/error_codes.dart';
 import 'package:moumou/utils/http_byte_range.dart';
 import 'package:moumou/utils/network_mime_types.dart';
 
@@ -66,7 +67,22 @@ Future<String> discoverLanIp() async {
     }
   }
   if (best != null) return best;
-  throw StateError('未找到局域网 IPv4 地址');
+  throw const LanMediaServerException(LanMediaServerErrorCode.noLanIpv4);
+}
+
+/// 局域网媒体服务器失败：[code]（+ [path]），文案在 UI 层
+/// （见 `lib/l10n/error_texts.dart` 的 `lanMediaServerErrorText`）。
+class LanMediaServerException implements Exception {
+  /// 错误码
+  final LanMediaServerErrorCode code;
+
+  /// 相关文件路径（[LanMediaServerErrorCode.fileMissing] 时给出）
+  final String? path;
+
+  const LanMediaServerException(this.code, {this.path});
+
+  @override
+  String toString() => 'LanMediaServerException(${code.name})';
 }
 
 class LanMediaServer {
@@ -96,7 +112,10 @@ class LanMediaServer {
     await stop();
     final file = File(filePath);
     if (!await file.exists()) {
-      throw FileSystemException('文件不存在', filePath);
+      throw LanMediaServerException(
+        LanMediaServerErrorCode.fileMissing,
+        path: filePath,
+      );
     }
     final ip = await lanIpResolver();
     final token = _generateToken();

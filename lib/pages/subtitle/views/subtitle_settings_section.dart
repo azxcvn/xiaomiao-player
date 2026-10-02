@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/models/wyzie_models.dart';
 import 'package:moumou/services/subtitle/custom_subtitle_api.dart';
 import 'package:moumou/services/subtitle/subtitle_source_settings.dart';
@@ -229,7 +230,7 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
       );
     } on CustomSubtitleApiException catch (e) {
       if (!mounted) return;
-      _snack(e.message);
+      _snack(customSubtitleErrorText(l10n, e));
     } catch (e) {
       if (!mounted) return;
       _snack(l10n.subtitleTestFailed('$e'));
@@ -279,6 +280,7 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
   }
 
   String _sourceName(String key) {
+    if (key == 'all') return AppLocalizations.of(context).commonAll;
     final tiered = _sourcesResponse?.tiered;
     if (tiered != null) {
       for (final item in tiered) {

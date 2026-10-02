@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/services/file_operations_service.dart';
 import 'package:moumou/utils/app_dialog.dart';
+import 'package:moumou/utils/error_codes.dart';
 import 'package:moumou/utils/file_ops.dart';
 import 'package:moumou/utils/formatters.dart';
 
@@ -142,7 +144,8 @@ class _RenameDialogState extends State<_RenameDialog> {
       isDirectory: widget.isDirectory,
     ),
   );
-  String? _error;
+  /// 校验失败的原因码（null = 通过）；文案渲染时现取
+  FileOpErrorCode? _error;
 
   @override
   void dispose() {
@@ -190,7 +193,7 @@ class _RenameDialogState extends State<_RenameDialog> {
           helperStyle: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
           suffixText: _lockedExt.isEmpty ? null : _lockedExt,
           suffixStyle: const TextStyle(fontWeight: FontWeight.w600),
-          errorText: _error,
+          errorText: _error == null ? null : fileOpCodeText(l10n, _error!),
           border: const OutlineInputBorder(),
         ),
       ),

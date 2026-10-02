@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/pages/download/download_manager_page.dart';
 import 'package:moumou/services/bilibili/bili_download_service.dart';
 import 'package:moumou/services/download/download_manager.dart';
@@ -26,7 +27,7 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
   bool _busy = false;
   BiliDownloadTarget? _target;
   final Set<int> _selected = {};
-  String? _error;
+  Object? _error;
 
   @override
   void initState() {
@@ -72,7 +73,7 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
       setState(() => _target = target);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = _errText(e));
+      setState(() => _error = e);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -174,7 +175,10 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text(_error!, textAlign: TextAlign.center),
+          child: Text(
+            serviceErrorText(l10n, _error!),
+            textAlign: TextAlign.center,
+          ),
         ),
       );
     }
@@ -318,6 +322,4 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
         behavior: SnackBarBehavior.floating,
       ));
   }
-
-  String _errText(Object e) => e.toString().replaceFirst('BiliApiException: ', '');
 }

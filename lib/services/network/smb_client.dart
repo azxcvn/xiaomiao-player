@@ -12,6 +12,7 @@ import 'package:moumou/models/network_connection.dart';
 import 'package:moumou/models/network_file.dart';
 import 'package:moumou/services/network/network_client.dart';
 import 'package:moumou/services/network/smb_pipeline.dart';
+import 'package:moumou/utils/error_codes.dart';
 import 'package:moumou/utils/network_mime_types.dart';
 
 class SmbClient implements NetworkClient {
@@ -42,7 +43,7 @@ class SmbClient implements NetworkClient {
       );
       _connect = created;
     } catch (e) {
-      throw NetworkClientException(_friendly(e));
+      throw _friendly(e);
     }
   }
 
@@ -75,7 +76,7 @@ class SmbClient implements NetworkClient {
       final files = await c.listFiles(folder);
       return files.map(_toFile).toList();
     } catch (e) {
-      throw NetworkClientException(_friendly(e));
+      throw _friendly(e);
     }
   }
 
@@ -108,13 +109,15 @@ class SmbClient implements NetworkClient {
       return await c.openRead(f, offset);
     } catch (e) {
       debugPrint('[SMB] openStream($path, $offset) 失败: $e');
-      throw NetworkClientException(_friendly(e));
+      throw _friendly(e);
     }
   }
 
   SmbConnect _requireConnect() {
     final c = _connect;
-    if (c == null) throw const NetworkClientException('SMB 尚未连接');
+    if (c == null) {
+      throw const NetworkClientException(NetworkErrorCode.smbNotConnected);
+    }
     return c;
   }
 
@@ -140,19 +143,30 @@ class SmbClient implements NetworkClient {
     return t;
   }
 
-  String _friendly(Object e) {
+  /// 把 smb_connect 抛出的第三方异常翻成**带错误码**的客户端异常。
+  ///
+  /// 参数键名与 ARB placeholder 一致（见 `lib/l10n/error_texts.dart`）。
+  NetworkClientException _friendly(Object e) {
     final s = e.toString();
     final lower = s.toLowerCase();
     if (lower.contains('logon') || lower.contains('password')) {
-      return '用户名或密码错误';
+      return const NetworkClientException(NetworkErrorCode.smbAuthFailed);
     }
     if (lower.contains('denied') || lower.contains('access')) {
-      return '拒绝访问（权限不足）';
+      return const NetworkClientException(NetworkErrorCode.smbAccessDenied);
     }
     if (lower.contains('not found') || lower.contains('no such')) {
-      return '路径不存在';
+      return const NetworkClientException(NetworkErrorCode.smbPathNotFound);
     }
-    if (s.trim().isEmpty) return 'SMB 请求失败';
-    return s.length > 120 ? 'SMB 请求失败' : s;
+    if (s.trim().isEmpty) {
+      return const NetworkClientException(NetworkErrorCode.smbRequestFailed);
+    }
+    if (s.length > 120) {
+      return const NetworkClientException(NetworkErrorCode.smbRequestFailed);
+    }
+    return NetworkClientException(
+      NetworkErrorCode.smbServerMessage,
+      args: {'message': s},
+    );
   }
 }

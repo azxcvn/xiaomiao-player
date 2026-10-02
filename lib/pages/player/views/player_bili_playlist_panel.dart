@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/bili_playlist.dart';
 
 /// B 站番剧播放列表面板（通过 [showPlayerPanel] 右侧滑入 / 竖屏底部弹出，
@@ -160,7 +161,7 @@ class _PlayerBiliPlaylistPanelState extends State<PlayerBiliPlaylistPanel> {
             ),
             Expanded(
               child: Text(
-                item.title,
+                biliPlaylistItemTitle(l10n, item),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(

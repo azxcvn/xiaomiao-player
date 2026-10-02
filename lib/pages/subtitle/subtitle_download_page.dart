@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/subtitle_entry.dart';
 import 'package:moumou/pages/subtitle/subtitle_settings_page.dart';
@@ -164,7 +165,7 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
       });
     } catch (e) {
       if (!mounted || !_searchSession.isCurrent(session)) return;
-      setState(() => _error = _errText(e));
+      setState(() => _error = _errText(l10n, e));
     } finally {
       // 旧会话回来时不能把转圈提前关掉（新搜索还在跑）
       if (mounted && _searchSession.isCurrent(session)) {
@@ -486,7 +487,7 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
             }
           }),
           title: Text(
-            sub.displayName,
+            subtitleEntryDisplayName(l10n, sub),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 14),
@@ -497,8 +498,10 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
               spacing: 6,
               runSpacing: 4,
               children: [
-                _metaChip(sub.displayLanguage),
-                _metaChip(sub.source.isNotEmpty ? sub.source : l10n.subtitleUnknownSource),
+                _metaChip(subtitleEntryDisplayLanguage(l10n, sub)),
+                _metaChip(sub.source.isNotEmpty
+                    ? subtitleEntrySourceLabel(l10n, sub)
+                    : l10n.subtitleUnknownSource),
                 if (sub.format.isNotEmpty) _metaChip(sub.format.toUpperCase()),
               ],
             ),
@@ -568,15 +571,10 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
   static Future<void> _writeFileBytes(String path, List<int> bytes) =>
       File(path).writeAsBytes(bytes, flush: true);
 
-  /// 去掉异常类名前缀，只把给用户看的那句话显示出来（两条来源链路共用）
-  String _errText(Object e) {
-    final text = e.toString();
-    for (final prefix in const [
-      'WyzieApiException: ',
-      'CustomSubtitleApiException: ',
-    ]) {
-      if (text.startsWith(prefix)) return text.substring(prefix.length);
-    }
-    return text;
-  }
+  /// 异常 → 展示文案（两条来源链路共用，按错误码取文，不再剥类名前缀）
+  String _errText(AppLocalizations l10n, Object e) => switch (e) {
+        WyzieApiException error => wyzieErrorText(l10n, error),
+        CustomSubtitleApiException error => customSubtitleErrorText(l10n, error),
+        _ => '$e',
+      };
 }

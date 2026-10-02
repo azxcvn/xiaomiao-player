@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/pages/bilibili/bili_bangumi_index_page.dart';
 import 'package:moumou/pages/bilibili/bili_play_launcher.dart';
 import 'package:moumou/pages/bilibili/bili_search_page.dart';
 import 'package:moumou/pages/bilibili/bili_season_page.dart';
 import 'package:moumou/services/bilibili/bili_bangumi_service.dart';
-import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/utils/bili_bangumi_url.dart';
 import 'package:moumou/utils/bili_short_link.dart';
@@ -29,7 +29,7 @@ class _BiliIndexPageState extends State<BiliIndexPage> {
   int _page = 1;
   bool _hasNext = true;
   bool _loading = false;
-  String? _error;
+  Object? _error;
 
   @override
   void initState() {
@@ -70,7 +70,7 @@ class _BiliIndexPageState extends State<BiliIndexPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = _errorText(e);
+        _error = e;
         _loading = false;
       });
     }
@@ -196,6 +196,7 @@ class _BiliIndexPageState extends State<BiliIndexPage> {
       );
     }
     if (_error != null && _recommend.isEmpty) {
+      final l10n = AppLocalizations.of(context);
       return SliverFillRemaining(
         child: Center(
           child: Column(
@@ -203,7 +204,10 @@ class _BiliIndexPageState extends State<BiliIndexPage> {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Text(_error!, textAlign: TextAlign.center),
+                child: Text(
+                  serviceErrorText(l10n, _error!),
+                  textAlign: TextAlign.center,
+                ),
               ),
               const SizedBox(height: 12),
               FilledButton.icon(
@@ -254,9 +258,6 @@ class _BiliIndexPageState extends State<BiliIndexPage> {
       ),
     );
   }
-
-  static String _errorText(Object e) =>
-      e is BiliApiException ? e.message : e.toString();
 }
 
 /// 追番时间表：日期 Tab + 横向选集卡片（番剧 + 国创两条时间线合并）。

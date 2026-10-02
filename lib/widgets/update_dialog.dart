@@ -178,7 +178,7 @@ class UpdateDialog extends StatelessWidget {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
                 child: MarkdownBody(
-                  data: info.body,
+                  data: info.body.isEmpty ? l10n.updateNoNotes : info.body,
                   styleSheet: markdownStyle,
                   // ⚠️ 不传 onTapLink 时 flutter_markdown 只把链接渲染成高亮文本，
                   // 点上去毫无反应（P3）：更新说明里带 release / 下载页链接是常态。

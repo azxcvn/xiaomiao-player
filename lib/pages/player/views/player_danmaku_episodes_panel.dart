@@ -30,6 +30,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/dandan_models.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/danmaku_search_store.dart';
@@ -137,8 +138,13 @@ class _PlayerDanmakuEpisodesPanelState extends State<PlayerDanmakuEpisodesPanel>
       widget.item.anime.episodes,
     );
     if (loc.index < 0) {
-      final message = loc.message;
-      if (message != null) setState(() => _locateHint = message);
+      final hint = loc.hint;
+      if (hint != null) {
+        final l10n = AppLocalizations.of(context);
+        setState(
+          () => _locateHint = danmakuEpisodeLocateHint(l10n, hint, loc.number),
+        );
+      }
       return;
     }
     _focusEpisode(loc.index);
@@ -260,7 +266,12 @@ class _PlayerDanmakuEpisodesPanelState extends State<PlayerDanmakuEpisodesPanel>
   /// 集数 / 来源信息（原顶部信息区的内容，现在压进跳转条右侧的小字）
   String _metaText(int total) {
     final l10n = AppLocalizations.of(context);
-    return l10n.playerEpisodeTotalFromServer(total, widget.item.serverName);
+    // 服务层对内置默认服务器给空串（持久化里存的仍是原名），显示名走 l10n
+    final server = widget.item.serverName;
+    return l10n.playerEpisodeTotalFromServer(
+      total,
+      server.isEmpty ? l10n.danmakuServerDefaultName : server,
+    );
   }
 
   /// 只有 1 集：没有可跳转的目标，就只留一行极简的来源信息

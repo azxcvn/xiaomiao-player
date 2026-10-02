@@ -1,8 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moumou/l10n/app_localizations_zh.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/bilibili_user.dart';
 
 /// B 站用户信息模型测试（nav 接口 level_info / vip_label / money 解析）。
 void main() {
+  // 会员状态显示名已搬到 UI 层（label_maps）：测试用中文夹具取文案
+  final l10n = AppLocalizationsZh();
+
   test('fromJson 解析等级/经验/会员/硬币', () {
     final user = BiliUser.fromJson({
       'isLogin': true,
@@ -27,40 +32,43 @@ void main() {
     expect(user.nextExp, 28800);
     expect(user.money, 88.5);
     expect(user.levelLabel, 'LV5');
-    expect(user.vipLabel, '年度大会员');
+    expect(biliUserVipLabel(l10n, user), '年度大会员');
   });
 
   test('vipLabel 双字段判定：两者同时为真才判大会员', () {
     expect(
-      BiliUser.fromJson({'vipStatus': 1, 'vipType': 1}).vipLabel,
+      biliUserVipLabel(l10n, BiliUser.fromJson({'vipStatus': 1, 'vipType': 1})),
       '大会员',
     );
     expect(
-      BiliUser.fromJson({'vipStatus': 1, 'vipType': 2}).vipLabel,
+      biliUserVipLabel(l10n, BiliUser.fromJson({'vipStatus': 1, 'vipType': 2})),
       '年度大会员',
     );
     expect(
-      BiliUser.fromJson({'vipStatus': 0, 'vipType': 0}).vipLabel,
+      biliUserVipLabel(l10n, BiliUser.fromJson({'vipStatus': 0, 'vipType': 0})),
       '普通会员',
     );
   });
 
   test('vipType 误报（TV 通道 vipType=1 但 vipStatus=0）判为普通会员', () {
     expect(
-      BiliUser.fromJson({'vipStatus': 0, 'vipType': 1}).vipLabel,
+      biliUserVipLabel(l10n, BiliUser.fromJson({'vipStatus': 0, 'vipType': 1})),
       '普通会员',
     );
   });
 
   test('vipStatus 误报（vipStatus=1 但 vipType=0）判为普通会员', () {
     expect(
-      BiliUser.fromJson({'vipStatus': 1, 'vipType': 0}).vipLabel,
+      biliUserVipLabel(l10n, BiliUser.fromJson({'vipStatus': 1, 'vipType': 0})),
       '普通会员',
     );
   });
 
   test('vipType=2 但 vipStatus 缺省(0) 也判为普通会员', () {
-    expect(BiliUser.fromJson({'vipType': 2}).vipLabel, '普通会员');
+    expect(
+      biliUserVipLabel(l10n, BiliUser.fromJson({'vipType': 2})),
+      '普通会员',
+    );
   });
 
   test('满级(6)时 nextExp 缺省回退 currentExp', () {
@@ -75,7 +83,7 @@ void main() {
     const g = BiliUser.guest();
     expect(g.isLogin, isFalse);
     expect(g.levelLabel, 'LV0');
-    expect(g.vipLabel, '普通会员');
+    expect(biliUserVipLabel(l10n, g), '普通会员');
   });
 
   test('数字字段以字符串下发也能解析（登录 nav 自检崩溃修复）', () {
@@ -98,7 +106,7 @@ void main() {
     expect(user.currentExp, 18800);
     expect(user.nextExp, 28800);
     expect(user.money, 88.5);
-    expect(user.vipLabel, '年度大会员');
+    expect(biliUserVipLabel(l10n, user), '年度大会员');
   });
 
   test('isLogin 以 0/1 数字下发也能解析', () {

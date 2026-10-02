@@ -1,5 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moumou/utils/error_codes.dart';
 import 'package:moumou/utils/network_path.dart';
+
+/// 断言抛出的 [NetworkPathException] 携带指定错误码。
+Matcher _throwsPathCode(NetworkPathErrorCode code) =>
+    throwsA(isA<NetworkPathException>().having((e) => e.code, 'code', code));
 
 void main() {
   test('根路径与空路径归一化为 /', () {
@@ -32,11 +37,26 @@ void main() {
   });
 
   test('拒绝非法路径', () {
-    expect(() => NetworkPath.from('http://x/y'), throwsArgumentError);
-    expect(() => NetworkPath.from('a/../b'), throwsArgumentError);
-    expect(() => NetworkPath.from('a/./b'), throwsArgumentError);
-    expect(() => NetworkPath.from(r'a\b'), throwsArgumentError);
-    expect(() => NetworkPath.from('a/\u0000b'), throwsArgumentError);
+    expect(
+      () => NetworkPath.from('http://x/y'),
+      _throwsPathCode(NetworkPathErrorCode.scheme),
+    );
+    expect(
+      () => NetworkPath.from('a/../b'),
+      _throwsPathCode(NetworkPathErrorCode.dotSegment),
+    );
+    expect(
+      () => NetworkPath.from('a/./b'),
+      _throwsPathCode(NetworkPathErrorCode.dotSegment),
+    );
+    expect(
+      () => NetworkPath.from(r'a\b'),
+      _throwsPathCode(NetworkPathErrorCode.segmentSeparator),
+    );
+    expect(
+      () => NetworkPath.from('a/\u0000b'),
+      _throwsPathCode(NetworkPathErrorCode.segmentControlChar),
+    );
   });
 
   test('值相等与 hashCode（代理按路径缓存的前提）', () {

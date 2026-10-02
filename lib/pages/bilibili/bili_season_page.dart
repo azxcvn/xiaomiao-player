@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/models/bili_playlist.dart';
 import 'package:moumou/pages/bilibili/bili_episode_picker_page.dart';
 import 'package:moumou/pages/bilibili/bili_play_launcher.dart';
 import 'package:moumou/services/bilibili/bili_bangumi_service.dart';
-import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/widgets/bili_cover_image.dart';
 import 'package:moumou/widgets/bili_episode_tile.dart';
 
@@ -30,7 +30,7 @@ class _BiliSeasonPageState extends State<BiliSeasonPage> {
 
   BiliSeasonDetail? _detail;
   bool _loading = true;
-  String? _error;
+  Object? _error;
   bool _reverse = false;
 
   @override
@@ -58,7 +58,7 @@ class _BiliSeasonPageState extends State<BiliSeasonPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = _errorText(e);
+        _error = e;
         _loading = false;
       });
     }
@@ -96,7 +96,10 @@ class _BiliSeasonPageState extends State<BiliSeasonPage> {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Text(_error!, textAlign: TextAlign.center),
+              child: Text(
+                serviceErrorText(l10n, _error!),
+                textAlign: TextAlign.center,
+              ),
             ),
             const SizedBox(height: 12),
             FilledButton.icon(
@@ -205,9 +208,6 @@ class _BiliSeasonPageState extends State<BiliSeasonPage> {
       ],
     );
   }
-
-  static String _errorText(Object e) =>
-      e is BiliApiException ? e.message : e.toString();
 }
 
 /// 头部：封面（评分角标）+ 右侧信息（标题 / 统计 / 说明）。

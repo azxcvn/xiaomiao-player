@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/models/bili_dash.dart';
 import 'package:moumou/pages/download/download_manager_page.dart';
 import 'package:moumou/services/bilibili/bili_download_service.dart';
@@ -28,7 +29,7 @@ class _BiliVideoDownloadPageState extends State<BiliVideoDownloadPage> {
   bool _busy = false;
   BiliDownloadTarget? _target;
   final Set<int> _selected = {};
-  String? _error;
+  Object? _error;
 
   List<BiliQualityOption> _qualities = [];
   int _qn = 0;
@@ -85,7 +86,7 @@ class _BiliVideoDownloadPageState extends State<BiliVideoDownloadPage> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = _errText(e));
+      setState(() => _error = e);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -188,7 +189,10 @@ class _BiliVideoDownloadPageState extends State<BiliVideoDownloadPage> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text(_error!, textAlign: TextAlign.center),
+          child: Text(
+            serviceErrorText(l10n, _error!),
+            textAlign: TextAlign.center,
+          ),
         ),
       );
     }
@@ -389,6 +393,4 @@ class _BiliVideoDownloadPageState extends State<BiliVideoDownloadPage> {
         behavior: SnackBarBehavior.floating,
       ));
   }
-
-  String _errText(Object e) => e.toString().replaceFirst('BiliApiException: ', '');
 }

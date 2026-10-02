@@ -5,9 +5,11 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:moumou/models/bili_dash.dart';
+import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/services/bilibili/bili_video_service.dart';
 import 'package:moumou/services/download/download_manager.dart';
 import 'package:moumou/services/download/download_task.dart';
+import 'package:moumou/utils/error_codes.dart';
 import 'package:path/path.dart' as p;
 
 /// B12 下载链路：写盘失败安全（P2-30）、总量未知不谎报进度（P2-32）、
@@ -203,7 +205,15 @@ void main() {
       await task.run();
 
       expect(task.status, DownloadStatus.failed);
-      expect(task.error, contains('写入文件失败'));
+      // 失败原因是服务层异常对象（文案由 UI 侧翻译）
+      expect(task.error, isA<BiliApiException>());
+      expect(
+        (task.error! as BiliApiException).code,
+        anyOf(
+          BiliApiErrorCode.downloadWriteFailed,
+          BiliApiErrorCode.downloadWriteFailedDetail,
+        ),
+      );
       expect(tracking.closed, isTrue, reason: '旧实现 catch 里 sink.close() 抛错会跳过 client.close()');
     });
   });
@@ -225,7 +235,10 @@ void main() {
       await task.run();
 
       expect(task.status, DownloadStatus.failed);
-      expect(task.error, contains('音视频合并失败'));
+      expect(
+        (task.error! as BiliApiException).code,
+        BiliApiErrorCode.downloadMergeFailed,
+      );
       expect(existing.readAsStringSync(), 'OLD', reason: '原成品不能被半截 mp4 覆盖');
       expect(File(p.join(dir.path, 'vd_1.merge.mp4')).existsSync(), isFalse);
       // 两个 m4s 保留：重试可走 Range 续传，不必重下
@@ -388,6 +401,69 @@ void main() {
       expect(task.canPause, isTrue);
       task.pause();
       expect(task.isPaused, isTrue);
+    });
+  });
+
+  group('失败原因持久化（错误码 + 参数，跨重启仍能翻译）', () {
+    test('失败任务可 jsonEncode（异常对象不进 JSON）且带错误码', () async {
+      final task = DownloadTask(
+        id: 'vd_persist',
+        title: '第1话',
+        subtitle: '',
+        coverUrl: '',
+        isVideo: true,
+        saveDir: Directory(p.join(dir.path, '不存在的目录')).path,
+        aid: 1,
+        cid: 100,
+        epId: 0,
+        seasonId: 0,
+        bvid: 'BV1xx',
+        qn: 80,
+        withDanmaku: false,
+        video: _FakeVideo(_playUrl()),
+        clientFactory: () => _TrackingClient(
+          (_) async => _resp(Stream.value(List<int>.filled(4, 1)), contentLength: 4),
+        ),
+      );
+
+      await task.run();
+
+      final json = task.toJson();
+      expect(json['errorCode'], isNotNull);
+      expect(() => jsonEncode(json), returnsNormally);
+    });
+
+    test('fromJson 读回错误码与参数；旧存档的中文 error 键被忽略', () {
+      final restored = DownloadTask.fromJson({
+        ...videoTask().toJson(),
+        'status': 'failed',
+        'errorCode': 'downloadWriteFailedDetail',
+        'errorArgs': {'error': '磁盘满'},
+      });
+      expect(restored.status, DownloadStatus.failed);
+      final error = restored.error;
+      expect(error, isA<BiliApiException>());
+      expect(
+        (error! as BiliApiException).code,
+        BiliApiErrorCode.downloadWriteFailedDetail,
+      );
+      expect((error as BiliApiException).args['error'], '磁盘满');
+
+      // 旧存档（只有中文 error 串 + 不认识的码名）→ 不报错、错误为空
+      final legacy = DownloadTask.fromJson({
+        ...videoTask().toJson(),
+        'status': 'failed',
+        'error': '写入文件失败（磁盘空间或权限）',
+      });
+      expect(legacy.status, DownloadStatus.failed);
+      expect(legacy.error, isNull);
+
+      final unknown = DownloadTask.fromJson({
+        ...videoTask().toJson(),
+        'status': 'failed',
+        'errorCode': '未来才有的码',
+      });
+      expect(unknown.error, isNull);
     });
   });
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/services/cache_manager_service.dart';
 import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/utils/formatters.dart';
@@ -81,10 +82,11 @@ class _CacheManagementPageState extends State<CacheManagementPage> {
   Future<void> _clearCategory(CacheCategory category) async {
     final l10n = AppLocalizations.of(context);
     final size = _sizes[category.key] ?? 0;
+    final label = cacheCategoryLabel(l10n, category);
     final confirmed = await _confirm(
-      l10n.settingsCacheClearCategoryTitle(category.label),
+      l10n.settingsCacheClearCategoryTitle(label),
       l10n.settingsCacheClearCategoryBody(
-        category.label,
+        label,
         formatFileSize(size),
       ),
     );
@@ -92,7 +94,7 @@ class _CacheManagementPageState extends State<CacheManagementPage> {
     final ok = await CacheManagerService.clearCategory(category);
     _toast(
       ok
-          ? l10n.settingsCacheCategoryCleared(category.label)
+          ? l10n.settingsCacheCategoryCleared(label)
           : l10n.settingsCacheClearFailed,
     );
     _refresh();
@@ -103,7 +105,11 @@ class _CacheManagementPageState extends State<CacheManagementPage> {
     final l10n = AppLocalizations.of(context);
     final first = await _confirm(
       l10n.settingsCacheClearAllTitle,
-      l10n.settingsCacheClearAllBody(formatFileSize(_totalBytes)),
+      l10n.settingsCacheClearAllBody(
+        formatFileSize(_totalBytes),
+        '· ${cacheCategoryLabel(l10n, CacheManagerService.listThumbs)}\n'
+            '· ${cacheCategoryLabel(l10n, CacheManagerService.other)}',
+      ),
     );
     if (!first) return;
     final second = await _confirm(
@@ -151,7 +157,7 @@ class _CacheManagementPageState extends State<CacheManagementPage> {
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       title: Text(
-                        category.label,
+                        cacheCategoryLabel(l10n, category),
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w500,

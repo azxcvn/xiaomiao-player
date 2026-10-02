@@ -8,13 +8,15 @@
 /// - 「切集自动匹配弹幕」开关：与默认弹弹Play 服务器**互斥**（工作.md 第 7 点，
 ///   收尾阶段恢复的限制）——默认服务器启用时开关变灰 + 副标题换成禁用原因，
 ///   点击弹 toast 说明；停用默认服务器后自动恢复用户此前的选择
-///   （判定与文案统一由 [DanmakuServerSettings] 提供，见 `_AutoMatchTile`）。
+///   （判定由 [DanmakuServerSettings] 提供，文案在页面侧取 l10n，
+///   见 `_AutoMatchTile`）。
 ///
 /// 启用的服务器同时用于网络弹幕搜索（逐台实时呈现，不等齐再合并）与自动匹配。
 library;
 
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/danmaku_server.dart';
 import 'package:moumou/services/danmaku_server_settings.dart';
 import 'package:moumou/utils/app_dialog.dart';
@@ -265,9 +267,10 @@ class _DedupeConfirmDialogState extends State<_DedupeConfirmDialog> {
 /// 换成禁用原因；此时点整行仍会弹 toast 说明为什么不能开（变灰而不解释会让
 /// 用户以为是 bug）。
 ///
-/// 两级文案都取自服务层（页面内不写文案字面量，防措辞漂移）：副标题用短句
-/// [DanmakuServerSettings.autoMatchBlockedReason]（窄屏不挤），toast 用完整
-/// 说明 [DanmakuServerSettings.autoMatchBlockedMessage]。
+/// 两级文案都在页面侧组装（服务层只给状态 [DanmakuServerSettings.
+/// autoMatchBlockedByDefaultServer]）：副标题用短句
+/// `danmakuServerAutoMatchBlocked`（窄屏不挤），toast 用完整说明
+/// `danmakuServerAutoMatchBlockedDetail`。
 class _AutoMatchTile extends StatelessWidget {
   final DanmakuServerSettings settings;
 
@@ -277,13 +280,14 @@ class _AutoMatchTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
-    final blockedReason = settings.autoMatchBlockedReason;
-    final allowed = blockedReason == null;
+    final allowed = !settings.autoMatchBlockedByDefaultServer;
     final tile = SettingsSwitchTile(
       icon: Icons.autorenew,
       title: l10n.danmakuServerAutoMatch,
       subtitle: Text(
-        blockedReason ?? l10n.danmakuServerAutoMatchDesc,
+        allowed
+            ? l10n.danmakuServerAutoMatchDesc
+            : l10n.danmakuServerAutoMatchBlocked,
         style: allowed
             ? null
             : TextStyle(color: scheme.error, fontWeight: FontWeight.w500),
@@ -305,7 +309,9 @@ class _AutoMatchTile extends StatelessWidget {
             // toast 用完整说明（副标题只放短指引，窄屏两行会挤）
             onTap: () => _toast(
               context,
-              settings.autoMatchBlockedMessage ?? blockedReason,
+              l10n.danmakuServerAutoMatchBlockedDetail(
+                l10n.danmakuServerDefaultName,
+              ),
             ),
           ),
         ),
@@ -346,6 +352,7 @@ class _DanmakuServerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Card(
       elevation: 0,
       margin: EdgeInsets.zero,
@@ -363,7 +370,7 @@ class _DanmakuServerCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    server.name,
+                    danmakuServerDisplayName(l10n, server),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,

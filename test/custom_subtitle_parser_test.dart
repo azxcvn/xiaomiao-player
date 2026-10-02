@@ -41,7 +41,8 @@ void main() {
       expect(list[0].name, 'Movie.zh.srt');
       expect(list[0].language, 'zh');
       expect(list[0].format, 'srt');
-      expect(list[0].source, '自定义');
+      // 来源在服务层存 ASCII 稳定值 `custom`，显示名由 UI 侧取 l10n
+      expect(list[0].source, 'custom');
       expect(list[1].language, 'en、zh');
       expect(list[1].format, 'ass');
     });

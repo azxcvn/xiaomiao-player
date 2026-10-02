@@ -34,11 +34,8 @@ class SubtitleEntry {
     this.hashMatch = false,
   });
 
-  /// 展示名：空则占位
-  String get displayName => name.isNotEmpty ? name : '未知字幕';
-
-  /// 语言展示名：空则占位
-  String get displayLanguage => language.isNotEmpty ? language : '未知语言';
+  /// 展示名 / 语言展示名的**占位兜底**在 UI 层：
+  /// `label_maps.subtitleEntryDisplayName` / `subtitleEntryDisplayLanguage`。
 
   /// Wyzie 条目 → 通用条目（落盘名基底沿用 fileName → release → media）
   static SubtitleEntry fromWyzie(WyzieSubtitle s) => SubtitleEntry(

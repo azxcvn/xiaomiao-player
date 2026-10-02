@@ -5,6 +5,7 @@ import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/services/bilibili/bili_video_service.dart';
 import 'package:moumou/utils/bili_bangumi_url.dart';
 import 'package:moumou/utils/bili_short_link.dart';
+import 'package:moumou/utils/error_codes.dart';
 
 /// 解析出的单个可下载条目（番剧单集 / UGC 单个分 P）。
 class BiliDownloadItem {
@@ -101,7 +102,7 @@ class BiliDownloadService {
       return _resolveCollectionList(list);
     }
 
-    throw const BiliApiException('无法识别 B 站链接（支持 BV / av / ss / ep / 合集链接 / b23.tv 短链）');
+    throw const BiliApiException(BiliApiErrorCode.downloadLinkUnrecognized);
   }
 
   /// 文本含 b23.tv 短链时展开成真实 URL；不含短链返回 null（调用方用原文解析）。
@@ -141,7 +142,7 @@ class BiliDownloadService {
         )
         .toList();
     if (items.isEmpty) {
-      throw const BiliApiException('未解析到视频分 P');
+      throw const BiliApiException(BiliApiErrorCode.downloadNoVideoParts);
     }
     return BiliDownloadTarget(
       title: v.title,
@@ -170,7 +171,7 @@ class BiliDownloadService {
         )
         .toList();
     if (items.isEmpty) {
-      throw const BiliApiException('该番剧没有可下载的集数');
+      throw const BiliApiException(BiliApiErrorCode.downloadBangumiNoEpisodes);
     }
     return BiliDownloadTarget(
       title: detail.title,
@@ -185,12 +186,12 @@ class BiliDownloadService {
     final bvid =
         await _video.fetchFirstSeasonArchiveBvid(mid: ref.mid, seasonId: ref.seasonId);
     if (bvid == null || bvid.isEmpty) {
-      throw const BiliApiException('该合集没有可下载的视频');
+      throw const BiliApiException(BiliApiErrorCode.downloadCollectionNoVideos);
     }
     final v = await _video.resolveUgcVideo(bvid);
     final season = v.ugcSeason;
     if (season == null || season.sections.isEmpty) {
-      throw const BiliApiException('该合集暂无内容');
+      throw const BiliApiException(BiliApiErrorCode.downloadCollectionEmpty);
     }
     return _buildCollectionTarget(season);
   }
@@ -223,7 +224,7 @@ class BiliDownloadService {
       }
     }
     if (items.isEmpty) {
-      throw const BiliApiException('该合集没有可下载的视频');
+      throw const BiliApiException(BiliApiErrorCode.downloadCollectionNoVideos);
     }
     return BiliDownloadTarget(
       title: season.title,

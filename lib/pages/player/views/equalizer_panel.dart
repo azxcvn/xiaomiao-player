@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/equalizer_preset.dart';
 import 'package:moumou/services/equalizer_settings.dart';
 
@@ -103,7 +104,7 @@ class _PlayerEqualizerPanelState extends State<PlayerEqualizerPanel> {
               final p = kEqualizerPresets[i];
               final selected = _settings.presetId == p.id;
               return _PresetChip(
-                label: p.label,
+                label: equalizerPresetLabel(l10n, p),
                 selected: selected,
                 enabled: enabled,
                 onTap: () => _settings.applyPreset(p),

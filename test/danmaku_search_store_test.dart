@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/models/dandan_models.dart';
+import 'package:moumou/services/dandan_play_api.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/danmaku_search_store.dart';
+import 'package:moumou/utils/error_codes.dart';
 
 /// 网络弹幕搜索会话测试（用户实测反馈的"返回后结果全丢、还得重搜一次"）：
 /// - 逐台实时产出、去重升级就地覆盖、停止后保留已到结果；
@@ -13,7 +15,7 @@ void main() {
   DanmakuSearchStore makeStore(_FakeNetworkService network) =>
       DanmakuSearchStore(network: network);
 
-  test('搜索：逐台产出追加，结束后 searching 归位、错误文案为空', () async {
+  test('搜索：逐台产出追加，结束后 searching 归位、错误种类为空', () async {
     final network = _FakeNetworkService();
     final store = makeStore(network);
 
@@ -23,7 +25,7 @@ void main() {
 
     await network.closeCurrent();
     expect(store.searching, isFalse);
-    expect(store.error, isNull, reason: '有结果就不报错');
+    expect(store.errorKind, isNull, reason: '有结果就不报错');
     expect(store.results.map((r) => r.anime.animeTitle), ['番剧A', '番剧B']);
     expect(store.stopped, isFalse);
   });
@@ -40,7 +42,7 @@ void main() {
     expect(store.results.single.serverName, '我的服务器');
   });
 
-  test('无结果：error 给出"未找到相关番剧"', () async {
+  test('无结果：错误种类 = noResult（文案由 UI 侧翻译）', () async {
     final network = _FakeNetworkService(empty: true);
     final store = makeStore(network);
 
@@ -48,7 +50,21 @@ void main() {
     await network.closeCurrent();
 
     expect(store.results, isEmpty);
-    expect(store.error, contains('未找到相关番剧'));
+    expect(store.errorKind, DanmakuSearchError.noResult);
+    expect(store.serverErrors, isEmpty);
+  });
+
+  test('无结果且有服务器失败：错误种类 = serverErrors（带服务器名 + 异常对象）', () async {
+    final network = _FakeNetworkService(fail: true);
+    final store = makeStore(network);
+
+    await store.search('紫罗兰');
+    await network.closeCurrent();
+
+    expect(store.results, isEmpty);
+    expect(store.errorKind, DanmakuSearchError.serverErrors);
+    expect(store.serverErrors.single.serverName, '我的服务器');
+    expect(store.serverErrors.single.error, isA<DandanApiException>());
   });
 
   test('停止：中断后续服务器、已到结果保留、stopped 置位', () async {
@@ -92,7 +108,7 @@ void main() {
 
     expect(store.keyword, isEmpty);
     expect(store.results, isEmpty);
-    expect(store.error, isNull);
+    expect(store.errorKind, isNull);
     expect(store.listOffset, 0);
   });
 
@@ -140,10 +156,13 @@ void main() {
 
 /// 假网络服务：第一台立刻产出（可升级），第二台挂在 [closeCurrent] 之前
 class _FakeNetworkService extends DanmakuNetworkService {
-  _FakeNetworkService({this.upgrade = false, this.empty = false});
+  _FakeNetworkService({this.upgrade = false, this.empty = false, this.fail = false});
 
   final bool upgrade;
   final bool empty;
+
+  /// 单台服务器失败（产出带异常对象的 outcome，不产出结果）
+  final bool fail;
   final List<String> keywords = [];
   int searchCount = 0;
   StreamController<DanmakuServerSearchOutcome>? _controller;
@@ -158,13 +177,27 @@ class _FakeNetworkService extends DanmakuNetworkService {
       scheduleMicrotask(controller.close);
       return controller.stream;
     }
+    if (fail) {
+      controller.add(
+        const DanmakuServerSearchOutcome(
+          serverName: '我的服务器',
+          serverUrl: 'https://self.example.com',
+          error: DandanApiException(
+            DandanApiErrorCode.networkFailed,
+            args: {'error': 'boom'},
+          ),
+        ),
+      );
+      return controller.stream;
+    }
     final episodes = [
       for (var i = 0; i < (upgrade ? 1 : 2); i++)
         DandanEpisode(episodeId: 10 + i, episodeTitle: '第0${i + 1}话'),
     ];
     controller.add(
       DanmakuServerSearchOutcome(
-        serverName: '弹弹Play（默认）',
+        // 默认服务器：服务层给空串，显示名由 UI 侧取 l10n
+        serverName: '',
         serverUrl: null,
         items: [
           DanmakuSearchItem(
@@ -176,7 +209,7 @@ class _FakeNetworkService extends DanmakuNetworkService {
               episodes: episodes,
             ),
             serverUrl: null,
-            serverName: '弹弹Play（默认）',
+            serverName: '',
           ),
         ],
       ),

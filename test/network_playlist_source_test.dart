@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/models/network_file.dart';
+import 'package:moumou/services/network/network_client.dart';
 import 'package:moumou/services/network/network_playlist_source.dart';
+import 'package:moumou/utils/error_codes.dart';
 
 /// 远端同目录视频补全（bug：网络存储播放时入口拿不到兄弟列表，播放页面板
 /// 只显示「当前文件夹没有其他视频」）：按「连接 id + 当前视频远端路径」列
@@ -51,7 +53,10 @@ void main() {
     );
     expect(missing.calls, isEmpty, reason: '路径为空不该发请求');
 
-    final failing = _FakeSource([], error: StateError('网络连接不存在'));
+    final failing = _FakeSource(
+      [],
+      error: const NetworkClientException(NetworkErrorCode.connectionMissing),
+    );
     expect(
       await failing.siblingVideosOf(connectionId: 9, remotePath: '/a/01.mkv'),
       isEmpty,

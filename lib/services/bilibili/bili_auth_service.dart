@@ -6,6 +6,7 @@ import 'package:moumou/services/bilibili/bili_constants.dart';
 import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/utils/bili_app_sign.dart';
 import 'package:moumou/utils/bili_wbi.dart';
+import 'package:moumou/utils/error_codes.dart';
 
 /// 扫码登录二维码（TV 通道 auth_code 接口返回）。
 class BiliQrCode {
@@ -98,7 +99,7 @@ class BiliAuthService {
     final url = body['url'] as String? ?? '';
     final authCode = body['auth_code'] as String? ?? '';
     if (url.isEmpty || authCode.isEmpty) {
-      throw const BiliApiException('生成二维码失败：响应缺少 url/auth_code');
+      throw const BiliApiException(BiliApiErrorCode.loginQrFailed);
     }
     return BiliQrCode(url: url, authCode: authCode);
   }
@@ -206,8 +207,19 @@ class BiliAuthService {
   Map<String, dynamic> _data(Map<String, dynamic> response) {
     final code = (response['code'] as num?)?.toInt() ?? -1;
     if (code != 0) {
-      final message = response['message'] as String? ?? '未知错误';
-      throw BiliApiException(message.isEmpty ? '服务器返回错误（code=$code）' : message);
+      final message = response['message'] as String?;
+      if (message == null) {
+        throw const BiliApiException(BiliApiErrorCode.unknownError);
+      }
+      throw message.isEmpty
+          ? BiliApiException(
+              BiliApiErrorCode.serverReturnedCode,
+              args: {'code': '$code'},
+            )
+          : BiliApiException(
+              BiliApiErrorCode.serverMessage,
+              args: {'message': message},
+            );
     }
     final data = response['data'];
     if (data is Map<String, dynamic>) return data;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/services/file_operations_service.dart';
 import 'package:moumou/services/pinned_folders_settings.dart';
 import 'package:moumou/services/video_info_service.dart';
@@ -243,7 +244,7 @@ Future<bool> _transfer(
     destinationDir: destination,
   );
   if (invalid != null) {
-    await _notify(context, invalid);
+    await _notify(context, fileOpCodeText(l10n, invalid));
     return false;
   }
 
@@ -273,7 +274,7 @@ Future<bool> _transfer(
             onProgress: handle.report,
           );
   } on FileOpException catch (e) {
-    failure = e.message;
+    failure = fileOpErrorText(l10n, e);
     cancelled = e.cancelled;
   } catch (e) {
     failure = '$e';
@@ -350,7 +351,10 @@ Future<bool> _batchTransfer(
     );
     if (invalid != null) {
       if (!context.mounted) return false;
-      await _notify(context, '「${item.name}」$invalid');
+      await _notify(
+        context,
+        '「${item.name}」${fileOpCodeText(l10n, invalid)}',
+      );
       return false;
     }
   }
@@ -406,7 +410,7 @@ Future<bool> _batchTransfer(
         done++;
       } on FileOpException catch (e) {
         if (e.cancelled) break;
-        failures.add('${item.name}：${e.message}');
+        failures.add('${item.name}：${fileOpErrorText(l10n, e)}');
       } catch (e) {
         failures.add('${item.name}：$e');
       }
@@ -547,7 +551,7 @@ Future<bool> _rename(
     return true;
   } on FileOpException catch (e) {
     if (!context.mounted) return false;
-    await _notify(context, e.message);
+    await _notify(context, fileOpErrorText(AppLocalizations.of(context), e));
     return false;
   }
 }
@@ -584,7 +588,7 @@ Future<bool> _delete(
     return true;
   } on FileOpException catch (e) {
     if (!context.mounted) return false;
-    await _notify(context, e.message);
+    await _notify(context, fileOpErrorText(AppLocalizations.of(context), e));
     return false;
   }
 }
@@ -607,6 +611,7 @@ Future<bool> _batchDelete(
   if (confirm == null || !confirm.confirmed || !context.mounted) return false;
 
   final failures = <String>[];
+  final l10n = AppLocalizations.of(context);
   var done = 0;
   for (final item in items) {
     try {
@@ -621,7 +626,7 @@ Future<bool> _batchDelete(
       VideoInfoService.clearCache(item.path);
       done++;
     } on FileOpException catch (e) {
-      failures.add('${item.name}：${e.message}');
+      failures.add('${item.name}：${fileOpErrorText(l10n, e)}');
     } catch (e) {
       failures.add('${item.name}：$e');
     }
@@ -634,7 +639,6 @@ Future<bool> _batchDelete(
     debugPrint('onMutated callback failed: $e\n$s');
   }
   if (!context.mounted) return true;
-  final l10n = AppLocalizations.of(context);
 
   if (failures.isEmpty) {
     await _notify(

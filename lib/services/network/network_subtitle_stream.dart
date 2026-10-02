@@ -10,9 +10,11 @@ library;
 
 import 'package:moumou/models/network_connection.dart';
 import 'package:moumou/models/network_file.dart';
+import 'package:moumou/services/network/network_client.dart';
 import 'package:moumou/services/network/network_client_factory.dart';
 import 'package:moumou/services/network/network_connection_settings.dart';
 import 'package:moumou/services/network/network_streaming_proxy.dart';
+import 'package:moumou/utils/error_codes.dart';
 import 'package:moumou/utils/network_mime_types.dart';
 import 'package:moumou/utils/retry_policy.dart';
 
@@ -45,7 +47,7 @@ class NetworkSubtitleStreams implements NetworkSubtitleStreamResolver {
   Future<List<NetworkFile>> listFiles(int connectionId, String dirPath) async {
     final connection = connectionById(connectionId);
     if (connection == null) {
-      throw StateError('网络连接不存在');
+      throw const NetworkClientException(NetworkErrorCode.connectionMissing);
     }
     final client = createNetworkClient(connection);
     try {
@@ -71,7 +73,7 @@ class NetworkSubtitleStreams implements NetworkSubtitleStreamResolver {
   ) async {
     final connection = connectionById(connectionId);
     if (connection == null) {
-      throw StateError('网络连接不存在');
+      throw const NetworkClientException(NetworkErrorCode.connectionMissing);
     }
     return NetworkStreamingProxy.instance.registerStream(
       connection,

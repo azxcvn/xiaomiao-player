@@ -3,7 +3,7 @@ import 'package:moumou/models/wyzie_models.dart';
 
 /// Wyzie 字幕 API 数据模型 fromJson 测试（字段映射 / 容错 / 常量表完整性）。
 void main() {
-  test('WyzieSubtitle fromJson 完整解析 + 派生展示名/语言名', () {
+  test('WyzieSubtitle fromJson 完整解析', () {
     final sub = WyzieSubtitle.fromJson({
       'id': 'abc',
       'url': 'https://x/sub.srt',
@@ -20,8 +20,9 @@ void main() {
     expect(sub, isNotNull);
     expect(sub!.id, 'abc');
     expect(sub.url, 'https://x/sub.srt');
-    expect(sub.displayName, 'Movie.Name.en.srt');
-    expect(sub.displayLanguage, 'English');
+    // 展示名/语言名由 UI 侧取（label_maps），模型只留原始字段
+    expect(sub.fileName, 'Movie.Name.en.srt');
+    expect(sub.display, 'English');
     expect(sub.downloadCount, 42);
     expect(sub.hearingImpaired, isTrue);
     expect(sub.ai, isTrue);
@@ -89,13 +90,14 @@ void main() {
     expect(r.releaseYear, '2010');
   });
 
-  test('常量表：语言/格式/编码含默认值，来源兜底含 all', () {
+  test('常量表：语言/格式/编码含默认值，来源兜底不含 all', () {
     expect(wyzieLanguages['en'], 'English');
     expect(wyzieLanguages['zh'], 'Chinese');
     expect(wyzieFormats['srt'], 'SRT');
     expect(wyzieFormats['ass'], 'ASS');
     expect(wyzieEncodings['utf-8'], 'Unicode (UTF-8)');
-    expect(wyzieFallbackSources['all'], '全部');
+    // all（全部）是界面文案，由 UI 侧取 l10n，不在兜底表里
+    expect(wyzieFallbackSources.containsKey('all'), isFalse);
     expect(wyzieFallbackIsFree('charlie'), isTrue);
     expect(wyzieFallbackIsFree('bravo'), isFalse);
   });

@@ -5,12 +5,13 @@ import 'package:moumou/services/device_services.dart';
 import 'package:moumou/services/video_info_service.dart';
 import 'package:moumou/services/video_scanner.dart';
 
-/// 缓存类别（key 与原生 `getCacheSizes` / `clearCache` 对应；纯数据，无 UI 依赖）
+/// 缓存类别（key 与原生 `getCacheSizes` / `clearCache` 对应；纯数据，无 UI 依赖）。
+///
+/// 展示名由 UI 侧按 key 映射：`label_maps.cacheCategoryLabel`。
 class CacheCategory {
   final String key;
-  final String label;
 
-  const CacheCategory(this.key, this.label);
+  const CacheCategory(this.key);
 }
 
 /// 缓存管理服务：查询/清除各类应用缓存。
@@ -25,24 +26,24 @@ class CacheManagerService {
   static const MethodChannel _channel = MethodChannel('moumou/video_info');
 
   /// 视频列表封面缩略图缓存
-  static const listThumbs = CacheCategory('listThumbs', '视频列表封面缩略图');
+  static const listThumbs = CacheCategory('listThumbs');
 
   /// 网络弹幕缓存（`filesDir/danmaku/network/` 的 XML）
   ///
   /// ⚠️ 这一类**由 Dart 侧管理**（原生 `getCacheSizes`/`clearCache` 不认识它），
   /// 所以体积统计与清理都在 [getCacheSizes] / [clearCategory] / [clearAll] 里
   /// 单独处理；不清理会随观看番剧数量无限增长（体检报告 §3-14）。
-  static const networkDanmaku = CacheCategory('networkDanmaku', '网络弹幕缓存');
+  static const networkDanmaku = CacheCategory('networkDanmaku');
 
   /// 哔哩哔哩封面图缓存（`filesDir/bili_covers/`）
   ///
   /// ⚠️ 与 [networkDanmaku] 同属**由 Dart 侧管理**的类别（原生
   /// `getCacheSizes`/`clearCache` 不认识它），体积统计与清理都在本文件里处理。
   /// 封面是「看过就有、丢了会重新下载」的派生数据，不清理会随浏览番剧增多增长。
-  static const biliCovers = CacheCategory('biliCovers', '哔哩封面缓存');
+  static const biliCovers = CacheCategory('biliCovers');
 
   /// 其他缓存（未来：字幕文件等）
-  static const other = CacheCategory('other', '其他缓存');
+  static const other = CacheCategory('other');
 
   /// 全部类别（顺序即展示顺序）
   static const all = [listThumbs, networkDanmaku, biliCovers, other];

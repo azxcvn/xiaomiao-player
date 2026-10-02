@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/player_action.dart';
 import 'package:moumou/models/playlist_sort.dart';
@@ -78,7 +79,6 @@ import 'package:moumou/services/super_resolution_service.dart';
 import 'package:moumou/services/video_scanner.dart';
 import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/utils/cast_source.dart';
-import 'package:moumou/utils/dolby_vision_hint.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/intro_outro_skip.dart';
 import 'package:moumou/utils/network_mime_types.dart';
@@ -92,6 +92,7 @@ import 'package:moumou/utils/player_gestures.dart';
 import 'package:moumou/utils/player_orientation.dart';
 import 'package:moumou/widgets/app_frame.dart';
 import 'package:moumou/widgets/cast_device_dialog.dart';
+import 'package:moumou/widgets/dolby_vision_hint.dart';
 import 'package:moumou/widgets/player_panel.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 
@@ -496,7 +497,11 @@ class _PlayerPageState extends State<PlayerPage>
     // 音轨无法播放时自动回退（mpv 日志判定 + audio-params 复核）后提示用户：
     // 例如 TrueHD 8 声道轨在 Android opensles 上初始化失败 → 退回 AC-3。
     _audioController.onAudioFallback = (fallback, failed, reason) {
-      if (mounted) _toast(reason);
+      // 回调可能在 initState 期间注册，l10n 一律在回调内部现取
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        _toast(audioFallbackReasonText(l10n, reason, fallback));
+      }
     };
     unawaited(_audioController.applyOnInit());
     // 弹幕控制器：绑定同一播放器（本地同名弹幕加载 + 1s 秒桶发射 +
@@ -513,10 +518,16 @@ class _PlayerPageState extends State<PlayerPage>
       }
     };
     // 网络弹幕（弹弹Play 搜索选中/自动匹配/切集自动匹配）加载成功提示
-    _danmakuController.onNetworkDanmakuLoaded = (message) {
-      if (mounted) {
-        _toast(AppLocalizations.of(context).playerDanmakuLoaded(message));
-      }
+    _danmakuController.onNetworkDanmakuLoaded =
+        (anime, episode, serverName, autoMatch) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
+      final server = serverName ?? l10n.danmakuServerDefaultName;
+      _toast(
+        autoMatch
+            ? l10n.playerNetworkDanmakuLoadedAuto(anime, episode, server)
+            : l10n.playerNetworkDanmakuLoadedManual(anime, episode, server),
+      );
     };
     // 精确落帧 / 解码预设 / GPU 后端（hr-seek、profile、gpu-api）不再在此处
     // 异步下发：三者都必须在 open 之前写入，已随 `_applyPlaybackTuning`
@@ -1902,7 +1913,7 @@ class _PlayerPageState extends State<PlayerPage>
         mimeType: networkMimeTypeForFileName(video.name) ?? 'video/mp4',
       );
     } catch (e) {
-      _toast(l10n.playerSwitchFailed('$e'));
+      _toast(l10n.playerSwitchFailed(serviceErrorText(l10n, e)));
       return null;
     }
     final previousUrl = _networkSource != null ? _path : null;

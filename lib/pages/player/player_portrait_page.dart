@@ -62,7 +62,6 @@ import 'package:moumou/services/subtitle_service.dart';
 import 'package:moumou/services/super_resolution_service.dart';
 import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/utils/cast_source.dart';
-import 'package:moumou/utils/dolby_vision_hint.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/intro_outro_skip.dart';
 import 'package:moumou/utils/network_playlist.dart';
@@ -75,6 +74,7 @@ import 'package:moumou/utils/player_gestures.dart';
 import 'package:moumou/utils/player_orientation.dart';
 import 'package:moumou/widgets/app_frame.dart';
 import 'package:moumou/widgets/cast_device_dialog.dart';
+import 'package:moumou/widgets/dolby_vision_hint.dart';
 import 'package:moumou/widgets/player_bottom_panel.dart';
 import 'package:moumou/widgets/player_panel.dart';
 import 'package:saver_gallery/saver_gallery.dart';
@@ -463,10 +463,16 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
           _toast(AppLocalizations.of(context).playerAutoLoadedDanmaku(fileName));
         }
       };
-      _danmakuController.onNetworkDanmakuLoaded = (message) {
-        if (mounted) {
-          _toast(AppLocalizations.of(context).playerDanmakuLoaded(message));
-        }
+      _danmakuController.onNetworkDanmakuLoaded =
+          (anime, episode, serverName, autoMatch) {
+        if (!mounted) return;
+        final l10n = AppLocalizations.of(context);
+        final server = serverName ?? l10n.danmakuServerDefaultName;
+        _toast(
+          autoMatch
+              ? l10n.playerNetworkDanmakuLoadedAuto(anime, episode, server)
+              : l10n.playerNetworkDanmakuLoadedManual(anime, episode, server),
+        );
       };
     }
     // 横竖屏共享会话状态（B4/D2）：共享横屏页实例（倍速唯一真值、音量/

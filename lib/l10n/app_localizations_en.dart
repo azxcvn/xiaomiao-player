@@ -1543,8 +1543,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsCacheClearAllTitle => 'Clear all caches';
 
   @override
-  String settingsCacheClearAllBody(String size) {
-    return 'This deletes all caches ($size in total):\n· Video list cover thumbnails\n· Other caches\n\nThis cannot be undone.';
+  String settingsCacheClearAllBody(String size, String items) {
+    return 'This deletes all caches ($size in total):\n$items\n\nThis cannot be undone.';
   }
 
   @override
@@ -4099,4 +4099,571 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get biliCoverUnavailable =>
       'Bilibili cover unavailable (cache miss and download failed)';
+
+  @override
+  String errorNetworkRequestFailed(String error) {
+    return 'Network request failed: $error';
+  }
+
+  @override
+  String errorHttpRequestFailed(String status) {
+    return 'Request failed (HTTP $status)';
+  }
+
+  @override
+  String errorHttpSearchFailed(String status) {
+    return 'Search failed (HTTP $status)';
+  }
+
+  @override
+  String errorHttpDownloadFailed(String status) {
+    return 'Download failed (HTTP $status)';
+  }
+
+  @override
+  String get errorResponseNotJson => 'The response is not a JSON object';
+
+  @override
+  String errorResponseParseFailed(String error) {
+    return 'Failed to parse the response: $error';
+  }
+
+  @override
+  String errorResponseDecodeFailed(String error) {
+    return 'Failed to decode the response: $error';
+  }
+
+  @override
+  String errorDownloadFailed(String error) {
+    return 'Download failed: $error';
+  }
+
+  @override
+  String errorDownloadTooLarge(String received) {
+    return 'Download failed: the file is too large ($received bytes)';
+  }
+
+  @override
+  String errorResponseTooLarge(String received, String max) {
+    return 'Unexpected response (read $received bytes, exceeding the $max limit)';
+  }
+
+  @override
+  String errorResponseTooLargeAborted(String received) {
+    return 'The response is too large ($received bytes); parsing aborted';
+  }
+
+  @override
+  String get errorServerReturned => 'The server returned an error';
+
+  @override
+  String errorServerReturnedCode(String code) {
+    return 'The server returned an error (code=$code)';
+  }
+
+  @override
+  String get errorUnknown => 'Unknown error';
+
+  @override
+  String get errorNetworkConnectionMissing =>
+      'The network connection does not exist';
+
+  @override
+  String get biliWbiKeyMissingPlay =>
+      'Could not obtain the WBI key; unable to resolve the playback URL';
+
+  @override
+  String get biliWbiKeyMissingSearch =>
+      'Could not obtain the WBI key; unable to search';
+
+  @override
+  String get biliRiskControlTriggered =>
+      'Risk-control verification triggered (v_voucher); try again later or switch networks';
+
+  @override
+  String get biliVideoNotFound =>
+      'The video does not exist or access is denied';
+
+  @override
+  String get biliVideoNoAccess =>
+      'Access denied; signing in or a premium membership may be required';
+
+  @override
+  String get biliVideoVipRequired => 'A premium membership is required';
+
+  @override
+  String get biliVideoRiskControlFailed =>
+      'Risk-control verification failed; try again later';
+
+  @override
+  String get biliVideoExclusive =>
+      'This is an exclusive video; the corresponding access is required';
+
+  @override
+  String get biliDownloadLinkUnrecognized =>
+      'Unrecognized Bilibili link (BV / av / ss / ep / collection links and b23.tv short links are supported)';
+
+  @override
+  String get biliDownloadNoVideoParts => 'No video parts were resolved';
+
+  @override
+  String get biliDownloadBangumiNoEpisodes =>
+      'This anime has no downloadable episodes';
+
+  @override
+  String get biliDownloadCollectionNoVideos =>
+      'This collection has no downloadable videos';
+
+  @override
+  String get biliDownloadCollectionEmpty => 'This collection is empty';
+
+  @override
+  String get biliDownloadNoDanmaku => 'This episode has no danmaku';
+
+  @override
+  String get biliDownloadNoVideoStream => 'No video stream was obtained';
+
+  @override
+  String get biliDownloadMergeFailed => 'Failed to merge audio and video';
+
+  @override
+  String get biliDownloadNetworkFailed => 'Network request failed';
+
+  @override
+  String get biliDownloadWriteFailed =>
+      'Failed to write the file (disk space or permissions)';
+
+  @override
+  String biliDownloadWriteFailedDetail(String error) {
+    return 'Failed to write the file (disk space or permissions): $error';
+  }
+
+  @override
+  String get wyzieSearchNoSubtitles => 'Search failed (HTTP 400)';
+
+  @override
+  String get wyzieNoMatch => 'No matching title found; try another keyword';
+
+  @override
+  String get customSubtitleUrlInvalid =>
+      'Invalid custom subtitle address (an http/https address is required)';
+
+  @override
+  String customSubtitleResponseUnparsable(String message) {
+    return 'Could not parse the response from this address: $message';
+  }
+
+  @override
+  String get customSubtitleResponseNotJson => 'The response is not valid JSON';
+
+  @override
+  String get customSubtitleResponseNoList =>
+      'No subtitle list was found in the response';
+
+  @override
+  String dandanServerUrlInvalid(String url) {
+    return 'Invalid server address (must start with http/https): $url';
+  }
+
+  @override
+  String get networkConnectTimeout =>
+      'Connection timed out: the server did not respond; check the address and port';
+
+  @override
+  String ftpRefusedConnection(String code) {
+    return 'The FTP server refused the connection (code $code)';
+  }
+
+  @override
+  String get ftpResumeUnsupported =>
+      'The FTP server does not support resuming downloads (REST)';
+
+  @override
+  String ftpTransferRejected(String code) {
+    return 'The FTP server rejected the file transfer (code $code)';
+  }
+
+  @override
+  String ftpRootUnavailable(String code) {
+    return 'The FTP root directory is unavailable (code $code)';
+  }
+
+  @override
+  String get ftpLoginFailed =>
+      'FTP sign-in failed; check the account and password';
+
+  @override
+  String get ftpBinaryModeRejected => 'The FTP server rejected binary mode';
+
+  @override
+  String ftpListFailed(String code) {
+    return 'Failed to list the FTP directory (code $code)';
+  }
+
+  @override
+  String get ftpConnectionClosed =>
+      'The FTP connection was closed by the server';
+
+  @override
+  String get ftpUnexpectedResponse =>
+      'The FTP server returned an unexpected response';
+
+  @override
+  String get ftpConnectionInterrupted => 'The FTP connection was interrupted';
+
+  @override
+  String get ftpPassiveUnsupported =>
+      'The FTP server does not support passive mode';
+
+  @override
+  String get ftpPassiveParseFailed =>
+      'Could not parse the FTP passive-mode response';
+
+  @override
+  String get webdavNotAFile => 'The file does not exist or is not a file';
+
+  @override
+  String get webdavTargetIsDirectory => 'The target is a directory';
+
+  @override
+  String get webdavRangeIgnored =>
+      'The server ignored the range request; precise seeking is unavailable';
+
+  @override
+  String webdavRangeFailed(String status) {
+    return 'The range request failed (HTTP $status)';
+  }
+
+  @override
+  String get webdavRangeStartMismatch =>
+      'The range start returned by the server does not match the request';
+
+  @override
+  String webdavDownloadFailedAuth(String status) {
+    return 'Download failed (HTTP $status, authentication failed)';
+  }
+
+  @override
+  String webdavDirectoryTooLarge(String mb) {
+    return 'The directory is too large: the response exceeded ${mb}MB';
+  }
+
+  @override
+  String webdavRequestFailed(String status) {
+    return 'The WebDAV request failed (HTTP $status)';
+  }
+
+  @override
+  String webdavRequestFailedAuth(String status) {
+    return 'The WebDAV request failed (HTTP $status, authentication failed)';
+  }
+
+  @override
+  String get smbNotConnected => 'SMB is not connected';
+
+  @override
+  String get smbAuthFailed => 'Incorrect user name or password';
+
+  @override
+  String get smbAccessDenied => 'Access denied (insufficient permissions)';
+
+  @override
+  String get smbPathNotFound => 'The path does not exist';
+
+  @override
+  String get smbRequestFailed => 'The SMB request failed';
+
+  @override
+  String get netPathScheme => 'The network path must not contain a URI scheme';
+
+  @override
+  String get netPathTooLong => 'The network path is too long';
+
+  @override
+  String get netPathTooManySegments => 'The network path has too many segments';
+
+  @override
+  String get netPathSegmentEmpty => 'A path segment must not be empty';
+
+  @override
+  String get netPathSegmentTooLong => 'A path segment is too long';
+
+  @override
+  String get netPathDotSegment =>
+      'The network path must not contain \".\" or \"..\"';
+
+  @override
+  String get netPathSegmentSeparator =>
+      'A path segment must not contain a separator';
+
+  @override
+  String get netPathSegmentControlChar =>
+      'A path segment must not contain control characters';
+
+  @override
+  String get fileOpSourceMissing =>
+      'The source file does not exist or has been moved';
+
+  @override
+  String fileOpWriteFailed(String name, String error) {
+    return 'Failed to write: $name ($error)';
+  }
+
+  @override
+  String get fileOpCopiedButDeleteFailed =>
+      'Copied to the destination, but the original file could not be deleted; please clean up manually';
+
+  @override
+  String fileOpRenameTempFailed(String error) {
+    return 'Failed to rename the temporary file: $error';
+  }
+
+  @override
+  String get fileOpTargetExists =>
+      'A file or folder with the same name already exists in this folder';
+
+  @override
+  String fileOpRenameFailed(String error) {
+    return 'Rename failed: $error';
+  }
+
+  @override
+  String get fileOpFileMissing => 'The file does not exist or has been deleted';
+
+  @override
+  String fileOpDeleteFailed(String error) {
+    return 'Delete failed: $error';
+  }
+
+  @override
+  String get fileOpFolderMissing =>
+      'The folder does not exist or has been deleted';
+
+  @override
+  String get fileOpNoVideosInFolder =>
+      'This folder has no video files to delete';
+
+  @override
+  String get fileOpSelectTargetFolder => 'Choose a destination folder';
+
+  @override
+  String get fileOpTargetUnreadable =>
+      'The destination folder does not exist or is unreadable';
+
+  @override
+  String get fileOpAlreadyInFolder =>
+      'This folder is already in that directory';
+
+  @override
+  String get fileOpAlreadyInFolderVideo =>
+      'This video is already in that directory';
+
+  @override
+  String get fileOpIntoItself =>
+      'A folder cannot be copied or moved into its own subfolder';
+
+  @override
+  String get fileOpNameEmpty => 'The name must not be empty';
+
+  @override
+  String get fileOpNameInvalid => 'The name is not valid';
+
+  @override
+  String get fileOpNameHasSeparator =>
+      'The name must not contain a path separator';
+
+  @override
+  String get fileOpNameIllegalChars =>
+      'The name must not contain characters such as \\ / : * ? \" < > |';
+
+  @override
+  String get fileOpNameEmptyBeforeExt => 'Enter the name before the extension';
+
+  @override
+  String get commonGotIt => 'Got it';
+
+  @override
+  String get commonErrorsSeparator => '; ';
+
+  @override
+  String get playerEqualizerPresetFlat => 'Flat';
+
+  @override
+  String get playerEqualizerPresetDialogue => 'Dialogue boost';
+
+  @override
+  String get playerEqualizerPresetCinema => 'Cinema';
+
+  @override
+  String get playerEqualizerPresetBass => 'Bass boost';
+
+  @override
+  String get playerEqualizerPresetTreble => 'Treble boost';
+
+  @override
+  String get playerEqualizerPresetNight => 'Night mode';
+
+  @override
+  String get biliVipNormal => 'Regular member';
+
+  @override
+  String get biliVipAnnual => 'Annual premium member';
+
+  @override
+  String get biliVipMember => 'Premium member';
+
+  @override
+  String biliPlaylistEpisode(String index) {
+    return 'Episode $index';
+  }
+
+  @override
+  String get subtitleUnknownName => 'Unknown subtitle';
+
+  @override
+  String get subtitleUnknownLanguage => 'Unknown language';
+
+  @override
+  String get danmakuServerDefaultName => 'Dandanplay (default)';
+
+  @override
+  String get danmakuServerAutoMatchBlocked =>
+      'Disable the Dandanplay server first';
+
+  @override
+  String danmakuServerAutoMatchBlockedDetail(String name) {
+    return 'Cannot enable \"Auto-match danmaku on episode change\" while the \"$name\" server is enabled; disable that server first';
+  }
+
+  @override
+  String get danmakuSearchNoResult =>
+      'No matching anime found; try other keywords';
+
+  @override
+  String danmakuSearchFailed(String errors) {
+    return 'Search failed: $errors';
+  }
+
+  @override
+  String get danmakuOffsetNone => 'No offset';
+
+  @override
+  String danmakuOffsetDelay(String time) {
+    return 'Delayed $time';
+  }
+
+  @override
+  String danmakuOffsetAdvance(String time) {
+    return 'Advanced $time';
+  }
+
+  @override
+  String get playerAudioFallbackNoTrack =>
+      'The current audio track cannot be played and there is no other track to switch to';
+
+  @override
+  String playerAudioFallbackSwitched(String name) {
+    return 'The current audio track cannot be played; switched to \"$name\" automatically';
+  }
+
+  @override
+  String playerDiagnosticsDuration(String minutes, String seconds) {
+    return '$minutes min $seconds s';
+  }
+
+  @override
+  String playerDiagnosticsAvsyncAudioAhead(String value) {
+    return '$value audio ahead';
+  }
+
+  @override
+  String playerDiagnosticsAvsyncVideoAhead(String value) {
+    return '$value video ahead';
+  }
+
+  @override
+  String playerDiagnosticsWarnDroppedFrames(int dropped) {
+    return 'Dropped $dropped frames: rendering cannot keep up; try a lower super-resolution level or switch to hardware decoding';
+  }
+
+  @override
+  String get playerDiagnosticsWarnSoftwareDecode =>
+      'Currently using software decoding (CPU): high bitrate or high resolution may cause dropped frames and heat';
+
+  @override
+  String playerDiagnosticsWarnAvsync(String value) {
+    return 'Audio and video are out of sync: $value';
+  }
+
+  @override
+  String get cacheCategoryListThumbs => 'Video list cover thumbnails';
+
+  @override
+  String get cacheCategoryNetworkDanmaku => 'Online danmaku cache';
+
+  @override
+  String get cacheCategoryBiliCovers => 'Bilibili cover cache';
+
+  @override
+  String get cacheCategoryOther => 'Other caches';
+
+  @override
+  String get updateNoNotes => 'No release notes available';
+
+  @override
+  String get buildInfoNoRevision =>
+      'This build has no commit hash injected (build it with the script in tools/)';
+
+  @override
+  String buildInfoCopied(String revision) {
+    return 'Copied $revision';
+  }
+
+  @override
+  String buildInfoCopiedDirty(String revision) {
+    return 'Copied $revision (uncommitted changes in the working tree)';
+  }
+
+  @override
+  String get castDeviceOffline => 'The device is offline';
+
+  @override
+  String get castNoLanIpv4 => 'No LAN IPv4 address was found';
+
+  @override
+  String get castFileMissing => 'The file does not exist';
+
+  @override
+  String get dolbyVisionHintTitle => 'Dolby Vision video';
+
+  @override
+  String get dolbyVisionHintBody =>
+      'This video is encoded in Dolby Vision.\nIf the picture looks green or purple, enable GPU-next rendering and switch to software decoding in \"Playback settings → Decoding\".\nIf that does not help, this device may not support Dolby Vision playback.';
+
+  @override
+  String playerNetworkDanmakuLoadedManual(
+    String anime,
+    String episode,
+    String server,
+  ) {
+    return '$anime · $episode ($server)';
+  }
+
+  @override
+  String playerNetworkDanmakuLoadedAuto(
+    String anime,
+    String episode,
+    String server,
+  ) {
+    return '$anime $episode ($server)';
+  }
+
+  @override
+  String get playerDanmakuLocateNoEpisode =>
+      'Could not detect an episode number from the file name; use the input above to jump';
+
+  @override
+  String playerDanmakuLocateEpisodeMissing(String number) {
+    return 'Episode $number was not found; use the input above to jump';
+  }
 }

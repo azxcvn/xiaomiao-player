@@ -32,7 +32,6 @@ import 'package:moumou/models/subtitle_track.dart' show mpvColorToRgba;
 import 'package:moumou/services/app_font_settings.dart';
 import 'package:moumou/services/danmaku_settings.dart';
 import 'package:moumou/services/device_services.dart';
-import 'package:moumou/utils/danmaku_timeline.dart';
 import 'package:moumou/widgets/color_editor_row.dart';
 import 'package:moumou/widgets/settings_ui.dart';
 
@@ -213,7 +212,7 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
                     value: s.timeOffsetSeconds,
                     min: DanmakuSettings.minTimeOffsetSeconds,
                     max: DanmakuSettings.maxTimeOffsetSeconds,
-                    display: formatDanmakuTimeOffset,
+                    display: (value) => danmakuOffsetText(l10n, value),
                     // 1 秒一档（-180~+180 共 360 档），松手提交重锚定弹幕
                     divisions: 360,
                     onCommit: s.setTimeOffset,

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/services/cast/lan_media_server.dart';
+import 'package:moumou/utils/error_codes.dart';
 
 void main() {
   test('isSiteLocalIpv4：判定站点本地地址', () {
@@ -99,9 +100,16 @@ void main() {
     expect(server.isRunning, isFalse);
 
     // 文件不存在时 expose 抛错（不残留半开服务）
+    // 阶段 6：原来是 FileSystemException（中文消息），改成带错误码的自有异常
     await expectLater(
       server.expose('${dir.path}/missing.mp4'),
-      throwsA(isA<FileSystemException>()),
+      throwsA(
+        isA<LanMediaServerException>().having(
+          (e) => e.code,
+          'code',
+          LanMediaServerErrorCode.fileMissing,
+        ),
+      ),
     );
     expect(server.isRunning, isFalse);
   });

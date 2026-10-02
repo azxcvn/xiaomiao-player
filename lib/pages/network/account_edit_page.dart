@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/models/network_connection.dart';
 import 'package:moumou/services/network/network_client.dart';
 import 'package:moumou/services/network/network_client_factory.dart';
 import 'package:moumou/services/network/network_connection_settings.dart';
+import 'package:moumou/utils/network_path.dart';
 
 /// 网络存储账户编辑页：新增 / 编辑 WebDAV、SMB、FTP 账户。
 ///
@@ -174,8 +176,8 @@ class _AccountEditPageState extends State<AccountEditPage> {
       if (!mounted) return;
       setState(() {
         _testSuccess = false;
-        _testResult = e is NetworkClientException
-            ? e.message
+        _testResult = e is NetworkClientException || e is NetworkPathException
+            ? serviceErrorText(l10n, e)
             : l10n.commonConnectFailed('$e');
       });
     } finally {

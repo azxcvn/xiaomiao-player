@@ -36,6 +36,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/danmaku_search_history.dart';
 import 'package:moumou/services/danmaku_search_store.dart';
@@ -368,24 +369,39 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
       return l10n.playerDanmakuSearchStoppedCount(results.length);
     }
     if (results.isNotEmpty && _store.serverErrors.isNotEmpty) {
-      return l10n.playerDanmakuPartialServerFailed(
-        _store.serverErrors.join('；'),
-      );
+      return l10n.playerDanmakuPartialServerFailed(_serverErrorsText(l10n));
     }
     return null;
   }
 
+  /// 各服务器失败原因（「服务器名: 失败原因」，分隔符走 l10n）：
+  /// 服务层只给「服务器名 + 异常对象」，文案在这里翻译。
+  String _serverErrorsText(AppLocalizations l10n) => _store.serverErrors
+      .map(
+        (failure) =>
+            '${failure.serverName.isEmpty ? l10n.danmakuServerDefaultName : failure.serverName}'
+            ': ${serviceErrorText(l10n, failure.error)}',
+      )
+      .join(l10n.commonErrorsSeparator);
+
+  /// 一条结果都没有时的整条错误文案（服务层只给失败种类）。
+  String _errorTextOf(AppLocalizations l10n) =>
+      _store.errorKind == DanmakuSearchError.noResult
+      ? l10n.danmakuSearchNoResult
+      : l10n.danmakuSearchFailed(_serverErrorsText(l10n));
+
   Widget _buildBody() {
     final results = _store.results;
-    final error = _store.error;
+    final errorKind = _store.errorKind;
     // 还没拿到任何结果：整屏转圈（有结果后就让位给列表，转圈留在搜索框里）
     if (_store.searching && results.isEmpty) return _buildLoading();
     // 停在空态：没搜过，或搜完确实没命中（用户手动停止不算——那种情况
     // 要显示「已停止搜索 · 共 0 部」让他知道是自己停的）
-    if (results.isEmpty && error == null && !_store.stopped) {
+    if (results.isEmpty && errorKind == null && !_store.stopped) {
       return _buildEmpty();
     }
-    final status = _statusTextOf(AppLocalizations.of(context));
+    final l10n = AppLocalizations.of(context);
+    final status = _statusTextOf(l10n);
     return ListView(
       // 关键词做 key：换关键词 = 全新列表，从顶部开始（不继承上一轮滚动位置）
       key: ValueKey(_store.keyword),
@@ -396,8 +412,8 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
           _buildStatusStrip(status),
           const SizedBox(height: 8),
         ],
-        if (error != null) ...[
-          _buildErrorBanner(error),
+        if (errorKind != null) ...[
+          _buildErrorBanner(_errorTextOf(l10n)),
           const SizedBox(height: 10),
         ],
         for (var i = 0; i < results.length; i++) ...[
@@ -646,8 +662,13 @@ class _AnimeResultCard extends StatelessWidget {
                           l10n.playerEpisodeCountUnit(anime.episodes.length),
                         ),
                         // **每个**结果都标来源服务器名，用户点选集前就能
-                        // 判断这条来自哪里（issue #1 需求 4）。
-                        _CapsuleLabel(item.serverName),
+                        // 判断这条来自哪里（issue #1 需求 4）。默认服务器在
+                        // 服务层存空串，显示名在这里取 l10n。
+                        _CapsuleLabel(
+                          item.serverName.isEmpty
+                              ? l10n.danmakuServerDefaultName
+                              : item.serverName,
+                        ),
                       ],
                     ),
                   ],

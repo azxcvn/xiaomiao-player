@@ -231,9 +231,18 @@ class DanmakuController extends ChangeNotifier {
   /// 对齐 SubtitleController.onAutoLoadedSubtitle。
   void Function(String fileName)? onAutoLoadedDanmaku;
 
-  /// 网络弹幕（弹弹Play 搜索 / 自动匹配 / 切集自动匹配）加载成功后的回调
-  /// （参数为提示文案，如「番剧名 · 第02话」），由播放页注入以弹提示。
-  void Function(String message)? onNetworkDanmakuLoaded;
+  /// 网络弹幕（弹弹Play 搜索 / 自动匹配 / 切集自动匹配）加载成功后的回调，
+  /// 由播放页注入以弹提示。
+  ///
+  /// 参数：番剧名 / 集名 / 来源服务器名（**null = 默认弹弹Play 服务器**，
+  /// 显示名由 UI 层取 l10n）/ [autoMatch] 为 true 表示「切集自动匹配」这条回执
+  /// （两条回执的中文排版不同，故必须区分）。
+  void Function(
+    String anime,
+    String episode,
+    String? serverName,
+    bool autoMatch,
+  )? onNetworkDanmakuLoaded;
 
   bool get danmakuOn => _danmakuOn;
 
@@ -627,10 +636,13 @@ class DanmakuController extends ChangeNotifier {
     await _rememberDownload(download.filePathOrNull);
     // 提示带**来源服务器名**：用户选完弹幕后面板上没有别处能看到它来自哪台
     // 服务器（issue #1 需求 4）。搜索结果卡同样带来源胶囊，这里是加载后的回执。
-    final serverLabel = DanmakuServerSettings.instance.serverLabelFor(
-      serverUrl,
+    // 文案由 UI 层拼（默认服务器回 null，UI 取 l10n 显示名）。
+    onNetworkDanmakuLoaded?.call(
+      animeTitle,
+      episodeTitle,
+      DanmakuServerSettings.instance.serverLabelFor(serverUrl),
+      false,
     );
-    onNetworkDanmakuLoaded?.call('$animeTitle · $episodeTitle（$serverLabel）');
     return true;
   }
 
@@ -772,12 +784,12 @@ class DanmakuController extends ChangeNotifier {
       notifyListeners();
     }
     await _rememberDownload(download.filePathOrNull);
-    // 同上：提示带来源服务器名（此路径是「切集自动匹配」命中）
-    final autoLabel = DanmakuServerSettings.instance.serverLabelFor(
-      cache.serverUrl,
-    );
+    // 同上：提示带来源服务器名（此路径是「切集自动匹配」命中，文案由 UI 层拼）
     onNetworkDanmakuLoaded?.call(
-      '${cache.animeTitle} ${matched.episodeTitle}（$autoLabel）',
+      cache.animeTitle,
+      matched.episodeTitle,
+      DanmakuServerSettings.instance.serverLabelFor(cache.serverUrl),
+      true,
     );
   }
 

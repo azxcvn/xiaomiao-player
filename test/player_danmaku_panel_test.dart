@@ -101,7 +101,8 @@ class _FakeDanmakuController extends ChangeNotifier
   void Function(String fileName)? onAutoLoadedDanmaku;
 
   @override
-  void Function(String message)? onNetworkDanmakuLoaded;
+  void Function(String anime, String episode, String? serverName, bool autoMatch)?
+      onNetworkDanmakuLoaded;
 
   @override
   bool get danmakuOn => true;

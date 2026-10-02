@@ -76,6 +76,17 @@ AudioTrack? pickFallbackAudioTrack({
   return (embedded.isNotEmpty ? embedded : pool).first;
 }
 
+/// 音轨自动回退的原因码（**纯数据，不含文案**）。
+///
+/// 文案在 UI 层：`l10n/label_maps.dart` 的 [audioFallbackReasonText]。
+enum AudioFallbackReason {
+  /// 当前音轨放不出来，且没有其它可切换的音轨
+  noAlternative,
+
+  /// 当前音轨放不出来，已自动切到另一条音轨
+  switched,
+}
+
 /// 音频控制器：绑定单个播放器（横竖屏共享同一实例），
 /// 维护「音频轨道列表 / 当前音轨 / 外部音轨 / 声道 / 音频处理」状态并直接驱动 mpv。
 ///
@@ -127,9 +138,13 @@ class AudioController extends ChangeNotifier {
   ///
   /// - [fallback] 非空 = 已自动切到该音轨；
   /// - [fallback] 为空 = 确认当前音轨放不出来但**无路可退**（调用方提示失败原因）；
-  /// - [failed] 为判定失败的那条音轨（可能为 null）；[reason] 为给用户看的说明。
-  void Function(AudioTrack? fallback, AudioTrack? failed, String reason)?
-      onAudioFallback;
+  /// - [failed] 为判定失败的那条音轨（可能为 null）；[reason] 为回退原因码
+  ///   （文案在 UI 层，见 `l10n/label_maps.dart` 的 [audioFallbackReasonText]）。
+  void Function(
+    AudioTrack? fallback,
+    AudioTrack? failed,
+    AudioFallbackReason reason,
+  )? onAudioFallback;
 
   /// 回退流程防重入（一次失败只回退一次；用户手动换轨后复位）
   bool _fallbackInFlight = false;
@@ -358,7 +373,7 @@ class AudioController extends ChangeNotifier {
           onAudioFallback?.call(
             null,
             failed ?? _primary,
-            '当前音轨无法播放，且没有其它可切换的音轨',
+            AudioFallbackReason.noAlternative,
           );
           return;
         }
@@ -366,7 +381,7 @@ class AudioController extends ChangeNotifier {
         onAudioFallback?.call(
           fallback,
           failed,
-          '当前音轨无法播放，已自动切换到「${fallback.displayTitle}」',
+          AudioFallbackReason.switched,
         );
       } finally {
         _fallbackInFlight = false;

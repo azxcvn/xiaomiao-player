@@ -23,6 +23,7 @@ import 'package:flutter/foundation.dart';
 import 'package:moumou/models/network_connection.dart';
 import 'package:moumou/models/network_file.dart';
 import 'package:moumou/services/network/network_client.dart';
+import 'package:moumou/utils/error_codes.dart';
 import 'package:moumou/utils/ftp_parser.dart';
 import 'package:moumou/utils/network_mime_types.dart';
 import 'package:moumou/utils/network_path.dart';
@@ -38,9 +39,6 @@ class FtpClient implements NetworkClient {
 
   /// 浏览类操作的默认重试策略（只重试连接类失败，见 [isRetryableNetworkError]）。
   static const _retryPolicy = RetryPolicy();
-
-  /// 黑洞地址 / 服务器半开时的统一提示（12 秒 = 分级超时的常规 API 档）。
-  static const _timeoutMessage = '连接超时：服务器无响应，请检查地址与端口';
 
   _FtpControl? _control;
 
@@ -61,11 +59,11 @@ class FtpClient implements NetworkClient {
     try {
       _control = await _openControl();
     } on TimeoutException {
-      throw const NetworkClientException(_timeoutMessage);
+      throw const NetworkClientException(NetworkErrorCode.connectTimeout);
     } on SocketException catch (error) {
       // `Socket.connect(timeout:)` 超时抛的是 SocketException("Connection timed out")
       if (error.message.toLowerCase().contains('timed out')) {
-        throw const NetworkClientException(_timeoutMessage);
+        throw const NetworkClientException(NetworkErrorCode.connectTimeout);
       }
       rethrow;
     }
@@ -141,19 +139,28 @@ class FtpClient implements NetworkClient {
     final ctrl = _FtpControl(socket, connection.host);
     try {
       await ctrl.readReply();
-      _expect(ctrl.replyCode == 220, 'FTP 服务器拒绝连接（代码 ${ctrl.replyCode}）');
+      _expect(
+        ctrl,
+        ctrl.replyCode == 220,
+        NetworkErrorCode.ftpRefusedConnection,
+      );
       await _login(ctrl);
 
       if (offset > 0) {
         await ctrl.sendCommand('REST $offset');
-        _expect(ctrl.replyCode == 350, 'FTP 服务器不支持断点续传（REST）');
+        _expect(
+          ctrl,
+          ctrl.replyCode == 350,
+          NetworkErrorCode.ftpResumeUnsupported,
+        );
       }
 
       final data = await ctrl.openPassiveData();
       await ctrl.sendCommand('RETR ${_remotePath(NetworkPath.from(path))}');
       _expect(
+        ctrl,
         ctrl.replyCode == 150 || ctrl.replyCode == 125,
-        'FTP 服务器拒绝文件传输（代码 ${ctrl.replyCode}）',
+        NetworkErrorCode.ftpTransferRejected,
       );
       return _managedStream(data, ctrl);
     } catch (_) {
@@ -172,12 +179,20 @@ class FtpClient implements NetworkClient {
     final ctrl = _FtpControl(socket, connection.host);
     try {
       await ctrl.readReply();
-      _expect(ctrl.replyCode == 220, 'FTP 服务器拒绝连接（代码 ${ctrl.replyCode}）');
+      _expect(
+        ctrl,
+        ctrl.replyCode == 220,
+        NetworkErrorCode.ftpRefusedConnection,
+      );
       await _login(ctrl);
       final root = _remotePath(NetworkPath.root);
       if (root != '/') {
         await ctrl.sendCommand('CWD $root');
-        _expect(ctrl.replyCode == 250, 'FTP 根目录不可用（代码 ${ctrl.replyCode}）');
+        _expect(
+          ctrl,
+          ctrl.replyCode == 250,
+          NetworkErrorCode.ftpRootUnavailable,
+        );
       }
       return ctrl;
     } catch (_) {
@@ -226,9 +241,17 @@ class FtpClient implements NetworkClient {
       final pass = connection.isAnonymous ? 'anonymous@' : connection.password;
       await ctrl.sendCommand('PASS $pass');
     }
-    _expect(ctrl.replyCode == 230 || ctrl.replyCode == 202, 'FTP 登录失败，请检查账号密码');
+    _expect(
+      ctrl,
+      ctrl.replyCode == 230 || ctrl.replyCode == 202,
+      NetworkErrorCode.ftpLoginFailed,
+    );
     await ctrl.sendCommand('TYPE I');
-    _expect(ctrl.replyCode == 200, 'FTP 服务器拒绝二进制模式');
+    _expect(
+      ctrl,
+      ctrl.replyCode == 200,
+      NetworkErrorCode.ftpBinaryModeRejected,
+    );
     // `OPTS UTF8 ON`：RFC 2640 规定成功回 200。失败（500/501/502/504）说明
     // 服务器不认这个命令——**不等于**它用 GBK，所以这里不写死结论，
     // 交给列表试解（见 _decodeListing）。
@@ -257,8 +280,9 @@ class FtpClient implements NetworkClient {
     try {
       await ctrl.sendCommand('LIST ${_remotePath(dir)}');
       _expect(
+        ctrl,
         ctrl.replyCode == 150 || ctrl.replyCode == 125,
-        'FTP 目录列表失败（代码 ${ctrl.replyCode}）',
+        NetworkErrorCode.ftpListFailed,
       );
       final text = _decodeListing(ctrl, await _readAllBytes(data));
       await ctrl.readReply(); // 226
@@ -312,8 +336,11 @@ class FtpClient implements NetworkClient {
     return segments.isEmpty ? '/' : '/${segments.join('/')}';
   }
 
-  static void _expect(bool condition, String message) {
-    if (!condition) throw NetworkClientException(message);
+  /// 断言一条应答码，不符即抛带应答码的错误（文案由 UI 层按码取）。
+  static void _expect(_FtpControl ctrl, bool condition, NetworkErrorCode code) {
+    if (!condition) {
+      throw NetworkClientException(code, args: {'code': '${ctrl.replyCode}'});
+    }
   }
 
   static String? _childOrNull(NetworkPath dir, String name) {
@@ -437,13 +464,15 @@ class _FtpControl {
     final buffer = StringBuffer();
     final first = await _readLine();
     if (first == null) {
-      throw const NetworkClientException('FTP 连接被服务器关闭');
+      throw const NetworkClientException(NetworkErrorCode.ftpConnectionClosed);
     }
     buffer.write(first);
 
     final code = int.tryParse(first.length >= 3 ? first.substring(0, 3) : '');
     if (code == null) {
-      throw const NetworkClientException('FTP 服务器返回异常响应');
+      throw const NetworkClientException(
+        NetworkErrorCode.ftpUnexpectedResponse,
+      );
     }
     final multiline = first.length >= 4 && first[3] == '-';
     if (multiline) {
@@ -451,7 +480,9 @@ class _FtpControl {
       while (true) {
         final line = await _readLine();
         if (line == null) {
-          throw const NetworkClientException('FTP 连接中断');
+          throw const NetworkClientException(
+            NetworkErrorCode.ftpConnectionInterrupted,
+          );
         }
         buffer.write('\n$line');
         if (line.startsWith(terminator)) break;
@@ -512,12 +543,16 @@ class _FtpControl {
     }
     await sendCommand('PASV');
     if (replyCode != 227) {
-      throw const NetworkClientException('FTP 服务器不支持被动模式');
+      throw const NetworkClientException(
+        NetworkErrorCode.ftpPassiveUnsupported,
+      );
     }
     final m = RegExp(r'\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)')
         .firstMatch(replyText);
     if (m == null) {
-      throw const NetworkClientException('FTP 被动模式响应无法解析');
+      throw const NetworkClientException(
+        NetworkErrorCode.ftpPassiveParseFailed,
+      );
     }
     var ip =
         '${m.group(1)!}.${m.group(2)!}.${m.group(3)!}.${m.group(4)!}';

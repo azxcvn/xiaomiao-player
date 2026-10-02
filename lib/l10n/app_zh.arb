@@ -1170,11 +1170,14 @@
   "@settingsCacheClearAllTitle": {
     "description": "缓存管理页：一键清除的首次确认弹窗标题"
   },
-  "settingsCacheClearAllBody": "将删除全部缓存（当前共 {size}）：\n· 视频列表封面缩略图\n· 其他缓存\n\n此操作不可恢复。",
+  "settingsCacheClearAllBody": "将删除全部缓存（当前共 {size}）：\n{items}\n\n此操作不可恢复。",
   "@settingsCacheClearAllBody": {
     "description": "缓存管理页：一键清除的首次确认弹窗正文（size = 已格式化的总大小；两条类别名为举例，与 service 层 CacheCategory.label 同串）",
     "placeholders": {
       "size": {
+        "type": "String"
+      },
+      "items": {
         "type": "String"
       }
     }
@@ -4364,5 +4367,813 @@
   "biliCoverUnavailable": "哔哩封面不可用（缓存未命中且下载失败）",
   "@biliCoverUnavailable": {
     "description": "B 站封面图兜底提示"
+  },
+  "errorNetworkRequestFailed": "网络请求失败: {error}",
+  "@errorNetworkRequestFailed": {
+    "description": "错误：网络请求异常（bili / 弹弹Play / Wyzie / 自定义字幕共用）",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorHttpRequestFailed": "请求失败（HTTP {status}）",
+  "@errorHttpRequestFailed": {
+    "description": "错误：HTTP 非 2xx（bili / 弹弹Play / Wyzie / 下载共用）",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "errorHttpSearchFailed": "搜索失败（HTTP {status}）",
+  "@errorHttpSearchFailed": {
+    "description": "错误：搜索接口 HTTP 非 2xx（Wyzie / 自定义字幕）",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "errorHttpDownloadFailed": "下载失败（HTTP {status}）",
+  "@errorHttpDownloadFailed": {
+    "description": "错误：下载 HTTP 非 2xx（Wyzie / 自定义字幕 / WebDAV / 下载任务）",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "errorResponseNotJson": "响应不是 JSON 对象",
+  "@errorResponseNotJson": {
+    "description": "错误：响应不是 JSON 对象"
+  },
+  "errorResponseParseFailed": "响应解析失败：{error}",
+  "@errorResponseParseFailed": {
+    "description": "错误：响应解析异常（bili / 弹弹Play）",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorResponseDecodeFailed": "响应解码失败：{error}",
+  "@errorResponseDecodeFailed": {
+    "description": "错误：响应解码异常（弹弹Play）",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDownloadFailed": "下载失败: {error}",
+  "@errorDownloadFailed": {
+    "description": "错误：下载异常（Wyzie / 自定义字幕）",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDownloadTooLarge": "下载失败：文件过大（{received} 字节）",
+  "@errorDownloadTooLarge": {
+    "description": "错误：下载体积超上限（Wyzie / 自定义字幕）",
+    "placeholders": {
+      "received": {
+        "type": "String"
+      }
+    }
+  },
+  "errorResponseTooLarge": "响应异常（已读 {received} 字节，超过 {max} 上限）",
+  "@errorResponseTooLarge": {
+    "description": "错误：响应体积超上限（Wyzie / 自定义字幕）",
+    "placeholders": {
+      "received": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "errorResponseTooLargeAborted": "响应过大（{received} 字节），已放弃解析",
+  "@errorResponseTooLargeAborted": {
+    "description": "错误：响应过大已放弃解析（弹弹Play / Wyzie）",
+    "placeholders": {
+      "received": {
+        "type": "String"
+      }
+    }
+  },
+  "errorServerReturned": "服务器返回错误",
+  "@errorServerReturned": {
+    "description": "错误：服务端返回失败（弹弹Play / bili）"
+  },
+  "errorServerReturnedCode": "服务器返回错误（code={code}）",
+  "@errorServerReturnedCode": {
+    "description": "错误：服务端返回失败（带业务 code；bili / 弹弹Play）",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "errorUnknown": "未知错误",
+  "@errorUnknown": {
+    "description": "错误：兜底未知错误"
+  },
+  "errorNetworkConnectionMissing": "网络连接不存在",
+  "@errorNetworkConnectionMissing": {
+    "description": "错误：网络连接缺失（播放列表源 / 网络字幕流）"
+  },
+  "biliWbiKeyMissingPlay": "未获取到 WBI 密钥，无法解析播放地址",
+  "@biliWbiKeyMissingPlay": {
+    "description": "B 站错误：缺少 WBI 密钥（播放地址）"
+  },
+  "biliWbiKeyMissingSearch": "未获取到 WBI 密钥，无法搜索",
+  "@biliWbiKeyMissingSearch": {
+    "description": "B 站错误：缺少 WBI 密钥（搜索）"
+  },
+  "biliRiskControlTriggered": "触发风控验证（v_voucher），请稍后重试或切换网络",
+  "@biliRiskControlTriggered": {
+    "description": "B 站错误：触发风控验证"
+  },
+  "biliVideoNotFound": "视频不存在或无权访问",
+  "@biliVideoNotFound": {
+    "description": "B 站错误：视频不存在（code -404）"
+  },
+  "biliVideoNoAccess": "无权访问，可能需要登录或大会员",
+  "@biliVideoNoAccess": {
+    "description": "B 站错误：无权访问（code -403）"
+  },
+  "biliVideoVipRequired": "需要大会员权限",
+  "@biliVideoVipRequired": {
+    "description": "B 站错误：需要大会员（code -10403）"
+  },
+  "biliVideoRiskControlFailed": "风控验证失败，请稍后重试",
+  "@biliVideoRiskControlFailed": {
+    "description": "B 站错误：风控验证失败（code -352）"
+  },
+  "biliVideoExclusive": "专属视频，需开通相应权限",
+  "@biliVideoExclusive": {
+    "description": "B 站错误：专属视频（code 87008）"
+  },
+  "biliDownloadLinkUnrecognized": "无法识别 B 站链接（支持 BV / av / ss / ep / 合集链接 / b23.tv 短链）",
+  "@biliDownloadLinkUnrecognized": {
+    "description": "B 站下载：链接无法识别"
+  },
+  "biliDownloadNoVideoParts": "未解析到视频分 P",
+  "@biliDownloadNoVideoParts": {
+    "description": "B 站下载：没有分 P"
+  },
+  "biliDownloadBangumiNoEpisodes": "该番剧没有可下载的集数",
+  "@biliDownloadBangumiNoEpisodes": {
+    "description": "B 站下载：番剧无集数"
+  },
+  "biliDownloadCollectionNoVideos": "该合集没有可下载的视频",
+  "@biliDownloadCollectionNoVideos": {
+    "description": "B 站下载：合集无可下载视频"
+  },
+  "biliDownloadCollectionEmpty": "该合集暂无内容",
+  "@biliDownloadCollectionEmpty": {
+    "description": "B 站下载：合集暂无内容"
+  },
+  "biliDownloadNoDanmaku": "该集没有弹幕",
+  "@biliDownloadNoDanmaku": {
+    "description": "B 站下载：该集无弹幕"
+  },
+  "biliDownloadNoVideoStream": "未获取到视频流",
+  "@biliDownloadNoVideoStream": {
+    "description": "B 站下载：未取到视频流"
+  },
+  "biliDownloadMergeFailed": "音视频合并失败",
+  "@biliDownloadMergeFailed": {
+    "description": "B 站下载：音视频合并失败"
+  },
+  "biliDownloadNetworkFailed": "网络请求失败",
+  "@biliDownloadNetworkFailed": {
+    "description": "B 站下载：网络请求失败（无详情）"
+  },
+  "biliDownloadWriteFailed": "写入文件失败（磁盘空间或权限）",
+  "@biliDownloadWriteFailed": {
+    "description": "B 站下载：写盘失败"
+  },
+  "biliDownloadWriteFailedDetail": "写入文件失败（磁盘空间或权限）：{error}",
+  "@biliDownloadWriteFailedDetail": {
+    "description": "B 站下载：写盘失败（带异常详情）",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "wyzieSearchNoSubtitles": "搜索失败（HTTP 400）",
+  "@wyzieSearchNoSubtitles": {
+    "description": "Wyzie：HTTP 400（接口判定为无结果）"
+  },
+  "wyzieNoMatch": "未找到匹配的影视，请换个关键词",
+  "@wyzieNoMatch": {
+    "description": "Wyzie：没有匹配的影视"
+  },
+  "customSubtitleUrlInvalid": "自定义字幕地址无效（需要 http/https 地址）",
+  "@customSubtitleUrlInvalid": {
+    "description": "自定义字幕：接口地址无效"
+  },
+  "customSubtitleResponseUnparsable": "无法解析该地址的响应：{message}",
+  "@customSubtitleResponseUnparsable": {
+    "description": "自定义字幕：响应无法解析（内嵌解析失败原因）",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "customSubtitleResponseNotJson": "响应不是合法 JSON",
+  "@customSubtitleResponseNotJson": {
+    "description": "自定义字幕解析：不是合法 JSON"
+  },
+  "customSubtitleResponseNoList": "响应里找不到字幕列表",
+  "@customSubtitleResponseNoList": {
+    "description": "自定义字幕解析：没有字幕列表"
+  },
+  "dandanServerUrlInvalid": "服务器地址无效（需以 http/https 开头）: {url}",
+  "@dandanServerUrlInvalid": {
+    "description": "弹弹Play：自建服务器地址无效",
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "networkConnectTimeout": "连接超时：服务器无响应，请检查地址与端口",
+  "@networkConnectTimeout": {
+    "description": "网络错误：连接超时（FTP / WebDAV 共用）"
+  },
+  "ftpRefusedConnection": "FTP 服务器拒绝连接（代码 {code}）",
+  "@ftpRefusedConnection": {
+    "description": "FTP 错误：拒绝连接",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpResumeUnsupported": "FTP 服务器不支持断点续传（REST）",
+  "@ftpResumeUnsupported": {
+    "description": "FTP 错误：不支持断点续传"
+  },
+  "ftpTransferRejected": "FTP 服务器拒绝文件传输（代码 {code}）",
+  "@ftpTransferRejected": {
+    "description": "FTP 错误：拒绝文件传输",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpRootUnavailable": "FTP 根目录不可用（代码 {code}）",
+  "@ftpRootUnavailable": {
+    "description": "FTP 错误：根目录不可用",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpLoginFailed": "FTP 登录失败，请检查账号密码",
+  "@ftpLoginFailed": {
+    "description": "FTP 错误：登录失败"
+  },
+  "ftpBinaryModeRejected": "FTP 服务器拒绝二进制模式",
+  "@ftpBinaryModeRejected": {
+    "description": "FTP 错误：拒绝二进制模式"
+  },
+  "ftpListFailed": "FTP 目录列表失败（代码 {code}）",
+  "@ftpListFailed": {
+    "description": "FTP 错误：目录列表失败",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpConnectionClosed": "FTP 连接被服务器关闭",
+  "@ftpConnectionClosed": {
+    "description": "FTP 错误：连接被关闭"
+  },
+  "ftpUnexpectedResponse": "FTP 服务器返回异常响应",
+  "@ftpUnexpectedResponse": {
+    "description": "FTP 错误：异常响应"
+  },
+  "ftpConnectionInterrupted": "FTP 连接中断",
+  "@ftpConnectionInterrupted": {
+    "description": "FTP 错误：连接中断"
+  },
+  "ftpPassiveUnsupported": "FTP 服务器不支持被动模式",
+  "@ftpPassiveUnsupported": {
+    "description": "FTP 错误：不支持被动模式"
+  },
+  "ftpPassiveParseFailed": "FTP 被动模式响应无法解析",
+  "@ftpPassiveParseFailed": {
+    "description": "FTP 错误：被动模式响应无法解析"
+  },
+  "webdavNotAFile": "文件不存在或不是文件",
+  "@webdavNotAFile": {
+    "description": "WebDAV 错误：目标不是文件"
+  },
+  "webdavTargetIsDirectory": "目标是一个目录",
+  "@webdavTargetIsDirectory": {
+    "description": "WebDAV 错误：目标是目录"
+  },
+  "webdavRangeIgnored": "服务器忽略了分段请求，无法精确跳转",
+  "@webdavRangeIgnored": {
+    "description": "WebDAV 错误：忽略 Range 请求"
+  },
+  "webdavRangeFailed": "分段请求失败（HTTP {status}）",
+  "@webdavRangeFailed": {
+    "description": "WebDAV 错误：Range 请求失败",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "webdavRangeStartMismatch": "服务器返回的分段起点与请求不一致",
+  "@webdavRangeStartMismatch": {
+    "description": "WebDAV 错误：Range 起点不一致"
+  },
+  "webdavDownloadFailedAuth": "下载失败（HTTP {status}，认证失败）",
+  "@webdavDownloadFailedAuth": {
+    "description": "WebDAV 错误：下载 401",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "webdavDirectoryTooLarge": "目录过大：响应超过 {mb}MB",
+  "@webdavDirectoryTooLarge": {
+    "description": "WebDAV 错误：目录响应超上限",
+    "placeholders": {
+      "mb": {
+        "type": "String"
+      }
+    }
+  },
+  "webdavRequestFailed": "WebDAV 请求失败（HTTP {status}）",
+  "@webdavRequestFailed": {
+    "description": "WebDAV 错误：请求失败",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "webdavRequestFailedAuth": "WebDAV 请求失败（HTTP {status}，认证失败）",
+  "@webdavRequestFailedAuth": {
+    "description": "WebDAV 错误：请求 401",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "smbNotConnected": "SMB 尚未连接",
+  "@smbNotConnected": {
+    "description": "SMB 错误：尚未连接"
+  },
+  "smbAuthFailed": "用户名或密码错误",
+  "@smbAuthFailed": {
+    "description": "SMB 错误：账号密码错误"
+  },
+  "smbAccessDenied": "拒绝访问（权限不足）",
+  "@smbAccessDenied": {
+    "description": "SMB 错误：拒绝访问"
+  },
+  "smbPathNotFound": "路径不存在",
+  "@smbPathNotFound": {
+    "description": "SMB 错误：路径不存在"
+  },
+  "smbRequestFailed": "SMB 请求失败",
+  "@smbRequestFailed": {
+    "description": "SMB 错误：请求失败"
+  },
+  "netPathScheme": "网络路径不能包含 URI scheme",
+  "@netPathScheme": {
+    "description": "网络路径校验：含 scheme"
+  },
+  "netPathTooLong": "网络路径过长",
+  "@netPathTooLong": {
+    "description": "网络路径校验：整体过长"
+  },
+  "netPathTooManySegments": "网络路径段数过多",
+  "@netPathTooManySegments": {
+    "description": "网络路径校验：段数过多"
+  },
+  "netPathSegmentEmpty": "路径段不能为空",
+  "@netPathSegmentEmpty": {
+    "description": "网络路径校验：空段"
+  },
+  "netPathSegmentTooLong": "路径段过长",
+  "@netPathSegmentTooLong": {
+    "description": "网络路径校验：单段过长"
+  },
+  "netPathDotSegment": "网络路径不能包含 . 或 ..",
+  "@netPathDotSegment": {
+    "description": "网络路径校验：. / .. 段"
+  },
+  "netPathSegmentSeparator": "路径段不能包含分隔符",
+  "@netPathSegmentSeparator": {
+    "description": "网络路径校验：段内含分隔符"
+  },
+  "netPathSegmentControlChar": "路径段不能包含控制字符",
+  "@netPathSegmentControlChar": {
+    "description": "网络路径校验：段内含控制字符"
+  },
+  "fileOpSourceMissing": "源文件不存在或已被移动",
+  "@fileOpSourceMissing": {
+    "description": "文件操作：源文件缺失"
+  },
+  "fileOpWriteFailed": "写入失败：{name}（{error}）",
+  "@fileOpWriteFailed": {
+    "description": "文件操作：写入失败（文件名 + 异常）",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileOpCopiedButDeleteFailed": "已复制到目标位置，但删除原文件失败，请手动清理",
+  "@fileOpCopiedButDeleteFailed": {
+    "description": "文件操作：复制成功但删除源失败"
+  },
+  "fileOpRenameTempFailed": "重命名临时文件失败：{error}",
+  "@fileOpRenameTempFailed": {
+    "description": "文件操作：临时文件重命名失败",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileOpTargetExists": "同目录下已存在同名文件或文件夹",
+  "@fileOpTargetExists": {
+    "description": "文件操作：目标已存在同名项"
+  },
+  "fileOpRenameFailed": "重命名失败：{error}",
+  "@fileOpRenameFailed": {
+    "description": "文件操作：重命名失败",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileOpFileMissing": "文件不存在或已被删除",
+  "@fileOpFileMissing": {
+    "description": "文件操作：文件缺失"
+  },
+  "fileOpDeleteFailed": "删除失败：{error}",
+  "@fileOpDeleteFailed": {
+    "description": "文件操作：删除失败",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileOpFolderMissing": "文件夹不存在或已被删除",
+  "@fileOpFolderMissing": {
+    "description": "文件操作：文件夹缺失"
+  },
+  "fileOpNoVideosInFolder": "该文件夹内没有可删除的视频文件",
+  "@fileOpNoVideosInFolder": {
+    "description": "文件操作：文件夹内无视频"
+  },
+  "fileOpSelectTargetFolder": "请选择目标文件夹",
+  "@fileOpSelectTargetFolder": {
+    "description": "文件操作校验：未选目标文件夹"
+  },
+  "fileOpTargetUnreadable": "目标文件夹不存在或不可读",
+  "@fileOpTargetUnreadable": {
+    "description": "文件操作校验：目标文件夹不可用"
+  },
+  "fileOpAlreadyInFolder": "该文件夹已经在这个目录里了",
+  "@fileOpAlreadyInFolder": {
+    "description": "文件操作校验：文件夹已在目标目录"
+  },
+  "fileOpAlreadyInFolderVideo": "该视频已经在这个目录里了",
+  "@fileOpAlreadyInFolderVideo": {
+    "description": "文件操作校验：视频已在目标目录"
+  },
+  "fileOpIntoItself": "不能把文件夹复制或移动到它自己的子目录里",
+  "@fileOpIntoItself": {
+    "description": "文件操作校验：不能移到自己的子目录"
+  },
+  "fileOpNameEmpty": "名称不能为空",
+  "@fileOpNameEmpty": {
+    "description": "文件名校验：空"
+  },
+  "fileOpNameInvalid": "名称不合法",
+  "@fileOpNameInvalid": {
+    "description": "文件名校验：不合法"
+  },
+  "fileOpNameHasSeparator": "名称不能包含路径分隔符",
+  "@fileOpNameHasSeparator": {
+    "description": "文件名校验：含路径分隔符"
+  },
+  "fileOpNameIllegalChars": "名称不能包含 \\ / : * ? \" < > | 等字符",
+  "@fileOpNameIllegalChars": {
+    "description": "文件名校验：含非法字符"
+  },
+  "fileOpNameEmptyBeforeExt": "请输入扩展名之前的名称",
+  "@fileOpNameEmptyBeforeExt": {
+    "description": "重命名输入校验：扩展名前为空"
+  },
+  "commonGotIt": "知道了",
+  "@commonGotIt": {
+    "description": "通用按钮：知道了（杜比视界提示）"
+  },
+  "commonErrorsSeparator": "；",
+  "@commonErrorsSeparator": {
+    "description": "通用：多条错误拼接用的分隔符（弹幕搜索失败原因）"
+  },
+  "playerEqualizerPresetFlat": "平直",
+  "@playerEqualizerPresetFlat": {
+    "description": "均衡器预设：平直"
+  },
+  "playerEqualizerPresetDialogue": "对白增强",
+  "@playerEqualizerPresetDialogue": {
+    "description": "均衡器预设：对白增强"
+  },
+  "playerEqualizerPresetCinema": "电影",
+  "@playerEqualizerPresetCinema": {
+    "description": "均衡器预设：电影"
+  },
+  "playerEqualizerPresetBass": "低音震撼",
+  "@playerEqualizerPresetBass": {
+    "description": "均衡器预设：低音震撼"
+  },
+  "playerEqualizerPresetTreble": "高音清晰",
+  "@playerEqualizerPresetTreble": {
+    "description": "均衡器预设：高音清晰"
+  },
+  "playerEqualizerPresetNight": "柔和夜间",
+  "@playerEqualizerPresetNight": {
+    "description": "均衡器预设：柔和夜间"
+  },
+  "biliVipNormal": "普通会员",
+  "@biliVipNormal": {
+    "description": "B 站账号：普通会员"
+  },
+  "biliVipAnnual": "年度大会员",
+  "@biliVipAnnual": {
+    "description": "B 站账号：年度大会员"
+  },
+  "biliVipMember": "大会员",
+  "@biliVipMember": {
+    "description": "B 站账号：大会员"
+  },
+  "biliPlaylistEpisode": "第 {index} 集",
+  "@biliPlaylistEpisode": {
+    "description": "B 站播放列表：无标题时的集名",
+    "placeholders": {
+      "index": {
+        "type": "String"
+      }
+    }
+  },
+  "subtitleUnknownName": "未知字幕",
+  "@subtitleUnknownName": {
+    "description": "字幕条目：无展示名时的占位"
+  },
+  "subtitleUnknownLanguage": "未知语言",
+  "@subtitleUnknownLanguage": {
+    "description": "字幕条目：无语言时的占位"
+  },
+  "danmakuServerDefaultName": "弹弹Play（默认）",
+  "@danmakuServerDefaultName": {
+    "description": "弹幕：内置默认服务器的显示名（仅显示，持久化值不变）"
+  },
+  "danmakuServerAutoMatchBlocked": "请先停用弹弹Play 服务器",
+  "@danmakuServerAutoMatchBlocked": {
+    "description": "弹幕设置：禁止开启自动匹配的短原因"
+  },
+  "danmakuServerAutoMatchBlockedDetail": "已启用「{name}」服务器时不可开启「切集自动匹配弹幕」，如需使用请先停用该服务器",
+  "@danmakuServerAutoMatchBlockedDetail": {
+    "description": "弹幕设置：禁止开启自动匹配的完整说明",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "danmakuSearchNoResult": "未找到相关番剧，请尝试其他关键词",
+  "@danmakuSearchNoResult": {
+    "description": "弹幕搜索：无结果"
+  },
+  "danmakuSearchFailed": "搜索失败：{errors}",
+  "@danmakuSearchFailed": {
+    "description": "弹幕搜索：各服务器错误汇总",
+    "placeholders": {
+      "errors": {
+        "type": "String"
+      }
+    }
+  },
+  "danmakuOffsetNone": "无偏移",
+  "@danmakuOffsetNone": {
+    "description": "弹幕时间轴偏移：0"
+  },
+  "danmakuOffsetDelay": "延后 {time}",
+  "@danmakuOffsetDelay": {
+    "description": "弹幕时间轴偏移：正",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "danmakuOffsetAdvance": "提前 {time}",
+  "@danmakuOffsetAdvance": {
+    "description": "弹幕时间轴偏移：负",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "playerAudioFallbackNoTrack": "当前音轨无法播放，且没有其它可切换的音轨",
+  "@playerAudioFallbackNoTrack": {
+    "description": "播放器：音轨回退失败提示"
+  },
+  "playerAudioFallbackSwitched": "当前音轨无法播放，已自动切换到「{name}」",
+  "@playerAudioFallbackSwitched": {
+    "description": "播放器：音轨自动回退提示",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playerDiagnosticsDuration": "{minutes} 分 {seconds} 秒",
+  "@playerDiagnosticsDuration": {
+    "description": "播放器诊断：≥60 秒的时长文本",
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "playerDiagnosticsAvsyncAudioAhead": "{value} 音频超前",
+  "@playerDiagnosticsAvsyncAudioAhead": {
+    "description": "播放器诊断：音画同步（音频超前）",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "playerDiagnosticsAvsyncVideoAhead": "{value} 视频超前",
+  "@playerDiagnosticsAvsyncVideoAhead": {
+    "description": "播放器诊断：音画同步（视频超前）",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "playerDiagnosticsWarnDroppedFrames": "已丢帧 {dropped} 帧：渲染跟不上，可尝试降超分档位或改硬解",
+  "@playerDiagnosticsWarnDroppedFrames": {
+    "description": "播放器诊断：丢帧告警",
+    "placeholders": {
+      "dropped": {
+        "type": "int"
+      }
+    }
+  },
+  "playerDiagnosticsWarnSoftwareDecode": "当前为软解（CPU 解码）：高码率/高分辨率可能掉帧发热",
+  "@playerDiagnosticsWarnSoftwareDecode": {
+    "description": "播放器诊断：软解告警"
+  },
+  "playerDiagnosticsWarnAvsync": "音画不同步：{value}",
+  "@playerDiagnosticsWarnAvsync": {
+    "description": "播放器诊断：音画不同步告警",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "cacheCategoryListThumbs": "视频列表封面缩略图",
+  "@cacheCategoryListThumbs": {
+    "description": "缓存类别：视频列表封面缩略图"
+  },
+  "cacheCategoryNetworkDanmaku": "网络弹幕缓存",
+  "@cacheCategoryNetworkDanmaku": {
+    "description": "缓存类别：网络弹幕缓存"
+  },
+  "cacheCategoryBiliCovers": "哔哩封面缓存",
+  "@cacheCategoryBiliCovers": {
+    "description": "缓存类别：哔哩封面缓存"
+  },
+  "cacheCategoryOther": "其他缓存",
+  "@cacheCategoryOther": {
+    "description": "缓存类别：其他缓存"
+  },
+  "updateNoNotes": "暂无更新说明",
+  "@updateNoNotes": {
+    "description": "检查更新：Release 正文为空时的占位"
+  },
+  "buildInfoNoRevision": "本次构建未注入提交哈希（需用 tools/ 里的构建脚本编译）",
+  "@buildInfoNoRevision": {
+    "description": "关于页：构建信息没有提交哈希"
+  },
+  "buildInfoCopied": "已复制 {revision}",
+  "@buildInfoCopied": {
+    "description": "关于页：复制提交哈希提示",
+    "placeholders": {
+      "revision": {
+        "type": "String"
+      }
+    }
+  },
+  "buildInfoCopiedDirty": "已复制 {revision}（工作区有未提交改动）",
+  "@buildInfoCopiedDirty": {
+    "description": "关于页：复制提交哈希提示（工作区有改动）",
+    "placeholders": {
+      "revision": {
+        "type": "String"
+      }
+    }
+  },
+  "castDeviceOffline": "设备已离线",
+  "@castDeviceOffline": {
+    "description": "投屏：设备离线"
+  },
+  "castNoLanIpv4": "未找到局域网 IPv4 地址",
+  "@castNoLanIpv4": {
+    "description": "投屏：本机没有局域网 IPv4"
+  },
+  "castFileMissing": "文件不存在",
+  "@castFileMissing": {
+    "description": "投屏：待投屏文件不存在"
+  },
+  "dolbyVisionHintTitle": "杜比视界视频",
+  "@dolbyVisionHintTitle": {
+    "description": "播放器：杜比视界引导弹窗标题"
+  },
+  "dolbyVisionHintBody": "该视频为杜比视界（Dolby Vision）编码。\n若画面发绿/发紫，请在「播放设置 → 解码」启用 GPU-next 渲染并切换软解；\n若仍无法解决，则该设备可能不支持杜比视界播放。",
+  "@dolbyVisionHintBody": {
+    "description": "播放器：杜比视界引导弹窗正文"
+  },
+  "playerNetworkDanmakuLoadedManual": "{anime} · {episode}（{server}）",
+  "@playerNetworkDanmakuLoadedManual": {
+    "description": "播放器：网络弹幕手动下载成功的回执（服务器名由 UI 侧取 l10n 显示名）",
+    "placeholders": {
+      "anime": {
+        "type": "String"
+      },
+      "episode": {
+        "type": "String"
+      },
+      "server": {
+        "type": "String"
+      }
+    }
+  },
+  "playerNetworkDanmakuLoadedAuto": "{anime} {episode}（{server}）",
+  "@playerNetworkDanmakuLoadedAuto": {
+    "description": "播放器：切集自动匹配命中弹幕的回执（服务器名由 UI 侧取 l10n 显示名）",
+    "placeholders": {
+      "anime": {
+        "type": "String"
+      },
+      "episode": {
+        "type": "String"
+      },
+      "server": {
+        "type": "String"
+      }
+    }
+  },
+  "playerDanmakuLocateNoEpisode": "未能从文件名识别集数，可用上方输入框直接跳转",
+  "@playerDanmakuLocateNoEpisode": {
+    "description": "播放器 · 网络弹幕集数面板：自动定位失败（识别不出集数）"
+  },
+  "playerDanmakuLocateEpisodeMissing": "未找到第 {number} 集，可用上方输入框直接跳转",
+  "@playerDanmakuLocateEpisodeMissing": {
+    "description": "播放器 · 网络弹幕集数面板：自动定位失败（集列表里没有该集）",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
   }
 }

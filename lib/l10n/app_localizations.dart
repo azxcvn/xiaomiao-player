@@ -2939,8 +2939,8 @@ abstract class AppLocalizations {
   /// 缓存管理页：一键清除的首次确认弹窗正文（size = 已格式化的总大小；两条类别名为举例，与 service 层 CacheCategory.label 同串）
   ///
   /// In zh, this message translates to:
-  /// **'将删除全部缓存（当前共 {size}）：\n· 视频列表封面缩略图\n· 其他缓存\n\n此操作不可恢复。'**
-  String settingsCacheClearAllBody(String size);
+  /// **'将删除全部缓存（当前共 {size}）：\n{items}\n\n此操作不可恢复。'**
+  String settingsCacheClearAllBody(String size, String items);
 
   /// 缓存管理页：一键清除的二次确认弹窗标题
   ///
@@ -6920,6 +6920,872 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'哔哩封面不可用（缓存未命中且下载失败）'**
   String get biliCoverUnavailable;
+
+  /// 错误：网络请求异常（bili / 弹弹Play / Wyzie / 自定义字幕共用）
+  ///
+  /// In zh, this message translates to:
+  /// **'网络请求失败: {error}'**
+  String errorNetworkRequestFailed(String error);
+
+  /// 错误：HTTP 非 2xx（bili / 弹弹Play / Wyzie / 下载共用）
+  ///
+  /// In zh, this message translates to:
+  /// **'请求失败（HTTP {status}）'**
+  String errorHttpRequestFailed(String status);
+
+  /// 错误：搜索接口 HTTP 非 2xx（Wyzie / 自定义字幕）
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索失败（HTTP {status}）'**
+  String errorHttpSearchFailed(String status);
+
+  /// 错误：下载 HTTP 非 2xx（Wyzie / 自定义字幕 / WebDAV / 下载任务）
+  ///
+  /// In zh, this message translates to:
+  /// **'下载失败（HTTP {status}）'**
+  String errorHttpDownloadFailed(String status);
+
+  /// 错误：响应不是 JSON 对象
+  ///
+  /// In zh, this message translates to:
+  /// **'响应不是 JSON 对象'**
+  String get errorResponseNotJson;
+
+  /// 错误：响应解析异常（bili / 弹弹Play）
+  ///
+  /// In zh, this message translates to:
+  /// **'响应解析失败：{error}'**
+  String errorResponseParseFailed(String error);
+
+  /// 错误：响应解码异常（弹弹Play）
+  ///
+  /// In zh, this message translates to:
+  /// **'响应解码失败：{error}'**
+  String errorResponseDecodeFailed(String error);
+
+  /// 错误：下载异常（Wyzie / 自定义字幕）
+  ///
+  /// In zh, this message translates to:
+  /// **'下载失败: {error}'**
+  String errorDownloadFailed(String error);
+
+  /// 错误：下载体积超上限（Wyzie / 自定义字幕）
+  ///
+  /// In zh, this message translates to:
+  /// **'下载失败：文件过大（{received} 字节）'**
+  String errorDownloadTooLarge(String received);
+
+  /// 错误：响应体积超上限（Wyzie / 自定义字幕）
+  ///
+  /// In zh, this message translates to:
+  /// **'响应异常（已读 {received} 字节，超过 {max} 上限）'**
+  String errorResponseTooLarge(String received, String max);
+
+  /// 错误：响应过大已放弃解析（弹弹Play / Wyzie）
+  ///
+  /// In zh, this message translates to:
+  /// **'响应过大（{received} 字节），已放弃解析'**
+  String errorResponseTooLargeAborted(String received);
+
+  /// 错误：服务端返回失败（弹弹Play / bili）
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器返回错误'**
+  String get errorServerReturned;
+
+  /// 错误：服务端返回失败（带业务 code；bili / 弹弹Play）
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器返回错误（code={code}）'**
+  String errorServerReturnedCode(String code);
+
+  /// 错误：兜底未知错误
+  ///
+  /// In zh, this message translates to:
+  /// **'未知错误'**
+  String get errorUnknown;
+
+  /// 错误：网络连接缺失（播放列表源 / 网络字幕流）
+  ///
+  /// In zh, this message translates to:
+  /// **'网络连接不存在'**
+  String get errorNetworkConnectionMissing;
+
+  /// B 站错误：缺少 WBI 密钥（播放地址）
+  ///
+  /// In zh, this message translates to:
+  /// **'未获取到 WBI 密钥，无法解析播放地址'**
+  String get biliWbiKeyMissingPlay;
+
+  /// B 站错误：缺少 WBI 密钥（搜索）
+  ///
+  /// In zh, this message translates to:
+  /// **'未获取到 WBI 密钥，无法搜索'**
+  String get biliWbiKeyMissingSearch;
+
+  /// B 站错误：触发风控验证
+  ///
+  /// In zh, this message translates to:
+  /// **'触发风控验证（v_voucher），请稍后重试或切换网络'**
+  String get biliRiskControlTriggered;
+
+  /// B 站错误：视频不存在（code -404）
+  ///
+  /// In zh, this message translates to:
+  /// **'视频不存在或无权访问'**
+  String get biliVideoNotFound;
+
+  /// B 站错误：无权访问（code -403）
+  ///
+  /// In zh, this message translates to:
+  /// **'无权访问，可能需要登录或大会员'**
+  String get biliVideoNoAccess;
+
+  /// B 站错误：需要大会员（code -10403）
+  ///
+  /// In zh, this message translates to:
+  /// **'需要大会员权限'**
+  String get biliVideoVipRequired;
+
+  /// B 站错误：风控验证失败（code -352）
+  ///
+  /// In zh, this message translates to:
+  /// **'风控验证失败，请稍后重试'**
+  String get biliVideoRiskControlFailed;
+
+  /// B 站错误：专属视频（code 87008）
+  ///
+  /// In zh, this message translates to:
+  /// **'专属视频，需开通相应权限'**
+  String get biliVideoExclusive;
+
+  /// B 站下载：链接无法识别
+  ///
+  /// In zh, this message translates to:
+  /// **'无法识别 B 站链接（支持 BV / av / ss / ep / 合集链接 / b23.tv 短链）'**
+  String get biliDownloadLinkUnrecognized;
+
+  /// B 站下载：没有分 P
+  ///
+  /// In zh, this message translates to:
+  /// **'未解析到视频分 P'**
+  String get biliDownloadNoVideoParts;
+
+  /// B 站下载：番剧无集数
+  ///
+  /// In zh, this message translates to:
+  /// **'该番剧没有可下载的集数'**
+  String get biliDownloadBangumiNoEpisodes;
+
+  /// B 站下载：合集无可下载视频
+  ///
+  /// In zh, this message translates to:
+  /// **'该合集没有可下载的视频'**
+  String get biliDownloadCollectionNoVideos;
+
+  /// B 站下载：合集暂无内容
+  ///
+  /// In zh, this message translates to:
+  /// **'该合集暂无内容'**
+  String get biliDownloadCollectionEmpty;
+
+  /// B 站下载：该集无弹幕
+  ///
+  /// In zh, this message translates to:
+  /// **'该集没有弹幕'**
+  String get biliDownloadNoDanmaku;
+
+  /// B 站下载：未取到视频流
+  ///
+  /// In zh, this message translates to:
+  /// **'未获取到视频流'**
+  String get biliDownloadNoVideoStream;
+
+  /// B 站下载：音视频合并失败
+  ///
+  /// In zh, this message translates to:
+  /// **'音视频合并失败'**
+  String get biliDownloadMergeFailed;
+
+  /// B 站下载：网络请求失败（无详情）
+  ///
+  /// In zh, this message translates to:
+  /// **'网络请求失败'**
+  String get biliDownloadNetworkFailed;
+
+  /// B 站下载：写盘失败
+  ///
+  /// In zh, this message translates to:
+  /// **'写入文件失败（磁盘空间或权限）'**
+  String get biliDownloadWriteFailed;
+
+  /// B 站下载：写盘失败（带异常详情）
+  ///
+  /// In zh, this message translates to:
+  /// **'写入文件失败（磁盘空间或权限）：{error}'**
+  String biliDownloadWriteFailedDetail(String error);
+
+  /// Wyzie：HTTP 400（接口判定为无结果）
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索失败（HTTP 400）'**
+  String get wyzieSearchNoSubtitles;
+
+  /// Wyzie：没有匹配的影视
+  ///
+  /// In zh, this message translates to:
+  /// **'未找到匹配的影视，请换个关键词'**
+  String get wyzieNoMatch;
+
+  /// 自定义字幕：接口地址无效
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义字幕地址无效（需要 http/https 地址）'**
+  String get customSubtitleUrlInvalid;
+
+  /// 自定义字幕：响应无法解析（内嵌解析失败原因）
+  ///
+  /// In zh, this message translates to:
+  /// **'无法解析该地址的响应：{message}'**
+  String customSubtitleResponseUnparsable(String message);
+
+  /// 自定义字幕解析：不是合法 JSON
+  ///
+  /// In zh, this message translates to:
+  /// **'响应不是合法 JSON'**
+  String get customSubtitleResponseNotJson;
+
+  /// 自定义字幕解析：没有字幕列表
+  ///
+  /// In zh, this message translates to:
+  /// **'响应里找不到字幕列表'**
+  String get customSubtitleResponseNoList;
+
+  /// 弹弹Play：自建服务器地址无效
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器地址无效（需以 http/https 开头）: {url}'**
+  String dandanServerUrlInvalid(String url);
+
+  /// 网络错误：连接超时（FTP / WebDAV 共用）
+  ///
+  /// In zh, this message translates to:
+  /// **'连接超时：服务器无响应，请检查地址与端口'**
+  String get networkConnectTimeout;
+
+  /// FTP 错误：拒绝连接
+  ///
+  /// In zh, this message translates to:
+  /// **'FTP 服务器拒绝连接（代码 {code}）'**
+  String ftpRefusedConnection(String code);
+
+  /// FTP 错误：不支持断点续传
+  ///
+  /// In zh, this message translates to:
+  /// **'FTP 服务器不支持断点续传（REST）'**
+  String get ftpResumeUnsupported;
+
+  /// FTP 错误：拒绝文件传输
+  ///
+  /// In zh, this message translates to:
+  /// **'FTP 服务器拒绝文件传输（代码 {code}）'**
+  String ftpTransferRejected(String code);
+
+  /// FTP 错误：根目录不可用
+  ///
+  /// In zh, this message translates to:
+  /// **'FTP 根目录不可用（代码 {code}）'**
+  String ftpRootUnavailable(String code);
+
+  /// FTP 错误：登录失败
+  ///
+  /// In zh, this message translates to:
+  /// **'FTP 登录失败，请检查账号密码'**
+  String get ftpLoginFailed;
+
+  /// FTP 错误：拒绝二进制模式
+  ///
+  /// In zh, this message translates to:
+  /// **'FTP 服务器拒绝二进制模式'**
+  String get ftpBinaryModeRejected;
+
+  /// FTP 错误：目录列表失败
+  ///
+  /// In zh, this message translates to:
+  /// **'FTP 目录列表失败（代码 {code}）'**
+  String ftpListFailed(String code);
+
+  /// FTP 错误：连接被关闭
+  ///
+  /// In zh, this message translates to:
+  /// **'FTP 连接被服务器关闭'**
+  String get ftpConnectionClosed;
+
+  /// FTP 错误：异常响应
+  ///
+  /// In zh, this message translates to:
+  /// **'FTP 服务器返回异常响应'**
+  String get ftpUnexpectedResponse;
+
+  /// FTP 错误：连接中断
+  ///
+  /// In zh, this message translates to:
+  /// **'FTP 连接中断'**
+  String get ftpConnectionInterrupted;
+
+  /// FTP 错误：不支持被动模式
+  ///
+  /// In zh, this message translates to:
+  /// **'FTP 服务器不支持被动模式'**
+  String get ftpPassiveUnsupported;
+
+  /// FTP 错误：被动模式响应无法解析
+  ///
+  /// In zh, this message translates to:
+  /// **'FTP 被动模式响应无法解析'**
+  String get ftpPassiveParseFailed;
+
+  /// WebDAV 错误：目标不是文件
+  ///
+  /// In zh, this message translates to:
+  /// **'文件不存在或不是文件'**
+  String get webdavNotAFile;
+
+  /// WebDAV 错误：目标是目录
+  ///
+  /// In zh, this message translates to:
+  /// **'目标是一个目录'**
+  String get webdavTargetIsDirectory;
+
+  /// WebDAV 错误：忽略 Range 请求
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器忽略了分段请求，无法精确跳转'**
+  String get webdavRangeIgnored;
+
+  /// WebDAV 错误：Range 请求失败
+  ///
+  /// In zh, this message translates to:
+  /// **'分段请求失败（HTTP {status}）'**
+  String webdavRangeFailed(String status);
+
+  /// WebDAV 错误：Range 起点不一致
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器返回的分段起点与请求不一致'**
+  String get webdavRangeStartMismatch;
+
+  /// WebDAV 错误：下载 401
+  ///
+  /// In zh, this message translates to:
+  /// **'下载失败（HTTP {status}，认证失败）'**
+  String webdavDownloadFailedAuth(String status);
+
+  /// WebDAV 错误：目录响应超上限
+  ///
+  /// In zh, this message translates to:
+  /// **'目录过大：响应超过 {mb}MB'**
+  String webdavDirectoryTooLarge(String mb);
+
+  /// WebDAV 错误：请求失败
+  ///
+  /// In zh, this message translates to:
+  /// **'WebDAV 请求失败（HTTP {status}）'**
+  String webdavRequestFailed(String status);
+
+  /// WebDAV 错误：请求 401
+  ///
+  /// In zh, this message translates to:
+  /// **'WebDAV 请求失败（HTTP {status}，认证失败）'**
+  String webdavRequestFailedAuth(String status);
+
+  /// SMB 错误：尚未连接
+  ///
+  /// In zh, this message translates to:
+  /// **'SMB 尚未连接'**
+  String get smbNotConnected;
+
+  /// SMB 错误：账号密码错误
+  ///
+  /// In zh, this message translates to:
+  /// **'用户名或密码错误'**
+  String get smbAuthFailed;
+
+  /// SMB 错误：拒绝访问
+  ///
+  /// In zh, this message translates to:
+  /// **'拒绝访问（权限不足）'**
+  String get smbAccessDenied;
+
+  /// SMB 错误：路径不存在
+  ///
+  /// In zh, this message translates to:
+  /// **'路径不存在'**
+  String get smbPathNotFound;
+
+  /// SMB 错误：请求失败
+  ///
+  /// In zh, this message translates to:
+  /// **'SMB 请求失败'**
+  String get smbRequestFailed;
+
+  /// 网络路径校验：含 scheme
+  ///
+  /// In zh, this message translates to:
+  /// **'网络路径不能包含 URI scheme'**
+  String get netPathScheme;
+
+  /// 网络路径校验：整体过长
+  ///
+  /// In zh, this message translates to:
+  /// **'网络路径过长'**
+  String get netPathTooLong;
+
+  /// 网络路径校验：段数过多
+  ///
+  /// In zh, this message translates to:
+  /// **'网络路径段数过多'**
+  String get netPathTooManySegments;
+
+  /// 网络路径校验：空段
+  ///
+  /// In zh, this message translates to:
+  /// **'路径段不能为空'**
+  String get netPathSegmentEmpty;
+
+  /// 网络路径校验：单段过长
+  ///
+  /// In zh, this message translates to:
+  /// **'路径段过长'**
+  String get netPathSegmentTooLong;
+
+  /// 网络路径校验：. / .. 段
+  ///
+  /// In zh, this message translates to:
+  /// **'网络路径不能包含 . 或 ..'**
+  String get netPathDotSegment;
+
+  /// 网络路径校验：段内含分隔符
+  ///
+  /// In zh, this message translates to:
+  /// **'路径段不能包含分隔符'**
+  String get netPathSegmentSeparator;
+
+  /// 网络路径校验：段内含控制字符
+  ///
+  /// In zh, this message translates to:
+  /// **'路径段不能包含控制字符'**
+  String get netPathSegmentControlChar;
+
+  /// 文件操作：源文件缺失
+  ///
+  /// In zh, this message translates to:
+  /// **'源文件不存在或已被移动'**
+  String get fileOpSourceMissing;
+
+  /// 文件操作：写入失败（文件名 + 异常）
+  ///
+  /// In zh, this message translates to:
+  /// **'写入失败：{name}（{error}）'**
+  String fileOpWriteFailed(String name, String error);
+
+  /// 文件操作：复制成功但删除源失败
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制到目标位置，但删除原文件失败，请手动清理'**
+  String get fileOpCopiedButDeleteFailed;
+
+  /// 文件操作：临时文件重命名失败
+  ///
+  /// In zh, this message translates to:
+  /// **'重命名临时文件失败：{error}'**
+  String fileOpRenameTempFailed(String error);
+
+  /// 文件操作：目标已存在同名项
+  ///
+  /// In zh, this message translates to:
+  /// **'同目录下已存在同名文件或文件夹'**
+  String get fileOpTargetExists;
+
+  /// 文件操作：重命名失败
+  ///
+  /// In zh, this message translates to:
+  /// **'重命名失败：{error}'**
+  String fileOpRenameFailed(String error);
+
+  /// 文件操作：文件缺失
+  ///
+  /// In zh, this message translates to:
+  /// **'文件不存在或已被删除'**
+  String get fileOpFileMissing;
+
+  /// 文件操作：删除失败
+  ///
+  /// In zh, this message translates to:
+  /// **'删除失败：{error}'**
+  String fileOpDeleteFailed(String error);
+
+  /// 文件操作：文件夹缺失
+  ///
+  /// In zh, this message translates to:
+  /// **'文件夹不存在或已被删除'**
+  String get fileOpFolderMissing;
+
+  /// 文件操作：文件夹内无视频
+  ///
+  /// In zh, this message translates to:
+  /// **'该文件夹内没有可删除的视频文件'**
+  String get fileOpNoVideosInFolder;
+
+  /// 文件操作校验：未选目标文件夹
+  ///
+  /// In zh, this message translates to:
+  /// **'请选择目标文件夹'**
+  String get fileOpSelectTargetFolder;
+
+  /// 文件操作校验：目标文件夹不可用
+  ///
+  /// In zh, this message translates to:
+  /// **'目标文件夹不存在或不可读'**
+  String get fileOpTargetUnreadable;
+
+  /// 文件操作校验：文件夹已在目标目录
+  ///
+  /// In zh, this message translates to:
+  /// **'该文件夹已经在这个目录里了'**
+  String get fileOpAlreadyInFolder;
+
+  /// 文件操作校验：视频已在目标目录
+  ///
+  /// In zh, this message translates to:
+  /// **'该视频已经在这个目录里了'**
+  String get fileOpAlreadyInFolderVideo;
+
+  /// 文件操作校验：不能移到自己的子目录
+  ///
+  /// In zh, this message translates to:
+  /// **'不能把文件夹复制或移动到它自己的子目录里'**
+  String get fileOpIntoItself;
+
+  /// 文件名校验：空
+  ///
+  /// In zh, this message translates to:
+  /// **'名称不能为空'**
+  String get fileOpNameEmpty;
+
+  /// 文件名校验：不合法
+  ///
+  /// In zh, this message translates to:
+  /// **'名称不合法'**
+  String get fileOpNameInvalid;
+
+  /// 文件名校验：含路径分隔符
+  ///
+  /// In zh, this message translates to:
+  /// **'名称不能包含路径分隔符'**
+  String get fileOpNameHasSeparator;
+
+  /// 文件名校验：含非法字符
+  ///
+  /// In zh, this message translates to:
+  /// **'名称不能包含 \\ / : * ? \" < > | 等字符'**
+  String get fileOpNameIllegalChars;
+
+  /// 重命名输入校验：扩展名前为空
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入扩展名之前的名称'**
+  String get fileOpNameEmptyBeforeExt;
+
+  /// 通用按钮：知道了（杜比视界提示）
+  ///
+  /// In zh, this message translates to:
+  /// **'知道了'**
+  String get commonGotIt;
+
+  /// 通用：多条错误拼接用的分隔符（弹幕搜索失败原因）
+  ///
+  /// In zh, this message translates to:
+  /// **'；'**
+  String get commonErrorsSeparator;
+
+  /// 均衡器预设：平直
+  ///
+  /// In zh, this message translates to:
+  /// **'平直'**
+  String get playerEqualizerPresetFlat;
+
+  /// 均衡器预设：对白增强
+  ///
+  /// In zh, this message translates to:
+  /// **'对白增强'**
+  String get playerEqualizerPresetDialogue;
+
+  /// 均衡器预设：电影
+  ///
+  /// In zh, this message translates to:
+  /// **'电影'**
+  String get playerEqualizerPresetCinema;
+
+  /// 均衡器预设：低音震撼
+  ///
+  /// In zh, this message translates to:
+  /// **'低音震撼'**
+  String get playerEqualizerPresetBass;
+
+  /// 均衡器预设：高音清晰
+  ///
+  /// In zh, this message translates to:
+  /// **'高音清晰'**
+  String get playerEqualizerPresetTreble;
+
+  /// 均衡器预设：柔和夜间
+  ///
+  /// In zh, this message translates to:
+  /// **'柔和夜间'**
+  String get playerEqualizerPresetNight;
+
+  /// B 站账号：普通会员
+  ///
+  /// In zh, this message translates to:
+  /// **'普通会员'**
+  String get biliVipNormal;
+
+  /// B 站账号：年度大会员
+  ///
+  /// In zh, this message translates to:
+  /// **'年度大会员'**
+  String get biliVipAnnual;
+
+  /// B 站账号：大会员
+  ///
+  /// In zh, this message translates to:
+  /// **'大会员'**
+  String get biliVipMember;
+
+  /// B 站播放列表：无标题时的集名
+  ///
+  /// In zh, this message translates to:
+  /// **'第 {index} 集'**
+  String biliPlaylistEpisode(String index);
+
+  /// 字幕条目：无展示名时的占位
+  ///
+  /// In zh, this message translates to:
+  /// **'未知字幕'**
+  String get subtitleUnknownName;
+
+  /// 字幕条目：无语言时的占位
+  ///
+  /// In zh, this message translates to:
+  /// **'未知语言'**
+  String get subtitleUnknownLanguage;
+
+  /// 弹幕：内置默认服务器的显示名（仅显示，持久化值不变）
+  ///
+  /// In zh, this message translates to:
+  /// **'弹弹Play（默认）'**
+  String get danmakuServerDefaultName;
+
+  /// 弹幕设置：禁止开启自动匹配的短原因
+  ///
+  /// In zh, this message translates to:
+  /// **'请先停用弹弹Play 服务器'**
+  String get danmakuServerAutoMatchBlocked;
+
+  /// 弹幕设置：禁止开启自动匹配的完整说明
+  ///
+  /// In zh, this message translates to:
+  /// **'已启用「{name}」服务器时不可开启「切集自动匹配弹幕」，如需使用请先停用该服务器'**
+  String danmakuServerAutoMatchBlockedDetail(String name);
+
+  /// 弹幕搜索：无结果
+  ///
+  /// In zh, this message translates to:
+  /// **'未找到相关番剧，请尝试其他关键词'**
+  String get danmakuSearchNoResult;
+
+  /// 弹幕搜索：各服务器错误汇总
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索失败：{errors}'**
+  String danmakuSearchFailed(String errors);
+
+  /// 弹幕时间轴偏移：0
+  ///
+  /// In zh, this message translates to:
+  /// **'无偏移'**
+  String get danmakuOffsetNone;
+
+  /// 弹幕时间轴偏移：正
+  ///
+  /// In zh, this message translates to:
+  /// **'延后 {time}'**
+  String danmakuOffsetDelay(String time);
+
+  /// 弹幕时间轴偏移：负
+  ///
+  /// In zh, this message translates to:
+  /// **'提前 {time}'**
+  String danmakuOffsetAdvance(String time);
+
+  /// 播放器：音轨回退失败提示
+  ///
+  /// In zh, this message translates to:
+  /// **'当前音轨无法播放，且没有其它可切换的音轨'**
+  String get playerAudioFallbackNoTrack;
+
+  /// 播放器：音轨自动回退提示
+  ///
+  /// In zh, this message translates to:
+  /// **'当前音轨无法播放，已自动切换到「{name}」'**
+  String playerAudioFallbackSwitched(String name);
+
+  /// 播放器诊断：≥60 秒的时长文本
+  ///
+  /// In zh, this message translates to:
+  /// **'{minutes} 分 {seconds} 秒'**
+  String playerDiagnosticsDuration(String minutes, String seconds);
+
+  /// 播放器诊断：音画同步（音频超前）
+  ///
+  /// In zh, this message translates to:
+  /// **'{value} 音频超前'**
+  String playerDiagnosticsAvsyncAudioAhead(String value);
+
+  /// 播放器诊断：音画同步（视频超前）
+  ///
+  /// In zh, this message translates to:
+  /// **'{value} 视频超前'**
+  String playerDiagnosticsAvsyncVideoAhead(String value);
+
+  /// 播放器诊断：丢帧告警
+  ///
+  /// In zh, this message translates to:
+  /// **'已丢帧 {dropped} 帧：渲染跟不上，可尝试降超分档位或改硬解'**
+  String playerDiagnosticsWarnDroppedFrames(int dropped);
+
+  /// 播放器诊断：软解告警
+  ///
+  /// In zh, this message translates to:
+  /// **'当前为软解（CPU 解码）：高码率/高分辨率可能掉帧发热'**
+  String get playerDiagnosticsWarnSoftwareDecode;
+
+  /// 播放器诊断：音画不同步告警
+  ///
+  /// In zh, this message translates to:
+  /// **'音画不同步：{value}'**
+  String playerDiagnosticsWarnAvsync(String value);
+
+  /// 缓存类别：视频列表封面缩略图
+  ///
+  /// In zh, this message translates to:
+  /// **'视频列表封面缩略图'**
+  String get cacheCategoryListThumbs;
+
+  /// 缓存类别：网络弹幕缓存
+  ///
+  /// In zh, this message translates to:
+  /// **'网络弹幕缓存'**
+  String get cacheCategoryNetworkDanmaku;
+
+  /// 缓存类别：哔哩封面缓存
+  ///
+  /// In zh, this message translates to:
+  /// **'哔哩封面缓存'**
+  String get cacheCategoryBiliCovers;
+
+  /// 缓存类别：其他缓存
+  ///
+  /// In zh, this message translates to:
+  /// **'其他缓存'**
+  String get cacheCategoryOther;
+
+  /// 检查更新：Release 正文为空时的占位
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无更新说明'**
+  String get updateNoNotes;
+
+  /// 关于页：构建信息没有提交哈希
+  ///
+  /// In zh, this message translates to:
+  /// **'本次构建未注入提交哈希（需用 tools/ 里的构建脚本编译）'**
+  String get buildInfoNoRevision;
+
+  /// 关于页：复制提交哈希提示
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制 {revision}'**
+  String buildInfoCopied(String revision);
+
+  /// 关于页：复制提交哈希提示（工作区有改动）
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制 {revision}（工作区有未提交改动）'**
+  String buildInfoCopiedDirty(String revision);
+
+  /// 投屏：设备离线
+  ///
+  /// In zh, this message translates to:
+  /// **'设备已离线'**
+  String get castDeviceOffline;
+
+  /// 投屏：本机没有局域网 IPv4
+  ///
+  /// In zh, this message translates to:
+  /// **'未找到局域网 IPv4 地址'**
+  String get castNoLanIpv4;
+
+  /// 投屏：待投屏文件不存在
+  ///
+  /// In zh, this message translates to:
+  /// **'文件不存在'**
+  String get castFileMissing;
+
+  /// 播放器：杜比视界引导弹窗标题
+  ///
+  /// In zh, this message translates to:
+  /// **'杜比视界视频'**
+  String get dolbyVisionHintTitle;
+
+  /// 播放器：杜比视界引导弹窗正文
+  ///
+  /// In zh, this message translates to:
+  /// **'该视频为杜比视界（Dolby Vision）编码。\n若画面发绿/发紫，请在「播放设置 → 解码」启用 GPU-next 渲染并切换软解；\n若仍无法解决，则该设备可能不支持杜比视界播放。'**
+  String get dolbyVisionHintBody;
+
+  /// 播放器：网络弹幕手动下载成功的回执（服务器名由 UI 侧取 l10n 显示名）
+  ///
+  /// In zh, this message translates to:
+  /// **'{anime} · {episode}（{server}）'**
+  String playerNetworkDanmakuLoadedManual(
+    String anime,
+    String episode,
+    String server,
+  );
+
+  /// 播放器：切集自动匹配命中弹幕的回执（服务器名由 UI 侧取 l10n 显示名）
+  ///
+  /// In zh, this message translates to:
+  /// **'{anime} {episode}（{server}）'**
+  String playerNetworkDanmakuLoadedAuto(
+    String anime,
+    String episode,
+    String server,
+  );
+
+  /// 播放器 · 网络弹幕集数面板：自动定位失败（识别不出集数）
+  ///
+  /// In zh, this message translates to:
+  /// **'未能从文件名识别集数，可用上方输入框直接跳转'**
+  String get playerDanmakuLocateNoEpisode;
+
+  /// 播放器 · 网络弹幕集数面板：自动定位失败（集列表里没有该集）
+  ///
+  /// In zh, this message translates to:
+  /// **'未找到第 {number} 集，可用上方输入框直接跳转'**
+  String playerDanmakuLocateEpisodeMissing(String number);
 }
 
 class _AppLocalizationsDelegate

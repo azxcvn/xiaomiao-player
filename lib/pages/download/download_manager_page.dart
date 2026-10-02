@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/services/download/download_manager.dart';
 import 'package:moumou/services/download/download_task.dart';
 import 'package:moumou/utils/app_dialog.dart';
@@ -134,7 +135,9 @@ class _TaskCard extends StatelessWidget {
                 Expanded(
                   child: task.status == DownloadStatus.failed
                       ? Text(
-                          task.error ?? l10n.downloadFailed,
+                          task.error == null
+                              ? l10n.downloadFailed
+                              : serviceErrorText(l10n, task.error!),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontSize: 11, color: scheme.error),

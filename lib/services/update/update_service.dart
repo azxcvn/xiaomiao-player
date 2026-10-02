@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:moumou/models/update_info.dart';
+import 'package:moumou/utils/error_codes.dart';
 import 'package:moumou/utils/retry_policy.dart';
 import 'package:moumou/utils/version_compare.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -62,7 +63,7 @@ class UpdateService {
     final local = localVersion ?? (await PackageInfo.fromPlatform()).version;
     final remote = await _fetchLatestRelease(client);
     if (remote == null) {
-      throw const UpdateCheckException('获取远端版本信息失败');
+      throw const UpdateCheckException(UpdateCheckErrorCode.fetchRemoteFailed);
     }
     if (!needUpdate(local, remote.version)) return null;
     return UpdateInfo(
@@ -98,7 +99,7 @@ class UpdateService {
     final rawBody = json['body'];
     return (
       version: _normalizeVersion(tag),
-      body: rawBody is String && rawBody.trim().isNotEmpty ? rawBody : '暂无更新说明',
+      body: rawBody is String && rawBody.trim().isNotEmpty ? rawBody : '',
     );
   }
 
@@ -113,7 +114,7 @@ class UpdateService {
     final rawBody = json['body'];
     return (
       version: _normalizeVersion(version),
-      body: rawBody is String && rawBody.trim().isNotEmpty ? rawBody : '暂无更新说明',
+      body: rawBody is String && rawBody.trim().isNotEmpty ? rawBody : '',
     );
   }
 
@@ -194,11 +195,14 @@ class UpdateService {
 ''';
 }
 
-/// 检查更新失败异常（网络失败 / 解析失败 / 更新源未配置）
+/// 检查更新失败异常（网络失败 / 解析失败 / 更新源未配置）：[code]，
+/// 文案在 UI 层（见 `lib/l10n/error_texts.dart`）。
 class UpdateCheckException implements Exception {
-  final String message;
-  const UpdateCheckException(this.message);
+  /// 错误码
+  final UpdateCheckErrorCode code;
+
+  const UpdateCheckException(this.code);
 
   @override
-  String toString() => 'UpdateCheckException: $message';
+  String toString() => 'UpdateCheckException(${code.name})';
 }

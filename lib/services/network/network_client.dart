@@ -6,14 +6,21 @@
 library;
 
 import 'package:moumou/models/network_file.dart';
+import 'package:moumou/utils/error_codes.dart';
 
-/// 网络协议通用错误。
+/// 网络协议通用错误：[code] + [args]（文案在 UI 层，见
+/// `lib/l10n/error_texts.dart` 的 `networkErrorText`）。
 class NetworkClientException implements Exception {
-  final String message;
-  const NetworkClientException(this.message);
+  /// 错误码
+  final NetworkErrorCode code;
+
+  /// 参数（键名与 ARB placeholder 一致：`code` / `status` / `mb` / `message`）
+  final Map<String, Object?> args;
+
+  const NetworkClientException(this.code, {this.args = const {}});
 
   @override
-  String toString() => message;
+  String toString() => 'NetworkClientException(${code.name})';
 }
 
 /// 所有远程协议（WebDAV / SMB / FTP）客户端的统一抽象。

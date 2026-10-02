@@ -16,8 +16,10 @@ import 'package:moumou/models/network_connection.dart';
 import 'package:moumou/models/network_file.dart';
 import 'package:moumou/models/video_file.dart';
 import 'package:moumou/services/device_services.dart';
+import 'package:moumou/services/network/network_client.dart';
 import 'package:moumou/services/network/network_client_factory.dart';
 import 'package:moumou/services/network/network_connection_settings.dart';
+import 'package:moumou/utils/error_codes.dart';
 import 'package:moumou/utils/network_playlist.dart';
 import 'package:moumou/utils/network_subtitle_match.dart';
 import 'package:moumou/utils/retry_policy.dart';
@@ -34,7 +36,7 @@ class NetworkPlaylistSource {
   Future<List<NetworkFile>> listFiles(int connectionId, String dirPath) async {
     final connection = connectionById(connectionId);
     if (connection == null) {
-      throw StateError('网络连接不存在');
+      throw const NetworkClientException(NetworkErrorCode.connectionMissing);
     }
     // Android 16+ 本地网络保护：连局域网 NAS 前先请求权限（缺失会被系统拦截）。
     // 正常流程浏览页已经请求过，这里兜住「直接补全」的路径。

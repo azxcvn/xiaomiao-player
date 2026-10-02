@@ -1487,8 +1487,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsCacheClearAllTitle => '清除所有缓存';
 
   @override
-  String settingsCacheClearAllBody(String size) {
-    return '将删除全部缓存（当前共 $size）：\n· 视频列表封面缩略图\n· 其他缓存\n\n此操作不可恢复。';
+  String settingsCacheClearAllBody(String size, String items) {
+    return '将删除全部缓存（当前共 $size）：\n$items\n\n此操作不可恢复。';
   }
 
   @override
@@ -3919,4 +3919,530 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get biliCoverUnavailable => '哔哩封面不可用（缓存未命中且下载失败）';
+
+  @override
+  String errorNetworkRequestFailed(String error) {
+    return '网络请求失败: $error';
+  }
+
+  @override
+  String errorHttpRequestFailed(String status) {
+    return '请求失败（HTTP $status）';
+  }
+
+  @override
+  String errorHttpSearchFailed(String status) {
+    return '搜索失败（HTTP $status）';
+  }
+
+  @override
+  String errorHttpDownloadFailed(String status) {
+    return '下载失败（HTTP $status）';
+  }
+
+  @override
+  String get errorResponseNotJson => '响应不是 JSON 对象';
+
+  @override
+  String errorResponseParseFailed(String error) {
+    return '响应解析失败：$error';
+  }
+
+  @override
+  String errorResponseDecodeFailed(String error) {
+    return '响应解码失败：$error';
+  }
+
+  @override
+  String errorDownloadFailed(String error) {
+    return '下载失败: $error';
+  }
+
+  @override
+  String errorDownloadTooLarge(String received) {
+    return '下载失败：文件过大（$received 字节）';
+  }
+
+  @override
+  String errorResponseTooLarge(String received, String max) {
+    return '响应异常（已读 $received 字节，超过 $max 上限）';
+  }
+
+  @override
+  String errorResponseTooLargeAborted(String received) {
+    return '响应过大（$received 字节），已放弃解析';
+  }
+
+  @override
+  String get errorServerReturned => '服务器返回错误';
+
+  @override
+  String errorServerReturnedCode(String code) {
+    return '服务器返回错误（code=$code）';
+  }
+
+  @override
+  String get errorUnknown => '未知错误';
+
+  @override
+  String get errorNetworkConnectionMissing => '网络连接不存在';
+
+  @override
+  String get biliWbiKeyMissingPlay => '未获取到 WBI 密钥，无法解析播放地址';
+
+  @override
+  String get biliWbiKeyMissingSearch => '未获取到 WBI 密钥，无法搜索';
+
+  @override
+  String get biliRiskControlTriggered => '触发风控验证（v_voucher），请稍后重试或切换网络';
+
+  @override
+  String get biliVideoNotFound => '视频不存在或无权访问';
+
+  @override
+  String get biliVideoNoAccess => '无权访问，可能需要登录或大会员';
+
+  @override
+  String get biliVideoVipRequired => '需要大会员权限';
+
+  @override
+  String get biliVideoRiskControlFailed => '风控验证失败，请稍后重试';
+
+  @override
+  String get biliVideoExclusive => '专属视频，需开通相应权限';
+
+  @override
+  String get biliDownloadLinkUnrecognized =>
+      '无法识别 B 站链接（支持 BV / av / ss / ep / 合集链接 / b23.tv 短链）';
+
+  @override
+  String get biliDownloadNoVideoParts => '未解析到视频分 P';
+
+  @override
+  String get biliDownloadBangumiNoEpisodes => '该番剧没有可下载的集数';
+
+  @override
+  String get biliDownloadCollectionNoVideos => '该合集没有可下载的视频';
+
+  @override
+  String get biliDownloadCollectionEmpty => '该合集暂无内容';
+
+  @override
+  String get biliDownloadNoDanmaku => '该集没有弹幕';
+
+  @override
+  String get biliDownloadNoVideoStream => '未获取到视频流';
+
+  @override
+  String get biliDownloadMergeFailed => '音视频合并失败';
+
+  @override
+  String get biliDownloadNetworkFailed => '网络请求失败';
+
+  @override
+  String get biliDownloadWriteFailed => '写入文件失败（磁盘空间或权限）';
+
+  @override
+  String biliDownloadWriteFailedDetail(String error) {
+    return '写入文件失败（磁盘空间或权限）：$error';
+  }
+
+  @override
+  String get wyzieSearchNoSubtitles => '搜索失败（HTTP 400）';
+
+  @override
+  String get wyzieNoMatch => '未找到匹配的影视，请换个关键词';
+
+  @override
+  String get customSubtitleUrlInvalid => '自定义字幕地址无效（需要 http/https 地址）';
+
+  @override
+  String customSubtitleResponseUnparsable(String message) {
+    return '无法解析该地址的响应：$message';
+  }
+
+  @override
+  String get customSubtitleResponseNotJson => '响应不是合法 JSON';
+
+  @override
+  String get customSubtitleResponseNoList => '响应里找不到字幕列表';
+
+  @override
+  String dandanServerUrlInvalid(String url) {
+    return '服务器地址无效（需以 http/https 开头）: $url';
+  }
+
+  @override
+  String get networkConnectTimeout => '连接超时：服务器无响应，请检查地址与端口';
+
+  @override
+  String ftpRefusedConnection(String code) {
+    return 'FTP 服务器拒绝连接（代码 $code）';
+  }
+
+  @override
+  String get ftpResumeUnsupported => 'FTP 服务器不支持断点续传（REST）';
+
+  @override
+  String ftpTransferRejected(String code) {
+    return 'FTP 服务器拒绝文件传输（代码 $code）';
+  }
+
+  @override
+  String ftpRootUnavailable(String code) {
+    return 'FTP 根目录不可用（代码 $code）';
+  }
+
+  @override
+  String get ftpLoginFailed => 'FTP 登录失败，请检查账号密码';
+
+  @override
+  String get ftpBinaryModeRejected => 'FTP 服务器拒绝二进制模式';
+
+  @override
+  String ftpListFailed(String code) {
+    return 'FTP 目录列表失败（代码 $code）';
+  }
+
+  @override
+  String get ftpConnectionClosed => 'FTP 连接被服务器关闭';
+
+  @override
+  String get ftpUnexpectedResponse => 'FTP 服务器返回异常响应';
+
+  @override
+  String get ftpConnectionInterrupted => 'FTP 连接中断';
+
+  @override
+  String get ftpPassiveUnsupported => 'FTP 服务器不支持被动模式';
+
+  @override
+  String get ftpPassiveParseFailed => 'FTP 被动模式响应无法解析';
+
+  @override
+  String get webdavNotAFile => '文件不存在或不是文件';
+
+  @override
+  String get webdavTargetIsDirectory => '目标是一个目录';
+
+  @override
+  String get webdavRangeIgnored => '服务器忽略了分段请求，无法精确跳转';
+
+  @override
+  String webdavRangeFailed(String status) {
+    return '分段请求失败（HTTP $status）';
+  }
+
+  @override
+  String get webdavRangeStartMismatch => '服务器返回的分段起点与请求不一致';
+
+  @override
+  String webdavDownloadFailedAuth(String status) {
+    return '下载失败（HTTP $status，认证失败）';
+  }
+
+  @override
+  String webdavDirectoryTooLarge(String mb) {
+    return '目录过大：响应超过 ${mb}MB';
+  }
+
+  @override
+  String webdavRequestFailed(String status) {
+    return 'WebDAV 请求失败（HTTP $status）';
+  }
+
+  @override
+  String webdavRequestFailedAuth(String status) {
+    return 'WebDAV 请求失败（HTTP $status，认证失败）';
+  }
+
+  @override
+  String get smbNotConnected => 'SMB 尚未连接';
+
+  @override
+  String get smbAuthFailed => '用户名或密码错误';
+
+  @override
+  String get smbAccessDenied => '拒绝访问（权限不足）';
+
+  @override
+  String get smbPathNotFound => '路径不存在';
+
+  @override
+  String get smbRequestFailed => 'SMB 请求失败';
+
+  @override
+  String get netPathScheme => '网络路径不能包含 URI scheme';
+
+  @override
+  String get netPathTooLong => '网络路径过长';
+
+  @override
+  String get netPathTooManySegments => '网络路径段数过多';
+
+  @override
+  String get netPathSegmentEmpty => '路径段不能为空';
+
+  @override
+  String get netPathSegmentTooLong => '路径段过长';
+
+  @override
+  String get netPathDotSegment => '网络路径不能包含 . 或 ..';
+
+  @override
+  String get netPathSegmentSeparator => '路径段不能包含分隔符';
+
+  @override
+  String get netPathSegmentControlChar => '路径段不能包含控制字符';
+
+  @override
+  String get fileOpSourceMissing => '源文件不存在或已被移动';
+
+  @override
+  String fileOpWriteFailed(String name, String error) {
+    return '写入失败：$name（$error）';
+  }
+
+  @override
+  String get fileOpCopiedButDeleteFailed => '已复制到目标位置，但删除原文件失败，请手动清理';
+
+  @override
+  String fileOpRenameTempFailed(String error) {
+    return '重命名临时文件失败：$error';
+  }
+
+  @override
+  String get fileOpTargetExists => '同目录下已存在同名文件或文件夹';
+
+  @override
+  String fileOpRenameFailed(String error) {
+    return '重命名失败：$error';
+  }
+
+  @override
+  String get fileOpFileMissing => '文件不存在或已被删除';
+
+  @override
+  String fileOpDeleteFailed(String error) {
+    return '删除失败：$error';
+  }
+
+  @override
+  String get fileOpFolderMissing => '文件夹不存在或已被删除';
+
+  @override
+  String get fileOpNoVideosInFolder => '该文件夹内没有可删除的视频文件';
+
+  @override
+  String get fileOpSelectTargetFolder => '请选择目标文件夹';
+
+  @override
+  String get fileOpTargetUnreadable => '目标文件夹不存在或不可读';
+
+  @override
+  String get fileOpAlreadyInFolder => '该文件夹已经在这个目录里了';
+
+  @override
+  String get fileOpAlreadyInFolderVideo => '该视频已经在这个目录里了';
+
+  @override
+  String get fileOpIntoItself => '不能把文件夹复制或移动到它自己的子目录里';
+
+  @override
+  String get fileOpNameEmpty => '名称不能为空';
+
+  @override
+  String get fileOpNameInvalid => '名称不合法';
+
+  @override
+  String get fileOpNameHasSeparator => '名称不能包含路径分隔符';
+
+  @override
+  String get fileOpNameIllegalChars => '名称不能包含 \\ / : * ? \" < > | 等字符';
+
+  @override
+  String get fileOpNameEmptyBeforeExt => '请输入扩展名之前的名称';
+
+  @override
+  String get commonGotIt => '知道了';
+
+  @override
+  String get commonErrorsSeparator => '；';
+
+  @override
+  String get playerEqualizerPresetFlat => '平直';
+
+  @override
+  String get playerEqualizerPresetDialogue => '对白增强';
+
+  @override
+  String get playerEqualizerPresetCinema => '电影';
+
+  @override
+  String get playerEqualizerPresetBass => '低音震撼';
+
+  @override
+  String get playerEqualizerPresetTreble => '高音清晰';
+
+  @override
+  String get playerEqualizerPresetNight => '柔和夜间';
+
+  @override
+  String get biliVipNormal => '普通会员';
+
+  @override
+  String get biliVipAnnual => '年度大会员';
+
+  @override
+  String get biliVipMember => '大会员';
+
+  @override
+  String biliPlaylistEpisode(String index) {
+    return '第 $index 集';
+  }
+
+  @override
+  String get subtitleUnknownName => '未知字幕';
+
+  @override
+  String get subtitleUnknownLanguage => '未知语言';
+
+  @override
+  String get danmakuServerDefaultName => '弹弹Play（默认）';
+
+  @override
+  String get danmakuServerAutoMatchBlocked => '请先停用弹弹Play 服务器';
+
+  @override
+  String danmakuServerAutoMatchBlockedDetail(String name) {
+    return '已启用「$name」服务器时不可开启「切集自动匹配弹幕」，如需使用请先停用该服务器';
+  }
+
+  @override
+  String get danmakuSearchNoResult => '未找到相关番剧，请尝试其他关键词';
+
+  @override
+  String danmakuSearchFailed(String errors) {
+    return '搜索失败：$errors';
+  }
+
+  @override
+  String get danmakuOffsetNone => '无偏移';
+
+  @override
+  String danmakuOffsetDelay(String time) {
+    return '延后 $time';
+  }
+
+  @override
+  String danmakuOffsetAdvance(String time) {
+    return '提前 $time';
+  }
+
+  @override
+  String get playerAudioFallbackNoTrack => '当前音轨无法播放，且没有其它可切换的音轨';
+
+  @override
+  String playerAudioFallbackSwitched(String name) {
+    return '当前音轨无法播放，已自动切换到「$name」';
+  }
+
+  @override
+  String playerDiagnosticsDuration(String minutes, String seconds) {
+    return '$minutes 分 $seconds 秒';
+  }
+
+  @override
+  String playerDiagnosticsAvsyncAudioAhead(String value) {
+    return '$value 音频超前';
+  }
+
+  @override
+  String playerDiagnosticsAvsyncVideoAhead(String value) {
+    return '$value 视频超前';
+  }
+
+  @override
+  String playerDiagnosticsWarnDroppedFrames(int dropped) {
+    return '已丢帧 $dropped 帧：渲染跟不上，可尝试降超分档位或改硬解';
+  }
+
+  @override
+  String get playerDiagnosticsWarnSoftwareDecode =>
+      '当前为软解（CPU 解码）：高码率/高分辨率可能掉帧发热';
+
+  @override
+  String playerDiagnosticsWarnAvsync(String value) {
+    return '音画不同步：$value';
+  }
+
+  @override
+  String get cacheCategoryListThumbs => '视频列表封面缩略图';
+
+  @override
+  String get cacheCategoryNetworkDanmaku => '网络弹幕缓存';
+
+  @override
+  String get cacheCategoryBiliCovers => '哔哩封面缓存';
+
+  @override
+  String get cacheCategoryOther => '其他缓存';
+
+  @override
+  String get updateNoNotes => '暂无更新说明';
+
+  @override
+  String get buildInfoNoRevision => '本次构建未注入提交哈希（需用 tools/ 里的构建脚本编译）';
+
+  @override
+  String buildInfoCopied(String revision) {
+    return '已复制 $revision';
+  }
+
+  @override
+  String buildInfoCopiedDirty(String revision) {
+    return '已复制 $revision（工作区有未提交改动）';
+  }
+
+  @override
+  String get castDeviceOffline => '设备已离线';
+
+  @override
+  String get castNoLanIpv4 => '未找到局域网 IPv4 地址';
+
+  @override
+  String get castFileMissing => '文件不存在';
+
+  @override
+  String get dolbyVisionHintTitle => '杜比视界视频';
+
+  @override
+  String get dolbyVisionHintBody =>
+      '该视频为杜比视界（Dolby Vision）编码。\n若画面发绿/发紫，请在「播放设置 → 解码」启用 GPU-next 渲染并切换软解；\n若仍无法解决，则该设备可能不支持杜比视界播放。';
+
+  @override
+  String playerNetworkDanmakuLoadedManual(
+    String anime,
+    String episode,
+    String server,
+  ) {
+    return '$anime · $episode（$server）';
+  }
+
+  @override
+  String playerNetworkDanmakuLoadedAuto(
+    String anime,
+    String episode,
+    String server,
+  ) {
+    return '$anime $episode（$server）';
+  }
+
+  @override
+  String get playerDanmakuLocateNoEpisode => '未能从文件名识别集数，可用上方输入框直接跳转';
+
+  @override
+  String playerDanmakuLocateEpisodeMissing(String number) {
+    return '未找到第 $number 集，可用上方输入框直接跳转';
+  }
 }

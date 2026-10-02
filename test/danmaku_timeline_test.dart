@@ -1,8 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moumou/l10n/app_localizations_zh.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/utils/danmaku_timeline.dart';
 
 /// 弹幕时间轴纯函数测试：同秒多条弹幕的 1 秒内错峰延迟 + 时间轴偏移。
 void main() {
+  // 偏移展示文案已搬到 UI 层（label_maps）：测试用中文夹具取文案
+  final l10n = AppLocalizationsZh();
+
   group('staggerDelayMilliseconds（同秒错峰）', () {
     test('总数 <= 0 → 0', () {
       expect(staggerDelayMilliseconds(index: 0, total: 0), 0);
@@ -53,19 +58,19 @@ void main() {
     });
   });
 
-  group('formatDanmakuTimeOffset（偏移展示）', () {
+  group('formatDanmakuOffsetDuration / danmakuOffsetText（偏移展示）', () {
     test('0 → 无偏移', () {
-      expect(formatDanmakuTimeOffset(0), '无偏移');
+      expect(danmakuOffsetText(l10n, 0), '无偏移');
     });
 
     test('正 → 延后 MM:SS', () {
-      expect(formatDanmakuTimeOffset(45), '延后 00:45');
-      expect(formatDanmakuTimeOffset(125), '延后 02:05');
+      expect(danmakuOffsetText(l10n, 45), '延后 00:45');
+      expect(danmakuOffsetText(l10n, 125), '延后 02:05');
     });
 
     test('负 → 提前 MM:SS', () {
-      expect(formatDanmakuTimeOffset(-45), '提前 00:45');
-      expect(formatDanmakuTimeOffset(-125), '提前 02:05');
+      expect(danmakuOffsetText(l10n, -45), '提前 00:45');
+      expect(danmakuOffsetText(l10n, -125), '提前 02:05');
     });
   });
 }

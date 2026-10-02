@@ -21,14 +21,11 @@ Duration sourceDanmakuPosition(Duration playbackPosition, double offsetSeconds) 
   return Duration(milliseconds: sourceMs);
 }
 
-/// 时间轴偏移的展示文本：0 → 「无偏移」，正 → 「延后 MM:SS」，
-/// 负 → 「提前 MM:SS」（对齐 Kazumi `formatDanmakuTimeOffset`）。
-String formatDanmakuTimeOffset(double value) {
-  if (value == 0) return '无偏移';
-  return '${value > 0 ? '延后' : '提前'} ${_formatOffsetDuration(value)}';
-}
-
-String _formatOffsetDuration(double value) {
+/// 时间轴偏移时长的 ASCII 文本（`MM:SS`）。
+///
+/// 偏移的**方向与整句**属界面文案，在 UI 层拼：见
+/// `label_maps.danmakuOffsetText`（0 → 无偏移，正 → 延后，负 → 提前）。
+String formatDanmakuOffsetDuration(double value) {
   final total = value.abs().round();
   final minutes = total ~/ 60;
   final seconds = total % 60;

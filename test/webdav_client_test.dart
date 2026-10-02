@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/models/network_connection.dart';
 import 'package:moumou/services/network/network_client.dart';
 import 'package:moumou/services/network/webdav_client.dart';
+import 'package:moumou/utils/error_codes.dart';
 
 const _multistatus =
     '<?xml version="1.0" encoding="utf-8"?>'
@@ -84,9 +85,9 @@ void main() {
       client.openStream('/movie.mp4', offset: 1024),
       throwsA(
         isA<NetworkClientException>().having(
-          (e) => e.message,
-          'message',
-          contains('忽略了分段请求'),
+          (e) => e.code,
+          'code',
+          NetworkErrorCode.webdavRangeIgnored,
         ),
       ),
     );
@@ -114,11 +115,13 @@ void main() {
     await expectLater(
       client.openStream('/movie.mp4'),
       throwsA(
-        isA<NetworkClientException>().having(
-          (e) => e.message,
-          'message',
-          contains('HTTP 404'),
-        ),
+        isA<NetworkClientException>()
+            .having(
+              (e) => e.code,
+              'code',
+              NetworkErrorCode.webdavDownloadFailed,
+            )
+            .having((e) => e.args['status'], 'status', '404'),
       ),
     );
     await client.disconnect();
@@ -149,9 +152,9 @@ void main() {
       client.openStream('/movie.mp4', offset: 1024),
       throwsA(
         isA<NetworkClientException>().having(
-          (e) => e.message,
-          'message',
-          contains('分段起点'),
+          (e) => e.code,
+          'code',
+          NetworkErrorCode.webdavRangeStartMismatch,
         ),
       ),
     );
@@ -170,9 +173,9 @@ void main() {
       client.connect(),
       throwsA(
         isA<NetworkClientException>().having(
-          (e) => e.message,
-          'message',
-          contains('超时'),
+          (e) => e.code,
+          'code',
+          NetworkErrorCode.connectTimeout,
         ),
       ),
     );
@@ -207,9 +210,9 @@ void main() {
       client.connect(),
       throwsA(
         isA<NetworkClientException>().having(
-          (e) => e.message,
-          'message',
-          contains('目录过大'),
+          (e) => e.code,
+          'code',
+          NetworkErrorCode.webdavDirectoryTooLarge,
         ),
       ),
     );

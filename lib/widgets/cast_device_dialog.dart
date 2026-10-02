@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/models/cast_device.dart';
 import 'package:moumou/services/cast/cast_service.dart';
 import 'package:moumou/services/cast/lan_media_server.dart';
@@ -97,7 +98,7 @@ class _CastDeviceDialogState extends State<CastDeviceDialog> {
     } catch (e) {
       // 投屏失败：释放刚启动的服务器端口（无人拉流）
       await LanMediaServer.instance.stop();
-      if (mounted) _toast(l10n.castFailed('$e'));
+      if (mounted) _toast(l10n.castFailed(serviceErrorText(l10n, e)));
     } finally {
       if (mounted) setState(() => _casting = null);
     }

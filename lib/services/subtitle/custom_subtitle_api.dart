@@ -15,15 +15,21 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
 import 'package:moumou/models/subtitle_entry.dart';
 import 'package:moumou/utils/custom_subtitle_parser.dart';
+import 'package:moumou/utils/error_codes.dart';
 import 'package:moumou/utils/retry_policy.dart';
 
 /// 自定义源请求失败（地址非法 / 网络错误 / 非 2xx / 解析失败统一抛出）
 class CustomSubtitleApiException implements Exception {
-  final String message;
-  const CustomSubtitleApiException(this.message);
+  /// 错误码
+  final CustomSubtitleApiErrorCode code;
+
+  /// 参数（键名与 ARB placeholder 一致：`status` / `received` / `max` / `error` / `reason`）
+  final Map<String, Object?> args;
+
+  const CustomSubtitleApiException(this.code, {this.args = const {}});
 
   @override
-  String toString() => 'CustomSubtitleApiException: $message';
+  String toString() => 'CustomSubtitleApiException(${code.name})';
 }
 
 class CustomSubtitleApi {
@@ -60,7 +66,7 @@ class CustomSubtitleApi {
     final schemeOk = uri != null && (uri.isScheme('http') || uri.isScheme('https'));
     if (url.isEmpty || !schemeOk) {
       throw const CustomSubtitleApiException(
-        '自定义字幕地址无效（需要 http/https 地址）',
+        CustomSubtitleApiErrorCode.urlInvalid,
       );
     }
 
@@ -74,11 +80,17 @@ class CustomSubtitleApi {
         onRetry: _logRetry,
       );
     } catch (e) {
-      throw CustomSubtitleApiException('网络请求失败: $e');
+      throw CustomSubtitleApiException(
+        CustomSubtitleApiErrorCode.networkFailed,
+        args: {'error': '$e'},
+      );
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       await drainStreamCapped(response.stream).catchError((Object _) {});
-      throw CustomSubtitleApiException('搜索失败（HTTP ${response.statusCode}）');
+      throw CustomSubtitleApiException(
+        CustomSubtitleApiErrorCode.searchHttpFailed,
+        args: {'status': '${response.statusCode}'},
+      );
     }
 
     final String text;
@@ -90,14 +102,21 @@ class CustomSubtitleApi {
       text = utf8.decode(bytes, allowMalformed: true);
     } on ResponseTooLargeException catch (e) {
       throw CustomSubtitleApiException(
-        '响应异常（已读 ${e.receivedBytes} 字节，超过 ${e.maxBytes} 上限）',
+        CustomSubtitleApiErrorCode.responseTooLarge,
+        args: {
+          'received': '${e.receivedBytes}',
+          'max': '${e.maxBytes}',
+        },
       );
     }
 
     try {
       return parseCustomSubtitleResponse(text);
     } on CustomSubtitleParseException catch (e) {
-      throw CustomSubtitleApiException('无法解析该地址的响应：${e.message}');
+      throw CustomSubtitleApiException(
+        CustomSubtitleApiErrorCode.responseUnparsable,
+        args: {'reason': e.code},
+      );
     }
   }
 
@@ -113,16 +132,25 @@ class CustomSubtitleApi {
         onRetry: _logRetry,
       );
     } catch (e) {
-      throw CustomSubtitleApiException('下载失败: $e');
+      throw CustomSubtitleApiException(
+        CustomSubtitleApiErrorCode.downloadFailed,
+        args: {'error': '$e'},
+      );
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       await drainStreamCapped(response.stream).catchError((Object _) {});
-      throw CustomSubtitleApiException('下载失败（HTTP ${response.statusCode}）');
+      throw CustomSubtitleApiException(
+        CustomSubtitleApiErrorCode.downloadHttpFailed,
+        args: {'status': '${response.statusCode}'},
+      );
     }
     try {
       return await readBodyCapped(response, maxBytes: kMaxDownloadBytes);
     } on ResponseTooLargeException catch (e) {
-      throw CustomSubtitleApiException('下载失败：文件过大（${e.receivedBytes} 字节）');
+      throw CustomSubtitleApiException(
+        CustomSubtitleApiErrorCode.downloadTooLarge,
+        args: {'received': '${e.receivedBytes}'},
+      );
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/network_connection.dart';
 import 'package:moumou/models/network_file.dart';
@@ -16,6 +17,7 @@ import 'package:moumou/utils/async_session.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/network_entry_filter.dart';
 import 'package:moumou/utils/network_mime_types.dart';
+import 'package:moumou/utils/network_path.dart';
 import 'package:moumou/utils/network_sort.dart';
 import 'package:moumou/widgets/app_frame.dart';
 import 'package:moumou/widgets/folder_card.dart';
@@ -154,8 +156,8 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
       if (!mounted || !_loadSession.isCurrent(session)) return;
       final l10n = AppLocalizations.of(context);
       setState(() {
-        _error = e is NetworkClientException
-            ? e.message
+        _error = e is NetworkClientException || e is NetworkPathException
+            ? serviceErrorText(l10n, e)
             : l10n.commonConnectFailed('$e');
         _loading = false;
       });

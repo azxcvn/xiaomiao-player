@@ -27,6 +27,12 @@ import 'package:moumou/utils/dandan_comment.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+/// 单台服务器的失败原因（服务器名 + 服务层错误对象）。
+///
+/// 服务层不出文案：UI 侧用 `'$serverName'`（为空 = 默认服务器，取
+/// `l10n.danmakuServerDefaultName`）拼 `serviceErrorText(l10n, error)`。
+typedef DanmakuServerFailure = ({String serverName, Object error});
+
 /// 搜索结果条目（番剧 + 来源服务器；去重开启时按 animeId 跨服务器先到先得）。
 class DanmakuSearchItem {
   final DandanAnime anime;
@@ -34,7 +40,8 @@ class DanmakuSearchItem {
   /// 来源服务器地址；null = 默认弹弹Play 服务器
   final String? serverUrl;
 
-  /// 来源服务器名称（搜索结果胶囊标签展示）
+  /// 来源服务器名称；**空串 = 默认弹弹Play 服务器**（显示名由 UI 侧取 l10n
+  /// `danmakuServerDefaultName`，服务层不产出文案）
   final String serverName;
 
   const DanmakuSearchItem({
@@ -51,6 +58,7 @@ class DanmakuSearchItem {
 /// 集数**更多**，面板应当用它对同 animeId 的旧卡就地覆盖（见 [searchStream]）。
 /// [error] 为该服务器失败原因（成功为 null）；与 [items]/[upgrades] 不同时非空。
 class DanmakuServerSearchOutcome {
+  /// 服务器名；**空串 = 默认弹弹Play 服务器**（显示名由 UI 侧取 l10n）
   final String serverName;
 
   /// 来源服务器地址；null = 默认弹弹Play 服务器
@@ -58,7 +66,9 @@ class DanmakuServerSearchOutcome {
 
   final List<DanmakuSearchItem> items;
   final List<DanmakuSearchItem> upgrades;
-  final String? error;
+
+  /// 该服务器失败原因（服务层异常对象，文案由 UI 层翻译）；成功为 null
+  final Object? error;
 
   const DanmakuServerSearchOutcome({
     required this.serverName,
@@ -72,7 +82,9 @@ class DanmakuServerSearchOutcome {
 /// 搜索合并结果（空结果时 [errors] 记录各服务器失败原因，供 UI 提示）。
 class DanmakuSearchResult {
   final List<DanmakuSearchItem> items;
-  final List<String> errors;
+
+  /// 各服务器失败原因（服务器名 + 异常对象；文案由 UI 层翻译）
+  final List<DanmakuServerFailure> errors;
 
   const DanmakuSearchResult({required this.items, required this.errors});
 }
@@ -150,6 +162,8 @@ class DanmakuNetworkService {
     }
     for (final server in servers) {
       final serverUrl = server.isDefault ? null : server.url;
+      // 默认服务器的显示名由 UI 层取 l10n，服务层一律给空串
+      final serverName = server.isDefault ? '' : server.name;
       try {
         final animes = await _api.searchAnime(keyword, baseUrl: serverUrl);
         final items = <DanmakuSearchItem>[];
@@ -158,7 +172,7 @@ class DanmakuNetworkService {
           final item = DanmakuSearchItem(
             anime: anime,
             serverUrl: serverUrl,
-            serverName: server.name,
+            serverName: serverName,
           );
           if (!dedupe) {
             items.add(item);
@@ -176,16 +190,16 @@ class DanmakuNetworkService {
           }
         }
         yield DanmakuServerSearchOutcome(
-          serverName: server.name,
+          serverName: serverName,
           serverUrl: serverUrl,
           items: items,
           upgrades: upgrades,
         );
       } catch (e) {
         yield DanmakuServerSearchOutcome(
-          serverName: server.name,
+          serverName: serverName,
           serverUrl: serverUrl,
-          error: '${server.name}: ${e is DandanApiException ? e.message : e}',
+          error: e,
         );
       }
     }
@@ -200,7 +214,7 @@ class DanmakuNetworkService {
     final items = <DanmakuSearchItem>[];
     // animeId → 在 items 中的下标（替换事件按它就地覆盖）
     final positionOf = <int, int>{};
-    final errors = <String>[];
+    final errors = <DanmakuServerFailure>[];
     await for (final outcome in searchStream(keyword)) {
       for (final item in outcome.items) {
         positionOf[item.anime.animeId] = items.length;
@@ -211,7 +225,9 @@ class DanmakuNetworkService {
         if (at != null) items[at] = upgraded;
       }
       final error = outcome.error;
-      if (error != null) errors.add(error);
+      if (error != null) {
+        errors.add((serverName: outcome.serverName, error: error));
+      }
     }
     return DanmakuSearchResult(items: items, errors: errors);
   }
