@@ -38,6 +38,7 @@
 | 状态管理 | `ChangeNotifier` + `ListenableBuilder`（`Listenable.merge`）；持久化用 `shared_preferences`，密钥类用 `flutter_secure_storage` |
 | 弹幕渲染 | `canvas_danmaku` |
 | 主题 | `flex_seed_scheme`（Material 3 色板派生） |
+| 多语言 | 官方 `gen_l10n`（配置在仓库根 `l10n.yaml`，模板 `lib/l10n/app_zh.arb`）：`简体中文` / `English` 两种语言，默认简体中文，生成物入库；详见 §5.11 |
 | 网络 | `http`（纯 Dart）+ `smb_connect`（本地 fork） |
 | 原生 | Kotlin（`android/app/src/main/kotlin/com/azxcvn/moumou/`）：MethodChannel `moumou/video_info` + 前台服务 + 崩溃处理 |
 | 依赖清单 | 见 `pubspec.yaml` |
@@ -50,6 +51,15 @@
 ```
 lib/
 ├── main.dart                  # 入口：主题装配 + AppFrame + 路由观察者 + 崩溃日志钩子
+├── l10n/                      # 多语言（官方 gen_l10n；配置在仓库根 l10n.yaml）
+│   ├── app_zh.arb             # 中文模板：键 / 描述 / 占位符的唯一权威（源语言）
+│   ├── app_en.arb             # 英文（缺键由 untranslated-messages-file 兜住）
+│   ├── app_localizations.dart # gen_l10n 生成物（另有 _zh / _en，入库，避免忘了生成导致 analyze 报错）
+│   ├── label_maps.dart        # 表（枚举 / 映射表）→ 文案 的 UI 侧映射
+│   ├── error_texts.dart       # 服务层「码 + 参数」→ 文案 + 统一入口 serviceErrorText
+│   ├── legal.dart             # 长文正文按语言取（legalTextsFor，未知语言回落中文）
+│   ├── legal_zh.dart          # 隐私政策 / 用户服务协议中文正文（源文，不进 ARB）
+│   └── legal_en.dart          # 同上英文（改中文条款必须同步改这里）
 ├── models/                    # 纯数据模型（无逻辑、无依赖）
 │   ├── tree_node.dart         # 目录树节点（folder/video）
 │   ├── video_file.dart        # 视频文件信息 + 来源枚举（本地 / 网络连接）
@@ -124,8 +134,8 @@ lib/
 │   ├── danmaku_search_history.dart  # 网络弹幕搜索历史（去重/上限淘汰/一键清除）
 │   ├── danmaku_auto_match_cache_store.dart # 弹幕自动匹配缓存存储
 │   ├── danmaku_network_service.dart # 弹幕网络服务（搜索合并/文件匹配/下载落盘 + 文件前 16MB MD5）
-│   ├── privacy_policy_settings.dart # 隐私政策同意状态
-│   ├── privacy_policy_content.dart # 隐私政策与用户服务协议正文
+│   ├── app_locale_settings.dart # 语言偏好（键 app_locale，只允许 'zh' / 'en'，默认 zh）
+│   ├── privacy_policy_settings.dart # 隐私政策同意状态（长文正文见 lib/l10n/legal_zh.dart / legal_en.dart）
 │   ├── network/                    # 网络存储（WebDAV / SMB / FTP）抽象层
 │   │   ├── network_client.dart     # NetworkClient 抽象接口（connect/listFiles/getFileSize/openStream/disconnect）
 │   │   ├── network_client_factory.dart # 按协议创建客户端
@@ -190,7 +200,9 @@ lib/
 │   ├── directory_picker_dialog.dart # 目录选择器弹窗（返回真实路径 + 存储卷跳转）
 │   ├── storage_root_selector.dart # 存储卷跳转胶囊行（内部存储 / SD 卡 / U 盘）
 │   ├── cast_device_dialog.dart # 投屏设备选择弹窗
-│   ├── privacy_policy_dialog.dart # 首次启动隐私门禁弹窗
+│   ├── dolby_vision_hint.dart # 杜比视界偏色检测 + 引导弹窗（UI 层：文案走 l10n）
+│   ├── language_picker_dialog.dart # 首启语言选择弹窗（隐私同意后弹一次，默认简体中文）
+│   ├── privacy_policy_dialog.dart # 首次启动隐私门禁弹窗（长文正文按语言取 lib/l10n/legal.dart）
 │   ├── update_dialog.dart       # 更新弹窗
 │   ├── file_operations_ui.dart  # 文件管理 UI（动作菜单/重命名/删除确认/传输进度）
 │   ├── folder_actions.dart      # 文件管理动作编排（单选 + 多选，四页面共用）
@@ -297,6 +309,7 @@ lib/
 │   └── theme_controller.dart  # 主题控制（模式/色/风格/自定义色/动态色标记 + 迁移）
 └── utils/                     # 纯工具函数
     ├── app_dialog.dart        # showAppDialog（统一弹窗动画）
+    ├── error_codes.dart       # 服务层错误码表（纯数据，无 Flutter / l10n 依赖）
     ├── anime4k_patch.dart     # Anime4K 着色器安装期优化纯函数
     ├── formatters.dart        # 大小/日期/时长/倍速/网速格式化 + 截图文件名 + 底栏时间文本
     ├── url_media.dart         # 在线直链纯函数（规范化补协议 / 协议白名单 / 标题提取）
@@ -308,7 +321,6 @@ lib/
     ├── playback_completion.dart # EOF 动作解析纯函数（优先级链）
     ├── playback_restore.dart  # 恢复进度：openAndRestore（暂停加载 → 静音激活时间线 → seek → 确认）
     ├── playback_history.dart  # 播放历史写入唯一入口
-    ├── dolby_vision_hint.dart # 杜比视界偏色检测 + 引导弹窗
     ├── pip_aspect.dart        # 画中画宽高比纯函数
     ├── player_gestures.dart   # 双击判定 + 滑动手势数学
     ├── player_diagnostics.dart # 播放诊断纯函数
@@ -375,6 +387,7 @@ utils（纯工具）    → 只依赖 models
 
 - `widgets/` 里的公共组件**禁止 import `pages/`**；页面专属小组件放 `pages/<页面>/views/`；
 - `services/` 不含 UI（不 import Flutter widget 层）；
+- **文案一律走 l10n**：`models/`、`utils/`（以及 `services/`）**禁止 import l10n**，只产出「码 + 参数」或纯数据；翻译在 UI 侧做（`lib/l10n/error_texts.dart`、`lib/l10n/label_maps.dart`）。日志（含崩溃日志文件内容）**永远保持中文**，不翻译；
 - 单文件超过 ~400 行应当考虑拆分；播放页主体与其 `views/` 面板组件为共享会话状态而保留较大体量。
 
 ---
@@ -463,8 +476,23 @@ utils（纯工具）    → 只依赖 models
 
 - **投屏**：`CastService` 通过 SSDP 发现 DLNA 渲染器并推送播放地址；`LanMediaServer` 提供局域网媒体服务（本地文件 → HTTP，支持 Range/CORS）。
 - **更新**：`UpdateService.checkForUpdate` 取本地版本与 GitHub Releases 最新版本比较（带网络重试与响应体积上限），`UpdateSettings` 记录自动检查开关与忽略版本。
-- **隐私**：`PrivacyPolicySettings` 首次启动门禁（倒计时 + 勾选同意），正文集中在 `privacy_policy_content`。
+- **隐私**：`PrivacyPolicySettings` 首次启动门禁（倒计时 + 勾选同意）；长文正文按语言拆在 `lib/l10n/legal_zh.dart` / `legal_en.dart`，入口是 `lib/l10n/legal.dart` 的 `legalTextsFor`（界面文案一律走 ARB，见 `杂项文件/多语言支持方案/`）。
 - **设备能力**：`DeviceCapabilities`（原生）探测屏幕 HDR、关键编解码器与系统解码器清单，配合设备信息页与解码器详情页；`decode_settings` 持久化解码方式与预设。
+
+### 5.11 多语言（l10n）
+
+- **方案**：官方 `gen_l10n` + ARB，配置在仓库根 `l10n.yaml`。模板是 `lib/l10n/app_zh.arb`（**中文是源语言**，键名 / 描述 / 占位符元数据的唯一权威），英文在 `app_en.arb`；`lib/l10n/app_localizations*.dart` 生成物**入库**（否则忘了生成就会 analyze 报 `undefined_getter`）。
+- **语言范围**：只有 `简体中文` / `English`，默认简体中文，**没有「跟随系统」**；`app_locale` 只允许 `'zh'` / `'en'`，缺省 / 空值 / 非法值一律回落 `'zh'`（`services/app_locale_settings.dart`）；设备语言不在支持列表时回落中文（`preferred-supported-locales: [zh]`）。
+- **入口**：首启同意隐私政策后弹一次语言选择窗（`widgets/language_picker_dialog.dart`，只对新装首启弹、升级老用户不弹，可关闭=保持中文）；之后在「我的 → 语言 → 语言设置」改，改完立即生效、无需重启。
+- **分层红线**（详见 §4）：`models/`、`utils/`、`services/` **禁止 import l10n**，只产出「码 + 参数」或纯数据；文案一律在 UI 侧取：
+  - 表（枚举 / 映射表）的标签：`lib/l10n/label_maps.dart`，`switch` 表达式按枚举穷尽，漏分支由 analyze 兜住；
+  - 服务层错误：`lib/utils/error_codes.dart`（纯数据错误码表）+ `lib/l10n/error_texts.dart`（码 → 文案，统一入口 `serviceErrorText`）；
+  - 无 context 层的整句（如播放诊断建议）：把拼句搬到 UI 侧映射函数里，服务 / 工具层只给数值与码。
+- **长文**（隐私政策 / 用户服务协议）：**不进 ARB**——按语言拆 `lib/l10n/legal_zh.dart` / `legal_en.dart`，入口 `lib/l10n/legal.dart` 的 `legalTextsFor(Locale)`；**改中文条款必须同步改英文**，`test/legal_texts_test.dart` 断言两版四段都非空、英文无残留汉字。
+- **不翻译的东西**：日志（含崩溃日志文件内容，原生侧同理）、第三方接口内容（番剧名 / 简介 / 弹幕 / 服务端 message）、内容匹配关键词（集数正则、字幕语言判定、章节关键词）、落盘文件名与截图文件名（`小喵Player-yyyy-…`）、系统相册名。
+- **改文案的固定流程**：改 `app_zh.arb` / `app_en.arb` → `flutter gen-l10n` → `flutter analyze` → 全量 `flutter test`；`l10n_untranslated.json` 必须为空（英文不许缺键）。
+- **Android 原生侧**：只有用户可见的文案进 `android/app/src/main/res/values/strings.xml`（中文默认）与 `values-en/strings.xml`；应用名固定 zh=`小喵Player` / en=`Meow Player`，`AndroidManifest.xml` 用 `@string/app_name`；通知渠道 ID `moumou_background_playback` **不许改**（改了会变成新渠道）。
+- 迁移方案、逐文件清单与残留扫描工具（本地保留、不入库）：`杂项文件/多语言支持方案/`；残留门禁 `python tools/i18n_scan.py residual [--include-android] [--fullwidth]`。
 
 ---
 
@@ -480,3 +508,5 @@ utils（纯工具）    → 只依赖 models
 | `CrashHandler.kt` | 未捕获异常写入 `files/crash_logs/` |
 
 原生与 Dart 的通道方法名、参数键保持一一对应，新增能力时两端同步。
+
+原生侧文案：**用户可见**的进 `res/values/strings.xml`（中文默认）与 `res/values-en/strings.xml`；日志与**崩溃日志文件内容**保持中文（与 Dart 侧同一口径，见 §5.11）。
