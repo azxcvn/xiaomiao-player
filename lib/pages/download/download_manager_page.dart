@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/services/download/download_manager.dart';
 import 'package:moumou/services/download/download_task.dart';
 import 'package:moumou/utils/app_dialog.dart';
@@ -18,19 +19,20 @@ class _DownloadManagerPageState extends State<DownloadManagerPage> {
   DownloadManager get _manager => DownloadManager.instance;
 
   Future<void> _confirmClearFinished() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('清除已完成'),
-        content: const Text('只清除已完成和失败的下载记录，不会删除已下载的文件。'),
+        title: Text(l10n.downloadClearFinished),
+        content: Text(l10n.downloadClearFinishedDesc),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('取消'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('清除'),
+            child: Text(l10n.commonClear),
           ),
         ],
       ),
@@ -42,14 +44,15 @@ class _DownloadManagerPageState extends State<DownloadManagerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('下载管理'),
+        title: Text(l10n.settingsDownloadManager),
         actions: [
           IconButton(
             onPressed: _confirmClearFinished,
             icon: const Icon(Icons.clear_all),
-            tooltip: '清除已完成',
+            tooltip: l10n.downloadClearFinished,
           ),
         ],
       ),
@@ -58,7 +61,7 @@ class _DownloadManagerPageState extends State<DownloadManagerPage> {
         builder: (context, _) {
           final tasks = _manager.tasks;
           if (tasks.isEmpty) {
-            return const Center(child: Text('暂无下载任务'));
+            return Center(child: Text(l10n.downloadNoTasks));
           }
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
@@ -77,6 +80,7 @@ class _TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     return Card(
       margin: const EdgeInsets.only(bottom: 6),
@@ -120,8 +124,8 @@ class _TaskCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 4),
-                _statusLabel(scheme),
-                _actions(scheme),
+                _statusLabel(scheme, l10n),
+                _actions(scheme, l10n),
               ],
             ),
             const SizedBox(height: 6),
@@ -130,7 +134,7 @@ class _TaskCard extends StatelessWidget {
                 Expanded(
                   child: task.status == DownloadStatus.failed
                       ? Text(
-                          task.error ?? '下载失败',
+                          task.error ?? l10n.downloadFailed,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontSize: 11, color: scheme.error),
@@ -169,14 +173,20 @@ class _TaskCard extends StatelessWidget {
     );
   }
 
-  Widget _statusLabel(ColorScheme scheme) {
+  Widget _statusLabel(ColorScheme scheme, AppLocalizations l10n) {
     final (text, color) = switch (task.status) {
-      DownloadStatus.completed => ('完成', Colors.green),
-      DownloadStatus.failed => ('失败', scheme.error),
-      DownloadStatus.paused => ('暂停', scheme.onSurfaceVariant),
-      DownloadStatus.merging => ('合并', scheme.tertiary),
-      DownloadStatus.downloading => ('下载中', scheme.primary),
-      DownloadStatus.pending => ('等待', scheme.onSurfaceVariant),
+      DownloadStatus.completed => (l10n.downloadStatusCompleted, Colors.green),
+      DownloadStatus.failed => (l10n.downloadStatusFailed, scheme.error),
+      DownloadStatus.paused => (l10n.commonPause, scheme.onSurfaceVariant),
+      DownloadStatus.merging => (l10n.downloadStatusMerging, scheme.tertiary),
+      DownloadStatus.downloading => (
+        l10n.downloadStatusDownloading,
+        scheme.primary,
+      ),
+      DownloadStatus.pending => (
+        l10n.downloadStatusPending,
+        scheme.onSurfaceVariant,
+      ),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
@@ -209,20 +219,25 @@ class _TaskCard extends StatelessWidget {
     );
   }
 
-  Widget _actions(ColorScheme scheme) {
+  Widget _actions(ColorScheme scheme, AppLocalizations l10n) {
     final muted = scheme.onSurfaceVariant;
     switch (task.status) {
       case DownloadStatus.downloading:
         return _iconBtn(
           Icons.pause,
           muted,
-          '暂停',
+          l10n.commonPause,
           () => DownloadManager.instance.pause(task.id),
         );
       case DownloadStatus.merging:
         // 合并是一次原生调用、中途停不了：按钮置灰并说明原因，
         // 不给「按了没反应、随后自己变完成」的错觉（P2-33）
-        return _iconBtn(Icons.pause, muted, '合并中，无法暂停', null);
+        return _iconBtn(
+          Icons.pause,
+          muted,
+          l10n.downloadMergingCannotPause,
+          null,
+        );
       case DownloadStatus.paused:
         return Row(
           mainAxisSize: MainAxisSize.min,
@@ -230,13 +245,13 @@ class _TaskCard extends StatelessWidget {
             _iconBtn(
               Icons.play_arrow,
               scheme.primary,
-              '继续',
+              l10n.commonResume,
               () => DownloadManager.instance.resume(task.id),
             ),
             _iconBtn(
               Icons.delete_outline,
               muted,
-              '删除',
+              l10n.commonDelete,
               () => DownloadManager.instance.remove(task.id),
             ),
           ],
@@ -248,13 +263,13 @@ class _TaskCard extends StatelessWidget {
             _iconBtn(
               Icons.refresh,
               scheme.primary,
-              '重试',
+              l10n.commonRetry,
               () => DownloadManager.instance.retry(task.id),
             ),
             _iconBtn(
               Icons.delete_outline,
               muted,
-              '删除',
+              l10n.commonDelete,
               () => DownloadManager.instance.remove(task.id),
             ),
           ],
@@ -264,7 +279,7 @@ class _TaskCard extends StatelessWidget {
         return _iconBtn(
           Icons.delete_outline,
           muted,
-          '删除',
+          l10n.commonDelete,
           () => DownloadManager.instance.remove(task.id),
         );
     }

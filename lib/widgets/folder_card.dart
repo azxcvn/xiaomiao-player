@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/tree_node.dart';
 import 'package:moumou/services/view_settings.dart';
 import 'package:moumou/utils/formatters.dart';
@@ -45,6 +46,7 @@ class FolderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Card(
       elevation: 0,
       color: selected
@@ -101,7 +103,7 @@ class FolderCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 6),
-                    ..._buildFields(scheme),
+                    ..._buildFields(l10n, scheme),
                   ],
                 ),
               ),
@@ -115,7 +117,7 @@ class FolderCard extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildFields(ColorScheme scheme) {
+  List<Widget> _buildFields(AppLocalizations l10n, ColorScheme scheme) {
     final widgets = <Widget>[];
 
     // 路径：单独一行（完整显示，不省略；长路径自动换行）
@@ -130,7 +132,7 @@ class FolderCard extends StatelessWidget {
         _fieldTag(
           scheme,
           Icons.video_library_outlined,
-          '${node.videoCount} 个视频',
+          l10n.folderVideoCount(node.videoCount),
         ),
       );
     }

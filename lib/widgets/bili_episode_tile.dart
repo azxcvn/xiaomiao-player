@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/bili_bangumi.dart';
 
 /// 番剧单集磁贴（2 列网格用）：集号 + 集名 + 右侧胶囊角标（会员/限免/预告）。
@@ -12,9 +13,10 @@ class BiliEpisodeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     final title = episode.title.isNotEmpty
         ? episode.title
-        : (episode.epId > 0 ? '第 ${episode.epId} 话' : '');
+        : (episode.epId > 0 ? l10n.biliEpisodeNo(episode.epId) : '');
     final name = _episodeName();
     return Material(
       color: scheme.surfaceContainerLow,
@@ -72,10 +74,13 @@ class BiliEpisodeTile extends StatelessWidget {
 
   /// 胶囊角标：会员→粉色 VIP、限免→绿、预告→灰（浅色底 + 同色文字）。
   Widget _badge(BuildContext context, String badge) {
+    final l10n = AppLocalizations.of(context);
+    // switch 的匹配键是 B 站接口返回的角标原值（数据，不是 UI 文案），
+    // 属不可翻译清单，保持中文；只把显示文案换成 l10n。
     final (Color color, String text) = switch (badge) {
       '会员' => (const Color(0xFFFB7299), 'VIP'),
-      '限免' => (const Color(0xFF2E9E5B), '限免'),
-      '预告' => (Colors.grey, '预告'),
+      '限免' => (const Color(0xFF2E9E5B), l10n.playerBiliFreeLimited),
+      '预告' => (Colors.grey, l10n.playerBiliPreview),
       _ => (Colors.grey, badge),
     };
     return Container(

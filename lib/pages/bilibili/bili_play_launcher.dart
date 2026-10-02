@@ -9,6 +9,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/models/bili_dash.dart';
 import 'package:moumou/models/bili_media.dart';
@@ -41,9 +42,10 @@ Future<void> playBiliEpisode(
     final resolvedPlaylist = await playlistFuture;
     if (!context.mounted) return;
     _dismissLoading(context);
+    final l10n = AppLocalizations.of(context);
     if (media.playUrl.defaultVideo == null ||
         media.playUrl.defaultAudio == null) {
-      _toast(context, '解析播放地址失败');
+      _toast(context, l10n.playerResolveUrlFailed);
       return;
     }
     await Navigator.of(context).push(MaterialPageRoute(
@@ -57,7 +59,8 @@ Future<void> playBiliEpisode(
   } catch (e) {
     if (context.mounted) {
       _dismissLoading(context);
-      _toast(context, '播放失败：${_errText(e)}');
+      final l10n = AppLocalizations.of(context);
+      _toast(context, l10n.biliPlayFailed(_errText(e)));
     }
   }
 }
@@ -99,12 +102,13 @@ Future<void> playBiliUgc(
     );
     if (!context.mounted) return;
     _dismissLoading(context);
+    final l10n = AppLocalizations.of(context);
     if (playUrl.defaultVideo == null || playUrl.defaultAudio == null) {
-      _toast(context, '解析播放地址失败');
+      _toast(context, l10n.playerResolveUrlFailed);
       return;
     }
-    final title = _ugcTitle(video);
-    final media = _buildUgcMedia(service, video, playUrl);
+    final title = _ugcTitle(video, l10n);
+    final media = _buildUgcMedia(service, video, playUrl, l10n);
     await Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => PlayerPage(
         path: playUrl.defaultVideo!.baseUrl,
@@ -115,7 +119,8 @@ Future<void> playBiliUgc(
   } catch (e) {
     if (context.mounted) {
       _dismissLoading(context);
-      _toast(context, '播放失败：${_errText(e)}');
+      final l10n = AppLocalizations.of(context);
+      _toast(context, l10n.biliPlayFailed(_errText(e)));
     }
   }
 }
@@ -134,21 +139,22 @@ int? _aidFor(BiliUgcVideo video, {required int fallback}) {
 }
 
 /// 播放页标题：真实标题优先，其次 BV 号，最后 av 号。
-String _ugcTitle(BiliUgcVideo video) {
+String _ugcTitle(BiliUgcVideo video, AppLocalizations l10n) {
   if (video.title.isNotEmpty) return video.title;
   if (video.bvid.isNotEmpty) return video.bvid;
-  return video.aid > 0 ? 'av${video.aid}' : 'B 站视频';
+  return video.aid > 0 ? 'av${video.aid}' : l10n.biliVideoFallbackTitle;
 }
 
 BiliMedia _buildUgcMedia(
   BiliVideoService service,
   BiliUgcVideo video,
   BiliPlayUrlResult playUrl,
+  AppLocalizations l10n,
 ) {
   return BiliMedia(
     cid: video.cid,
     aid: video.aid,
-    title: _ugcTitle(video),
+    title: _ugcTitle(video, l10n),
     playUrl: playUrl,
     switchQuality: (qn) async => _buildUgcMedia(
       service,
@@ -159,6 +165,7 @@ BiliMedia _buildUgcMedia(
         cid: video.cid,
         qn: qn,
       ),
+      l10n,
     ),
   );
 }

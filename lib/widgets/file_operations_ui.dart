@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/services/file_operations_service.dart';
 import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/utils/file_ops.dart';
@@ -40,6 +41,7 @@ Future<FileAction?> showFileActionMenu(
   int selectionCount = 0,
 }) {
   final scheme = Theme.of(context).colorScheme;
+  final l10n = AppLocalizations.of(context);
   final multi = selectionCount > 0;
   return showModalBottomSheet<FileAction>(
     context: context,
@@ -54,20 +56,22 @@ Future<FileAction?> showFileActionMenu(
           children: [
             if (isDirectory)
               _tile(context, scheme, isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-                  isPinned ? '取消固定' : '固定', FileAction.pin),
-            _tile(context, scheme, Icons.copy_all_outlined, '复制', FileAction.copy),
-            _tile(context, scheme, Icons.drive_file_move_outline, '移动',
+                  isPinned ? l10n.fileOpUnpin : l10n.fileOpPin, FileAction.pin),
+            _tile(context, scheme, Icons.copy_all_outlined, l10n.commonCopy,
+                FileAction.copy),
+            _tile(context, scheme, Icons.drive_file_move_outline, l10n.commonMove,
                 FileAction.move),
             // 多选下重命名无意义（一次只能改一个名字）→ 整项撤掉，不留灰项
             if (!multi)
-              _tile(context, scheme, Icons.drive_file_rename_outline, '重命名',
-                  FileAction.rename),
-            _tile(context, scheme, Icons.delete_outline, '删除', FileAction.delete,
-                destructive: true),
+              _tile(context, scheme, Icons.drive_file_rename_outline,
+                  l10n.commonRename, FileAction.rename),
+            _tile(context, scheme, Icons.delete_outline, l10n.commonDelete,
+                FileAction.delete, destructive: true),
             // 「多选」是模式切换而不是对本条目的操作，用分隔线单列在最底部
             if (!multi) ...[
               const Divider(height: 1),
-              _tile(context, scheme, Icons.checklist, '多选', FileAction.multiSelect),
+              _tile(context, scheme, Icons.checklist, l10n.fileOpMultiSelect,
+                  FileAction.multiSelect),
             ],
           ],
         ),
@@ -170,8 +174,9 @@ class _RenameDialogState extends State<_RenameDialog> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
-      title: const Text('重命名'),
+      title: Text(l10n.commonRename),
       content: TextField(
         controller: _controller,
         autofocus: true,
@@ -179,9 +184,9 @@ class _RenameDialogState extends State<_RenameDialog> {
         onChanged: _onChanged,
         onSubmitted: (_) => _submit(),
         decoration: InputDecoration(
-          labelText: '新名称',
-          hintText: '扩展名之前的名称',
-          helperText: _lockedExt.isEmpty ? null : '扩展名固定为 $_lockedExt，不可修改',
+          labelText: l10n.fileOpNewName,
+          hintText: l10n.fileOpNameHint,
+          helperText: _lockedExt.isEmpty ? null : l10n.fileOpLockedExt(_lockedExt),
           helperStyle: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
           suffixText: _lockedExt.isEmpty ? null : _lockedExt,
           suffixStyle: const TextStyle(fontWeight: FontWeight.w600),
@@ -192,11 +197,11 @@ class _RenameDialogState extends State<_RenameDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: _error == null ? _submit : null,
-          child: const Text('确定'),
+          child: Text(l10n.commonConfirm),
         ),
       ],
     );
@@ -278,21 +283,22 @@ class _DeleteConfirmDialogState extends State<_DeleteConfirmDialog> {
 
   /// 正文：单选沿用原来的两种说法；多选统一说「共 N 项」
   String get _message {
+    final l10n = AppLocalizations.of(context);
     if (widget.itemCount <= 1) {
       return widget.isDirectory
-          ? '仅删除该文件夹内的视频文件，其它文件不会被删除。'
-          : '确定删除「${widget.title}」吗？';
+          ? l10n.fileOpDeleteFolderVideosOnly
+          : l10n.settingsErrorLogDeleteConfirm(widget.title);
     }
-    if (!_hasFolder) return '确定删除选中的 ${widget.itemCount} 个视频吗？';
-    return '将删除选中的 ${widget.itemCount} 项：文件夹只删除里面的视频文件，'
-        '其它文件不会被删除。';
+    if (!_hasFolder) return l10n.fileOpDeleteSelectedVideos(widget.itemCount);
+    return l10n.fileOpDeleteSelectedMixed(widget.itemCount);
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
-      title: const Text('删除'),
+      title: Text(l10n.commonDelete),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,7 +310,7 @@ class _DeleteConfirmDialogState extends State<_DeleteConfirmDialog> {
               onChanged: (v) => setState(() => _deleteAll = v ?? false),
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
-              title: const Text('删除所有文件'),
+              title: Text(l10n.fileOpDeleteAllFiles),
             ),
         ],
       ),
@@ -313,7 +319,7 @@ class _DeleteConfirmDialogState extends State<_DeleteConfirmDialog> {
           onPressed: () => Navigator.of(context).pop(
             const DeleteConfirmResult(confirmed: false),
           ),
-          child: const Text('取消'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: scheme.error),
@@ -323,7 +329,7 @@ class _DeleteConfirmDialogState extends State<_DeleteConfirmDialog> {
               deleteAllFiles: _hasFolder && _deleteAll,
             ),
           ),
-          child: const Text('删除'),
+          child: Text(l10n.commonDelete),
         ),
       ],
     );
@@ -348,6 +354,7 @@ class FileOpProgressDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
       title: Text(title),
       content: ValueListenableBuilder<FileOpProgress>(
@@ -362,14 +369,16 @@ class FileOpProgressDialog extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                value.currentName.isEmpty ? '准备中…' : value.currentName,
+                value.currentName.isEmpty
+                    ? l10n.fileOpPreparing
+                    : value.currentName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 13),
               ),
               const SizedBox(height: 4),
               Text(
-                _describe(value),
+                _describe(l10n, value),
                 style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
               ),
             ],
@@ -377,27 +386,30 @@ class FileOpProgressDialog extends StatelessWidget {
         },
       ),
       actions: [
-        TextButton(onPressed: onCancel, child: const Text('取消')),
+        TextButton(onPressed: onCancel, child: Text(l10n.commonCancel)),
       ],
     );
   }
 
   /// 进度描述。`itemsTotal > 1` 时前缀「第 i/N 项」——多选批量传输时，
   /// 进度条每换一项都会从 0 重来，这条文案负责告诉用户「整批做到哪了」。
-  static String _describe(FileOpProgress p) {
+  static String _describe(AppLocalizations l10n, FileOpProgress p) {
     final parts = <String>[];
     if (p.itemsTotal > 1) {
       final current = (p.itemsDone + 1).clamp(1, p.itemsTotal);
-      parts.add('第 $current/${p.itemsTotal} 项');
+      parts.add(l10n.fileOpProgressItem(current, p.itemsTotal));
     }
     if (p.bytesTotal > 0) {
       parts.add(
-        '${formatFileSize(p.bytesDone)} / ${formatFileSize(p.bytesTotal)}'
-        '（${(p.fraction * 100).toStringAsFixed(0)}%）',
+        l10n.fileOpBytesProgress(
+          formatFileSize(p.bytesDone),
+          formatFileSize(p.bytesTotal),
+          (p.fraction * 100).toStringAsFixed(0),
+        ),
       );
     } else if (p.itemsTotal == 1) {
-      parts.add('${p.itemsDone} / ${p.itemsTotal} 项');
+      parts.add(l10n.fileOpProgressItems(p.itemsDone, p.itemsTotal));
     }
-    return parts.isEmpty ? '处理中…' : parts.join(' · ');
+    return parts.isEmpty ? l10n.fileOpProcessing : parts.join(' · ');
   }
 }

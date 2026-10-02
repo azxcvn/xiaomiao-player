@@ -4927,6 +4927,1999 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'字体更改需退出播放器并重新进入后生效；内嵌 ASS 字幕需开启「强制覆盖内嵌样式」后字体设置才会生效。'**
   String get playerFontChangeHintFull;
+
+  /// 通用按钮：复制（文件操作 / 媒体信息）
+  ///
+  /// In zh, this message translates to:
+  /// **'复制'**
+  String get commonCopy;
+
+  /// 通用按钮：粘贴（打开链接弹窗）
+  ///
+  /// In zh, this message translates to:
+  /// **'粘贴'**
+  String get commonPaste;
+
+  /// 通用：未知（值缺失时的兜底）
+  ///
+  /// In zh, this message translates to:
+  /// **'未知'**
+  String get commonUnknown;
+
+  /// 通用：已保存（副标题状态）
+  ///
+  /// In zh, this message translates to:
+  /// **'已保存'**
+  String get commonSaved;
+
+  /// 通用按钮：展开
+  ///
+  /// In zh, this message translates to:
+  /// **'展开'**
+  String get commonExpand;
+
+  /// 通用按钮：收起
+  ///
+  /// In zh, this message translates to:
+  /// **'收起'**
+  String get commonCollapse;
+
+  /// 通用：全选（勾选栏）
+  ///
+  /// In zh, this message translates to:
+  /// **'全选'**
+  String get commonSelectAll;
+
+  /// 通用：取消全选
+  ///
+  /// In zh, this message translates to:
+  /// **'取消全选'**
+  String get commonDeselectAll;
+
+  /// 通用按钮：测试
+  ///
+  /// In zh, this message translates to:
+  /// **'测试'**
+  String get commonTest;
+
+  /// 通用按钮：测试连接（网络账户 / 字幕来源）
+  ///
+  /// In zh, this message translates to:
+  /// **'测试连接'**
+  String get commonTestConnection;
+
+  /// 通用：测试中
+  ///
+  /// In zh, this message translates to:
+  /// **'测试中…'**
+  String get commonTesting;
+
+  /// 通用：保存中
+  ///
+  /// In zh, this message translates to:
+  /// **'保存中…'**
+  String get commonSaving;
+
+  /// 通用动作：移动（文件操作菜单）
+  ///
+  /// In zh, this message translates to:
+  /// **'移动'**
+  String get commonMove;
+
+  /// 通用动作：重命名
+  ///
+  /// In zh, this message translates to:
+  /// **'重命名'**
+  String get commonRename;
+
+  /// 通用动作：继续（下载任务）
+  ///
+  /// In zh, this message translates to:
+  /// **'继续'**
+  String get commonResume;
+
+  /// 通用：正序（选集顺序）
+  ///
+  /// In zh, this message translates to:
+  /// **'正序'**
+  String get commonOrderAsc;
+
+  /// 通用：倒序（选集顺序）
+  ///
+  /// In zh, this message translates to:
+  /// **'倒序'**
+  String get commonOrderDesc;
+
+  /// 通用提示：保存失败
+  ///
+  /// In zh, this message translates to:
+  /// **'保存失败'**
+  String get commonSaveFailed;
+
+  /// 通用提示：保存失败（带原因）
+  ///
+  /// In zh, this message translates to:
+  /// **'保存失败：{error}'**
+  String commonSaveFailedWith(String error);
+
+  /// 通用提示：连接成功
+  ///
+  /// In zh, this message translates to:
+  /// **'连接成功'**
+  String get commonConnectOk;
+
+  /// 通用提示：连接失败
+  ///
+  /// In zh, this message translates to:
+  /// **'连接失败：{error}'**
+  String commonConnectFailed(String error);
+
+  /// 通用：取消搜索（首页 / 目录页 / 网络浏览）
+  ///
+  /// In zh, this message translates to:
+  /// **'取消搜索'**
+  String get commonCancelSearch;
+
+  /// 通用：清除搜索
+  ///
+  /// In zh, this message translates to:
+  /// **'清除搜索'**
+  String get commonClearSearch;
+
+  /// B 站页：索引 tab / 入口
+  ///
+  /// In zh, this message translates to:
+  /// **'索引'**
+  String get biliIndexTitle;
+
+  /// B 站索引页：推荐 tab
+  ///
+  /// In zh, this message translates to:
+  /// **'推荐'**
+  String get biliRecommend;
+
+  /// B 站入口名 / 首页入口
+  ///
+  /// In zh, this message translates to:
+  /// **'哔哩番剧'**
+  String get biliBangumi;
+
+  /// B 站索引页：解析链接入口
+  ///
+  /// In zh, this message translates to:
+  /// **'解析链接'**
+  String get biliParseLink;
+
+  /// B 站下载页：解析按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'解析'**
+  String get biliParse;
+
+  /// B 站番剧索引页：空态
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无内容'**
+  String get biliNothingHere;
+
+  /// B 站索引页：追番时间表
+  ///
+  /// In zh, this message translates to:
+  /// **'追番时间表'**
+  String get biliTimeline;
+
+  /// B 站追番时间表：今天 tab
+  ///
+  /// In zh, this message translates to:
+  /// **'今天'**
+  String get biliToday;
+
+  /// B 站追番时间表：周一
+  ///
+  /// In zh, this message translates to:
+  /// **'周一'**
+  String get biliWeekdayMon;
+
+  /// B 站追番时间表：周二
+  ///
+  /// In zh, this message translates to:
+  /// **'周二'**
+  String get biliWeekdayTue;
+
+  /// B 站追番时间表：周三
+  ///
+  /// In zh, this message translates to:
+  /// **'周三'**
+  String get biliWeekdayWed;
+
+  /// B 站追番时间表：周四
+  ///
+  /// In zh, this message translates to:
+  /// **'周四'**
+  String get biliWeekdayThu;
+
+  /// B 站追番时间表：周五
+  ///
+  /// In zh, this message translates to:
+  /// **'周五'**
+  String get biliWeekdayFri;
+
+  /// B 站追番时间表：周六
+  ///
+  /// In zh, this message translates to:
+  /// **'周六'**
+  String get biliWeekdaySat;
+
+  /// B 站追番时间表：周日
+  ///
+  /// In zh, this message translates to:
+  /// **'周日'**
+  String get biliWeekdaySun;
+
+  /// B 站剧集卡片角标：已追番
+  ///
+  /// In zh, this message translates to:
+  /// **'已追番'**
+  String get biliFollowed;
+
+  /// B 站：链接无法识别
+  ///
+  /// In zh, this message translates to:
+  /// **'无法识别该链接（支持 ss/ep/BV/av 号与 b23.tv 短链）'**
+  String get biliLinkUnrecognized;
+
+  /// B 站：解析番剧链接弹窗标题
+  ///
+  /// In zh, this message translates to:
+  /// **'解析番剧链接'**
+  String get biliParseBangumiLink;
+
+  /// B 站：解析链接输入提示
+  ///
+  /// In zh, this message translates to:
+  /// **'粘贴番剧/视频链接或 b23.tv 短链'**
+  String get biliPasteAnimeLinkHint;
+
+  /// B 站搜索页标题
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索番剧'**
+  String get biliSearchAnime;
+
+  /// B 站搜索页输入提示
+  ///
+  /// In zh, this message translates to:
+  /// **'输入关键词搜索番剧'**
+  String get biliSearchAnimeHint;
+
+  /// B 站搜索页空态
+  ///
+  /// In zh, this message translates to:
+  /// **'没有找到相关番剧'**
+  String get biliNoAnimeFound;
+
+  /// B 站番剧详情页标题（兜底）
+  ///
+  /// In zh, this message translates to:
+  /// **'番剧详情'**
+  String get biliSeasonDetail;
+
+  /// B 站番剧详情页：无选集
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无选集'**
+  String get biliNoEpisodeSelection;
+
+  /// B 站番剧详情页：查看全部
+  ///
+  /// In zh, this message translates to:
+  /// **'查看全部'**
+  String get biliViewAll;
+
+  /// B 站：选集
+  ///
+  /// In zh, this message translates to:
+  /// **'选集'**
+  String get biliSelectEpisode;
+
+  /// B 站番剧详情页：评分
+  ///
+  /// In zh, this message translates to:
+  /// **'评分 {score}'**
+  String biliRating(String score);
+
+  /// B 站播放量：亿级（value 已按 1e8 折算）
+  ///
+  /// In zh, this message translates to:
+  /// **'{value}亿'**
+  String biliCountHundredMillion(String value);
+
+  /// B 站播放量：万级（value 已按 1e4 折算）
+  ///
+  /// In zh, this message translates to:
+  /// **'{value}万'**
+  String biliCountTenThousand(String value);
+
+  /// B 站番剧详情页：简介
+  ///
+  /// In zh, this message translates to:
+  /// **'简介'**
+  String get biliIntro;
+
+  /// B 站番剧详情页：多季
+  ///
+  /// In zh, this message translates to:
+  /// **'多季'**
+  String get biliMultiSeason;
+
+  /// B 站剧集卡片：第 N 话
+  ///
+  /// In zh, this message translates to:
+  /// **'第 {number} 话'**
+  String biliEpisodeNo(int number);
+
+  /// B 站 UGC：拿不到标题时的兜底标题
+  ///
+  /// In zh, this message translates to:
+  /// **'B 站视频'**
+  String get biliVideoFallbackTitle;
+
+  /// B 站：播放失败提示
+  ///
+  /// In zh, this message translates to:
+  /// **'播放失败：{error}'**
+  String biliPlayFailed(String error);
+
+  /// B 站账号页：等级
+  ///
+  /// In zh, this message translates to:
+  /// **'等级'**
+  String get biliLevel;
+
+  /// B 站账号页：资产分组
+  ///
+  /// In zh, this message translates to:
+  /// **'资产'**
+  String get biliAssets;
+
+  /// B 站账号页：硬币
+  ///
+  /// In zh, this message translates to:
+  /// **'硬币'**
+  String get biliCoins;
+
+  /// B 站账号页：硬币说明
+  ///
+  /// In zh, this message translates to:
+  /// **'用于投币等操作'**
+  String get biliCoinsDesc;
+
+  /// B 站账号页：退出登录
+  ///
+  /// In zh, this message translates to:
+  /// **'退出登录'**
+  String get biliSignOut;
+
+  /// B 站账号页：已满级
+  ///
+  /// In zh, this message translates to:
+  /// **'已满级'**
+  String get biliMaxLevel;
+
+  /// B 站账号页：经验值
+  ///
+  /// In zh, this message translates to:
+  /// **'经验值 {current} / {next}'**
+  String biliExpValue(int current, int next);
+
+  /// B 站账号页：退出确认
+  ///
+  /// In zh, this message translates to:
+  /// **'确定退出哔哩哔哩账号吗？'**
+  String get biliSignOutConfirm;
+
+  /// B 站账号页：退出确认按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'退出'**
+  String get biliSignOutAction;
+
+  /// B 站登录：二维码获取中
+  ///
+  /// In zh, this message translates to:
+  /// **'正在获取二维码...'**
+  String get biliLoginQrLoading;
+
+  /// B 站登录：扫码提示
+  ///
+  /// In zh, this message translates to:
+  /// **'请使用哔哩哔哩客户端扫码'**
+  String get biliLoginScanHint;
+
+  /// B 站登录：二维码获取失败
+  ///
+  /// In zh, this message translates to:
+  /// **'获取二维码失败，请重试'**
+  String get biliLoginQrFailed;
+
+  /// B 站登录：二维码失效刷新中
+  ///
+  /// In zh, this message translates to:
+  /// **'二维码已失效，正在刷新...'**
+  String get biliLoginQrRefreshing;
+
+  /// B 站登录：已扫码待确认
+  ///
+  /// In zh, this message translates to:
+  /// **'已扫码，请在手机上确认'**
+  String get biliLoginScannedConfirm;
+
+  /// B 站登录：凭证获取失败
+  ///
+  /// In zh, this message translates to:
+  /// **'登录凭证获取失败，请重试'**
+  String get biliLoginCredentialFailed;
+
+  /// B 站登录：成功提示
+  ///
+  /// In zh, this message translates to:
+  /// **'登录成功：{nickname}'**
+  String biliLoginSuccess(String nickname);
+
+  /// B 站登录：失败提示
+  ///
+  /// In zh, this message translates to:
+  /// **'登录失败，请重试'**
+  String get biliLoginFailedRetry;
+
+  /// B 站登录：二维码保存成功
+  ///
+  /// In zh, this message translates to:
+  /// **'二维码已保存到相册'**
+  String get biliQrSavedToGallery;
+
+  /// B 站登录：未装客户端
+  ///
+  /// In zh, this message translates to:
+  /// **'未检测到哔哩哔哩客户端'**
+  String get biliClientNotFound;
+
+  /// B 站登录：Cookie 为空提示
+  ///
+  /// In zh, this message translates to:
+  /// **'请先粘贴 Cookie'**
+  String get biliPasteCookieFirst;
+
+  /// B 站登录：Cookie 无效
+  ///
+  /// In zh, this message translates to:
+  /// **'登录失败：Cookie 无效或已过期'**
+  String get biliCookieInvalid;
+
+  /// B 站登录页标题
+  ///
+  /// In zh, this message translates to:
+  /// **'哔哩哔哩登录'**
+  String get biliLoginTitle;
+
+  /// B 站登录：扫码 tab
+  ///
+  /// In zh, this message translates to:
+  /// **'扫码登录'**
+  String get biliLoginQrTab;
+
+  /// B 站登录：Cookie tab
+  ///
+  /// In zh, this message translates to:
+  /// **'Cookie 登录'**
+  String get biliLoginCookieTab;
+
+  /// B 站登录：二维码剩余时间
+  ///
+  /// In zh, this message translates to:
+  /// **'剩余有效时间：{seconds} 秒'**
+  String biliLoginRemaining(int seconds);
+
+  /// B 站登录：刷新二维码按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'刷新二维码'**
+  String get biliQrRefresh;
+
+  /// B 站登录：保存二维码按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'保存到相册'**
+  String get biliSaveToGallery;
+
+  /// B 站登录：唤起 App 按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'打开哔哩哔哩'**
+  String get biliOpenApp;
+
+  /// B 站登录：唤起 App 说明
+  ///
+  /// In zh, this message translates to:
+  /// **'「打开哔哩哔哩」会在已安装的哔哩哔哩客户端中自动唤起扫码确认。'**
+  String get biliOpenAppDesc;
+
+  /// B 站登录：Cookie 登录说明
+  ///
+  /// In zh, this message translates to:
+  /// **'从浏览器复制 Cookie 粘贴登录（扫码异常时的备用方式）'**
+  String get biliCookieLoginDesc;
+
+  /// B 站登录：登录中
+  ///
+  /// In zh, this message translates to:
+  /// **'登录中...'**
+  String get biliLoggingIn;
+
+  /// B 站登录：Cookie 隐私说明
+  ///
+  /// In zh, this message translates to:
+  /// **'Cookie 仅本地加密保存，不会上传或记录日志。'**
+  String get biliCookiePrivacy;
+
+  /// 下载：未设置目录（B 站视频/弹幕/字幕三处共用）
+  ///
+  /// In zh, this message translates to:
+  /// **'请先设置下载目录'**
+  String get downloadSetDirFirst;
+
+  /// 下载：目录失效
+  ///
+  /// In zh, this message translates to:
+  /// **'下载目录不存在，请重新选择'**
+  String get downloadDirGone;
+
+  /// B 站弹幕下载：加入任务提示
+  ///
+  /// In zh, this message translates to:
+  /// **'{count, plural, other{已添加 {count} 个弹幕下载任务}}'**
+  String biliDanmakuTasksAdded(int count);
+
+  /// B 站视频下载：加入任务提示
+  ///
+  /// In zh, this message translates to:
+  /// **'{count, plural, other{已添加 {count} 个视频下载任务}}'**
+  String biliVideoTasksAdded(int count);
+
+  /// B 站下载：链接输入提示
+  ///
+  /// In zh, this message translates to:
+  /// **'粘贴 B 站视频/番剧链接（BV / av / ss / ep / b23.tv）'**
+  String get biliPasteVideoLinkHint;
+
+  /// B 站下载：空态提示
+  ///
+  /// In zh, this message translates to:
+  /// **'粘贴链接后点「解析」'**
+  String get biliPasteThenParse;
+
+  /// 下载：目录未设置
+  ///
+  /// In zh, this message translates to:
+  /// **'未设置下载目录'**
+  String get downloadNoDir;
+
+  /// 下载：设置目录按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'设置目录'**
+  String get downloadSetDir;
+
+  /// B 站弹幕下载：已选集数
+  ///
+  /// In zh, this message translates to:
+  /// **'{count, plural, other{已选 {count} 集}}'**
+  String biliEpisodesSelected(int count);
+
+  /// B 站视频下载：已选 / 总数
+  ///
+  /// In zh, this message translates to:
+  /// **'已选 {selected} / 共 {total, plural, other{{total} 集}}'**
+  String biliEpisodesSelectedOfTotal(int selected, int total);
+
+  /// B 站弹幕下载：下载按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'下载弹幕（{count}）'**
+  String biliDownloadDanmaku(int count);
+
+  /// B 站视频下载：下载按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'下载视频（{count}）'**
+  String biliDownloadVideo(int count);
+
+  /// B 站视频下载：同步弹幕开关
+  ///
+  /// In zh, this message translates to:
+  /// **'同步下载弹幕'**
+  String get biliSyncDanmaku;
+
+  /// 字幕下载设置：字幕来源分组
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕来源'**
+  String get subtitleSourceSection;
+
+  /// 字幕来源：Wyzie 说明
+  ///
+  /// In zh, this message translates to:
+  /// **'经 sub.wyzie.io 搜索，需要 API 密钥'**
+  String get subtitleWyzieDesc;
+
+  /// 字幕来源：自定义说明
+  ///
+  /// In zh, this message translates to:
+  /// **'自填接口地址，片名会发送到该地址'**
+  String get subtitleCustomDesc;
+
+  /// 字幕来源：自定义参数分组
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义参数'**
+  String get subtitleCustomParams;
+
+  /// 字幕来源：Wyzie 参数分组
+  ///
+  /// In zh, this message translates to:
+  /// **'Wyzie 参数'**
+  String get subtitleWyzieParams;
+
+  /// 字幕来源：密钥项
+  ///
+  /// In zh, this message translates to:
+  /// **'WYZIE API 密钥'**
+  String get subtitleWyzieApiKey;
+
+  /// 字幕来源：Wyzie 来源列表
+  ///
+  /// In zh, this message translates to:
+  /// **'Wyzie 来源'**
+  String get subtitleWyzieSources;
+
+  /// 字幕下载：字幕语言
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕语言'**
+  String get subtitleLanguage;
+
+  /// 字幕下载：首选格式
+  ///
+  /// In zh, this message translates to:
+  /// **'首选格式'**
+  String get subtitlePreferredFormat;
+
+  /// 字幕下载：首选编码
+  ///
+  /// In zh, this message translates to:
+  /// **'首选编码'**
+  String get subtitlePreferredEncoding;
+
+  /// 字幕来源：自定义接口地址
+  ///
+  /// In zh, this message translates to:
+  /// **'接口地址'**
+  String get subtitleApiEndpoint;
+
+  /// 字幕来源：测试说明
+  ///
+  /// In zh, this message translates to:
+  /// **'用一个片名试搜一次，看能否解析出字幕'**
+  String get subtitleCustomTestHint;
+
+  /// 字幕来源：测试中
+  ///
+  /// In zh, this message translates to:
+  /// **'正在测试…'**
+  String get subtitleTesting;
+
+  /// 字幕来源：测试成功但无结果
+  ///
+  /// In zh, this message translates to:
+  /// **'连接成功，但没解析出字幕'**
+  String get subtitleTestNoResult;
+
+  /// 字幕来源：测试成功
+  ///
+  /// In zh, this message translates to:
+  /// **'{count, plural, other{连接成功，解析出 {count} 条字幕}}'**
+  String subtitleTestOk(int count);
+
+  /// 字幕来源：测试失败
+  ///
+  /// In zh, this message translates to:
+  /// **'测试失败：{error}'**
+  String subtitleTestFailed(String error);
+
+  /// 字幕来源筛选：全部来源
+  ///
+  /// In zh, this message translates to:
+  /// **'全部来源'**
+  String get subtitleAllSources;
+
+  /// 字幕语言筛选：全部语言
+  ///
+  /// In zh, this message translates to:
+  /// **'全部语言'**
+  String get subtitleAllLanguages;
+
+  /// 字幕格式筛选：全部格式
+  ///
+  /// In zh, this message translates to:
+  /// **'全部格式'**
+  String get subtitleAllFormats;
+
+  /// 字幕编码筛选：全部编码
+  ///
+  /// In zh, this message translates to:
+  /// **'全部编码'**
+  String get subtitleAllEncodings;
+
+  /// 字幕来源：密钥输入提示
+  ///
+  /// In zh, this message translates to:
+  /// **'粘贴密钥（wyzie-…）'**
+  String get subtitlePasteKeyHint;
+
+  /// 字幕来源：获取密钥帮助
+  ///
+  /// In zh, this message translates to:
+  /// **'如何获取密钥'**
+  String get subtitleHowToGetKey;
+
+  /// 字幕来源：密钥类型
+  ///
+  /// In zh, this message translates to:
+  /// **'密钥类型：{type}'**
+  String subtitleKeyType(String type);
+
+  /// 字幕来源：密钥无效
+  ///
+  /// In zh, this message translates to:
+  /// **'密钥无效'**
+  String get subtitleKeyInvalid;
+
+  /// 字幕来源筛选：免费来源分组
+  ///
+  /// In zh, this message translates to:
+  /// **'免费来源'**
+  String get subtitleFreeSource;
+
+  /// 字幕来源筛选：付费来源分组
+  ///
+  /// In zh, this message translates to:
+  /// **'付费来源'**
+  String get subtitlePaidSource;
+
+  /// 字幕来源：自定义地址说明。{placeholder} 是语法记号，调用点传字面量 {name}（ARB 里的裸花括号会被 gen_l10n 当成占位符，ICU 单引号转义不生效 —— 见 06 遗留）
+  ///
+  /// In zh, this message translates to:
+  /// **'地址里可用 {placeholder} 作为片名占位（不写占位符则把片名拼到末尾）。\n搜索时片名会发送到你填写的地址，请自行确认该服务的条款与可用性；本应用不内置、也不代理任何第三方字幕服务。'**
+  String subtitleCustomSourceHelp(String placeholder);
+
+  /// 字幕来源：自定义地址输入说明。{placeholder} 是语法记号，调用点传字面量 {name}
+  ///
+  /// In zh, this message translates to:
+  /// **'用 {placeholder} 占位片名；没有占位符时片名会拼到末尾。'**
+  String subtitlePlaceholderHelp(String placeholder);
+
+  /// 字幕来源：自定义接口帮助
+  ///
+  /// In zh, this message translates to:
+  /// **'如何自定义接口地址'**
+  String get subtitleHowToCustomEndpoint;
+
+  /// 字幕来源：测试弹窗输入提示
+  ///
+  /// In zh, this message translates to:
+  /// **'填一个片名（如 你的名字）'**
+  String get subtitleTestNameHint;
+
+  /// 字幕来源：测试弹窗说明
+  ///
+  /// In zh, this message translates to:
+  /// **'用这个片名请求一次，看能否解析出字幕。'**
+  String get subtitleTestNameDesc;
+
+  /// 字幕下载：未设密钥
+  ///
+  /// In zh, this message translates to:
+  /// **'请先设置 WYZIE API 密钥'**
+  String get subtitleSetWyzieKeyFirst;
+
+  /// 字幕下载：未设自定义地址
+  ///
+  /// In zh, this message translates to:
+  /// **'请先设置自定义字幕地址'**
+  String get subtitleSetCustomUrlFirst;
+
+  /// 字幕下载：全部成功提示
+  ///
+  /// In zh, this message translates to:
+  /// **'{count, plural, other{已下载 {count} 个字幕}}'**
+  String subtitleDownloadedCount(int count);
+
+  /// 字幕下载：部分失败提示
+  ///
+  /// In zh, this message translates to:
+  /// **'下载完成：成功 {ok}，失败 {fail}'**
+  String subtitleDownloadResult(int ok, int fail);
+
+  /// 字幕下载：搜索框提示
+  ///
+  /// In zh, this message translates to:
+  /// **'输入影视名称或 IMDB / TMDB ID'**
+  String get subtitleSearchHint;
+
+  /// 字幕下载：返回设置
+  ///
+  /// In zh, this message translates to:
+  /// **'返回设置'**
+  String get subtitleBackToSettings;
+
+  /// 字幕下载：无结果提示
+  ///
+  /// In zh, this message translates to:
+  /// **'未找到字幕，请换个关键词或调整字幕设置'**
+  String get subtitleNoResultHint;
+
+  /// 字幕下载：设置面板标题
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕下载设置'**
+  String get subtitleDownloadSettings;
+
+  /// 字幕下载：空态提示
+  ///
+  /// In zh, this message translates to:
+  /// **'输入关键词后点「确定」搜索字幕'**
+  String get subtitleSearchHintShort;
+
+  /// 字幕下载：结果头（关键词 + 条数）
+  ///
+  /// In zh, this message translates to:
+  /// **'{query} · {count, plural, other{{count} 条}}'**
+  String subtitleResultHeader(String query, int count);
+
+  /// 字幕下载：重新搜索
+  ///
+  /// In zh, this message translates to:
+  /// **'重新搜索'**
+  String get subtitleSearchAgain;
+
+  /// 字幕下载：已选 / 总数
+  ///
+  /// In zh, this message translates to:
+  /// **'已选 {selected} / {total, plural, other{{total} 条}}'**
+  String subtitleSelectedOfTotal(int selected, int total);
+
+  /// 字幕下载：来源未知
+  ///
+  /// In zh, this message translates to:
+  /// **'未知来源'**
+  String get subtitleUnknownSource;
+
+  /// 字幕下载：下载中
+  ///
+  /// In zh, this message translates to:
+  /// **'下载中…'**
+  String get subtitleDownloadingNow;
+
+  /// 字幕下载：下载按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'下载字幕（{count}）'**
+  String subtitleDownloadButton(int count);
+
+  /// 视频卡片菜单：媒体信息
+  ///
+  /// In zh, this message translates to:
+  /// **'媒体信息'**
+  String get mediaInfoItem;
+
+  /// 媒体信息页：复制成功
+  ///
+  /// In zh, this message translates to:
+  /// **'媒体信息已复制'**
+  String get mediaInfoCopied;
+
+  /// 媒体信息页标题（带文件名）
+  ///
+  /// In zh, this message translates to:
+  /// **'媒体信息 - {title}'**
+  String mediaInfoTitleWithName(String title);
+
+  /// 媒体信息页：通用信息大标题
+  ///
+  /// In zh, this message translates to:
+  /// **'【通用信息】'**
+  String get mediaInfoGeneralHeader;
+
+  /// 媒体信息页：视频流分组
+  ///
+  /// In zh, this message translates to:
+  /// **'视频流'**
+  String get mediaInfoVideoStreams;
+
+  /// 媒体信息页：音频流分组
+  ///
+  /// In zh, this message translates to:
+  /// **'音频流'**
+  String get mediaInfoAudioStreams;
+
+  /// 媒体信息页：字幕流分组
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕流'**
+  String get mediaInfoSubtitleStreams;
+
+  /// 媒体信息页：获取失败
+  ///
+  /// In zh, this message translates to:
+  /// **'媒体信息获取失败'**
+  String get mediaInfoFetchFailed;
+
+  /// 媒体信息页：通用信息分组
+  ///
+  /// In zh, this message translates to:
+  /// **'通用信息'**
+  String get mediaInfoGeneral;
+
+  /// 媒体信息字段：格式
+  ///
+  /// In zh, this message translates to:
+  /// **'格式'**
+  String get mediaInfoFormat;
+
+  /// 媒体信息字段：格式版本
+  ///
+  /// In zh, this message translates to:
+  /// **'格式版本'**
+  String get mediaInfoFormatVersion;
+
+  /// 媒体信息字段：文件大小
+  ///
+  /// In zh, this message translates to:
+  /// **'文件大小'**
+  String get mediaInfoFileSize;
+
+  /// 媒体信息字段：总比特率
+  ///
+  /// In zh, this message translates to:
+  /// **'总比特率'**
+  String get mediaInfoOverallBitrate;
+
+  /// 媒体信息字段：编码日期
+  ///
+  /// In zh, this message translates to:
+  /// **'编码日期'**
+  String get mediaInfoEncodedDate;
+
+  /// 媒体信息字段：编码应用
+  ///
+  /// In zh, this message translates to:
+  /// **'编码应用'**
+  String get mediaInfoWritingApp;
+
+  /// 媒体信息字段：编码库
+  ///
+  /// In zh, this message translates to:
+  /// **'编码库'**
+  String get mediaInfoWritingLibrary;
+
+  /// 媒体信息字段：第 N 条视频流
+  ///
+  /// In zh, this message translates to:
+  /// **'视频流 #{index}'**
+  String mediaInfoVideoStreamNo(int index);
+
+  /// 媒体信息字段：第 N 条音频流
+  ///
+  /// In zh, this message translates to:
+  /// **'音频流 #{index}'**
+  String mediaInfoAudioStreamNo(int index);
+
+  /// 媒体信息字段：第 N 条字幕流
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕流 #{index}'**
+  String mediaInfoSubtitleStreamNo(int index);
+
+  /// 媒体信息页：空态
+  ///
+  /// In zh, this message translates to:
+  /// **'未获取到媒体信息'**
+  String get mediaInfoNoInfo;
+
+  /// 媒体信息字段：编码
+  ///
+  /// In zh, this message translates to:
+  /// **'编码'**
+  String get mediaInfoCodec;
+
+  /// 媒体信息字段：配置
+  ///
+  /// In zh, this message translates to:
+  /// **'配置'**
+  String get mediaInfoProfile;
+
+  /// 媒体信息字段：编码 ID
+  ///
+  /// In zh, this message translates to:
+  /// **'编码ID'**
+  String get mediaInfoCodecId;
+
+  /// 媒体信息字段：宽
+  ///
+  /// In zh, this message translates to:
+  /// **'宽'**
+  String get mediaInfoWidth;
+
+  /// 媒体信息字段：高
+  ///
+  /// In zh, this message translates to:
+  /// **'高'**
+  String get mediaInfoHeight;
+
+  /// 媒体信息字段：宽高比
+  ///
+  /// In zh, this message translates to:
+  /// **'宽高比'**
+  String get mediaInfoAspectRatio;
+
+  /// 媒体信息字段：帧率模式
+  ///
+  /// In zh, this message translates to:
+  /// **'帧率模式'**
+  String get mediaInfoFrameRateMode;
+
+  /// 媒体信息字段：比特率
+  ///
+  /// In zh, this message translates to:
+  /// **'比特率'**
+  String get mediaInfoBitrate;
+
+  /// 媒体信息字段：位深度
+  ///
+  /// In zh, this message translates to:
+  /// **'位深度'**
+  String get mediaInfoBitDepth;
+
+  /// 媒体信息字段：色彩空间
+  ///
+  /// In zh, this message translates to:
+  /// **'色彩空间'**
+  String get mediaInfoColorSpace;
+
+  /// 媒体信息字段：色度子采样
+  ///
+  /// In zh, this message translates to:
+  /// **'色度子采样'**
+  String get mediaInfoChromaSubsampling;
+
+  /// 媒体信息字段：HDR 格式
+  ///
+  /// In zh, this message translates to:
+  /// **'HDR格式'**
+  String get mediaInfoHdrFormat;
+
+  /// 媒体信息字段：声道
+  ///
+  /// In zh, this message translates to:
+  /// **'声道'**
+  String get mediaInfoChannels;
+
+  /// 媒体信息字段：流大小
+  ///
+  /// In zh, this message translates to:
+  /// **'流大小'**
+  String get mediaInfoStreamSize;
+
+  /// 媒体信息页：流选项卡
+  ///
+  /// In zh, this message translates to:
+  /// **'流'**
+  String get mediaInfoStream;
+
+  /// 网络存储页标题 / 首页入口
+  ///
+  /// In zh, this message translates to:
+  /// **'网络存储'**
+  String get networkStorageTitle;
+
+  /// 账户编辑：主机为空
+  ///
+  /// In zh, this message translates to:
+  /// **'请先填写主机地址'**
+  String get networkHostInputRequired;
+
+  /// 账户编辑：端口非法
+  ///
+  /// In zh, this message translates to:
+  /// **'端口需为 1-65535'**
+  String get networkPortInvalid;
+
+  /// 账户编辑：默认端口提示（SMB）
+  ///
+  /// In zh, this message translates to:
+  /// **'默认 {port}（群晖 5005/5006）'**
+  String networkDefaultPortWithSynology(String port);
+
+  /// 账户编辑：默认端口提示
+  ///
+  /// In zh, this message translates to:
+  /// **'默认 {port}'**
+  String networkDefaultPort(String port);
+
+  /// 账户编辑页：标题
+  ///
+  /// In zh, this message translates to:
+  /// **'编辑账户'**
+  String get networkEditAccount;
+
+  /// 账户编辑页 / 网络存储页：添加账户
+  ///
+  /// In zh, this message translates to:
+  /// **'添加账户'**
+  String get networkAddAccount;
+
+  /// 账户编辑：显示名称
+  ///
+  /// In zh, this message translates to:
+  /// **'显示名称'**
+  String get networkDisplayName;
+
+  /// 账户编辑：名称提示
+  ///
+  /// In zh, this message translates to:
+  /// **'例如：家庭 NAS'**
+  String get networkDisplayNameHint;
+
+  /// 账户编辑：名称为空
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入名称'**
+  String get networkNameRequired;
+
+  /// 账户编辑：协议
+  ///
+  /// In zh, this message translates to:
+  /// **'协议'**
+  String get networkProtocolLabel;
+
+  /// 账户编辑：主机地址
+  ///
+  /// In zh, this message translates to:
+  /// **'主机地址'**
+  String get networkHostLabel;
+
+  /// 账户编辑：主机提示
+  ///
+  /// In zh, this message translates to:
+  /// **'IP 或域名'**
+  String get networkHostHint;
+
+  /// 账户编辑：主机为空提示
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入主机地址'**
+  String get networkHostRequiredInput;
+
+  /// 账户编辑：端口
+  ///
+  /// In zh, this message translates to:
+  /// **'端口'**
+  String get networkPortLabel;
+
+  /// 账户编辑：路径提示
+  ///
+  /// In zh, this message translates to:
+  /// **'默认为 /'**
+  String get networkPathDefaultHint;
+
+  /// 账户编辑：匿名登录
+  ///
+  /// In zh, this message translates to:
+  /// **'匿名登录'**
+  String get networkAnonymous;
+
+  /// 账户编辑：匿名登录说明
+  ///
+  /// In zh, this message translates to:
+  /// **'FTP / SMB 匿名访问时开启'**
+  String get networkAnonymousDesc;
+
+  /// 账户编辑：使用 HTTPS
+  ///
+  /// In zh, this message translates to:
+  /// **'使用 HTTPS'**
+  String get networkUseHttps;
+
+  /// 账户编辑：HTTPS 说明
+  ///
+  /// In zh, this message translates to:
+  /// **'启用后使用加密连接（默认端口 443）'**
+  String get networkUseHttpsDesc;
+
+  /// 账户编辑：账号
+  ///
+  /// In zh, this message translates to:
+  /// **'账号'**
+  String get networkUsername;
+
+  /// 账户编辑：密码
+  ///
+  /// In zh, this message translates to:
+  /// **'密码'**
+  String get networkPassword;
+
+  /// 账户编辑：隐藏密码
+  ///
+  /// In zh, this message translates to:
+  /// **'隐藏密码'**
+  String get networkHidePassword;
+
+  /// 账户编辑：显示密码
+  ///
+  /// In zh, this message translates to:
+  /// **'显示密码'**
+  String get networkShowPassword;
+
+  /// 网络浏览：排序胶囊标题（字段 + 方向拼成一句，英文靠空格）
+  ///
+  /// In zh, this message translates to:
+  /// **'按{field}{order}'**
+  String networkSortByBoth(String field, String order);
+
+  /// 网络浏览：搜索入口
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索本目录'**
+  String get networkSearchCurrentDir;
+
+  /// 网络浏览：刷新
+  ///
+  /// In zh, this message translates to:
+  /// **'刷新本目录'**
+  String get networkRefreshCurrentDir;
+
+  /// 网络浏览：回到根目录
+  ///
+  /// In zh, this message translates to:
+  /// **'回到共享根目录'**
+  String get networkBackToRoot;
+
+  /// 网络浏览：显示隐藏文件
+  ///
+  /// In zh, this message translates to:
+  /// **'显示隐藏文件'**
+  String get networkShowHiddenFiles;
+
+  /// 网络浏览：无匹配
+  ///
+  /// In zh, this message translates to:
+  /// **'没有匹配的文件'**
+  String get networkNoMatchingFiles;
+
+  /// 网络浏览：空目录
+  ///
+  /// In zh, this message translates to:
+  /// **'该目录为空'**
+  String get networkDirEmpty;
+
+  /// 网络浏览：只有隐藏文件
+  ///
+  /// In zh, this message translates to:
+  /// **'本目录只有隐藏文件'**
+  String get networkOnlyHiddenFiles;
+
+  /// 网络浏览：返回上一级
+  ///
+  /// In zh, this message translates to:
+  /// **'返回上一级'**
+  String get networkBackUp;
+
+  /// 网络浏览：修改时间
+  ///
+  /// In zh, this message translates to:
+  /// **'修改时间'**
+  String get networkModifiedTime;
+
+  /// 网络浏览：字段缺失
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器未提供'**
+  String get networkServerNotProvided;
+
+  /// 网络浏览：位置
+  ///
+  /// In zh, this message translates to:
+  /// **'位置'**
+  String get networkLocation;
+
+  /// 网络浏览：连接
+  ///
+  /// In zh, this message translates to:
+  /// **'连接'**
+  String get networkConnectionLabel;
+
+  /// 网络存储：删除账户
+  ///
+  /// In zh, this message translates to:
+  /// **'删除账户'**
+  String get networkDeleteAccount;
+
+  /// 网络存储：空态
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有网络存储账户'**
+  String get networkNoAccounts;
+
+  /// 网络存储：空态说明
+  ///
+  /// In zh, this message translates to:
+  /// **'点击右下角 + 添加 WebDAV / SMB / FTP 账户'**
+  String get networkNoAccountsHint;
+
+  /// 文件夹详情页：搜索视频
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索视频'**
+  String get homeSearchVideos;
+
+  /// 首页 / 目录页：搜索提示
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索文件夹与视频'**
+  String get homeSearchFoldersAndVideos;
+
+  /// 排序与字段弹窗标题
+  ///
+  /// In zh, this message translates to:
+  /// **'排序与字段'**
+  String get homeSortAndFields;
+
+  /// 首页：排序与视图入口
+  ///
+  /// In zh, this message translates to:
+  /// **'排序与视图'**
+  String get homeSortAndView;
+
+  /// 文件夹空态
+  ///
+  /// In zh, this message translates to:
+  /// **'该文件夹没有视频'**
+  String get homeNoVideosInFolder;
+
+  /// 文件夹详情：无匹配视频
+  ///
+  /// In zh, this message translates to:
+  /// **'没有匹配的视频'**
+  String get homeNoMatchingVideos;
+
+  /// 首页 / 目录页：无匹配
+  ///
+  /// In zh, this message translates to:
+  /// **'没有匹配的内容'**
+  String get homeNoMatchingContent;
+
+  /// 首页：无匹配文件夹
+  ///
+  /// In zh, this message translates to:
+  /// **'没有匹配的文件夹'**
+  String get homeNoMatchingFolders;
+
+  /// 首页：最近播放入口
+  ///
+  /// In zh, this message translates to:
+  /// **'最近播放'**
+  String get homeRecentPlayed;
+
+  /// 首页 / 弹窗：打开链接
+  ///
+  /// In zh, this message translates to:
+  /// **'打开链接'**
+  String get homeOpenLink;
+
+  /// 首页：文件缺失提示
+  ///
+  /// In zh, this message translates to:
+  /// **'文件不存在或已被移动：{title}'**
+  String homeFileGone(String title);
+
+  /// 首页：权限提示
+  ///
+  /// In zh, this message translates to:
+  /// **'请在系统设置中手动开启存储权限'**
+  String get homePermissionHintInSettings;
+
+  /// 首页：权限被拒说明
+  ///
+  /// In zh, this message translates to:
+  /// **'存储权限已被拒绝，需要到系统设置里手动开启'**
+  String get homePermissionDeniedDetail;
+
+  /// 首页：权限说明
+  ///
+  /// In zh, this message translates to:
+  /// **'需要授予存储权限才能扫描视频'**
+  String get homePermissionNeeded;
+
+  /// 首页：去设置按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'去系统设置开启'**
+  String get homeOpenSettings;
+
+  /// 首页：授予权限按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'授予权限'**
+  String get homeGrantPermission;
+
+  /// 首页：无视频
+  ///
+  /// In zh, this message translates to:
+  /// **'没有找到视频'**
+  String get homeNoVideosFound;
+
+  /// 首页：重新扫描
+  ///
+  /// In zh, this message translates to:
+  /// **'重新扫描'**
+  String get homeRescan;
+
+  /// 首页：重新检查权限
+  ///
+  /// In zh, this message translates to:
+  /// **'我已开启，重新检查'**
+  String get homeRecheckPermission;
+
+  /// 打开链接：剪贴板空
+  ///
+  /// In zh, this message translates to:
+  /// **'剪贴板为空'**
+  String get openLinkClipboardEmpty;
+
+  /// 打开链接：链接非法
+  ///
+  /// In zh, this message translates to:
+  /// **'链接无效，支持 http/https/rtmp/rtsp 等流媒体协议'**
+  String get openLinkInvalid;
+
+  /// 打开链接：输入提示
+  ///
+  /// In zh, this message translates to:
+  /// **'输入视频直链，将在线播放'**
+  String get openLinkHint;
+
+  /// 下载管理：清除已完成
+  ///
+  /// In zh, this message translates to:
+  /// **'清除已完成'**
+  String get downloadClearFinished;
+
+  /// 下载管理：清除已完成说明
+  ///
+  /// In zh, this message translates to:
+  /// **'只清除已完成和失败的下载记录，不会删除已下载的文件。'**
+  String get downloadClearFinishedDesc;
+
+  /// 下载管理：空态
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无下载任务'**
+  String get downloadNoTasks;
+
+  /// 下载管理：失败兜底文案
+  ///
+  /// In zh, this message translates to:
+  /// **'下载失败'**
+  String get downloadFailed;
+
+  /// 下载状态：完成
+  ///
+  /// In zh, this message translates to:
+  /// **'完成'**
+  String get downloadStatusCompleted;
+
+  /// 下载状态：失败
+  ///
+  /// In zh, this message translates to:
+  /// **'失败'**
+  String get downloadStatusFailed;
+
+  /// 下载状态：合并中
+  ///
+  /// In zh, this message translates to:
+  /// **'合并'**
+  String get downloadStatusMerging;
+
+  /// 下载状态：下载中
+  ///
+  /// In zh, this message translates to:
+  /// **'下载中'**
+  String get downloadStatusDownloading;
+
+  /// 下载状态：等待
+  ///
+  /// In zh, this message translates to:
+  /// **'等待'**
+  String get downloadStatusPending;
+
+  /// 下载管理：合并中不可暂停
+  ///
+  /// In zh, this message translates to:
+  /// **'合并中，无法暂停'**
+  String get downloadMergingCannotPause;
+
+  /// 投屏：搜索启动失败
+  ///
+  /// In zh, this message translates to:
+  /// **'投屏搜索启动失败：{error}'**
+  String castSearchStartFailed(String error);
+
+  /// 投屏：已投屏
+  ///
+  /// In zh, this message translates to:
+  /// **'已投屏到 {device}'**
+  String castConnected(String device);
+
+  /// 投屏：失败
+  ///
+  /// In zh, this message translates to:
+  /// **'投屏失败：{error}'**
+  String castFailed(String error);
+
+  /// 投屏：搜索中
+  ///
+  /// In zh, this message translates to:
+  /// **'正在搜索投屏设备…'**
+  String get castSearching;
+
+  /// 投屏：未发现设备
+  ///
+  /// In zh, this message translates to:
+  /// **'未发现可投屏设备，请确认手机与电视连接同一 WiFi 后重试。'**
+  String get castNoDevicesFound;
+
+  /// 调色组件：展开自定义调色
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义调色'**
+  String get colorEditorCustom;
+
+  /// 调色组件：收起自定义调色
+  ///
+  /// In zh, this message translates to:
+  /// **'收起自定义调色'**
+  String get colorEditorCollapseCustom;
+
+  /// 目录选择器：目录不可读
+  ///
+  /// In zh, this message translates to:
+  /// **'目录不可读或不存在'**
+  String get directoryPickerUnreadable;
+
+  /// 目录选择器：标题
+  ///
+  /// In zh, this message translates to:
+  /// **'选择下载目录'**
+  String get directoryPickerTitle;
+
+  /// 目录选择器：上级目录
+  ///
+  /// In zh, this message translates to:
+  /// **'上级目录'**
+  String get directoryPickerUp;
+
+  /// 目录选择器：确认按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'选择此目录'**
+  String get directoryPickerSelectThis;
+
+  /// 目录选择器：空态
+  ///
+  /// In zh, this message translates to:
+  /// **'该目录下没有子目录'**
+  String get directoryPickerEmpty;
+
+  /// 文件操作菜单：固定
+  ///
+  /// In zh, this message translates to:
+  /// **'固定'**
+  String get fileOpPin;
+
+  /// 文件操作菜单：取消固定
+  ///
+  /// In zh, this message translates to:
+  /// **'取消固定'**
+  String get fileOpUnpin;
+
+  /// 文件操作菜单：多选
+  ///
+  /// In zh, this message translates to:
+  /// **'多选'**
+  String get fileOpMultiSelect;
+
+  /// 重命名弹窗：名称标签
+  ///
+  /// In zh, this message translates to:
+  /// **'新名称'**
+  String get fileOpNewName;
+
+  /// 重命名弹窗：提示
+  ///
+  /// In zh, this message translates to:
+  /// **'扩展名之前的名称'**
+  String get fileOpNameHint;
+
+  /// 重命名弹窗：扩展名锁定说明
+  ///
+  /// In zh, this message translates to:
+  /// **'扩展名固定为 {ext}，不可修改'**
+  String fileOpLockedExt(String ext);
+
+  /// 删除确认：文件夹默认语义
+  ///
+  /// In zh, this message translates to:
+  /// **'仅删除该文件夹内的视频文件，其它文件不会被删除。'**
+  String get fileOpDeleteFolderVideosOnly;
+
+  /// 删除确认：多选纯视频
+  ///
+  /// In zh, this message translates to:
+  /// **'{count, plural, other{确定删除选中的 {count} 个视频吗？}}'**
+  String fileOpDeleteSelectedVideos(int count);
+
+  /// 删除确认：多选含文件夹
+  ///
+  /// In zh, this message translates to:
+  /// **'{count, plural, other{将删除选中的 {count} 项：文件夹只删除里面的视频文件，其它文件不会被删除。}}'**
+  String fileOpDeleteSelectedMixed(int count);
+
+  /// 删除确认：删除所有文件勾选
+  ///
+  /// In zh, this message translates to:
+  /// **'删除所有文件'**
+  String get fileOpDeleteAllFiles;
+
+  /// 传输进度：准备中
+  ///
+  /// In zh, this message translates to:
+  /// **'准备中…'**
+  String get fileOpPreparing;
+
+  /// 传输进度：整批第几项
+  ///
+  /// In zh, this message translates to:
+  /// **'第 {current}/{total} 项'**
+  String fileOpProgressItem(int current, int total);
+
+  /// 传输进度：单项计数
+  ///
+  /// In zh, this message translates to:
+  /// **'{done} / {total, plural, other{{total} 项}}'**
+  String fileOpProgressItems(int done, int total);
+
+  /// 传输进度：处理中
+  ///
+  /// In zh, this message translates to:
+  /// **'处理中…'**
+  String get fileOpProcessing;
+
+  /// 传输进度：字节进度（含百分比）
+  ///
+  /// In zh, this message translates to:
+  /// **'{done} / {total}（{percent}%）'**
+  String fileOpBytesProgress(String done, String total, String percent);
+
+  /// 多选工具栏：退出多选
+  ///
+  /// In zh, this message translates to:
+  /// **'退出多选'**
+  String get fileSelectionExit;
+
+  /// 多选工具栏：已选数量
+  ///
+  /// In zh, this message translates to:
+  /// **'{count, plural, other{已选 {count} 项}}'**
+  String fileSelectionSelected(int count);
+
+  /// 多选工具栏：文件操作菜单
+  ///
+  /// In zh, this message translates to:
+  /// **'文件操作'**
+  String get fileSelectionOps;
+
+  /// 文件操作进度：正在移动
+  ///
+  /// In zh, this message translates to:
+  /// **'正在移动…'**
+  String get folderTransferMoving;
+
+  /// 文件操作进度：正在复制
+  ///
+  /// In zh, this message translates to:
+  /// **'正在复制…'**
+  String get folderTransferCopying;
+
+  /// 文件操作：已取消
+  ///
+  /// In zh, this message translates to:
+  /// **'已取消'**
+  String get folderActionCancelled;
+
+  /// 文件操作：移动成功
+  ///
+  /// In zh, this message translates to:
+  /// **'已移动「{title}」到 {dest}'**
+  String folderMovedTo(String title, String dest);
+
+  /// 文件操作：复制成功
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制「{title}」到 {dest}'**
+  String folderCopiedTo(String title, String dest);
+
+  /// 文件操作：批量移动（含失败项）
+  ///
+  /// In zh, this message translates to:
+  /// **'已移动 {done}/{total, plural, other{{total} 项}}，失败：{failures}'**
+  String folderActionMovedProgressFailed(int done, int total, String failures);
+
+  /// 文件操作：批量复制（含失败项）
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制 {done}/{total, plural, other{{total} 项}}，失败：{failures}'**
+  String folderActionCopiedProgressFailed(int done, int total, String failures);
+
+  /// 文件操作：批量删除（含失败项）
+  ///
+  /// In zh, this message translates to:
+  /// **'已删除 {done}/{total, plural, other{{total} 项}}，失败：{failures}'**
+  String folderActionDeletedProgressFailed(
+    int done,
+    int total,
+    String failures,
+  );
+
+  /// 文件操作：批量移动（失败项过多只列前 3）
+  ///
+  /// In zh, this message translates to:
+  /// **'已移动 {done}/{total, plural, other{{total} 项}}，失败：{failures} 等 {count} 项'**
+  String folderActionMovedProgressFailedMore(
+    int done,
+    int total,
+    String failures,
+    int count,
+  );
+
+  /// 文件操作：批量复制（失败项过多只列前 3）
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制 {done}/{total, plural, other{{total} 项}}，失败：{failures} 等 {count} 项'**
+  String folderActionCopiedProgressFailedMore(
+    int done,
+    int total,
+    String failures,
+    int count,
+  );
+
+  /// 文件操作：批量删除（失败项过多只列前 3）
+  ///
+  /// In zh, this message translates to:
+  /// **'已删除 {done}/{total, plural, other{{total} 项}}，失败：{failures} 等 {count} 项'**
+  String folderActionDeletedProgressFailedMore(
+    int done,
+    int total,
+    String failures,
+    int count,
+  );
+
+  /// 文件操作：取消但已移动部分
+  ///
+  /// In zh, this message translates to:
+  /// **'已取消（已移动 {done, plural, other{{done} 项}}）'**
+  String folderActionCancelledThenMoved(int done);
+
+  /// 文件操作：取消但已复制部分
+  ///
+  /// In zh, this message translates to:
+  /// **'已取消（已复制 {done, plural, other{{done} 项}}）'**
+  String folderActionCancelledThenCopied(int done);
+
+  /// 文件操作：批量移动完成
+  ///
+  /// In zh, this message translates to:
+  /// **'已移动 {done, plural, other{{done} 项}}到 {dest}'**
+  String folderActionMovedCount(int done, String dest);
+
+  /// 文件操作：批量复制完成
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制 {done, plural, other{{done} 项}}到 {dest}'**
+  String folderActionCopiedCount(int done, String dest);
+
+  /// 文件操作：重命名无变化
+  ///
+  /// In zh, this message translates to:
+  /// **'名称没有变化'**
+  String get folderNameUnchanged;
+
+  /// 文件操作：重命名成功
+  ///
+  /// In zh, this message translates to:
+  /// **'已重命名为 {newName}'**
+  String folderRenamedTo(String newName);
+
+  /// 文件操作：删除单项
+  ///
+  /// In zh, this message translates to:
+  /// **'已删除「{title}」'**
+  String folderDeletedOne(String title);
+
+  /// 文件操作：批量删除完成
+  ///
+  /// In zh, this message translates to:
+  /// **'已删除 {done, plural, other{{done} 项}}'**
+  String folderDeletedCount(int done);
+
+  /// 文件夹卡片：视频个数
+  ///
+  /// In zh, this message translates to:
+  /// **'{count, plural, other{{count} 个视频}}'**
+  String folderVideoCount(int count);
+
+  /// 排序与字段：文件夹排序方式
+  ///
+  /// In zh, this message translates to:
+  /// **'文件夹排序方式'**
+  String get optionsSheetFolderSort;
+
+  /// 排序与字段：文件夹排序方向
+  ///
+  /// In zh, this message translates to:
+  /// **'文件夹排序方向'**
+  String get optionsSheetFolderSortDir;
+
+  /// 排序与字段：文件夹显示字段
+  ///
+  /// In zh, this message translates to:
+  /// **'文件夹显示字段'**
+  String get optionsSheetFolderFields;
+
+  /// 排序与字段：视频排序方式
+  ///
+  /// In zh, this message translates to:
+  /// **'视频排序方式'**
+  String get optionsSheetVideoSort;
+
+  /// 排序与字段：视频排序方向
+  ///
+  /// In zh, this message translates to:
+  /// **'视频排序方向'**
+  String get optionsSheetVideoSortDir;
+
+  /// 排序与字段：视频显示字段
+  ///
+  /// In zh, this message translates to:
+  /// **'视频显示字段'**
+  String get optionsSheetVideoFields;
+
+  /// 排序与字段：显示模式
+  ///
+  /// In zh, this message translates to:
+  /// **'显示模式'**
+  String get optionsSheetViewMode;
+
+  /// 更新弹窗：主下载站
+  ///
+  /// In zh, this message translates to:
+  /// **'主下载站'**
+  String get updatePrimarySource;
+
+  /// 更新弹窗：备用下载站
+  ///
+  /// In zh, this message translates to:
+  /// **'备用下载站'**
+  String get updateBackupSource;
+
+  /// 更新弹窗：下载链接待接入
+  ///
+  /// In zh, this message translates to:
+  /// **'{label}链接待接入'**
+  String updateLinkPending(String label);
+
+  /// 更新弹窗：链接打不开
+  ///
+  /// In zh, this message translates to:
+  /// **'无法打开{label}链接'**
+  String updateOpenLinkFailed(String label);
+
+  /// 更新弹窗：发现新版本
+  ///
+  /// In zh, this message translates to:
+  /// **'发现新版本 {version}'**
+  String updateNewVersion(String version);
+
+  /// 更新弹窗：忽略本版本
+  ///
+  /// In zh, this message translates to:
+  /// **'忽略'**
+  String get updateIgnore;
+
+  /// 更新弹窗：稍后提醒
+  ///
+  /// In zh, this message translates to:
+  /// **'稍后提醒'**
+  String get updateLater;
+
+  /// 更新弹窗：立即更新
+  ///
+  /// In zh, this message translates to:
+  /// **'立即更新'**
+  String get updateNow;
+
+  /// 更新弹窗：选择下载方式
+  ///
+  /// In zh, this message translates to:
+  /// **'选择下载方式'**
+  String get updateChooseMethod;
+
+  /// 更新弹窗：下载方式待接入
+  ///
+  /// In zh, this message translates to:
+  /// **'待接入'**
+  String get updatePending;
+
+  /// 视频卡片：已看完
+  ///
+  /// In zh, this message translates to:
+  /// **'已看完'**
+  String get videoCardWatched;
+
+  /// 视频卡片：未观看
+  ///
+  /// In zh, this message translates to:
+  /// **'未观看'**
+  String get videoCardUnwatched;
+
+  /// 视频卡片：字幕检测中
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕检测中…'**
+  String get videoCardDetectingSubtitle;
+
+  /// 视频卡片：含字幕
+  ///
+  /// In zh, this message translates to:
+  /// **'含字幕'**
+  String get videoCardHasSubtitle;
+
+  /// 视频卡片：字幕格式
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕 · {codec}'**
+  String videoCardSubtitleCodec(String codec);
+
+  /// 视频卡片：无字幕
+  ///
+  /// In zh, this message translates to:
+  /// **'无字幕'**
+  String get videoCardNoSubtitle;
+
+  /// B 站封面图兜底提示
+  ///
+  /// In zh, this message translates to:
+  /// **'哔哩封面不可用（缓存未命中且下载失败）'**
+  String get biliCoverUnavailable;
 }
 
 class _AppLocalizationsDelegate

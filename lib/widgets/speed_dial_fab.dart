@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 
 /// 右下角 FAB 的底部额外抬升量（相对 Scaffold 默认 endFloat 的 16dp 底距）。
 ///
@@ -80,7 +81,7 @@ class _SpeedDialFabState extends State<SpeedDialFab>
         FloatingActionButton(
           heroTag: widget.heroTag,
           onPressed: _toggle,
-          tooltip: '更多',
+          tooltip: AppLocalizations.of(context).commonMore,
           child: AnimatedBuilder(
             animation: _controller,
             builder: (context, _) => Transform.rotate(

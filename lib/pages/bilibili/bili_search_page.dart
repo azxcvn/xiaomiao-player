@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/pages/bilibili/bili_season_page.dart';
 import 'package:moumou/services/bilibili/bili_bangumi_service.dart';
@@ -77,6 +78,7 @@ class _BiliSearchPageState extends State<BiliSearchPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: TextField(
@@ -84,14 +86,14 @@ class _BiliSearchPageState extends State<BiliSearchPage> {
           autofocus: true,
           textInputAction: TextInputAction.search,
           onSubmitted: (_) => _search(),
-          decoration: const InputDecoration(
-            hintText: '搜索番剧',
+          decoration: InputDecoration(
+            hintText: l10n.biliSearchAnime,
             border: InputBorder.none,
           ),
         ),
         actions: [
           IconButton(
-            tooltip: '搜索',
+            tooltip: l10n.commonSearch,
             icon: const Icon(Icons.search),
             onPressed: _search,
           ),
@@ -106,12 +108,13 @@ class _BiliSearchPageState extends State<BiliSearchPage> {
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context);
     if (!_results.started) {
-      return const Center(child: Text('输入关键词搜索番剧'));
+      return Center(child: Text(l10n.biliSearchAnimeHint));
     }
     return switch (_results.state) {
       Loaded<List<BiliSearchItem>>(:final data) => data.isEmpty
-          ? const Center(child: Text('没有找到相关番剧'))
+          ? Center(child: Text(l10n.biliNoAnimeFound))
           : _resultList(data),
       LoadError<List<BiliSearchItem>>(:final message) => _errorView(message),
       _ => const Center(child: CircularProgressIndicator()),
@@ -119,6 +122,7 @@ class _BiliSearchPageState extends State<BiliSearchPage> {
   }
 
   Widget _errorView(String message) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -131,7 +135,7 @@ class _BiliSearchPageState extends State<BiliSearchPage> {
           FilledButton.icon(
             onPressed: _search,
             icon: const Icon(Icons.refresh),
-            label: const Text('重试'),
+            label: Text(l10n.commonRetry),
           ),
         ],
       ),

@@ -149,6 +149,7 @@ class _ColorEditorRowState extends State<ColorEditorRow> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final base = _base;
     final effective = _effectiveValue;
     return Column(
@@ -213,7 +214,9 @@ class _ColorEditorRowState extends State<ColorEditorRow> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    _custom ? '收起自定义调色' : '自定义调色',
+                    _custom
+                        ? l10n.colorEditorCollapseCustom
+                        : l10n.colorEditorCustom,
                     style: TextStyle(
                       color: _custom ? Colors.white : Colors.white70,
                       fontSize: 12,
@@ -251,7 +254,7 @@ class _ColorEditorRowState extends State<ColorEditorRow> {
   Widget _buildPresets() {
     final l10n = AppLocalizations.of(context);
     final allItems = <({String? hex, String label})>[
-      if (widget.allowNone) (hex: null, label: '无'),
+      if (widget.allowNone) (hex: null, label: l10n.commonNone),
       for (final c in widget.presetColors)
         (hex: c.hex, label: subtitlePresetColorLabel(l10n, c.hex)),
     ];

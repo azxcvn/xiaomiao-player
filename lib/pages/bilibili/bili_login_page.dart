@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/services/bilibili/bili_account.dart';
 import 'package:moumou/services/bilibili/bili_auth_service.dart';
 import 'package:moumou/services/bilibili/bili_constants.dart';
@@ -32,7 +33,9 @@ class _BiliLoginPageState extends State<BiliLoginPage> {
 
   String? _qrUrl;
   String? _authCode;
-  String _statusText = '正在获取二维码...';
+
+  /// 状态提示；null = 默认提示「正在获取二维码...」（文案在 build 里取 l10n）
+  String? _statusText;
   int _remaining = 0;
   bool _busy = false;
   bool _ticking = false;
@@ -55,31 +58,34 @@ class _BiliLoginPageState extends State<BiliLoginPage> {
     _pollTimer?.cancel();
     setState(() {
       _qrUrl = null;
-      _statusText = '正在获取二维码...';
+      _statusText = null;
     });
     try {
       final qr = await account.startQrLogin();
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       setState(() {
         _qrUrl = qr.url;
         _authCode = qr.authCode;
-        _statusText = '请使用哔哩哔哩客户端扫码';
+        _statusText = l10n.biliLoginScanHint;
         _remaining = _qrValidSeconds;
       });
       _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
     } catch (e) {
       if (!mounted) return;
-      setState(() => _statusText = '获取二维码失败，请重试');
+      final l10n = AppLocalizations.of(context);
+      setState(() => _statusText = l10n.biliLoginQrFailed);
     }
   }
 
   Future<void> _tick() async {
     if (_ticking || _authCode == null) return;
+    final l10n = AppLocalizations.of(context);
     // 倒计时到 0 主动刷新（与服务端 86038 兜底双保险）
     if (_remaining > 0) {
       setState(() => _remaining--);
       if (_remaining == 0) {
-        setState(() => _statusText = '二维码已失效，正在刷新...');
+        setState(() => _statusText = l10n.biliLoginQrRefreshing);
         await _generate();
         return;
       }
@@ -90,11 +96,11 @@ class _BiliLoginPageState extends State<BiliLoginPage> {
       if (!mounted) return;
       switch (poll.code) {
         case BiliConstants.qrScanned:
-          setState(() => _statusText = '已扫码，请在手机上确认');
+          setState(() => _statusText = l10n.biliLoginScannedConfirm);
           break;
         case BiliConstants.qrExpired:
           _pollTimer?.cancel();
-          setState(() => _statusText = '二维码已失效，正在刷新...');
+          setState(() => _statusText = l10n.biliLoginQrRefreshing);
           await _generate();
           break;
         case BiliConstants.qrSuccess:
@@ -105,7 +111,7 @@ class _BiliLoginPageState extends State<BiliLoginPage> {
             // 服务端已确认登录但凭证未解析出来（cookie_info 缺失）：
             // 不能静默取消轮询冻结页面，给提示并刷新重试。
             debugPrint('[BILI-LOGIN] poll 成功但 data 为空，刷新重试');
-            _toast('登录凭证获取失败，请重试');
+            _toast(l10n.biliLoginCredentialFailed);
             await _generate();
           }
           break;
@@ -124,25 +130,28 @@ class _BiliLoginPageState extends State<BiliLoginPage> {
     try {
       final user = await account.completeQrLogin(data);
       if (!mounted) return;
-      _toast('登录成功：${user.nickname}');
+      final l10n = AppLocalizations.of(context);
+      _toast(l10n.biliLoginSuccess(user.nickname));
       Navigator.of(context).pop(true);
     } catch (e) {
       debugPrint('[BILI-LOGIN] 登录失败: $e');
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       setState(() => _busy = false);
-      _toast('登录失败，请重试');
+      _toast(l10n.biliLoginFailedRetry);
       await _generate();
     }
   }
 
   Future<void> _saveQr() async {
     if (_qrUrl == null) return;
+    final l10n = AppLocalizations.of(context);
     try {
       final boundary =
           _qrBoundaryKey.currentContext?.findRenderObject()
               as RenderRepaintBoundary?;
       if (boundary == null) {
-        _toast('保存失败');
+        _toast(l10n.commonSaveFailed);
         return;
       }
       final image = await boundary.toImage(pixelRatio: 3);
@@ -150,7 +159,7 @@ class _BiliLoginPageState extends State<BiliLoginPage> {
       final bytes = byteData?.buffer.asUint8List();
       image.dispose();
       if (bytes == null || bytes.isEmpty) {
-        _toast('保存失败');
+        _toast(l10n.commonSaveFailed);
         return;
       }
       final name = 'moumou_bili_qr_${DateTime.now().millisecondsSinceEpoch}.png';
@@ -160,9 +169,11 @@ class _BiliLoginPageState extends State<BiliLoginPage> {
         albumPath: '小喵Player',
         skipIfExists: false,
       );
-      _toast(result.isSuccess ? '二维码已保存到相册' : '保存失败：${result.errorMessage}');
+      _toast(result.isSuccess
+          ? l10n.biliQrSavedToGallery
+          : l10n.commonSaveFailedWith('${result.errorMessage}'));
     } catch (e) {
-      _toast('保存失败：$e');
+      _toast(l10n.commonSaveFailedWith('$e'));
     }
   }
 
@@ -171,25 +182,26 @@ class _BiliLoginPageState extends State<BiliLoginPage> {
     if (url == null) return;
     final ok = await DeviceServices.openBilibiliScan(url);
     if (!mounted) return;
-    if (!ok) _toast('未检测到哔哩哔哩客户端');
+    if (!ok) _toast(AppLocalizations.of(context).biliClientNotFound);
   }
 
   Future<void> _importCookie() async {
+    final l10n = AppLocalizations.of(context);
     final raw = _cookieController.text.trim();
     if (raw.isEmpty) {
-      _toast('请先粘贴 Cookie');
+      _toast(l10n.biliPasteCookieFirst);
       return;
     }
     setState(() => _busy = true);
     try {
       final user = await account.importCookie(raw);
       if (!mounted) return;
-      _toast('登录成功：${user.nickname}');
+      _toast(l10n.biliLoginSuccess(user.nickname));
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      _toast('登录失败：Cookie 无效或已过期');
+      _toast(l10n.biliCookieInvalid);
     }
   }
 
@@ -207,15 +219,16 @@ class _BiliLoginPageState extends State<BiliLoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('哔哩哔哩登录'),
-          bottom: const TabBar(
+          title: Text(l10n.biliLoginTitle),
+          bottom: TabBar(
             tabs: [
-              Tab(icon: Icon(Icons.qr_code_2), text: '扫码登录'),
-              Tab(icon: Icon(Icons.cookie_outlined), text: 'Cookie 登录'),
+              Tab(icon: const Icon(Icons.qr_code_2), text: l10n.biliLoginQrTab),
+              Tab(icon: const Icon(Icons.cookie_outlined), text: l10n.biliLoginCookieTab),
             ],
           ),
         ),
@@ -231,6 +244,7 @@ class _BiliLoginPageState extends State<BiliLoginPage> {
 
   Widget _buildQrTab(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
       child: Column(
@@ -259,13 +273,13 @@ class _BiliLoginPageState extends State<BiliLoginPage> {
           ),
           const SizedBox(height: 20),
           Text(
-            _statusText,
+            _statusText ?? l10n.biliLoginQrLoading,
             style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 14),
           ),
           if (_qrUrl != null && _remaining > 0) ...[
             const SizedBox(height: 6),
             Text(
-              '剩余有效时间：$_remaining 秒',
+              l10n.biliLoginRemaining(_remaining),
               style: TextStyle(
                 color: scheme.onSurfaceVariant,
                 fontSize: 12,
@@ -282,23 +296,23 @@ class _BiliLoginPageState extends State<BiliLoginPage> {
               TextButton.icon(
                 onPressed: _qrUrl == null ? null : _generate,
                 icon: const Icon(Icons.refresh),
-                label: const Text('刷新二维码'),
+                label: Text(l10n.biliQrRefresh),
               ),
               TextButton.icon(
                 onPressed: _qrUrl == null ? null : _saveQr,
                 icon: const Icon(Icons.save_alt),
-                label: const Text('保存到相册'),
+                label: Text(l10n.biliSaveToGallery),
               ),
               TextButton.icon(
                 onPressed: _qrUrl == null ? null : _openBilibili,
                 icon: const Icon(Icons.open_in_new),
-                label: const Text('打开哔哩哔哩'),
+                label: Text(l10n.biliOpenApp),
               ),
             ],
           ),
           const SizedBox(height: 16),
           Text(
-            '「打开哔哩哔哩」会在已安装的哔哩哔哩客户端中自动唤起扫码确认。',
+            l10n.biliOpenAppDesc,
             style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
             textAlign: TextAlign.center,
           ),
@@ -309,13 +323,14 @@ class _BiliLoginPageState extends State<BiliLoginPage> {
 
   Widget _buildCookieTab(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            '从浏览器复制 Cookie 粘贴登录（扫码异常时的备用方式）',
+            l10n.biliCookieLoginDesc,
             style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
           ),
           const SizedBox(height: 16),
@@ -334,11 +349,11 @@ class _BiliLoginPageState extends State<BiliLoginPage> {
           FilledButton.icon(
             onPressed: _busy ? null : _importCookie,
             icon: const Icon(Icons.login),
-            label: Text(_busy ? '登录中...' : '登录'),
+            label: Text(_busy ? l10n.biliLoggingIn : l10n.commonLogin),
           ),
           const SizedBox(height: 16),
           Text(
-            'Cookie 仅本地加密保存，不会上传或记录日志。',
+            l10n.biliCookiePrivacy,
             style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
           ),
         ],

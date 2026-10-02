@@ -78,6 +78,9 @@ void main() {
     const longTitle = '紫罗兰永恒花园 剧场版 特别篇 完全版 收藏套装 4K 修复版';
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Scaffold(
           body: PlayerPanel(
             pages: const [

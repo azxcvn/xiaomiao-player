@@ -2789,4 +2789,1314 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get playerFontChangeHintFull =>
       'Font changes take effect after leaving and re-entering the player; for embedded ASS subtitles, font settings only take effect when \"Force override embedded styles\" is on.';
+
+  @override
+  String get commonCopy => 'Copy';
+
+  @override
+  String get commonPaste => 'Paste';
+
+  @override
+  String get commonUnknown => 'Unknown';
+
+  @override
+  String get commonSaved => 'Saved';
+
+  @override
+  String get commonExpand => 'Expand';
+
+  @override
+  String get commonCollapse => 'Collapse';
+
+  @override
+  String get commonSelectAll => 'Select all';
+
+  @override
+  String get commonDeselectAll => 'Deselect all';
+
+  @override
+  String get commonTest => 'Test';
+
+  @override
+  String get commonTestConnection => 'Test connection';
+
+  @override
+  String get commonTesting => 'Testing…';
+
+  @override
+  String get commonSaving => 'Saving…';
+
+  @override
+  String get commonMove => 'Move';
+
+  @override
+  String get commonRename => 'Rename';
+
+  @override
+  String get commonResume => 'Resume';
+
+  @override
+  String get commonOrderAsc => 'Ascending';
+
+  @override
+  String get commonOrderDesc => 'Descending';
+
+  @override
+  String get commonSaveFailed => 'Save failed';
+
+  @override
+  String commonSaveFailedWith(String error) {
+    return 'Save failed: $error';
+  }
+
+  @override
+  String get commonConnectOk => 'Connected';
+
+  @override
+  String commonConnectFailed(String error) {
+    return 'Connection failed: $error';
+  }
+
+  @override
+  String get commonCancelSearch => 'Cancel search';
+
+  @override
+  String get commonClearSearch => 'Clear search';
+
+  @override
+  String get biliIndexTitle => 'Index';
+
+  @override
+  String get biliRecommend => 'Recommended';
+
+  @override
+  String get biliBangumi => 'Bilibili anime';
+
+  @override
+  String get biliParseLink => 'Parse link';
+
+  @override
+  String get biliParse => 'Parse';
+
+  @override
+  String get biliNothingHere => 'Nothing here yet';
+
+  @override
+  String get biliTimeline => 'Anime schedule';
+
+  @override
+  String get biliToday => 'Today';
+
+  @override
+  String get biliWeekdayMon => 'Monday';
+
+  @override
+  String get biliWeekdayTue => 'Tuesday';
+
+  @override
+  String get biliWeekdayWed => 'Wednesday';
+
+  @override
+  String get biliWeekdayThu => 'Thursday';
+
+  @override
+  String get biliWeekdayFri => 'Friday';
+
+  @override
+  String get biliWeekdaySat => 'Saturday';
+
+  @override
+  String get biliWeekdaySun => 'Sunday';
+
+  @override
+  String get biliFollowed => 'Following';
+
+  @override
+  String get biliLinkUnrecognized =>
+      'Unrecognized link (ss/ep/BV/av numbers and b23.tv short links are supported)';
+
+  @override
+  String get biliParseBangumiLink => 'Parse anime link';
+
+  @override
+  String get biliPasteAnimeLinkHint =>
+      'Paste an anime/video link or a b23.tv short link';
+
+  @override
+  String get biliSearchAnime => 'Search anime';
+
+  @override
+  String get biliSearchAnimeHint => 'Enter keywords to search anime';
+
+  @override
+  String get biliNoAnimeFound => 'No anime found';
+
+  @override
+  String get biliSeasonDetail => 'Anime details';
+
+  @override
+  String get biliNoEpisodeSelection => 'No episodes yet';
+
+  @override
+  String get biliViewAll => 'View all';
+
+  @override
+  String get biliSelectEpisode => 'Episodes';
+
+  @override
+  String biliRating(String score) {
+    return 'Rating $score';
+  }
+
+  @override
+  String biliCountHundredMillion(String value) {
+    return '$value hundred million';
+  }
+
+  @override
+  String biliCountTenThousand(String value) {
+    return '$value ten thousand';
+  }
+
+  @override
+  String get biliIntro => 'Synopsis';
+
+  @override
+  String get biliMultiSeason => 'Seasons';
+
+  @override
+  String biliEpisodeNo(int number) {
+    return 'Episode $number';
+  }
+
+  @override
+  String get biliVideoFallbackTitle => 'Bilibili video';
+
+  @override
+  String biliPlayFailed(String error) {
+    return 'Playback failed: $error';
+  }
+
+  @override
+  String get biliLevel => 'Level';
+
+  @override
+  String get biliAssets => 'Assets';
+
+  @override
+  String get biliCoins => 'Coins';
+
+  @override
+  String get biliCoinsDesc => 'Used for tipping coins';
+
+  @override
+  String get biliSignOut => 'Sign out';
+
+  @override
+  String get biliMaxLevel => 'Max level';
+
+  @override
+  String biliExpValue(int current, int next) {
+    return 'EXP $current / $next';
+  }
+
+  @override
+  String get biliSignOutConfirm => 'Sign out of your Bilibili account?';
+
+  @override
+  String get biliSignOutAction => 'Sign out';
+
+  @override
+  String get biliLoginQrLoading => 'Getting the QR code...';
+
+  @override
+  String get biliLoginScanHint => 'Scan with the Bilibili app';
+
+  @override
+  String get biliLoginQrFailed => 'Failed to get the QR code. Try again';
+
+  @override
+  String get biliLoginQrRefreshing => 'The QR code expired. Refreshing...';
+
+  @override
+  String get biliLoginScannedConfirm => 'Scanned. Please confirm on your phone';
+
+  @override
+  String get biliLoginCredentialFailed =>
+      'Failed to get the sign-in credentials. Try again';
+
+  @override
+  String biliLoginSuccess(String nickname) {
+    return 'Signed in as $nickname';
+  }
+
+  @override
+  String get biliLoginFailedRetry => 'Sign-in failed. Try again';
+
+  @override
+  String get biliQrSavedToGallery => 'QR code saved to the gallery';
+
+  @override
+  String get biliClientNotFound => 'The Bilibili app was not found';
+
+  @override
+  String get biliPasteCookieFirst => 'Paste a cookie first';
+
+  @override
+  String get biliCookieInvalid =>
+      'Sign-in failed: the cookie is invalid or has expired';
+
+  @override
+  String get biliLoginTitle => 'Bilibili sign-in';
+
+  @override
+  String get biliLoginQrTab => 'QR code';
+
+  @override
+  String get biliLoginCookieTab => 'Cookie';
+
+  @override
+  String biliLoginRemaining(int seconds) {
+    return 'Valid for another ${seconds}s';
+  }
+
+  @override
+  String get biliQrRefresh => 'Refresh QR code';
+
+  @override
+  String get biliSaveToGallery => 'Save to gallery';
+
+  @override
+  String get biliOpenApp => 'Open the Bilibili app';
+
+  @override
+  String get biliOpenAppDesc =>
+      'The \"Open Bilibili\" button launches the installed Bilibili app so you can confirm the scan there.';
+
+  @override
+  String get biliCookieLoginDesc =>
+      'Copy a cookie from your browser and paste it here (a fallback when QR sign-in fails)';
+
+  @override
+  String get biliLoggingIn => 'Signing in...';
+
+  @override
+  String get biliCookiePrivacy =>
+      'The cookie is stored encrypted on this device only; it is never uploaded or logged.';
+
+  @override
+  String get downloadSetDirFirst => 'Choose a download folder first';
+
+  @override
+  String get downloadDirGone =>
+      'The download folder no longer exists; choose it again';
+
+  @override
+  String biliDanmakuTasksAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Added $count danmaku download tasks',
+      one: 'Added 1 danmaku download task',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String biliVideoTasksAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Added $count video download tasks',
+      one: 'Added 1 video download task',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get biliPasteVideoLinkHint =>
+      'Paste a Bilibili video/anime link (BV / av / ss / ep / b23.tv)';
+
+  @override
+  String get biliPasteThenParse => 'Paste a link, then tap \"Parse\"';
+
+  @override
+  String get downloadNoDir => 'No download folder';
+
+  @override
+  String get downloadSetDir => 'Set folder';
+
+  @override
+  String biliEpisodesSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count episodes selected',
+      one: '1 episode selected',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String biliEpisodesSelectedOfTotal(int selected, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total episodes',
+      one: '1 episode',
+    );
+    return '$selected of $_temp0 selected';
+  }
+
+  @override
+  String biliDownloadDanmaku(int count) {
+    return 'Download danmaku ($count)';
+  }
+
+  @override
+  String biliDownloadVideo(int count) {
+    return 'Download video ($count)';
+  }
+
+  @override
+  String get biliSyncDanmaku => 'Download danmaku too';
+
+  @override
+  String get subtitleSourceSection => 'Subtitle source';
+
+  @override
+  String get subtitleWyzieDesc =>
+      'Searches via sub.wyzie.io; an API key is required';
+
+  @override
+  String get subtitleCustomDesc =>
+      'Use your own endpoint; titles are sent to that address';
+
+  @override
+  String get subtitleCustomParams => 'Custom parameters';
+
+  @override
+  String get subtitleWyzieParams => 'Wyzie parameters';
+
+  @override
+  String get subtitleWyzieApiKey => 'WYZIE API key';
+
+  @override
+  String get subtitleWyzieSources => 'Wyzie sources';
+
+  @override
+  String get subtitleLanguage => 'Subtitle language';
+
+  @override
+  String get subtitlePreferredFormat => 'Preferred format';
+
+  @override
+  String get subtitlePreferredEncoding => 'Preferred encoding';
+
+  @override
+  String get subtitleApiEndpoint => 'Endpoint';
+
+  @override
+  String get subtitleCustomTestHint =>
+      'Try one title to see whether subtitles can be found';
+
+  @override
+  String get subtitleTesting => 'Testing…';
+
+  @override
+  String get subtitleTestNoResult => 'Connected, but no subtitles were found';
+
+  @override
+  String subtitleTestOk(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count subtitles',
+      one: '1 subtitle',
+    );
+    return 'Connected; $_temp0 found';
+  }
+
+  @override
+  String subtitleTestFailed(String error) {
+    return 'Test failed: $error';
+  }
+
+  @override
+  String get subtitleAllSources => 'All sources';
+
+  @override
+  String get subtitleAllLanguages => 'All languages';
+
+  @override
+  String get subtitleAllFormats => 'All formats';
+
+  @override
+  String get subtitleAllEncodings => 'All encodings';
+
+  @override
+  String get subtitlePasteKeyHint => 'Paste the key (wyzie-…)';
+
+  @override
+  String get subtitleHowToGetKey => 'How to get a key';
+
+  @override
+  String subtitleKeyType(String type) {
+    return 'Key type: $type';
+  }
+
+  @override
+  String get subtitleKeyInvalid => 'Invalid key';
+
+  @override
+  String get subtitleFreeSource => 'Free sources';
+
+  @override
+  String get subtitlePaidSource => 'Paid sources';
+
+  @override
+  String subtitleCustomSourceHelp(String placeholder) {
+    return 'You can use $placeholder in the URL as a title placeholder (without a placeholder the title is appended to the end).\nTitles are sent to the address you enter, so check that service\'s terms and availability yourself; this app neither bundles nor proxies any third-party subtitle service.';
+  }
+
+  @override
+  String subtitlePlaceholderHelp(String placeholder) {
+    return 'Use $placeholder as the title placeholder; without it the title is appended to the end.';
+  }
+
+  @override
+  String get subtitleHowToCustomEndpoint => 'How to use a custom endpoint';
+
+  @override
+  String get subtitleTestNameHint => 'Enter a title (e.g. Your Name)';
+
+  @override
+  String get subtitleTestNameDesc =>
+      'Requests once with this title to see whether subtitles can be found.';
+
+  @override
+  String get subtitleSetWyzieKeyFirst => 'Set the WYZIE API key first';
+
+  @override
+  String get subtitleSetCustomUrlFirst =>
+      'Set the custom subtitle endpoint first';
+
+  @override
+  String subtitleDownloadedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count subtitles',
+      one: '1 subtitle',
+    );
+    return 'Downloaded $_temp0';
+  }
+
+  @override
+  String subtitleDownloadResult(int ok, int fail) {
+    return 'Download finished: $ok succeeded, $fail failed';
+  }
+
+  @override
+  String get subtitleSearchHint =>
+      'Enter a movie/TV title or an IMDB / TMDB ID';
+
+  @override
+  String get subtitleBackToSettings => 'Back to settings';
+
+  @override
+  String get subtitleNoResultHint =>
+      'No subtitles found. Try another keyword or adjust the subtitle settings';
+
+  @override
+  String get subtitleDownloadSettings => 'Subtitle download settings';
+
+  @override
+  String get subtitleSearchHintShort =>
+      'Enter keywords and tap \"OK\" to search';
+
+  @override
+  String subtitleResultHeader(String query, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count results',
+      one: '1 result',
+    );
+    return '$query · $_temp0';
+  }
+
+  @override
+  String get subtitleSearchAgain => 'Search again';
+
+  @override
+  String subtitleSelectedOfTotal(int selected, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total results',
+      one: '1 result',
+    );
+    return '$selected of $_temp0 selected';
+  }
+
+  @override
+  String get subtitleUnknownSource => 'Unknown source';
+
+  @override
+  String get subtitleDownloadingNow => 'Downloading…';
+
+  @override
+  String subtitleDownloadButton(int count) {
+    return 'Download subtitles ($count)';
+  }
+
+  @override
+  String get mediaInfoItem => 'Media info';
+
+  @override
+  String get mediaInfoCopied => 'Media info copied';
+
+  @override
+  String mediaInfoTitleWithName(String title) {
+    return 'Media info - $title';
+  }
+
+  @override
+  String get mediaInfoGeneralHeader => '[General]';
+
+  @override
+  String get mediaInfoVideoStreams => 'Video streams';
+
+  @override
+  String get mediaInfoAudioStreams => 'Audio streams';
+
+  @override
+  String get mediaInfoSubtitleStreams => 'Subtitle streams';
+
+  @override
+  String get mediaInfoFetchFailed => 'Failed to load media info';
+
+  @override
+  String get mediaInfoGeneral => 'General';
+
+  @override
+  String get mediaInfoFormat => 'Format';
+
+  @override
+  String get mediaInfoFormatVersion => 'Format version';
+
+  @override
+  String get mediaInfoFileSize => 'File size';
+
+  @override
+  String get mediaInfoOverallBitrate => 'Overall bitrate';
+
+  @override
+  String get mediaInfoEncodedDate => 'Encoded date';
+
+  @override
+  String get mediaInfoWritingApp => 'Writing application';
+
+  @override
+  String get mediaInfoWritingLibrary => 'Writing library';
+
+  @override
+  String mediaInfoVideoStreamNo(int index) {
+    return 'Video stream #$index';
+  }
+
+  @override
+  String mediaInfoAudioStreamNo(int index) {
+    return 'Audio stream #$index';
+  }
+
+  @override
+  String mediaInfoSubtitleStreamNo(int index) {
+    return 'Subtitle stream #$index';
+  }
+
+  @override
+  String get mediaInfoNoInfo => 'No media info available';
+
+  @override
+  String get mediaInfoCodec => 'Codec';
+
+  @override
+  String get mediaInfoProfile => 'Profile';
+
+  @override
+  String get mediaInfoCodecId => 'Codec ID';
+
+  @override
+  String get mediaInfoWidth => 'Width';
+
+  @override
+  String get mediaInfoHeight => 'Height';
+
+  @override
+  String get mediaInfoAspectRatio => 'Aspect ratio';
+
+  @override
+  String get mediaInfoFrameRateMode => 'Frame rate mode';
+
+  @override
+  String get mediaInfoBitrate => 'Bitrate';
+
+  @override
+  String get mediaInfoBitDepth => 'Bit depth';
+
+  @override
+  String get mediaInfoColorSpace => 'Color space';
+
+  @override
+  String get mediaInfoChromaSubsampling => 'Chroma subsampling';
+
+  @override
+  String get mediaInfoHdrFormat => 'HDR format';
+
+  @override
+  String get mediaInfoChannels => 'Channels';
+
+  @override
+  String get mediaInfoStreamSize => 'Stream size';
+
+  @override
+  String get mediaInfoStream => 'Stream';
+
+  @override
+  String get networkStorageTitle => 'Network storage';
+
+  @override
+  String get networkHostInputRequired => 'Enter the host address first';
+
+  @override
+  String get networkPortInvalid => 'The port must be 1-65535';
+
+  @override
+  String networkDefaultPortWithSynology(String port) {
+    return 'Default $port (Synology 5005/5006)';
+  }
+
+  @override
+  String networkDefaultPort(String port) {
+    return 'Default $port';
+  }
+
+  @override
+  String get networkEditAccount => 'Edit account';
+
+  @override
+  String get networkAddAccount => 'Add account';
+
+  @override
+  String get networkDisplayName => 'Display name';
+
+  @override
+  String get networkDisplayNameHint => 'e.g. Home NAS';
+
+  @override
+  String get networkNameRequired => 'Enter a name';
+
+  @override
+  String get networkProtocolLabel => 'Protocol';
+
+  @override
+  String get networkHostLabel => 'Host';
+
+  @override
+  String get networkHostHint => 'IP or domain';
+
+  @override
+  String get networkHostRequiredInput => 'Enter the host address';
+
+  @override
+  String get networkPortLabel => 'Port';
+
+  @override
+  String get networkPathDefaultHint => 'Defaults to /';
+
+  @override
+  String get networkAnonymous => 'Anonymous';
+
+  @override
+  String get networkAnonymousDesc => 'Enable for anonymous FTP / SMB access';
+
+  @override
+  String get networkUseHttps => 'Use HTTPS';
+
+  @override
+  String get networkUseHttpsDesc =>
+      'Use an encrypted connection (default port 443)';
+
+  @override
+  String get networkUsername => 'Username';
+
+  @override
+  String get networkPassword => 'Password';
+
+  @override
+  String get networkHidePassword => 'Hide password';
+
+  @override
+  String get networkShowPassword => 'Show password';
+
+  @override
+  String networkSortByBoth(String field, String order) {
+    return '$field $order';
+  }
+
+  @override
+  String get networkSearchCurrentDir => 'Search this folder';
+
+  @override
+  String get networkRefreshCurrentDir => 'Refresh this folder';
+
+  @override
+  String get networkBackToRoot => 'Back to the share root';
+
+  @override
+  String get networkShowHiddenFiles => 'Show hidden files';
+
+  @override
+  String get networkNoMatchingFiles => 'No matching files';
+
+  @override
+  String get networkDirEmpty => 'This folder is empty';
+
+  @override
+  String get networkOnlyHiddenFiles => 'Only hidden files here';
+
+  @override
+  String get networkBackUp => 'Go up one level';
+
+  @override
+  String get networkModifiedTime => 'Modified';
+
+  @override
+  String get networkServerNotProvided => 'Not provided by the server';
+
+  @override
+  String get networkLocation => 'Location';
+
+  @override
+  String get networkConnectionLabel => 'Connection';
+
+  @override
+  String get networkDeleteAccount => 'Delete account';
+
+  @override
+  String get networkNoAccounts => 'No network storage accounts yet';
+
+  @override
+  String get networkNoAccountsHint =>
+      'Tap + in the bottom right to add a WebDAV / SMB / FTP account';
+
+  @override
+  String get homeSearchVideos => 'Search videos';
+
+  @override
+  String get homeSearchFoldersAndVideos => 'Search folders and videos';
+
+  @override
+  String get homeSortAndFields => 'Sort & fields';
+
+  @override
+  String get homeSortAndView => 'Sort & view';
+
+  @override
+  String get homeNoVideosInFolder => 'No videos in this folder';
+
+  @override
+  String get homeNoMatchingVideos => 'No matching videos';
+
+  @override
+  String get homeNoMatchingContent => 'No matching content';
+
+  @override
+  String get homeNoMatchingFolders => 'No matching folders';
+
+  @override
+  String get homeRecentPlayed => 'Recently played';
+
+  @override
+  String get homeOpenLink => 'Open link';
+
+  @override
+  String homeFileGone(String title) {
+    return 'The file no longer exists or was moved: $title';
+  }
+
+  @override
+  String get homePermissionHintInSettings =>
+      'Enable the storage permission in system settings';
+
+  @override
+  String get homePermissionDeniedDetail =>
+      'Storage permission was denied. Enable it in system settings';
+
+  @override
+  String get homePermissionNeeded =>
+      'Storage permission is required to scan videos';
+
+  @override
+  String get homeOpenSettings => 'Open settings';
+
+  @override
+  String get homeGrantPermission => 'Grant permission';
+
+  @override
+  String get homeNoVideosFound => 'No videos found';
+
+  @override
+  String get homeRescan => 'Rescan';
+
+  @override
+  String get homeRecheckPermission => 'I\'ve enabled it — check again';
+
+  @override
+  String get openLinkClipboardEmpty => 'The clipboard is empty';
+
+  @override
+  String get openLinkInvalid =>
+      'Invalid link. http/https/rtmp/rtsp streaming URLs are supported';
+
+  @override
+  String get openLinkHint => 'Enter a direct video URL to play it online';
+
+  @override
+  String get downloadClearFinished => 'Clear finished';
+
+  @override
+  String get downloadClearFinishedDesc =>
+      'Removes finished and failed records only; downloaded files are kept.';
+
+  @override
+  String get downloadNoTasks => 'No download tasks';
+
+  @override
+  String get downloadFailed => 'Download failed';
+
+  @override
+  String get downloadStatusCompleted => 'Completed';
+
+  @override
+  String get downloadStatusFailed => 'Failed';
+
+  @override
+  String get downloadStatusMerging => 'Merging';
+
+  @override
+  String get downloadStatusDownloading => 'Downloading';
+
+  @override
+  String get downloadStatusPending => 'Pending';
+
+  @override
+  String get downloadMergingCannotPause => 'Merging — cannot pause';
+
+  @override
+  String castSearchStartFailed(String error) {
+    return 'Failed to start the cast search: $error';
+  }
+
+  @override
+  String castConnected(String device) {
+    return 'Casting to $device';
+  }
+
+  @override
+  String castFailed(String error) {
+    return 'Casting failed: $error';
+  }
+
+  @override
+  String get castSearching => 'Searching for cast devices…';
+
+  @override
+  String get castNoDevicesFound =>
+      'No cast devices found. Make sure your phone and TV are on the same Wi-Fi and try again.';
+
+  @override
+  String get colorEditorCustom => 'Custom color';
+
+  @override
+  String get colorEditorCollapseCustom => 'Collapse custom color';
+
+  @override
+  String get directoryPickerUnreadable =>
+      'The folder is unreadable or does not exist';
+
+  @override
+  String get directoryPickerTitle => 'Choose a download folder';
+
+  @override
+  String get directoryPickerUp => 'Parent folder';
+
+  @override
+  String get directoryPickerSelectThis => 'Choose this folder';
+
+  @override
+  String get directoryPickerEmpty => 'No subfolders here';
+
+  @override
+  String get fileOpPin => 'Pin';
+
+  @override
+  String get fileOpUnpin => 'Unpin';
+
+  @override
+  String get fileOpMultiSelect => 'Select multiple';
+
+  @override
+  String get fileOpNewName => 'New name';
+
+  @override
+  String get fileOpNameHint => 'Name without the extension';
+
+  @override
+  String fileOpLockedExt(String ext) {
+    return 'The extension is fixed to $ext and cannot be changed';
+  }
+
+  @override
+  String get fileOpDeleteFolderVideosOnly =>
+      'Only video files inside this folder are deleted; other files are kept.';
+
+  @override
+  String fileOpDeleteSelectedVideos(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count selected videos',
+      one: 'selected video',
+    );
+    return 'Delete the $_temp0?';
+  }
+
+  @override
+  String fileOpDeleteSelectedMixed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count selected items',
+      one: '1 selected item',
+    );
+    return 'This will delete $_temp0: for folders only the videos inside are removed, other files are kept.';
+  }
+
+  @override
+  String get fileOpDeleteAllFiles => 'Delete all files';
+
+  @override
+  String get fileOpPreparing => 'Preparing…';
+
+  @override
+  String fileOpProgressItem(int current, int total) {
+    return 'Item $current/$total';
+  }
+
+  @override
+  String fileOpProgressItems(int done, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total items',
+      one: '1 item',
+    );
+    return '$done / $_temp0';
+  }
+
+  @override
+  String get fileOpProcessing => 'Processing…';
+
+  @override
+  String fileOpBytesProgress(String done, String total, String percent) {
+    return '$done / $total ($percent%)';
+  }
+
+  @override
+  String get fileSelectionExit => 'Exit selection';
+
+  @override
+  String fileSelectionSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count selected',
+      one: '1 selected',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fileSelectionOps => 'File actions';
+
+  @override
+  String get folderTransferMoving => 'Moving…';
+
+  @override
+  String get folderTransferCopying => 'Copying…';
+
+  @override
+  String get folderActionCancelled => 'Cancelled';
+
+  @override
+  String folderMovedTo(String title, String dest) {
+    return 'Moved \"$title\" to $dest';
+  }
+
+  @override
+  String folderCopiedTo(String title, String dest) {
+    return 'Copied \"$title\" to $dest';
+  }
+
+  @override
+  String folderActionMovedProgressFailed(int done, int total, String failures) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total items',
+      one: '1 item',
+    );
+    return 'Moved $done/$_temp0, failed: $failures';
+  }
+
+  @override
+  String folderActionCopiedProgressFailed(
+    int done,
+    int total,
+    String failures,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total items',
+      one: '1 item',
+    );
+    return 'Copied $done/$_temp0, failed: $failures';
+  }
+
+  @override
+  String folderActionDeletedProgressFailed(
+    int done,
+    int total,
+    String failures,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total items',
+      one: '1 item',
+    );
+    return 'Deleted $done/$_temp0, failed: $failures';
+  }
+
+  @override
+  String folderActionMovedProgressFailedMore(
+    int done,
+    int total,
+    String failures,
+    int count,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total items',
+      one: '1 item',
+    );
+    return 'Moved $done/$_temp0, failed: $failures and $count in total';
+  }
+
+  @override
+  String folderActionCopiedProgressFailedMore(
+    int done,
+    int total,
+    String failures,
+    int count,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total items',
+      one: '1 item',
+    );
+    return 'Copied $done/$_temp0, failed: $failures and $count in total';
+  }
+
+  @override
+  String folderActionDeletedProgressFailedMore(
+    int done,
+    int total,
+    String failures,
+    int count,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total items',
+      one: '1 item',
+    );
+    return 'Deleted $done/$_temp0, failed: $failures and $count in total';
+  }
+
+  @override
+  String folderActionCancelledThenMoved(int done) {
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done items',
+      one: '1 item',
+    );
+    return 'Cancelled (moved $_temp0)';
+  }
+
+  @override
+  String folderActionCancelledThenCopied(int done) {
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done items',
+      one: '1 item',
+    );
+    return 'Cancelled (copied $_temp0)';
+  }
+
+  @override
+  String folderActionMovedCount(int done, String dest) {
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done items',
+      one: '1 item',
+    );
+    return 'Moved $_temp0 to $dest';
+  }
+
+  @override
+  String folderActionCopiedCount(int done, String dest) {
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done items',
+      one: '1 item',
+    );
+    return 'Copied $_temp0 to $dest';
+  }
+
+  @override
+  String get folderNameUnchanged => 'The name is unchanged';
+
+  @override
+  String folderRenamedTo(String newName) {
+    return 'Renamed to $newName';
+  }
+
+  @override
+  String folderDeletedOne(String title) {
+    return 'Deleted \"$title\"';
+  }
+
+  @override
+  String folderDeletedCount(int done) {
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done items',
+      one: '1 item',
+    );
+    return 'Deleted $_temp0';
+  }
+
+  @override
+  String folderVideoCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count videos',
+      one: '1 video',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get optionsSheetFolderSort => 'Folder sort by';
+
+  @override
+  String get optionsSheetFolderSortDir => 'Folder sort order';
+
+  @override
+  String get optionsSheetFolderFields => 'Folder fields';
+
+  @override
+  String get optionsSheetVideoSort => 'Video sort by';
+
+  @override
+  String get optionsSheetVideoSortDir => 'Video sort order';
+
+  @override
+  String get optionsSheetVideoFields => 'Video fields';
+
+  @override
+  String get optionsSheetViewMode => 'View mode';
+
+  @override
+  String get updatePrimarySource => 'Primary download site';
+
+  @override
+  String get updateBackupSource => 'Backup download site';
+
+  @override
+  String updateLinkPending(String label) {
+    return 'The $label link is not available yet';
+  }
+
+  @override
+  String updateOpenLinkFailed(String label) {
+    return 'Cannot open the $label link';
+  }
+
+  @override
+  String updateNewVersion(String version) {
+    return 'New version $version available';
+  }
+
+  @override
+  String get updateIgnore => 'Ignore';
+
+  @override
+  String get updateLater => 'Remind me later';
+
+  @override
+  String get updateNow => 'Update now';
+
+  @override
+  String get updateChooseMethod => 'Choose a download method';
+
+  @override
+  String get updatePending => 'Not available yet';
+
+  @override
+  String get videoCardWatched => 'Watched';
+
+  @override
+  String get videoCardUnwatched => 'Unwatched';
+
+  @override
+  String get videoCardDetectingSubtitle => 'Checking subtitles…';
+
+  @override
+  String get videoCardHasSubtitle => 'Has subtitles';
+
+  @override
+  String videoCardSubtitleCodec(String codec) {
+    return 'Subtitle · $codec';
+  }
+
+  @override
+  String get videoCardNoSubtitle => 'No subtitles';
+
+  @override
+  String get biliCoverUnavailable =>
+      'Bilibili cover unavailable (cache miss and download failed)';
 }

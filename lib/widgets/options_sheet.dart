@@ -57,7 +57,7 @@ class _SortOptionsSheet extends StatelessWidget {
             if (hasFolders) {
               // 上半区：文件夹相关
               sections.addAll([
-                _sectionTitle(context, '文件夹排序方式'),
+                _sectionTitle(context, l10n.optionsSheetFolderSort),
                 SegmentedButton<SortField>(
                   showSelectedIcon: false,
                   segments: SortField.values
@@ -73,7 +73,7 @@ class _SortOptionsSheet extends StatelessWidget {
                       viewSettings.setSortField(s.first),
                 ),
                 const SizedBox(height: 16),
-                _sectionTitle(context, '文件夹排序方向'),
+                _sectionTitle(context, l10n.optionsSheetFolderSortDir),
                 SegmentedButton<SortOrder>(
                   showSelectedIcon: false,
                   segments: SortOrder.values
@@ -89,7 +89,7 @@ class _SortOptionsSheet extends StatelessWidget {
                       viewSettings.setSortOrder(s.first),
                 ),
                 const SizedBox(height: 16),
-                _sectionTitle(context, '文件夹显示字段'),
+                _sectionTitle(context, l10n.optionsSheetFolderFields),
                 _fieldChips(
                   context,
                   FolderField.values.map((f) {
@@ -114,7 +114,7 @@ class _SortOptionsSheet extends StatelessWidget {
               }
               // 下半区：视频相关
               sections.addAll([
-                _sectionTitle(context, '视频排序方式'),
+                _sectionTitle(context, l10n.optionsSheetVideoSort),
                 SegmentedButton<VideoSortField>(
                   showSelectedIcon: false,
                   segments: VideoSortField.values
@@ -130,7 +130,7 @@ class _SortOptionsSheet extends StatelessWidget {
                       viewSettings.setVideoSortField(s.first),
                 ),
                 const SizedBox(height: 16),
-                _sectionTitle(context, '视频排序方向'),
+                _sectionTitle(context, l10n.optionsSheetVideoSortDir),
                 SegmentedButton<SortOrder>(
                   showSelectedIcon: false,
                   segments: SortOrder.values
@@ -146,7 +146,7 @@ class _SortOptionsSheet extends StatelessWidget {
                       viewSettings.setVideoSortOrder(s.first),
                 ),
                 const SizedBox(height: 16),
-                _sectionTitle(context, '视频显示字段'),
+                _sectionTitle(context, l10n.optionsSheetVideoFields),
                 // 8 字段三行胶囊（等宽均分）：
                 // 第一行 时长/大小/日期，第二行 进度/帧率/分辨率，
                 // 第三行 字幕指示器/完整名称（横向两个）
@@ -160,7 +160,7 @@ class _SortOptionsSheet extends StatelessWidget {
                 SizedBox(height: 16),
               ]);
               sections.addAll([
-                _sectionTitle(context, '显示模式'),
+                _sectionTitle(context, l10n.optionsSheetViewMode),
                 SegmentedButton<ViewMode>(
                   showSelectedIcon: false,
                   // 列表模式在前、树状模式在后
@@ -185,7 +185,10 @@ class _SortOptionsSheet extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text('排序与字段', style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    l10n.homeSortAndFields,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   const SizedBox(height: 16),
                   ...sections,
                   const SizedBox(height: 16),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/wyzie_models.dart';
 import 'package:moumou/services/subtitle/custom_subtitle_api.dart';
 import 'package:moumou/services/subtitle/subtitle_source_settings.dart';
@@ -76,26 +77,27 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
     return ListenableBuilder(
       listenable: Listenable.merge([_settings, _source]),
       builder: (context, _) {
+        final l10n = AppLocalizations.of(context);
         final custom = _source.kind == SubtitleSourceKind.custom;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SettingsGroupTitle(title: '字幕来源'),
+            SettingsGroupTitle(title: l10n.subtitleSourceSection),
             SettingsCard(
               child: Column(
                 children: [
                   SettingsRadioTile(
                     icon: Icons.cloud_outlined,
-                    title: 'Wyzie 字幕服务',
-                    subtitle: const Text('经 sub.wyzie.io 搜索，需要 API 密钥'),
+                    title: l10n.subtitleSourceWyzie,
+                    subtitle: Text(l10n.subtitleWyzieDesc),
                     selected: !custom,
                     onTap: () => _source.setKind(SubtitleSourceKind.wyzie),
                   ),
                   const Divider(height: 1),
                   SettingsRadioTile(
                     icon: Icons.link,
-                    title: '自定义字幕地址',
-                    subtitle: const Text('自填接口地址，片名会发送到该地址'),
+                    title: l10n.subtitleSourceCustom,
+                    subtitle: Text(l10n.subtitleCustomDesc),
                     selected: custom,
                     onTap: () => _source.setKind(SubtitleSourceKind.custom),
                   ),
@@ -103,7 +105,9 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
               ),
             ),
             const SizedBox(height: 16),
-            SettingsGroupTitle(title: custom ? '自定义参数' : 'Wyzie 参数'),
+            SettingsGroupTitle(
+              title: custom ? l10n.subtitleCustomParams : l10n.subtitleWyzieParams,
+            ),
             SettingsCard(
               child: Column(
                 children: custom ? _customTiles() : _wyzieTiles(),
@@ -120,50 +124,57 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
   }
 
   /// Wyzie 参数（原有五项，行为不变）
-  List<Widget> _wyzieTiles() => [
+  List<Widget> _wyzieTiles() {
+    final l10n = AppLocalizations.of(context);
+    return [
         SettingsTile(
           icon: Icons.key_outlined,
-          title: 'WYZIE API 密钥',
-          subtitle: Text(_settings.apiKey.isEmpty ? '未设置' : '已保存'),
+          title: l10n.subtitleWyzieApiKey,
+          subtitle: Text(_settings.apiKey.isEmpty ? l10n.commonNotSet : l10n.commonSaved),
           onTap: _editApiKey,
         ),
         const Divider(height: 1),
         SettingsTile(
           icon: Icons.dns_outlined,
-          title: 'Wyzie 来源',
+          title: l10n.subtitleWyzieSources,
           subtitle: Text(_sourcesSummary()),
           onTap: _editSources,
         ),
         const Divider(height: 1),
         SettingsTile(
           icon: Icons.translate,
-          title: '字幕语言',
+          title: l10n.subtitleLanguage,
           subtitle: Text(_languagesSummary()),
           onTap: _editLanguages,
         ),
         const Divider(height: 1),
         SettingsTile(
           icon: Icons.description_outlined,
-          title: '首选格式',
+          title: l10n.subtitlePreferredFormat,
           subtitle: Text(_formatsSummary()),
           onTap: _editFormats,
         ),
         const Divider(height: 1),
         SettingsTile(
           icon: Icons.text_fields,
-          title: '首选编码',
+          title: l10n.subtitlePreferredEncoding,
           subtitle: Text(_encodingsSummary()),
           onTap: _editEncodings,
         ),
       ];
+  }
 
   /// 自定义来源参数：地址模板 + 测试连接
-  List<Widget> _customTiles() => [
+  List<Widget> _customTiles() {
+    final l10n = AppLocalizations.of(context);
+    return [
         SettingsTile(
           icon: Icons.link,
-          title: '接口地址',
+          title: l10n.subtitleApiEndpoint,
           subtitle: Text(
-            _source.customConfigured ? _source.customUrlTemplate : '未设置',
+            _source.customConfigured
+                ? _source.customUrlTemplate
+                : l10n.commonNotSet,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -172,11 +183,12 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
         const Divider(height: 1),
         SettingsTile(
           icon: Icons.network_check,
-          title: '测试连接',
-          subtitle: const Text('用一个片名试搜一次，看能否解析出字幕'),
+          title: l10n.commonTestConnection,
+          subtitle: Text(l10n.subtitleCustomTestHint),
           onTap: _source.customConfigured ? _testCustomSource : null,
         ),
       ];
+  }
 
   // ── 自定义来源 ────────────────────────────────────────────
 
@@ -202,20 +214,25 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
     );
     if (query == null || query.trim().isEmpty) return;
     if (!mounted) return;
-    _snack('正在测试…');
+    final l10n = AppLocalizations.of(context);
+    _snack(l10n.subtitleTesting);
     try {
       final entries = await _customApi.search(
         urlTemplate: _source.customUrlTemplate,
         query: query.trim(),
       );
       if (!mounted) return;
-      _snack(entries.isEmpty ? '连接成功，但没解析出字幕' : '连接成功，解析出 ${entries.length} 条字幕');
+      _snack(
+        entries.isEmpty
+            ? l10n.subtitleTestNoResult
+            : l10n.subtitleTestOk(entries.length),
+      );
     } on CustomSubtitleApiException catch (e) {
       if (!mounted) return;
       _snack(e.message);
     } catch (e) {
       if (!mounted) return;
-      _snack('测试失败：$e');
+      _snack(l10n.subtitleTestFailed('$e'));
     }
   }
 
@@ -231,25 +248,33 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
 
   String _sourcesSummary() {
     final s = _settings.sources;
-    if (s.isEmpty || s.contains('all')) return '全部来源';
+    if (s.isEmpty || s.contains('all')) {
+      return AppLocalizations.of(context).subtitleAllSources;
+    }
     return s.map(_sourceName).join('、');
   }
 
   String _languagesSummary() {
     final s = _settings.languages;
-    if (s.isEmpty || s.contains('all')) return '全部语言';
+    if (s.isEmpty || s.contains('all')) {
+      return AppLocalizations.of(context).subtitleAllLanguages;
+    }
     return s.map((k) => wyzieLanguages[k] ?? k).join('、');
   }
 
   String _formatsSummary() {
     final s = _settings.formats;
-    if (s.isEmpty || s.contains('all')) return '全部格式';
+    if (s.isEmpty || s.contains('all')) {
+      return AppLocalizations.of(context).subtitleAllFormats;
+    }
     return s.map((k) => wyzieFormats[k] ?? k).join('、');
   }
 
   String _encodingsSummary() {
     final s = _settings.encodings;
-    if (s.isEmpty || s.contains('all')) return '全部编码';
+    if (s.isEmpty || s.contains('all')) {
+      return AppLocalizations.of(context).subtitleAllEncodings;
+    }
     return s.map((k) => wyzieEncodings[k] ?? k).join('、');
   }
 
@@ -297,7 +322,7 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
   // ── 字幕语言 / 首选格式 / 首选编码 ────────────────────────
 
   Future<void> _editLanguages() => _showMultiSelect(
-        title: '字幕语言',
+        title: AppLocalizations.of(context).subtitleLanguage,
         options: wyzieLanguagesSorted,
         selected: _settings.languages,
         hasAll: true,
@@ -305,7 +330,7 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
       );
 
   Future<void> _editFormats() => _showMultiSelect(
-        title: '首选格式',
+        title: AppLocalizations.of(context).subtitlePreferredFormat,
         options: wyzieFormats,
         selected: _settings.formats,
         hasAll: true,
@@ -313,7 +338,7 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
       );
 
   Future<void> _editEncodings() => _showMultiSelect(
-        title: '首选编码',
+        title: AppLocalizations.of(context).subtitlePreferredEncoding,
         options: wyzieEncodings,
         selected: _settings.encodings,
         hasAll: true,
@@ -327,6 +352,7 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
     required bool hasAll,
     required Future<void> Function(Set<String>) onConfirm,
   }) async {
+    final l10n = AppLocalizations.of(context);
     var temp = Set<String>.from(selected);
     await showAppDialog<void>(
       context: context,
@@ -363,7 +389,8 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
                             temp.remove('all');
                           }
                         }),
-                        title: const Text('全部', style: TextStyle(fontSize: 14)),
+                        title: Text(l10n.commonAll,
+                            style: const TextStyle(fontSize: 14)),
                       ),
                     for (final e in options.entries)
                       CheckboxListTile(
@@ -379,14 +406,14 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(ctx).pop(),
-                  child: const Text('取消'),
+                  child: Text(l10n.commonCancel),
                 ),
                 FilledButton(
                   onPressed: () {
                     Navigator.of(ctx).pop();
                     onConfirm(temp);
                   },
-                  child: const Text('确定'),
+                  child: Text(l10n.commonConfirm),
                 ),
               ],
             );
@@ -435,8 +462,9 @@ class _ApiKeyDialogState extends State<_ApiKeyDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
-      title: const Text('WYZIE API 密钥'),
+      title: Text(l10n.subtitleWyzieApiKey),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -444,8 +472,8 @@ class _ApiKeyDialogState extends State<_ApiKeyDialog> {
           TextField(
             controller: _ctrl,
             autofocus: true,
-            decoration: const InputDecoration(
-              hintText: '粘贴密钥（wyzie-…）',
+            decoration: InputDecoration(
+              hintText: l10n.subtitlePasteKeyHint,
               isDense: true,
             ),
           ),
@@ -455,7 +483,7 @@ class _ApiKeyDialogState extends State<_ApiKeyDialog> {
             child: TextButton.icon(
               onPressed: widget.onGetKey,
               icon: const Icon(Icons.open_in_new, size: 18),
-              label: const Text('如何获取密钥'),
+              label: Text(l10n.subtitleHowToGetKey),
             ),
           ),
         ],
@@ -463,14 +491,14 @@ class _ApiKeyDialogState extends State<_ApiKeyDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: () {
             Navigator.of(context).pop();
             widget.onConfirm(_ctrl.text);
           },
-          child: const Text('确定'),
+          child: Text(l10n.commonConfirm),
         ),
       ],
     );
@@ -554,6 +582,7 @@ class _WyzieSourcesDialogState extends State<_WyzieSourcesDialog> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     final freeItems = _items.where((i) => i.isFree).toList();
     final paidItems = _items.where((i) => !i.isFree).toList();
     final keyInfo = _response?.key;
@@ -561,7 +590,7 @@ class _WyzieSourcesDialogState extends State<_WyzieSourcesDialog> {
     return AlertDialog(
       title: Row(
         children: [
-          const Expanded(child: Text('字幕来源')),
+          Expanded(child: Text(l10n.subtitleSourceSection)),
           IconButton(
             onPressed: _loading ? null : _load,
             icon: _loading
@@ -571,7 +600,7 @@ class _WyzieSourcesDialogState extends State<_WyzieSourcesDialog> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.refresh),
-            tooltip: '刷新',
+            tooltip: l10n.commonRefresh,
           ),
         ],
       ),
@@ -585,8 +614,12 @@ class _WyzieSourcesDialogState extends State<_WyzieSourcesDialog> {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
                   keyInfo.valid
-                      ? '密钥类型：${keyInfo.type.isNotEmpty ? keyInfo.type : '未知'}'
-                      : '密钥无效',
+                      ? l10n.subtitleKeyType(
+                          keyInfo.type.isNotEmpty
+                              ? keyInfo.type
+                              : l10n.commonUnknown,
+                        )
+                      : l10n.subtitleKeyInvalid,
                   style: TextStyle(
                     fontSize: 12,
                     color: keyInfo.valid ? scheme.primary : scheme.error,
@@ -604,14 +637,15 @@ class _WyzieSourcesDialogState extends State<_WyzieSourcesDialog> {
                   _temp.remove('all');
                 }
               }),
-              title: const Text('全部', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+              title: Text(l10n.commonAll,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
             ),
             if (freeItems.isNotEmpty) ...[
-              _groupLabel('免费来源'),
+              _groupLabel(l10n.subtitleFreeSource),
               for (final item in freeItems) _sourceTile(item),
             ],
             if (paidItems.isNotEmpty) ...[
-              _groupLabel('付费来源'),
+              _groupLabel(l10n.subtitlePaidSource),
               for (final item in paidItems) _sourceTile(item),
             ],
           ],
@@ -620,11 +654,11 @@ class _WyzieSourcesDialogState extends State<_WyzieSourcesDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(_temp),
-          child: const Text('确定'),
+          child: Text(l10n.commonConfirm),
         ),
       ],
     );
@@ -676,9 +710,7 @@ class _CustomSourceHint extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 0, 4, 0),
       child: Text(
-        '地址里可用 {name} 作为片名占位（不写占位符则把片名拼到末尾）。\n'
-        '搜索时片名会发送到你填写的地址，请自行确认该服务的条款与可用性；'
-        '本应用不内置、也不代理任何第三方字幕服务。',
+        AppLocalizations.of(context).subtitleCustomSourceHelp('{name}'),
         style: TextStyle(
           fontSize: 12,
           height: 1.5,
@@ -724,8 +756,9 @@ class _CustomUrlDialogState extends State<_CustomUrlDialog> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
-      title: const Text('自定义字幕地址'),
+      title: Text(l10n.subtitleSourceCustom),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -742,7 +775,7 @@ class _CustomUrlDialogState extends State<_CustomUrlDialog> {
           ),
           const SizedBox(height: 8),
           Text(
-            '用 {name} 占位片名；没有占位符时片名会拼到末尾。',
+            l10n.subtitlePlaceholderHelp('{name}'),
             style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: 4),
@@ -751,7 +784,7 @@ class _CustomUrlDialogState extends State<_CustomUrlDialog> {
             child: TextButton.icon(
               onPressed: widget.onGetHelp,
               icon: const Icon(Icons.open_in_new, size: 18),
-              label: const Text('如何自定义接口地址'),
+              label: Text(l10n.subtitleHowToCustomEndpoint),
             ),
           ),
         ],
@@ -759,11 +792,11 @@ class _CustomUrlDialogState extends State<_CustomUrlDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(_ctrl.text),
-          child: const Text('保存'),
+          child: Text(l10n.commonSave),
         ),
       ],
     );
@@ -789,8 +822,9 @@ class _CustomTestDialogState extends State<_CustomTestDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
-      title: const Text('测试连接'),
+      title: Text(l10n.commonTestConnection),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -798,14 +832,14 @@ class _CustomTestDialogState extends State<_CustomTestDialog> {
           TextField(
             controller: _ctrl,
             autofocus: true,
-            decoration: const InputDecoration(
-              hintText: '填一个片名（如 你的名字）',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              hintText: l10n.subtitleTestNameHint,
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            '用这个片名请求一次，看能否解析出字幕。',
+            l10n.subtitleTestNameDesc,
             style: TextStyle(
               fontSize: 12,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -816,11 +850,11 @@ class _CustomTestDialogState extends State<_CustomTestDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(_ctrl.text),
-          child: const Text('测试'),
+          child: Text(l10n.commonTest),
         ),
       ],
     );

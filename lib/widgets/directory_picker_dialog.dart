@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/subtitle_dir.dart';
 import 'package:moumou/services/device_services.dart';
 import 'package:moumou/utils/app_dialog.dart';
@@ -45,8 +46,9 @@ class _DirectoryPickerDialogState extends State<_DirectoryPickerDialog> {
     final entries = await DeviceServices.listDirectory(path);
     if (!mounted) return;
     if (entries == null) {
+      final l10n = AppLocalizations.of(context);
       setState(() {
-        _error = '目录不可读或不存在';
+        _error = l10n.directoryPickerUnreadable;
         _loading = false;
       });
       return;
@@ -72,9 +74,10 @@ class _DirectoryPickerDialogState extends State<_DirectoryPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     return AlertDialog(
-      title: const Text('选择下载目录'),
+      title: Text(l10n.directoryPickerTitle),
       content: SizedBox(
         width: double.maxFinite,
         height: 380,
@@ -89,7 +92,7 @@ class _DirectoryPickerDialogState extends State<_DirectoryPickerDialog> {
                 IconButton(
                   onPressed: _parent == null ? null : () => _load(_parent!),
                   icon: const Icon(Icons.arrow_upward),
-                  tooltip: '上级目录',
+                  tooltip: l10n.directoryPickerUp,
                 ),
                 Expanded(
                   child: Text(
@@ -108,21 +111,22 @@ class _DirectoryPickerDialogState extends State<_DirectoryPickerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(_currentPath),
-          child: const Text('选择此目录'),
+          child: Text(l10n.directoryPickerSelectThis),
         ),
       ],
     );
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context);
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_error != null) return Center(child: Text(_error!));
     if (_dirs.isEmpty) {
-      return const Center(child: Text('该目录下没有子目录'));
+      return Center(child: Text(l10n.directoryPickerEmpty));
     }
     return ListView.builder(
       itemCount: _dirs.length,

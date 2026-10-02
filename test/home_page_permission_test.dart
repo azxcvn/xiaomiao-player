@@ -7,6 +7,8 @@ import 'package:moumou/services/view_settings.dart';
 import 'package:permission_handler_platform_interface/permission_handler_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 权限流程测试：未授权显示「授予权限」，点击授权后进入扫描流程。
 class MockPermissionHandlerPlatform extends PermissionHandlerPlatform {
   final Map<Permission, PermissionStatus> statuses = {};
@@ -61,7 +63,12 @@ void main() {
     mock.statuses[Permission.manageExternalStorage] = PermissionStatus.denied;
 
     await tester.pumpWidget(
-      MaterialApp(home: HomePage(viewSettings: ViewSettings())),
+      MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
+        home: HomePage(viewSettings: ViewSettings()),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -75,7 +82,12 @@ void main() {
     mock.statuses[Permission.manageExternalStorage] = PermissionStatus.granted;
 
     await tester.pumpWidget(
-      MaterialApp(home: HomePage(viewSettings: ViewSettings())),
+      MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
+        home: HomePage(viewSettings: ViewSettings()),
+      ),
     );
     // 建树/建文件夹列表在后台 isolate（compute，risk_audit #6）执行：
     // widget 测试的 FakeAsync 不驱动真实 isolate 通信，需 runAsync 让出
@@ -92,7 +104,12 @@ void main() {
     mock.statuses[Permission.manageExternalStorage] = PermissionStatus.denied;
 
     await tester.pumpWidget(
-      MaterialApp(home: HomePage(viewSettings: ViewSettings())),
+      MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
+        home: HomePage(viewSettings: ViewSettings()),
+      ),
     );
     await tester.pumpAndSettle();
     expect(find.text('授予权限'), findsOneWidget);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/utils/url_media.dart';
 
@@ -45,10 +46,11 @@ class _OpenLinkDialogState extends State<_OpenLinkDialog> {
 
   /// 粘贴剪贴板内容到输入框（复制播放地址后一键填入）
   Future<void> _pasteFromClipboard() async {
+    final l10n = AppLocalizations.of(context);
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     final text = data?.text?.trim() ?? '';
     if (text.isEmpty) {
-      setState(() => _errorText = '剪贴板为空');
+      setState(() => _errorText = l10n.openLinkClipboardEmpty);
       return;
     }
     setState(() {
@@ -59,11 +61,10 @@ class _OpenLinkDialogState extends State<_OpenLinkDialog> {
   }
 
   void _confirm() {
+    final l10n = AppLocalizations.of(context);
     final normalized = normalizeMediaUrl(_controller.text);
     if (normalized == null || !isPlayableMediaUrl(normalized)) {
-      setState(
-        () => _errorText = '链接无效，支持 http/https/rtmp/rtsp 等流媒体协议',
-      );
+      setState(() => _errorText = l10n.openLinkInvalid);
       return;
     }
     // ⚠️ 必须先 pop 弹窗再回调：Navigator.pop() 弹的是**栈顶**路由——
@@ -75,13 +76,14 @@ class _OpenLinkDialogState extends State<_OpenLinkDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
-      title: const Text('打开链接'),
+      title: Text(l10n.homeOpenLink),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('输入视频直链，将在线播放'),
+          Text(l10n.openLinkHint),
           const SizedBox(height: 12),
           TextField(
             controller: _controller,
@@ -94,7 +96,7 @@ class _OpenLinkDialogState extends State<_OpenLinkDialog> {
               errorText: _errorText,
               suffixIcon: IconButton(
                 icon: const Icon(Icons.content_paste),
-                tooltip: '粘贴',
+                tooltip: l10n.commonPaste,
                 onPressed: _pasteFromClipboard,
               ),
             ),
@@ -105,11 +107,11 @@ class _OpenLinkDialogState extends State<_OpenLinkDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: _confirm,
-          child: const Text('播放'),
+          child: Text(l10n.commonPlay),
         ),
       ],
     );

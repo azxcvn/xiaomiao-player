@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/network_connection.dart';
 import 'package:moumou/services/network/network_client.dart';
 import 'package:moumou/services/network/network_client_factory.dart';
@@ -126,11 +127,12 @@ class _AccountEditPageState extends State<AccountEditPage> {
   }
 
   Future<void> _testConnection() async {
+    final l10n = AppLocalizations.of(context);
     final host = _host.text.trim();
     if (host.isEmpty) {
       setState(() {
         _testSuccess = false;
-        _testResult = '请先填写主机地址';
+        _testResult = l10n.networkHostInputRequired;
       });
       return;
     }
@@ -138,7 +140,7 @@ class _AccountEditPageState extends State<AccountEditPage> {
     if (port == null || port < 1 || port > 65535) {
       setState(() {
         _testSuccess = false;
-        _testResult = '端口需为 1-65535';
+        _testResult = l10n.networkPortInvalid;
       });
       return;
     }
@@ -166,13 +168,15 @@ class _AccountEditPageState extends State<AccountEditPage> {
       if (!mounted) return;
       setState(() {
         _testSuccess = true;
-        _testResult = '连接成功';
+        _testResult = l10n.commonConnectOk;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _testSuccess = false;
-        _testResult = e is NetworkClientException ? e.message : '连接失败：$e';
+        _testResult = e is NetworkClientException
+            ? e.message
+            : l10n.commonConnectFailed('$e');
       });
     } finally {
       try {
@@ -219,19 +223,25 @@ class _AccountEditPageState extends State<AccountEditPage> {
 
   /// 端口输入框的占位提示：给「默认端口 + NAS 常用端口」，减少瞎试。
   String _defaultPortHint() {
+    final l10n = AppLocalizations.of(context);
     final def = _protocol.defaultPortFor(useHttps: _useHttps);
     if (_protocol == NetworkProtocol.webdav) {
-      return '默认 $def（群晖 5005/5006）';
+      return l10n.networkDefaultPortWithSynology('$def');
     }
-    return '默认 $def';
+    return l10n.networkDefaultPort('$def');
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final editing = widget.connection != null;
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: Text(editing ? '编辑账户' : '添加账户')),
+      appBar: AppBar(
+        title: Text(
+          editing ? l10n.networkEditAccount : l10n.networkAddAccount,
+        ),
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -239,21 +249,22 @@ class _AccountEditPageState extends State<AccountEditPage> {
           children: [
             TextFormField(
               controller: _name,
-              decoration: const InputDecoration(
-                labelText: '显示名称',
-                hintText: '例如：家庭 NAS',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.networkDisplayName,
+                hintText: l10n.networkDisplayNameHint,
+                border: const OutlineInputBorder(),
               ),
               textInputAction: TextInputAction.next,
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? '请输入名称' : null,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? l10n.networkNameRequired
+                  : null,
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<NetworkProtocol>(
               initialValue: _protocol,
-              decoration: const InputDecoration(
-                labelText: '协议',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.networkProtocolLabel,
+                border: const OutlineInputBorder(),
               ),
               items: [
                 for (final p in NetworkProtocol.values)
@@ -277,16 +288,17 @@ class _AccountEditPageState extends State<AccountEditPage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _host,
-              decoration: const InputDecoration(
-                labelText: '主机地址',
-                hintText: 'IP 或域名',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.networkHostLabel,
+                hintText: l10n.networkHostHint,
+                border: const OutlineInputBorder(),
               ),
               keyboardType: TextInputType.url,
               textInputAction: TextInputAction.next,
               onChanged: (_) => setState(() {}),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? '请输入主机地址' : null,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? l10n.networkHostRequiredInput
+                  : null,
             ),
             const SizedBox(height: 16),
             Row(
@@ -297,7 +309,7 @@ class _AccountEditPageState extends State<AccountEditPage> {
                   child: TextFormField(
                     controller: _port,
                     decoration: InputDecoration(
-                      labelText: '端口',
+                      labelText: l10n.networkPortLabel,
                       hintText: _defaultPortHint(),
                       border: const OutlineInputBorder(),
                     ),
@@ -321,10 +333,10 @@ class _AccountEditPageState extends State<AccountEditPage> {
                   flex: 3,
                   child: TextFormField(
                     controller: _path,
-                    decoration: const InputDecoration(
-                      labelText: '路径',
-                      hintText: '默认为 /',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.commonPath,
+                      hintText: l10n.networkPathDefaultHint,
+                      border: const OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.url,
                     onChanged: (_) => setState(() {}),
@@ -368,8 +380,8 @@ class _AccountEditPageState extends State<AccountEditPage> {
             const SizedBox(height: 8),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('匿名登录'),
-              subtitle: const Text('FTP / SMB 匿名访问时开启'),
+              title: Text(l10n.networkAnonymous),
+              subtitle: Text(l10n.networkAnonymousDesc),
               value: _isAnonymous,
               onChanged: (v) {
                 setState(() => _isAnonymous = v);
@@ -378,8 +390,8 @@ class _AccountEditPageState extends State<AccountEditPage> {
             if (_protocol == NetworkProtocol.webdav)
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('使用 HTTPS'),
-                subtitle: const Text('启用后使用加密连接（默认端口 443）'),
+                title: Text(l10n.networkUseHttps),
+                subtitle: Text(l10n.networkUseHttpsDesc),
                 value: _useHttps,
                 onChanged: _onHttpsChanged,
               ),
@@ -392,9 +404,9 @@ class _AccountEditPageState extends State<AccountEditPage> {
                   Expanded(
                     child: TextFormField(
                       controller: _username,
-                      decoration: const InputDecoration(
-                        labelText: '账号',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: l10n.networkUsername,
+                        border: const OutlineInputBorder(),
                       ),
                       textInputAction: TextInputAction.next,
                     ),
@@ -404,10 +416,12 @@ class _AccountEditPageState extends State<AccountEditPage> {
                     child: TextFormField(
                       controller: _password,
                       decoration: InputDecoration(
-                        labelText: '密码',
+                        labelText: l10n.networkPassword,
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
-                          tooltip: _passwordVisible ? '隐藏密码' : '显示密码',
+                          tooltip: _passwordVisible
+                              ? l10n.networkHidePassword
+                              : l10n.networkShowPassword,
                           onPressed: () => setState(
                               () => _passwordVisible = !_passwordVisible),
                           icon: Icon(
@@ -434,7 +448,9 @@ class _AccountEditPageState extends State<AccountEditPage> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.wifi),
-              label: Text(_testing ? '测试中…' : '测试连接'),
+              label: Text(
+                _testing ? l10n.commonTesting : l10n.commonTestConnection,
+              ),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
               ),
@@ -474,7 +490,7 @@ class _AccountEditPageState extends State<AccountEditPage> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.check),
-              label: Text(_saving ? '保存中…' : '保存'),
+              label: Text(_saving ? l10n.commonSaving : l10n.commonSave),
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
               ),

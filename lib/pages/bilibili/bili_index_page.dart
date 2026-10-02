@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/pages/bilibili/bili_bangumi_index_page.dart';
 import 'package:moumou/pages/bilibili/bili_play_launcher.dart';
@@ -128,17 +129,18 @@ class _BiliIndexPageState extends State<BiliIndexPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('哔哩番剧'),
+        title: Text(l10n.biliBangumi),
         actions: [
           IconButton(
-            tooltip: '解析链接',
+            tooltip: l10n.biliParseLink,
             icon: const Icon(Icons.link),
             onPressed: _openLinkParse,
           ),
           IconButton(
-            tooltip: '搜索',
+            tooltip: l10n.commonSearch,
             icon: const Icon(Icons.search),
             onPressed: _openSearch,
           ),
@@ -164,20 +166,21 @@ class _BiliIndexPageState extends State<BiliIndexPage> {
 
   Widget _buildRecommendHeader(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            '推荐',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          Text(
+            l10n.biliRecommend,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
           ),
           TextButton.icon(
             onPressed: _openIndex,
             icon: Icon(Icons.tune, size: 16, color: scheme.primary),
             label: Text(
-              '索引',
+              l10n.biliIndexTitle,
               style: TextStyle(fontSize: 13, color: scheme.primary),
             ),
           ),
@@ -206,7 +209,7 @@ class _BiliIndexPageState extends State<BiliIndexPage> {
               FilledButton.icon(
                 onPressed: _loadRecommend,
                 icon: const Icon(Icons.refresh),
-                label: const Text('重试'),
+                label: Text(AppLocalizations.of(context).commonRetry),
               ),
             ],
           ),
@@ -265,8 +268,6 @@ class _TimelineSection extends StatefulWidget {
 }
 
 class _TimelineSectionState extends State<_TimelineSection> {
-  static const List<String> _week = ['一', '二', '三', '四', '五', '六', '日'];
-
   final BiliBangumiService _service = BiliBangumiService();
   List<BiliTimelineDay> _days = const [];
   bool _loading = true;
@@ -277,10 +278,21 @@ class _TimelineSectionState extends State<_TimelineSection> {
     _load();
   }
 
-  String _weekLabel(BiliTimelineDay d) {
-    final i = d.dayOfWeek - 1;
-    return (i >= 0 && i < _week.length) ? '周${_week[i]}' : '';
-  }
+  /// 周几（1 = 周一 … 7 = 周日）：文案按当前语言取
+  String _weekdayLabel(AppLocalizations l10n, int dayOfWeek) =>
+      switch (dayOfWeek) {
+        1 => l10n.biliWeekdayMon,
+        2 => l10n.biliWeekdayTue,
+        3 => l10n.biliWeekdayWed,
+        4 => l10n.biliWeekdayThu,
+        5 => l10n.biliWeekdayFri,
+        6 => l10n.biliWeekdaySat,
+        7 => l10n.biliWeekdaySun,
+        _ => '',
+      };
+
+  String _weekLabel(AppLocalizations l10n, BiliTimelineDay d) =>
+      _weekdayLabel(l10n, d.dayOfWeek);
 
   Future<void> _load() async {
     setState(() => _loading = true);
@@ -310,6 +322,7 @@ class _TimelineSectionState extends State<_TimelineSection> {
       );
     }
     if (_days.isEmpty) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context);
     final todayIndex = _days.indexWhere((d) => d.isToday);
     final initialIndex = todayIndex < 0 ? 0 : todayIndex;
     return DefaultTabController(
@@ -322,8 +335,8 @@ class _TimelineSectionState extends State<_TimelineSection> {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: Row(
               children: [
-                const Text(
-                  '追番时间表',
+                Text(
+                  l10n.biliTimeline,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 ),
               ],
@@ -349,7 +362,7 @@ class _TimelineSectionState extends State<_TimelineSection> {
               unselectedLabelStyle: const TextStyle(fontSize: 13),
               tabs: [
                 for (final d in _days)
-                  Tab(text: '${d.date} ${d.isToday ? '今天' : _weekLabel(d)}'),
+                  Tab(text: '${d.date} ${d.isToday ? l10n.biliToday : _weekLabel(l10n, d)}'),
               ],
             ),
           ),
@@ -374,7 +387,7 @@ class _TimelineSectionState extends State<_TimelineSection> {
                                 child: BiliCoverCard(
                                   cover: ep.cover,
                                   title: ep.title,
-                                  badge: ep.follow == 1 ? '已追番' : null,
+                                  badge: ep.follow == 1 ? l10n.biliFollowed : null,
                                   cornerText: ep.pubTime,
                                   subtitle: ep.pubIndex,
                                   onTap: ep.seasonId > 0
@@ -441,7 +454,9 @@ class _LinkParseDialogState extends State<_LinkParseDialog> {
       if (expanded != null) ref = parseBiliBangumiUrl(expanded);
     }
     if (!mounted || ref == null || !ref.isValid) {
-      setState(() => _error = '无法识别该链接（支持 ss/ep/BV/av 号与 b23.tv 短链）');
+      setState(
+        () => _error = AppLocalizations.of(context).biliLinkUnrecognized,
+      );
       return;
     }
     Navigator.of(context).pop(ref);
@@ -449,6 +464,7 @@ class _LinkParseDialogState extends State<_LinkParseDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -458,16 +474,16 @@ class _LinkParseDialogState extends State<_LinkParseDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '解析番剧链接',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+            Text(
+              l10n.biliParseBangumiLink,
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _controller,
               autofocus: true,
               decoration: InputDecoration(
-                hintText: '粘贴番剧/视频链接或 b23.tv 短链',
+                hintText: l10n.biliPasteAnimeLinkHint,
                 errorText: _error,
                 border: const OutlineInputBorder(),
                 isDense: true,
@@ -480,7 +496,7 @@ class _LinkParseDialogState extends State<_LinkParseDialog> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('取消'),
+                  child: Text(l10n.commonCancel),
                 ),
                 const SizedBox(width: 8),
                 FilledButton(
@@ -491,7 +507,7 @@ class _LinkParseDialogState extends State<_LinkParseDialog> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('解析'),
+                      : Text(l10n.biliParse),
                 ),
               ],
             ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 
 /// 多选相关的公共 UI：**顶部上下文工具栏** + 卡片左侧的勾选圆点。
 
@@ -16,23 +17,24 @@ PreferredSizeWidget buildFileSelectionAppBar({
   required VoidCallback onExit,
   required VoidCallback onToggleAll,
   required VoidCallback onOpenMenu,
+  required AppLocalizations l10n,
 }) {
   return AppBar(
     leading: IconButton(
       icon: const Icon(Icons.close),
-      tooltip: '退出多选',
+      tooltip: l10n.fileSelectionExit,
       onPressed: onExit,
     ),
-    title: Text('已选 $count 项'),
+    title: Text(l10n.fileSelectionSelected(count)),
     actions: [
       IconButton(
         icon: Icon(allSelected ? Icons.deselect : Icons.select_all),
-        tooltip: allSelected ? '取消全选' : '全选',
+        tooltip: allSelected ? l10n.commonDeselectAll : l10n.commonSelectAll,
         onPressed: onToggleAll,
       ),
       IconButton(
         icon: const Icon(Icons.more_vert),
-        tooltip: '文件操作',
+        tooltip: l10n.fileSelectionOps,
         // 一个都没选时没有可执行的操作，置灰
         onPressed: count == 0 ? null : onOpenMenu,
       ),

@@ -2660,4 +2660,1263 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get playerFontChangeHintFull =>
       '字体更改需退出播放器并重新进入后生效；内嵌 ASS 字幕需开启「强制覆盖内嵌样式」后字体设置才会生效。';
+
+  @override
+  String get commonCopy => '复制';
+
+  @override
+  String get commonPaste => '粘贴';
+
+  @override
+  String get commonUnknown => '未知';
+
+  @override
+  String get commonSaved => '已保存';
+
+  @override
+  String get commonExpand => '展开';
+
+  @override
+  String get commonCollapse => '收起';
+
+  @override
+  String get commonSelectAll => '全选';
+
+  @override
+  String get commonDeselectAll => '取消全选';
+
+  @override
+  String get commonTest => '测试';
+
+  @override
+  String get commonTestConnection => '测试连接';
+
+  @override
+  String get commonTesting => '测试中…';
+
+  @override
+  String get commonSaving => '保存中…';
+
+  @override
+  String get commonMove => '移动';
+
+  @override
+  String get commonRename => '重命名';
+
+  @override
+  String get commonResume => '继续';
+
+  @override
+  String get commonOrderAsc => '正序';
+
+  @override
+  String get commonOrderDesc => '倒序';
+
+  @override
+  String get commonSaveFailed => '保存失败';
+
+  @override
+  String commonSaveFailedWith(String error) {
+    return '保存失败：$error';
+  }
+
+  @override
+  String get commonConnectOk => '连接成功';
+
+  @override
+  String commonConnectFailed(String error) {
+    return '连接失败：$error';
+  }
+
+  @override
+  String get commonCancelSearch => '取消搜索';
+
+  @override
+  String get commonClearSearch => '清除搜索';
+
+  @override
+  String get biliIndexTitle => '索引';
+
+  @override
+  String get biliRecommend => '推荐';
+
+  @override
+  String get biliBangumi => '哔哩番剧';
+
+  @override
+  String get biliParseLink => '解析链接';
+
+  @override
+  String get biliParse => '解析';
+
+  @override
+  String get biliNothingHere => '暂无内容';
+
+  @override
+  String get biliTimeline => '追番时间表';
+
+  @override
+  String get biliToday => '今天';
+
+  @override
+  String get biliWeekdayMon => '周一';
+
+  @override
+  String get biliWeekdayTue => '周二';
+
+  @override
+  String get biliWeekdayWed => '周三';
+
+  @override
+  String get biliWeekdayThu => '周四';
+
+  @override
+  String get biliWeekdayFri => '周五';
+
+  @override
+  String get biliWeekdaySat => '周六';
+
+  @override
+  String get biliWeekdaySun => '周日';
+
+  @override
+  String get biliFollowed => '已追番';
+
+  @override
+  String get biliLinkUnrecognized => '无法识别该链接（支持 ss/ep/BV/av 号与 b23.tv 短链）';
+
+  @override
+  String get biliParseBangumiLink => '解析番剧链接';
+
+  @override
+  String get biliPasteAnimeLinkHint => '粘贴番剧/视频链接或 b23.tv 短链';
+
+  @override
+  String get biliSearchAnime => '搜索番剧';
+
+  @override
+  String get biliSearchAnimeHint => '输入关键词搜索番剧';
+
+  @override
+  String get biliNoAnimeFound => '没有找到相关番剧';
+
+  @override
+  String get biliSeasonDetail => '番剧详情';
+
+  @override
+  String get biliNoEpisodeSelection => '暂无选集';
+
+  @override
+  String get biliViewAll => '查看全部';
+
+  @override
+  String get biliSelectEpisode => '选集';
+
+  @override
+  String biliRating(String score) {
+    return '评分 $score';
+  }
+
+  @override
+  String biliCountHundredMillion(String value) {
+    return '$value亿';
+  }
+
+  @override
+  String biliCountTenThousand(String value) {
+    return '$value万';
+  }
+
+  @override
+  String get biliIntro => '简介';
+
+  @override
+  String get biliMultiSeason => '多季';
+
+  @override
+  String biliEpisodeNo(int number) {
+    return '第 $number 话';
+  }
+
+  @override
+  String get biliVideoFallbackTitle => 'B 站视频';
+
+  @override
+  String biliPlayFailed(String error) {
+    return '播放失败：$error';
+  }
+
+  @override
+  String get biliLevel => '等级';
+
+  @override
+  String get biliAssets => '资产';
+
+  @override
+  String get biliCoins => '硬币';
+
+  @override
+  String get biliCoinsDesc => '用于投币等操作';
+
+  @override
+  String get biliSignOut => '退出登录';
+
+  @override
+  String get biliMaxLevel => '已满级';
+
+  @override
+  String biliExpValue(int current, int next) {
+    return '经验值 $current / $next';
+  }
+
+  @override
+  String get biliSignOutConfirm => '确定退出哔哩哔哩账号吗？';
+
+  @override
+  String get biliSignOutAction => '退出';
+
+  @override
+  String get biliLoginQrLoading => '正在获取二维码...';
+
+  @override
+  String get biliLoginScanHint => '请使用哔哩哔哩客户端扫码';
+
+  @override
+  String get biliLoginQrFailed => '获取二维码失败，请重试';
+
+  @override
+  String get biliLoginQrRefreshing => '二维码已失效，正在刷新...';
+
+  @override
+  String get biliLoginScannedConfirm => '已扫码，请在手机上确认';
+
+  @override
+  String get biliLoginCredentialFailed => '登录凭证获取失败，请重试';
+
+  @override
+  String biliLoginSuccess(String nickname) {
+    return '登录成功：$nickname';
+  }
+
+  @override
+  String get biliLoginFailedRetry => '登录失败，请重试';
+
+  @override
+  String get biliQrSavedToGallery => '二维码已保存到相册';
+
+  @override
+  String get biliClientNotFound => '未检测到哔哩哔哩客户端';
+
+  @override
+  String get biliPasteCookieFirst => '请先粘贴 Cookie';
+
+  @override
+  String get biliCookieInvalid => '登录失败：Cookie 无效或已过期';
+
+  @override
+  String get biliLoginTitle => '哔哩哔哩登录';
+
+  @override
+  String get biliLoginQrTab => '扫码登录';
+
+  @override
+  String get biliLoginCookieTab => 'Cookie 登录';
+
+  @override
+  String biliLoginRemaining(int seconds) {
+    return '剩余有效时间：$seconds 秒';
+  }
+
+  @override
+  String get biliQrRefresh => '刷新二维码';
+
+  @override
+  String get biliSaveToGallery => '保存到相册';
+
+  @override
+  String get biliOpenApp => '打开哔哩哔哩';
+
+  @override
+  String get biliOpenAppDesc => '「打开哔哩哔哩」会在已安装的哔哩哔哩客户端中自动唤起扫码确认。';
+
+  @override
+  String get biliCookieLoginDesc => '从浏览器复制 Cookie 粘贴登录（扫码异常时的备用方式）';
+
+  @override
+  String get biliLoggingIn => '登录中...';
+
+  @override
+  String get biliCookiePrivacy => 'Cookie 仅本地加密保存，不会上传或记录日志。';
+
+  @override
+  String get downloadSetDirFirst => '请先设置下载目录';
+
+  @override
+  String get downloadDirGone => '下载目录不存在，请重新选择';
+
+  @override
+  String biliDanmakuTasksAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已添加 $count 个弹幕下载任务',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String biliVideoTasksAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已添加 $count 个视频下载任务',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get biliPasteVideoLinkHint =>
+      '粘贴 B 站视频/番剧链接（BV / av / ss / ep / b23.tv）';
+
+  @override
+  String get biliPasteThenParse => '粘贴链接后点「解析」';
+
+  @override
+  String get downloadNoDir => '未设置下载目录';
+
+  @override
+  String get downloadSetDir => '设置目录';
+
+  @override
+  String biliEpisodesSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已选 $count 集',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String biliEpisodesSelectedOfTotal(int selected, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 集',
+    );
+    return '已选 $selected / 共 $_temp0';
+  }
+
+  @override
+  String biliDownloadDanmaku(int count) {
+    return '下载弹幕（$count）';
+  }
+
+  @override
+  String biliDownloadVideo(int count) {
+    return '下载视频（$count）';
+  }
+
+  @override
+  String get biliSyncDanmaku => '同步下载弹幕';
+
+  @override
+  String get subtitleSourceSection => '字幕来源';
+
+  @override
+  String get subtitleWyzieDesc => '经 sub.wyzie.io 搜索，需要 API 密钥';
+
+  @override
+  String get subtitleCustomDesc => '自填接口地址，片名会发送到该地址';
+
+  @override
+  String get subtitleCustomParams => '自定义参数';
+
+  @override
+  String get subtitleWyzieParams => 'Wyzie 参数';
+
+  @override
+  String get subtitleWyzieApiKey => 'WYZIE API 密钥';
+
+  @override
+  String get subtitleWyzieSources => 'Wyzie 来源';
+
+  @override
+  String get subtitleLanguage => '字幕语言';
+
+  @override
+  String get subtitlePreferredFormat => '首选格式';
+
+  @override
+  String get subtitlePreferredEncoding => '首选编码';
+
+  @override
+  String get subtitleApiEndpoint => '接口地址';
+
+  @override
+  String get subtitleCustomTestHint => '用一个片名试搜一次，看能否解析出字幕';
+
+  @override
+  String get subtitleTesting => '正在测试…';
+
+  @override
+  String get subtitleTestNoResult => '连接成功，但没解析出字幕';
+
+  @override
+  String subtitleTestOk(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '连接成功，解析出 $count 条字幕',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subtitleTestFailed(String error) {
+    return '测试失败：$error';
+  }
+
+  @override
+  String get subtitleAllSources => '全部来源';
+
+  @override
+  String get subtitleAllLanguages => '全部语言';
+
+  @override
+  String get subtitleAllFormats => '全部格式';
+
+  @override
+  String get subtitleAllEncodings => '全部编码';
+
+  @override
+  String get subtitlePasteKeyHint => '粘贴密钥（wyzie-…）';
+
+  @override
+  String get subtitleHowToGetKey => '如何获取密钥';
+
+  @override
+  String subtitleKeyType(String type) {
+    return '密钥类型：$type';
+  }
+
+  @override
+  String get subtitleKeyInvalid => '密钥无效';
+
+  @override
+  String get subtitleFreeSource => '免费来源';
+
+  @override
+  String get subtitlePaidSource => '付费来源';
+
+  @override
+  String subtitleCustomSourceHelp(String placeholder) {
+    return '地址里可用 $placeholder 作为片名占位（不写占位符则把片名拼到末尾）。\n搜索时片名会发送到你填写的地址，请自行确认该服务的条款与可用性；本应用不内置、也不代理任何第三方字幕服务。';
+  }
+
+  @override
+  String subtitlePlaceholderHelp(String placeholder) {
+    return '用 $placeholder 占位片名；没有占位符时片名会拼到末尾。';
+  }
+
+  @override
+  String get subtitleHowToCustomEndpoint => '如何自定义接口地址';
+
+  @override
+  String get subtitleTestNameHint => '填一个片名（如 你的名字）';
+
+  @override
+  String get subtitleTestNameDesc => '用这个片名请求一次，看能否解析出字幕。';
+
+  @override
+  String get subtitleSetWyzieKeyFirst => '请先设置 WYZIE API 密钥';
+
+  @override
+  String get subtitleSetCustomUrlFirst => '请先设置自定义字幕地址';
+
+  @override
+  String subtitleDownloadedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已下载 $count 个字幕',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subtitleDownloadResult(int ok, int fail) {
+    return '下载完成：成功 $ok，失败 $fail';
+  }
+
+  @override
+  String get subtitleSearchHint => '输入影视名称或 IMDB / TMDB ID';
+
+  @override
+  String get subtitleBackToSettings => '返回设置';
+
+  @override
+  String get subtitleNoResultHint => '未找到字幕，请换个关键词或调整字幕设置';
+
+  @override
+  String get subtitleDownloadSettings => '字幕下载设置';
+
+  @override
+  String get subtitleSearchHintShort => '输入关键词后点「确定」搜索字幕';
+
+  @override
+  String subtitleResultHeader(String query, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 条',
+    );
+    return '$query · $_temp0';
+  }
+
+  @override
+  String get subtitleSearchAgain => '重新搜索';
+
+  @override
+  String subtitleSelectedOfTotal(int selected, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 条',
+    );
+    return '已选 $selected / $_temp0';
+  }
+
+  @override
+  String get subtitleUnknownSource => '未知来源';
+
+  @override
+  String get subtitleDownloadingNow => '下载中…';
+
+  @override
+  String subtitleDownloadButton(int count) {
+    return '下载字幕（$count）';
+  }
+
+  @override
+  String get mediaInfoItem => '媒体信息';
+
+  @override
+  String get mediaInfoCopied => '媒体信息已复制';
+
+  @override
+  String mediaInfoTitleWithName(String title) {
+    return '媒体信息 - $title';
+  }
+
+  @override
+  String get mediaInfoGeneralHeader => '【通用信息】';
+
+  @override
+  String get mediaInfoVideoStreams => '视频流';
+
+  @override
+  String get mediaInfoAudioStreams => '音频流';
+
+  @override
+  String get mediaInfoSubtitleStreams => '字幕流';
+
+  @override
+  String get mediaInfoFetchFailed => '媒体信息获取失败';
+
+  @override
+  String get mediaInfoGeneral => '通用信息';
+
+  @override
+  String get mediaInfoFormat => '格式';
+
+  @override
+  String get mediaInfoFormatVersion => '格式版本';
+
+  @override
+  String get mediaInfoFileSize => '文件大小';
+
+  @override
+  String get mediaInfoOverallBitrate => '总比特率';
+
+  @override
+  String get mediaInfoEncodedDate => '编码日期';
+
+  @override
+  String get mediaInfoWritingApp => '编码应用';
+
+  @override
+  String get mediaInfoWritingLibrary => '编码库';
+
+  @override
+  String mediaInfoVideoStreamNo(int index) {
+    return '视频流 #$index';
+  }
+
+  @override
+  String mediaInfoAudioStreamNo(int index) {
+    return '音频流 #$index';
+  }
+
+  @override
+  String mediaInfoSubtitleStreamNo(int index) {
+    return '字幕流 #$index';
+  }
+
+  @override
+  String get mediaInfoNoInfo => '未获取到媒体信息';
+
+  @override
+  String get mediaInfoCodec => '编码';
+
+  @override
+  String get mediaInfoProfile => '配置';
+
+  @override
+  String get mediaInfoCodecId => '编码ID';
+
+  @override
+  String get mediaInfoWidth => '宽';
+
+  @override
+  String get mediaInfoHeight => '高';
+
+  @override
+  String get mediaInfoAspectRatio => '宽高比';
+
+  @override
+  String get mediaInfoFrameRateMode => '帧率模式';
+
+  @override
+  String get mediaInfoBitrate => '比特率';
+
+  @override
+  String get mediaInfoBitDepth => '位深度';
+
+  @override
+  String get mediaInfoColorSpace => '色彩空间';
+
+  @override
+  String get mediaInfoChromaSubsampling => '色度子采样';
+
+  @override
+  String get mediaInfoHdrFormat => 'HDR格式';
+
+  @override
+  String get mediaInfoChannels => '声道';
+
+  @override
+  String get mediaInfoStreamSize => '流大小';
+
+  @override
+  String get mediaInfoStream => '流';
+
+  @override
+  String get networkStorageTitle => '网络存储';
+
+  @override
+  String get networkHostInputRequired => '请先填写主机地址';
+
+  @override
+  String get networkPortInvalid => '端口需为 1-65535';
+
+  @override
+  String networkDefaultPortWithSynology(String port) {
+    return '默认 $port（群晖 5005/5006）';
+  }
+
+  @override
+  String networkDefaultPort(String port) {
+    return '默认 $port';
+  }
+
+  @override
+  String get networkEditAccount => '编辑账户';
+
+  @override
+  String get networkAddAccount => '添加账户';
+
+  @override
+  String get networkDisplayName => '显示名称';
+
+  @override
+  String get networkDisplayNameHint => '例如：家庭 NAS';
+
+  @override
+  String get networkNameRequired => '请输入名称';
+
+  @override
+  String get networkProtocolLabel => '协议';
+
+  @override
+  String get networkHostLabel => '主机地址';
+
+  @override
+  String get networkHostHint => 'IP 或域名';
+
+  @override
+  String get networkHostRequiredInput => '请输入主机地址';
+
+  @override
+  String get networkPortLabel => '端口';
+
+  @override
+  String get networkPathDefaultHint => '默认为 /';
+
+  @override
+  String get networkAnonymous => '匿名登录';
+
+  @override
+  String get networkAnonymousDesc => 'FTP / SMB 匿名访问时开启';
+
+  @override
+  String get networkUseHttps => '使用 HTTPS';
+
+  @override
+  String get networkUseHttpsDesc => '启用后使用加密连接（默认端口 443）';
+
+  @override
+  String get networkUsername => '账号';
+
+  @override
+  String get networkPassword => '密码';
+
+  @override
+  String get networkHidePassword => '隐藏密码';
+
+  @override
+  String get networkShowPassword => '显示密码';
+
+  @override
+  String networkSortByBoth(String field, String order) {
+    return '按$field$order';
+  }
+
+  @override
+  String get networkSearchCurrentDir => '搜索本目录';
+
+  @override
+  String get networkRefreshCurrentDir => '刷新本目录';
+
+  @override
+  String get networkBackToRoot => '回到共享根目录';
+
+  @override
+  String get networkShowHiddenFiles => '显示隐藏文件';
+
+  @override
+  String get networkNoMatchingFiles => '没有匹配的文件';
+
+  @override
+  String get networkDirEmpty => '该目录为空';
+
+  @override
+  String get networkOnlyHiddenFiles => '本目录只有隐藏文件';
+
+  @override
+  String get networkBackUp => '返回上一级';
+
+  @override
+  String get networkModifiedTime => '修改时间';
+
+  @override
+  String get networkServerNotProvided => '服务器未提供';
+
+  @override
+  String get networkLocation => '位置';
+
+  @override
+  String get networkConnectionLabel => '连接';
+
+  @override
+  String get networkDeleteAccount => '删除账户';
+
+  @override
+  String get networkNoAccounts => '还没有网络存储账户';
+
+  @override
+  String get networkNoAccountsHint => '点击右下角 + 添加 WebDAV / SMB / FTP 账户';
+
+  @override
+  String get homeSearchVideos => '搜索视频';
+
+  @override
+  String get homeSearchFoldersAndVideos => '搜索文件夹与视频';
+
+  @override
+  String get homeSortAndFields => '排序与字段';
+
+  @override
+  String get homeSortAndView => '排序与视图';
+
+  @override
+  String get homeNoVideosInFolder => '该文件夹没有视频';
+
+  @override
+  String get homeNoMatchingVideos => '没有匹配的视频';
+
+  @override
+  String get homeNoMatchingContent => '没有匹配的内容';
+
+  @override
+  String get homeNoMatchingFolders => '没有匹配的文件夹';
+
+  @override
+  String get homeRecentPlayed => '最近播放';
+
+  @override
+  String get homeOpenLink => '打开链接';
+
+  @override
+  String homeFileGone(String title) {
+    return '文件不存在或已被移动：$title';
+  }
+
+  @override
+  String get homePermissionHintInSettings => '请在系统设置中手动开启存储权限';
+
+  @override
+  String get homePermissionDeniedDetail => '存储权限已被拒绝，需要到系统设置里手动开启';
+
+  @override
+  String get homePermissionNeeded => '需要授予存储权限才能扫描视频';
+
+  @override
+  String get homeOpenSettings => '去系统设置开启';
+
+  @override
+  String get homeGrantPermission => '授予权限';
+
+  @override
+  String get homeNoVideosFound => '没有找到视频';
+
+  @override
+  String get homeRescan => '重新扫描';
+
+  @override
+  String get homeRecheckPermission => '我已开启，重新检查';
+
+  @override
+  String get openLinkClipboardEmpty => '剪贴板为空';
+
+  @override
+  String get openLinkInvalid => '链接无效，支持 http/https/rtmp/rtsp 等流媒体协议';
+
+  @override
+  String get openLinkHint => '输入视频直链，将在线播放';
+
+  @override
+  String get downloadClearFinished => '清除已完成';
+
+  @override
+  String get downloadClearFinishedDesc => '只清除已完成和失败的下载记录，不会删除已下载的文件。';
+
+  @override
+  String get downloadNoTasks => '暂无下载任务';
+
+  @override
+  String get downloadFailed => '下载失败';
+
+  @override
+  String get downloadStatusCompleted => '完成';
+
+  @override
+  String get downloadStatusFailed => '失败';
+
+  @override
+  String get downloadStatusMerging => '合并';
+
+  @override
+  String get downloadStatusDownloading => '下载中';
+
+  @override
+  String get downloadStatusPending => '等待';
+
+  @override
+  String get downloadMergingCannotPause => '合并中，无法暂停';
+
+  @override
+  String castSearchStartFailed(String error) {
+    return '投屏搜索启动失败：$error';
+  }
+
+  @override
+  String castConnected(String device) {
+    return '已投屏到 $device';
+  }
+
+  @override
+  String castFailed(String error) {
+    return '投屏失败：$error';
+  }
+
+  @override
+  String get castSearching => '正在搜索投屏设备…';
+
+  @override
+  String get castNoDevicesFound => '未发现可投屏设备，请确认手机与电视连接同一 WiFi 后重试。';
+
+  @override
+  String get colorEditorCustom => '自定义调色';
+
+  @override
+  String get colorEditorCollapseCustom => '收起自定义调色';
+
+  @override
+  String get directoryPickerUnreadable => '目录不可读或不存在';
+
+  @override
+  String get directoryPickerTitle => '选择下载目录';
+
+  @override
+  String get directoryPickerUp => '上级目录';
+
+  @override
+  String get directoryPickerSelectThis => '选择此目录';
+
+  @override
+  String get directoryPickerEmpty => '该目录下没有子目录';
+
+  @override
+  String get fileOpPin => '固定';
+
+  @override
+  String get fileOpUnpin => '取消固定';
+
+  @override
+  String get fileOpMultiSelect => '多选';
+
+  @override
+  String get fileOpNewName => '新名称';
+
+  @override
+  String get fileOpNameHint => '扩展名之前的名称';
+
+  @override
+  String fileOpLockedExt(String ext) {
+    return '扩展名固定为 $ext，不可修改';
+  }
+
+  @override
+  String get fileOpDeleteFolderVideosOnly => '仅删除该文件夹内的视频文件，其它文件不会被删除。';
+
+  @override
+  String fileOpDeleteSelectedVideos(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '确定删除选中的 $count 个视频吗？',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String fileOpDeleteSelectedMixed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '将删除选中的 $count 项：文件夹只删除里面的视频文件，其它文件不会被删除。',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fileOpDeleteAllFiles => '删除所有文件';
+
+  @override
+  String get fileOpPreparing => '准备中…';
+
+  @override
+  String fileOpProgressItem(int current, int total) {
+    return '第 $current/$total 项';
+  }
+
+  @override
+  String fileOpProgressItems(int done, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 项',
+    );
+    return '$done / $_temp0';
+  }
+
+  @override
+  String get fileOpProcessing => '处理中…';
+
+  @override
+  String fileOpBytesProgress(String done, String total, String percent) {
+    return '$done / $total（$percent%）';
+  }
+
+  @override
+  String get fileSelectionExit => '退出多选';
+
+  @override
+  String fileSelectionSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已选 $count 项',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fileSelectionOps => '文件操作';
+
+  @override
+  String get folderTransferMoving => '正在移动…';
+
+  @override
+  String get folderTransferCopying => '正在复制…';
+
+  @override
+  String get folderActionCancelled => '已取消';
+
+  @override
+  String folderMovedTo(String title, String dest) {
+    return '已移动「$title」到 $dest';
+  }
+
+  @override
+  String folderCopiedTo(String title, String dest) {
+    return '已复制「$title」到 $dest';
+  }
+
+  @override
+  String folderActionMovedProgressFailed(int done, int total, String failures) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 项',
+    );
+    return '已移动 $done/$_temp0，失败：$failures';
+  }
+
+  @override
+  String folderActionCopiedProgressFailed(
+    int done,
+    int total,
+    String failures,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 项',
+    );
+    return '已复制 $done/$_temp0，失败：$failures';
+  }
+
+  @override
+  String folderActionDeletedProgressFailed(
+    int done,
+    int total,
+    String failures,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 项',
+    );
+    return '已删除 $done/$_temp0，失败：$failures';
+  }
+
+  @override
+  String folderActionMovedProgressFailedMore(
+    int done,
+    int total,
+    String failures,
+    int count,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 项',
+    );
+    return '已移动 $done/$_temp0，失败：$failures 等 $count 项';
+  }
+
+  @override
+  String folderActionCopiedProgressFailedMore(
+    int done,
+    int total,
+    String failures,
+    int count,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 项',
+    );
+    return '已复制 $done/$_temp0，失败：$failures 等 $count 项';
+  }
+
+  @override
+  String folderActionDeletedProgressFailedMore(
+    int done,
+    int total,
+    String failures,
+    int count,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 项',
+    );
+    return '已删除 $done/$_temp0，失败：$failures 等 $count 项';
+  }
+
+  @override
+  String folderActionCancelledThenMoved(int done) {
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done 项',
+    );
+    return '已取消（已移动 $_temp0）';
+  }
+
+  @override
+  String folderActionCancelledThenCopied(int done) {
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done 项',
+    );
+    return '已取消（已复制 $_temp0）';
+  }
+
+  @override
+  String folderActionMovedCount(int done, String dest) {
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done 项',
+    );
+    return '已移动 $_temp0到 $dest';
+  }
+
+  @override
+  String folderActionCopiedCount(int done, String dest) {
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done 项',
+    );
+    return '已复制 $_temp0到 $dest';
+  }
+
+  @override
+  String get folderNameUnchanged => '名称没有变化';
+
+  @override
+  String folderRenamedTo(String newName) {
+    return '已重命名为 $newName';
+  }
+
+  @override
+  String folderDeletedOne(String title) {
+    return '已删除「$title」';
+  }
+
+  @override
+  String folderDeletedCount(int done) {
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done 项',
+    );
+    return '已删除 $_temp0';
+  }
+
+  @override
+  String folderVideoCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 个视频',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get optionsSheetFolderSort => '文件夹排序方式';
+
+  @override
+  String get optionsSheetFolderSortDir => '文件夹排序方向';
+
+  @override
+  String get optionsSheetFolderFields => '文件夹显示字段';
+
+  @override
+  String get optionsSheetVideoSort => '视频排序方式';
+
+  @override
+  String get optionsSheetVideoSortDir => '视频排序方向';
+
+  @override
+  String get optionsSheetVideoFields => '视频显示字段';
+
+  @override
+  String get optionsSheetViewMode => '显示模式';
+
+  @override
+  String get updatePrimarySource => '主下载站';
+
+  @override
+  String get updateBackupSource => '备用下载站';
+
+  @override
+  String updateLinkPending(String label) {
+    return '$label链接待接入';
+  }
+
+  @override
+  String updateOpenLinkFailed(String label) {
+    return '无法打开$label链接';
+  }
+
+  @override
+  String updateNewVersion(String version) {
+    return '发现新版本 $version';
+  }
+
+  @override
+  String get updateIgnore => '忽略';
+
+  @override
+  String get updateLater => '稍后提醒';
+
+  @override
+  String get updateNow => '立即更新';
+
+  @override
+  String get updateChooseMethod => '选择下载方式';
+
+  @override
+  String get updatePending => '待接入';
+
+  @override
+  String get videoCardWatched => '已看完';
+
+  @override
+  String get videoCardUnwatched => '未观看';
+
+  @override
+  String get videoCardDetectingSubtitle => '字幕检测中…';
+
+  @override
+  String get videoCardHasSubtitle => '含字幕';
+
+  @override
+  String videoCardSubtitleCodec(String codec) {
+    return '字幕 · $codec';
+  }
+
+  @override
+  String get videoCardNoSubtitle => '无字幕';
+
+  @override
+  String get biliCoverUnavailable => '哔哩封面不可用（缓存未命中且下载失败）';
 }

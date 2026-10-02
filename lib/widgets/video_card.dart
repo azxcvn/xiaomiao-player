@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/video_file.dart';
 import 'package:moumou/services/playback_progress_service.dart';
 import 'package:moumou/services/player_controls_settings.dart';
@@ -136,6 +137,7 @@ class _VideoCardState extends State<VideoCard> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     final fields = widget.fields;
     // 同步读取最新进度（列表重建时自动刷新）
     final progress =
@@ -193,8 +195,8 @@ class _VideoCardState extends State<VideoCard> {
                 ? Icons.play_circle_outline
                 : Icons.radio_button_unchecked),
         watched
-            ? '已看完'
-            : (watching ? '$progressPercent%' : '未观看'),
+            ? l10n.videoCardWatched
+            : (watching ? '$progressPercent%' : l10n.videoCardUnwatched),
         emphasize: watched,
       ));
     }
@@ -213,10 +215,12 @@ class _VideoCardState extends State<VideoCard> {
       final hasSub = meta?.hasEmbeddedSubtitles ?? false;
       final codec = meta?.subtitleCodec ?? '';
       final text = meta == null
-          ? '字幕检测中…'
+          ? l10n.videoCardDetectingSubtitle
           : hasSub
-              ? (codec.isEmpty ? '含字幕' : '字幕 · $codec')
-              : '无字幕';
+              ? (codec.isEmpty
+                  ? l10n.videoCardHasSubtitle
+                  : l10n.videoCardSubtitleCodec(codec))
+              : l10n.videoCardNoSubtitle;
       tags.add(_tag(
         scheme,
         meta == null
@@ -348,7 +352,7 @@ class _VideoCardState extends State<VideoCard> {
                     size: 20,
                     color: scheme.onSurfaceVariant,
                   ),
-                  tooltip: '媒体信息',
+                  tooltip: l10n.mediaInfoItem,
                   visualDensity: VisualDensity.compact,
                   onPressed: widget.onInfoTap,
                 )

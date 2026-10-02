@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/network_connection.dart';
 import 'package:moumou/pages/network/account_edit_page.dart';
 import 'package:moumou/pages/network/network_browser_page.dart';
@@ -35,19 +36,20 @@ class NetworkStoragePage extends StatelessWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context, NetworkConnection connection) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('删除账户'),
-        content: Text('确定删除「${connection.name}」吗？此操作不可撤销。'),
+        title: Text(l10n.networkDeleteAccount),
+        content: Text(l10n.danmakuServerDeleteConfirm(connection.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('取消'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('删除'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -59,13 +61,14 @@ class NetworkStoragePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('网络存储')),
+      appBar: AppBar(title: Text(l10n.networkStorageTitle)),
       // 标准 endFloat 右下角位置（与弹幕服务器页的加号保持一致）；
       // 本页无悬浮胶囊导航栏，不做高度抬升
       floatingActionButton: FloatingActionButton(
         heroTag: 'network_add',
-        tooltip: '添加账户',
+        tooltip: l10n.networkAddAccount,
         onPressed: () => _openEdit(context),
         child: const Icon(Icons.add),
       ),
@@ -95,6 +98,7 @@ class NetworkStoragePage extends StatelessWidget {
   }
 
   Widget _emptyState(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
@@ -102,10 +106,10 @@ class NetworkStoragePage extends StatelessWidget {
         children: [
           Icon(Icons.cloud_off_outlined, size: 80, color: scheme.outline),
           const SizedBox(height: 16),
-          const Text('还没有网络存储账户'),
+          Text(l10n.networkNoAccounts),
           const SizedBox(height: 8),
           Text(
-            '点击右下角 + 添加 WebDAV / SMB / FTP 账户',
+            l10n.networkNoAccountsHint,
             style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
           ),
         ],
@@ -129,6 +133,7 @@ class _AccountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
@@ -182,14 +187,17 @@ class _AccountCard extends StatelessWidget {
                 ),
               ),
               PopupMenuButton<String>(
-                tooltip: '更多操作',
+                tooltip: l10n.commonMoreActions,
                 onSelected: (value) {
                   if (value == 'edit') onEdit();
                   if (value == 'delete') onDelete();
                 },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'edit', child: Text('编辑')),
-                  PopupMenuItem(value: 'delete', child: Text('删除')),
+                itemBuilder: (_) => [
+                  PopupMenuItem(value: 'edit', child: Text(l10n.commonEdit)),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(l10n.commonDelete),
+                  ),
                 ],
               ),
             ],

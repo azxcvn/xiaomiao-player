@@ -9,6 +9,8 @@ import 'package:moumou/services/view_settings.dart';
 import 'package:moumou/widgets/video_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 扫描器拿不到时长的视频（`.nomedia` / 隐藏文件夹里的条目由原生文件系统
 /// 补扫得到，`durationMs` 恒为 0）在列表里的进度显示测试。
 ///
@@ -57,6 +59,9 @@ void main() {
     await PlaybackProgressService.instance.ensureLoaded();
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Scaffold(
           body: VideoCard(
             video: VideoFile(

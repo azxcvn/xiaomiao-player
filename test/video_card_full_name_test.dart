@@ -8,6 +8,8 @@ import 'package:moumou/services/view_settings.dart';
 import 'package:moumou/widgets/video_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 视频卡片「完整名称」字段测试（用户反馈：列表里标题显示不全）：
 /// 选中该字段时标题不截断（不限行数、整名换行，卡片高度随标题行数变化）；
 /// 未选中时维持原来的「最多 2 行 + 省略号」。
@@ -39,6 +41,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Scaffold(
           // 列表里用卡片（ListView 给子项松高度约束）：卡片按内容取自身高度，
           // 与真实列表一致——这样才能断言「卡片高度随标题行数变化」
