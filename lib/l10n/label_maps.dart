@@ -32,6 +32,7 @@ import 'package:moumou/services/subtitle/subtitle_source_settings.dart';
 import 'package:moumou/services/view_settings.dart';
 import 'package:moumou/services/wallpaper_settings.dart';
 import 'package:moumou/theme/theme_controller.dart';
+import 'package:moumou/utils/chapter_utils.dart';
 import 'package:moumou/utils/danmaku_episode.dart';
 import 'package:moumou/utils/danmaku_timeline.dart';
 import 'package:moumou/utils/network_sort.dart';
@@ -300,6 +301,13 @@ String decodePresetDescription(AppLocalizations l10n, DecodePreset preset) =>
     };
 
 // ── 章节跳段 / 播放列表排序 ───────────────────────────────────
+
+/// 缩略图章节胶囊的展示名：章节自带标题就用标题，无标题回退「第 N 章」。
+///
+/// 只有时间没有标题的章节（MKV 常见）由 [ChapterHeading.number] 表达，
+/// 文案在这里现取——`utils/chapter_utils.dart` 按分层不许 import l10n。
+String chapterHeadingLabel(AppLocalizations l10n, ChapterHeading heading) =>
+    heading.text ?? l10n.playerChapterNumber(heading.fallbackNumber);
 
 /// 章节跳段类型胶囊文案
 String chapterSkipTypeLabel(AppLocalizations l10n, ChapterSkipType type) =>

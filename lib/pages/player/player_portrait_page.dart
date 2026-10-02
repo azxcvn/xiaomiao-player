@@ -2221,6 +2221,15 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         showRemaining: _showRemaining,
       );
 
+  /// 缩略图预览里的章节胶囊文案：章节有标题用标题，无标题回退「第 N 章」。
+  ///
+  /// 文案在 UI 层取：`utils/chapter_utils` 按分层只回标题或章节序号。
+  String? _chapterChipLabel(Duration position) {
+    final heading = _chapterTracker.chapterHeadingAt(position);
+    if (heading == null) return null;
+    return chapterHeadingLabel(AppLocalizations.of(context), heading);
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -2528,8 +2537,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
                       fraction: _thumbFraction,
                       visible: _thumbVisible,
                       // 拖动位置所属章节（按预览时刻查，不按当前播放位置）
-                      chapterTitle:
-                          _chapterTracker.chapterTitleAt(_thumbPreview!.time),
+                      chapterTitle: _chapterChipLabel(_thumbPreview!.time),
                     ),
                   ),
                 // 右侧操作（截图 / 锁定，从右侧滑入；与横屏同款灰黑圆角按钮）

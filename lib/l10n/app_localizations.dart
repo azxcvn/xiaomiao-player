@@ -3662,6 +3662,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, other{共 {count} 章}}'**
   String playerChapterCount(int count);
 
+  /// 播放器缩略图章节胶囊：章节无标题时的回退名（{number} 从 1 起算）
+  ///
+  /// In zh, this message translates to:
+  /// **'第 {number} 章'**
+  String playerChapterNumber(int number);
+
   /// 播放器章节跳段面板：自动跳过开关
   ///
   /// In zh, this message translates to:
@@ -5216,6 +5222,18 @@ abstract class AppLocalizations {
   /// **'登录失败：Cookie 无效或已过期'**
   String get biliCookieInvalid;
 
+  /// B 站登录：Cookie 里根本没有 SESSDATA（与「无效或已过期」区分，见 error_texts.dart）
+  ///
+  /// In zh, this message translates to:
+  /// **'Cookie 缺少 SESSDATA，无法登录'**
+  String get biliCookieMissingSessdata;
+
+  /// B 站登录：扫码返回的登录凭证解析失败（缺少 SESSDATA）
+  ///
+  /// In zh, this message translates to:
+  /// **'登录凭证解析失败（缺少 SESSDATA）'**
+  String get biliLoginCredentialParseFailed;
+
   /// B 站登录页标题
   ///
   /// In zh, this message translates to:
@@ -5593,6 +5611,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'字幕下载设置'**
   String get subtitleDownloadSettings;
+
+  /// 字幕下载：设置项副标题的前缀（配 commonLabelWithColon 用，后面跟来源名）
+  ///
+  /// In zh, this message translates to:
+  /// **'当前来源'**
+  String get subtitleCurrentSource;
 
   /// 字幕下载：空态提示
   ///

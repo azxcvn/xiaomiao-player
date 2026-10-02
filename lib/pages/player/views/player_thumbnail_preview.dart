@@ -22,9 +22,11 @@ class PlayerThumbnailPreview extends StatelessWidget {
   /// 是否显示（拖动中显示，松手淡出）
   final bool visible;
 
-  /// 拖动位置所属的章节名（null / 空白 = 不显示章节胶囊）。
-  /// 由页面用 `ChapterTracker.chapterTitleAt(拖动位置)` 提供——注意不能按
-  /// 当前播放位置取，拖动时播放位置还停在原处。
+  /// 拖动位置所属的章节名（null = 不显示章节胶囊；无标题章节由页面回退成
+  /// 「第 N 章」后再传进来）。
+  /// 由页面用 `ChapterTracker.chapterHeadingAt(拖动位置)` 查、经
+  /// `label_maps.chapterHeadingLabel` 取文案——注意不能按当前播放位置取，
+  /// 拖动时播放位置还停在原处。
   final String? chapterTitle;
 
   const PlayerThumbnailPreview({

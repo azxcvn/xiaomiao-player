@@ -1918,6 +1918,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String playerChapterNumber(int number) {
+    return '第 $number 章';
+  }
+
+  @override
   String get playerChapterSkipAuto => '自动跳过';
 
   @override
@@ -2818,6 +2823,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get biliCookieInvalid => '登录失败：Cookie 无效或已过期';
 
   @override
+  String get biliCookieMissingSessdata => 'Cookie 缺少 SESSDATA，无法登录';
+
+  @override
+  String get biliLoginCredentialParseFailed => '登录凭证解析失败（缺少 SESSDATA）';
+
+  @override
   String get biliLoginTitle => '哔哩哔哩登录';
 
   @override
@@ -3064,6 +3075,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get subtitleDownloadSettings => '字幕下载设置';
+
+  @override
+  String get subtitleCurrentSource => '当前来源';
 
   @override
   String get subtitleSearchHintShort => '输入关键词后点「确定」搜索字幕';

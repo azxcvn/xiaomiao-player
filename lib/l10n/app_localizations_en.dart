@@ -2000,6 +2000,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String playerChapterNumber(int number) {
+    return 'Chapter $number';
+  }
+
+  @override
   String get playerChapterSkipAuto => 'Auto skip';
 
   @override
@@ -2951,6 +2956,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sign-in failed: the cookie is invalid or has expired';
 
   @override
+  String get biliCookieMissingSessdata =>
+      'Sign-in failed: the cookie has no SESSDATA';
+
+  @override
+  String get biliLoginCredentialParseFailed =>
+      'Failed to parse the sign-in credential (no SESSDATA)';
+
+  @override
   String get biliLoginTitle => 'Bilibili sign-in';
 
   @override
@@ -3214,6 +3227,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subtitleDownloadSettings => 'Subtitle download settings';
+
+  @override
+  String get subtitleCurrentSource => 'Current source';
 
   @override
   String get subtitleSearchHintShort =>

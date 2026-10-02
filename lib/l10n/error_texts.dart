@@ -125,10 +125,13 @@ String biliErrorText(AppLocalizations l10n, BiliApiException e) =>
       BiliApiErrorCode.videoRiskControlFailed =>
         l10n.biliVideoRiskControlFailed,
       BiliApiErrorCode.videoExclusive => l10n.biliVideoExclusive,
-      // 登录链路的失败原因：登录页只显示通用文案，这里与登录页保持同一套说法
+      // 登录链路的失败原因：登录页的 toast 仍是通用文案，但错误对象保留
+      // **可区分**的具体原因（缺 SESSDATA / 凭证解析失败 / Cookie 失效），
+      // 不要合并成同一句——否则「格式不对」会被说成「已过期」（归因误导）。
       BiliApiErrorCode.loginQrFailed => l10n.biliLoginQrFailed,
-      BiliApiErrorCode.loginCredentialParseFailed => l10n.biliLoginFailedRetry,
-      BiliApiErrorCode.loginCookieMissing => l10n.biliCookieInvalid,
+      BiliApiErrorCode.loginCredentialParseFailed =>
+        l10n.biliLoginCredentialParseFailed,
+      BiliApiErrorCode.loginCookieMissing => l10n.biliCookieMissingSessdata,
       BiliApiErrorCode.loginCookieInvalid => l10n.biliCookieInvalid,
       BiliApiErrorCode.downloadLinkUnrecognized =>
         l10n.biliDownloadLinkUnrecognized,

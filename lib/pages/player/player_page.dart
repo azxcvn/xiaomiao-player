@@ -3469,6 +3469,15 @@ class _PlayerPageState extends State<PlayerPage>
     _resetHideTimer();
   }
 
+  /// 缩略图预览里的章节胶囊文案：章节有标题用标题，无标题回退「第 N 章」。
+  ///
+  /// 文案在 UI 层取：`utils/chapter_utils` 按分层只回标题或章节序号。
+  String? _chapterChipLabel(Duration position) {
+    final heading = _chapterTracker.chapterHeadingAt(position);
+    if (heading == null) return null;
+    return chapterHeadingLabel(AppLocalizations.of(context), heading);
+  }
+
   @override
   Widget build(BuildContext context) {
     // 拦截系统返回键（手势/三键），与左上角返回按钮走同一路径：
@@ -3924,8 +3933,7 @@ class _PlayerPageState extends State<PlayerPage>
                       fraction: _thumbFraction,
                       visible: _thumbVisible,
                       // 拖动位置所属章节（按预览时刻查，不按当前播放位置）
-                      chapterTitle:
-                          _chapterTracker.chapterTitleAt(_thumbPreview!.time),
+                      chapterTitle: _chapterChipLabel(_thumbPreview!.time),
                     ),
                   ),
                 // 双指缩放后显示「还原画面」入口：**跟随控制层**淡入淡出

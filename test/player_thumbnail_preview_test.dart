@@ -5,7 +5,7 @@ import 'package:moumou/pages/player/views/player_thumbnail_preview.dart';
 /// 缩略图预览气泡的章节胶囊回归测试。
 ///
 /// 对齐 mpvRx：拖动进度条时，预览图**上方**显示当前时间点所属的章节名胶囊，
-/// 下方是时间胶囊。章节名由页面用 `ChapterTracker.chapterTitleAt(拖动位置)`
+/// 下方是时间胶囊。章节名由页面用 `ChapterTracker.chapterHeadingAt(拖动位置)`
 /// 注入（纯函数算法见 `utils/chapter_utils.dart` 与 `chapter_utils_test.dart`）。
 ///
 /// 这里只验证「气泡在有/无章节名时的渲染行为」，不涉及抓帧（frame 传 null

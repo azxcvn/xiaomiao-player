@@ -375,10 +375,8 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
               icon: Icons.tune,
               title: l10n.subtitleDownloadSettings,
               subtitle: Text(
-                '当前来源：${subtitleSourceKindLabel(
-                  AppLocalizations.of(context),
-                  _source.kind,
-                )}',
+                '${l10n.commonLabelWithColon(l10n.subtitleCurrentSource)}'
+                '${subtitleSourceKindLabel(l10n, _source.kind)}',
               ),
               onTap: () {
                 Navigator.of(context).push(

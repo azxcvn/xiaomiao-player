@@ -116,13 +116,16 @@ class ChapterTracker extends ChangeNotifier {
   String? get currentChapterTitle =>
       _currentChapterIndex == null ? null : _chapters[_currentChapterIndex!].title;
 
-  /// 任意时间点所属的章节名（进度条拖动时的缩略图章节胶囊用）。
+  /// 任意时间点所属的章节（进度条拖动时的缩略图章节胶囊用）。
   ///
   /// 与 [currentChapterTitle] 的区别：后者按**当前播放位置**算，而拖动进度条时
   /// 播放位置还停在原处，必须用**拖动位置**去查。规则见
-  /// [chapter_utils.chapterTitleAt]（标题空白回退「第 N 章」）。
-  String? chapterTitleAt(Duration position) =>
-      chapter_utils.chapterTitleAt(_chapters, position.inMilliseconds / 1000.0);
+  /// [chapter_utils.chapterHeadingAt]（无标题章节的回退序号由 UI 侧翻成文案）。
+  chapter_utils.ChapterHeading? chapterHeadingAt(Duration position) =>
+      chapter_utils.chapterHeadingAt(
+        _chapters,
+        position.inMilliseconds / 1000.0,
+      );
 
   /// 打开媒体 / 切集后调用：读取章节并派生跳过片段。
   ///

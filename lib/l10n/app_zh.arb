@@ -1721,6 +1721,15 @@
       }
     }
   },
+  "playerChapterNumber": "第 {number} 章",
+  "@playerChapterNumber": {
+    "description": "播放器缩略图章节胶囊：章节无标题时的回退名（{number} 从 1 起算）",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "playerChapterSkipAuto": "自动跳过",
   "@playerChapterSkipAuto": {
     "description": "播放器章节跳段面板：自动跳过开关"
@@ -2912,6 +2921,14 @@
   "@biliCookieInvalid": {
     "description": "B 站登录：Cookie 无效"
   },
+  "biliCookieMissingSessdata": "Cookie 缺少 SESSDATA，无法登录",
+  "@biliCookieMissingSessdata": {
+    "description": "B 站登录：Cookie 里根本没有 SESSDATA（与「无效或已过期」区分，见 error_texts.dart）"
+  },
+  "biliLoginCredentialParseFailed": "登录凭证解析失败（缺少 SESSDATA）",
+  "@biliLoginCredentialParseFailed": {
+    "description": "B 站登录：扫码返回的登录凭证解析失败（缺少 SESSDATA）"
+  },
   "biliLoginTitle": "哔哩哔哩登录",
   "@biliLoginTitle": {
     "description": "B 站登录页标题"
@@ -3239,6 +3256,10 @@
   "subtitleDownloadSettings": "字幕下载设置",
   "@subtitleDownloadSettings": {
     "description": "字幕下载：设置面板标题"
+  },
+  "subtitleCurrentSource": "当前来源",
+  "@subtitleCurrentSource": {
+    "description": "字幕下载：设置项副标题的前缀（配 commonLabelWithColon 用，后面跟来源名）"
   },
   "subtitleSearchHintShort": "输入关键词后点「确定」搜索字幕",
   "@subtitleSearchHintShort": {
