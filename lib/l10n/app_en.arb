@@ -1276,5 +1276,9 @@
   "playerNetworkDanmakuLoadedManual": "{anime} · {episode} ({server})",
   "playerNetworkDanmakuLoadedAuto": "{anime} {episode} ({server})",
   "playerDanmakuLocateNoEpisode": "Could not detect an episode number from the file name; use the input above to jump",
-  "playerDanmakuLocateEpisodeMissing": "Episode {number} was not found; use the input above to jump"
+  "playerDanmakuLocateEpisodeMissing": "Episode {number} was not found; use the input above to jump",
+  "legalAgreeCheckbox": "I have read and agree to the privacy policy above",
+  "legalDisagreeExit": "Disagree and exit",
+  "legalAgreeWithCountdown": "Agree and continue ({seconds}s)",
+  "legalAgreeContinue": "Agree and continue"
 }

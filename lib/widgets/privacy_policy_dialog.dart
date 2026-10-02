@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:moumou/services/privacy_policy_content.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/legal.dart';
 import 'package:moumou/utils/app_dialog.dart';
 
 /// 首次启动用户隐私弹窗（工作.md：隐私政策功能）。
@@ -68,6 +69,9 @@ class _PrivacyPolicyDialogState extends State<PrivacyPolicyDialog> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
+    // 长文正文按当前语言取（legal_zh / legal_en，不进 ARB）
+    final legal = legalTextsFor(Localizations.localeOf(context));
     return PopScope(
       // 门禁弹窗不可被系统返回键关闭，只能点同意/不同意
       canPop: false,
@@ -84,7 +88,7 @@ class _PrivacyPolicyDialogState extends State<PrivacyPolicyDialog> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
                 child: Text(
-                  kPrivacyPolicyTitle,
+                  legal.policyTitle,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 18,
@@ -97,7 +101,7 @@ class _PrivacyPolicyDialogState extends State<PrivacyPolicyDialog> {
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
                   child: Text(
-                    kPrivacyPolicyBody,
+                    legal.policyBody,
                     style: TextStyle(
                       fontSize: 13,
                       height: 1.6,
@@ -115,9 +119,9 @@ class _PrivacyPolicyDialogState extends State<PrivacyPolicyDialog> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                 value: _agreed,
                 onChanged: (v) => setState(() => _agreed = v ?? false),
-                title: const Text(
-                  '我已阅读并同意以上隐私政策',
-                  style: TextStyle(fontSize: 13),
+                title: Text(
+                  l10n.legalAgreeCheckbox,
+                  style: const TextStyle(fontSize: 13),
                 ),
               ),
               // 底部按钮
@@ -129,9 +133,9 @@ class _PrivacyPolicyDialogState extends State<PrivacyPolicyDialog> {
                       child: OutlinedButton(
                         key: PrivacyPolicyDialog.cancelButtonKey,
                         onPressed: () => Navigator.of(context).pop(false),
-                        child: const FittedBox(
+                        child: FittedBox(
                           fit: BoxFit.scaleDown,
-                          child: Text('不同意并退出'),
+                          child: Text(l10n.legalDisagreeExit),
                         ),
                       ),
                     ),
@@ -147,8 +151,8 @@ class _PrivacyPolicyDialogState extends State<PrivacyPolicyDialog> {
                           fit: BoxFit.scaleDown,
                           child: Text(
                             _remaining > 0
-                                ? '同意并继续 ($_remaining 秒)'
-                                : '同意并继续',
+                                ? l10n.legalAgreeWithCountdown('$_remaining')
+                                : l10n.legalAgreeContinue,
                           ),
                         ),
                       ),

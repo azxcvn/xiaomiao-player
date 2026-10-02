@@ -4445,4 +4445,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String playerDanmakuLocateEpisodeMissing(String number) {
     return '未找到第 $number 集，可用上方输入框直接跳转';
   }
+
+  @override
+  String get legalAgreeCheckbox => '我已阅读并同意以上隐私政策';
+
+  @override
+  String get legalDisagreeExit => '不同意并退出';
+
+  @override
+  String legalAgreeWithCountdown(String seconds) {
+    return '同意并继续 ($seconds 秒)';
+  }
+
+  @override
+  String get legalAgreeContinue => '同意并继续';
 }

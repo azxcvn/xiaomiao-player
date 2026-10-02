@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:moumou/services/privacy_policy_content.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/legal.dart';
 
 /// 用户协议页（设置 → 关于 → 用户协议，工作.md：隐私政策功能）。
 ///
@@ -11,8 +12,11 @@ class PrivacyPolicyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
+    // 长文正文按当前语言取（legal_zh / legal_en，不进 ARB）
+    final legal = legalTextsFor(Localizations.localeOf(context));
     return Scaffold(
-      appBar: AppBar(title: const Text('用户协议')),
+      appBar: AppBar(title: Text(l10n.settingsAboutUserAgreement)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -38,10 +42,10 @@ class PrivacyPolicyPage extends StatelessWidget {
                       color: scheme.primary,
                     ),
                     const SizedBox(width: 10),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        kUserAgreementTitle,
-                        style: TextStyle(
+                        legal.agreementTitle,
+                        style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),
@@ -54,7 +58,7 @@ class PrivacyPolicyPage extends StatelessWidget {
             const SizedBox(height: 16),
             // 完整正文（可选中复制）
             SelectableText(
-              kUserAgreementBody,
+              legal.agreementBody,
               style: TextStyle(
                 fontSize: 13,
                 height: 1.6,

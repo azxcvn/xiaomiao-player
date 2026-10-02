@@ -4666,4 +4666,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String playerDanmakuLocateEpisodeMissing(String number) {
     return 'Episode $number was not found; use the input above to jump';
   }
+
+  @override
+  String get legalAgreeCheckbox =>
+      'I have read and agree to the privacy policy above';
+
+  @override
+  String get legalDisagreeExit => 'Disagree and exit';
+
+  @override
+  String legalAgreeWithCountdown(String seconds) {
+    return 'Agree and continue (${seconds}s)';
+  }
+
+  @override
+  String get legalAgreeContinue => 'Agree and continue';
 }

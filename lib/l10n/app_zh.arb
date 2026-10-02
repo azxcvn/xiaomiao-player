@@ -5175,5 +5175,26 @@
         "type": "String"
       }
     }
+  },
+  "legalAgreeCheckbox": "我已阅读并同意以上隐私政策",
+  "@legalAgreeCheckbox": {
+    "description": "隐私弹窗：同意复选框文案"
+  },
+  "legalDisagreeExit": "不同意并退出",
+  "@legalDisagreeExit": {
+    "description": "隐私弹窗：不同意（退出应用）按钮"
+  },
+  "legalAgreeWithCountdown": "同意并继续 ({seconds} 秒)",
+  "@legalAgreeWithCountdown": {
+    "description": "隐私弹窗：倒计时中的同意按钮",
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "legalAgreeContinue": "同意并继续",
+  "@legalAgreeContinue": {
+    "description": "隐私弹窗：倒计时结束后的同意按钮"
   }
 }

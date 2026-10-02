@@ -7786,6 +7786,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'未找到第 {number} 集，可用上方输入框直接跳转'**
   String playerDanmakuLocateEpisodeMissing(String number);
+
+  /// 隐私弹窗：同意复选框文案
+  ///
+  /// In zh, this message translates to:
+  /// **'我已阅读并同意以上隐私政策'**
+  String get legalAgreeCheckbox;
+
+  /// 隐私弹窗：不同意（退出应用）按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'不同意并退出'**
+  String get legalDisagreeExit;
+
+  /// 隐私弹窗：倒计时中的同意按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'同意并继续 ({seconds} 秒)'**
+  String legalAgreeWithCountdown(String seconds);
+
+  /// 隐私弹窗：倒计时结束后的同意按钮
+  ///
+  /// In zh, this message translates to:
+  /// **'同意并继续'**
+  String get legalAgreeContinue;
 }
 
 class _AppLocalizationsDelegate
