@@ -40,7 +40,7 @@ class AppearancePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settingsAppearanceTitle)),
+      appBar: AppBar(title: Text(l10n.settingsGroupAppearance)),
       body: ListenableBuilder(
         listenable: controller,
         builder: (context, _) {
@@ -80,7 +80,7 @@ class AppearancePage extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               // ── App 字体设置（工作.md 第 3 点：调色板风格下方）────
-              SettingsGroupTitle(title: l10n.settingsAppearanceGroupFont),
+              SettingsGroupTitle(title: l10n.settingsFontGroupFont),
               SettingsCard(
                 child: SettingsTile(
                   icon: Icons.font_download_outlined,
@@ -230,7 +230,7 @@ class AppearancePage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                l10n.settingsAppearanceCustomColor,
+                l10n.commonCustom,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.w500,

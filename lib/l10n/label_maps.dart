@@ -54,12 +54,12 @@ String themeColorLabel(AppLocalizations l10n, int index) => switch (index) {
   2 => l10n.settingsThemeColorLightBlue,
   3 => l10n.settingsThemeColorIndigo,
   4 => l10n.settingsThemeColorTeal,
-  5 => l10n.settingsThemeColorCyan,
-  6 => l10n.settingsThemeColorGreen,
+  5 => l10n.commonColorCyan,
+  6 => l10n.commonColorGreen,
   7 => l10n.settingsThemeColorMint,
   8 => l10n.settingsThemeColorLightGreen,
   9 => l10n.settingsThemeColorLime,
-  10 => l10n.settingsThemeColorYellow,
+  10 => l10n.commonColorYellow,
   11 => l10n.settingsThemeColorAmber,
   12 => l10n.settingsThemeColorOrange,
   13 => l10n.settingsThemeColorDeepOrange,
@@ -116,7 +116,7 @@ String playerOrientationModeLabel(
   AppLocalizations l10n,
   VideoOrientationMode mode,
 ) => switch (mode) {
-  VideoOrientationMode.auto => l10n.playerOrientationAuto,
+  VideoOrientationMode.auto => l10n.commonAuto,
   VideoOrientationMode.portrait => l10n.playerOrientationPortrait,
   VideoOrientationMode.landscape => l10n.playerOrientationLandscape,
 };
@@ -127,7 +127,7 @@ String playerOrientationModeLabel(
 String playerVideoFitLabel(AppLocalizations l10n, PlayerVideoFit fit) =>
     switch (fit) {
       PlayerVideoFit.fill => l10n.playerVideoFitFill,
-      PlayerVideoFit.contain => l10n.playerVideoFitContain,
+      PlayerVideoFit.contain => l10n.commonAuto,
       PlayerVideoFit.cover => l10n.playerVideoFitCover,
       PlayerVideoFit.fitWidth => l10n.playerVideoFitFitWidth,
       PlayerVideoFit.fitHeight => l10n.playerVideoFitFitHeight,
@@ -281,7 +281,7 @@ String decodeModeDescription(AppLocalizations l10n, DecodeMode mode) =>
 String decodePresetLabel(AppLocalizations l10n, DecodePreset preset) =>
     switch (preset) {
       DecodePreset.fast => l10n.decodePresetFast,
-      DecodePreset.standard => l10n.decodePresetStandard,
+      DecodePreset.standard => l10n.commonDefault,
       DecodePreset.highQuality => l10n.decodePresetHighQuality,
       DecodePreset.gpuHq => l10n.decodePresetGpuHq,
       DecodePreset.lowLatency => l10n.decodePresetLowLatency,
@@ -338,7 +338,7 @@ String subtitleBorderStyleLabel(
   AppLocalizations l10n,
   SubtitleBorderStyle style,
 ) => switch (style) {
-  SubtitleBorderStyle.none => l10n.subtitleBorderNone,
+  SubtitleBorderStyle.none => l10n.commonNone,
   SubtitleBorderStyle.outline => l10n.subtitleBorderOutline,
   SubtitleBorderStyle.box => l10n.subtitleBorderBox,
 };
@@ -347,9 +347,9 @@ String subtitleBorderStyleLabel(
 String subtitlePresetColorLabel(AppLocalizations l10n, String hex) =>
     switch (hex.toUpperCase()) {
       '#FFFFFF' => l10n.subtitlePresetWhite,
-      '#FFEB3B' => l10n.subtitlePresetYellow,
-      '#4DD0E1' => l10n.subtitlePresetCyan,
-      '#81C784' => l10n.subtitlePresetGreen,
+      '#FFEB3B' => l10n.commonColorYellow,
+      '#4DD0E1' => l10n.commonColorCyan,
+      '#81C784' => l10n.commonColorGreen,
       '#000000' => l10n.subtitlePresetBlack,
       '#80000000' => l10n.subtitlePresetTranslucentBlack,
       '#FF000000' => l10n.subtitlePresetOpaqueBlack,
@@ -505,7 +505,7 @@ String appFontWeightLabel(AppLocalizations l10n, int index) => switch (index) {
   6 => l10n.settingsFontWeightBold,
   7 => l10n.settingsFontWeightExtraBold,
   8 => l10n.settingsFontWeightBlack,
-  _ => l10n.settingsFontWeightNone,
+  _ => l10n.commonDefault,
 };
 
 // ── 阶段 6：服务 / 模型 / 工具层产出的显示名与结果文案 ──────────

@@ -144,7 +144,8 @@ String _languageOf(Map<String, dynamic> map) {
       for (final e in value) {
         if (e is String && e.trim().isNotEmpty) parts.add(e.trim());
       }
-      if (parts.isNotEmpty) return parts.join('、');
+      // 分隔符用 ASCII（本层是纯函数、拿不到 l10n；语言名列表用逗号在哪门语言下都读得通）
+      if (parts.isNotEmpty) return parts.join(', ');
     }
   }
   return '';

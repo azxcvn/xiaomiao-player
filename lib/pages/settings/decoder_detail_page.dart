@@ -158,7 +158,7 @@ class DecoderDetailPage extends StatelessWidget {
             ),
           // 采样率胶囊
           if (d.sampleRates.isNotEmpty)
-            _tagSection(scheme, l10n.settingsDecoderSampleRates, d.sampleRates),
+            _tagSection(scheme, l10n.mediaInfoSampleRates, d.sampleRates),
           // 色彩格式胶囊
           if (d.colorFormats.isNotEmpty)
             _tagSection(scheme, l10n.settingsDecoderColorFormats, d.colorFormats),

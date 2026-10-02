@@ -54,7 +54,7 @@ class _LicensePageState extends State<LicensePage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settingsLicenseTitle)),
+      appBar: AppBar(title: Text(l10n.settingsAboutLicenses)),
       body: FutureBuilder<Map<String, LicenseEntry>>(
         future: _licensesFuture,
         builder: (context, snapshot) {

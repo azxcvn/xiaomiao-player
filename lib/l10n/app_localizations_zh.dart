@@ -42,12 +42,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsThemeColorTeal => '蓝绿色';
 
   @override
-  String get settingsThemeColorCyan => '青色';
-
-  @override
-  String get settingsThemeColorGreen => '绿色';
-
-  @override
   String get settingsThemeColorMint => '薄荷绿';
 
   @override
@@ -55,9 +49,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsThemeColorLime => '酸橙色';
-
-  @override
-  String get settingsThemeColorYellow => '黄色';
 
   @override
   String get settingsThemeColorAmber => '琥珀色';
@@ -168,9 +159,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerDoubleTapMixed => '混合模式';
 
   @override
-  String get playerOrientationAuto => '自动';
-
-  @override
   String get playerOrientationPortrait => '锁定竖屏';
 
   @override
@@ -178,9 +166,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playerVideoFitFill => '拉伸';
-
-  @override
-  String get playerVideoFitContain => '自动';
 
   @override
   String get playerVideoFitCover => '裁剪';
@@ -363,9 +348,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get decodePresetFastDesc => '性能优先';
 
   @override
-  String get decodePresetStandard => '默认';
-
-  @override
   String get decodePresetStandardDesc => '标准配置';
 
   @override
@@ -429,9 +411,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get subtitleAlignRight => '右对齐';
 
   @override
-  String get subtitleBorderNone => '无';
-
-  @override
   String get subtitleBorderOutline => '描边';
 
   @override
@@ -439,15 +418,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get subtitlePresetWhite => '白色';
-
-  @override
-  String get subtitlePresetYellow => '黄色';
-
-  @override
-  String get subtitlePresetCyan => '青色';
-
-  @override
-  String get subtitlePresetGreen => '绿色';
 
   @override
   String get subtitlePresetBlack => '黑色';
@@ -604,25 +574,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsDanmakuServerDesc => '网络弹幕服务器与切集自动匹配';
 
   @override
-  String get settingsDanmakuDownload => '弹幕下载';
-
-  @override
   String get settingsDanmakuDownloadDesc => 'B 站弹幕下载';
-
-  @override
-  String get settingsVideoDownload => '视频下载';
 
   @override
   String get settingsVideoDownloadDesc => 'B 站视频下载';
 
   @override
-  String get settingsSubtitleDownload => '字幕下载';
-
-  @override
   String get settingsSubtitleDownloadDesc => '影视字幕下载';
-
-  @override
-  String get settingsDownloadManager => '下载管理';
 
   @override
   String get settingsDownloadManagerDesc => '查看下载任务进度';
@@ -644,9 +602,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsLoginRequired => '需要登录哔哩哔哩账号';
-
-  @override
-  String get settingsGroupLanguage => '语言';
 
   @override
   String get settingsLanguage => '语言设置';
@@ -921,11 +876,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get danmakuServerDelete => '删除服务器';
 
   @override
-  String danmakuServerDeleteConfirm(String name) {
-    return '确定删除「$name」吗？此操作不可撤销。';
-  }
-
-  @override
   String get danmakuServerDedupe => '搜索结果自动去重';
 
   @override
@@ -1072,9 +1022,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsErrorLogTitle => '错误日志';
 
   @override
-  String get settingsErrorLogRefresh => '刷新';
-
-  @override
   String get settingsErrorLogRefreshRealtime => '刷新（实时查看）';
 
   @override
@@ -1100,9 +1047,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsErrorLogExport => '导出';
 
   @override
-  String get settingsErrorLogDelete => '删除';
-
-  @override
   String get settingsErrorLogCopied => '日志内容已复制到剪贴板';
 
   @override
@@ -1115,11 +1059,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsErrorLogDeleteTitle => '删除日志';
-
-  @override
-  String settingsErrorLogDeleteConfirm(String name) {
-    return '确定删除「$name」吗？';
-  }
 
   @override
   String get settingsErrorLogDeleted => '已删除';
@@ -1168,9 +1107,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsFontWeightLabel => '字体字重';
-
-  @override
-  String get settingsFontWeightNone => '默认';
 
   @override
   String get settingsFontWeightThin => '极细';
@@ -1294,9 +1230,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsAboutAppNameLoading => '读取中';
 
   @override
-  String get settingsLicenseTitle => '许可证书';
-
-  @override
   String get settingsLicenseOpenSource => '开源许可';
 
   @override
@@ -1331,9 +1264,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsLicenseLoadFailed => '许可信息加载失败';
 
   @override
-  String get settingsAppearanceTitle => '外观';
-
-  @override
   String get settingsAppearanceMode => '外观模式';
 
   @override
@@ -1343,9 +1273,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsAppearancePaletteVariant => '调色板风格';
 
   @override
-  String get settingsAppearanceGroupFont => '字体';
-
-  @override
   String get settingsAppearanceCustomFontDesc => '自定义全局字体';
 
   @override
@@ -1353,9 +1280,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsAppearanceDynamicColor => '动态色';
-
-  @override
-  String get settingsAppearanceCustomColor => '自定义';
 
   @override
   String get settingsAppearanceSdkTooLow => '安卓版本过低，不支持该功能';
@@ -1448,16 +1372,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsDecoderHardwareFeatures => '硬件特性';
 
   @override
-  String get settingsDecoderSampleRates => '采样率';
-
-  @override
   String get settingsDecoderColorFormats => '色彩格式';
 
   @override
   String get settingsDecoderProfiles => '支持的 Profile / Level';
-
-  @override
-  String get settingsCacheTitle => '缓存管理';
 
   @override
   String get settingsCacheGroupTitle => '缓存';
@@ -1627,12 +1545,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsWallpaperOffsetX => '水平位置';
 
   @override
-  String get settingsWallpaperOffsetY => '垂直位置';
-
-  @override
-  String get settingsWallpaperBlur => '模糊';
-
-  @override
   String get settingsWallpaperOpacity => '透明度';
 
   @override
@@ -1722,9 +1634,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String playerQualitySwitchFailed(String error) {
     return '切换画质失败：$error';
   }
-
-  @override
-  String get playerQuality => '清晰度';
 
   @override
   String playerScreenshotFailed(String error) {
@@ -2531,11 +2440,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playerResetToZeroSeconds => '重置为 0 秒';
-
-  @override
-  String playerDelaySeconds(String value) {
-    return '$value 秒';
-  }
 
   @override
   String get playerTextColor => '文字颜色';
@@ -4459,4 +4363,83 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get legalAgreeContinue => '同意并继续';
+
+  @override
+  String get commonListSeparator => '、';
+
+  @override
+  String commonLabelWithColon(String label) {
+    return '$label：';
+  }
+
+  @override
+  String mediaInfoStreamsGroupTitle(String title) {
+    return '【$title】';
+  }
+
+  @override
+  String get settingsFontPreviewSample => '0123456789，。！？；：“”（）【】…·';
+
+  @override
+  String folderActionDestWithTarget(String dest, String target) {
+    return '$dest：$target';
+  }
+
+  @override
+  String fileOpItemIssue(String name, String reason) {
+    return '「$name」$reason';
+  }
+
+  @override
+  String fileOpItemFailed(String name, String reason) {
+    return '$name：$reason';
+  }
+
+  @override
+  String get commonColorCyan => '青色';
+
+  @override
+  String get commonColorGreen => '绿色';
+
+  @override
+  String get commonColorYellow => '黄色';
+
+  @override
+  String get commonDefault => '默认';
+
+  @override
+  String commonDeleteConfirm(String name) {
+    return '确定删除「$name」吗？';
+  }
+
+  @override
+  String commonDeleteConfirmIrreversible(String name) {
+    return '确定删除「$name」吗？此操作不可撤销。';
+  }
+
+  @override
+  String get mediaInfoSampleRates => '采样率';
+
+  @override
+  String get commonLanguage => '语言';
+
+  @override
+  String get downloadManagerTitle => '下载管理';
+
+  @override
+  String get biliVideoDownloadTitle => '视频下载';
+
+  @override
+  String get biliDanmakuDownloadTitle => '弹幕下载';
+
+  @override
+  String get biliSubtitleDownloadTitle => '字幕下载';
+
+  @override
+  String get commonQuality => '清晰度';
+
+  @override
+  String playerDelaySeconds(String value) {
+    return '$value 秒';
+  }
 }

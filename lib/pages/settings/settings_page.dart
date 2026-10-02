@@ -169,7 +169,7 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               // ── 语言（用户已拍板：位置在「弹幕」组下方、「下载」组上方）──
-              SettingsGroupTitle(title: l10n.settingsGroupLanguage),
+              SettingsGroupTitle(title: l10n.commonLanguage),
               SettingsCard(
                 child: SettingsTile(
                   icon: Icons.translate_outlined,
@@ -191,7 +191,7 @@ class SettingsPage extends StatelessWidget {
                   children: [
                     SettingsTile(
                       icon: Icons.subtitles_outlined,
-                      title: l10n.settingsDanmakuDownload,
+                      title: l10n.biliDanmakuDownloadTitle,
                       subtitle: Text(l10n.settingsDanmakuDownloadDesc),
                       onTap: () =>
                           _openBiliDownload(context, const BiliDanmakuDownloadPage()),
@@ -199,7 +199,7 @@ class SettingsPage extends StatelessWidget {
                     const Divider(height: 1),
                     SettingsTile(
                       icon: Icons.download_outlined,
-                      title: l10n.settingsVideoDownload,
+                      title: l10n.biliVideoDownloadTitle,
                       subtitle: Text(l10n.settingsVideoDownloadDesc),
                       onTap: () =>
                           _openBiliDownload(context, const BiliVideoDownloadPage()),
@@ -207,7 +207,7 @@ class SettingsPage extends StatelessWidget {
                     const Divider(height: 1),
                     SettingsTile(
                       icon: Icons.closed_caption_outlined,
-                      title: l10n.settingsSubtitleDownload,
+                      title: l10n.biliSubtitleDownloadTitle,
                       subtitle: Text(l10n.settingsSubtitleDownloadDesc),
                       onTap: () {
                         Navigator.of(context).push(
@@ -220,7 +220,7 @@ class SettingsPage extends StatelessWidget {
                     const Divider(height: 1),
                     SettingsTile(
                       icon: Icons.list_alt_outlined,
-                      title: l10n.settingsDownloadManager,
+                      title: l10n.downloadManagerTitle,
                       subtitle: Text(l10n.settingsDownloadManagerDesc),
                       onTap: () {
                         Navigator.of(context).push(

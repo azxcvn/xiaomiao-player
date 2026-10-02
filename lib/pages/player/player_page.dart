@@ -991,7 +991,7 @@ class _PlayerPageState extends State<PlayerPage>
 
   /// 清晰度面板页。
   PlayerPanelPage _qualityPanelPage() => PlayerPanelPage(
-        title: AppLocalizations.of(context).playerQuality,
+        title: AppLocalizations.of(context).commonQuality,
         body: _biliMedia == null
             ? const SizedBox.shrink()
             : PlayerQualityPanel(
@@ -2187,7 +2187,7 @@ class _PlayerPageState extends State<PlayerPage>
               if (_biliMedia != null) ...[
                 _PanelActionTile(
                   icon: Icons.hd_outlined,
-                  label: l10n.playerQuality,
+                  label: l10n.commonQuality,
                   subtitle: _currentQualityDescription(_biliMedia!),
                   onTap: () => PlayerPanelNavigator.of(panelContext)
                       .push(_qualityPanelPage()),

@@ -1158,6 +1158,7 @@ class _AssLimitItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.only(top: 5),
       child: Row(
@@ -1179,7 +1180,7 @@ class _AssLimitItem extends StatelessWidget {
               TextSpan(
                 children: [
                   TextSpan(
-                    text: '$label：',
+                    text: l10n.commonLabelWithColon(label),
                     style: const TextStyle(
                       color: _AssLimitNote._title,
                       fontWeight: FontWeight.w600,

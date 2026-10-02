@@ -274,7 +274,7 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
     return ListenableBuilder(
       listenable: _source,
       builder: (context, _) => Scaffold(
-        appBar: AppBar(title: Text(l10n.settingsSubtitleDownload)),
+        appBar: AppBar(title: Text(l10n.biliSubtitleDownloadTitle)),
         body: Column(
           children: [
             _buildInput(),

@@ -290,7 +290,7 @@ class _DeleteConfirmDialogState extends State<_DeleteConfirmDialog> {
     if (widget.itemCount <= 1) {
       return widget.isDirectory
           ? l10n.fileOpDeleteFolderVideosOnly
-          : l10n.settingsErrorLogDeleteConfirm(widget.title);
+          : l10n.commonDeleteConfirm(widget.title);
     }
     if (!_hasFolder) return l10n.fileOpDeleteSelectedVideos(widget.itemCount);
     return l10n.fileOpDeleteSelectedMixed(widget.itemCount);

@@ -840,7 +840,9 @@ class _BlocklistTileState extends State<_BlocklistTile> {
               style: const TextStyle(color: Colors.white, fontSize: 15),
             ),
             subtitle: Text(
-              keywords.isEmpty ? l10n.commonNotSet : keywords.join('、'),
+              keywords.isEmpty
+                  ? l10n.commonNotSet
+                  : keywords.join(l10n.commonListSeparator),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: Colors.white38, fontSize: 11),

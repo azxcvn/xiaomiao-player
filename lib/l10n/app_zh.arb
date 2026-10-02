@@ -32,12 +32,9 @@
   "settingsThemeColorLightBlue": "浅蓝色",
   "settingsThemeColorIndigo": "靛蓝色",
   "settingsThemeColorTeal": "蓝绿色",
-  "settingsThemeColorCyan": "青色",
-  "settingsThemeColorGreen": "绿色",
   "settingsThemeColorMint": "薄荷绿",
   "settingsThemeColorLightGreen": "浅绿色",
   "settingsThemeColorLime": "酸橙色",
-  "settingsThemeColorYellow": "黄色",
   "settingsThemeColorAmber": "琥珀色",
   "settingsThemeColorOrange": "橙色",
   "settingsThemeColorDeepOrange": "橙红色",
@@ -80,17 +77,12 @@
   },
   "playerDoubleTapSeek": "双击左退右进",
   "playerDoubleTapMixed": "混合模式",
-  "playerOrientationAuto": "自动",
-  "@playerOrientationAuto": {
-    "description": "播放器设置 · 视频方向"
-  },
   "playerOrientationPortrait": "锁定竖屏",
   "playerOrientationLandscape": "锁定横屏",
   "playerVideoFitFill": "拉伸",
   "@playerVideoFitFill": {
     "description": "播放器 · 画面比例（4:3 / 16:9 两个比例项不自造文案，保持原样）"
   },
-  "playerVideoFitContain": "自动",
   "playerVideoFitCover": "裁剪",
   "playerVideoFitFitWidth": "等宽",
   "playerVideoFitFitHeight": "等高",
@@ -166,7 +158,6 @@
     "description": "解码性能预设（名称 + 说明）"
   },
   "decodePresetFastDesc": "性能优先",
-  "decodePresetStandard": "默认",
   "decodePresetStandardDesc": "标准配置",
   "decodePresetHighQuality": "高质量",
   "decodePresetHighQualityDesc": "画质优先",
@@ -194,19 +185,12 @@
   "playlistSortDateDesc": "日期降序",
   "subtitleAlignLeft": "左对齐",
   "subtitleAlignRight": "右对齐",
-  "subtitleBorderNone": "无",
-  "@subtitleBorderNone": {
-    "description": "字幕描边/背景模式（本 App 不提供选择器，枚举保留三态）"
-  },
   "subtitleBorderOutline": "描边",
   "subtitleBorderBox": "背景框",
   "subtitlePresetWhite": "白色",
   "@subtitlePresetWhite": {
     "description": "字幕颜色预设名（按 hex 取；同一颜色多处复用同一个键）"
   },
-  "subtitlePresetYellow": "黄色",
-  "subtitlePresetCyan": "青色",
-  "subtitlePresetGreen": "绿色",
   "subtitlePresetBlack": "黑色",
   "subtitlePresetTranslucentBlack": "半透明黑",
   "subtitlePresetOpaqueBlack": "纯黑",
@@ -324,13 +308,9 @@
   "settingsMediaScanDesc": "扫描规则与文件夹过滤",
   "settingsDanmakuServer": "弹幕服务器",
   "settingsDanmakuServerDesc": "网络弹幕服务器与切集自动匹配",
-  "settingsDanmakuDownload": "弹幕下载",
   "settingsDanmakuDownloadDesc": "B 站弹幕下载",
-  "settingsVideoDownload": "视频下载",
   "settingsVideoDownloadDesc": "B 站视频下载",
-  "settingsSubtitleDownload": "字幕下载",
   "settingsSubtitleDownloadDesc": "影视字幕下载",
-  "settingsDownloadManager": "下载管理",
   "settingsDownloadManagerDesc": "查看下载任务进度",
   "settingsGroupOther": "其他",
   "settingsDeviceInfo": "设备信息",
@@ -340,10 +320,6 @@
   "settingsLoginRequired": "需要登录哔哩哔哩账号",
   "@settingsLoginRequired": {
     "description": "未登录时打开 B 站下载页的提示"
-  },
-  "settingsGroupLanguage": "语言",
-  "@settingsGroupLanguage": {
-    "description": "设置页「语言」组（在弹幕组下方、下载组上方）"
   },
   "settingsLanguage": "语言设置",
   "languageNameZh": "简体中文",
@@ -516,15 +492,6 @@
   "danmakuServerIntro": "启用的服务器将同时用于弹幕搜索与自动匹配，搜索结果按各服务器返回顺序实时呈现",
   "danmakuServerGroupServers": "服务器",
   "danmakuServerDelete": "删除服务器",
-  "danmakuServerDeleteConfirm": "确定删除「{name}」吗？此操作不可撤销。",
-  "@danmakuServerDeleteConfirm": {
-    "description": "删除服务器二次确认",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "danmakuServerDedupe": "搜索结果自动去重",
   "danmakuServerDedupeOnDesc": "重复番剧合并为一条，保留集数最全的",
   "danmakuServerDedupeOffDesc": "每台服务器的结果各自展示，可自行挑选来源",
@@ -595,10 +562,6 @@
   "@settingsErrorLogTitle": {
     "description": "错误日志页（设置 → 关于 → 工具 → 错误日志）页面标题"
   },
-  "settingsErrorLogRefresh": "刷新",
-  "@settingsErrorLogRefresh": {
-    "description": "错误日志页：刷新按钮 tooltip"
-  },
   "settingsErrorLogRefreshRealtime": "刷新（实时查看）",
   "@settingsErrorLogRefreshRealtime": {
     "description": "错误日志详情页：刷新按钮 tooltip（进入即读最新内容）"
@@ -637,10 +600,6 @@
   "@settingsErrorLogExport": {
     "description": "错误日志：导出日志按钮（列表 tooltip 与详情页按钮共用）"
   },
-  "settingsErrorLogDelete": "删除",
-  "@settingsErrorLogDelete": {
-    "description": "错误日志列表：删除单个日志按钮 tooltip"
-  },
   "settingsErrorLogCopied": "日志内容已复制到剪贴板",
   "@settingsErrorLogCopied": {
     "description": "错误日志：复制成功的 toast"
@@ -661,15 +620,6 @@
   "settingsErrorLogDeleteTitle": "删除日志",
   "@settingsErrorLogDeleteTitle": {
     "description": "错误日志：删除单个日志的二次确认标题"
-  },
-  "settingsErrorLogDeleteConfirm": "确定删除「{name}」吗？",
-  "@settingsErrorLogDeleteConfirm": {
-    "description": "错误日志：删除单个日志的二次确认正文",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
   },
   "settingsErrorLogDeleted": "已删除",
   "@settingsErrorLogDeleted": {
@@ -735,10 +685,6 @@
   "settingsFontWeightLabel": "字体字重",
   "@settingsFontWeightLabel": {
     "description": "App 字体设置页：字重滑杆标题"
-  },
-  "settingsFontWeightNone": "默认",
-  "@settingsFontWeightNone": {
-    "description": "App 字体设置页：字重未自定义（滑杆 -1 档）时的显示值"
   },
   "settingsFontWeightThin": "极细",
   "@settingsFontWeightThin": {
@@ -906,10 +852,6 @@
   "@settingsAboutAppNameLoading": {
     "description": "关于页：构建信息还没读完时版本胶囊的占位文案"
   },
-  "settingsLicenseTitle": "许可证书",
-  "@settingsLicenseTitle": {
-    "description": "许可证书页：页面标题"
-  },
   "settingsLicenseOpenSource": "开源许可",
   "@settingsLicenseOpenSource": {
     "description": "许可证书页：列表分组标题"
@@ -952,10 +894,6 @@
   "@settingsLicenseLoadFailed": {
     "description": "许可证书页：许可收集失败的提示"
   },
-  "settingsAppearanceTitle": "外观",
-  "@settingsAppearanceTitle": {
-    "description": "外观设置子页：页面标题"
-  },
   "settingsAppearanceMode": "外观模式",
   "@settingsAppearanceMode": {
     "description": "外观设置子页：主题模式分组标题"
@@ -968,10 +906,6 @@
   "@settingsAppearancePaletteVariant": {
     "description": "外观设置子页：调色板风格分组标题"
   },
-  "settingsAppearanceGroupFont": "字体",
-  "@settingsAppearanceGroupFont": {
-    "description": "外观设置子页：字体分组标题"
-  },
   "settingsAppearanceCustomFontDesc": "自定义全局字体",
   "@settingsAppearanceCustomFontDesc": {
     "description": "外观设置子页：App 字体设置项副标题"
@@ -983,10 +917,6 @@
   "settingsAppearanceDynamicColor": "动态色",
   "@settingsAppearanceDynamicColor": {
     "description": "外观设置子页：主题色网格第 24 格（取系统壁纸主色）"
-  },
-  "settingsAppearanceCustomColor": "自定义",
-  "@settingsAppearanceCustomColor": {
-    "description": "外观设置子页：主题色网格下方的自定义色通栏"
   },
   "settingsAppearanceSdkTooLow": "安卓版本过低，不支持该功能",
   "@settingsAppearanceSdkTooLow": {
@@ -1108,10 +1038,6 @@
   "@settingsDecoderHardwareFeatures": {
     "description": "解码器详情页：硬件特性胶囊分组标题"
   },
-  "settingsDecoderSampleRates": "采样率",
-  "@settingsDecoderSampleRates": {
-    "description": "解码器详情页：采样率胶囊分组标题"
-  },
   "settingsDecoderColorFormats": "色彩格式",
   "@settingsDecoderColorFormats": {
     "description": "解码器详情页：色彩格式胶囊分组标题"
@@ -1119,10 +1045,6 @@
   "settingsDecoderProfiles": "支持的 Profile / Level",
   "@settingsDecoderProfiles": {
     "description": "解码器详情页：supported profiles / levels 胶囊分组标题"
-  },
-  "settingsCacheTitle": "缓存管理",
-  "@settingsCacheTitle": {
-    "description": "缓存管理页：页面标题（本页自有键，未复用 settingsAboutCacheManagement）"
   },
   "settingsCacheGroupTitle": "缓存",
   "@settingsCacheGroupTitle": {
@@ -1296,8 +1218,6 @@
   "settingsWallpaperDragHint": "拖动以调整位置，双指捏合以缩放。",
   "settingsWallpaperScale": "缩放",
   "settingsWallpaperOffsetX": "水平位置",
-  "settingsWallpaperOffsetY": "垂直位置",
-  "settingsWallpaperBlur": "模糊",
   "settingsWallpaperOpacity": "透明度",
   "settingsWallpaperImageUnavailable": "图片已不可用，请重新选择",
   "commonBack": "返回",
@@ -1424,10 +1344,6 @@
         "type": "String"
       }
     }
-  },
-  "playerQuality": "清晰度",
-  "@playerQuality": {
-    "description": "播放器「更多」面板 / 清晰度面板：清晰度"
   },
   "playerScreenshotFailed": "截图失败：{error}",
   "@playerScreenshotFailed": {
@@ -2473,15 +2389,6 @@
   "playerResetToZeroSeconds": "重置为 0 秒",
   "@playerResetToZeroSeconds": {
     "description": "播放器字幕延迟面板：重置为 0 秒"
-  },
-  "playerDelaySeconds": "{value} 秒",
-  "@playerDelaySeconds": {
-    "description": "播放器字幕延迟面板：带正负号的延迟读数",
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
   },
   "playerTextColor": "文字颜色",
   "@playerTextColor": {
@@ -5196,5 +5103,126 @@
   "legalAgreeContinue": "同意并继续",
   "@legalAgreeContinue": {
     "description": "隐私弹窗：倒计时结束后的同意按钮"
+  },
+  "commonListSeparator": "、",
+  "@commonListSeparator": {
+    "description": "通用：并列项之间的分隔符（弹幕屏蔽词 / 诊断项 / 字幕来源语言格式编码的摘要）"
+  },
+  "commonLabelWithColon": "{label}：",
+  "@commonLabelWithColon": {
+    "description": "通用：给一段内容加「标签：」前缀（字幕 ASS 限制说明）",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaInfoStreamsGroupTitle": "【{title}】",
+  "@mediaInfoStreamsGroupTitle": {
+    "description": "媒体信息：复制出的文本里给流分组加方括号标题",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsFontPreviewSample": "0123456789，。！？；：“”（）【】…·",
+  "@settingsFontPreviewSample": {
+    "description": "字体设置页：字体效果预览样例（中文侧顺带展示全角标点字形覆盖）"
+  },
+  "folderActionDestWithTarget": "{dest}：{target}",
+  "@folderActionDestWithTarget": {
+    "description": "文件操作：目标位置与最终条目名（「已移动到 X」的 X）",
+    "placeholders": {
+      "dest": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "fileOpItemIssue": "「{name}」{reason}",
+  "@fileOpItemIssue": {
+    "description": "文件操作：条目名 + 校验失败原因（批量移动/复制预校验）",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "fileOpItemFailed": "{name}：{reason}",
+  "@fileOpItemFailed": {
+    "description": "文件操作：条目名 + 失败原因（批量移动/复制/删除的失败汇总）",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "commonColorCyan": "青色",
+  "@commonColorCyan": {
+    "description": "通用颜色名：青色（主题色 / 字幕颜色预设共用）"
+  },
+  "commonColorGreen": "绿色",
+  "@commonColorGreen": {
+    "description": "通用颜色名：绿色（主题色 / 字幕颜色预设共用）"
+  },
+  "commonColorYellow": "黄色",
+  "@commonColorYellow": {
+    "description": "通用颜色名：黄色（主题色 / 字幕颜色预设共用）"
+  },
+  "commonDefault": "默认",
+  "@commonDefault": {
+    "description": "通用：默认（解码档位 / 字体字重等「未自定义」状态）"
+  },
+  "commonDeleteConfirm": "确定删除「{name}」吗？",
+  "@commonDeleteConfirm": {
+    "description": "错误日志：删除单个日志的二次确认正文",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "commonDeleteConfirmIrreversible": "确定删除「{name}」吗？此操作不可撤销。",
+  "@commonDeleteConfirmIrreversible": {
+    "description": "删除服务器二次确认",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaInfoSampleRates": "采样率",
+  "@mediaInfoSampleRates": {
+    "description": "解码器详情页：采样率胶囊分组标题"
+  },
+  "commonLanguage": "语言",
+  "@commonLanguage": {
+    "description": "设置页「语言」组（在弹幕组下方、下载组上方）"
+  },
+  "downloadManagerTitle": "下载管理",
+  "biliVideoDownloadTitle": "视频下载",
+  "biliDanmakuDownloadTitle": "弹幕下载",
+  "biliSubtitleDownloadTitle": "字幕下载",
+  "commonQuality": "清晰度",
+  "@commonQuality": {
+    "description": "播放器「更多」面板 / 清晰度面板：清晰度"
+  },
+  "playerDelaySeconds": "{value} 秒",
+  "@playerDelaySeconds": {
+    "description": "播放器字幕延迟面板：带正负号的延迟读数",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -118,7 +118,7 @@ class _ErrorLogPageState extends State<ErrorLogPage> {
     final l10n = AppLocalizations.of(context);
     final confirmed = await _confirm(
       l10n.settingsErrorLogDeleteTitle,
-      l10n.settingsErrorLogDeleteConfirm(log.name),
+      l10n.commonDeleteConfirm(log.name),
     );
     if (!confirmed) return;
     final ok = await CrashLogService.deleteLog(log.path);
@@ -155,7 +155,7 @@ class _ErrorLogPageState extends State<ErrorLogPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: l10n.settingsErrorLogRefresh,
+            tooltip: l10n.commonRefresh,
             onPressed: _refreshing
                 ? null
                 : () {
@@ -354,7 +354,7 @@ class _LogTile extends StatelessWidget {
             ),
             IconButton(
               icon: const Icon(Icons.delete_outline, size: 18),
-              tooltip: l10n.settingsErrorLogDelete,
+              tooltip: l10n.commonDelete,
               visualDensity: VisualDensity.compact,
               color: scheme.error,
               onPressed: onDelete,

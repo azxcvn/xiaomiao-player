@@ -206,7 +206,8 @@ String _batchSummary({
   required List<String> failures,
 }) {
   final many = failures.length > 3;
-  final joined = (many ? failures.take(3) : failures).join('；');
+  final joined =
+      (many ? failures.take(3) : failures).join(l10n.commonErrorsSeparator);
   return switch (verb) {
     BatchVerb.move => many
         ? l10n.folderActionMovedProgressFailedMore(done, total, joined, failures.length)
@@ -319,8 +320,10 @@ Future<bool> _transfer(
     debugPrint('onMutated callback failed: $e\n$s');
   }
   if (!context.mounted) return false;
-  final targetName = target == null ? '' : '：${FileOps.baseName(target)}';
-  final destPath = '${FileOps.baseName(destination)}$targetName';
+  final destBase = FileOps.baseName(destination);
+  final destPath = target == null
+      ? destBase
+      : l10n.folderActionDestWithTarget(destBase, FileOps.baseName(target));
   await _notify(
     context,
     move ? l10n.folderMovedTo(title, destPath) : l10n.folderCopiedTo(title, destPath),
@@ -353,7 +356,7 @@ Future<bool> _batchTransfer(
       if (!context.mounted) return false;
       await _notify(
         context,
-        '「${item.name}」${fileOpCodeText(l10n, invalid)}',
+        l10n.fileOpItemIssue(item.name, fileOpCodeText(l10n, invalid)),
       );
       return false;
     }
@@ -410,9 +413,9 @@ Future<bool> _batchTransfer(
         done++;
       } on FileOpException catch (e) {
         if (e.cancelled) break;
-        failures.add('${item.name}：${fileOpErrorText(l10n, e)}');
+        failures.add(l10n.fileOpItemFailed(item.name, fileOpErrorText(l10n, e)));
       } catch (e) {
-        failures.add('${item.name}：$e');
+        failures.add(l10n.fileOpItemFailed(item.name, '$e'));
       }
     }
   } finally {
@@ -626,9 +629,9 @@ Future<bool> _batchDelete(
       VideoInfoService.clearCache(item.path);
       done++;
     } on FileOpException catch (e) {
-      failures.add('${item.name}：${fileOpErrorText(l10n, e)}');
+      failures.add(l10n.fileOpItemFailed(item.name, fileOpErrorText(l10n, e)));
     } catch (e) {
-      failures.add('${item.name}：$e');
+      failures.add(l10n.fileOpItemFailed(item.name, '$e'));
     }
   }
 

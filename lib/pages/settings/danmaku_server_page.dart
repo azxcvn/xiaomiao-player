@@ -118,7 +118,7 @@ class DanmakuServerPage extends StatelessWidget {
         content: Text(
           AppLocalizations.of(
             dialogContext,
-          ).danmakuServerDeleteConfirm(server.name),
+          ).commonDeleteConfirmIrreversible(server.name),
         ),
         actions: [
           TextButton(

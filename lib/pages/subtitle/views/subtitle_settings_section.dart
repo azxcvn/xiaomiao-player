@@ -252,7 +252,7 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
     if (s.isEmpty || s.contains('all')) {
       return AppLocalizations.of(context).subtitleAllSources;
     }
-    return s.map(_sourceName).join('、');
+    return s.map(_sourceName).join(AppLocalizations.of(context).commonListSeparator);
   }
 
   String _languagesSummary() {
@@ -260,7 +260,9 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
     if (s.isEmpty || s.contains('all')) {
       return AppLocalizations.of(context).subtitleAllLanguages;
     }
-    return s.map((k) => wyzieLanguages[k] ?? k).join('、');
+    return s
+        .map((k) => wyzieLanguages[k] ?? k)
+        .join(AppLocalizations.of(context).commonListSeparator);
   }
 
   String _formatsSummary() {
@@ -268,7 +270,9 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
     if (s.isEmpty || s.contains('all')) {
       return AppLocalizations.of(context).subtitleAllFormats;
     }
-    return s.map((k) => wyzieFormats[k] ?? k).join('、');
+    return s
+        .map((k) => wyzieFormats[k] ?? k)
+        .join(AppLocalizations.of(context).commonListSeparator);
   }
 
   String _encodingsSummary() {
@@ -276,7 +280,9 @@ class _SubtitleSettingsSectionState extends State<SubtitleSettingsSection> {
     if (s.isEmpty || s.contains('all')) {
       return AppLocalizations.of(context).subtitleAllEncodings;
     }
-    return s.map((k) => wyzieEncodings[k] ?? k).join('、');
+    return s
+        .map((k) => wyzieEncodings[k] ?? k)
+        .join(AppLocalizations.of(context).commonListSeparator);
   }
 
   String _sourceName(String key) {

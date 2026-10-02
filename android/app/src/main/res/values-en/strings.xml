@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 英文资源（阶段 8）：与 values/strings.xml 的键一一对应，缺键时回落中文。
+     ⚠️ 应用名固定为 Meow Player（01-执行协议 红线 15）。
+     注意：Android 字符串里撇号要写成 \'，这里刻意避开撇号写法。 -->
+<resources>
+    <string name="app_name">Meow Player</string>
+
+    <string name="background_playback_channel_name">Background video playback</string>
+    <string name="background_playback_channel_description">Keep playing video audio in the background</string>
+    <string name="background_playback_title">Listen to video</string>
+    <string name="background_playback_text">Playing in the background</string>
+
+    <string name="storage_internal">Internal storage</string>
+    <string name="storage_sd_card">SD card</string>
+
+    <string name="log_read_failed">Failed to read the log: %1$s</string>
+
+    <string name="crash_dialog_message">The app stopped because of an error.\nThe log has been saved; see "About → Error logs".</string>
+</resources>

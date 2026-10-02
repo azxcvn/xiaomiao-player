@@ -164,18 +164,6 @@ abstract class AppLocalizations {
   /// **'蓝绿色'**
   String get settingsThemeColorTeal;
 
-  /// No description provided for @settingsThemeColorCyan.
-  ///
-  /// In zh, this message translates to:
-  /// **'青色'**
-  String get settingsThemeColorCyan;
-
-  /// No description provided for @settingsThemeColorGreen.
-  ///
-  /// In zh, this message translates to:
-  /// **'绿色'**
-  String get settingsThemeColorGreen;
-
   /// No description provided for @settingsThemeColorMint.
   ///
   /// In zh, this message translates to:
@@ -193,12 +181,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'酸橙色'**
   String get settingsThemeColorLime;
-
-  /// No description provided for @settingsThemeColorYellow.
-  ///
-  /// In zh, this message translates to:
-  /// **'黄色'**
-  String get settingsThemeColorYellow;
 
   /// No description provided for @settingsThemeColorAmber.
   ///
@@ -416,12 +398,6 @@ abstract class AppLocalizations {
   /// **'混合模式'**
   String get playerDoubleTapMixed;
 
-  /// 播放器设置 · 视频方向
-  ///
-  /// In zh, this message translates to:
-  /// **'自动'**
-  String get playerOrientationAuto;
-
   /// No description provided for @playerOrientationPortrait.
   ///
   /// In zh, this message translates to:
@@ -439,12 +415,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'拉伸'**
   String get playerVideoFitFill;
-
-  /// No description provided for @playerVideoFitContain.
-  ///
-  /// In zh, this message translates to:
-  /// **'自动'**
-  String get playerVideoFitContain;
 
   /// No description provided for @playerVideoFitCover.
   ///
@@ -806,12 +776,6 @@ abstract class AppLocalizations {
   /// **'性能优先'**
   String get decodePresetFastDesc;
 
-  /// No description provided for @decodePresetStandard.
-  ///
-  /// In zh, this message translates to:
-  /// **'默认'**
-  String get decodePresetStandard;
-
   /// No description provided for @decodePresetStandardDesc.
   ///
   /// In zh, this message translates to:
@@ -938,12 +902,6 @@ abstract class AppLocalizations {
   /// **'右对齐'**
   String get subtitleAlignRight;
 
-  /// 字幕描边/背景模式（本 App 不提供选择器，枚举保留三态）
-  ///
-  /// In zh, this message translates to:
-  /// **'无'**
-  String get subtitleBorderNone;
-
   /// No description provided for @subtitleBorderOutline.
   ///
   /// In zh, this message translates to:
@@ -961,24 +919,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'白色'**
   String get subtitlePresetWhite;
-
-  /// No description provided for @subtitlePresetYellow.
-  ///
-  /// In zh, this message translates to:
-  /// **'黄色'**
-  String get subtitlePresetYellow;
-
-  /// No description provided for @subtitlePresetCyan.
-  ///
-  /// In zh, this message translates to:
-  /// **'青色'**
-  String get subtitlePresetCyan;
-
-  /// No description provided for @subtitlePresetGreen.
-  ///
-  /// In zh, this message translates to:
-  /// **'绿色'**
-  String get subtitlePresetGreen;
 
   /// No description provided for @subtitlePresetBlack.
   ///
@@ -1280,23 +1220,11 @@ abstract class AppLocalizations {
   /// **'网络弹幕服务器与切集自动匹配'**
   String get settingsDanmakuServerDesc;
 
-  /// No description provided for @settingsDanmakuDownload.
-  ///
-  /// In zh, this message translates to:
-  /// **'弹幕下载'**
-  String get settingsDanmakuDownload;
-
   /// No description provided for @settingsDanmakuDownloadDesc.
   ///
   /// In zh, this message translates to:
   /// **'B 站弹幕下载'**
   String get settingsDanmakuDownloadDesc;
-
-  /// No description provided for @settingsVideoDownload.
-  ///
-  /// In zh, this message translates to:
-  /// **'视频下载'**
-  String get settingsVideoDownload;
 
   /// No description provided for @settingsVideoDownloadDesc.
   ///
@@ -1304,23 +1232,11 @@ abstract class AppLocalizations {
   /// **'B 站视频下载'**
   String get settingsVideoDownloadDesc;
 
-  /// No description provided for @settingsSubtitleDownload.
-  ///
-  /// In zh, this message translates to:
-  /// **'字幕下载'**
-  String get settingsSubtitleDownload;
-
   /// No description provided for @settingsSubtitleDownloadDesc.
   ///
   /// In zh, this message translates to:
   /// **'影视字幕下载'**
   String get settingsSubtitleDownloadDesc;
-
-  /// No description provided for @settingsDownloadManager.
-  ///
-  /// In zh, this message translates to:
-  /// **'下载管理'**
-  String get settingsDownloadManager;
 
   /// No description provided for @settingsDownloadManagerDesc.
   ///
@@ -1363,12 +1279,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'需要登录哔哩哔哩账号'**
   String get settingsLoginRequired;
-
-  /// 设置页「语言」组（在弹幕组下方、下载组上方）
-  ///
-  /// In zh, this message translates to:
-  /// **'语言'**
-  String get settingsGroupLanguage;
 
   /// No description provided for @settingsLanguage.
   ///
@@ -1892,12 +1802,6 @@ abstract class AppLocalizations {
   /// **'删除服务器'**
   String get danmakuServerDelete;
 
-  /// 删除服务器二次确认
-  ///
-  /// In zh, this message translates to:
-  /// **'确定删除「{name}」吗？此操作不可撤销。'**
-  String danmakuServerDeleteConfirm(String name);
-
   /// No description provided for @danmakuServerDedupe.
   ///
   /// In zh, this message translates to:
@@ -2168,12 +2072,6 @@ abstract class AppLocalizations {
   /// **'错误日志'**
   String get settingsErrorLogTitle;
 
-  /// 错误日志页：刷新按钮 tooltip
-  ///
-  /// In zh, this message translates to:
-  /// **'刷新'**
-  String get settingsErrorLogRefresh;
-
   /// 错误日志详情页：刷新按钮 tooltip（进入即读最新内容）
   ///
   /// In zh, this message translates to:
@@ -2216,12 +2114,6 @@ abstract class AppLocalizations {
   /// **'导出'**
   String get settingsErrorLogExport;
 
-  /// 错误日志列表：删除单个日志按钮 tooltip
-  ///
-  /// In zh, this message translates to:
-  /// **'删除'**
-  String get settingsErrorLogDelete;
-
   /// 错误日志：复制成功的 toast
   ///
   /// In zh, this message translates to:
@@ -2245,12 +2137,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'删除日志'**
   String get settingsErrorLogDeleteTitle;
-
-  /// 错误日志：删除单个日志的二次确认正文
-  ///
-  /// In zh, this message translates to:
-  /// **'确定删除「{name}」吗？'**
-  String settingsErrorLogDeleteConfirm(String name);
 
   /// 错误日志：删除成功的 toast
   ///
@@ -2341,12 +2227,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'字体字重'**
   String get settingsFontWeightLabel;
-
-  /// App 字体设置页：字重未自定义（滑杆 -1 档）时的显示值
-  ///
-  /// In zh, this message translates to:
-  /// **'默认'**
-  String get settingsFontWeightNone;
 
   /// App 字体设置页：字重档位 w100
   ///
@@ -2582,12 +2462,6 @@ abstract class AppLocalizations {
   /// **'读取中'**
   String get settingsAboutAppNameLoading;
 
-  /// 许可证书页：页面标题
-  ///
-  /// In zh, this message translates to:
-  /// **'许可证书'**
-  String get settingsLicenseTitle;
-
   /// 许可证书页：列表分组标题
   ///
   /// In zh, this message translates to:
@@ -2636,12 +2510,6 @@ abstract class AppLocalizations {
   /// **'许可信息加载失败'**
   String get settingsLicenseLoadFailed;
 
-  /// 外观设置子页：页面标题
-  ///
-  /// In zh, this message translates to:
-  /// **'外观'**
-  String get settingsAppearanceTitle;
-
   /// 外观设置子页：主题模式分组标题
   ///
   /// In zh, this message translates to:
@@ -2660,12 +2528,6 @@ abstract class AppLocalizations {
   /// **'调色板风格'**
   String get settingsAppearancePaletteVariant;
 
-  /// 外观设置子页：字体分组标题
-  ///
-  /// In zh, this message translates to:
-  /// **'字体'**
-  String get settingsAppearanceGroupFont;
-
   /// 外观设置子页：App 字体设置项副标题
   ///
   /// In zh, this message translates to:
@@ -2683,12 +2545,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'动态色'**
   String get settingsAppearanceDynamicColor;
-
-  /// 外观设置子页：主题色网格下方的自定义色通栏
-  ///
-  /// In zh, this message translates to:
-  /// **'自定义'**
-  String get settingsAppearanceCustomColor;
 
   /// 外观设置子页：Android 12 以下点动态色的 toast
   ///
@@ -2870,12 +2726,6 @@ abstract class AppLocalizations {
   /// **'硬件特性'**
   String get settingsDecoderHardwareFeatures;
 
-  /// 解码器详情页：采样率胶囊分组标题
-  ///
-  /// In zh, this message translates to:
-  /// **'采样率'**
-  String get settingsDecoderSampleRates;
-
   /// 解码器详情页：色彩格式胶囊分组标题
   ///
   /// In zh, this message translates to:
@@ -2887,12 +2737,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'支持的 Profile / Level'**
   String get settingsDecoderProfiles;
-
-  /// 缓存管理页：页面标题（本页自有键，未复用 settingsAboutCacheManagement）
-  ///
-  /// In zh, this message translates to:
-  /// **'缓存管理'**
-  String get settingsCacheTitle;
 
   /// 缓存管理页：缓存类别分组标题
   ///
@@ -3194,18 +3038,6 @@ abstract class AppLocalizations {
   /// **'水平位置'**
   String get settingsWallpaperOffsetX;
 
-  /// No description provided for @settingsWallpaperOffsetY.
-  ///
-  /// In zh, this message translates to:
-  /// **'垂直位置'**
-  String get settingsWallpaperOffsetY;
-
-  /// No description provided for @settingsWallpaperBlur.
-  ///
-  /// In zh, this message translates to:
-  /// **'模糊'**
-  String get settingsWallpaperBlur;
-
   /// No description provided for @settingsWallpaperOpacity.
   ///
   /// In zh, this message translates to:
@@ -3367,12 +3199,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'切换画质失败：{error}'**
   String playerQualitySwitchFailed(String error);
-
-  /// 播放器「更多」面板 / 清晰度面板：清晰度
-  ///
-  /// In zh, this message translates to:
-  /// **'清晰度'**
-  String get playerQuality;
 
   /// 播放页提示：截图异常
   ///
@@ -4693,12 +4519,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'重置为 0 秒'**
   String get playerResetToZeroSeconds;
-
-  /// 播放器字幕延迟面板：带正负号的延迟读数
-  ///
-  /// In zh, this message translates to:
-  /// **'{value} 秒'**
-  String playerDelaySeconds(String value);
 
   /// 播放器字幕样式面板：文字颜色
   ///
@@ -7810,6 +7630,132 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'同意并继续'**
   String get legalAgreeContinue;
+
+  /// 通用：并列项之间的分隔符（弹幕屏蔽词 / 诊断项 / 字幕来源语言格式编码的摘要）
+  ///
+  /// In zh, this message translates to:
+  /// **'、'**
+  String get commonListSeparator;
+
+  /// 通用：给一段内容加「标签：」前缀（字幕 ASS 限制说明）
+  ///
+  /// In zh, this message translates to:
+  /// **'{label}：'**
+  String commonLabelWithColon(String label);
+
+  /// 媒体信息：复制出的文本里给流分组加方括号标题
+  ///
+  /// In zh, this message translates to:
+  /// **'【{title}】'**
+  String mediaInfoStreamsGroupTitle(String title);
+
+  /// 字体设置页：字体效果预览样例（中文侧顺带展示全角标点字形覆盖）
+  ///
+  /// In zh, this message translates to:
+  /// **'0123456789，。！？；：“”（）【】…·'**
+  String get settingsFontPreviewSample;
+
+  /// 文件操作：目标位置与最终条目名（「已移动到 X」的 X）
+  ///
+  /// In zh, this message translates to:
+  /// **'{dest}：{target}'**
+  String folderActionDestWithTarget(String dest, String target);
+
+  /// 文件操作：条目名 + 校验失败原因（批量移动/复制预校验）
+  ///
+  /// In zh, this message translates to:
+  /// **'「{name}」{reason}'**
+  String fileOpItemIssue(String name, String reason);
+
+  /// 文件操作：条目名 + 失败原因（批量移动/复制/删除的失败汇总）
+  ///
+  /// In zh, this message translates to:
+  /// **'{name}：{reason}'**
+  String fileOpItemFailed(String name, String reason);
+
+  /// 通用颜色名：青色（主题色 / 字幕颜色预设共用）
+  ///
+  /// In zh, this message translates to:
+  /// **'青色'**
+  String get commonColorCyan;
+
+  /// 通用颜色名：绿色（主题色 / 字幕颜色预设共用）
+  ///
+  /// In zh, this message translates to:
+  /// **'绿色'**
+  String get commonColorGreen;
+
+  /// 通用颜色名：黄色（主题色 / 字幕颜色预设共用）
+  ///
+  /// In zh, this message translates to:
+  /// **'黄色'**
+  String get commonColorYellow;
+
+  /// 通用：默认（解码档位 / 字体字重等「未自定义」状态）
+  ///
+  /// In zh, this message translates to:
+  /// **'默认'**
+  String get commonDefault;
+
+  /// 错误日志：删除单个日志的二次确认正文
+  ///
+  /// In zh, this message translates to:
+  /// **'确定删除「{name}」吗？'**
+  String commonDeleteConfirm(String name);
+
+  /// 删除服务器二次确认
+  ///
+  /// In zh, this message translates to:
+  /// **'确定删除「{name}」吗？此操作不可撤销。'**
+  String commonDeleteConfirmIrreversible(String name);
+
+  /// 解码器详情页：采样率胶囊分组标题
+  ///
+  /// In zh, this message translates to:
+  /// **'采样率'**
+  String get mediaInfoSampleRates;
+
+  /// 设置页「语言」组（在弹幕组下方、下载组上方）
+  ///
+  /// In zh, this message translates to:
+  /// **'语言'**
+  String get commonLanguage;
+
+  /// No description provided for @downloadManagerTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载管理'**
+  String get downloadManagerTitle;
+
+  /// No description provided for @biliVideoDownloadTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'视频下载'**
+  String get biliVideoDownloadTitle;
+
+  /// No description provided for @biliDanmakuDownloadTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'弹幕下载'**
+  String get biliDanmakuDownloadTitle;
+
+  /// No description provided for @biliSubtitleDownloadTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕下载'**
+  String get biliSubtitleDownloadTitle;
+
+  /// 播放器「更多」面板 / 清晰度面板：清晰度
+  ///
+  /// In zh, this message translates to:
+  /// **'清晰度'**
+  String get commonQuality;
+
+  /// 播放器字幕延迟面板：带正负号的延迟读数
+  ///
+  /// In zh, this message translates to:
+  /// **'{value} 秒'**
+  String playerDelaySeconds(String value);
 }
 
 class _AppLocalizationsDelegate

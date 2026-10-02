@@ -48,7 +48,7 @@ class _DownloadManagerPageState extends State<DownloadManagerPage> {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.settingsDownloadManager),
+        title: Text(l10n.downloadManagerTitle),
         actions: [
           IconButton(
             onPressed: _confirmClearFinished,

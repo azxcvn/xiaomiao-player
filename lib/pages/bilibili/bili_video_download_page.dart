@@ -136,7 +136,7 @@ class _BiliVideoDownloadPageState extends State<BiliVideoDownloadPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settingsVideoDownload)),
+      appBar: AppBar(title: Text(l10n.biliVideoDownloadTitle)),
       body: Column(
         children: [
           _buildInput(),
@@ -276,7 +276,7 @@ class _BiliVideoDownloadPageState extends State<BiliVideoDownloadPage> {
           Padding(
             padding: const EdgeInsets.only(left: 16),
             child: Text(
-              l10n.playerQuality,
+              l10n.commonQuality,
               style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
             ),
           ),

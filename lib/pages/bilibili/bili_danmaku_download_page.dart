@@ -122,7 +122,7 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settingsDanmakuDownload)),
+      appBar: AppBar(title: Text(l10n.biliDanmakuDownloadTitle)),
       body: Column(
         children: [
           _buildInput(),

@@ -42,12 +42,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsThemeColorTeal => 'Teal';
 
   @override
-  String get settingsThemeColorCyan => 'Cyan';
-
-  @override
-  String get settingsThemeColorGreen => 'Green';
-
-  @override
   String get settingsThemeColorMint => 'Mint';
 
   @override
@@ -55,9 +49,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsThemeColorLime => 'Lime';
-
-  @override
-  String get settingsThemeColorYellow => 'Yellow';
 
   @override
   String get settingsThemeColorAmber => 'Amber';
@@ -168,9 +159,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerDoubleTapMixed => 'Mixed';
 
   @override
-  String get playerOrientationAuto => 'Auto';
-
-  @override
   String get playerOrientationPortrait => 'Lock portrait';
 
   @override
@@ -178,9 +166,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playerVideoFitFill => 'Stretch';
-
-  @override
-  String get playerVideoFitContain => 'Auto';
 
   @override
   String get playerVideoFitCover => 'Crop';
@@ -374,9 +359,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get decodePresetFastDesc => 'Performance first';
 
   @override
-  String get decodePresetStandard => 'Default';
-
-  @override
   String get decodePresetStandardDesc => 'Standard configuration';
 
   @override
@@ -440,9 +422,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subtitleAlignRight => 'Right';
 
   @override
-  String get subtitleBorderNone => 'None';
-
-  @override
   String get subtitleBorderOutline => 'Outline';
 
   @override
@@ -450,15 +429,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subtitlePresetWhite => 'White';
-
-  @override
-  String get subtitlePresetYellow => 'Yellow';
-
-  @override
-  String get subtitlePresetCyan => 'Cyan';
-
-  @override
-  String get subtitlePresetGreen => 'Green';
 
   @override
   String get subtitlePresetBlack => 'Black';
@@ -616,25 +586,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Network danmaku servers and per-episode auto match';
 
   @override
-  String get settingsDanmakuDownload => 'Danmaku download';
-
-  @override
   String get settingsDanmakuDownloadDesc => 'Bilibili danmaku download';
-
-  @override
-  String get settingsVideoDownload => 'Video download';
 
   @override
   String get settingsVideoDownloadDesc => 'Bilibili video download';
 
   @override
-  String get settingsSubtitleDownload => 'Subtitle download';
-
-  @override
   String get settingsSubtitleDownloadDesc => 'Movie & TV subtitle download';
-
-  @override
-  String get settingsDownloadManager => 'Download manager';
 
   @override
   String get settingsDownloadManagerDesc => 'View download progress';
@@ -656,9 +614,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsLoginRequired => 'Sign in to your Bilibili account first';
-
-  @override
-  String get settingsGroupLanguage => 'Language';
 
   @override
   String get settingsLanguage => 'Language settings';
@@ -955,11 +910,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get danmakuServerDelete => 'Delete server';
 
   @override
-  String danmakuServerDeleteConfirm(String name) {
-    return 'Delete \"$name\"? This cannot be undone.';
-  }
-
-  @override
   String get danmakuServerDedupe => 'Deduplicate search results';
 
   @override
@@ -1115,9 +1065,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsErrorLogTitle => 'Error Logs';
 
   @override
-  String get settingsErrorLogRefresh => 'Refresh';
-
-  @override
   String get settingsErrorLogRefreshRealtime => 'Refresh (live)';
 
   @override
@@ -1144,9 +1091,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsErrorLogExport => 'Export';
 
   @override
-  String get settingsErrorLogDelete => 'Delete';
-
-  @override
   String get settingsErrorLogCopied => 'Log copied to clipboard';
 
   @override
@@ -1159,11 +1103,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsErrorLogDeleteTitle => 'Delete log';
-
-  @override
-  String settingsErrorLogDeleteConfirm(String name) {
-    return 'Delete \"$name\"?';
-  }
 
   @override
   String get settingsErrorLogDeleted => 'Deleted';
@@ -1212,9 +1151,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsFontWeightLabel => 'Font weight';
-
-  @override
-  String get settingsFontWeightNone => 'Default';
 
   @override
   String get settingsFontWeightThin => 'Thin';
@@ -1345,9 +1281,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAboutAppNameLoading => 'Loading';
 
   @override
-  String get settingsLicenseTitle => 'Licenses';
-
-  @override
   String get settingsLicenseOpenSource => 'Open-source licenses';
 
   @override
@@ -1382,9 +1315,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLicenseLoadFailed => 'Could not load license information';
 
   @override
-  String get settingsAppearanceTitle => 'Appearance';
-
-  @override
   String get settingsAppearanceMode => 'Appearance mode';
 
   @override
@@ -1394,9 +1324,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAppearancePaletteVariant => 'Palette style';
 
   @override
-  String get settingsAppearanceGroupFont => 'Font';
-
-  @override
   String get settingsAppearanceCustomFontDesc => 'Customize the global font';
 
   @override
@@ -1404,9 +1331,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsAppearanceDynamicColor => 'Dynamic';
-
-  @override
-  String get settingsAppearanceCustomColor => 'Custom';
 
   @override
   String get settingsAppearanceSdkTooLow =>
@@ -1504,16 +1428,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDecoderHardwareFeatures => 'Hardware features';
 
   @override
-  String get settingsDecoderSampleRates => 'Sample rates';
-
-  @override
   String get settingsDecoderColorFormats => 'Color formats';
 
   @override
   String get settingsDecoderProfiles => 'Supported profile / level';
-
-  @override
-  String get settingsCacheTitle => 'Cache management';
 
   @override
   String get settingsCacheGroupTitle => 'Cache';
@@ -1694,12 +1612,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsWallpaperOffsetX => 'Horizontal position';
 
   @override
-  String get settingsWallpaperOffsetY => 'Vertical position';
-
-  @override
-  String get settingsWallpaperBlur => 'Blur';
-
-  @override
   String get settingsWallpaperOpacity => 'Opacity';
 
   @override
@@ -1790,9 +1702,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String playerQualitySwitchFailed(String error) {
     return 'Failed to switch quality: $error';
   }
-
-  @override
-  String get playerQuality => 'Quality';
 
   @override
   String playerScreenshotFailed(String error) {
@@ -2651,11 +2560,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playerResetToZeroSeconds => 'Reset to 0 s';
-
-  @override
-  String playerDelaySeconds(String value) {
-    return '$value s';
-  }
 
   @override
   String get playerTextColor => 'Text color';
@@ -4681,4 +4585,83 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get legalAgreeContinue => 'Agree and continue';
+
+  @override
+  String get commonListSeparator => ', ';
+
+  @override
+  String commonLabelWithColon(String label) {
+    return '$label: ';
+  }
+
+  @override
+  String mediaInfoStreamsGroupTitle(String title) {
+    return '[$title]';
+  }
+
+  @override
+  String get settingsFontPreviewSample => '0123456789 ,.!?;:\"()[]...·';
+
+  @override
+  String folderActionDestWithTarget(String dest, String target) {
+    return '$dest: $target';
+  }
+
+  @override
+  String fileOpItemIssue(String name, String reason) {
+    return '\"$name\": $reason';
+  }
+
+  @override
+  String fileOpItemFailed(String name, String reason) {
+    return '$name: $reason';
+  }
+
+  @override
+  String get commonColorCyan => 'Cyan';
+
+  @override
+  String get commonColorGreen => 'Green';
+
+  @override
+  String get commonColorYellow => 'Yellow';
+
+  @override
+  String get commonDefault => 'Default';
+
+  @override
+  String commonDeleteConfirm(String name) {
+    return 'Delete \"$name\"?';
+  }
+
+  @override
+  String commonDeleteConfirmIrreversible(String name) {
+    return 'Delete \"$name\"? This cannot be undone.';
+  }
+
+  @override
+  String get mediaInfoSampleRates => 'Sample rates';
+
+  @override
+  String get commonLanguage => 'Language';
+
+  @override
+  String get downloadManagerTitle => 'Download manager';
+
+  @override
+  String get biliVideoDownloadTitle => 'Video download';
+
+  @override
+  String get biliDanmakuDownloadTitle => 'Danmaku download';
+
+  @override
+  String get biliSubtitleDownloadTitle => 'Subtitle download';
+
+  @override
+  String get commonQuality => 'Quality';
+
+  @override
+  String playerDelaySeconds(String value) {
+    return '$value s';
+  }
 }

@@ -223,7 +223,7 @@ class _PlayerDiagnosticsPanelState extends State<PlayerDiagnosticsPanel> {
       return l10n.playerDiagnosticsReadFailed;
     }
     const maxNames = 6;
-    final shown = failedKeys.take(maxNames).join('、');
+    final shown = failedKeys.take(maxNames).join(l10n.commonListSeparator);
     final rest = failedKeys.length - maxNames;
     return rest > 0
         ? l10n.playerDiagnosticsFailedValueMore(shown, failedKeys.length)

@@ -189,7 +189,7 @@ class _WallpaperEditorPageState extends State<WallpaperEditorPage> {
             onChanged: (v) => setState(() => _offsetX = v),
           ),
           SettingsSliderRow(
-            label: l10n.settingsWallpaperOffsetY,
+            label: l10n.playerVerticalPosition,
             display: _offsetLabel(_offsetY),
             value: _offsetY,
             min: WallpaperSettings.minOffset,
@@ -197,7 +197,7 @@ class _WallpaperEditorPageState extends State<WallpaperEditorPage> {
             onChanged: (v) => setState(() => _offsetY = v),
           ),
           SettingsSliderRow(
-            label: l10n.settingsWallpaperBlur,
+            label: l10n.commonBlur,
             display: _blur.round().toString(),
             value: _blur,
             min: WallpaperSettings.minBlur,

@@ -43,7 +43,8 @@ void main() {
       expect(list[0].format, 'srt');
       // 来源在服务层存 ASCII 稳定值 `custom`，显示名由 UI 侧取 l10n
       expect(list[0].source, 'custom');
-      expect(list[1].language, 'en、zh');
+      // 语言数组用 ASCII 逗号拼接（纯函数层拿不到 l10n，见阶段 8 全角标点收口）
+      expect(list[1].language, 'en, zh');
       expect(list[1].format, 'ass');
     });
 

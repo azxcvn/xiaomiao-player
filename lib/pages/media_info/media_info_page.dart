@@ -67,15 +67,20 @@ class _MediaInfoPageState extends State<MediaInfoPage> {
       });
       buf.writeln();
     }
-    _formatStreams(buf, l10n.mediaInfoVideoStreams, info['videoStreams']);
-    _formatStreams(buf, l10n.mediaInfoAudioStreams, info['audioStreams']);
-    _formatStreams(buf, l10n.mediaInfoSubtitleStreams, info['textStreams']);
+    _formatStreams(l10n, buf, l10n.mediaInfoVideoStreams, info['videoStreams']);
+    _formatStreams(l10n, buf, l10n.mediaInfoAudioStreams, info['audioStreams']);
+    _formatStreams(l10n, buf, l10n.mediaInfoSubtitleStreams, info['textStreams']);
     return buf.toString();
   }
 
-  void _formatStreams(StringBuffer buf, String title, dynamic list) {
+  void _formatStreams(
+    AppLocalizations l10n,
+    StringBuffer buf,
+    String title,
+    dynamic list,
+  ) {
     if (list is! List || list.isEmpty) return;
-    buf.writeln('【$title】');
+    buf.writeln(l10n.mediaInfoStreamsGroupTitle(title));
     for (final item in list) {
       final m = Map<String, dynamic>.from(item as Map);
       buf.writeln('- ${m.entries.where((e) => e.value != null && e.value.toString().isNotEmpty).map((e) => '${e.key}: ${e.value}').join(' | ')}');
@@ -186,8 +191,8 @@ class _MediaInfoPageState extends State<MediaInfoPage> {
       'chromaSubsampling': l10n.mediaInfoChromaSubsampling,
       'hdrFormat': l10n.mediaInfoHdrFormat,
       'channels': l10n.mediaInfoChannels,
-      'samplingRate': l10n.settingsDecoderSampleRates,
-      'language': l10n.settingsGroupLanguage,
+      'samplingRate': l10n.mediaInfoSampleRates,
+      'language': l10n.commonLanguage,
       'title': l10n.commonTitle,
       'duration': l10n.commonDuration,
       'streamSize': l10n.mediaInfoStreamSize,

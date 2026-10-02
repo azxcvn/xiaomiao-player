@@ -41,7 +41,7 @@ class NetworkStoragePage extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.networkDeleteAccount),
-        content: Text(l10n.danmakuServerDeleteConfirm(connection.name)),
+        content: Text(l10n.commonDeleteConfirmIrreversible(connection.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),

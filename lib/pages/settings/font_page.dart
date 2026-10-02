@@ -96,7 +96,7 @@ class _FontSettingsPageState extends State<FontSettingsPage> {
                     children: [
                       // 数字与符号合并为一行，缩小字距
                       _PreviewText(
-                        '0123456789，。！？；：“”（）【】…·',
+                        l10n.settingsFontPreviewSample,
                         fontSize: 12,
                         letterSpacing: -0.5,
                       ),

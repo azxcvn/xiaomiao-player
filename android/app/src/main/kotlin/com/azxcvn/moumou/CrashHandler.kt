@@ -136,7 +136,7 @@ class CrashHandler private constructor(private val context: Context) :
             Handler(Looper.getMainLooper()).post {
                 Toast.makeText(
                     context,
-                    "应用遇到错误已停止运行\n日志已保存，可在「关于 → 错误日志」查看",
+                    context.getString(R.string.crash_dialog_message),
                     Toast.LENGTH_LONG,
                 ).show()
             }

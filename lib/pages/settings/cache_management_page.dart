@@ -129,11 +129,11 @@ class _CacheManagementPageState extends State<CacheManagementPage> {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.settingsCacheTitle),
+        title: Text(l10n.settingsAboutCacheManagement),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: l10n.settingsErrorLogRefresh,
+            tooltip: l10n.commonRefresh,
             onPressed: _loading ? null : _refresh,
           ),
         ],
