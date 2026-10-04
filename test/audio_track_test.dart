@@ -94,15 +94,20 @@ void main() {
       );
     });
 
-    test('动态范围压缩', () {
-      expect(
-        buildAudioFilterChain(
-          channels: AudioChannels.autoSafe,
-          volumeNormalization: false,
-          drc: true,
-        ),
-        'lavfi=[acompressor=threshold=-20dB:ratio=4:attack=5:release=50:makeup=2]',
+    test('动态范围压缩（acompressor 的 threshold 是线性值，不能写 dB）', () {
+      final chain = buildAudioFilterChain(
+        channels: AudioChannels.autoSafe,
+        volumeNormalization: false,
+        drc: true,
       );
+      expect(
+        chain,
+        'lavfi=[acompressor=threshold=0.1:ratio=4:attack=5:release=50:makeup=2]',
+      );
+      // 回归断言：ffmpeg 的 acompressor threshold 取值 0.000976563–1（线性），
+      // 旧实现写 `threshold=-20dB` 会让整条 lavfi 图建不起来 → 音频链初始化
+      // 失败 → 整段无声（issue #8）。
+      expect(chain.contains('dB'), isFalse);
     });
 
     test('音量标准化', () {
@@ -134,8 +139,38 @@ void main() {
           volumeNormalization: true,
           drc: true,
         ),
-        'lavfi=[acompressor=threshold=-20dB:ratio=4:attack=5:release=50:makeup=2],'
+        'lavfi=[acompressor=threshold=0.1:ratio=4:attack=5:release=50:makeup=2],'
         'dynaudnorm,'
+        'pan=[stereo|c0=c1|c1=c0]',
+      );
+    });
+
+    test('内核不支持的滤镜被跳过（写了就会让整条 af 建不起来）', () {
+      expect(
+        buildAudioFilterChain(
+          channels: AudioChannels.reverseStereo,
+          volumeNormalization: true,
+          drc: false,
+          unavailableFilters: const {'dynaudnorm', 'pan'},
+        ),
+        '',
+      );
+      expect(
+        buildAudioFilterChain(
+          channels: AudioChannels.reverseStereo,
+          volumeNormalization: true,
+          drc: false,
+          unavailableFilters: const {'pan'},
+        ),
+        'dynaudnorm',
+      );
+      expect(
+        buildAudioFilterChain(
+          channels: AudioChannels.reverseStereo,
+          volumeNormalization: false,
+          drc: false,
+          unavailableFilters: const {'dynaudnorm'},
+        ),
         'pan=[stereo|c0=c1|c1=c0]',
       );
     });

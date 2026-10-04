@@ -71,6 +71,99 @@ void main() {
         isTrue,
       );
     });
+
+    test('af 滤镜失败**不算**音轨放不出来（否则会把用户选的轨切走）', () {
+      expect(
+        isAudioPlaybackFailureLog('cplayer', 'Audio filter initialized failed.'),
+        isFalse,
+      );
+      expect(
+        isAudioPlaybackFailureLog(
+          'cplayer',
+          "Option af: item 'dynaudnorm' isn't supported.",
+        ),
+        isFalse,
+      );
+    });
+  });
+
+  group('音频滤镜失败日志（内核缺滤镜 → 整段无声的兜底）', () {
+    test('「Audio filter initialized failed.」→ 命中（lavfi 图建不起来）', () {
+      expect(
+        isAudioFilterFailureLog('cplayer', 'Audio filter initialized failed.'),
+        isTrue,
+      );
+      expect(
+        isAudioFilterFailureLog('af', '  audio filter initialized failed  '),
+        isTrue,
+      );
+    });
+
+    test("「Option af: item 'xxx' isn't supported.」→ 命中（滤镜名不存在）", () {
+      expect(
+        isAudioFilterFailureLog(
+          'cplayer',
+          "Option af: item 'dynaudnorm' isn't supported.",
+        ),
+        isTrue,
+      );
+      expect(
+        isAudioFilterFailureLog(
+          'cplayer',
+          "Option af: item 'pan=[stereo|c0=c1|c1=c0]' isn't supported.",
+        ),
+        isTrue,
+      );
+    });
+
+    test('media_kit 的属性写入失败日志 → 命中', () {
+      expect(
+        isAudioFilterFailureLog(
+          'media_kit',
+          'error: invalid parameter _setProperty(af, 4)',
+        ),
+        isTrue,
+      );
+    });
+
+    test('别的选项/别的错误 → 不命中', () {
+      expect(
+        isAudioFilterFailureLog('cplayer', "Option vf: item 'x' isn't supported."),
+        isFalse,
+      );
+      expect(isAudioFilterFailureLog('ao', 'Could not open audio device'), isFalse);
+      expect(isAudioFilterFailureLog('media_kit', 'error: _command(quit)'), isFalse);
+      expect(isAudioFilterFailureLog('', ''), isFalse);
+    });
+
+    test('从日志里取出出问题的滤镜名', () {
+      expect(
+        unsupportedAudioFilterFromLog("Option af: item 'dynaudnorm' isn't supported."),
+        'dynaudnorm',
+      );
+      expect(
+        unsupportedAudioFilterFromLog(
+          "Option af: item 'pan=[stereo|c0=c1|c1=c0]' isn't supported.",
+        ),
+        'pan',
+      );
+      expect(
+        unsupportedAudioFilterFromLog(
+          "Option af: item '@bass:lavfi=[lowshelf=f=250:t=s:g=10]' isn't supported.",
+        ),
+        'lowshelf',
+      );
+      expect(
+        unsupportedAudioFilterFromLog(
+          "Option af: item 'lavfi=[acompressor=threshold=0.1:ratio=4]' isn't supported.",
+        ),
+        'acompressor',
+      );
+      expect(
+        unsupportedAudioFilterFromLog('Audio filter initialized failed.'),
+        isNull,
+      );
+    });
   });
 
   group('pickFallbackAudioTrack（回退目标选择）', () {
@@ -153,6 +246,94 @@ void main() {
         current: trueHd,
       );
       expect(t, ac3);
+    });
+  });
+
+  group('pickTrackAfterExternalRemoval（移除外部音轨后落回内嵌轨）', () {
+    const embedded1 = AudioTrack(id: '1', language: 'jpn', codec: 'flac');
+    const embedded2 = AudioTrack(id: '2', language: 'chi', codec: 'aac');
+    const external = AudioTrack(
+      id: '3',
+      codec: 'mp3',
+      external: true,
+      sourcePath: '/tmp/x.mp3',
+    );
+
+    test('落回导入前选中的那条内嵌轨（不是第一条）', () {
+      final t = pickTrackAfterExternalRemoval(
+        tracks: const [embedded1, embedded2, external],
+        removedId: external.id,
+        aidBeforeImport: embedded2.id,
+      );
+      expect(t, embedded2);
+    });
+
+    test('导入前那条已不在列表里 → 退到第一条内嵌轨', () {
+      final t = pickTrackAfterExternalRemoval(
+        tracks: const [embedded1, embedded2],
+        removedId: external.id,
+        aidBeforeImport: '99',
+      );
+      expect(t, embedded1);
+    });
+
+    test('没有记录（aidBeforeImport=null）→ 第一条内嵌轨', () {
+      final t = pickTrackAfterExternalRemoval(
+        tracks: const [embedded1, embedded2],
+        removedId: external.id,
+      );
+      expect(t, embedded1);
+    });
+
+    test('aid 为 auto → 第一条内嵌轨', () {
+      final t = pickTrackAfterExternalRemoval(
+        tracks: const [embedded1, embedded2],
+        removedId: external.id,
+        aidBeforeImport: 'auto',
+      );
+      expect(t, embedded1);
+    });
+
+    test('导入前就是「关闭」→ 仍然关闭（null）', () {
+      expect(
+        pickTrackAfterExternalRemoval(
+          tracks: const [embedded1, embedded2],
+          removedId: external.id,
+          aidBeforeImport: 'no',
+        ),
+        isNull,
+      );
+    });
+
+    test('视频本来没有内嵌音轨 → null（不硬选）', () {
+      expect(
+        pickTrackAfterExternalRemoval(
+          tracks: const [external],
+          removedId: external.id,
+          aidBeforeImport: embedded1.id,
+        ),
+        isNull,
+      );
+      expect(
+        pickTrackAfterExternalRemoval(
+          tracks: const [],
+          removedId: external.id,
+        ),
+        isNull,
+      );
+    });
+
+    test('还有别的外部音轨时不会被选中（只落内嵌轨）', () {
+      const external2 = AudioTrack(
+        id: '4',
+        external: true,
+        sourcePath: '/tmp/y.mp3',
+      );
+      final t = pickTrackAfterExternalRemoval(
+        tracks: const [external2, embedded1],
+        removedId: external.id,
+      );
+      expect(t, embedded1);
     });
   });
 }

@@ -724,7 +724,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsPlayerPinchToZoomDesc =>
-      'Zoom the picture with a two-finger pinch';
+      'Allow two-finger pinch to shrink the picture';
 
   @override
   String get settingsPlayerButtonBackground => 'Button background';
@@ -1883,7 +1883,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get audioSleepTimer => 'Sleep timer';
 
   @override
-  String get audioSleepEndOfTrack => 'After current track';
+  String get audioSleepEndOfTrack => 'After track';
 
   @override
   String get audioSleepEndOfTrackHint =>
@@ -4490,6 +4490,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String playerPlaybackFailed(String error) {
     return 'Playback failed: $error';
   }
+
+  @override
+  String get playerAudioEffectsUnsupported =>
+      'Some audio effects aren\'t supported by the playback core and were skipped';
 
   @override
   String playerDiagnosticsDuration(String minutes, String seconds) {

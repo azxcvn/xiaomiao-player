@@ -440,12 +440,18 @@ class _AudioChip extends StatelessWidget {
               Icon(icon, size: 16, color: selected ? onPrimary : Colors.white70),
               const SizedBox(width: 6),
             ],
-            Text(
-              label,
-              style: TextStyle(
-                color: selected ? onPrimary : Colors.white,
-                fontSize: 13,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            // 文案长度随语言变化（英文明显更长，如「播完当前」→ After track）：
+            // 胶囊在等宽网格里宽度固定，Flexible + 省略号保证任何语言都不溢出
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: selected ? onPrimary : Colors.white,
+                  fontSize: 13,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                ),
               ),
             ),
           ],

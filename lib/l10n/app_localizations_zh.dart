@@ -706,7 +706,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsPlayerPinchToZoom => '双指缩小视频';
 
   @override
-  String get settingsPlayerPinchToZoomDesc => '双指缩放画面';
+  String get settingsPlayerPinchToZoomDesc => '允许双指去缩小画面';
 
   @override
   String get settingsPlayerButtonBackground => '按钮背景';
@@ -4269,6 +4269,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String playerPlaybackFailed(String error) {
     return '播放失败：$error';
   }
+
+  @override
+  String get playerAudioEffectsUnsupported => '当前播放内核不支持所选音效，已自动跳过';
 
   @override
   String playerDiagnosticsDuration(String minutes, String seconds) {

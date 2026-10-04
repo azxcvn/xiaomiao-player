@@ -373,7 +373,7 @@
   "settingsPlayerSaveVolumeToSystem": "保存音量到系统",
   "settingsPlayerSaveVolumeToSystemDesc": "退出时把音量写回系统",
   "settingsPlayerPinchToZoom": "双指缩小视频",
-  "settingsPlayerPinchToZoomDesc": "双指缩放画面",
+  "settingsPlayerPinchToZoomDesc": "允许双指去缩小画面",
   "settingsPlayerButtonBackground": "按钮背景",
   "settingsPlayerButtonBackgroundDesc": "为控制按钮加半透明背景",
   "settingsPlayerAutoNext": "自动连播",
@@ -4955,6 +4955,10 @@
         "type": "String"
       }
     }
+  },
+  "playerAudioEffectsUnsupported": "当前播放内核不支持所选音效，已自动跳过",
+  "@playerAudioEffectsUnsupported": {
+    "description": "播放器：内核缺音频滤镜（音量标准化/压缩/低音/环绕等）时，服务层摘掉或停用 af 链后的提示"
   },
   "playerDiagnosticsDuration": "{minutes} 分 {seconds} 秒",
   "@playerDiagnosticsDuration": {

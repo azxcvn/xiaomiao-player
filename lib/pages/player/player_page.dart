@@ -507,6 +507,13 @@ class _PlayerPageState extends State<PlayerPage>
         _toast(audioFallbackReasonText(l10n, reason, fallback));
       }
     };
+    // 内核缺音频滤镜（音频效果建不起来）时提示一次：服务层已经把出问题的
+    // 滤镜摘掉/整条停用，这里只负责告诉用户「音效没生效，但播放正常」。
+    _audioController.onAudioFiltersUnavailable = () {
+      if (mounted) {
+        _toast(AppLocalizations.of(context).playerAudioEffectsUnsupported);
+      }
+    };
     unawaited(_audioController.applyOnInit());
     // mpv 的错误/日志必须被消费（2026-10 实测教训）：此前应用侧完全不看
     // `Player.stream.error`，在线播放失败时只剩「无限转圈、没有任何提示」——
@@ -518,6 +525,9 @@ class _PlayerPageState extends State<PlayerPage>
         final text = message.trim();
         if (text.isEmpty) return;
         debugPrint('[mpv error] $text');
+        // 音频滤镜（af）建不起来的报错交给 AudioController 兜底处理，并另给
+        // 一句看得懂的提示；这里不再弹裸的 mpv 报错（同一件事提示两次且看不懂）
+        if (isAudioFilterFailureLog('', text)) return;
         if (!mounted) return;
         final brief = text.length > 120 ? '${text.substring(0, 120)}…' : text;
         _toast(AppLocalizations.of(context).playerPlaybackFailed(brief));

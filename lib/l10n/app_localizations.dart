@@ -1487,7 +1487,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsPlayerPinchToZoomDesc.
   ///
   /// In zh, this message translates to:
-  /// **'双指缩放画面'**
+  /// **'允许双指去缩小画面'**
   String get settingsPlayerPinchToZoomDesc;
 
   /// No description provided for @settingsPlayerButtonBackground.
@@ -7490,6 +7490,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'播放失败：{error}'**
   String playerPlaybackFailed(String error);
+
+  /// 播放器：内核缺音频滤镜（音量标准化/压缩/低音/环绕等）时，服务层摘掉或停用 af 链后的提示
+  ///
+  /// In zh, this message translates to:
+  /// **'当前播放内核不支持所选音效，已自动跳过'**
+  String get playerAudioEffectsUnsupported;
 
   /// 播放器诊断：≥60 秒的时长文本
   ///
