@@ -1888,12 +1888,12 @@
   "@playerPickDanmakuFile": {
     "description": "播放器弹幕面板：选择文件"
   },
-  "playerLocalDanmakuLoaded": "已加载本地弹幕（{count, plural, other{{count} 条}}）",
+  "playerLocalDanmakuLoaded": "已加载本地弹幕：{name}",
   "@playerLocalDanmakuLoaded": {
-    "description": "播放器弹幕面板：本地弹幕导入成功",
+    "description": "播放器弹幕面板：本地弹幕导入成功（带弹幕文件名，与 playerAutoLoadedDanmaku 同款「前缀：文件名」写法）",
     "placeholders": {
-      "count": {
-        "type": "int"
+      "name": {
+        "type": "String"
       }
     }
   },

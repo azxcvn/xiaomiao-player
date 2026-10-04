@@ -118,4 +118,23 @@ void main() {
       expect(isSupportedDanmakuFile('EP01.xmlx'), isFalse);
     });
   });
+
+  group('danmakuFileNameOf（导入成功提示里的文件名）', () {
+    test('绝对路径取文件名', () {
+      expect(danmakuFileNameOf('/storage/emulated/0/EP01.xml'), 'EP01.xml');
+      expect(
+        danmakuFileNameOf('/storage/emulated/0/素材收集清单/M06/弹幕.xml'),
+        '弹幕.xml',
+      );
+    });
+
+    test('只有文件名时原样返回；末尾多余斜杠被忽略', () {
+      expect(danmakuFileNameOf('EP01.xml'), 'EP01.xml');
+      expect(danmakuFileNameOf('/storage/emulated/0/M06/'), 'M06');
+    });
+
+    test('空路径返回空串', () {
+      expect(danmakuFileNameOf(''), '');
+    });
+  });
 }

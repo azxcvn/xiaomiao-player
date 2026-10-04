@@ -2145,14 +2145,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerPickDanmakuFile => 'Choose a danmaku file';
 
   @override
-  String playerLocalDanmakuLoaded(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count items',
-      one: '1 item',
-    );
-    return 'Local danmaku loaded ($_temp0)';
+  String playerLocalDanmakuLoaded(String name) {
+    return 'Local danmaku loaded: $name';
   }
 
   @override

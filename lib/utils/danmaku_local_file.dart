@@ -46,3 +46,15 @@ bool isSupportedDanmakuFile(String filename) {
   final lower = filename.toLowerCase();
   return lower.endsWith('.xml');
 }
+
+/// 从弹幕文件路径取**文件名**（导入成功提示「已加载本地弹幕：xxx.xml」用）。
+///
+/// 纯函数、无 l10n 依赖；空路径返回空串，末尾多余的 `/` 会被忽略。
+String danmakuFileNameOf(String path) {
+  var norm = path;
+  while (norm.endsWith('/') && norm.length > 1) {
+    norm = norm.substring(0, norm.length - 1);
+  }
+  final idx = norm.lastIndexOf('/');
+  return idx >= 0 ? norm.substring(idx + 1) : norm;
+}

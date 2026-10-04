@@ -2053,13 +2053,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerPickDanmakuFile => '选择弹幕文件';
 
   @override
-  String playerLocalDanmakuLoaded(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count 条',
-    );
-    return '已加载本地弹幕（$_temp0）';
+  String playerLocalDanmakuLoaded(String name) {
+    return '已加载本地弹幕：$name';
   }
 
   @override

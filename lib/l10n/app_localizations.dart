@@ -3848,11 +3848,11 @@ abstract class AppLocalizations {
   /// **'选择弹幕文件'**
   String get playerPickDanmakuFile;
 
-  /// 播放器弹幕面板：本地弹幕导入成功
+  /// 播放器弹幕面板：本地弹幕导入成功（带弹幕文件名，与 playerAutoLoadedDanmaku 同款「前缀：文件名」写法）
   ///
   /// In zh, this message translates to:
-  /// **'已加载本地弹幕（{count, plural, other{{count} 条}}）'**
-  String playerLocalDanmakuLoaded(int count);
+  /// **'已加载本地弹幕：{name}'**
+  String playerLocalDanmakuLoaded(String name);
 
   /// 播放器弹幕面板：导入失败提示
   ///

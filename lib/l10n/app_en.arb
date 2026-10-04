@@ -625,7 +625,7 @@
   "playerDanmakuAutoMatch": "Auto match",
   "playerDanmakuAutoMatchComingSoon": "\"Auto match\" is coming soon",
   "playerPickDanmakuFile": "Choose a danmaku file",
-  "playerLocalDanmakuLoaded": "Local danmaku loaded ({count, plural, =1{1 item} other{{count} items}})",
+  "playerLocalDanmakuLoaded": "Local danmaku loaded: {name}",
   "playerDanmakuLoadFailedCheckFormat": "Failed to load danmaku; check the file format",
   "playerDanmakuStyle": "Danmaku style",
   "playerDanmakuFontSize": "Danmaku font size",
