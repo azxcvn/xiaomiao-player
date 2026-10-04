@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/bilibili_user.dart';
 import 'package:moumou/services/bilibili/bili_account.dart';
 import 'package:moumou/utils/app_dialog.dart';
@@ -13,8 +15,9 @@ class BiliUserPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('哔哩哔哩账号')),
+      appBar: AppBar(title: Text(l10n.biliAccount)),
       body: ListenableBuilder(
         listenable: BiliAccount.instance,
         builder: (context, _) {
@@ -25,7 +28,7 @@ class BiliUserPage extends StatelessWidget {
             children: [
               _HeaderCard(user: user),
               const SizedBox(height: 20),
-              const SettingsGroupTitle(title: '等级'),
+              SettingsGroupTitle(title: l10n.biliLevel),
               SettingsCard(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                 child: Column(
@@ -43,7 +46,7 @@ class BiliUserPage extends StatelessWidget {
                         ),
                         const Spacer(),
                         Text(
-                          _expLabel(user),
+                          _expLabel(l10n, user),
                           style: TextStyle(
                             fontSize: 13,
                             color: scheme.onSurfaceVariant,
@@ -65,12 +68,12 @@ class BiliUserPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              const SettingsGroupTitle(title: '资产'),
+              SettingsGroupTitle(title: l10n.biliAssets),
               SettingsCard(
                 child: SettingsTile(
                   icon: Icons.monetization_on_outlined,
-                  title: '硬币',
-                  subtitle: const Text('用于投币等操作'),
+                  title: l10n.biliCoins,
+                  subtitle: Text(l10n.biliCoinsDesc),
                   trailing: Text(
                     user.money.toStringAsFixed(1),
                     style: TextStyle(
@@ -87,7 +90,7 @@ class BiliUserPage extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: () => _confirmLogout(context),
                   icon: const Icon(Icons.logout),
-                  label: const Text('退出登录'),
+                  label: Text(l10n.biliSignOut),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: scheme.error,
                     minimumSize: const Size.fromHeight(48),
@@ -106,25 +109,26 @@ class BiliUserPage extends StatelessWidget {
     return (user.currentExp / user.nextExp).clamp(0.0, 1.0);
   }
 
-  String _expLabel(BiliUser user) {
-    if (user.level >= 6) return '已满级';
-    return '经验值 ${user.currentExp} / ${user.nextExp}';
+  String _expLabel(AppLocalizations l10n, BiliUser user) {
+    if (user.level >= 6) return l10n.biliMaxLevel;
+    return l10n.biliExpValue(user.currentExp, user.nextExp);
   }
 
   Future<void> _confirmLogout(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('退出登录'),
-        content: const Text('确定退出哔哩哔哩账号吗？'),
+        title: Text(l10n.biliSignOut),
+        content: Text(l10n.biliSignOutConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('取消'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('退出'),
+            child: Text(l10n.biliSignOutAction),
           ),
         ],
       ),
@@ -144,6 +148,7 @@ class _HeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return SettingsCard(
       padding: const EdgeInsets.all(20),
       child: Row(
@@ -173,7 +178,7 @@ class _HeaderCard extends StatelessWidget {
                     _Badge(text: user.levelLabel, color: scheme.primary),
                     const SizedBox(width: 8),
                     _Badge(
-                      text: user.vipLabel,
+                      text: biliUserVipLabel(l10n, user),
                       color: user.vipType > 0
                           ? const Color(0xFFFB7299)
                           : scheme.onSurfaceVariant,

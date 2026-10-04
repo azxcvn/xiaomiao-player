@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/widgets/app_frame.dart';
 import 'package:moumou/widgets/marquee_text.dart';
@@ -177,6 +178,7 @@ class _PlayerPanelState extends State<PlayerPanel> {
   }
 
   Widget _buildHeader(PlayerPanelPage page) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
       child: Row(
@@ -184,7 +186,7 @@ class _PlayerPanelState extends State<PlayerPanel> {
           if (_navigator.canPop)
             IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white),
-              tooltip: '返回',
+              tooltip: l10n.commonBack,
               onPressed: _navigator.pop,
             ),
           Expanded(
@@ -195,7 +197,7 @@ class _PlayerPanelState extends State<PlayerPanel> {
           ),
           IconButton(
             icon: const Icon(Icons.close, color: Colors.white),
-            tooltip: '关闭',
+            tooltip: l10n.commonOff,
             onPressed: widget.onClose,
           ),
         ],

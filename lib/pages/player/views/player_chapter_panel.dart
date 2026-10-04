@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/chapter_info.dart';
 import 'package:moumou/pages/player/views/player_chapter_skip_panel.dart';
 import 'package:moumou/services/chapter_tracker.dart';
@@ -39,27 +40,32 @@ class PlayerChapterPanel extends StatelessWidget {
 
   /// 打开「章节跳段」二级页（优先用页面注入的导航器就地切换）。
   void _openChapterSkip(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final push = onPushSubPage;
     if (push != null) {
-      push('章节跳段', const PlayerChapterSkipPanel());
+      push(l10n.playerChapterPanelTitle, const PlayerChapterSkipPanel());
       return;
     }
     // 兜底：无注入时尝试右侧面板导航器（横屏外壳）
     PlayerPanelNavigator.of(context).push(
-      const PlayerPanelPage(title: '章节跳段', body: PlayerChapterSkipPanel()),
+      PlayerPanelPage(
+        title: l10n.playerChapterPanelTitle,
+        body: const PlayerChapterSkipPanel(),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         // 顶部固定：章节跳段入口（始终可进入，不受有无章节影响）
         ListTile(
           leading: const Icon(Icons.fast_forward_outlined, color: Colors.white),
-          title: const Text(
-            '章节跳段',
-            style: TextStyle(color: Colors.white, fontSize: 15),
+          title: Text(
+            l10n.playerChapterPanelTitle,
+            style: const TextStyle(color: Colors.white, fontSize: 15),
           ),
           titleAlignment: ListTileTitleAlignment.center,
           trailing: const Icon(Icons.chevron_right, color: Colors.white54),
@@ -72,10 +78,10 @@ class PlayerChapterPanel extends StatelessWidget {
             builder: (context, _) {
               final chapters = tracker.chapters;
               if (chapters.isEmpty) {
-                return const Center(
+                return Center(
                   child: Text(
-                    '当前视频无章节信息',
-                    style: TextStyle(color: Colors.white38, fontSize: 13),
+                    l10n.playerNoChapters,
+                    style: const TextStyle(color: Colors.white38, fontSize: 13),
                   ),
                 );
               }
@@ -90,7 +96,7 @@ class PlayerChapterPanel extends StatelessWidget {
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(8, 2, 8, 10),
                       child: Text(
-                        '共 ${chapters.length} 章',
+                        l10n.playerChapterCount(chapters.length),
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.45),
                           fontSize: 12,

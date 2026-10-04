@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 默认（中文）资源：没有对应 values-xx/ 的语言都拿这一份，与 Dart 侧
+     l10n.yaml 的 preferred-supported-locales: [zh] 口径一致。
+     ⚠️ 应用名固定：中文「小喵Player」/ 英文「Meow Player」，不许自创（01-执行协议 红线 15）。
+     ⚠️ 只有**用户可见**的文案进这里；崩溃日志内容与日志消息按红线 13 永远保持中文，
+        见 kotlin/com/azxcvn/moumou/CrashHandler.kt 与 VideoFsWalker.kt。 -->
+<resources>
+    <string name="app_name">小喵Player</string>
+
+    <!-- 听视频后台播放（BackgroundPlaybackService）：
+         渠道 ID 固定 moumou_background_playback（改了会变成新渠道），渠道名/描述可翻译 -->
+    <string name="background_playback_channel_name">听视频后台播放</string>
+    <string name="background_playback_channel_description">在后台继续播放视频音频</string>
+    <string name="background_playback_title">听视频</string>
+    <string name="background_playback_text">正在后台播放</string>
+
+    <!-- 存储卷展示名：系统描述（volume.getDescription）取不到时的回退名 -->
+    <string name="storage_internal">内部存储</string>
+    <string name="storage_sd_card">SD 卡</string>
+
+    <!-- 读取日志失败（%1$s = 异常消息），由主界面回给 Dart 侧展示 -->
+    <string name="log_read_failed">读取日志失败：%1$s</string>
+
+    <!-- 崩溃提示弹窗（崩溃路径**唯一**一条走资源的文案；日志文件内容仍是中文） -->
+    <string name="crash_dialog_message">应用遇到错误已停止运行\n日志已保存，可在「关于 → 错误日志」查看</string>
+</resources>

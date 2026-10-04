@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
 import 'package:moumou/services/bilibili/bili_constants.dart';
+import 'package:moumou/utils/error_codes.dart';
 import 'package:moumou/utils/retry_policy.dart';
 
 /// 哔哩哔哩统一请求封装：Cookie / UA / Referer 注入 + UTF-8 解码 + 错误语义化。
@@ -19,11 +20,16 @@ import 'package:moumou/utils/retry_policy.dart';
 /// （请求可能已被服务端接收，重发有重复提交风险），超时统一走 12s 常规 API 档。
 /// 流式接口（`openStream` / 下载 Range / 流代理转发）不走这里，也一律不重试。
 class BiliApiException implements Exception {
-  final String message;
-  const BiliApiException(this.message);
+  /// 错误码
+  final BiliApiErrorCode code;
+
+  /// 参数（键名与 ARB placeholder 一致：`code` / `status` / `error` / `message`）
+  final Map<String, Object?> args;
+
+  const BiliApiException(this.code, {this.args = const {}});
 
   @override
-  String toString() => 'BiliApiException: $message';
+  String toString() => 'BiliApiException(${code.name})';
 }
 
 class BiliHttp {
@@ -100,7 +106,10 @@ class BiliHttp {
         onRetry: _logRetry,
       );
     } catch (e) {
-      throw BiliApiException('网络请求失败: $e');
+      throw BiliApiException(
+        BiliApiErrorCode.networkFailed,
+        args: {'error': '$e'},
+      );
     }
     return _decode(response);
   }
@@ -132,10 +141,16 @@ class BiliHttp {
         onRetry: _logRetry,
       );
     } catch (e) {
-      throw BiliApiException('网络请求失败: $e');
+      throw BiliApiException(
+        BiliApiErrorCode.networkFailed,
+        args: {'error': '$e'},
+      );
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw BiliApiException('请求失败（HTTP ${response.statusCode}）');
+      throw BiliApiException(
+        BiliApiErrorCode.httpFailed,
+        args: {'status': '${response.statusCode}'},
+      );
     }
     return response.bodyBytes;
   }
@@ -164,7 +179,10 @@ class BiliHttp {
         onRetry: _logRetry,
       );
     } catch (e) {
-      throw BiliApiException('网络请求失败: $e');
+      throw BiliApiException(
+        BiliApiErrorCode.networkFailed,
+        args: {'error': '$e'},
+      );
     }
     return _decode(response);
   }
@@ -193,7 +211,10 @@ class BiliHttp {
         onRetry: _logRetry,
       );
     } catch (e) {
-      throw BiliApiException('网络请求失败: $e');
+      throw BiliApiException(
+        BiliApiErrorCode.networkFailed,
+        args: {'error': '$e'},
+      );
     }
     return _decode(response);
   }
@@ -220,7 +241,10 @@ class BiliHttp {
         onRetry: _logRetry,
       );
     } catch (e) {
-      throw BiliApiException('网络请求失败: $e');
+      throw BiliApiException(
+        BiliApiErrorCode.networkFailed,
+        args: {'error': '$e'},
+      );
     }
     return _decode(response);
   }
@@ -259,7 +283,10 @@ class BiliHttp {
         onRetry: _logRetry,
       );
     } catch (e) {
-      throw BiliApiException('网络请求失败: $e');
+      throw BiliApiException(
+        BiliApiErrorCode.networkFailed,
+        args: {'error': '$e'},
+      );
     }
     return _decode(response);
   }
@@ -268,16 +295,22 @@ class BiliHttp {
   Map<String, dynamic> _decode(http.Response response) {
     final text = utf8.decode(response.bodyBytes);
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw BiliApiException('请求失败（HTTP ${response.statusCode}）');
+      throw BiliApiException(
+        BiliApiErrorCode.httpFailed,
+        args: {'status': '${response.statusCode}'},
+      );
     }
     try {
       final decoded = jsonDecode(text);
       if (decoded is Map<String, dynamic>) return decoded;
       if (decoded is Map) return decoded.cast<String, dynamic>();
-      throw BiliApiException('响应不是 JSON 对象');
+      throw const BiliApiException(BiliApiErrorCode.responseNotJson);
     } catch (e) {
       if (e is BiliApiException) rethrow;
-      throw BiliApiException('响应解析失败: $e');
+      throw BiliApiException(
+        BiliApiErrorCode.responseParseFailed,
+        args: {'error': '$e'},
+      );
     }
   }
 }

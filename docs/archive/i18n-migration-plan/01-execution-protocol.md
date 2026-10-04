@@ -1,0 +1,209 @@
+# 01 · 执行协议（AI 执行者必读，先读这一份）
+
+> 你（AI）要在这个仓库里把中文硬编码文案迁移到 Flutter 官方 l10n（`gen_l10n` + ARB）。
+> 本协议是**硬约束**：与 `02-implementation-plan.md` 冲突时以本协议为准；与仓库根目录 `AGENTS.md` 冲突时以 `AGENTS.md` 为准。
+> 本协议中「必须 / 禁止 / 不允许」都是门禁级要求，**违反即回滚该次改动并在报告里说明**。
+
+---
+
+## 0. 开工前必须读的东西（按序）
+
+| 顺序 | 文件 | 读它是为了 |
+|---|---|---|
+| 1 | `AGENTS.md`（仓库根目录） | 仓库协作规则：只做静态分析与测试、禁编译、禁提交、不升版本号、不跑 format |
+| 2 | `docs/archive/i18n-migration-plan/01-execution-protocol.md` | 本文件：红线与门禁 |
+| 3 | `docs/archive/i18n-migration-plan/02-implementation-plan.md` | 技术方案与阶段步骤（怎么改） |
+| 4 | `docs/archive/i18n-migration-plan/04-data-baseline.md` | 现状数字、不可翻译清单、持久化审计（**不要自己重新统计**） |
+| 5 | `docs/archive/i18n-migration-plan/03-task-list.md` | 你的待办：一条 = 一个文件，勾选进度写在这里 |
+| 6 | `docs/PROJECT.md` | 改动落点涉及的模块职责（防止改错层） |
+
+---
+
+## 1. 红线（16 条，不得违反）
+
+1. **禁止编译与运行**：不 `flutter build`、不 `flutter run`、不启模拟器、不 `adb install`。真机验证由用户自己做。
+2. **禁止 `dart format`**：仓库是旧版格式化风格，改动风格必须与所在文件现状一致。
+3. **禁止提交与推送**：不 `git commit`、不 `git push`、不建 tag、不改历史。改动只停在本地工作区。
+4. **禁止改 `pubspec.yaml` 的 `version:`**（除非用户点名"升版本号"，且按 `AGENTS.md` 的 `a.b.c+N` 规则递增）。
+5. **禁止改业务逻辑**。唯一例外：`lib/widgets/folder_actions.dart` 的哨兵值 `'取消'`（第 260、380 行）改成常量/枚举——这是阶段 1 的第一步，且必须保持行为完全等价。
+6. **禁止翻译不可翻译清单**（`04-data-baseline.md` §13 = `tools/whitelist.json`）：字幕轨语言判定、外挂字幕后缀、集数正则、章节关键词、FTP GBK 分支、哨兵值。
+7. **禁止调整任何枚举项的顺序、禁止删除枚举项、禁止改枚举名**。持久化用 index / `.name` / `.id`（证据见 `04-data-baseline.md` §14），重排会让老用户设置错乱。
+8. **禁止修改既有持久化键名与取值格式**。新增键只允许 `app_locale`，且**值只允许 `'zh'` / `'en'`**（**不允许 `'system'`**，用户已定不提供「跟随系统」）；缺省、空值、非法值一律回落 `'zh'`。
+9. **禁止在 `lib/models/`、`lib/utils/` 里 `import` Flutter 或 l10n**：这些层刻意保持纯 Dart 可单测（文件头注释常写"纯函数，可单测"）。翻译一律在 UI 层做映射。
+10. **禁止引入新的第三方依赖**，阶段 0 只允许加 `flutter_localizations`（SDK）与 `intl`。也**不要**引入任何第三方 i18n 迁移工具（用户已明确否决）。
+11. **禁止在中途留下编译不过的状态**：每改完一个文件必须立刻 `flutter analyze` 通过，才能进入下一个文件。
+12. **禁止自行决定已拍板项的细节或新增要求**：决策见 `02-implementation-plan.md` §6（如英文应用名、长文做法、语言弹窗时机、默认语言）。`§6.2` 里"推导出的约定"如果不认同，**先问再改**。
+13. **日志永远保持中文**（用户已定：无论将来增加多少语言，日志都不翻译）。日志输出既不算"残留中文"，也不许顺手英文化。
+14. **截图文件名保持现状**：`lib/utils/formatters.dart:24` 的 `小喵Player-yyyy-…` 不随语言变化。
+15. **应用名固定**：中文 `小喵Player`、英文 `Meow Player`。Dart `appTitle`（zh/en）与 Android `app_name`（`values/`、`values-en/`）都只能用这两串，**不许自创**。
+16. **长文（隐私政策/用户协议）不许塞进 ARB**：按语言拆 `lib/l10n/legal_zh.dart` / `legal_en.dart`（用户已定）；英文 AI 翻译即可，无需专业/法务审校。
+
+---
+
+## 2. 工作粒度与循环
+
+**粒度**：严格按 `03-task-list.md` **一条任务 = 一个文件** 推进。禁止一次改多个文件（除非该文件与其测试文件是同一处改动的两半）。
+
+**单文件循环**：
+
+1. 从 `03-task-list.md` 取当前阶段的第一条未勾选任务。
+2. 读该文件全文（不要只读片段），确认它属于哪一类：
+   - UI 文案（`pages` / `widgets`）→ 用 `AppLocalizations.of(context).xxx`
+   - 表（枚举 / 映射表 / `switch` 返回中文）→ 按 `02-implementation-plan.md` §2.8
+   - 无 context 层（`services` / `models` / `utils`）→ 按 §2.7（只产出码/枚举 + 参数）
+   - 不可翻译清单命中 → 跳过，不动它
+3. 改这一个文件：加 ARB 键（中英双语）→ 改调用点 → 去掉多余的 `const`。
+4. 跑 `flutter gen-l10n`（ARB 变了就要跑）。
+5. 跑 `flutter analyze`：**必须无问题**。有问题就地修，不许留给下一个文件。
+6. 若该文件有对应测试文件（`test/<同名>_test.dart`），跑 `flutter test test/<该文件>`；失败要判断是"预期红（夹具未做）"还是"自己改坏了"。
+7. 在 `03-task-list.md` 把该行 `- [ ]` 改成 `- [x]`。
+8. 记一句话进度（改了哪些键、有无遗留），进入下一条。
+
+**阶段循环**（每阶段收口）：
+
+1. 本阶段全部文件勾选完成。
+2. `flutter analyze` 无问题。
+3. `flutter test`（**全量**）通过。
+4. `python tools/i18n_scan.py residual --path <本阶段目录>` → 残留数必须为 0（不可翻译清单里的白名单项除外）。
+5. 更新 `03-task-list.md` 的进度总览（`python tools/i18n_scan.py tasks` 重新生成即可，勾选会被保留）。
+6. 按 §9 的模板输出阶段报告，然后**停下来等用户确认**，不要自动进入下一阶段。
+
+---
+
+## 3. 命令清单（可直接复制）
+
+工作目录 = 工程根 `C:\Users\root\Desktop\moumou`（用 `pwd` 确认，不要假设）。
+
+```powershell
+# 1) 生成 l10n 代码（改了任一 .arb 之后都要跑）
+flutter gen-l10n
+
+# 2) 静态分析（每改完一个文件必跑；这是本仓库的"收工标准"）
+flutter analyze
+
+# 3) 单文件测试 / 全量测试（阶段收口必跑全量）
+flutter test test/xxx_test.dart
+flutter test
+
+# 4) 残留中文门禁（有残留 exit code = 1）
+python "docs\archive\i18n-migration-plan\tools\i18n_scan.py" residual --path lib/pages/settings
+
+# 5) 未翻译清单（阶段收口必须为空）
+#    l10n.yaml 里配置 --untranslated-messages-file 的输出文件，检查其内容
+
+# 6) 重新生成任务清单（保留勾选）
+python "docs\archive\i18n-migration-plan\tools\i18n_scan.py" tasks
+```
+
+说明：扫描脚本是**只读**的（除 `tasks` 写 `03-task-list.md`、`residual` 写 `05-residual-chinese-report.md`）。
+若本机没有 `python`，用 DSH 提供的解释器：`C:\Users\root\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\python.exe`。
+
+---
+
+## 4. 每阶段"开始前必须成立"的前置条件
+
+| 阶段 | 开始前必须成立 | 否则 |
+|---|---|---|
+| 0 | 无（这是第一个阶段） | — |
+| 1 | 阶段 0 的测试夹具已生效：**在未改任何文案的情况下 `flutter test` 全绿** | 先修夹具，不许动文案 |
+| 2–7 | 上一阶段收口报告已被用户确认 | 停下来问 |
+| 8 | 全部 lib 阶段完成；`residual` 全仓仅剩白名单项 | 先补完 |
+
+**阶段 0 的夹具没绿之前，禁止改任何业务文案**——否则测试一片红，你无法区分"预期红"与"自己改坏"。
+
+**新增文件任务**（`l10n.yaml`、ARB、`app_locale_settings.dart`、`label_maps.dart`、语言弹窗、`legal_*.dart`、Android `strings.xml`、测试夹具）不在扫描范围内，因此单独列在 `03-task-list.md` 的「新增文件任务」小节，**同样要逐条勾选**；文件命名若与清单不一致，必须先把清单改掉再动手。
+
+---
+
+## 5. 门禁（什么算通过）
+
+| 门禁 | 通过标准 |
+|---|---|
+| G1 编译 | `flutter analyze` 输出 "No issues found!"（或等价无问题） |
+| G2 测试 | `flutter test` 全绿（阶段收口时必须是全量） |
+| G3 生成 | `flutter gen-l10n` 成功；`untranslated-messages-file` 里本阶段新增键的英文**不为空** |
+| G4 残留 | `residual --path <阶段目录>` 计数为 0 |
+| G5 数据 | 改完表之后，枚举项顺序/名称与改动前完全一致（用 `git diff` 人工核对，只允许删除 `label` 字段与其构造参数） |
+| G6 白名单 | `residual` 报告里"白名单过期项"为 0；若某条过期（该行已无中文），从 `tools/whitelist.json` 删除后重跑 |
+
+任一门禁不过 → 不许进入下一阶段，也不许"先记下来以后修"。
+
+---
+
+## 6. 必须停下来提问的情况（不许自行决定）
+
+1. **`02-implementation-plan.md` §6.2 的"推导约定"你并不认同**，或用户临时改主意、或出现新的决策点（例如语言弹窗要不要强制选择、要不要支持第三种语言）。§6.1 的九项已拍板，**不要再问**、也不要自行更改。
+2. 本协议/方案与代码现状**不一致**（例如文档说某文件有 X 处中文，实际是 Y 处；某行号对不上）。
+3. 需要**改业务逻辑**才能完成迁移（例如某个中文值既当文案又当逻辑判断——`folder_actions` 那种）。
+4. 测试红了，且判断不出原因是"夹具/预期"还是"自己改坏了"。
+5. ARB 键命名出现**歧义**（同一句中文在两个模块含义不同，需要拆成两个键 → 影响英文译法）。
+6. 需要动 `android/` 的**构建配置**（Gradle、manifest 权限、AGP 版本等），而不只是 `res/xml`、`strings.xml`。
+7. 发现某个中文文案其实是**用户数据**（文件名、账号名、日志内容）或**第三方返回内容**，拿不准要不要翻。
+8. 需要 `flutter build` / 真机 / 截图才能判断的问题（例如英文溢出）——**交给用户**，不要自己编译。
+
+提问要求：一次问清，给出你的判断选项与依据，不要挤牙膏式反复问。
+
+---
+
+## 7. 常见失败的处理顺序
+
+| 症状 | 处理顺序 |
+|---|---|
+| `flutter analyze` 报 "Const variables must be initialized with a constant value" | 定位到该 widget，去掉该处 `const`；**逐处确认重建范围**，不要整棵树去 `const`；若该 widget 在 `const List` 里，把它改成非 const 列表或把文案上提到父级 |
+| 报 `Undefined name 'context'` | 说明该处没有可用的 `BuildContext`（回调、`static` 方法、`initState`、纯函数）→ 走 §2.7 的"服务出码、UI 出文案"；`initState` 场景改用 `didChangeDependencies` |
+| `flutter gen-l10n` 报 ARB 解析错误 | 检查是否把**裸花括号**写进 ARB（全仓只有 2 处，在 `subtitle_settings_section.dart`，讲 `{name}` 语法）→ 转义或改写文案 |
+| 键重复/键名冲突 | 先查 `common.*`；同一句中文全仓共 189 条跨文件重复，**必须复用同一个键** |
+| `flutter test` 大量 `findsNothing` | 先确认测试夹具是否生效（阶段 0）；未生效就去修夹具，不要在测试里改断言迁就英文 |
+| 测试里 `Text('取消')` 找不到 | 判断该测试是否钉了 locale；夹具覆盖后应恢复。**不要**为了让它过而把断言改成英文 |
+| `residual` 报某行"白名单过期" | 该行已无中文（可能你把它翻掉了，或行号漂移）→ 若是行号漂移就更新 `whitelist.json` 行号；若是你误翻了不可翻译文案 → **回滚这处改动** |
+| `git status` 出现意外文件 | 立即停下来报告，不要 `git checkout -- .` 之类"清理"（可能抹掉用户的手改） |
+| 语言弹窗该弹却没弹（或不该弹却弹了、默认没选中简体中文） | 挂错分支或持久化判断写错 | 检查 `main.dart` 的 `_ensurePrivacyAgreed()`：只有"本次刚同意"才弹；已同意过的老用户不进该分支；弹窗默认选中值固定 `'zh'` |
+| 切语言后个别界面仍是旧语言 | 该处文案在 `initState`/静态缓存/`const` 里取了值 | 改成在 `build` / `didChangeDependencies` 里取 l10n；`const` 按 §7 处理 |
+
+---
+
+## 8. 命名与风格约定
+
+| 项 | 约定 |
+|---|---|
+| ARB 键 | 英文 camelCase，语义化；按模块前缀：`common.` / `home.` / `player.` / `settings.` / `network.` / `bili.` / `danmaku.` / `subtitle.` / `download.` / `cast.` / `mediaInfo.` / `error.` / `legal.`（`gen_l10n` 不支持点号分组的用 `commonCancel` 这种拼接式，保持前缀可读） |
+| 占位符 | 用英文名（`name` / `count` / `path` / `code`）；`$var` 与 `${expr}` 都要转成 ARB `placeholders` |
+| 复数 | 用 ARB `plural` 语法（`{count, plural, =1{1 file} other{{count} files}}`），禁止手拼 `s` |
+| 注释 | 中文，风格跟随所在文件；新增文件头写清职责 |
+| 代码风格 | 与所在文件现状一致；**不跑 `dart format`**；不用 PowerShell 文本命令（`Get-Content`/`Set-Content`/`-replace`）改 UTF-8 源码，用编辑工具 |
+| 语言偏好持久化 | 键 `app_locale`，值**只允许 `'zh'` / `'en'`**（ASCII，不含中文，**没有 `'system'`**），默认 `'zh'` |
+| 语言选项文案 | 用**自称**且**不翻译**：`简体中文` / `English`（弹窗与设置页都一致） |
+| 长文文件 | `lib/l10n/legal_zh.dart` / `lib/l10n/legal_en.dart`，保留 `'''…'''` 多行排版；文件头写明"改中文必须同步改英文" |
+| 语言弹窗文件 | `lib/widgets/language_picker_dialog.dart`（如需改名，先同步 `03-task-list.md`） |
+| 应用名 | zh=`小喵Player`、en=`Meow Player`；Dart 用 `appTitle` 键，Android 用 `@string/app_name` |
+
+---
+
+## 9. 阶段报告模板（每阶段收口后必须按此输出）
+
+```
+## 阶段 N 完成情况
+
+- 改动文件：<数量> 个（列出关键文件）
+- 新增 ARB 键：<数量> 个（中英双语已补齐 / 仍缺 <n> 个）
+- 验证：
+  - flutter analyze：<结果>
+  - flutter test：<结果，通过数/总数>
+  - residual --path <目录>：残留 <n> 条（=0 才算通过）；白名单过期 <n> 条
+  - gen-l10n untranslated：<本阶段是否有缺英文>
+- 门禁自查：G1..G6 <逐条通过/不通过>
+- 未做的事（如实写，不许含糊）：
+- 需要用户人工验证的（真机/目视）：
+- 阻塞或需要拍板的问题：
+```
+
+**禁止**在报告里写"已完成""应该没问题"这类没有验证支撑的结论；没验证的必须写"未验证"。
+
+---
+
+## 10. 进度与交接
+
+- 进度唯一真源 = `03-task-list.md` 的勾选框（`- [x]`）。**每完成一个文件就勾一个**，不要批量补勾。
+- 每次 `residual` 会覆盖 `05-residual-chinese-report.md`，它是当前残留快照，不需要手工维护。
+- 每次改完 ARB 后跑 `python tools/i18n_scan.py tasks` 刷新清单（勾选保留）。
+- 交接给下一个会话/下一个 AI 时，让对方先读本协议 §0 的六份文件，再看 `03-task-list.md` 的勾选状态继续做。

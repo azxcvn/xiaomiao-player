@@ -11,6 +11,7 @@ import 'package:dlna_dart/dlna.dart';
 import 'package:moumou/models/cast_device.dart';
 import 'package:moumou/services/cast/lan_media_server.dart';
 import 'package:moumou/utils/cast_source.dart';
+import 'package:moumou/utils/error_codes.dart';
 
 /// 是否为渲染器（能播放的电视/盒子）：deviceType 含 MediaRenderer。
 bool isMediaRenderer(String deviceType) => deviceType.contains('MediaRenderer');
@@ -66,8 +67,20 @@ class CastService {
   /// 推送到指定设备并播放（SetAVTransportURI → Play）。
   Future<void> pushToDevice(CastDevice device, String url) async {
     final dlna = _deviceManager?.deviceList[device.id];
-    if (dlna == null) throw StateError('设备已离线');
+    if (dlna == null) throw const CastException(CastErrorCode.deviceOffline);
     await dlna.setUrl(url);
     await dlna.play();
   }
+}
+
+/// 投屏失败：[code]，文案在 UI 层（见 `lib/l10n/error_texts.dart` 的
+/// `castErrorText` / `serviceErrorText`）。
+class CastException implements Exception {
+  /// 错误码
+  final CastErrorCode code;
+
+  const CastException(this.code);
+
+  @override
+  String toString() => 'CastException(${code.name})';
 }

@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/player_action.dart';
 import 'package:moumou/models/playlist_sort.dart';
 import 'package:moumou/models/bili_media.dart';
@@ -76,9 +79,9 @@ import 'package:moumou/services/super_resolution_service.dart';
 import 'package:moumou/services/video_scanner.dart';
 import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/utils/cast_source.dart';
-import 'package:moumou/utils/dolby_vision_hint.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/intro_outro_skip.dart';
+import 'package:moumou/utils/mpv_tuning.dart';
 import 'package:moumou/utils/network_mime_types.dart';
 import 'package:moumou/utils/network_playlist.dart';
 import 'package:moumou/utils/pip_aspect.dart';
@@ -90,6 +93,7 @@ import 'package:moumou/utils/player_gestures.dart';
 import 'package:moumou/utils/player_orientation.dart';
 import 'package:moumou/widgets/app_frame.dart';
 import 'package:moumou/widgets/cast_device_dialog.dart';
+import 'package:moumou/widgets/dolby_vision_hint.dart';
 import 'package:moumou/widgets/player_panel.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 
@@ -464,6 +468,9 @@ class _PlayerPageState extends State<PlayerPage>
         libass: true,
         libassAndroidFontsDir: fontInjection.fontsDir,
         libassAndroidFontName: fontInjection.fontName,
+        // 协议白名单与 open 前重建的 demuxer-lavf-o 用同一份常量
+        // （见 utils/mpv_tuning.dart：不能靠读回来合并，方括号会丢）。
+        protocolWhitelist: kPlaybackProtocolWhitelist,
       ),
     );
     // 解码档位注入（方案 A）：创建时传入 hwdec/vo，换档后下次打开视频生效
@@ -484,7 +491,9 @@ class _PlayerPageState extends State<PlayerPage>
     _subtitleController = SubtitleController(_player);
     // 同名字幕自动加载成功后弹提示（服务层不依赖 UI，由页面层展示）
     _subtitleController.onAutoLoadedSubtitle = (fileName) {
-      if (mounted) _toast('已自动加载字幕：$fileName');
+      if (mounted) {
+        _toast(AppLocalizations.of(context).playerAutoLoadedSubtitle(fileName));
+      }
     };
     unawaited(_subtitleController.applyOnInit());
     // 音频控制器：绑定同一播放器（track-list / aid / audio-add / 声道 / af）
@@ -492,9 +501,46 @@ class _PlayerPageState extends State<PlayerPage>
     // 音轨无法播放时自动回退（mpv 日志判定 + audio-params 复核）后提示用户：
     // 例如 TrueHD 8 声道轨在 Android opensles 上初始化失败 → 退回 AC-3。
     _audioController.onAudioFallback = (fallback, failed, reason) {
-      if (mounted) _toast(reason);
+      // 回调可能在 initState 期间注册，l10n 一律在回调内部现取
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        _toast(audioFallbackReasonText(l10n, reason, fallback));
+      }
+    };
+    // 内核缺音频滤镜（音频效果建不起来）时提示一次：服务层已经把出问题的
+    // 滤镜摘掉/整条停用，这里只负责告诉用户「音效没生效，但播放正常」。
+    _audioController.onAudioFiltersUnavailable = () {
+      if (mounted) {
+        _toast(AppLocalizations.of(context).playerAudioEffectsUnsupported);
+      }
     };
     unawaited(_audioController.applyOnInit());
+    // mpv 的错误/日志必须被消费（2026-10 实测教训）：此前应用侧完全不看
+    // `Player.stream.error`，在线播放失败时只剩「无限转圈、没有任何提示」——
+    // 用户和对着一堆日志排障的人都拿不到原因（https 证书库缺失那次就是这样
+    // 藏了很久）。这里把 error 变成一句可读提示（附 mpv 的原因），并把
+    // warn/error 级日志写进 logcat 便于定位。
+    _subs.add(
+      _player.stream.error.listen((message) {
+        final text = message.trim();
+        if (text.isEmpty) return;
+        debugPrint('[mpv error] $text');
+        // 音频滤镜（af）建不起来的报错交给 AudioController 兜底处理，并另给
+        // 一句看得懂的提示；这里不再弹裸的 mpv 报错（同一件事提示两次且看不懂）
+        if (isAudioFilterFailureLog('', text)) return;
+        if (!mounted) return;
+        final brief = text.length > 120 ? '${text.substring(0, 120)}…' : text;
+        _toast(AppLocalizations.of(context).playerPlaybackFailed(brief));
+      }),
+    );
+    _subs.add(
+      _player.stream.log.listen((event) {
+        final level = event.level.toLowerCase();
+        if (level == 'error' || level == 'fatal' || level == 'warn') {
+          debugPrint('[mpv $level] ${event.prefix}: ${event.text}');
+        }
+      }),
+    );
     // 弹幕控制器：绑定同一播放器（本地同名弹幕加载 + 1s 秒桶发射 +
     // 渲染层暂停/倍速同步；首开加载在 _openAndSetRate 的 open 完成后）
     _danmakuController = DanmakuController(_player);
@@ -504,11 +550,21 @@ class _PlayerPageState extends State<PlayerPage>
     _session.addListener(_onSessionChanged);
     // 自动加载弹幕（同名/记忆恢复）成功后弹提示（服务层不依赖 UI）
     _danmakuController.onAutoLoadedDanmaku = (fileName) {
-      if (mounted) _toast('已自动加载弹幕：$fileName');
+      if (mounted) {
+        _toast(AppLocalizations.of(context).playerAutoLoadedDanmaku(fileName));
+      }
     };
     // 网络弹幕（弹弹Play 搜索选中/自动匹配/切集自动匹配）加载成功提示
-    _danmakuController.onNetworkDanmakuLoaded = (message) {
-      if (mounted) _toast('已加载弹幕：$message');
+    _danmakuController.onNetworkDanmakuLoaded =
+        (anime, episode, serverName, autoMatch) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
+      final server = serverName ?? l10n.danmakuServerDefaultName;
+      _toast(
+        autoMatch
+            ? l10n.playerNetworkDanmakuLoadedAuto(anime, episode, server)
+            : l10n.playerNetworkDanmakuLoadedManual(anime, episode, server),
+      );
     };
     // 精确落帧 / 解码预设 / GPU 后端（hr-seek、profile、gpu-api）不再在此处
     // 异步下发：三者都必须在 open 之前写入，已随 `_applyPlaybackTuning`
@@ -938,6 +994,7 @@ class _PlayerPageState extends State<PlayerPage>
   /// - 回落到的档位**恰好就是当前在播的档位** → 流没变，**不重开**（重开会黑
   ///   一下 + 进度回跳），只把面板高亮纠正到真实档位。
   Future<int?> _switchQuality(int qn) async {
+    final l10n = AppLocalizations.of(context);
     final m = _biliMedia;
     if (m == null || m.currentQn == qn) return null;
     final position = _position;
@@ -945,7 +1002,9 @@ class _PlayerPageState extends State<PlayerPage>
       final next = await m.switchQuality(qn);
       if (_disposed || !mounted) return null;
       if (next.currentQn != qn) {
-        _toast('该清晰度不可用，已切换到 ${_currentQualityDescription(next)}');
+        _toast(
+          l10n.playerQualityUnavailableSwitched(_currentQualityDescription(next)),
+        );
       }
       if (next.currentQn == m.currentQn) return next.currentQn;
       setState(() => _biliMedia = next);
@@ -954,7 +1013,7 @@ class _PlayerPageState extends State<PlayerPage>
       );
       return next.currentQn;
     } catch (e) {
-      if (mounted) _toast('切换画质失败：$e');
+      if (mounted) _toast(l10n.playerQualitySwitchFailed('$e'));
       return null;
     }
   }
@@ -969,7 +1028,7 @@ class _PlayerPageState extends State<PlayerPage>
 
   /// 清晰度面板页。
   PlayerPanelPage _qualityPanelPage() => PlayerPanelPage(
-        title: '清晰度',
+        title: AppLocalizations.of(context).commonQuality,
         body: _biliMedia == null
             ? const SizedBox.shrink()
             : PlayerQualityPanel(
@@ -1375,15 +1434,16 @@ class _PlayerPageState extends State<PlayerPage>
   // ── 截图 ────────────────────────────────────────────────
 
   Future<void> _takeScreenshot() async {
+    final l10n = AppLocalizations.of(context);
     Uint8List? bytes;
     try {
       bytes = await _player.screenshot(format: 'image/png');
     } catch (e) {
-      _toast('截图失败：$e');
+      _toast(l10n.playerScreenshotFailed('$e'));
       return;
     }
     if (bytes == null || bytes.isEmpty) {
-      _toast('截图失败：未获取到图像');
+      _toast(l10n.playerScreenshotNoImage);
       return;
     }
     try {
@@ -1394,9 +1454,11 @@ class _PlayerPageState extends State<PlayerPage>
         albumPath: '小喵Player',
         skipIfExists: false,
       );
-      _toast(result.isSuccess ? '已保存到相册' : '截图保存失败：${result.errorMessage}');
+      _toast(result.isSuccess
+          ? l10n.playerSavedToGallery
+          : l10n.playerScreenshotSaveFailed('${result.errorMessage}'));
     } catch (e) {
-      _toast('截图保存失败：$e');
+      _toast(l10n.playerScreenshotSaveFailed('$e'));
     }
   }
 
@@ -1749,9 +1811,9 @@ class _PlayerPageState extends State<PlayerPage>
     await showPlayerPanel(
       context,
       pages: [
-        const PlayerPanelPage(
-          title: '弹幕设置',
-          body: PlayerDanmakuSettingsPanel(),
+        PlayerPanelPage(
+          title: AppLocalizations.of(context).playerDanmakuSettings,
+          body: const PlayerDanmakuSettingsPanel(),
         ),
       ],
     );
@@ -1762,7 +1824,7 @@ class _PlayerPageState extends State<PlayerPage>
 
   /// 片头片尾面板页（顶栏「片头片尾」槽位弹出）
   PlayerPanelPage _introOutroPanelPage() => PlayerPanelPage(
-        title: '片头片尾',
+        title: AppLocalizations.of(context).playerActionIntroOutro,
         body: PlayerIntroOutroPanel(
           positionListenable: _positionNotifier,
           durationListenable: _durationNotifier,
@@ -1794,9 +1856,9 @@ class _PlayerPageState extends State<PlayerPage>
       case IntroOutroAction.skipIntro:
         final s = IntroOutroSettings.instance;
         _player.seek(Duration(seconds: s.introSeconds));
-        _toast('已跳过片头');
+        _toast(AppLocalizations.of(context).playerSkippedIntro);
       case IntroOutroAction.nextEpisode:
-        _toast('已跳过片尾');
+        _toast(AppLocalizations.of(context).playerSkippedOutro);
         _playNext();
     }
   }
@@ -1866,6 +1928,7 @@ class _PlayerPageState extends State<PlayerPage>
   Future<({String path, String title})?> _switchToNetworkVideo(
     VideoFile video,
   ) async {
+    final l10n = AppLocalizations.of(context);
     final connectionId = video.connectionId;
     final remotePath = video.remotePath;
     if (connectionId == null || remotePath == null || remotePath.isEmpty) {
@@ -1875,7 +1938,7 @@ class _PlayerPageState extends State<PlayerPage>
     if (_isSwitchingVideo) return null;
     final connection = NetworkConnectionSettings.instance.byId(connectionId);
     if (connection == null) {
-      _toast('网络连接不存在，无法切换');
+      _toast(l10n.playerNoNetworkCannotSwitch);
       return null;
     }
     final String url;
@@ -1887,7 +1950,7 @@ class _PlayerPageState extends State<PlayerPage>
         mimeType: networkMimeTypeForFileName(video.name) ?? 'video/mp4',
       );
     } catch (e) {
-      _toast('切换失败：$e');
+      _toast(l10n.playerSwitchFailed(serviceErrorText(l10n, e)));
       return null;
     }
     final previousUrl = _networkSource != null ? _path : null;
@@ -1926,6 +1989,7 @@ class _PlayerPageState extends State<PlayerPage>
   Future<({String path, String title, int epId})?> _switchToBiliEpisode(
     BiliPlaylistItem item,
   ) async {
+    final l10n = AppLocalizations.of(context);
     final playlist = widget.biliPlaylist;
     if (playlist == null) return null;
     if (item.epId == _biliMedia?.epId) return null;
@@ -1944,7 +2008,7 @@ class _PlayerPageState extends State<PlayerPage>
       if (_disposed || !mounted) return null;
       if (media.playUrl.defaultVideo == null ||
           media.playUrl.defaultAudio == null) {
-        _toast('解析播放地址失败');
+        _toast(l10n.playerResolveUrlFailed);
         return null;
       }
       setState(() {
@@ -1955,7 +2019,7 @@ class _PlayerPageState extends State<PlayerPage>
       await _openBiliMedia();
       return (path: _path, title: _title, epId: item.epId);
     } catch (e) {
-      if (mounted) _toast('切集失败：$e');
+      if (mounted) _toast(l10n.playerSwitchEpisodeFailed('$e'));
       return null;
     } finally {
       _isSwitchingVideo = false;
@@ -2101,7 +2165,7 @@ class _PlayerPageState extends State<PlayerPage>
 
   /// 倍速面板页（底栏倍速按钮弹出）
   PlayerPanelPage _speedPanelPage() => PlayerPanelPage(
-        title: '播放倍速',
+        title: AppLocalizations.of(context).playerPlaybackSpeed,
         body: PlayerSpeedPanel(
           speedListenable: _session.rateListenable,
           onSpeedChanged: _setSpeed,
@@ -2113,13 +2177,13 @@ class _PlayerPageState extends State<PlayerPage>
   /// 超分面板页（底栏超分辨率按钮弹出，与倍速面板同一外壳/胶囊样式）。
   /// 面板直接驱动 [SuperResolutionService] 单例（模式/质量/记忆）。
   PlayerPanelPage _superResolutionPanelPage() => PlayerPanelPage(
-        title: '超分辨率',
+        title: AppLocalizations.of(context).playerSuperResolution,
         body: PlayerSuperResolutionPanel(player: _player),
       );
 
   /// 画面比例面板页（顶栏「比例」槽位弹出，PiliPlus 同款选项）
   PlayerPanelPage _fitPanelPage() => PlayerPanelPage(
-        title: '画面比例',
+        title: AppLocalizations.of(context).playerAspectRatio,
         body: const PlayerFitPanel(),
       );
 
@@ -2127,8 +2191,9 @@ class _PlayerPageState extends State<PlayerPage>
   /// P0 仅本地文件可投，其余来源 toast 提示；LAN 服务器在投屏成功后
   /// 保持运行供电视拉流，退出播放页时释放。
   Future<void> _openCast() async {
+    final l10n = AppLocalizations.of(context);
     if (classifyCastSource(_path) != CastSource.localFile) {
-      _toast('暂不支持投屏该来源');
+      _toast(l10n.playerCastUnsupportedSource);
       return;
     }
     await showCastDeviceDialog(context, path: _path);
@@ -2147,6 +2212,7 @@ class _PlayerPageState extends State<PlayerPage>
       builder: (panelContext) => ListenableBuilder(
         listenable: _settings,
         builder: (context, _) {
+          final l10n = AppLocalizations.of(context);
           final notPlaced = PlayerTopAction.values
               .where((a) => !_settings.topActions.contains(a))
               .toList();
@@ -2158,7 +2224,7 @@ class _PlayerPageState extends State<PlayerPage>
               if (_biliMedia != null) ...[
                 _PanelActionTile(
                   icon: Icons.hd_outlined,
-                  label: '清晰度',
+                  label: l10n.commonQuality,
                   subtitle: _currentQualityDescription(_biliMedia!),
                   onTap: () => PlayerPanelNavigator.of(panelContext)
                       .push(_qualityPanelPage()),
@@ -2166,23 +2232,26 @@ class _PlayerPageState extends State<PlayerPage>
                 const Divider(height: 1, color: Colors.white12),
               ],
               if (notPlaced.isNotEmpty) ...[
-                const _PanelSectionLabel('未放置的功能'),
+                _PanelSectionLabel(l10n.playerFeatureNotPlaced),
                 // 面板类动作面板内 push（返回按钮可回「更多」）；
                 // 动作类（画中画/听视频）由 [_handlePanelAction] 关闭面板后执行
                 for (final a in notPlaced)
                   _PanelActionTile(
                     icon: a.icon,
-                    label: a.label,
-                    subtitle: a.implemented ? null : '功能即将上线',
+                    label: playerTopActionLabel(l10n, a),
+                    subtitle: a.implemented ? null : l10n.playerFeatureComingSoon,
                     onTap: () => _handlePanelAction(panelContext, a),
                   ),
                 const Divider(height: 1, color: Colors.white12),
               ],
               _PanelActionTile(
                 icon: Icons.tune,
-                label: '编辑控制栏',
+                label: l10n.playerEditControlBar,
                 onTap: () => PlayerPanelNavigator.of(panelContext).push(
-                  PlayerPanelPage(title: '编辑控制栏', body: _buildEditPanel()),
+                  PlayerPanelPage(
+                    title: l10n.playerEditControlBar,
+                    body: _buildEditPanel(),
+                  ),
                 ),
               ),
             ],
@@ -2202,6 +2271,7 @@ class _PlayerPageState extends State<PlayerPage>
     return ListenableBuilder(
       listenable: _settings,
       builder: (context, _) {
+        final l10n = AppLocalizations.of(context);
         final enabled = _settings.topActions;
         final disabled = PlayerTopAction.values
             .where((a) => !enabled.contains(a))
@@ -2210,7 +2280,7 @@ class _PlayerPageState extends State<PlayerPage>
         return ListView(
           padding: const EdgeInsets.symmetric(vertical: 4),
           children: [
-            const _PanelSectionLabel('已启用（长按拖拽排序）'),
+            _PanelSectionLabel(l10n.playerActionsEnabledHint),
             if (enabled.isNotEmpty)
               ReorderableListView.builder(
                 shrinkWrap: true,
@@ -2246,7 +2316,7 @@ class _PlayerPageState extends State<PlayerPage>
                     key: ValueKey(a.id),
                     leading: Icon(a.icon, color: Colors.white),
                     title: Text(
-                      a.label,
+                      playerTopActionLabel(l10n, a),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 15,
@@ -2262,28 +2332,31 @@ class _PlayerPageState extends State<PlayerPage>
                         ),
                       ),
                       onPressed: () => _settings.removeTopAction(a),
-                      child: const Text('删除'),
+                      child: Text(l10n.commonDelete),
                     ),
                   );
                 },
               ),
             // 槽位全空时的空态提示
             if (enabled.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 child: Text(
-                  '暂无已启用动作，从下方添加',
-                  style: TextStyle(color: Colors.white38, fontSize: 13),
+                  l10n.playerNoEnabledActions,
+                  style: const TextStyle(color: Colors.white38, fontSize: 13),
                 ),
               ),
             const Divider(height: 1, color: Colors.white12),
             if (disabled.isNotEmpty) ...[
-              const _PanelSectionLabel('可添加'),
+              _PanelSectionLabel(l10n.playerAddable),
               for (final a in disabled)
                 ListTile(
                   leading: Icon(a.icon, color: Colors.white),
                   title: Text(
-                    a.label,
+                    playerTopActionLabel(l10n, a),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 15,
@@ -2300,19 +2373,23 @@ class _PlayerPageState extends State<PlayerPage>
                     ),
                     onPressed: () {
                       if (full) {
-                        _toast('最多允许放 5 个');
+                        _toast(
+                          l10n.playerMaxActions(
+                            PlayerControlsSettings.maxTopActions,
+                          ),
+                        );
                       } else {
                         _settings.addTopAction(a);
                       }
                     },
-                    child: const Text('添加'),
+                    child: Text(l10n.commonAdd),
                   ),
                 ),
               const Divider(height: 1, color: Colors.white12),
             ],
             _PanelActionTile(
               icon: Icons.restart_alt,
-              label: '重置控制栏',
+              label: l10n.playerResetControlBar,
               onTap: _settings.resetTopActions,
             ),
           ],
@@ -2426,7 +2503,7 @@ class _PlayerPageState extends State<PlayerPage>
   /// 章节面板页（顶栏「章节」动作 / 点击章节名称共用；
   /// 无章节时面板内显示空状态提示）。
   PlayerPanelPage _chapterPanelPage() => PlayerPanelPage(
-        title: '章节',
+        title: AppLocalizations.of(context).playerActionChapter,
         body: Builder(
           builder: (panelContext) {
             final navigator = PlayerPanelNavigator.of(panelContext);
@@ -2450,7 +2527,7 @@ class _PlayerPageState extends State<PlayerPage>
   /// 字幕面板页（顶栏/更多「字幕」动作，工作.md 阶段1 第 3 点）：
   /// 一级面板集成字幕轨道 + 外挂导入 + 设置入口。
   PlayerPanelPage _subtitlePanelPage() => PlayerPanelPage(
-        title: '字幕',
+        title: AppLocalizations.of(context).playerActionSubtitle,
         body: Builder(
           builder: (panelContext) {
             final navigator = PlayerPanelNavigator.of(panelContext);
@@ -2482,7 +2559,7 @@ class _PlayerPageState extends State<PlayerPage>
   /// 音频面板页（顶栏/更多「音频」动作，工作.md 音频功能）：
   /// 一级面板集成音轨 + 外部音轨导入 + 音频声道 + 音频处理。
   PlayerPanelPage _audioPanelPage() => PlayerPanelPage(
-        title: '音频',
+        title: AppLocalizations.of(context).playerActionAudio,
         body: Builder(
           builder: (panelContext) {
             final navigator = PlayerPanelNavigator.of(panelContext);
@@ -2513,16 +2590,16 @@ class _PlayerPageState extends State<PlayerPage>
     // "关掉搜索结果" → 清空；若是"选完一集自动关闭" → 保留（省一次搜索请求）
     DanmakuSearchStore.instance.beginPanelSession();
     return PlayerPanelPage(
-      title: '弹幕',
+      title: AppLocalizations.of(context).commonDanmaku,
       body: Builder(
           builder: (panelContext) {
             final navigator = PlayerPanelNavigator.of(panelContext);
             return PlayerDanmakuPanel(
               controller: _danmakuController,
               onSettingsTap: () => navigator.push(
-                const PlayerPanelPage(
-                  title: '弹幕设置',
-                  body: PlayerDanmakuSettingsPanel(),
+                PlayerPanelPage(
+                  title: AppLocalizations.of(context).playerDanmakuSettings,
+                  body: const PlayerDanmakuSettingsPanel(),
                 ),
               ),
               onPushSubPage: (title, body) => navigator.push(
@@ -2531,7 +2608,7 @@ class _PlayerPageState extends State<PlayerPage>
               onPopSubPage: () => navigator.pop(),
               onNetworkTap: () => navigator.push(
                 PlayerPanelPage(
-                  title: '网络弹幕',
+                  title: AppLocalizations.of(context).playerDanmakuNetwork,
                   body: PlayerDanmakuNetworkPanel(
                     // 点结果 → 集数二级界面（面板内就地切换，不叠第二个弹窗）
                     onResultTap: (item) => navigator.push(
@@ -2580,6 +2657,7 @@ class _PlayerPageState extends State<PlayerPage>
     DandanEpisode episode,
     String? serverUrl,
   ) async {
+    final l10n = AppLocalizations.of(context);
     await _danmakuController.saveAutoMatchCache(
       animeId: anime.animeId,
       animeTitle: anime.animeTitle,
@@ -2593,16 +2671,17 @@ class _PlayerPageState extends State<PlayerPage>
       serverUrl: serverUrl,
     );
     if (!mounted) return;
-    if (!ok) _toast('弹幕加载失败');
+    if (!ok) _toast(l10n.playerDanmakuLoadFailed);
   }
 
   /// 自动匹配按钮：对当前视频文件匹配弹幕，候选唯一直接加载，多个弹选择框。
   Future<void> _autoMatchDanmaku() async {
-    _toast('正在匹配弹幕，请稍候…');
+    final l10n = AppLocalizations.of(context);
+    _toast(l10n.playerDanmakuMatching);
     final results = await _danmakuController.matchCurrentVideo();
     if (!mounted) return;
     if (results.isEmpty) {
-      _toast('未找到匹配的弹幕');
+      _toast(l10n.playerDanmakuNoMatch);
       return;
     }
     if (results.length == 1) {
@@ -2614,6 +2693,7 @@ class _PlayerPageState extends State<PlayerPage>
 
   /// 加载一条自动匹配候选，并异步取回该番剧完整集列表存入缓存（切集自动匹配）。
   Future<void> _loadMatchedDanmaku(DanmakuMatchItem item) async {
+    final l10n = AppLocalizations.of(context);
     final match = item.match;
     final ok = await _danmakuController.loadNetworkDanmaku(
       episodeId: match.episodeId,
@@ -2623,7 +2703,7 @@ class _PlayerPageState extends State<PlayerPage>
     );
     if (!mounted) return;
     if (!ok) {
-      _toast('弹幕加载失败');
+      _toast(l10n.playerDanmakuLoadFailed);
       return;
     }
     unawaited(_cacheMatchedAnime(item));
@@ -2647,10 +2727,11 @@ class _PlayerPageState extends State<PlayerPage>
 
   /// 自动匹配多个候选时的选择弹窗（§4.5 统一用 showAppDialog）。
   Future<void> _showMatchSelectionDialog(List<DanmakuMatchItem> results) async {
+    final l10n = AppLocalizations.of(context);
     final selected = await showAppDialog<DanmakuMatchItem>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('选择匹配结果'),
+        title: Text(l10n.playerDanmakuPickMatch),
         contentPadding: const EdgeInsets.symmetric(vertical: 8),
         content: SizedBox(
           width: double.maxFinite,
@@ -2671,7 +2752,7 @@ class _PlayerPageState extends State<PlayerPage>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(l10n.commonCancel),
           ),
         ],
       ),
@@ -2690,9 +2771,10 @@ class _PlayerPageState extends State<PlayerPage>
   /// 4. media_kit 在 PiP 期间保持播放；返回前台由
   ///    [didChangeAppLifecycleState] 恢复控制层与隐藏计时。
   Future<void> _enterPip() async {
+    final l10n = AppLocalizations.of(context);
     final supported = await DeviceServices.isPipSupported();
     if (!supported) {
-      _toast('当前设备不支持画中画');
+      _toast(l10n.playerPipUnsupported);
       return;
     }
     _hideTimer?.cancel();
@@ -2709,7 +2791,7 @@ class _PlayerPageState extends State<PlayerPage>
       aspectHeight: ratio.height,
     );
     if (!ok && mounted) {
-      _toast('进入画中画失败');
+      _toast(l10n.playerPipFailed);
       _resetHideTimer();
     }
   }
@@ -2717,7 +2799,7 @@ class _PlayerPageState extends State<PlayerPage>
   /// 循环播放面板页（顶栏/更多「循环播放」动作弹出，工作.md 第 6 点：
   /// 循环模式从设置页移入播放界面直接调整，可随自定义槽位增删）。
   PlayerPanelPage _loopPanelPage() => PlayerPanelPage(
-        title: '循环播放',
+        title: AppLocalizations.of(context).playerActionLoop,
         body: const PlayerLoopPanel(),
       );
 
@@ -2730,7 +2812,7 @@ class _PlayerPageState extends State<PlayerPage>
 
   /// 解码面板页（顶栏/更多「解码」动作弹出，四档 hwdec）
   PlayerPanelPage _decodePanelPage() => PlayerPanelPage(
-        title: '解码',
+        title: AppLocalizations.of(context).playerActionDecode,
         body: const PlayerDecodePanel(),
       );
 
@@ -2743,7 +2825,7 @@ class _PlayerPageState extends State<PlayerPage>
 
   /// 播放诊断面板页（顶栏/更多「播放诊断」动作弹出，§4.27）
   PlayerPanelPage _diagnosticsPanelPage() => PlayerPanelPage(
-        title: '播放诊断',
+        title: AppLocalizations.of(context).playerActionDiagnostics,
         body: PlayerDiagnosticsPanel(readProperties: _readDiagnosticsProperties),
       );
 
@@ -2796,8 +2878,10 @@ class _PlayerPageState extends State<PlayerPage>
 
   /// 均衡器面板页（顶栏/更多「音频均衡器」动作弹出，工作.md 均衡器功能）：
   /// 5 频段 + 低音增强 + 虚拟环绕 + 预设，状态由 [EqualizerSettings] 全局持久化。
-  PlayerPanelPage _equalizerPanelPage() =>
-      const PlayerPanelPage(title: '音频均衡器', body: PlayerEqualizerPanel());
+  PlayerPanelPage _equalizerPanelPage() => PlayerPanelPage(
+        title: AppLocalizations.of(context).playerActionEqualizer,
+        body: const PlayerEqualizerPanel(),
+      );
 
   /// 打开均衡器面板（顶栏「音频均衡器」动作）
   Future<void> _openEqualizerPanel() async {
@@ -2828,7 +2912,12 @@ class _PlayerPageState extends State<PlayerPage>
     _hideTimer?.cancel();
     await showPlayerPanel(
       context,
-      pages: [PlayerPanelPage(title: '更多', body: _buildMorePanel())],
+      pages: [
+        PlayerPanelPage(
+          title: AppLocalizations.of(context).commonMore,
+          body: _buildMorePanel(),
+        ),
+      ],
     );
     _resetHideTimer();
   }
@@ -3114,6 +3203,7 @@ class _PlayerPageState extends State<PlayerPage>
   /// 面板内自带 4 排序胶囊 + 当前项高亮；点击列表项 → [_switchToVideo] 统一切集
   /// （自动获得进度记忆 + 新集进度恢复），面板自身随后关闭。
   Future<void> _openPlaylistPanel() async {
+    final l10n = AppLocalizations.of(context);
     _hideTimer?.cancel();
     // B 站番剧：展示整季剧集（天然有序，无排序胶囊）
     final bili = widget.biliPlaylist;
@@ -3122,7 +3212,7 @@ class _PlayerPageState extends State<PlayerPage>
         context,
         pages: [
           PlayerPanelPage(
-            title: '播放列表',
+            title: l10n.playerPlaylist,
             body: PlayerBiliPlaylistPanel(
               playlist: bili,
               currentIndex: _biliIndex,
@@ -3143,7 +3233,7 @@ class _PlayerPageState extends State<PlayerPage>
       context,
       pages: [
         PlayerPanelPage(
-          title: '播放列表',
+          title: l10n.playerPlaylist,
           body: PlayerPlaylistPanel(
             videos: videos,
             currentPath: _playlistKey,
@@ -3416,6 +3506,15 @@ class _PlayerPageState extends State<PlayerPage>
     _resetHideTimer();
   }
 
+  /// 缩略图预览里的章节胶囊文案：章节有标题用标题，无标题回退「第 N 章」。
+  ///
+  /// 文案在 UI 层取：`utils/chapter_utils` 按分层只回标题或章节序号。
+  String? _chapterChipLabel(Duration position) {
+    final heading = _chapterTracker.chapterHeadingAt(position);
+    if (heading == null) return null;
+    return chapterHeadingLabel(AppLocalizations.of(context), heading);
+  }
+
   @override
   Widget build(BuildContext context) {
     // 拦截系统返回键（手势/三键），与左上角返回按钮走同一路径：
@@ -3635,7 +3734,9 @@ class _PlayerPageState extends State<PlayerPage>
                                 onSpeedTap: _openSpeedPanel,
                                 showSpeedButtonBackground:
                                     _settings.showButtonBackground,
-                                superResolutionLabel: '超分辨率',
+                                superResolutionLabel:
+                                    AppLocalizations.of(context)
+                                        .playerSuperResolution,
                                 onSuperResolutionTap: _openSuperResolutionPanel,
                                 onScreenSwitchTap: _openPortraitPlayer,
                                 showScreenSwitchBackground:
@@ -3869,8 +3970,7 @@ class _PlayerPageState extends State<PlayerPage>
                       fraction: _thumbFraction,
                       visible: _thumbVisible,
                       // 拖动位置所属章节（按预览时刻查，不按当前播放位置）
-                      chapterTitle:
-                          _chapterTracker.chapterTitleAt(_thumbPreview!.time),
+                      chapterTitle: _chapterChipLabel(_thumbPreview!.time),
                     ),
                   ),
                 // 双指缩放后显示「还原画面」入口：**跟随控制层**淡入淡出
@@ -4030,6 +4130,7 @@ class _UnlockButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.45),
@@ -4039,7 +4140,7 @@ class _UnlockButton extends StatelessWidget {
         constraints: const BoxConstraints.tightFor(width: 40, height: 40),
         padding: EdgeInsets.zero,
         icon: const Icon(Icons.lock_open, color: Colors.white, size: 22),
-        tooltip: '解锁',
+        tooltip: l10n.playerUnlock,
         onPressed: onTap,
       ),
     );

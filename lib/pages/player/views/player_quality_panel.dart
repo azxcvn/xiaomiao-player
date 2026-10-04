@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/bili_dash.dart';
 import 'package:moumou/widgets/player_option_chip.dart';
 
@@ -59,12 +60,13 @@ class _PlayerQualityPanelState extends State<PlayerQualityPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (widget.qualities.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(24),
+      return Padding(
+        padding: const EdgeInsets.all(24),
         child: Text(
-          '暂无可用画质',
-          style: TextStyle(color: Colors.white54, fontSize: 13),
+          l10n.playerNoQuality,
+          style: const TextStyle(color: Colors.white54, fontSize: 13),
         ),
       );
     }
@@ -94,7 +96,7 @@ class _PlayerQualityPanelState extends State<PlayerQualityPanel> {
           ],
           const SizedBox(height: 12),
           Text(
-            '切换画质会重开播放并保持进度',
+            l10n.playerQualitySwitchHint,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.45),

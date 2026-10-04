@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/device_decoder.dart';
 import 'package:moumou/widgets/settings_ui.dart';
 
@@ -15,6 +16,7 @@ class DecoderDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     final d = decoder;
     final isVideo = d.mediaType == 'video';
     return Scaffold(
@@ -61,18 +63,35 @@ class DecoderDetailPage extends StatelessWidget {
             ),
           ),
           // 基本信息
-          const SettingsGroupTitle(title: '基本信息'),
+          SettingsGroupTitle(title: l10n.settingsDecoderBasicInfo),
           SettingsCard(
             child: Column(
               children: [
-                _kvRow(scheme, 'MIME 类型', d.mimeType),
+                _kvRow(scheme, l10n.settingsDecoderMimeType, d.mimeType),
                 if (d.canonicalName.isNotEmpty && d.canonicalName != d.name)
-                  _kvRow(scheme, '规范名', d.canonicalName),
-                _kvRow(scheme, '类型', isVideo ? '视频解码器' : '音频解码器'),
-                _kvRow(scheme, '加速方式', d.isHardware ? '硬件加速' : '软件'),
-                if (d.isAlias) _kvRow(scheme, '别名', '是'),
+                  _kvRow(
+                    scheme,
+                    l10n.settingsDecoderCanonicalName,
+                    d.canonicalName,
+                  ),
+                _kvRow(
+                  scheme,
+                  l10n.settingsDecoderType,
+                  isVideo
+                      ? l10n.settingsDecoderVideoCodec
+                      : l10n.settingsDecoderAudioCodec,
+                ),
+                _kvRow(
+                  scheme,
+                  l10n.settingsDecoderAcceleration,
+                  d.isHardware
+                      ? l10n.settingsDecoderHardwareAcceleration
+                      : l10n.settingsDecoderSoftware,
+                ),
+                if (d.isAlias)
+                  _kvRow(scheme, l10n.settingsDecoderAlias, l10n.settingsDecoderYes),
                 if (d.bitrateRange.isNotEmpty)
-                  _kvRow(scheme, '码率范围', d.bitrateRange),
+                  _kvRow(scheme, l10n.settingsDecoderBitrateRange, d.bitrateRange),
               ],
             ),
           ),
@@ -81,18 +100,30 @@ class DecoderDetailPage extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SettingsGroupTitle(title: '分辨率与能力'),
+                SettingsGroupTitle(title: l10n.settingsDecoderResolutionCapability),
                 SettingsCard(
                   child: Column(
                     children: [
                       if (d.maxResolution.isNotEmpty)
-                        _kvRow(scheme, '最大分辨率', d.maxResolution),
+                        _kvRow(
+                          scheme,
+                          l10n.settingsDecoderMaxResolution,
+                          d.maxResolution,
+                        ),
                       if (d.minResolution.isNotEmpty)
-                        _kvRow(scheme, '最小分辨率', d.minResolution),
+                        _kvRow(
+                          scheme,
+                          l10n.settingsDecoderMinResolution,
+                          d.minResolution,
+                        ),
                       if (d.alignment.isNotEmpty)
-                        _kvRow(scheme, '对齐', d.alignment),
+                        _kvRow(scheme, l10n.settingsDecoderAlignment, d.alignment),
                       if (d.maxInstances > 0)
-                        _kvRow(scheme, '最大实例数', '${d.maxInstances}'),
+                        _kvRow(
+                          scheme,
+                          l10n.settingsDecoderMaxInstances,
+                          '${d.maxInstances}',
+                        ),
                     ],
                   ),
                 ),
@@ -103,26 +134,37 @@ class DecoderDetailPage extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SettingsGroupTitle(title: '音频能力'),
+                SettingsGroupTitle(title: l10n.settingsDecoderAudioCapability),
                 SettingsCard(
                   child: Column(
-                    children: [_kvRow(scheme, '最大声道数', '${d.maxChannels}')],
+                    children: [
+                      _kvRow(
+                        scheme,
+                        l10n.settingsDecoderMaxChannels,
+                        '${d.maxChannels}',
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           // 硬件特性胶囊
           if (d.features.isNotEmpty)
-            _tagSection(scheme, '硬件特性', d.features, primary: true),
+            _tagSection(
+              scheme,
+              l10n.settingsDecoderHardwareFeatures,
+              d.features,
+              primary: true,
+            ),
           // 采样率胶囊
           if (d.sampleRates.isNotEmpty)
-            _tagSection(scheme, '采样率', d.sampleRates),
+            _tagSection(scheme, l10n.mediaInfoSampleRates, d.sampleRates),
           // 色彩格式胶囊
           if (d.colorFormats.isNotEmpty)
-            _tagSection(scheme, '色彩格式', d.colorFormats),
+            _tagSection(scheme, l10n.settingsDecoderColorFormats, d.colorFormats),
           // profiles / levels 胶囊
           if (d.profiles.isNotEmpty)
-            _tagSection(scheme, '支持的 Profile / Level', d.profiles),
+            _tagSection(scheme, l10n.settingsDecoderProfiles, d.profiles),
         ],
       ),
     );

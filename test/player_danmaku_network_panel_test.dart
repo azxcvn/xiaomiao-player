@@ -9,6 +9,8 @@ import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/danmaku_search_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 网络弹幕搜索面板 UI 测试（本轮：逐台实时呈现）：
 /// 每台服务器返回就立刻上屏（不等其余服务器）、搜索中「转圈 + 停止」、
 /// 结果计数条、停止后结果保留且后续服务器不再产出、番剧名完整换行不截断、
@@ -26,6 +28,9 @@ void main() {
   }) async {
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Scaffold(
           body: PlayerDanmakuNetworkPanel(
             store: store ?? DanmakuSearchStore(network: _FakeNetworkService()),

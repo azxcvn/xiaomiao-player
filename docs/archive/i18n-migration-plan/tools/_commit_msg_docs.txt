@@ -1,0 +1,7 @@
+docs: 同步 PROJECT.md 的多语言结构
+
+- 删掉 privacy_policy_content 的文件树条目，正文指向 lib/l10n/legal_zh 与 legal_en
+- dolby_vision_hint 从 utils 树移到 widgets 树
+- 新增 lib/l10n 文件树、技术栈一行、分层红线一条
+- 登记 app_locale_settings、language_picker_dialog、error_codes
+- 新增 §5.11 多语言章节与原生侧文案口径

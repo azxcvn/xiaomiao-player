@@ -1,9 +1,15 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/subtitle_track.dart';
 
 void main() {
+  // 表改造后「轨道 N」回退名与外挂标记由 l10n 提供（模型层只给纯数据）
+  final zh = lookupAppLocalizations(const Locale('zh'));
+
   group('SubtitleTrack（工作.md 阶段1 第 3 点）', () {
-    test('displayTitle：优先标题、其次语言、最后回退轨道 id', () {
+    test('displayTitle：优先标题、其次语言，都没有时是空串（回退名在 UI 层）', () {
       expect(
         const SubtitleTrack(id: '1', title: '简体中文', language: 'chi')
             .displayTitle,
@@ -13,7 +19,11 @@ void main() {
         const SubtitleTrack(id: '2', language: 'eng').displayTitle,
         'eng',
       );
-      expect(const SubtitleTrack(id: '3').displayTitle, '轨道 3');
+      expect(const SubtitleTrack(id: '3').displayTitle, '');
+      expect(
+        subtitleTrackDisplayName(zh, const SubtitleTrack(id: '3')),
+        '轨道 3',
+      );
     });
 
     test('isStyled：ASS/SSA 内嵌样式字幕判定（大小写不敏感）', () {
@@ -25,9 +35,10 @@ void main() {
     });
   });
 
-  group('subtitleTrackLabel', () {
+  group('subtitleTrackLabel（UI 层映射）', () {
     test('普通内嵌字幕：标题 + 格式', () {
       final label = subtitleTrackLabel(
+        zh,
         const SubtitleTrack(id: '1', title: '中文', codec: 'srt'),
       );
       expect(label, '中文 · srt');
@@ -35,13 +46,14 @@ void main() {
 
     test('外挂字幕带「外挂」标记', () {
       final label = subtitleTrackLabel(
+        zh,
         const SubtitleTrack(id: '2', title: '双语', codec: 'ass', external: true),
       );
       expect(label, '双语 · 外挂 · ass');
     });
 
     test('无标题无格式：只显示回退名', () {
-      expect(subtitleTrackLabel(const SubtitleTrack(id: '7')), '轨道 7');
+      expect(subtitleTrackLabel(zh, const SubtitleTrack(id: '7')), '轨道 7');
     });
   });
 
@@ -90,9 +102,18 @@ void main() {
 
   group('SubtitlePresetColor', () {
     test('byHex：已知色匹配、未知色回退白色', () {
-      expect(SubtitlePresetColor.byHex('#FFEB3B').label, '黄色');
-      expect(SubtitlePresetColor.byHex('#ffffff').label, '白色');
-      expect(SubtitlePresetColor.byHex('#000000').label, '白色');
+      expect(
+        subtitlePresetColorLabel(zh, SubtitlePresetColor.byHex('#FFEB3B').hex),
+        '黄色',
+      );
+      expect(
+        subtitlePresetColorLabel(zh, SubtitlePresetColor.byHex('#ffffff').hex),
+        '白色',
+      );
+      expect(
+        subtitlePresetColorLabel(zh, SubtitlePresetColor.byHex('#000000').hex),
+        '白色',
+      );
     });
 
     test('textPresets, borderPresets, backPresets 分组预设非空且数量合理', () {

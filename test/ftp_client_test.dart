@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/models/network_connection.dart';
 import 'package:moumou/services/network/ftp_client.dart';
 import 'package:moumou/services/network/network_client.dart';
+import 'package:moumou/utils/error_codes.dart';
 
 /// 极简 FTP 假服务器：只实现客户端真正会用的那几条命令。
 ///
@@ -212,9 +213,9 @@ void main() {
       client.connect(),
       throwsA(
         isA<NetworkClientException>().having(
-          (e) => e.message,
-          'message',
-          contains('超时'),
+          (e) => e.code,
+          'code',
+          NetworkErrorCode.connectTimeout,
         ),
       ),
     );

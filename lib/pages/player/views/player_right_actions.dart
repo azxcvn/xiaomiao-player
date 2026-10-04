@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/pages/player/views/player_pressable.dart';
 
 /// 播放页右侧竖排操作按钮：截图 + 锁定（对齐 Kazumi 的左侧控制栏布局）。
@@ -19,6 +20,7 @@ class PlayerRightActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -26,14 +28,14 @@ class PlayerRightActions extends StatelessWidget {
         if (!locked) ...[
           _FixedBackgroundButton(
             icon: Icons.photo_camera_outlined,
-            tooltip: '截图',
+            tooltip: l10n.playerScreenshot,
             onPressed: onScreenshot,
           ),
           const SizedBox(height: 12),
         ],
         _FixedBackgroundButton(
           icon: locked ? Icons.lock_outline : Icons.lock_open,
-          tooltip: locked ? '解锁' : '锁定',
+          tooltip: locked ? l10n.playerUnlock : l10n.playerLock,
           onPressed: onToggleLock,
         ),
       ],

@@ -1,0 +1,46 @@
+# 阶段 4 · 分组 D 残留文案与键位建议
+
+- `player_playlist_panel.dart` L107：`'当前文件夹没有其他视频'` → l10n.playerNoOtherVideos
+- `player_playlist_panel.dart` L194：`'播放中'` → l10n.commonPlaying
+- `player_play_pause_button.dart` L50：`'暂停'` → l10n.commonPlay / l10n.commonPause（两个字面量同行）
+- `player_play_pause_button.dart` L50：`'播放'` → l10n.commonPlay / l10n.commonPause（两个字面量同行）
+- `player_quality_panel.dart` L66：`'暂无可用画质'` → l10n.playerNoQuality
+- `player_quality_panel.dart` L97：`'切换画质会重开播放并保持进度'` → l10n.playerQualitySwitchHint
+- `player_resume_indicator.dart` L125：`'已恢复上次播放进度'` → l10n.playerResumeIndicator
+- `player_resume_indicator.dart` L142：`'重头开始'` → l10n.playerRestartFromBeginning
+- `player_resume_indicator.dart` L160：`'关闭'` → l10n.commonOff
+- `player_right_actions.dart` L29：`'截图'` → l10n.playerScreenshot
+- `player_right_actions.dart` L36：`'解锁'` → l10n.playerUnlock
+- `player_right_actions.dart` L36：`'锁定'` → l10n.playerLock
+- `player_speed_indicator.dart` L70：`'正在 ${formatSpeed(speed)} 倍速播放'` → l10n.playerSpeedPlaying(formatSpeed(speed))
+- `player_speed_indicator.dart` L95：`'左右滑动可临时调节长按倍数'` → l10n.playerSpeedSwipeHint
+- `player_speed_panel.dart` L122：`'该倍速已在预设中'` → l10n.playerSpeedAlreadyInPresets
+- `player_speed_panel.dart` L127：`'自定义预设已达上限（${PlayerControlsSettings.maxCustomSpeedPresets} 个）'` → l10n.playerSpeedPresetLimit(PlayerControlsSettings.maxCustomSpeedPresets)
+- `player_speed_panel.dart` L194：`'预设'` → l10n.playerPreset
+- `player_speed_panel.dart` L218：`'我的预设'` → l10n.playerMyPresets
+- `player_speed_panel.dart` L240：`'精确调速'` → l10n.playerPreciseSpeed
+- `player_speed_panel.dart` L345：`'临时应用'` → l10n.playerApplyTemporarily
+- `player_speed_panel.dart` L353：`'添加到预设'` → l10n.playerAddToPresets
+- `player_speed_panel.dart` L360：`'归位'` → l10n.playerSpeedReset
+- `player_speed_panel.dart` L370：`'重置预设'` → l10n.playerResetPresets
+- `player_super_resolution_panel.dart` L116：`'模式'` → l10n.playerMode
+- `player_super_resolution_panel.dart` L147：`'超分质量'` → l10n.playerSuperResolutionQuality
+- `player_super_resolution_panel.dart` L161：`'记忆超分模式'` → l10n.playerRememberSuperResolution
+- `player_super_resolution_panel.dart` L165：`'开启后自动应用上次的超分模式与质量'` → l10n.playerRememberSuperResolutionDesc
+- `player_top_bar.dart` L51：`'返回'` → l10n.commonBack
+- `player_top_bar.dart` L93：`'更多'` → l10n.commonMore
+- `player_zoom_restore_chip.dart` L44：`'还原画面'` → l10n.playerRestoreView
+- `portrait_edit_panel.dart` L43：`'已启用（长按拖拽排序）'` → l10n.playerActionsEnabledHint
+- `portrait_edit_panel.dart` L91：`'删除'` → l10n.commonDelete
+- `portrait_edit_panel.dart` L99：`'可添加'` → l10n.playerAddable
+- `portrait_edit_panel.dart` L121：`'最多允许放 5 个'` → l10n.playerMaxActions(PlayerControlsSettings.maxTopActions)
+- `portrait_edit_panel.dart` L126：`'添加'` → l10n.commonAdd
+- `portrait_edit_panel.dart` L133：`'重置控制栏'` → l10n.playerResetControlBar
+- `portrait_player_bottom_bar.dart` L188：`'下一集'` → l10n.playerNextEpisode
+- `portrait_player_bottom_bar.dart` L238：`'播放列表'` → l10n.playerPlaylist
+- `portrait_player_bottom_bar.dart` L251：`'选择屏幕'` → l10n.playerCastSelectScreen
+- `portrait_player_top_bar.dart` L67：`'返回'` → l10n.commonBack
+- `portrait_player_top_bar.dart` L98：`'更多'` → l10n.commonMore
+- `portrait_player_top_bar.dart` L122：`'更多'` → l10n.commonMore
+
+（共 42 条，未匹配 0 条）

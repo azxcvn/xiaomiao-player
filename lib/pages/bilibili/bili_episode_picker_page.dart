@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/models/bili_playlist.dart';
 import 'package:moumou/pages/bilibili/bili_play_launcher.dart';
@@ -83,14 +84,15 @@ class _BiliEpisodePickerPageState extends State<BiliEpisodePickerPage>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('选集'),
+        title: Text(l10n.biliSelectEpisode),
         actions: [
           TextButton.icon(
             onPressed: _toggleReverse,
             icon: Icon(_reverse ? Icons.arrow_upward : Icons.arrow_downward, size: 18),
-            label: Text(_reverse ? '正序' : '倒序'),
+            label: Text(_reverse ? l10n.commonOrderAsc : l10n.commonOrderDesc),
           ),
         ],
       ),

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/models/bili_playlist.dart';
 import 'package:moumou/pages/bilibili/bili_episode_picker_page.dart';
 import 'package:moumou/pages/bilibili/bili_play_launcher.dart';
 import 'package:moumou/services/bilibili/bili_bangumi_service.dart';
-import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/widgets/bili_cover_image.dart';
 import 'package:moumou/widgets/bili_episode_tile.dart';
 
@@ -29,7 +30,7 @@ class _BiliSeasonPageState extends State<BiliSeasonPage> {
 
   BiliSeasonDetail? _detail;
   bool _loading = true;
-  String? _error;
+  Object? _error;
   bool _reverse = false;
 
   @override
@@ -57,7 +58,7 @@ class _BiliSeasonPageState extends State<BiliSeasonPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = _errorText(e);
+        _error = e;
         _loading = false;
       });
     }
@@ -76,13 +77,15 @@ class _BiliSeasonPageState extends State<BiliSeasonPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(_detail?.title ?? '番剧详情')),
+      appBar: AppBar(title: Text(_detail?.title ?? l10n.biliSeasonDetail)),
       body: _buildBody(),
     );
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context);
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -93,13 +96,16 @@ class _BiliSeasonPageState extends State<BiliSeasonPage> {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Text(_error!, textAlign: TextAlign.center),
+              child: Text(
+                serviceErrorText(l10n, _error!),
+                textAlign: TextAlign.center,
+              ),
             ),
             const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: () => _load(),
               icon: const Icon(Icons.refresh),
-              label: const Text('重试'),
+              label: Text(l10n.commonRetry),
             ),
           ],
         ),
@@ -128,9 +134,9 @@ class _BiliSeasonPageState extends State<BiliSeasonPage> {
         const SizedBox(height: 16),
         _episodeHeader(context, episodes.length),
         if (episodes.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
-            child: Center(child: Text('暂无选集')),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Center(child: Text(l10n.biliNoEpisodeSelection)),
           )
         else ...[
           _episodeGrid(inlineEpisodes),
@@ -164,6 +170,7 @@ class _BiliSeasonPageState extends State<BiliSeasonPage> {
 
   /// 「查看全部」按钮 → 全屏选集页。
   Widget _viewAllButton(List<BiliEpisode> episodes) {
+    final l10n = AppLocalizations.of(context);
     return OutlinedButton.icon(
       onPressed: () => Navigator.of(context).push(
         MaterialPageRoute(
@@ -174,35 +181,33 @@ class _BiliSeasonPageState extends State<BiliSeasonPage> {
         ),
       ),
       icon: const Icon(Icons.apps, size: 18),
-      label: const Text('查看全部'),
+      label: Text(l10n.biliViewAll),
     );
   }
 
   Widget _episodeHeader(BuildContext context, int count) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
-        const Text(
-          '选集',
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+        Text(
+          l10n.biliSelectEpisode,
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
         ),
         const SizedBox(width: 8),
         Text(
-          '共 $count 集',
+          l10n.playerBiliTotalEpisodes(count),
           style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
         ),
         const Spacer(),
         TextButton.icon(
           onPressed: () => setState(() => _reverse = !_reverse),
           icon: Icon(_reverse ? Icons.arrow_upward : Icons.arrow_downward, size: 18),
-          label: Text(_reverse ? '正序' : '倒序'),
+          label: Text(_reverse ? l10n.commonOrderAsc : l10n.commonOrderDesc),
         ),
       ],
     );
   }
-
-  static String _errorText(Object e) =>
-      e is BiliApiException ? e.message : e.toString();
 }
 
 /// 头部：封面（评分角标）+ 右侧信息（标题 / 统计 / 说明）。
@@ -224,6 +229,7 @@ class _Header extends StatelessWidget {
 
   Widget _buildCover(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: SizedBox(
@@ -259,7 +265,7 @@ class _Header extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    '评分 ${detail.ratingScore.toStringAsFixed(1)}',
+                    l10n.biliRating(detail.ratingScore.toStringAsFixed(1)),
                     style: TextStyle(
                       fontSize: 11,
                       height: 1,
@@ -285,11 +291,14 @@ class _InfoPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     // 连载状态 + 共多少话：优先 new_ep.desc（如「全13话」「更新至第5话」），
     // 缺失时按选集数量兜底「共 N 集」。
     final statusText = detail.newEpDesc.isNotEmpty
         ? detail.newEpDesc
-        : (detail.episodes.isNotEmpty ? '共 ${detail.episodes.length} 集' : '');
+        : (detail.episodes.isNotEmpty
+            ? l10n.playerBiliTotalEpisodes(detail.episodes.length)
+            : '');
     final areaTime = [
       if (detail.areas.isNotEmpty) detail.areas.first,
       if (detail.publishTime.isNotEmpty) detail.publishTime,
@@ -341,13 +350,14 @@ class _InfoPanel extends StatelessWidget {
 
   Widget _stat(BuildContext context, IconData icon, int value) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         Icon(icon, size: 14, color: scheme.onSurfaceVariant),
         const SizedBox(width: 3),
         Flexible(
           child: Text(
-            _formatCount(value),
+            _formatCount(l10n, value),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
@@ -357,9 +367,13 @@ class _InfoPanel extends StatelessWidget {
     );
   }
 
-  static String _formatCount(int n) {
-    if (n >= 100000000) return '${(n / 100000000).toStringAsFixed(1)}亿';
-    if (n >= 10000) return '${(n / 10000).toStringAsFixed(1)}万';
+  static String _formatCount(AppLocalizations l10n, int n) {
+    if (n >= 100000000) {
+      return l10n.biliCountHundredMillion((n / 100000000).toStringAsFixed(1));
+    }
+    if (n >= 10000) {
+      return l10n.biliCountTenThousand((n / 10000).toStringAsFixed(1));
+    }
     return '$n';
   }
 }
@@ -391,6 +405,7 @@ class _IntroSectionState extends State<_IntroSection> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         final canExpand = _exceedsLines(constraints.maxWidth);
@@ -399,15 +414,15 @@ class _IntroSectionState extends State<_IntroSection> {
           children: [
             Row(
               children: [
-                const Text(
-                  '简介',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                Text(
+                  l10n.biliIntro,
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                 ),
                 const Spacer(),
                 if (canExpand)
                   TextButton(
                     onPressed: () => setState(() => _expanded = !_expanded),
-                    child: Text(_expanded ? '收起' : '展开'),
+                    child: Text(_expanded ? l10n.commonCollapse : l10n.commonExpand),
                   ),
               ],
             ),
@@ -465,11 +480,12 @@ class _SeasonSwitcherState extends State<_SeasonSwitcher> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '多季',
+          l10n.biliMultiSeason,
           style: TextStyle(
               fontSize: 14, fontWeight: FontWeight.w600, color: scheme.onSurfaceVariant),
         ),

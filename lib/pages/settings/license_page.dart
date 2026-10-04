@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/widgets/settings_ui.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -51,8 +52,9 @@ class _LicensePageState extends State<LicensePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('许可证书')),
+      appBar: AppBar(title: Text(l10n.settingsAboutLicenses)),
       body: FutureBuilder<Map<String, LicenseEntry>>(
         future: _licensesFuture,
         builder: (context, snapshot) {
@@ -66,7 +68,7 @@ class _LicensePageState extends State<LicensePage> {
           if (map == null || map.isEmpty) {
             return Center(
               child: Text(
-                '暂无许可信息',
+                l10n.settingsLicenseEmpty,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -89,7 +91,7 @@ class _LicensePageState extends State<LicensePage> {
                       licenseCount: packages.length,
                     ),
                     const SizedBox(height: 20),
-                    const SettingsGroupTitle(title: '开源许可'),
+                    SettingsGroupTitle(title: l10n.settingsLicenseOpenSource),
                     const SizedBox(height: 8),
                   ],
                 ),
@@ -139,6 +141,7 @@ class _LicenseHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Card(
       elevation: 0,
       margin: EdgeInsets.zero,
@@ -168,11 +171,14 @@ class _LicenseHeaderCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    '小喵Player',
+                  Text(
+                    l10n.appTitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -180,7 +186,9 @@ class _LicenseHeaderCard extends StatelessWidget {
                       Flexible(
                         child: _LicenseChip(
                           // 版本只显示版本名（与关于页一致，不带构建号）
-                          label: version == null ? '版本读取中' : 'v$version',
+                          label: version == null
+                              ? l10n.settingsLicenseVersionLoading
+                              : 'v$version',
                           background: scheme.primary,
                           foreground: scheme.onPrimary,
                           bold: true,
@@ -189,7 +197,7 @@ class _LicenseHeaderCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Flexible(
                         child: _LicenseChip(
-                          label: '$licenseCount 项许可',
+                          label: l10n.settingsLicenseCount(licenseCount),
                           background: scheme.surfaceContainerHigh,
                           foreground: scheme.onSurfaceVariant,
                         ),
@@ -263,6 +271,7 @@ class _LicenseEntryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 8),
@@ -290,7 +299,7 @@ class _LicenseEntryTile extends StatelessWidget {
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
-          '${entry.paragraphs.length} 个许可段落',
+          l10n.settingsLicenseParagraphCount(entry.paragraphs.length),
           style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
         ),
         trailing: Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
@@ -314,22 +323,23 @@ class LicenseDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     final licenseText = entry.paragraphs.map((p) => p.text).join('\n\n');
     return Scaffold(
       appBar: AppBar(
         title: Text(package, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
           IconButton(
-            tooltip: '复制许可文本',
+            tooltip: l10n.settingsLicenseCopy,
             icon: const Icon(Icons.copy_rounded),
             onPressed: () {
               Clipboard.setData(ClipboardData(text: licenseText));
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
                 ..showSnackBar(
-                  const SnackBar(
-                    content: Text('许可文本已复制'),
-                    duration: Duration(milliseconds: 1200),
+                  SnackBar(
+                    content: Text(l10n.settingsLicenseCopied),
+                    duration: const Duration(milliseconds: 1200),
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
@@ -361,7 +371,9 @@ class LicenseDetailPage extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        '${entry.paragraphs.length} 个许可段落',
+                        l10n.settingsLicenseParagraphCount(
+                          entry.paragraphs.length,
+                        ),
                         style: TextStyle(
                           fontSize: 13,
                           color: scheme.onSurfaceVariant,
@@ -398,6 +410,7 @@ class _ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -405,11 +418,14 @@ class _ErrorView extends StatelessWidget {
           Icon(Icons.error_outline_rounded, size: 48, color: scheme.error),
           const SizedBox(height: 12),
           Text(
-            '许可信息加载失败',
+            l10n.settingsLicenseLoadFailed,
             style: TextStyle(fontSize: 15, color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
-          FilledButton.tonal(onPressed: onRetry, child: const Text('重试')),
+          FilledButton.tonal(
+            onPressed: onRetry,
+            child: Text(l10n.commonRetry),
+          ),
         ],
       ),
     );

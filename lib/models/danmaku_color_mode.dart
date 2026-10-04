@@ -16,21 +16,18 @@ import 'package:moumou/models/subtitle_track.dart';
 enum DanmakuColorMode {
   /// 跟随弹幕自身颜色（默认）：XML `p` 第 4 位 / protobuf 字段 5，
   /// 并保留大会员渐变彩色弹幕。
-  source('跟随弹幕颜色'),
+  source,
 
   /// 随机渐变色：忽略文件颜色，按 HSV 色轮黄金角逐条着色
   /// （算法见 `utils/danmaku_random_color.dart`）。
-  random('随机渐变色'),
+  random,
 
   /// 指定颜色：所有弹幕从用户选的**调色板**里随机取色（相邻两条不重色）；
   /// 只选 1 种即「统一一个颜色」，全部取消则模式回落 [source]
   /// （判定见 `DanmakuSettings.effectiveColorMode`；从空调色板切回本模式时
   /// 会自动补一个默认色，避免出现「点了没反应」的空模式），
   /// 渐变彩色弹幕一并让位。
-  fixed('指定颜色');
-
-  final String label;
-  const DanmakuColorMode(this.label);
+  fixed;
 
   /// 从持久化 index 还原（越界/损坏回落 [source]，即历史默认行为）。
   static DanmakuColorMode fromIndex(int? index) {

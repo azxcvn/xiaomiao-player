@@ -913,7 +913,7 @@ class MainActivity : FlutterActivity() {
         return try {
             File(path).readText()
         } catch (e: Exception) {
-            "读取日志失败：${e.message}"
+            getString(R.string.log_read_failed, e.message ?: "")
         }
     }
 
@@ -1549,7 +1549,7 @@ class MainActivity : FlutterActivity() {
             volume.getDescription(this)
         } catch (_: Exception) {
             null
-        } ?: if (isPrimary) "内部存储" else "SD 卡"
+        } ?: if (isPrimary) getString(R.string.storage_internal) else getString(R.string.storage_sd_card)
     }
 
     /** 取存储卷的真实挂载路径（内部存储统一收敛到规范路径） */

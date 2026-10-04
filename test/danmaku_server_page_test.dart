@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/danmaku_server.dart';
 import 'package:moumou/pages/settings/danmaku_server_page.dart';
 import 'package:moumou/services/danmaku_server_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'l10n_test_helper.dart';
 
 /// 弹幕服务器设置页 UI 测试（工作.md 第 7 点收尾：互斥限制的呈现，
 /// 以及服务器卡片的「更多操作」编辑 / 删除，对齐网络存储账户列表）：
@@ -18,7 +21,14 @@ void main() {
   });
 
   Future<void> pumpPage(WidgetTester tester) async {
-    await tester.pumpWidget(const MaterialApp(home: DanmakuServerPage()));
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
+        home: const DanmakuServerPage(),
+      ),
+    );
     await tester.pumpAndSettle();
   }
 
@@ -48,8 +58,11 @@ void main() {
     // 说明：不断言像素行数——测试字体是 Ahem（每个字形都是等宽方块），
     // 会把中文行宽算得远大于真实 CJK 字体，像素断言在测试环境没有意义。
     // 这里改断言「字符数」这一字体无关的量：副标题必须明显更短。
-    final short = settings.autoMatchBlockedReason!;
-    final full = settings.autoMatchBlockedMessage!;
+    // 文案由页面侧按 l10n 组装，直接从树上取同一份 l10n 拼预期值。
+    final l10n = AppLocalizations.of(tester.element(find.byType(DanmakuServerPage)));
+    final short = l10n.danmakuServerAutoMatchBlocked;
+    final full =
+        l10n.danmakuServerAutoMatchBlockedDetail(l10n.danmakuServerDefaultName);
     expect(short.length, lessThan(16), reason: '副标题需短到窄屏单行');
     expect(short.length * 2, lessThan(full.length), reason: '完整说明留给 toast');
     expect(find.text(short), findsOneWidget);

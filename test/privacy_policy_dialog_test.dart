@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moumou/l10n/legal.dart';
 import 'package:moumou/widgets/privacy_policy_dialog.dart';
+
+import 'l10n_test_helper.dart';
 
 /// 隐私弹窗测试（工作.md：隐私政策功能）：
 /// 5 秒倒计时门禁 + 勾选同意才可确认 + 取消/同意返回值。
@@ -10,9 +13,14 @@ void main() {
         find.byKey(PrivacyPolicyDialog.confirmButtonKey),
       );
 
-  Future<void> pumpDialog(WidgetTester tester) async {
+  Future<void> pumpDialog(WidgetTester tester, {Locale? locale}) async {
     await tester.pumpWidget(
-      const MaterialApp(home: Scaffold(body: PrivacyPolicyDialog())),
+      MaterialApp(
+        locale: locale ?? kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
+        home: const Scaffold(body: PrivacyPolicyDialog()),
+      ),
     );
     await tester.pump();
   }
@@ -62,10 +70,27 @@ void main() {
     expect(confirmButton(tester).onPressed, isNotNull);
   });
 
+  testWidgets('英文 locale：按钮与正文都走英文（长文不残留中文）', (tester) async {
+    await pumpDialog(tester, locale: const Locale('en'));
+
+    expect(find.text('Agree and continue (5s)'), findsOneWidget);
+    expect(
+      find.text('I have read and agree to the privacy policy above'),
+      findsOneWidget,
+    );
+    // 正文标题取英文长文（legal_en），不是中文标题
+    final legal = legalTextsFor(const Locale('en'));
+    expect(find.text(legal.policyTitle), findsOneWidget);
+    expect(find.text(legalTextsFor(kTestLocaleZh).policyTitle), findsNothing);
+  });
+
   testWidgets('取消按钮返回 false', (tester) async {
     bool? result;
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Scaffold(
           body: Builder(
             builder: (context) => TextButton(
@@ -94,6 +119,9 @@ void main() {
     bool? result;
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Scaffold(
           body: Builder(
             builder: (context) => TextButton(

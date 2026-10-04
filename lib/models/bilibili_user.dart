@@ -65,20 +65,6 @@ class BiliUser {
         nextExp = 0,
         money = 0;
 
-  /// 会员状态文案（普通会员 / 大会员 / 年度大会员…）。
-  ///
-  /// 两个字段都会各自误报：TV 通道登录时 `vipType` 可能报 1（TV 大会员）而
-  /// `vipStatus=0`；Web 通道登录时 `vipStatus` 可能误报 1 而 `vipType=0`。
-  /// 因此**必须 `vipStatus==1` 且 `vipType>0` 同时成立**才判定为大会员，
-  /// 任一为 0 都回落「普通会员」。文案优先用服务端 `vip_label.text`
-  /// （覆盖「十年大会员」「百年大会员」等特殊档位）。
-  String get vipLabel {
-    final isVip = vipStatus > 0 && vipType > 0;
-    if (!isVip) return '普通会员';
-    if (vipLabelText.isNotEmpty) return vipLabelText;
-    return vipType >= 2 ? '年度大会员' : '大会员';
-  }
-
   /// 等级文案（如「LV5」）。
   String get levelLabel => 'LV$level';
 

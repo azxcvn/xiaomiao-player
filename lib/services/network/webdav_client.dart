@@ -15,6 +15,7 @@ import 'package:http/http.dart' as http;
 import 'package:moumou/models/network_connection.dart';
 import 'package:moumou/models/network_file.dart';
 import 'package:moumou/services/network/network_client.dart';
+import 'package:moumou/utils/error_codes.dart';
 import 'package:moumou/utils/network_mime_types.dart';
 import 'package:moumou/utils/network_path.dart';
 import 'package:moumou/utils/retry_policy.dart';
@@ -27,9 +28,6 @@ class WebDavClient implements NetworkClient {
 
   http.Client? _client;
   bool _connected = false;
-
-  /// 黑洞地址 / 服务器半开时的统一提示（12 秒 = 分级超时的常规 API 档）。
-  static const _timeoutMessage = '连接超时：服务器无响应，请检查地址与端口';
 
   static const _propfindBody =
       '<?xml version="1.0" encoding="utf-8"?>'
@@ -117,11 +115,13 @@ class WebDavClient implements NetworkClient {
     final body = await _propfind(_uri(filePath.value), depth: 0);
     final resources = parseWebDavMultistatus(body);
     if (resources.isEmpty) {
-      throw const NetworkClientException('文件不存在或不是文件');
+      throw const NetworkClientException(NetworkErrorCode.webdavNotAFile);
     }
     final resource = resources.first;
     if (resource.isDirectory) {
-      throw const NetworkClientException('目标是一个目录');
+      throw const NetworkClientException(
+        NetworkErrorCode.webdavTargetIsDirectory,
+      );
     }
     return resource.contentLength;
   }
@@ -139,10 +139,15 @@ class WebDavClient implements NetworkClient {
     if (offset > 0) {
       if (response.statusCode != 206) {
         await _discard(response);
+        final status = '${response.statusCode}';
+        if (response.statusCode == 200) {
+          throw const NetworkClientException(
+            NetworkErrorCode.webdavRangeIgnored,
+          );
+        }
         throw NetworkClientException(
-          response.statusCode == 200
-              ? '服务器忽略了分段请求，无法精确跳转'
-              : '分段请求失败（HTTP ${response.statusCode}）',
+          NetworkErrorCode.webdavRangeFailed,
+          args: {'status': status},
         );
       }
       final contentRange = response.headers['content-range'] ?? '';
@@ -151,13 +156,22 @@ class WebDavClient implements NetworkClient {
           ?.group(1);
       if (start == null || int.parse(start) != offset) {
         await _discard(response);
-        throw const NetworkClientException('服务器返回的分段起点与请求不一致');
+        throw const NetworkClientException(
+          NetworkErrorCode.webdavRangeStartMismatch,
+        );
       }
     } else if (response.statusCode < 200 || response.statusCode >= 300) {
       await _discard(response);
+      final status = '${response.statusCode}';
+      if (response.statusCode == 401) {
+        throw NetworkClientException(
+          NetworkErrorCode.webdavDownloadFailedAuth,
+          args: {'status': status},
+        );
+      }
       throw NetworkClientException(
-        '下载失败（HTTP ${response.statusCode}'
-        '${response.statusCode == 401 ? '，认证失败' : ''}）',
+        NetworkErrorCode.webdavDownloadFailed,
+        args: {'status': status},
       );
     }
     return response.stream;
@@ -202,7 +216,7 @@ class WebDavClient implements NetworkClient {
       );
     } on TimeoutException {
       // 黑洞地址 / 半开连接：分级超时到点就报错，不重试到天荒地老。
-      throw const NetworkClientException(_timeoutMessage);
+      throw const NetworkClientException(NetworkErrorCode.connectTimeout);
     }
     // 响应体：**体积上限 + 超时**——超大目录的 PROPFIND 响应可以到几十 MB，
     // 无上限会把内存吃满（P2-21：旧实现 `bytesToString()` 只加了超时）。
@@ -215,15 +229,23 @@ class WebDavClient implements NetworkClient {
       body = utf8.decode(bytes, allowMalformed: true);
     } on ResponseTooLargeException catch (error) {
       throw NetworkClientException(
-        '目录过大：响应超过 ${error.maxBytes ~/ (1024 * 1024)}MB',
+        NetworkErrorCode.webdavDirectoryTooLarge,
+        args: {'mb': '${error.maxBytes ~/ (1024 * 1024)}'},
       );
     } on TimeoutException {
-      throw const NetworkClientException(_timeoutMessage);
+      throw const NetworkClientException(NetworkErrorCode.connectTimeout);
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
+      final status = '${response.statusCode}';
+      if (response.statusCode == 401) {
+        throw NetworkClientException(
+          NetworkErrorCode.webdavRequestFailedAuth,
+          args: {'status': status},
+        );
+      }
       throw NetworkClientException(
-        'WebDAV 请求失败（HTTP ${response.statusCode}'
-        '${response.statusCode == 401 ? '，认证失败' : ''}）',
+        NetworkErrorCode.webdavRequestFailed,
+        args: {'status': status},
       );
     }
     return body;

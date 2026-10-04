@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/bili_playlist.dart';
 
 /// B 站番剧播放列表面板（通过 [showPlayerPanel] 右侧滑入 / 竖屏底部弹出，
@@ -72,6 +74,7 @@ class _PlayerBiliPlaylistPanelState extends State<PlayerBiliPlaylistPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final items = widget.playlist.items;
     return Column(
       children: [
@@ -79,10 +82,10 @@ class _PlayerBiliPlaylistPanelState extends State<PlayerBiliPlaylistPanel> {
         const Divider(height: 1, color: Colors.white12),
         Expanded(
           child: items.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text(
-                    '没有获取到剧集列表',
-                    style: TextStyle(color: Colors.white38, fontSize: 13),
+                    l10n.playerBiliNoEpisodes,
+                    style: const TextStyle(color: Colors.white38, fontSize: 13),
                   ),
                 )
               : ListView.builder(
@@ -98,6 +101,7 @@ class _PlayerBiliPlaylistPanelState extends State<PlayerBiliPlaylistPanel> {
 
   /// 头部：番剧名 + 「第 X 集 / 共 N 集」
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context);
     final total = widget.playlist.length;
     final current = widget.currentIndex >= 0 ? widget.currentIndex + 1 : null;
     final title = widget.playlist.seasonTitle;
@@ -122,7 +126,9 @@ class _PlayerBiliPlaylistPanelState extends State<PlayerBiliPlaylistPanel> {
             const Spacer(),
           const SizedBox(width: 8),
           Text(
-            current == null ? '共 $total 集' : '第 $current 集 / 共 $total 集',
+            current == null
+                ? l10n.playerBiliTotalEpisodes(total)
+                : l10n.playerBiliCurrentOfTotal(current, total),
             style: const TextStyle(color: Colors.white54, fontSize: 12),
           ),
         ],
@@ -132,6 +138,7 @@ class _PlayerBiliPlaylistPanelState extends State<PlayerBiliPlaylistPanel> {
 
   /// 列表项：集号 + 集名 +（角标）+（当前集）主题色高亮与「播放中」徽标
   Widget _buildItem(BuildContext context, int index) {
+    final l10n = AppLocalizations.of(context);
     final item = widget.playlist.items[index];
     final isCurrent = index == widget.currentIndex;
     final scheme = Theme.of(context).colorScheme;
@@ -154,7 +161,7 @@ class _PlayerBiliPlaylistPanelState extends State<PlayerBiliPlaylistPanel> {
             ),
             Expanded(
               child: Text(
-                item.title,
+                biliPlaylistItemTitle(l10n, item),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
@@ -166,7 +173,7 @@ class _PlayerBiliPlaylistPanelState extends State<PlayerBiliPlaylistPanel> {
             ),
             if (item.badge.isNotEmpty) ...[
               const SizedBox(width: 8),
-              _buildBadge(item.badge),
+              _buildBadge(context, item.badge),
             ],
             if (isCurrent) ...[
               const SizedBox(width: 8),
@@ -178,7 +185,7 @@ class _PlayerBiliPlaylistPanelState extends State<PlayerBiliPlaylistPanel> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  '播放中',
+                  l10n.commonPlaying,
                   style: TextStyle(
                     color: scheme.onPrimary,
                     fontSize: 11,
@@ -194,11 +201,14 @@ class _PlayerBiliPlaylistPanelState extends State<PlayerBiliPlaylistPanel> {
   }
 
   /// 角标胶囊（与 [BiliEpisodeTile] 同色系，暗底上提高不透明度）
-  Widget _buildBadge(String badge) {
+  Widget _buildBadge(BuildContext context, String badge) {
+    final l10n = AppLocalizations.of(context);
+    // switch 的匹配键是 B 站接口返回的角标原值（数据，不是 UI 文案），
+    // 属不可翻译清单，保持中文；只把显示文案换成 l10n。
     final (Color color, String text) = switch (badge) {
       '会员' => (const Color(0xFFFB7299), 'VIP'),
-      '限免' => (const Color(0xFF2E9E5B), '限免'),
-      '预告' => (Colors.grey, '预告'),
+      '限免' => (const Color(0xFF2E9E5B), l10n.playerBiliFreeLimited),
+      '预告' => (Colors.grey, l10n.playerBiliPreview),
       _ => (Colors.grey, badge),
     };
     return Container(

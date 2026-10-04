@@ -6,6 +6,8 @@ import 'package:moumou/services/update/update_settings.dart';
 import 'package:moumou/widgets/update_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 更新弹窗测试（工作.md：更新功能）：
 /// 三按钮齐全、Markdown 无原生符号、忽略本版本落盘、立即更新弹子菜单与 Toast。
 void main() {
@@ -21,6 +23,9 @@ void main() {
   Future<void> pumpDialog(WidgetTester tester, {UpdateInfo? info}) async {
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Scaffold(
           body: Builder(
             builder: (context) => TextButton(
@@ -115,6 +120,9 @@ void main() {
     final opened = <Uri>[];
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Scaffold(
           body: UpdateDialog(
             info: const UpdateInfo(

@@ -39,11 +39,15 @@ class SubtitleTrack {
   /// （工作.md 阶段1 第 3 点：内嵌字幕应启用自带样式与字体）。
   bool get isStyled => _isStyledSubtitle(codec);
 
-  /// 展示名：优先标题，其次语言，最后回退「轨道 N」
+  /// 展示名的**数据部分**：优先标题，其次语言；两者都没有时返回**空串**。
+  ///
+  /// 空串表示「调用方负责按本地化文案兜底」（如「轨道 3」）——本层是纯数据模型，
+  /// 不许 import l10n：兜底文案见 `lib/l10n/label_maps.dart` 的
+  /// `subtitleTrackDisplayName`。
   String get displayTitle {
     if (title != null && title!.trim().isNotEmpty) return title!.trim();
     if (language != null && language!.trim().isNotEmpty) return language!.trim();
-    return '轨道 $id';
+    return '';
   }
 }
 
@@ -52,17 +56,6 @@ bool _isStyledSubtitle(String? codec) {
   if (codec == null) return false;
   final c = codec.toLowerCase();
   return c.contains('ass') || c.contains('ssa');
-}
-
-/// 字幕轨道在面板中的显示名（纯函数，可单测）。
-/// 返回 `displayTitle` + 外挂标记 + 格式后缀，如「简体中文 · 外挂 · ass」。
-String subtitleTrackLabel(SubtitleTrack track) {
-  final parts = <String>[track.displayTitle];
-  if (track.external) parts.add('外挂');
-  if (track.codec != null && track.codec!.trim().isNotEmpty) {
-    parts.add(track.codec!.trim());
-  }
-  return parts.join(' · ');
 }
 
 /// 支持的外挂字幕扩展名（参考小喵 player `isSupportedSubtitleFormat`）。
@@ -95,15 +88,17 @@ bool isFontFile(String filename) {
 }
 
 /// 字幕对齐（mpv `sub-align-x`）：水平位置三选。
+///
+/// 名称在 `lib/l10n/label_maps.dart` 的 [subtitleAlignLabel]。
 enum SubtitleAlign {
-  center('center', '居中'),
-  left('left', '左对齐'),
-  right('right', '右对齐');
+  center('center'),
+  left('left'),
+  right('right');
 
   /// mpv 属性值
   final String mpvValue;
-  final String label;
-  const SubtitleAlign(this.mpvValue, this.label);
+
+  const SubtitleAlign(this.mpvValue);
 
   static SubtitleAlign byMpvValue(String v) => switch (v) {
         'left' => SubtitleAlign.left,
@@ -139,21 +134,22 @@ enum SubtitleAlign {
 ///
 /// **本 App 不提供「描边模式」选择器**（用户拍板）：模式由「背景颜色」隐式驱动
 /// ——有背景色 → [box]（否则 mpv 不画背景色），选「无」→ [outline]
-/// （见 `SubtitleSettings.setBackColor`）。枚举保留三态供设置层与持久化表达。
+/// （见 `SubtitleSettings.setBackColor`）。枚举保留三态供设置层与持久化表达；
+/// 名称在 `lib/l10n/label_maps.dart` 的 [subtitleBorderStyleLabel]。
 enum SubtitleBorderStyle {
   /// 无边框、无背景（mpv `none`，对应 ASS `BorderStyle=0`）
-  none('none', '无'),
+  none('none'),
 
   /// 描边 + 阴影（mpv `outline-and-shadow`，ASS `BorderStyle=1`，也是 mpv 默认）
-  outline('outline-and-shadow', '描边'),
+  outline('outline-and-shadow'),
 
   /// 包住整段字幕的背景框，颜色 = `sub-back-color`（mpv `background-box`，libass 的 `BorderStyle=4`）
-  box('background-box', '背景框');
+  box('background-box');
 
   /// mpv 属性值
   final String mpvValue;
-  final String label;
-  const SubtitleBorderStyle(this.mpvValue, this.label);
+
+  const SubtitleBorderStyle(this.mpvValue);
 
   /// 从 mpv 取值 / 历史持久化值还原（兼容 0.38 之前的旧名）。
   ///
@@ -168,33 +164,35 @@ enum SubtitleBorderStyle {
 }
 
 /// 字幕预设颜色（mpv `sub-color`，工作.md 阶段1 第 3 点样式项）。
+///
+/// 只留 [hex]：颜色名（白色/黄色/…）在 `lib/l10n/label_maps.dart` 的
+/// [subtitlePresetColorLabel] 里按 hex 取——**同一颜色只写一个键**。
 class SubtitlePresetColor {
-  final String label;
   final String hex;
 
-  const SubtitlePresetColor(this.label, this.hex);
+  const SubtitlePresetColor(this.hex);
 
   /// 文字颜色常用预设（3~4 种常用色，对齐小喵 player 需求）
   static const List<SubtitlePresetColor> textPresets = [
-    SubtitlePresetColor('白色', '#FFFFFF'),
-    SubtitlePresetColor('黄色', '#FFEB3B'),
-    SubtitlePresetColor('青色', '#4DD0E1'),
-    SubtitlePresetColor('绿色', '#81C784'),
+    SubtitlePresetColor('#FFFFFF'),
+    SubtitlePresetColor('#FFEB3B'),
+    SubtitlePresetColor('#4DD0E1'),
+    SubtitlePresetColor('#81C784'),
   ];
 
   /// 描边颜色常用预设（黑色、白色、黄色，去除了红色）
   static const List<SubtitlePresetColor> borderPresets = [
-    SubtitlePresetColor('黑色', '#000000'),
-    SubtitlePresetColor('白色', '#FFFFFF'),
-    SubtitlePresetColor('黄色', '#FFEB3B'),
+    SubtitlePresetColor('#000000'),
+    SubtitlePresetColor('#FFFFFF'),
+    SubtitlePresetColor('#FFEB3B'),
   ];
 
   /// 背景颜色常用预设（对齐小喵 player 需求）
   static const List<SubtitlePresetColor> backPresets = [
-    SubtitlePresetColor('半透明黑', '#80000000'),
-    SubtitlePresetColor('纯黑', '#FF000000'),
-    SubtitlePresetColor('半透明白', '#80FFFFFF'),
-    SubtitlePresetColor('半透明蓝', '#801A2332'),
+    SubtitlePresetColor('#80000000'),
+    SubtitlePresetColor('#FF000000'),
+    SubtitlePresetColor('#80FFFFFF'),
+    SubtitlePresetColor('#801A2332'),
   ];
 
   /// 兼容旧引用

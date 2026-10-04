@@ -1,0 +1,261 @@
+# 阶段 4 · 分组 M 残留文案与键位建议
+
+- `player_page.dart` L489：`'已自动加载字幕：$fileName'` → l10n.playerAutoLoadedSubtitle(fileName)
+- `player_page.dart` L509：`'已自动加载弹幕：$fileName'` → l10n.playerAutoLoadedDanmaku(fileName)
+- `player_page.dart` L513：`'已加载弹幕：$message'` → l10n.playerDanmakuLoaded(message)
+- `player_page.dart` L950：`'该清晰度不可用，已切换到 ${_currentQualityDescription(next)}'` → l10n.playerQualityUnavailableSwitched(_currentQualityDescription(next))
+- `player_page.dart` L959：`'切换画质失败：$e'` → l10n.playerQualitySwitchFailed(e)
+- `player_page.dart` L974：`'清晰度'` → l10n.playerQuality
+- `player_page.dart` L1384：`'截图失败：$e'` → l10n.playerScreenshotFailed(e)
+- `player_page.dart` L1388：`'截图失败：未获取到图像'` → l10n.playerScreenshotNoImage
+- `player_page.dart` L1396：`'小喵Player'` → l10n.appTitle
+- `player_page.dart` L1399：`'已保存到相册'` → l10n.playerSavedToGallery
+- `player_page.dart` L1399：`'截图保存失败：${result.errorMessage}'` → l10n.playerScreenshotSaveFailed(result.errorMessage)
+- `player_page.dart` L1401：`'截图保存失败：$e'` → l10n.playerScreenshotSaveFailed(e)
+- `player_page.dart` L1755：`'弹幕设置'` → l10n.playerDanmakuSettings
+- `player_page.dart` L1767：`'片头片尾'` → l10n.playerActionIntroOutro
+- `player_page.dart` L1799：`'已跳过片头'` → l10n.playerSkippedIntro
+- `player_page.dart` L1801：`'已跳过片尾'` → l10n.playerSkippedOutro
+- `player_page.dart` L1880：`'网络连接不存在，无法切换'` → l10n.playerNoNetworkCannotSwitch
+- `player_page.dart` L1892：`'切换失败：$e'` → l10n.playerSwitchFailed(e)
+- `player_page.dart` L1949：`'解析播放地址失败'` → l10n.playerResolveUrlFailed
+- `player_page.dart` L1960：`'切集失败：$e'` → l10n.playerSwitchEpisodeFailed(e)
+- `player_page.dart` L2106：`'播放倍速'` → l10n.playerPlaybackSpeed
+- `player_page.dart` L2118：`'超分辨率'` → l10n.playerSuperResolution
+- `player_page.dart` L2124：`'画面比例'` → l10n.playerAspectRatio
+- `player_page.dart` L2133：`'暂不支持投屏该来源'` → l10n.playerCastUnsupportedSource
+- `player_page.dart` L2164：`'清晰度'` → l10n.playerQuality
+- `player_page.dart` L2172：`'未放置的功能'` → l10n.playerFeatureNotPlaced
+- `player_page.dart` L2179：`'功能即将上线'` → l10n.playerFeatureComingSoon
+- `player_page.dart` L2186：`'编辑控制栏'` → l10n.playerEditControlBar
+- `player_page.dart` L2188：`'编辑控制栏'` → l10n.playerEditControlBar
+- `player_page.dart` L2217：`'已启用（长按拖拽排序）'` → l10n.playerActionsEnabledHint
+- `player_page.dart` L2269：`'删除'` → l10n.commonDelete
+- `player_page.dart` L2279：`'暂无已启用动作，从下方添加'` → l10n.playerNoEnabledActions
+- `player_page.dart` L2285：`'可添加'` → l10n.playerAddable
+- `player_page.dart` L2307：`'最多允许放 5 个'` → l10n.playerMaxActions(PlayerControlsSettings.maxTopActions)
+- `player_page.dart` L2312：`'添加'` → l10n.commonAdd
+- `player_page.dart` L2319：`'重置控制栏'` → l10n.playerResetControlBar
+- `player_page.dart` L2433：`'章节'` → l10n.playerActionChapter
+- `player_page.dart` L2457：`'字幕'` → l10n.playerActionSubtitle
+- `player_page.dart` L2489：`'音频'` → l10n.playerActionAudio
+- `player_page.dart` L2520：`'弹幕'` → l10n.commonDanmaku
+- `player_page.dart` L2528：`'弹幕设置'` → l10n.playerDanmakuSettings
+- `player_page.dart` L2538：`'网络弹幕'` → l10n.playerDanmakuNetwork
+- `player_page.dart` L2600：`'弹幕加载失败'` → l10n.playerDanmakuLoadFailed
+- `player_page.dart` L2605：`'正在匹配弹幕，请稍候…'` → l10n.playerDanmakuMatching
+- `player_page.dart` L2609：`'未找到匹配的弹幕'` → l10n.playerDanmakuNoMatch
+- `player_page.dart` L2630：`'弹幕加载失败'` → l10n.playerDanmakuLoadFailed
+- `player_page.dart` L2657：`'选择匹配结果'` → l10n.playerDanmakuPickMatch
+- `player_page.dart` L2678：`'取消'` → l10n.commonCancel
+- `player_page.dart` L2699：`'当前设备不支持画中画'` → l10n.playerPipUnsupported
+- `player_page.dart` L2716：`'进入画中画失败'` → l10n.playerPipFailed
+- `player_page.dart` L2724：`'循环播放'` → l10n.playerActionLoop
+- `player_page.dart` L2737：`'解码'` → l10n.playerActionDecode
+- `player_page.dart` L2750：`'播放诊断'` → l10n.playerActionDiagnostics
+- `player_page.dart` L2804：`'音频均衡器'` → l10n.playerActionEqualizer
+- `player_page.dart` L2835：`'更多'` → l10n.commonMore
+- `player_page.dart` L3129：`'播放列表'` → l10n.playerPlaylist
+- `player_page.dart` L3150：`'播放列表'` → l10n.playerPlaylist
+- `player_page.dart` L3642：`'超分辨率'` → l10n.playerSuperResolution
+- `player_page.dart` L4046：`'解锁'` → l10n.playerUnlock
+- `player_portrait_page.dart` L462：`'已自动加载弹幕：$fileName'` → l10n.playerAutoLoadedDanmaku(fileName)
+- `player_portrait_page.dart` L465：`'已加载弹幕：$message'` → l10n.playerDanmakuLoaded(message)
+- `player_portrait_page.dart` L671：`'截图失败：$e'` → l10n.playerScreenshotFailed(e)
+- `player_portrait_page.dart` L675：`'截图失败：未获取到图像'` → l10n.playerScreenshotNoImage
+- `player_portrait_page.dart` L683：`'小喵Player'` → l10n.appTitle
+- `player_portrait_page.dart` L686：`'已保存到相册'` → l10n.playerSavedToGallery
+- `player_portrait_page.dart` L686：`'截图保存失败：${result.errorMessage}'` → l10n.playerScreenshotSaveFailed(result.errorMessage)
+- `player_portrait_page.dart` L688：`'截图保存失败：$e'` → l10n.playerScreenshotSaveFailed(e)
+- `player_portrait_page.dart` L1156：`'播放列表'` → l10n.playerPlaylist
+- `player_portrait_page.dart` L1177：`'播放列表'` → l10n.playerPlaylist
+- `player_portrait_page.dart` L1289：`'播放倍速'` → l10n.playerPlaybackSpeed
+- `player_portrait_page.dart` L1299：`'超分辨率'` → l10n.playerSuperResolution
+- `player_portrait_page.dart` L1304：`'画面比例'` → l10n.playerAspectRatio
+- `player_portrait_page.dart` L1309：`'循环播放'` → l10n.playerActionLoop
+- `player_portrait_page.dart` L1314：`'解码'` → l10n.playerActionDecode
+- `player_portrait_page.dart` L1320：`'播放诊断'` → l10n.playerActionDiagnostics
+- `player_portrait_page.dart` L1359：`'音频均衡器'` → l10n.playerActionEqualizer
+- `player_portrait_page.dart` L1366：`'暂不支持投屏该来源'` → l10n.playerCastUnsupportedSource
+- `player_portrait_page.dart` L1387：`'未放置的功能'` → l10n.playerFeatureNotPlaced
+- `player_portrait_page.dart` L1392：`'功能即将上线'` → l10n.playerFeatureComingSoon
+- `player_portrait_page.dart` L1399：`'编辑控制栏'` → l10n.playerEditControlBar
+- `player_portrait_page.dart` L1402：`'编辑控制栏'` → l10n.playerEditControlBar
+- `player_portrait_page.dart` L1446：`'章节'` → l10n.playerActionChapter
+- `player_portrait_page.dart` L1464：`'字幕'` → l10n.playerActionSubtitle
+- `player_portrait_page.dart` L1483：`'音频'` → l10n.playerActionAudio
+- `player_portrait_page.dart` L1508：`'弹幕'` → l10n.commonDanmaku
+- `player_portrait_page.dart` L1516：`'弹幕设置'` → l10n.playerDanmakuSettings
+- `player_portrait_page.dart` L1526：`'网络弹幕'` → l10n.playerDanmakuNetwork
+- `player_portrait_page.dart` L1557：`'片头片尾'` → l10n.playerActionIntroOutro
+- `player_portrait_page.dart` L1579：`'已跳过片头'` → l10n.playerSkippedIntro
+- `player_portrait_page.dart` L1581：`'已跳过片尾'` → l10n.playerSkippedOutro
+- `player_portrait_page.dart` L1656：`'当前设备不支持画中画'` → l10n.playerPipUnsupported
+- `player_portrait_page.dart` L1672：`'进入画中画失败'` → l10n.playerPipFailed
+- `player_portrait_page.dart` L1687：`'更多'` → l10n.commonMore
+- `player_portrait_page.dart` L1707：`'弹幕设置'` → l10n.playerDanmakuSettings
+- `player_portrait_page.dart` L1741：`'弹幕加载失败'` → l10n.playerDanmakuLoadFailed
+- `player_portrait_page.dart` L1745：`'正在匹配弹幕，请稍候…'` → l10n.playerDanmakuMatching
+- `player_portrait_page.dart` L1749：`'未找到匹配的弹幕'` → l10n.playerDanmakuNoMatch
+- `player_portrait_page.dart` L1769：`'弹幕加载失败'` → l10n.playerDanmakuLoadFailed
+- `player_portrait_page.dart` L1795：`'选择匹配结果'` → l10n.playerDanmakuPickMatch
+- `player_portrait_page.dart` L1816：`'取消'` → l10n.commonCancel
+- `player_portrait_page.dart` L2445：`'超分辨率'` → l10n.playerSuperResolution
+- `player_portrait_page.dart` L2787：`'解锁'` → l10n.playerUnlock
+- `player_danmaku_settings_panel.dart` L41：`'极细'` → l10n.settingsFontWeightThin
+- `player_danmaku_settings_panel.dart` L42：`'很细'` → l10n.settingsFontWeightExtraLight
+- `player_danmaku_settings_panel.dart` L43：`'细'` → l10n.settingsFontWeightLight
+- `player_danmaku_settings_panel.dart` L44：`'常规'` → l10n.settingsFontWeightRegular
+- `player_danmaku_settings_panel.dart` L45：`'中等'` → l10n.settingsFontWeightMedium
+- `player_danmaku_settings_panel.dart` L46：`'较粗'` → l10n.settingsFontWeightSemiBold
+- `player_danmaku_settings_panel.dart` L47：`'粗'` → l10n.settingsFontWeightBold
+- `player_danmaku_settings_panel.dart` L48：`'很粗'` → l10n.settingsFontWeightExtraBold
+- `player_danmaku_settings_panel.dart` L49：`'极粗'` → l10n.settingsFontWeightBlack
+- `player_danmaku_settings_panel.dart` L74：`'弹幕样式'` → l10n.playerDanmakuStyle
+- `player_danmaku_settings_panel.dart` L78：`'弹幕字号'` → l10n.playerDanmakuFontSize
+- `player_danmaku_settings_panel.dart` L87：`'字体字重'` → l10n.settingsFontWeightLabel
+- `player_danmaku_settings_panel.dart` L98：`'弹幕速度'` → l10n.playerDanmakuSpeed
+- `player_danmaku_settings_panel.dart` L102：`'${v.round()} 秒'` → l10n.commonSecondsValue(v.round())
+- `player_danmaku_settings_panel.dart` L103：`'数值越小弹幕越快'` → l10n.playerDanmakuSpeedDesc
+- `player_danmaku_settings_panel.dart` L108：`'描边粗细'` → l10n.playerStrokeWidth
+- `player_danmaku_settings_panel.dart` L112：`'无'` → l10n.commonNone
+- `player_danmaku_settings_panel.dart` L117：`'不透明度'` → l10n.playerOpacity
+- `player_danmaku_settings_panel.dart` L153：`'弹幕配置'` → l10n.playerDanmakuConfig
+- `player_danmaku_settings_panel.dart` L157：`'显示区域'` → l10n.playerDanmakuDisplayArea
+- `player_danmaku_settings_panel.dart` L168：`'弹幕行高'` → l10n.playerDanmakuLineHeight
+- `player_danmaku_settings_panel.dart` L177：`'顶部弹幕'` → l10n.playerDanmakuTop
+- `player_danmaku_settings_panel.dart` L183：`'底部弹幕'` → l10n.playerDanmakuBottom
+- `player_danmaku_settings_panel.dart` L189：`'滚动弹幕'` → l10n.playerDanmakuScroll
+- `player_danmaku_settings_panel.dart` L195：`'海量弹幕'` → l10n.playerDanmakuMassive
+- `player_danmaku_settings_panel.dart` L196：`'轨道占满时叠加绘制，弹幕过多不再丢弃'` → l10n.playerDanmakuMassiveDesc
+- `player_danmaku_settings_panel.dart` L202：`'弹幕去重'` → l10n.playerDanmakuDedupe
+- `player_danmaku_settings_panel.dart` L203：`'相同时间下相同弹幕合并为一条'` → l10n.playerDanmakuDedupeDesc
+- `player_danmaku_settings_panel.dart` L209：`'弹幕合并'` → l10n.playerDanmakuMerge
+- `player_danmaku_settings_panel.dart` L210：`'不同时间内相同弹幕合并且计数'` → l10n.playerDanmakuMergeDesc
+- `player_danmaku_settings_panel.dart` L220：`'弹幕偏移'` → l10n.playerDanmakuOffset
+- `player_danmaku_settings_panel.dart` L224：`'时间轴偏移'` → l10n.playerDanmakuTimelineOffset
+- `player_danmaku_settings_panel.dart` L241：`'提前 1 秒'` → l10n.playerDanmakuAdvanceOneSecond
+- `player_danmaku_settings_panel.dart` L253：`'延后 1 秒'` → l10n.playerDanmakuDelayOneSecond
+- `player_danmaku_settings_panel.dart` L270：`'重置偏移'` → l10n.playerDanmakuResetOffset
+- `player_danmaku_settings_panel.dart` L279：`'弹幕字体'` → l10n.playerDanmakuFont
+- `player_danmaku_settings_panel.dart` L505：`'保留弹幕自带颜色（含会员渐变彩色）'` → l10n.danmakuColorModeSourceDesc
+- `player_danmaku_settings_panel.dart` L506：`'忽略文件颜色，按色轮逐条随机着色'` → l10n.danmakuColorModeRandomDesc
+- `player_danmaku_settings_panel.dart` L507：`'弹幕从下面已选颜色里随机取色'` → l10n.danmakuColorModeFixedDesc
+- `player_danmaku_settings_panel.dart` L580：`'最多选 ${DanmakuSettings.maxPaletteColors} 种颜色'` → l10n.playerDanmakuPaletteMaxHint(DanmakuSettings.maxPaletteColors)
+- `player_danmaku_settings_panel.dart` L638：`'弹幕颜色（可多选，随机使用）'` → l10n.playerDanmakuPaletteTitle
+- `player_danmaku_settings_panel.dart` L669：`'该颜色已在调色板中'` → l10n.playerDanmakuColorExists
+- `player_danmaku_settings_panel.dart` L671：`'已选满 ${DanmakuSettings.maxPaletteColors} 种'` → l10n.playerDanmakuPaletteFull(DanmakuSettings.maxPaletteColors)
+- `player_danmaku_settings_panel.dart` L672：`'添加到调色板'` → l10n.playerDanmakuAddToPalette
+- `player_danmaku_settings_panel.dart` L701：`'已选 ${values.length}/${DanmakuSettings.maxPaletteColors} 种'` → l10n.playerDanmakuPaletteSelected(values.length, DanmakuSettings.maxPaletteColors)
+- `player_danmaku_settings_panel.dart` L842：`'屏蔽词'` → l10n.playerDanmakuBlockWords
+- `player_danmaku_settings_panel.dart` L846：`'未设置'` → l10n.commonNotSet
+- `player_danmaku_settings_panel.dart` L878：`'输入要屏蔽的关键词'` → l10n.playerDanmakuBlockWordsHint
+- `player_danmaku_settings_panel.dart` L912：`'添加'` → l10n.commonAdd
+- `player_danmaku_settings_panel.dart` L937：`'清空'` → l10n.commonClearAll
+- `player_danmaku_settings_panel.dart` L1024：`'恢复默认设置'` → l10n.commonRestoreDefaults
+- `player_danmaku_settings_panel.dart` L1076：`'已导入 $count 个字体文件，共 ${entries.length} 种字体'` → l10n.playerFontsImported(count, entries.length)
+- `player_danmaku_settings_panel.dart` L1129：`'选择字体目录'` → l10n.playerPickFontDir
+- `player_danmaku_settings_panel.dart` L1131：`'正在加载...'` → l10n.commonLoadingDots
+- `player_danmaku_settings_panel.dart` L1133：`'点击导入包含 .ttf/.otf 字体的目录'` → l10n.playerFontDirImportHint
+- `player_danmaku_settings_panel.dart` L1134：`'已加载 ${_entries.length} 种字体'` → l10n.playerFontsLoaded(_entries.length)
+- `player_danmaku_settings_panel.dart` L1142：`'选择字体'` → l10n.playerPickFont
+- `player_diagnostics_panel.dart` L137：`'播放'` → l10n.commonPlay
+- `player_diagnostics_panel.dart` L139：`'标题'` → l10n.commonTitle
+- `player_diagnostics_panel.dart` L140：`'容器'` → l10n.playerDiagnosticsContainer
+- `player_diagnostics_panel.dart` L141：`'音频编码'` → l10n.playerDiagnosticsAudioCodec
+- `player_diagnostics_panel.dart` L142：`'硬解'` → l10n.decodeModeHwCopy
+- `player_diagnostics_panel.dart` L146：`'视频输出'` → l10n.playerDiagnosticsVideoOutput
+- `player_diagnostics_panel.dart` L147：`'同步方式'` → l10n.playerDiagnosticsSyncMode
+- `player_diagnostics_panel.dart` L152：`'视频'` → l10n.commonVideo
+- `player_diagnostics_panel.dart` L154：`'分辨率'` → l10n.commonResolution
+- `player_diagnostics_panel.dart` L155：`'像素格式'` → l10n.playerDiagnosticsPixelFormat
+- `player_diagnostics_panel.dart` L156：`'容器帧率'` → l10n.playerDiagnosticsContainerFps
+- `player_diagnostics_panel.dart` L157：`'实际帧率'` → l10n.playerDiagnosticsActualFps
+- `player_diagnostics_panel.dart` L158：`'视频码率'` → l10n.playerDiagnosticsVideoBitrate
+- `player_diagnostics_panel.dart` L163：`'音频'` → l10n.playerActionAudio
+- `player_diagnostics_panel.dart` L165：`'音频参数'` → l10n.playerDiagnosticsAudioParams
+- `player_diagnostics_panel.dart` L166：`'音频码率'` → l10n.playerDiagnosticsAudioBitrate
+- `player_diagnostics_panel.dart` L167：`'音画同步'` → l10n.playerDiagnosticsAvSync
+- `player_diagnostics_panel.dart` L172：`'缓存与丢帧'` → l10n.playerDiagnosticsCacheGroup
+- `player_diagnostics_panel.dart` L174：`'缓冲时长'` → l10n.playerDiagnosticsBufferDuration
+- `player_diagnostics_panel.dart` L175：`'可播时长'` → l10n.playerDiagnosticsPlayableDuration
+- `player_diagnostics_panel.dart` L176：`'缓存占用'` → l10n.playerDiagnosticsCacheUsage
+- `player_diagnostics_panel.dart` L177：`'下行速率'` → l10n.playerDiagnosticsDownlinkRate
+- `player_diagnostics_panel.dart` L178：`'丢帧'` → l10n.playerDiagnosticsDroppedFrames
+- `player_diagnostics_panel.dart` L179：`'解码丢帧'` → l10n.playerDiagnosticsDecodeDropped
+- `player_diagnostics_panel.dart` L180：`'延迟帧'` → l10n.playerDiagnosticsDelayedFrames
+- `player_diagnostics_panel.dart` L185：`'每秒自动刷新 · 数据来自 mpv 运行时属性'` → l10n.playerDiagnosticsAutoRefreshHint
+- `player_diagnostics_panel.dart` L204：`'无法读取播放器属性（播放器可能未就绪或已卡住）'` → l10n.playerDiagnosticsReadFailed
+- `player_diagnostics_panel.dart` L209：`' 等 ${failedKeys.length} 项'` → （并入 playerDiagnosticsFailedValueMore，见下方说明）
+- `player_diagnostics_panel.dart` L210：`'读取失败：$shown$suffix（显示的是上一次成功值）'` → l10n.playerDiagnosticsFailedValue(shown) / l10n.playerDiagnosticsFailedValueMore(shown, failedKeys.length)
+- `subtitle_panel.dart` L58：`'字幕轨道'` → l10n.playerSubtitleTracks
+- `subtitle_panel.dart` L63：`'当前视频没有字幕，可在下方导入外挂字幕'` → l10n.playerNoSubtitleHint
+- `subtitle_panel.dart` L109：`'关闭字幕'` → l10n.playerSubtitleOff
+- `subtitle_panel.dart` L123：`'外挂字幕'` → l10n.playerExternalSubtitle
+- `subtitle_panel.dart` L129：`'导入外部字幕'` → l10n.playerImportExternalSubtitle
+- `subtitle_panel.dart` L136：`'字幕设置'` → l10n.playerSubtitleSettings
+- `subtitle_panel.dart` L139：`'字幕延迟'` → l10n.playerSubtitleDelay
+- `subtitle_panel.dart` L142：`'字幕延迟'` → l10n.playerSubtitleDelay
+- `subtitle_panel.dart` L148：`'字幕样式'` → l10n.playerSubtitleStyle
+- `subtitle_panel.dart` L151：`'字幕样式'` → l10n.playerSubtitleStyle
+- `subtitle_panel.dart` L157：`'字幕杂项'` → l10n.playerSubtitleMisc
+- `subtitle_panel.dart` L160：`'字幕杂项'` → l10n.playerSubtitleMisc
+- `subtitle_panel.dart` L166：`'字幕字体'` → l10n.playerSubtitleFont
+- `subtitle_panel.dart` L169：`'字幕字体'` → l10n.playerSubtitleFont
+- `subtitle_panel.dart` L209：`'选择字幕文件'` → l10n.playerPickSubtitleFile
+- `subtitle_panel.dart` L227：`'已导入外挂字幕'` → l10n.playerExternalSubtitleImported
+- `subtitle_panel.dart` L227：`'导入失败，请检查文件格式'` → l10n.playerImportFailedCheckFormat
+- `subtitle_panel.dart` L279：`'外挂'` → l10n.commonExternalTag
+- `subtitle_panel.dart` L292：`'移除已导入的字幕'` → l10n.playerRemoveSubtitle
+- `subtitle_panel.dart` L524：`'重置'` → l10n.commonReset
+- `subtitle_panel.dart` L689：`'快捷调整'` → l10n.playerQuickAdjust
+- `subtitle_panel.dart` L703：`'重置为 0 秒'` → l10n.playerResetToZeroSeconds
+- `subtitle_panel.dart` L717：`'$sign$text 秒'` → l10n.playerDelaySeconds('$sign$text')
+- `subtitle_panel.dart` L814：`'文字颜色'` → l10n.playerTextColor
+- `subtitle_panel.dart` L831：`'描边颜色'` → l10n.playerStrokeColor
+- `subtitle_panel.dart` L850：`'描边粗细'` → l10n.playerStrokeWidth
+- `subtitle_panel.dart` L876：`'背景颜色'` → l10n.playerBackgroundColor
+- `subtitle_panel.dart` L898：`'背景框大小'` → l10n.playerBackgroundBoxSize
+- `subtitle_panel.dart` L926：`'文字效果'` → l10n.playerTextEffects
+- `subtitle_panel.dart` L932：`'粗体'` → l10n.playerBold
+- `subtitle_panel.dart` L942：`'斜体'` → l10n.playerItalic
+- `subtitle_panel.dart` L955：`'字间距'` → l10n.playerLetterSpacing
+- `subtitle_panel.dart` L975：`'模糊'` → l10n.commonBlur
+- `subtitle_panel.dart` L1003：`'优先选中文字幕轨'` → l10n.playerPreferChineseSubtitle
+- `subtitle_panel.dart` L1008：`'默认启用中文轨（含「特效/双语」优先）；手动选过的不改'` → l10n.playerPreferChineseSubtitleDesc
+- `subtitle_panel.dart` L1009：`'交给内核默认挑选（通常是文件里的第一条）'` → l10n.playerSubtitleTrackAutoDesc
+- `subtitle_panel.dart` L1023：`'强制覆盖内嵌样式'` → l10n.playerForceOverrideStyle
+- `subtitle_panel.dart` L1030：`'使用上方设置渲染字幕样式'` → l10n.playerForceOverrideStyleDesc
+- `subtitle_panel.dart` L1031：`'字幕使用自带的样式与字体'` → l10n.playerStyleFromSubtitleDesc
+- `subtitle_panel.dart` L1056：`'重置所有样式'` → l10n.playerResetAllStyles
+- `subtitle_panel.dart` L1101：`'ASS 内嵌字幕的限制'` → l10n.playerAssLimitTitle
+- `subtitle_panel.dart` L1111：`'粗体 / 斜体 / 模糊'` → l10n.playerAssLimitBoldItalicBlur
+- `subtitle_panel.dart` L1111：`'开启覆盖也不生效（mpv 渲染限制）'` → l10n.playerAssLimitNoEffect
+- `subtitle_panel.dart` L1112：`'颜色 / 描边 / 背景 / 大小 / 位置 / 字间距'` → l10n.playerAssLimitStyleItems
+- `subtitle_panel.dart` L1112：`'开启覆盖后生效'` → l10n.playerAssLimitTakesEffect
+- `subtitle_panel.dart` L1113：`'SRT / VTT 等文本字幕'` → l10n.playerAssLimitTextFormats
+- `subtitle_panel.dart` L1113：`'所有样式都直接生效'` → l10n.playerAssLimitAllEffective
+- `subtitle_panel.dart` L1248：`'字幕缩放与位置'` → l10n.playerSubtitleScalePosition
+- `subtitle_panel.dart` L1250：`'缩放比例'` → l10n.playerScaleRatio
+- `subtitle_panel.dart` L1270：`'垂直位置'` → l10n.playerVerticalPosition
+- `subtitle_panel.dart` L1271：`'${v.round()}（100=窗口底部）'` → l10n.playerVerticalPositionValue(v.round())
+- `subtitle_panel.dart` L1299：`'重置缩放与位置'` → l10n.playerResetScalePosition
+- `subtitle_panel.dart` L1373：`'已导入 $count 个字体文件，共 ${entries.length} 种字体'` → l10n.playerFontsImported(count, entries.length)
+- `subtitle_panel.dart` L1388：`'已刷新，共 ${entries.length} 种字体'` → l10n.playerFontsRefreshed(entries.length)
+- `subtitle_panel.dart` L1402：`'已清除字体目录'` → l10n.playerFontDirCleared
+- `subtitle_panel.dart` L1426：`'字体更改需退出播放器并重新进入后生效'` → l10n.playerFontChangeHint
+- `subtitle_panel.dart` L1462：`'字体目录'` → l10n.playerFontDir
+- `subtitle_panel.dart` L1470：`'选择字体目录'` → l10n.playerPickFontDir
+- `subtitle_panel.dart` L1475：`'正在加载...'` → l10n.commonLoadingDots
+- `subtitle_panel.dart` L1477：`'已加载 ${_entries.length} 种字体'` → l10n.playerFontsLoaded(_entries.length)
+- `subtitle_panel.dart` L1478：`'点击选择包含 .ttf/.otf 字体的目录'` → l10n.playerFontDirPickHint
+- `subtitle_panel.dart` L1493：`'刷新'` → l10n.commonRefresh
+- `subtitle_panel.dart` L1500：`'清除目录'` → l10n.playerFontDirClear
+- `subtitle_panel.dart` L1520：`'当前字体'` → l10n.playerCurrentFont
+- `subtitle_panel.dart` L1528：`'默认字体'` → l10n.playerDefaultFont
+- `subtitle_panel.dart` L1540：`'请先选择字体目录'` → l10n.playerPickFontDirFirst
+- `subtitle_panel.dart` L1563：`'默认字体'` → l10n.playerDefaultFont
+- `subtitle_panel.dart` L1564：`'跟随系统字库'` → l10n.playerFollowSystemFonts
+- `subtitle_panel.dart` L1593：`'字体更改需退出播放器并重新进入后生效；内嵌 ASS 字幕需开启「强制覆盖内嵌样式」后字体设置才会生效。'` → l10n.playerFontChangeHintFull
+
+（共 257 条，未匹配 0 条）

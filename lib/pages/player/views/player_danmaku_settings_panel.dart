@@ -24,28 +24,16 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/danmaku_color_mode.dart';
 import 'package:moumou/models/danmaku_font_mode.dart';
 import 'package:moumou/models/subtitle_track.dart' show mpvColorToRgba;
 import 'package:moumou/services/app_font_settings.dart';
 import 'package:moumou/services/danmaku_settings.dart';
 import 'package:moumou/services/device_services.dart';
-import 'package:moumou/utils/danmaku_timeline.dart';
 import 'package:moumou/widgets/color_editor_row.dart';
 import 'package:moumou/widgets/settings_ui.dart';
-
-/// FontWeight.values 下标 → 中文名称（字重滑杆读数）
-const List<String> _fontWeightNames = [
-  '极细',
-  '很细',
-  '细',
-  '常规',
-  '中等',
-  '较粗',
-  '粗',
-  '很粗',
-  '极粗',
-];
 
 /// 与「设置」页面 / 字幕面板一致的滑杆主题（Kazumi 风格：缺口轨道 + 小柄
 /// 拇指，无拖拽气泡——用户要的「字幕杂项」那种，而非默认大圆钮 + 气泡）。
@@ -64,16 +52,17 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
       listenable: DanmakuSettings.instance,
       builder: (context, _) {
         final s = DanmakuSettings.instance;
+        final l10n = AppLocalizations.of(context);
         return SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _SectionLabel('弹幕样式'),
+              _SectionLabel(l10n.playerDanmakuStyle),
               _SettingsGroup(
                 children: [
                   _CommitSliderTile(
-                    label: '弹幕字号',
+                    label: l10n.playerDanmakuFontSize,
                     value: s.fontSize,
                     min: DanmakuSettings.minFontSize,
                     max: DanmakuSettings.maxFontSize,
@@ -82,37 +71,37 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
                   ),
                   _groupDivider(),
                   _CommitSliderTile(
-                    label: '字体字重',
+                    label: l10n.settingsFontWeightLabel,
                     value: s.fontWeight.toDouble(),
                     min: DanmakuSettings.minFontWeight,
                     max: DanmakuSettings.maxFontWeight,
-                    display: (v) => _fontWeightNames[v.round()],
+                    display: (v) => appFontWeightLabel(l10n, v.round()),
                     // 字重取整档（w100–w900 九档，滑杆无极拖动松手即最近档）
                     divisions: 8,
                     onCommit: (v) => s.setFontWeight(v.round()),
                   ),
                   _groupDivider(),
                   _CommitSliderTile(
-                    label: '弹幕速度',
+                    label: l10n.playerDanmakuSpeed,
                     value: s.scrollSeconds,
                     min: DanmakuSettings.minScrollSeconds,
                     max: DanmakuSettings.maxScrollSeconds,
-                    display: (v) => '${v.round()} 秒',
-                    hint: '数值越小弹幕越快',
+                    display: (v) => l10n.commonSecondsValue(v.round()),
+                    hint: l10n.playerDanmakuSpeedDesc,
                     onCommit: s.setScrollSeconds,
                   ),
                   _groupDivider(),
                   _CommitSliderTile(
-                    label: '描边粗细',
+                    label: l10n.playerStrokeWidth,
                     value: s.strokeWidth,
                     min: DanmakuSettings.minStrokeWidth,
                     max: DanmakuSettings.maxStrokeWidth,
-                    display: (v) => v == 0 ? '无' : v.toStringAsFixed(1),
+                    display: (v) => v == 0 ? l10n.commonNone : v.toStringAsFixed(1),
                     onCommit: s.setStrokeWidth,
                   ),
                   _groupDivider(),
                   _CommitSliderTile(
-                    label: '不透明度',
+                    label: l10n.playerOpacity,
                     value: s.opacity,
                     min: DanmakuSettings.minOpacity,
                     max: DanmakuSettings.maxOpacity,
@@ -148,11 +137,11 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              const _SectionLabel('弹幕配置'),
+              _SectionLabel(l10n.playerDanmakuConfig),
               _SettingsGroup(
                 children: [
                   _CommitSliderTile(
-                    label: '显示区域',
+                    label: l10n.playerDanmakuDisplayArea,
                     value: s.area,
                     min: DanmakuSettings.minArea,
                     max: DanmakuSettings.maxArea,
@@ -163,7 +152,7 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
                   ),
                   _groupDivider(),
                   _CommitSliderTile(
-                    label: '弹幕行高',
+                    label: l10n.playerDanmakuLineHeight,
                     value: s.lineHeight,
                     min: DanmakuSettings.minLineHeight,
                     max: DanmakuSettings.maxLineHeight,
@@ -172,40 +161,40 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
                   ),
                   _groupDivider(),
                   _SwitchTile(
-                    label: '顶部弹幕',
+                    label: l10n.playerDanmakuTop,
                     value: s.showTop,
                     onChanged: s.setShowTop,
                   ),
                   _groupDivider(),
                   _SwitchTile(
-                    label: '底部弹幕',
+                    label: l10n.playerDanmakuBottom,
                     value: s.showBottom,
                     onChanged: s.setShowBottom,
                   ),
                   _groupDivider(),
                   _SwitchTile(
-                    label: '滚动弹幕',
+                    label: l10n.playerDanmakuScroll,
                     value: s.showScroll,
                     onChanged: s.setShowScroll,
                   ),
                   _groupDivider(),
                   _SwitchTile(
-                    label: '海量弹幕',
-                    hint: '轨道占满时叠加绘制，弹幕过多不再丢弃',
+                    label: l10n.playerDanmakuMassive,
+                    hint: l10n.playerDanmakuMassiveDesc,
                     value: s.massiveMode,
                     onChanged: s.setMassiveMode,
                   ),
                   _groupDivider(),
                   _SwitchTile(
-                    label: '弹幕去重',
-                    hint: '相同时间下相同弹幕合并为一条',
+                    label: l10n.playerDanmakuDedupe,
+                    hint: l10n.playerDanmakuDedupeDesc,
                     value: s.deduplication,
                     onChanged: s.setDeduplication,
                   ),
                   _groupDivider(),
                   _SwitchTile(
-                    label: '弹幕合并',
-                    hint: '不同时间内相同弹幕合并且计数',
+                    label: l10n.playerDanmakuMerge,
+                    hint: l10n.playerDanmakuMergeDesc,
                     value: s.merge,
                     onChanged: s.setMerge,
                   ),
@@ -215,15 +204,15 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              const _SectionLabel('弹幕偏移'),
+              _SectionLabel(l10n.playerDanmakuOffset),
               _SettingsGroup(
                 children: [
                   _CommitSliderTile(
-                    label: '时间轴偏移',
+                    label: l10n.playerDanmakuTimelineOffset,
                     value: s.timeOffsetSeconds,
                     min: DanmakuSettings.minTimeOffsetSeconds,
                     max: DanmakuSettings.maxTimeOffsetSeconds,
-                    display: formatDanmakuTimeOffset,
+                    display: (value) => danmakuOffsetText(l10n, value),
                     // 1 秒一档（-180~+180 共 360 档），松手提交重锚定弹幕
                     divisions: 360,
                     onCommit: s.setTimeOffset,
@@ -236,7 +225,7 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
                         Expanded(
                           child: _OffsetActionButton(
                             icon: Icons.remove,
-                            label: '提前 1 秒',
+                            label: l10n.playerDanmakuAdvanceOneSecond,
                             enabled:
                                 s.timeOffsetSeconds >
                                 DanmakuSettings.minTimeOffsetSeconds,
@@ -248,7 +237,7 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
                         Expanded(
                           child: _OffsetActionButton(
                             icon: Icons.add,
-                            label: '延后 1 秒',
+                            label: l10n.playerDanmakuDelayOneSecond,
                             enabled:
                                 s.timeOffsetSeconds <
                                 DanmakuSettings.maxTimeOffsetSeconds,
@@ -265,7 +254,7 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
                       width: double.infinity,
                       child: _OffsetActionButton(
                         icon: Icons.restart_alt,
-                        label: '重置偏移',
+                        label: l10n.playerDanmakuResetOffset,
                         enabled: s.timeOffsetSeconds != 0,
                         onTap: () => s.setTimeOffset(0),
                       ),
@@ -274,7 +263,7 @@ class PlayerDanmakuSettingsPanel extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              const _SectionLabel('弹幕字体'),
+              _SectionLabel(l10n.playerDanmakuFont),
               // 不能加 const：否则父级 ListenableBuilder 重建时该子组件因
               // 同实例被跳过 build，切换字体模式后单选选中态/自定义段不刷新
               _DanmakuFontSection(),
@@ -499,14 +488,15 @@ class _ColorModeTile extends StatelessWidget {
   });
 
   /// 每种模式的说明（讲清「原色会不会被覆盖」）
-  String get _hint => switch (mode) {
-    DanmakuColorMode.source => '保留弹幕自带颜色（含会员渐变彩色）',
-    DanmakuColorMode.random => '忽略文件颜色，按色轮逐条随机着色',
-    DanmakuColorMode.fixed => '弹幕从下面已选颜色里随机取色',
+  String _hintOf(AppLocalizations l10n) => switch (mode) {
+    DanmakuColorMode.source => l10n.danmakuColorModeSourceDesc,
+    DanmakuColorMode.random => l10n.danmakuColorModeRandomDesc,
+    DanmakuColorMode.fixed => l10n.danmakuColorModeFixedDesc,
   };
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final accent = playerPanelAccent(context);
     return Material(
       type: MaterialType.transparency,
@@ -514,7 +504,7 @@ class _ColorModeTile extends StatelessWidget {
         dense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         title: Text(
-          mode.label,
+          danmakuColorModeLabel(l10n, mode),
           style: TextStyle(
             color: selected ? accent : Colors.white,
             fontSize: 14,
@@ -522,7 +512,7 @@ class _ColorModeTile extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          _hint,
+          _hintOf(l10n),
           style: const TextStyle(color: Colors.white38, fontSize: 11),
         ),
         trailing: selected
@@ -569,13 +559,14 @@ class _ColorPaletteSectionState extends State<_ColorPaletteSection> {
 
   /// 点胶囊 = 在调色板里加/减这一个色（不做「整体替换」，否则多选无从谈起）
   Future<void> _toggle(String hex) async {
+    final l10n = AppLocalizations.of(context);
     final s = DanmakuSettings.instance;
     if (s.colorValues.any((v) => _sameColor(v, hex))) {
       await s.removeColorValue(hex);
       return;
     }
     if (s.colorValues.length >= DanmakuSettings.maxPaletteColors) {
-      _toast('最多选 ${DanmakuSettings.maxPaletteColors} 种颜色');
+      _toast(l10n.playerDanmakuPaletteMaxHint(DanmakuSettings.maxPaletteColors));
       return;
     }
     await s.addColorValue(hex);
@@ -613,6 +604,7 @@ class _ColorPaletteSectionState extends State<_ColorPaletteSection> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final s = DanmakuSettings.instance;
     final values = s.colorValues;
     final already = values.any((v) => _sameColor(v, _draft));
@@ -633,7 +625,7 @@ class _ColorPaletteSectionState extends State<_ColorPaletteSection> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: ColorEditorRow(
-            label: '弹幕颜色（可多选，随机使用）',
+            label: l10n.playerDanmakuPaletteTitle,
             value: _draft,
             multiSelect: true,
             selectedValues: values,
@@ -664,10 +656,12 @@ class _ColorPaletteSectionState extends State<_ColorPaletteSection> {
               ),
               child: Text(
                 already
-                    ? '该颜色已在调色板中'
+                    ? l10n.playerDanmakuColorExists
                     : full
-                    ? '已选满 ${DanmakuSettings.maxPaletteColors} 种'
-                    : '添加到调色板',
+                    ? l10n.playerDanmakuPaletteFull(
+                        DanmakuSettings.maxPaletteColors,
+                      )
+                    : l10n.playerDanmakuAddToPalette,
               ),
             ),
           ),
@@ -686,6 +680,7 @@ class _PaletteStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final accent = playerPanelAccent(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -696,7 +691,10 @@ class _PaletteStrip extends StatelessWidget {
         children: [
           for (final hex in values) _swatch(hex, accent),
           Text(
-            '已选 ${values.length}/${DanmakuSettings.maxPaletteColors} 种',
+            l10n.playerDanmakuPaletteSelected(
+              values.length,
+              DanmakuSettings.maxPaletteColors,
+            ),
             style: const TextStyle(color: Colors.white54, fontSize: 12),
           ),
         ],
@@ -827,6 +825,7 @@ class _BlocklistTileState extends State<_BlocklistTile> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final s = DanmakuSettings.instance;
     final keywords = s.blockedKeywords;
     return Column(
@@ -836,12 +835,14 @@ class _BlocklistTileState extends State<_BlocklistTile> {
           child: ListTile(
             dense: true,
             leading: const Icon(Icons.block, color: Colors.white, size: 22),
-            title: const Text(
-              '屏蔽词',
-              style: TextStyle(color: Colors.white, fontSize: 15),
+            title: Text(
+              l10n.playerDanmakuBlockWords,
+              style: const TextStyle(color: Colors.white, fontSize: 15),
             ),
             subtitle: Text(
-              keywords.isEmpty ? '未设置' : keywords.join('、'),
+              keywords.isEmpty
+                  ? l10n.commonNotSet
+                  : keywords.join(l10n.commonListSeparator),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: Colors.white38, fontSize: 11),
@@ -873,7 +874,7 @@ class _BlocklistTileState extends State<_BlocklistTile> {
                                 fontSize: 14,
                               ),
                               decoration: InputDecoration(
-                                hintText: '输入要屏蔽的关键词',
+                                hintText: l10n.playerDanmakuBlockWordsHint,
                                 hintStyle: const TextStyle(
                                   color: Colors.white38,
                                   fontSize: 13,
@@ -907,7 +908,7 @@ class _BlocklistTileState extends State<_BlocklistTile> {
                                 vertical: 12,
                               ),
                             ),
-                            child: const Text('添加'),
+                            child: Text(l10n.commonAdd),
                           ),
                         ],
                       ),
@@ -931,9 +932,9 @@ class _BlocklistTileState extends State<_BlocklistTile> {
                           child: TextButton(
                             onPressed: () =>
                                 DanmakuSettings.instance.clearBlockedKeywords(),
-                            child: const Text(
-                              '清空',
-                              style: TextStyle(
+                            child: Text(
+                              l10n.commonClearAll,
+                              style: const TextStyle(
                                 color: Colors.white54,
                                 fontSize: 13,
                               ),
@@ -1008,6 +1009,7 @@ class _ResetButtonState extends State<_ResetButton> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return GestureDetector(
       onTap: _handleTap,
       child: AnimatedContainer(
@@ -1019,7 +1021,7 @@ class _ResetButtonState extends State<_ResetButton> {
           borderRadius: BorderRadius.circular(18),
         ),
         child: Text(
-          '恢复默认设置',
+          l10n.commonRestoreDefaults,
           textAlign: TextAlign.center,
           style: TextStyle(
             color: _flash ? scheme.onError : scheme.error,
@@ -1061,6 +1063,7 @@ class _DanmakuFontSectionState extends State<_DanmakuFontSection> {
 
   /// 选择字体目录 → 一次性拷贝全部字体 → 刷新列表
   Future<void> _pickDirectory() async {
+    final l10n = AppLocalizations.of(context);
     final uri = await DeviceServices.openFontDirectoryPicker();
     if (uri == null || !mounted) return;
     setState(() => _loading = true);
@@ -1071,7 +1074,7 @@ class _DanmakuFontSectionState extends State<_DanmakuFontSection> {
       _loading = false;
       _entries = entries;
     });
-    _toast('已导入 $count 个字体文件，共 ${entries.length} 种字体');
+    _toast(l10n.playerFontsImported(count, entries.length));
   }
 
   /// 选中弹幕自定义字体：写设置 + 注册进引擎（即时生效，冷启动再注册）
@@ -1099,23 +1102,24 @@ class _DanmakuFontSectionState extends State<_DanmakuFontSection> {
     final s = DanmakuSettings.instance;
     final mode = s.fontMode;
     final appFamily = AppFontSettings.instance.effectiveFamily;
+    final l10n = AppLocalizations.of(context);
     return _SettingsGroup(
       children: [
         _FontRadioTile(
-          label: DanmakuFontMode.followSystem.label,
+          label: danmakuFontModeLabel(l10n, DanmakuFontMode.followSystem),
           selected: mode == DanmakuFontMode.followSystem,
           onTap: () => s.setFontMode(DanmakuFontMode.followSystem),
         ),
         PlayerDanmakuSettingsPanel._groupDivider(),
         _FontRadioTile(
-          label: DanmakuFontMode.followApp.label,
+          label: danmakuFontModeLabel(l10n, DanmakuFontMode.followApp),
           subtitle: appFamily,
           selected: mode == DanmakuFontMode.followApp,
           onTap: () => s.setFontMode(DanmakuFontMode.followApp),
         ),
         PlayerDanmakuSettingsPanel._groupDivider(),
         _FontRadioTile(
-          label: DanmakuFontMode.custom.label,
+          label: danmakuFontModeLabel(l10n, DanmakuFontMode.custom),
           selected: mode == DanmakuFontMode.custom,
           onTap: () => s.setFontMode(DanmakuFontMode.custom),
         ),
@@ -1123,12 +1127,12 @@ class _DanmakuFontSectionState extends State<_DanmakuFontSection> {
           PlayerDanmakuSettingsPanel._groupDivider(),
           _FontTile(
             icon: Icons.folder_open,
-            title: '选择字体目录',
+            title: l10n.playerPickFontDir,
             subtitle: _loading
-                ? '正在加载...'
+                ? l10n.commonLoadingDots
                 : (_entries.isEmpty
-                      ? '点击导入包含 .ttf/.otf 字体的目录'
-                      : '已加载 ${_entries.length} 种字体'),
+                      ? l10n.playerFontDirImportHint
+                      : l10n.playerFontsLoaded(_entries.length)),
             trailing: const Icon(Icons.chevron_right, color: Colors.white54),
             onTap: _loading ? null : _pickDirectory,
           ),
@@ -1136,7 +1140,7 @@ class _DanmakuFontSectionState extends State<_DanmakuFontSection> {
             PlayerDanmakuSettingsPanel._groupDivider(),
             _FontTile(
               icon: Icons.text_fields,
-              title: s.customFontFamily ?? '选择字体',
+              title: s.customFontFamily ?? l10n.playerPickFont,
               trailing: Icon(
                 _expanded ? Icons.expand_less : Icons.expand_more,
                 color: Colors.white54,

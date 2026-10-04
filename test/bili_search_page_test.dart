@@ -8,6 +8,8 @@ import 'package:moumou/pages/bilibili/bili_search_page.dart';
 import 'package:moumou/services/bilibili/bili_bangumi_service.dart';
 import 'package:moumou/services/bilibili/bili_http.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 番剧搜索页测试（C2 通用分页控制器落地，§4.29）：
 /// - 未搜索提示 → 搜索中 loading → 结果渲染；
 /// - 触底加载更多（追加下一页 + 页脚 loading）；
@@ -49,6 +51,9 @@ void main() {
 
   Future<void> pumpPage(WidgetTester tester, BiliBangumiService service) async {
     await tester.pumpWidget(MaterialApp(
+      locale: kTestLocaleZh,
+      localizationsDelegates: kTestLocalizationDelegates,
+      supportedLocales: kTestSupportedLocales,
       home: BiliSearchPage(service: service),
     ));
     await tester.pump();

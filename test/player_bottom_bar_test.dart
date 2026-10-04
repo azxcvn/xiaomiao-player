@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/pages/player/views/player_bottom_bar.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 横屏播放页底栏回归测试（v3 布局回归修复 + 弹幕第 5 点）：
 /// - 右侧按钮簇（超分/列表/倍速/选择屏幕）必须**贴屏幕右缘**——
 ///   时间文本不得用 Flexible 包裹（会与 Spacer 平分自由空间，
@@ -14,6 +16,9 @@ import 'package:moumou/pages/player/views/player_bottom_bar.dart';
 void main() {
   Widget buildBar({double width = 800, bool danmakuOn = true}) {
     return MaterialApp(
+      locale: kTestLocaleZh,
+      localizationsDelegates: kTestLocalizationDelegates,
+      supportedLocales: kTestSupportedLocales,
       home: Scaffold(
         body: Center(
           child: SizedBox(

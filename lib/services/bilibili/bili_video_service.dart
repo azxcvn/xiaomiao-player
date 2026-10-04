@@ -24,6 +24,7 @@ import 'package:moumou/services/bilibili/bili_api.dart';
 import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/utils/bili_fingerprint_utils.dart';
 import 'package:moumou/utils/bili_wbi.dart';
+import 'package:moumou/utils/error_codes.dart';
 
 class BiliVideoService {
   BiliVideoService({
@@ -176,7 +177,7 @@ class BiliVideoService {
   ) async {
     final mixinKey = await _mixinKeyProvider();
     if (mixinKey.isEmpty) {
-      throw const BiliApiException('未获取到 WBI 密钥，无法解析播放地址');
+      throw const BiliApiException(BiliApiErrorCode.wbiKeyMissingPlay);
     }
     biliEncWbi(params, mixinKey);
     return _http.getJson('$url?${_wbiQuery(params)}');
@@ -205,7 +206,7 @@ class BiliVideoService {
     if (code == 0) return;
     final message =
         (response['message'] ?? response['msg'])?.toString() ?? '';
-    throw BiliApiException(_errorMessage(code, message));
+    throw _errorMessage(code, message);
   }
 
   /// `code == 0` 也可能是**风控**：服务端只回 `v_voucher`（人机验证凭证）、
@@ -213,25 +214,33 @@ class BiliVideoService {
   /// 「解析播放地址失败」——后者把「稍后重试/换个网络」这种可行动作全丢掉了。
   void _ensurePlayable(BiliPlayUrlResult parsed) {
     if (parsed.isRiskControlled) {
-      throw const BiliApiException('触发风控验证（v_voucher），请稍后重试或切换网络');
+      throw const BiliApiException(BiliApiErrorCode.riskControlTriggered);
     }
   }
 
   /// 常见错误码 → 友好提示（合并 PiliPlus 与小喵两套）。
-  String _errorMessage(int code, String message) {
+  BiliApiException _errorMessage(int code, String message) {
     switch (code) {
       case -404:
-        return '视频不存在或无权访问';
+        return const BiliApiException(BiliApiErrorCode.videoNotFound);
       case -403:
-        return '无权访问，可能需要登录或大会员';
+        return const BiliApiException(BiliApiErrorCode.videoNoAccess);
       case -10403:
-        return '需要大会员权限';
+        return const BiliApiException(BiliApiErrorCode.videoVipRequired);
       case -352:
-        return '风控验证失败，请稍后重试';
+        return const BiliApiException(BiliApiErrorCode.videoRiskControlFailed);
       case 87008:
-        return '专属视频，需开通相应权限';
+        return const BiliApiException(BiliApiErrorCode.videoExclusive);
       default:
-        return message.isEmpty ? '服务器返回错误（code=$code）' : message;
+        return message.isEmpty
+            ? BiliApiException(
+                BiliApiErrorCode.serverReturnedCode,
+                args: {'code': '$code'},
+              )
+            : BiliApiException(
+                BiliApiErrorCode.serverMessage,
+                args: {'message': message},
+              );
     }
   }
 }

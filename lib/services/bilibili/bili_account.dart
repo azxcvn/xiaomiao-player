@@ -5,6 +5,7 @@ import 'package:moumou/services/bilibili/bili_credential_store.dart';
 import 'package:moumou/services/bilibili/bili_fingerprint.dart';
 import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/utils/bili_wbi.dart';
+import 'package:moumou/utils/error_codes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 哔哩哔哩账号状态（ChangeNotifier 单例）：登录态 / 用户信息 / WBI 密钥 /
@@ -120,7 +121,7 @@ class BiliAccount extends ChangeNotifier {
       refreshToken: data.refreshToken,
     );
     if (!cred.isValid) {
-      throw const BiliApiException('登录凭证解析失败（缺少 SESSDATA）');
+      throw const BiliApiException(BiliApiErrorCode.loginCredentialParseFailed);
     }
     return _applyCredential(cred);
   }
@@ -129,7 +130,7 @@ class BiliAccount extends ChangeNotifier {
   Future<BiliUser> importCookie(String raw) async {
     final cred = BiliCredential.parse(raw);
     if (!cred.isValid) {
-      throw const BiliApiException('Cookie 缺少 SESSDATA，无法登录');
+      throw const BiliApiException(BiliApiErrorCode.loginCookieMissing);
     }
     return _applyCredential(cred);
   }
@@ -214,7 +215,7 @@ class BiliAccount extends ChangeNotifier {
     if (!nav.user.isLogin) {
       await _clearCredential();
       notifyListeners();
-      throw const BiliApiException('登录失败：Cookie 无效或已过期');
+      throw const BiliApiException(BiliApiErrorCode.loginCookieInvalid);
     }
     _user = nav.user;
     if (nav.mixinKey.isNotEmpty) _applyMixinKey(nav.mixinKey);

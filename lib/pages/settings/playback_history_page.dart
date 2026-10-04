@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/playback_history_entry.dart';
 import 'package:moumou/models/video_file.dart';
 import 'package:moumou/pages/player/player_page.dart';
@@ -67,23 +68,24 @@ class _PlaybackHistoryPageState extends State<PlaybackHistoryPage> {
   /// 破坏性操作，必须让用户在点「清除」之前就知道。
   Future<void> _confirmClearAll() async {
     final clearProgress = _history.effectiveClearProgressOnDelete;
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('清除历史记录'),
+        title: Text(l10n.settingsHistoryClearAllTitle),
         content: Text(
           clearProgress
-              ? '确定要清除全部播放历史吗？\n\n同时会清除全部播放进度（含「已看完」标记），此操作不可恢复。'
-              : '确定要清除全部播放历史吗？此操作不可恢复。',
+              ? l10n.settingsHistoryClearAllBodyWithProgress
+              : l10n.settingsHistoryClearAllBody,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('取消'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('清除'),
+            child: Text(l10n.commonClear),
           ),
         ],
       ),
@@ -99,15 +101,16 @@ class _PlaybackHistoryPageState extends State<PlaybackHistoryPage> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('历史记录'),
+        title: Text(l10n.settingsPlaybackHistory),
         actions: [
           ListenableBuilder(
             listenable: _history,
             builder: (context, _) => IconButton(
               icon: const Icon(Icons.delete_sweep_outlined),
-              tooltip: '清除全部历史',
+              tooltip: l10n.settingsHistoryClearAllTooltip,
               // 无历史时禁用（置灰不可点）
               onPressed: _history.entries.isEmpty ? null : _confirmClearAll,
             ),
@@ -130,8 +133,8 @@ class _PlaybackHistoryPageState extends State<PlaybackHistoryPage> {
                   children: [
                     SettingsSwitchTile(
                       icon: Icons.history,
-                      title: '播放历史记录',
-                      subtitle: const Text('关闭后不再记录新的播放'),
+                      title: l10n.settingsHistoryEnabled,
+                      subtitle: Text(l10n.settingsHistoryEnabledDesc),
                       value: _history.enabled,
                       onChanged: (v) => _history.setEnabled(v),
                     ),
@@ -140,8 +143,8 @@ class _PlaybackHistoryPageState extends State<PlaybackHistoryPage> {
                     // 置灰并说明原因（只置灰会让用户以为坏了）。
                     SettingsSwitchTile(
                       icon: Icons.delete_forever_outlined,
-                      title: '删除历史时清除进度',
-                      subtitle: const Text('关闭时两套数据互相独立'),
+                      title: l10n.settingsHistoryClearProgressOnDelete,
+                      subtitle: Text(l10n.settingsHistoryClearProgressOnDeleteDesc),
                       value: _history.clearProgressOnDelete,
                       onChanged: _history.canClearProgressOnDelete
                           ? (v) => _history.setClearProgressOnDelete(v)
@@ -151,8 +154,8 @@ class _PlaybackHistoryPageState extends State<PlaybackHistoryPage> {
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                       child: Text(
                         _history.canClearProgressOnDelete
-                            ? '开启后，删除历史记录会同时清除该视频的播放进度'
-                            : '需先开启上方的「播放历史记录」；关闭时不记录历史，但播放进度会一直保留',
+                            ? l10n.settingsHistoryClearProgressOnDesc
+                            : l10n.settingsHistoryClearProgressBlocked,
                         style: TextStyle(
                           fontSize: 12,
                           color: _history.canClearProgressOnDelete
@@ -186,7 +189,9 @@ class _PlaybackHistoryPageState extends State<PlaybackHistoryPage> {
             Icon(Icons.history_outlined, size: 72, color: scheme.outline),
             const SizedBox(height: 12),
             Text(
-              _history.enabled ? '暂无播放历史' : '暂无播放历史（记录已关闭）',
+              _history.enabled
+                  ? AppLocalizations.of(context).settingsHistoryEmpty
+                  : AppLocalizations.of(context).settingsHistoryEmptyDisabled,
               style: TextStyle(color: scheme.onSurfaceVariant),
             ),
           ],
@@ -221,8 +226,10 @@ class _PlaybackHistoryPageState extends State<PlaybackHistoryPage> {
                 color: scheme.onSurfaceVariant,
               ),
               tooltip: _history.effectiveClearProgressOnDelete
-                  ? '删除该条记录（同时清除播放进度）'
-                  : '删除该条记录',
+                  ? AppLocalizations.of(
+                      context,
+                    ).settingsHistoryDeleteEntryWithProgress
+                  : AppLocalizations.of(context).settingsHistoryDeleteEntry,
               visualDensity: VisualDensity.compact,
               onPressed: () => _removeEntry(
                 entry,

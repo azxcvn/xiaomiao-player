@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/services/view_settings.dart';
 import 'package:moumou/utils/app_dialog.dart';
 
@@ -50,16 +52,20 @@ class _SortOptionsSheet extends StatelessWidget {
         child: ListenableBuilder(
           listenable: viewSettings,
           builder: (context, _) {
+            final l10n = AppLocalizations.of(context);
             final sections = <Widget>[];
             if (hasFolders) {
               // 上半区：文件夹相关
               sections.addAll([
-                _sectionTitle(context, '文件夹排序方式'),
+                _sectionTitle(context, l10n.optionsSheetFolderSort),
                 SegmentedButton<SortField>(
                   showSelectedIcon: false,
                   segments: SortField.values
                       .map(
-                        (e) => ButtonSegment(value: e, label: Text(e.label)),
+                        (e) => ButtonSegment(
+                          value: e,
+                          label: Text(sortFieldLabel(l10n, e)),
+                        ),
                       )
                       .toList(),
                   selected: {viewSettings.sortField},
@@ -67,12 +73,15 @@ class _SortOptionsSheet extends StatelessWidget {
                       viewSettings.setSortField(s.first),
                 ),
                 const SizedBox(height: 16),
-                _sectionTitle(context, '文件夹排序方向'),
+                _sectionTitle(context, l10n.optionsSheetFolderSortDir),
                 SegmentedButton<SortOrder>(
                   showSelectedIcon: false,
                   segments: SortOrder.values
                       .map(
-                        (e) => ButtonSegment(value: e, label: Text(e.label)),
+                        (e) => ButtonSegment(
+                          value: e,
+                          label: Text(sortOrderLabel(l10n, e)),
+                        ),
                       )
                       .toList(),
                   selected: {viewSettings.sortOrder},
@@ -80,13 +89,13 @@ class _SortOptionsSheet extends StatelessWidget {
                       viewSettings.setSortOrder(s.first),
                 ),
                 const SizedBox(height: 16),
-                _sectionTitle(context, '文件夹显示字段'),
+                _sectionTitle(context, l10n.optionsSheetFolderFields),
                 _fieldChips(
                   context,
                   FolderField.values.map((f) {
                     final selected = viewSettings.fields.contains(f);
                     return (
-                      label: f.label,
+                      label: folderFieldLabel(l10n, f),
                       selected: selected,
                       onToggle: () => viewSettings.toggleField(f),
                     );
@@ -105,12 +114,15 @@ class _SortOptionsSheet extends StatelessWidget {
               }
               // 下半区：视频相关
               sections.addAll([
-                _sectionTitle(context, '视频排序方式'),
+                _sectionTitle(context, l10n.optionsSheetVideoSort),
                 SegmentedButton<VideoSortField>(
                   showSelectedIcon: false,
                   segments: VideoSortField.values
                       .map(
-                        (e) => ButtonSegment(value: e, label: Text(e.label)),
+                        (e) => ButtonSegment(
+                          value: e,
+                          label: Text(videoSortFieldLabel(l10n, e)),
+                        ),
                       )
                       .toList(),
                   selected: {viewSettings.videoSortField},
@@ -118,12 +130,15 @@ class _SortOptionsSheet extends StatelessWidget {
                       viewSettings.setVideoSortField(s.first),
                 ),
                 const SizedBox(height: 16),
-                _sectionTitle(context, '视频排序方向'),
+                _sectionTitle(context, l10n.optionsSheetVideoSortDir),
                 SegmentedButton<SortOrder>(
                   showSelectedIcon: false,
                   segments: SortOrder.values
                       .map(
-                        (e) => ButtonSegment(value: e, label: Text(e.label)),
+                        (e) => ButtonSegment(
+                          value: e,
+                          label: Text(sortOrderLabel(l10n, e)),
+                        ),
                       )
                       .toList(),
                   selected: {viewSettings.videoSortOrder},
@@ -131,7 +146,7 @@ class _SortOptionsSheet extends StatelessWidget {
                       viewSettings.setVideoSortOrder(s.first),
                 ),
                 const SizedBox(height: 16),
-                _sectionTitle(context, '视频显示字段'),
+                _sectionTitle(context, l10n.optionsSheetVideoFields),
                 // 8 字段三行胶囊（等宽均分）：
                 // 第一行 时长/大小/日期，第二行 进度/帧率/分辨率，
                 // 第三行 字幕指示器/完整名称（横向两个）
@@ -145,13 +160,16 @@ class _SortOptionsSheet extends StatelessWidget {
                 SizedBox(height: 16),
               ]);
               sections.addAll([
-                _sectionTitle(context, '显示模式'),
+                _sectionTitle(context, l10n.optionsSheetViewMode),
                 SegmentedButton<ViewMode>(
                   showSelectedIcon: false,
                   // 列表模式在前、树状模式在后
                   segments: [ViewMode.list, ViewMode.tree]
                       .map(
-                        (e) => ButtonSegment(value: e, label: Text(e.label)),
+                        (e) => ButtonSegment(
+                          value: e,
+                          label: Text(viewModeLabel(l10n, e)),
+                        ),
                       )
                       .toList(),
                   selected: {viewSettings.viewMode},
@@ -167,7 +185,10 @@ class _SortOptionsSheet extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text('排序与字段', style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    l10n.homeSortAndFields,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   const SizedBox(height: 16),
                   ...sections,
                   const SizedBox(height: 16),
@@ -215,7 +236,7 @@ class _SortOptionsSheet extends StatelessWidget {
       VideoField f,
     ) {
       return (
-        label: f.label,
+        label: videoFieldLabel(AppLocalizations.of(context), f),
         selected: viewSettings.videoFields.contains(f),
         onToggle: () => viewSettings.toggleVideoField(f),
       );

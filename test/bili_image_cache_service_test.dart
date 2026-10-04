@@ -8,9 +8,13 @@ import 'package:moumou/services/bili_image_cache_service.dart';
 ///
 /// 用**真实本地 HTTP 服务**当图床（不用 mock）：这样能一并验证「下载 → 写临时
 /// 文件 → 改名」这条真实落盘路径，以及「同一 URL 并发只发一次请求」的去重。
+///
+/// **不要在这里 `TestWidgetsFlutterBinding.ensureInitialized()`**：该 binding 初始化
+/// 时会装 `_MockHttpOverrides`（`flutter_test/src/_binding_io.dart`），此后所有 HTTP
+/// 请求一律返回 400、真实网络请求根本不发 —— 本文件的本地图床就永远连不上
+/// （曾表现为 6 个用例全挂：`Expected: not null / Actual: <null>`、`requests` 恒为 0）。
+/// 本文件只用普通 `test()`，不需要 widget binding。
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-
   late Directory tempDir;
   late HttpServer server;
   late String baseUrl;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/update_info.dart';
 import 'package:moumou/services/update/update_settings.dart';
 import 'package:moumou/utils/app_dialog.dart';
@@ -55,11 +56,12 @@ Future<void> _openDownloadSource(
   _DownloadSource source,
   UpdateInfo info,
 ) async {
+  final l10n = AppLocalizations.of(context);
   final isPrimary = source == _DownloadSource.primary;
   final url = isPrimary ? info.primaryDownloadUrl : info.backupDownloadUrl;
-  final label = isPrimary ? '主下载站' : '备用下载站';
+  final label = isPrimary ? l10n.updatePrimarySource : l10n.updateBackupSource;
   if (url.isEmpty) {
-    _toast(context, '$label链接待接入');
+    _toast(context, l10n.updateLinkPending(label));
     return;
   }
   final uri = Uri.parse(url);
@@ -68,7 +70,7 @@ Future<void> _openDownloadSource(
   if (canLaunch) {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   } else {
-    _toast(context, '无法打开$label链接');
+    _toast(context, l10n.updateOpenLinkFailed(label));
   }
 }
 
@@ -128,6 +130,7 @@ class UpdateDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final markdownStyle = MarkdownStyleSheet.fromTheme(Theme.of(context))
         .copyWith(
@@ -165,7 +168,7 @@ class UpdateDialog extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
               child: Text(
-                '发现新版本 ${info.version}',
+                l10n.updateNewVersion(info.version),
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
               ),
@@ -175,7 +178,7 @@ class UpdateDialog extends StatelessWidget {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
                 child: MarkdownBody(
-                  data: info.body,
+                  data: info.body.isEmpty ? l10n.updateNoNotes : info.body,
                   styleSheet: markdownStyle,
                   // ⚠️ 不传 onTapLink 时 flutter_markdown 只把链接渲染成高亮文本，
                   // 点上去毫无反应（P3）：更新说明里带 release / 下载页链接是常态。
@@ -197,9 +200,9 @@ class UpdateDialog extends StatelessWidget {
                       key: UpdateDialog.ignoreButtonKey,
                       onPressed: () =>
                           Navigator.of(context).pop(_UpdateAction.ignore),
-                      child: const FittedBox(
+                      child: FittedBox(
                         fit: BoxFit.scaleDown,
-                        child: Text('忽略'),
+                        child: Text(l10n.updateIgnore),
                       ),
                     ),
                   ),
@@ -209,9 +212,9 @@ class UpdateDialog extends StatelessWidget {
                       key: UpdateDialog.remindButtonKey,
                       onPressed: () =>
                           Navigator.of(context).pop(_UpdateAction.remindLater),
-                      child: const FittedBox(
+                      child: FittedBox(
                         fit: BoxFit.scaleDown,
-                        child: Text('稍后提醒'),
+                        child: Text(l10n.updateLater),
                       ),
                     ),
                   ),
@@ -221,9 +224,9 @@ class UpdateDialog extends StatelessWidget {
                       key: UpdateDialog.updateButtonKey,
                       onPressed: () =>
                           Navigator.of(context).pop(_UpdateAction.update),
-                      child: const FittedBox(
+                      child: FittedBox(
                         fit: BoxFit.scaleDown,
-                        child: Text('立即更新'),
+                        child: Text(l10n.updateNow),
                       ),
                     ),
                   ),
@@ -245,8 +248,9 @@ class _DownloadSourceDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
-      title: const Text('选择下载方式'),
+      title: Text(l10n.updateChooseMethod),
       contentPadding: const EdgeInsets.symmetric(vertical: 8),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -254,14 +258,14 @@ class _DownloadSourceDialog extends StatelessWidget {
           _sourceTile(
             context,
             icon: Icons.cloud_download_outlined,
-            title: '主下载站',
+            title: l10n.updatePrimarySource,
             url: info.primaryDownloadUrl,
             source: _DownloadSource.primary,
           ),
           _sourceTile(
             context,
             icon: Icons.cloud_queue_outlined,
-            title: '备用下载站',
+            title: l10n.updateBackupSource,
             url: info.backupDownloadUrl,
             source: _DownloadSource.backup,
           ),
@@ -270,7 +274,7 @@ class _DownloadSourceDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(l10n.commonCancel),
         ),
       ],
     );
@@ -283,6 +287,7 @@ class _DownloadSourceDialog extends StatelessWidget {
     required String url,
     required _DownloadSource source,
   }) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     return ListTile(
       leading: Icon(icon, color: scheme.primary),
@@ -291,7 +296,7 @@ class _DownloadSourceDialog extends StatelessWidget {
         style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
-        url.isEmpty ? '待接入' : url,
+        url.isEmpty ? l10n.updatePending : url,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),

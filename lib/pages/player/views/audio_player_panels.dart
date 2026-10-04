@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/video_file.dart';
 import 'package:moumou/utils/app_dialog.dart';
 
@@ -18,13 +19,12 @@ const Color kAudioPanelBg = Color(0xFF1C1C24);
 
 /// 听视频循环模式：关闭 → 单曲循环 → 列表循环（点击循环按钮三态切换）
 enum AudioRepeatMode {
-  off('循环关闭', Icons.repeat_rounded),
-  single('单曲循环', Icons.repeat_one_rounded),
-  loopAll('列表循环', Icons.repeat_rounded);
+  off(Icons.repeat_rounded),
+  single(Icons.repeat_one_rounded),
+  loopAll(Icons.repeat_rounded);
 
-  final String label;
   final IconData icon;
-  const AudioRepeatMode(this.label, this.icon);
+  const AudioRepeatMode(this.icon);
 
   /// 三态循环：off → single → loopAll → off
   AudioRepeatMode get next => switch (this) {
@@ -36,17 +36,35 @@ enum AudioRepeatMode {
 
 /// 定时关闭预设：关闭 / 15 分钟 / 30 分钟 / 60 分钟 / 自定义 / 播完当前曲目
 enum AudioSleepPreset {
-  off('关闭', Duration.zero),
-  min15('15 分钟', Duration(minutes: 15)),
-  min30('30 分钟', Duration(minutes: 30)),
-  min60('60 分钟', Duration(minutes: 60)),
-  custom('自定义', Duration.zero),
-  trackEnd('播完当前', Duration.zero);
+  off(Duration.zero),
+  min15(Duration(minutes: 15)),
+  min30(Duration(minutes: 30)),
+  min60(Duration(minutes: 60)),
+  custom(Duration.zero),
+  trackEnd(Duration.zero);
 
-  final String label;
   final Duration duration;
-  const AudioSleepPreset(this.label, this.duration);
+  const AudioSleepPreset(this.duration);
 }
+
+/// 循环模式文案（枚举成员顺序与语义一一对应）
+String _repeatModeLabel(AppLocalizations l10n, AudioRepeatMode mode) =>
+    switch (mode) {
+      AudioRepeatMode.off => l10n.audioRepeatOff,
+      AudioRepeatMode.single => l10n.audioRepeatSingle,
+      AudioRepeatMode.loopAll => l10n.loopModeLoopAll,
+    };
+
+/// 定时关闭预设文案
+String _sleepPresetLabel(AppLocalizations l10n, AudioSleepPreset preset) =>
+    switch (preset) {
+      AudioSleepPreset.off => l10n.commonOff,
+      AudioSleepPreset.min15 => l10n.audioSleepMinutes(15),
+      AudioSleepPreset.min30 => l10n.audioSleepMinutes(30),
+      AudioSleepPreset.min60 => l10n.audioSleepMinutes(60),
+      AudioSleepPreset.custom => l10n.commonCustom,
+      AudioSleepPreset.trackEnd => l10n.audioSleepEndOfTrack,
+    };
 
 // ────────────────────────────────────────────────────────────
 // 倍速面板
@@ -65,6 +83,7 @@ Future<void> showAudioSpeedSheet(
   required void Function(AudioSleepPreset preset, {Duration? custom}) onSleepPreset,
   ValueListenable<Duration?>? sleepRemaining,
 }) {
+  final l10n = AppLocalizations.of(context);
   return showModalBottomSheet<void>(
     context: context,
     backgroundColor: kAudioPanelBg,
@@ -80,7 +99,7 @@ Future<void> showAudioSpeedSheet(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _AudioPanelHeader(
-              title: '播放速度',
+              title: l10n.audioPlaybackSpeed,
               onClose: () => Navigator.of(sheetContext).pop(),
             ),
             const SizedBox(height: 12),
@@ -100,7 +119,7 @@ Future<void> showAudioSpeedSheet(
               ],
             ),
             const SizedBox(height: 20),
-            const _AudioSectionLabel('定时关闭'),
+            _AudioSectionLabel(l10n.audioSleepTimer),
             const SizedBox(height: 8),
             for (var row = 0; row < 2; row++) ...[
               if (row > 0) const SizedBox(height: 10),
@@ -110,7 +129,10 @@ Future<void> showAudioSpeedSheet(
                     if (col > 0) const SizedBox(width: 10),
                     Expanded(
                       child: _AudioChip(
-                        label: AudioSleepPreset.values[row * 3 + col].label,
+                        label: _sleepPresetLabel(
+                          l10n,
+                          AudioSleepPreset.values[row * 3 + col],
+                        ),
                         selected:
                             sleepPreset == AudioSleepPreset.values[row * 3 + col],
                         expand: true,
@@ -168,6 +190,7 @@ Future<void> showAudioPlaylistSheet(
   required VoidCallback onToggleShuffle,
   required VoidCallback onCycleRepeat,
 }) {
+  final l10n = AppLocalizations.of(context);
   final bottomInset = MediaQuery.paddingOf(context).bottom;
   final sheetHeight =
       (MediaQuery.sizeOf(context).height * 0.42 - bottomInset)
@@ -192,7 +215,7 @@ Future<void> showAudioPlaylistSheet(
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: _AudioPanelHeader(
-                  title: '播放列表（${videos.length}）',
+                  title: l10n.playerPlaylistWithCount(videos.length),
                   onClose: () => Navigator.of(sheetContext).pop(),
                 ),
               ),
@@ -243,7 +266,7 @@ Future<void> showAudioPlaylistSheet(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     _AudioChip(
-                      label: '随机播放',
+                      label: l10n.audioShuffle,
                       icon: Icons.shuffle_rounded,
                       selected: localShuffle,
                       onTap: () {
@@ -254,7 +277,7 @@ Future<void> showAudioPlaylistSheet(
                     ),
                     const SizedBox(width: 12),
                     _AudioChip(
-                      label: localRepeat.label,
+                      label: _repeatModeLabel(l10n, localRepeat),
                       icon: localRepeat.icon,
                       selected: localRepeat != AudioRepeatMode.off,
                       onTap: () {
@@ -287,6 +310,7 @@ class _AudioPanelHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         Expanded(
@@ -301,7 +325,7 @@ class _AudioPanelHeader extends StatelessWidget {
         ),
         IconButton(
           icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 22),
-          tooltip: '关闭',
+          tooltip: l10n.commonOff,
           onPressed: onClose,
         ),
       ],
@@ -324,13 +348,14 @@ class _SleepRemainingLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final style = TextStyle(
       color: Colors.white.withValues(alpha: 0.55),
       fontSize: 12,
     );
     if (trackEnd) {
       return Text(
-        '将在当前曲目播放结束后停止',
+        l10n.audioSleepEndOfTrackHint,
         textAlign: TextAlign.center,
         style: style,
       );
@@ -338,7 +363,7 @@ class _SleepRemainingLine extends StatelessWidget {
     final listenable = remaining;
     if (listenable == null) {
       return Text(
-        '剩余 ${_fmtDuration(Duration.zero)}',
+        l10n.audioSleepRemaining(_fmtDuration(Duration.zero)),
         textAlign: TextAlign.center,
         style: style,
       );
@@ -346,7 +371,7 @@ class _SleepRemainingLine extends StatelessWidget {
     return ValueListenableBuilder<Duration?>(
       valueListenable: listenable,
       builder: (_, value, _) => Text(
-        '剩余 ${_fmtDuration(value ?? Duration.zero)}',
+        l10n.audioSleepRemaining(_fmtDuration(value ?? Duration.zero)),
         textAlign: TextAlign.center,
         style: style,
       ),
@@ -415,12 +440,18 @@ class _AudioChip extends StatelessWidget {
               Icon(icon, size: 16, color: selected ? onPrimary : Colors.white70),
               const SizedBox(width: 6),
             ],
-            Text(
-              label,
-              style: TextStyle(
-                color: selected ? onPrimary : Colors.white,
-                fontSize: 13,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            // 文案长度随语言变化（英文明显更长，如「播完当前」→ After track）：
+            // 胶囊在等宽网格里宽度固定，Flexible + 省略号保证任何语言都不溢出
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: selected ? onPrimary : Colors.white,
+                  fontSize: 13,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                ),
               ),
             ),
           ],
@@ -508,15 +539,15 @@ Future<int?> _showCustomSleepDialog(BuildContext context) {
       builder: (dialogContext, setDialogState) => AlertDialog(
         backgroundColor: const Color(0xFF23232C),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: const Text(
-          '自定义定时关闭',
-          style: TextStyle(color: Colors.white, fontSize: 17),
+        title: Text(
+          AppLocalizations.of(dialogContext).audioSleepCustomTitle,
+          style: const TextStyle(color: Colors.white, fontSize: 17),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '$minutes 分钟',
+              AppLocalizations.of(dialogContext).audioSleepMinutes(minutes),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 22,
@@ -543,15 +574,15 @@ Future<int?> _showCustomSleepDialog(BuildContext context) {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text(
-              '取消',
-              style: TextStyle(color: Colors.white70),
+            child: Text(
+              AppLocalizations.of(dialogContext).commonCancel,
+              style: const TextStyle(color: Colors.white70),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(minutes),
             child: Text(
-              '确定',
+              AppLocalizations.of(dialogContext).commonConfirm,
               style: TextStyle(
                 color: Theme.of(dialogContext).colorScheme.primary,
               ),

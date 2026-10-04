@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/storage_root.dart';
 import 'package:moumou/models/tree_node.dart';
 import 'package:moumou/models/video_file.dart';
@@ -159,7 +160,9 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
   /// 现在优先取原生卷名（`StorageVolume.getDescription`，如「内部存储」「SD 卡」），
   /// 卷列表拿不到时退回按路径推算的卷根，最后才退回应用名。
   String get _volumeLabel =>
-      _volumeRoot?.name ?? _volumeRootPath ?? '小喵Player';
+      _volumeRoot?.name ??
+      _volumeRootPath ??
+      AppLocalizations.of(context).appTitle;
 
   void _jumpTo(int targetIndex) {
     if (targetIndex == _path.length - 1) return; // 当前页
@@ -364,13 +367,14 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
   }
 
   PreferredSizeWidget _buildAppBar() {
+    final l10n = AppLocalizations.of(context);
     return AppBar(
       title: _searching
           ? TextField(
               controller: _searchController,
               autofocus: true,
-              decoration: const InputDecoration(
-                hintText: '搜索文件夹与视频',
+              decoration: InputDecoration(
+                hintText: l10n.homeSearchFoldersAndVideos,
                 border: InputBorder.none,
               ),
               onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
@@ -380,20 +384,20 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
         if (_searching)
           IconButton(
             icon: const Icon(Icons.close),
-            tooltip: '取消搜索',
+            tooltip: l10n.commonCancelSearch,
             onPressed: _toggleSearch,
           )
         else if (_node.children.isNotEmpty)
           IconButton(
             icon: const Icon(Icons.search),
-            tooltip: '搜索',
+            tooltip: l10n.commonSearch,
             onPressed: _toggleSearch,
           ),
         // 目录为空时没有可排序内容，不显示排序入口
         if (_node.children.isNotEmpty)
           IconButton(
             icon: const Icon(Icons.sort),
-            tooltip: '排序与字段',
+            tooltip: l10n.homeSortAndFields,
             onPressed: _showOptions,
           ),
       ],
@@ -402,6 +406,7 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
 
   /// 多选态顶部工具栏；全选范围 = 当前可见子级
   PreferredSizeWidget _buildSelectionAppBar() {
+    final l10n = AppLocalizations.of(context);
     final visible = _visibleChildren().map((c) => c.path).toList();
     final allSelected = _selection.containsAll(visible);
     return buildFileSelectionAppBar(
@@ -410,6 +415,7 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
       onExit: _selection.exit,
       onToggleAll: () => _selection.setAll(visible, selected: !allSelected),
       onOpenMenu: () => _openSelectionMenu(),
+      l10n: l10n,
     );
   }
 
@@ -441,8 +447,9 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context);
     if (_node.children.isEmpty) {
-      return _emptyState('该文件夹没有视频');
+      return _emptyState(l10n.homeNoVideosInFolder);
     }
     return ListenableBuilder(
       listenable: Listenable.merge([
@@ -456,7 +463,7 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
         final selectedPaths = _selection.paths.toSet();
         final children = _visibleChildren();
         if (children.isEmpty && _query.isNotEmpty) {
-          return _emptyState('没有匹配的内容');
+          return _emptyState(l10n.homeNoMatchingContent);
         }
         // 底部安全区已由全局 SafeArea 处理
         // 下拉刷新 = **只更新当前目录整棵子树**（与首页的下拉「整盘刷新」不同，

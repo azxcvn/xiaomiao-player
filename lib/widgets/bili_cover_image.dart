@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/services/bili_image_cache_service.dart';
 import 'package:moumou/utils/bili_image_url.dart';
 
@@ -76,6 +77,7 @@ class BiliCoverImage extends StatelessWidget {
 
   Widget _build(BuildContext context, double displayWidth, double displayHeight) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     final dpr = MediaQuery.devicePixelRatioOf(context);
 
     // 图床裁剪 URL（非图床地址为 null → 退回原始 URL，行为与改动前一致）
@@ -95,6 +97,7 @@ class BiliCoverImage extends StatelessWidget {
         url: requestUrl,
         targetWidth: targetW,
         targetHeight: targetH,
+        l10n: l10n,
       ),
       width: double.infinity,
       height: double.infinity,
@@ -125,10 +128,16 @@ class BiliCoverImageProvider extends ImageProvider<BiliCoverImageProvider> {
   /// 仅用于解码尺寸与缓存键（图床已按显示尺寸裁剪，无需再算解码高度）
   final int targetHeight;
 
+  /// 失败文案的来源：provider 在 [BiliCoverImage._build] 里创建，只有那里拿得到
+  /// context。它只影响异常提示、与「图怎么加载」无关，所以不参与
+  /// [operator ==] / [hashCode]——本类的缓存键仍只有 url + 解码尺寸。
+  final AppLocalizations l10n;
+
   const BiliCoverImageProvider({
     required this.url,
     required this.targetWidth,
     required this.targetHeight,
+    required this.l10n,
   });
 
   @override
@@ -155,13 +164,13 @@ class BiliCoverImageProvider extends ImageProvider<BiliCoverImageProvider> {
       height: key.targetHeight,
     );
     if (file == null) {
-      throw const _BiliCoverUnavailable();
+      throw _BiliCoverUnavailable(key.l10n);
     }
     // ImmutableBuffer 是**原生资源**：一旦创建，无论后面解码成功与否都要 dispose
     // （这个项目的缩略图解码就踩过同一个坑：漏 dispose 会导致原生内存随滚动增长）。
     final bytes = await file.readAsBytes();
     if (bytes.isEmpty) {
-      throw const _BiliCoverUnavailable();
+      throw _BiliCoverUnavailable(key.l10n);
     }
     final buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
     try {
@@ -196,8 +205,10 @@ class BiliCoverImageProvider extends ImageProvider<BiliCoverImageProvider> {
 
 /// 缓存与网络都拿不到时抛出（`Image` 的 errorBuilder 会接住）
 class _BiliCoverUnavailable implements Exception {
-  const _BiliCoverUnavailable();
+  const _BiliCoverUnavailable(this.l10n);
+
+  final AppLocalizations l10n;
 
   @override
-  String toString() => '哔哩封面不可用（缓存未命中且下载失败）';
+  String toString() => l10n.biliCoverUnavailable;
 }

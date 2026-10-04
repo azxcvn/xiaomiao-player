@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/services/file_operations_service.dart';
 import 'package:moumou/services/pinned_folders_settings.dart';
 import 'package:moumou/services/video_info_service.dart';
@@ -189,16 +191,34 @@ FileOpProgress _asBatch(
   );
 }
 
+/// 批量操作的动词：决定汇总文案走哪一套（复制 / 移动 / 删除）。
+///
+/// 英文里三种动词的过去式各不相同（Copied / Moved / Deleted），所以**不能**把
+/// 动词当参数拼进一句话——按语种各写整句，这里只用枚举选分支。
+enum BatchVerb { copy, move, delete }
+
 /// 批量结果汇总：失败项 ≤ 3 全部列出，超出只列前 3 条并给出剩余数量
 String _batchSummary({
-  required String verb,
+  required AppLocalizations l10n,
+  required BatchVerb verb,
   required int done,
   required int total,
   required List<String> failures,
 }) {
-  final head = '已$verb $done/$total 项';
-  if (failures.length <= 3) return '$head，失败：${failures.join('；')}';
-  return '$head，失败：${failures.take(3).join('；')} 等 ${failures.length} 项';
+  final many = failures.length > 3;
+  final joined =
+      (many ? failures.take(3) : failures).join(l10n.commonErrorsSeparator);
+  return switch (verb) {
+    BatchVerb.move => many
+        ? l10n.folderActionMovedProgressFailedMore(done, total, joined, failures.length)
+        : l10n.folderActionMovedProgressFailed(done, total, joined),
+    BatchVerb.copy => many
+        ? l10n.folderActionCopiedProgressFailedMore(done, total, joined, failures.length)
+        : l10n.folderActionCopiedProgressFailed(done, total, joined),
+    BatchVerb.delete => many
+        ? l10n.folderActionDeletedProgressFailedMore(done, total, joined, failures.length)
+        : l10n.folderActionDeletedProgressFailed(done, total, joined),
+  };
 }
 
 // ───────────────────────── 复制 / 移动 ─────────────────────────
@@ -214,6 +234,7 @@ Future<bool> _transfer(
   // 撤销长按留下的按压高亮，避免「弹窗已关、卡片仍发灰」
   await Future<void>.delayed(const Duration(milliseconds: 120));
   if (!context.mounted) return false;
+  final l10n = AppLocalizations.of(context);
 
   final destination = await showDirectoryPickerDialog(context);
   if (destination == null || !context.mounted) return false;
@@ -224,16 +245,21 @@ Future<bool> _transfer(
     destinationDir: destination,
   );
   if (invalid != null) {
-    await _notify(context, invalid);
+    await _notify(context, fileOpCodeText(l10n, invalid));
     return false;
   }
 
   final pinned = PinnedFoldersSettings.instance;
   final wasPinned = move && isDirectory && pinned.isPinned(sourcePath);
 
-  final handle = _ProgressHandle.show(context, move ? '正在移动…' : '正在复制…');
+  final handle = _ProgressHandle.show(
+    context,
+    move ? l10n.folderTransferMoving : l10n.folderTransferCopying,
+  );
   String? failure;
   String? target;
+  // 取消不靠比字符串：文件操作服务在取消路径上给异常打 cancelled 标记
+  var cancelled = false;
   try {
     target = move
         ? await FileOperationsService.move(
@@ -249,7 +275,8 @@ Future<bool> _transfer(
             onProgress: handle.report,
           );
   } on FileOpException catch (e) {
-    failure = e.message;
+    failure = fileOpErrorText(l10n, e);
+    cancelled = e.cancelled;
   } catch (e) {
     failure = '$e';
   } finally {
@@ -257,9 +284,9 @@ Future<bool> _transfer(
     handle.dispose();
   }
 
-  if (failure == '已取消') {
+  if (cancelled) {
     if (!context.mounted) return false;
-    await _notify(context, '已取消');
+    await _notify(context, l10n.folderActionCancelled);
     return false;
   }
   if (failure != null) {
@@ -293,12 +320,13 @@ Future<bool> _transfer(
     debugPrint('onMutated callback failed: $e\n$s');
   }
   if (!context.mounted) return false;
-  final targetName = target == null ? '' : '：${FileOps.baseName(target)}';
+  final destBase = FileOps.baseName(destination);
+  final destPath = target == null
+      ? destBase
+      : l10n.folderActionDestWithTarget(destBase, FileOps.baseName(target));
   await _notify(
     context,
-    move
-        ? '已移动「$title」到 ${FileOps.baseName(destination)}$targetName'
-        : '已复制「$title」到 ${FileOps.baseName(destination)}$targetName',
+    move ? l10n.folderMovedTo(title, destPath) : l10n.folderCopiedTo(title, destPath),
   );
   return false;
 }
@@ -313,6 +341,7 @@ Future<bool> _batchTransfer(
   await Future<void>.delayed(const Duration(milliseconds: 120));
   if (!context.mounted) return false;
 
+  final l10n = AppLocalizations.of(context);
   final destination = await showDirectoryPickerDialog(context);
   if (destination == null || !context.mounted) return false;
 
@@ -325,12 +354,15 @@ Future<bool> _batchTransfer(
     );
     if (invalid != null) {
       if (!context.mounted) return false;
-      await _notify(context, '「${item.name}」$invalid');
+      await _notify(
+        context,
+        l10n.fileOpItemIssue(item.name, fileOpCodeText(l10n, invalid)),
+      );
       return false;
     }
   }
 
-  final verb = move ? '移动' : '复制';
+  final verb = move ? BatchVerb.move : BatchVerb.copy;
   final pinned = PinnedFoldersSettings.instance;
   final pinnedSources = <String>{};
   if (move) {
@@ -341,7 +373,10 @@ Future<bool> _batchTransfer(
     }
   }
 
-  final handle = _ProgressHandle.show(context, move ? '正在移动…' : '正在复制…');
+  final handle = _ProgressHandle.show(
+    context,
+    move ? l10n.folderTransferMoving : l10n.folderTransferCopying,
+  );
   final failures = <String>[];
   final movedTargets = <String, String>{};
   var done = 0;
@@ -377,10 +412,10 @@ Future<bool> _batchTransfer(
         }
         done++;
       } on FileOpException catch (e) {
-        if (e.message == '已取消') break;
-        failures.add('${item.name}：${e.message}');
+        if (e.cancelled) break;
+        failures.add(l10n.fileOpItemFailed(item.name, fileOpErrorText(l10n, e)));
       } catch (e) {
-        failures.add('${item.name}：$e');
+        failures.add(l10n.fileOpItemFailed(item.name, '$e'));
       }
     }
   } finally {
@@ -392,7 +427,7 @@ Future<bool> _batchTransfer(
   if (done == 0 && failures.isEmpty) {
     // 一项都没做成（用户一开始就取消）
     if (!context.mounted) return false;
-    await _notify(context, '已取消');
+    await _notify(context, l10n.folderActionCancelled);
     return false;
   }
 
@@ -435,11 +470,19 @@ Future<bool> _batchTransfer(
 
   if (failures.isEmpty) {
     if (cancelled && done < items.length) {
-      await _notify(context, '已取消（已$verb $done 项）');
-    } else {
       await _notify(
         context,
-        '已$verb $done 项到 ${FileOps.baseName(destination)}',
+        verb == BatchVerb.move
+            ? l10n.folderActionCancelledThenMoved(done)
+            : l10n.folderActionCancelledThenCopied(done),
+      );
+    } else {
+      final destName = FileOps.baseName(destination);
+      await _notify(
+        context,
+        verb == BatchVerb.move
+            ? l10n.folderActionMovedCount(done, destName)
+            : l10n.folderActionCopiedCount(done, destName),
       );
     }
     return true;
@@ -447,6 +490,7 @@ Future<bool> _batchTransfer(
   await _notify(
     context,
     _batchSummary(
+      l10n: l10n,
       verb: verb,
       done: done,
       total: items.length,
@@ -479,7 +523,7 @@ Future<bool> _rename(
     isDirectory: isDirectory,
   );
   if (newName == title) {
-    await _notify(context, '名称没有变化');
+    await _notify(context, AppLocalizations.of(context).folderNameUnchanged);
     return false;
   }
 
@@ -506,11 +550,11 @@ Future<bool> _rename(
       debugPrint('onMutated callback failed: $e\n$s');
     }
     if (!context.mounted) return true;
-    await _notify(context, '已重命名为 $newName');
+    await _notify(context, AppLocalizations.of(context).folderRenamedTo(newName));
     return true;
   } on FileOpException catch (e) {
     if (!context.mounted) return false;
-    await _notify(context, e.message);
+    await _notify(context, fileOpErrorText(AppLocalizations.of(context), e));
     return false;
   }
 }
@@ -543,11 +587,11 @@ Future<bool> _delete(
     await PinnedFoldersSettings.instance.retainExisting();
     await onMutated();
     if (!context.mounted) return true;
-    await _notify(context, '已删除「$title」');
+    await _notify(context, AppLocalizations.of(context).folderDeletedOne(title));
     return true;
   } on FileOpException catch (e) {
     if (!context.mounted) return false;
-    await _notify(context, e.message);
+    await _notify(context, fileOpErrorText(AppLocalizations.of(context), e));
     return false;
   }
 }
@@ -570,6 +614,7 @@ Future<bool> _batchDelete(
   if (confirm == null || !confirm.confirmed || !context.mounted) return false;
 
   final failures = <String>[];
+  final l10n = AppLocalizations.of(context);
   var done = 0;
   for (final item in items) {
     try {
@@ -584,9 +629,9 @@ Future<bool> _batchDelete(
       VideoInfoService.clearCache(item.path);
       done++;
     } on FileOpException catch (e) {
-      failures.add('${item.name}：${e.message}');
+      failures.add(l10n.fileOpItemFailed(item.name, fileOpErrorText(l10n, e)));
     } catch (e) {
-      failures.add('${item.name}：$e');
+      failures.add(l10n.fileOpItemFailed(item.name, '$e'));
     }
   }
 
@@ -599,12 +644,18 @@ Future<bool> _batchDelete(
   if (!context.mounted) return true;
 
   if (failures.isEmpty) {
-    await _notify(context, onlyOne ? '已删除「${items.first.name}」' : '已删除 $done 项');
+    await _notify(
+      context,
+      onlyOne
+          ? l10n.folderDeletedOne(items.first.name)
+          : l10n.folderDeletedCount(done),
+    );
   } else {
     await _notify(
       context,
       _batchSummary(
-        verb: '删除',
+        l10n: l10n,
+        verb: BatchVerb.delete,
         done: done,
         total: items.length,
         failures: failures,

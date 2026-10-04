@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/pages/bilibili/bili_season_page.dart';
 import 'package:moumou/services/bilibili/bili_bangumi_service.dart';
-import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/services/common_list_controller.dart';
 import 'package:moumou/utils/loading_state.dart';
 import 'package:moumou/widgets/bili_cover_card.dart';
@@ -31,7 +32,7 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
   BiliIndexCondition? _condition;
   Map<String, String> _params = {};
   bool _conditionLoading = true;
-  String? _conditionError;
+  Object? _conditionError;
   bool _expanded = false;
 
   late final AnimationController _expandController;
@@ -48,7 +49,6 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
       );
       return PageResult(result.list, hasMore: result.hasNext);
     },
-    describeError: _errorText,
   );
 
   @override
@@ -103,7 +103,7 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _conditionError = _errorText(e);
+        _conditionError = e;
         _conditionLoading = false;
       });
     }
@@ -132,13 +132,15 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('索引')),
+      appBar: AppBar(title: Text(l10n.biliIndexTitle)),
       body: _buildBody(),
     );
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context);
     if (_conditionLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -149,13 +151,16 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Text(_conditionError!, textAlign: TextAlign.center),
+              child: Text(
+                serviceErrorText(l10n, _conditionError!),
+                textAlign: TextAlign.center,
+              ),
             ),
             const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: _loadCondition,
               icon: const Icon(Icons.refresh),
-              label: const Text('重试'),
+              label: Text(l10n.commonRetry),
             ),
           ],
         ),
@@ -189,7 +194,7 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
                         _expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
                         size: 18,
                       ),
-                      label: Text(_expanded ? '收起' : '展开'),
+                      label: Text(_expanded ? l10n.commonCollapse : l10n.commonExpand),
                     ),
                   ),
               ],
@@ -268,9 +273,10 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
   }
 
   Widget _buildGrid() {
+    final l10n = AppLocalizations.of(context);
     return switch (_list.state) {
       Loaded<List<BiliIndexItem>>(:final data) => data.isEmpty
-          ? const SliverFillRemaining(child: Center(child: Text('暂无内容')))
+          ? SliverFillRemaining(child: Center(child: Text(l10n.biliNothingHere)))
           : _grid(data),
       LoadError<List<BiliIndexItem>>(:final message) => SliverFillRemaining(
           child: Center(
@@ -279,13 +285,16 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Text(message, textAlign: TextAlign.center),
+                  child: Text(
+                    serviceErrorText(l10n, message),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 FilledButton.icon(
                   onPressed: _reload,
                   icon: const Icon(Icons.refresh),
-                  label: const Text('重试'),
+                  label: Text(l10n.commonRetry),
                 ),
               ],
             ),
@@ -336,7 +345,4 @@ class _BiliBangumiIndexPageState extends State<BiliBangumiIndexPage>
       ),
     );
   }
-
-  static String _errorText(Object e) =>
-      e is BiliApiException ? e.message : e.toString();
 }

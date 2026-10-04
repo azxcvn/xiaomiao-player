@@ -8,12 +8,15 @@
 /// - 「切集自动匹配弹幕」开关：与默认弹弹Play 服务器**互斥**（工作.md 第 7 点，
 ///   收尾阶段恢复的限制）——默认服务器启用时开关变灰 + 副标题换成禁用原因，
 ///   点击弹 toast 说明；停用默认服务器后自动恢复用户此前的选择
-///   （判定与文案统一由 [DanmakuServerSettings] 提供，见 `_AutoMatchTile`）。
+///   （判定由 [DanmakuServerSettings] 提供，文案在页面侧取 l10n，
+///   见 `_AutoMatchTile`）。
 ///
 /// 启用的服务器同时用于网络弹幕搜索（逐台实时呈现，不等齐再合并）与自动匹配。
 library;
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/danmaku_server.dart';
 import 'package:moumou/services/danmaku_server_settings.dart';
 import 'package:moumou/utils/app_dialog.dart';
@@ -39,11 +42,12 @@ class DanmakuServerPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final settings = DanmakuServerSettings.instance;
     return Scaffold(
-      appBar: AppBar(title: const Text('弹幕服务器')),
+      appBar: AppBar(title: Text(l10n.settingsDanmakuServer)),
       floatingActionButton: FloatingActionButton(
-        tooltip: '添加服务器',
+        tooltip: l10n.danmakuServerAdd,
         onPressed: () => _showAddDialog(context),
         child: const Icon(Icons.add),
       ),
@@ -54,8 +58,7 @@ class DanmakuServerPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 96),
             children: [
               Text(
-                '启用的服务器将同时用于弹幕搜索与自动匹配，搜索结果按各服务器'
-                '返回顺序实时呈现',
+                l10n.danmakuServerIntro,
                 style: TextStyle(
                   fontSize: 13,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -72,7 +75,7 @@ class DanmakuServerPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              const SettingsGroupTitle(title: '服务器'),
+              SettingsGroupTitle(title: l10n.danmakuServerGroupServers),
               for (final server in settings.servers) ...[
                 _DanmakuServerCard(
                   server: server,
@@ -111,16 +114,20 @@ class DanmakuServerPage extends StatelessWidget {
     final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('删除服务器'),
-        content: Text('确定删除「${server.name}」吗？此操作不可撤销。'),
+        title: Text(AppLocalizations.of(dialogContext).danmakuServerDelete),
+        content: Text(
+          AppLocalizations.of(
+            dialogContext,
+          ).commonDeleteConfirmIrreversible(server.name),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('取消'),
+            child: Text(AppLocalizations.of(dialogContext).commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('删除'),
+            child: Text(AppLocalizations.of(dialogContext).commonDelete),
           ),
         ],
       ),
@@ -151,13 +158,16 @@ class _SearchDedupeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final enabled = settings.searchDedupe;
+    final l10n = AppLocalizations.of(context);
     return SettingsSwitchTile(
       icon: Icons.filter_alt_outlined,
-      title: '搜索结果自动去重',
+      title: l10n.danmakuServerDedupe,
       // 副标题只讲"结果长什么样"：具体会做什么动作（替换/可能看不到某台）
       // 放在开启前的二次确认里，一句话塞不下、塞进去反而误导
       subtitle: Text(
-        enabled ? '重复番剧合并为一条，保留集数最全的' : '每台服务器的结果各自展示，可自行挑选来源',
+        enabled
+            ? l10n.danmakuServerDedupeOnDesc
+            : l10n.danmakuServerDedupeOffDesc,
       ),
       value: enabled,
       onChanged: (value) => _onChanged(context, value),
@@ -210,19 +220,16 @@ class _DedupeConfirmDialogState extends State<_DedupeConfirmDialog> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
-      title: const Text('开启搜索结果自动去重？'),
+      title: Text(l10n.danmakuServerDedupeDialogTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '各服务器返回的结果仍然立刻显示，不会等全部返回。\n'
-            '同一部番剧只保留一条；如果后续服务器返回的集数更全，'
-            '会自动替换成更全的那条。\n'
-            '因此某台服务器的结果可能不单独出现——那不代表它没搜到，'
-            '而是被去重合并了。',
-            style: TextStyle(fontSize: 13, height: 1.45),
+          Text(
+            l10n.danmakuServerDedupeDialogBody,
+            style: const TextStyle(fontSize: 13, height: 1.45),
           ),
           const SizedBox(height: 6),
           // 勾选框左对齐贴住正文，不额外撑高弹窗（用 CheckboxListTile 而不是
@@ -231,7 +238,7 @@ class _DedupeConfirmDialogState extends State<_DedupeConfirmDialog> {
             value: _dontAskAgain,
             onChanged: (v) => setState(() => _dontAskAgain = v ?? false),
             title: Text(
-              '不再提示',
+              l10n.commonDontAskAgain,
               style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
             ),
             dense: true,
@@ -243,11 +250,11 @@ class _DedupeConfirmDialogState extends State<_DedupeConfirmDialog> {
       actions: [
         TextButton(
           onPressed: () => _close(false),
-          child: const Text('取消'),
+          child: Text(l10n.commonCancel),
         ),
         TextButton(
           onPressed: () => _close(true),
-          child: const Text('开启'),
+          child: Text(l10n.commonTurnOnShort),
         ),
       ],
     );
@@ -260,9 +267,10 @@ class _DedupeConfirmDialogState extends State<_DedupeConfirmDialog> {
 /// 换成禁用原因；此时点整行仍会弹 toast 说明为什么不能开（变灰而不解释会让
 /// 用户以为是 bug）。
 ///
-/// 两级文案都取自服务层（页面内不写文案字面量，防措辞漂移）：副标题用短句
-/// [DanmakuServerSettings.autoMatchBlockedReason]（窄屏不挤），toast 用完整
-/// 说明 [DanmakuServerSettings.autoMatchBlockedMessage]。
+/// 两级文案都在页面侧组装（服务层只给状态 [DanmakuServerSettings.
+/// autoMatchBlockedByDefaultServer]）：副标题用短句
+/// `danmakuServerAutoMatchBlocked`（窄屏不挤），toast 用完整说明
+/// `danmakuServerAutoMatchBlockedDetail`。
 class _AutoMatchTile extends StatelessWidget {
   final DanmakuServerSettings settings;
 
@@ -271,13 +279,15 @@ class _AutoMatchTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final blockedReason = settings.autoMatchBlockedReason;
-    final allowed = blockedReason == null;
+    final l10n = AppLocalizations.of(context);
+    final allowed = !settings.autoMatchBlockedByDefaultServer;
     final tile = SettingsSwitchTile(
       icon: Icons.autorenew,
-      title: '切集自动匹配弹幕',
+      title: l10n.danmakuServerAutoMatch,
       subtitle: Text(
-        blockedReason ?? '切集时自动匹配并加载对应集弹幕',
+        allowed
+            ? l10n.danmakuServerAutoMatchDesc
+            : l10n.danmakuServerAutoMatchBlocked,
         style: allowed
             ? null
             : TextStyle(color: scheme.error, fontWeight: FontWeight.w500),
@@ -299,7 +309,9 @@ class _AutoMatchTile extends StatelessWidget {
             // toast 用完整说明（副标题只放短指引，窄屏两行会挤）
             onTap: () => _toast(
               context,
-              settings.autoMatchBlockedMessage ?? blockedReason,
+              l10n.danmakuServerAutoMatchBlockedDetail(
+                l10n.danmakuServerDefaultName,
+              ),
             ),
           ),
         ),
@@ -340,6 +352,7 @@ class _DanmakuServerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Card(
       elevation: 0,
       margin: EdgeInsets.zero,
@@ -357,7 +370,7 @@ class _DanmakuServerCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    server.name,
+                    danmakuServerDisplayName(l10n, server),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -374,7 +387,7 @@ class _DanmakuServerCard extends StatelessWidget {
                   if (server.isDefault) ...[
                     const SizedBox(height: 2),
                     Text(
-                      '内置服务器，不可编辑、删除',
+                      AppLocalizations.of(context).danmakuServerBuiltIn,
                       style: TextStyle(fontSize: 11, color: scheme.outline),
                     ),
                   ],
@@ -383,14 +396,20 @@ class _DanmakuServerCard extends StatelessWidget {
             ),
             if (!server.isDefault)
               PopupMenuButton<String>(
-                tooltip: '更多操作',
+                tooltip: AppLocalizations.of(context).commonMoreActions,
                 onSelected: (value) {
                   if (value == 'edit') onEdit();
                   if (value == 'delete') onDelete();
                 },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'edit', child: Text('编辑')),
-                  PopupMenuItem(value: 'delete', child: Text('删除')),
+                itemBuilder: (_) => [
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: Text(AppLocalizations.of(context).commonEdit),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(AppLocalizations.of(context).commonDelete),
+                  ),
                 ],
               ),
           ],
@@ -462,25 +481,28 @@ class _ServerEditDialogState extends State<_ServerEditDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
-      title: Text(_isEditing ? '编辑服务器' : '添加服务器'),
+      title: Text(
+        _isEditing ? l10n.danmakuServerEdit : l10n.danmakuServerAdd,
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: _nameController,
             autofocus: true,
-            decoration: const InputDecoration(
-              labelText: '服务器名称',
-              hintText: '例：我的服务器',
+            decoration: InputDecoration(
+              labelText: l10n.danmakuServerNameLabel,
+              hintText: l10n.danmakuServerNameHint,
             ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _urlController,
             keyboardType: TextInputType.url,
-            decoration: const InputDecoration(
-              labelText: '服务器地址',
+            decoration: InputDecoration(
+              labelText: l10n.danmakuServerUrlLabel,
               hintText: 'https://example.com',
             ),
           ),
@@ -496,7 +518,7 @@ class _ServerEditDialogState extends State<_ServerEditDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(AppLocalizations.of(context).commonCancel),
         ),
         // 地址为空时按钮变灰（onPressed: null）：被禁用的按钮不响应手势，
         // 外层套透明命中层，点它照样能打开教程——不然用户正是在
@@ -505,7 +527,11 @@ class _ServerEditDialogState extends State<_ServerEditDialog> {
           children: [
             FilledButton(
               onPressed: _canSubmit ? _submit : null,
-              child: Text(_isEditing ? '保存' : '添加'),
+              child: Text(
+                _isEditing
+                    ? AppLocalizations.of(context).commonSave
+                    : AppLocalizations.of(context).commonAdd,
+              ),
             ),
             if (!_canSubmit)
               Positioned.fill(
@@ -529,7 +555,7 @@ class _ServerEditDialogState extends State<_ServerEditDialog> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else if (mounted) {
-      _toast('未找到可用的浏览器');
+      _toast(AppLocalizations.of(context).danmakuServerNoBrowser);
     }
   }
 
@@ -567,7 +593,7 @@ class _HelpLink extends StatelessWidget {
             Icon(Icons.open_in_new, size: 15, color: scheme.primary),
             const SizedBox(width: 5),
             Text(
-              '如何获取服务器地址',
+              AppLocalizations.of(context).danmakuServerHelpLink,
               style: TextStyle(
                 fontSize: 13,
                 color: scheme.primary,

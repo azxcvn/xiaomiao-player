@@ -5,12 +5,12 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:moumou/models/danmaku_server.dart';
 import 'package:moumou/services/cache_manager_service.dart';
 import 'package:moumou/services/dandan_play_api.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/danmaku_server_settings.dart';
 import 'package:moumou/utils/danmaku_xml.dart';
+import 'package:moumou/utils/error_codes.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -81,7 +81,8 @@ void main() {
       expect(result.items.length, 2);
       expect(result.items[0].anime.animeId, 1);
       expect(result.items[0].serverUrl, isNull); // 默认服务器先到先得
-      expect(result.items[0].serverName, DanmakuServerSettings.instance.servers.first.name);
+      expect(result.items[0].serverName, isEmpty,
+          reason: '默认服务器在服务层给空串，显示名由 UI 侧取 l10n');
       expect(result.items[1].anime.animeId, 2);
       expect(result.items[1].serverUrl, 'https://self.example.com');
       expect(result.items[1].serverName, '我的服务器');
@@ -113,7 +114,13 @@ void main() {
       expect(result.items.length, 1);
       expect(result.items.single.anime.animeId, 2);
       expect(result.errors.length, 1);
-      expect(result.errors.single, contains('弹弹Play'));
+      // 失败信息由 UI 侧组装：这里只断言「服务器名 + 异常对象」
+      expect(result.errors.single.serverName, isEmpty, reason: '默认服务器给空串');
+      expect(result.errors.single.error, isA<DandanApiException>());
+      expect(
+        (result.errors.single.error as DandanApiException).code,
+        DandanApiErrorCode.httpFailed,
+      );
     });
   });
 
@@ -217,7 +224,8 @@ void main() {
 
       final events = await service.searchStream('关键词').toList();
       expect(events.length, 2);
-      expect(events.first.items.single.serverName, DanmakuServer.defaultName);
+      expect(events.first.items.single.serverName, isEmpty,
+          reason: '默认服务器在服务层给空串');
       expect(events.last.items.single.serverName, '我的服务器');
       expect(
         events.last.items.single.anime.animeId,
@@ -335,7 +343,12 @@ void main() {
 
       final events = await service.searchStream('关键词').toList();
       expect(events.length, 2);
-      expect(events.first.error, contains('弹弹Play'));
+      expect(events.first.serverName, isEmpty, reason: '默认服务器给空串');
+      expect(events.first.error, isA<DandanApiException>());
+      expect(
+        (events.first.error! as DandanApiException).code,
+        DandanApiErrorCode.httpFailed,
+      );
       expect(events.first.items, isEmpty);
       expect(events.last.items.single.anime.animeTitle, '番剧B');
       expect(events.last.error, isNull);

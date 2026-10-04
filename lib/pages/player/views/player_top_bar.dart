@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/player_action.dart';
 import 'package:moumou/pages/player/player_metrics.dart';
 import 'package:moumou/pages/player/views/player_pressable.dart';
@@ -31,6 +33,7 @@ class PlayerTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     // 顶栏已随控制设置自动重建（槽位变化/背景开关共用同一监听）
     final showBg = PlayerControlsSettings.instance.showButtonBackground;
     return SafeArea(
@@ -46,7 +49,7 @@ class PlayerTopBar extends StatelessWidget {
             children: [
               _TopIconButton(
                 icon: Icons.arrow_back,
-                tooltip: '返回',
+                tooltip: l10n.commonBack,
                 showBackground: showBg,
                 onPressed: onBack,
               ),
@@ -66,6 +69,7 @@ class PlayerTopBar extends StatelessWidget {
             ListenableBuilder(
               listenable: PlayerControlsSettings.instance,
               builder: (context, _) {
+                final l10n = AppLocalizations.of(context);
                 final actions = PlayerControlsSettings.instance.topActions;
                 if (actions.isEmpty) return const SizedBox.shrink();
                 return Row(
@@ -74,7 +78,7 @@ class PlayerTopBar extends StatelessWidget {
                     for (final a in actions)
                       _TopIconButton(
                         icon: a.icon,
-                        tooltip: a.label,
+                        tooltip: playerTopActionLabel(l10n, a),
                         showBackground: showBg,
                         onPressed: () => onActionTap(a),
                       ),
@@ -87,7 +91,7 @@ class PlayerTopBar extends StatelessWidget {
               padding: const EdgeInsets.only(right: 12),
               child: _TopIconButton(
                 icon: Icons.more_vert,
-                tooltip: '更多',
+                tooltip: l10n.commonMore,
                 showBackground: showBg,
                 onPressed: onMore,
               ),

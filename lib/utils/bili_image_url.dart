@@ -22,18 +22,17 @@ library;
 class BiliCoverSize {
   final int width;
   final int height;
-  final String label;
 
-  const BiliCoverSize(this.width, this.height, this.label);
+  const BiliCoverSize(this.width, this.height);
 
   /// 番剧封面（竖版 3:4）：`BiliCoverCard` 网格、选集列表缩略图
-  static const cover3x4 = BiliCoverSize(320, 400, '3:4');
+  static const cover3x4 = BiliCoverSize(320, 400);
 
   /// 视频/番剧横版封面（16:9）：搜索结果行、详情页头图
-  static const cover16x9 = BiliCoverSize(360, 202, '16:9');
+  static const cover16x9 = BiliCoverSize(360, 202);
 
   /// 小尺寸 16:9（列表行内小图，展示宽度约 64-120dp）
-  static const small16x9 = BiliCoverSize(320, 180, '16:9 小图');
+  static const small16x9 = BiliCoverSize(320, 180);
 
   /// 全部预设（按像素面积从小到大，供 [BiliCoverSize.bestFor] 就近选择）
   static const List<BiliCoverSize> all = [cover3x4, cover16x9, small16x9];
@@ -53,8 +52,11 @@ bool isBiliImageHost(String url) {
 String normalizeBiliImageUrl(String url) {
   final trimmed = url.trim();
   if (trimmed.isEmpty) return trimmed;
+  // 非图床地址原样返回：不改协议、不剥参数。那些 query 可能是鉴权令牌
+  // （剥了图就 403），`@` 也可能是合法路径字符，都不是我们该动的东西。
+  if (!isBiliImageHost(trimmed)) return trimmed;
   var result = trimmed;
-  if (result.startsWith('http://') && isBiliImageHost(result)) {
+  if (result.startsWith('http://')) {
     result = 'https://${result.substring('http://'.length)}';
   }
   for (final marker in const ['@', '?', '#']) {

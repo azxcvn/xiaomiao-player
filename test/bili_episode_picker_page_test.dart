@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/pages/bilibili/bili_episode_picker_page.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 全屏选集页测试：进入页面第一页集数应直接可见（回归：切页动画控制器
 /// 初始值若为 0 会把第一页整体平移到屏幕外，需先切一次页才显示）。
 void main() {
@@ -21,7 +23,12 @@ void main() {
 
   testWidgets('进入选集页：第一页集数直接可见，无需切页', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(home: BiliEpisodePickerPage(episodes: episodes(5))),
+      MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
+        home: BiliEpisodePickerPage(episodes: episodes(5)),
+      ),
     );
     await tester.pumpAndSettle();
 

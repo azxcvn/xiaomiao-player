@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/services/video_scanner.dart';
+import 'package:moumou/utils/error_codes.dart';
 import 'package:moumou/utils/file_ops.dart';
 
 /// 文件管理纯函数测试（路径细分 / 目标校验 / 重命名校验 / 重名避让 / 失效固定路径）
@@ -64,7 +65,7 @@ void main() {
         destinationDir: '${root.path}/绝对不存在的目录_9f3a',
       );
       expect(reason, isNotNull);
-      expect(reason, contains('不存在'));
+      expect(reason, FileOpErrorCode.targetUnreadable);
     });
 
     test('目标与源同目录 → 提示无需操作（文件/文件夹文案区分）', () {
@@ -74,7 +75,7 @@ void main() {
           sourceIsDirectory: false,
           destinationDir: root.path,
         ),
-        contains('视频'),
+        FileOpErrorCode.alreadyInFolderVideo,
       );
       expect(
         FileOps.validateMoveTarget(
@@ -82,7 +83,7 @@ void main() {
           sourceIsDirectory: true,
           destinationDir: root.path,
         ),
-        contains('文件夹'),
+        FileOpErrorCode.alreadyInFolder,
       );
     });
 
@@ -93,7 +94,7 @@ void main() {
         sourceIsDirectory: true,
         destinationDir: child.path,
       );
-      expect(reason, contains('子目录'));
+      expect(reason, FileOpErrorCode.intoItself);
     });
 
     test('合法目标（同卷另一目录）→ 放行', () {
@@ -115,7 +116,7 @@ void main() {
           sourceIsDirectory: false,
           destinationDir: '',
         ),
-        '请选择目标文件夹',
+        FileOpErrorCode.selectTargetFolder,
       );
     });
   });
@@ -294,7 +295,7 @@ void main() {
         originalExtension: '.mp4',
       );
       expect(check.ok, isFalse);
-      expect(check.error, contains('扩展名之前'));
+      expect(check.error, FileOpErrorCode.nameEmptyBeforeExt);
     });
 
     test('validateRenameInput：只输主体 → 通过', () {

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/video_file.dart';
 import 'package:moumou/pages/media_info/media_info_page.dart';
 import 'package:moumou/pages/player/player_page.dart';
@@ -230,13 +231,14 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
   }
 
   PreferredSizeWidget _buildAppBar() {
+    final l10n = AppLocalizations.of(context);
     return AppBar(
       title: _searching
           ? TextField(
               controller: _searchController,
               autofocus: true,
-              decoration: const InputDecoration(
-                hintText: '搜索视频',
+              decoration: InputDecoration(
+                hintText: l10n.homeSearchVideos,
                 border: InputBorder.none,
               ),
               onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
@@ -246,18 +248,18 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
         if (_searching)
           IconButton(
             icon: const Icon(Icons.close),
-            tooltip: '取消搜索',
+            tooltip: l10n.commonCancelSearch,
             onPressed: _toggleSearch,
           )
         else
           IconButton(
             icon: const Icon(Icons.search),
-            tooltip: '搜索',
+            tooltip: l10n.commonSearch,
             onPressed: _toggleSearch,
           ),
         IconButton(
           icon: const Icon(Icons.sort),
-          tooltip: '排序与字段',
+          tooltip: l10n.homeSortAndFields,
           onPressed: _showVideoOptions,
         ),
       ],
@@ -266,6 +268,7 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
 
   /// 多选态顶部工具栏；全选范围 = 当前可见列表
   PreferredSizeWidget _buildSelectionAppBar() {
+    final l10n = AppLocalizations.of(context);
     final visible = _visibleVideos().map((v) => v.path).toList();
     final allSelected = _selection.containsAll(visible);
     return buildFileSelectionAppBar(
@@ -274,6 +277,7 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
       onExit: _selection.exit,
       onToggleAll: () => _selection.setAll(visible, selected: !allSelected),
       onOpenMenu: () => _openSelectionMenu(),
+      l10n: l10n,
     );
   }
 
@@ -297,8 +301,9 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context);
     if (_videos.isEmpty) {
-      return _emptyState('该文件夹没有视频');
+      return _emptyState(l10n.homeNoVideosInFolder);
     }
     return ListenableBuilder(
       listenable: Listenable.merge([
@@ -309,7 +314,7 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
       builder: (context, _) {
         final videos = _visibleVideos();
         if (videos.isEmpty && _query.isNotEmpty) {
-          return _emptyState('没有匹配的视频');
+          return _emptyState(l10n.homeNoMatchingVideos);
         }
         final selectedPaths = _selection.paths.toSet();
         // 底部安全区已由全局 SafeArea 处理

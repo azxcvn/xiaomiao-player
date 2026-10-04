@@ -1,0 +1,560 @@
+﻿appTitle	小喵Player
+audioChannelAutoSafe	安全自动
+audioChannelMono	单声道
+audioChannelReverseStereo	反向立体声
+audioChannelStereo	立体声
+audioTrackFallbackName	音轨 {id}
+biliAccount	哔哩哔哩账号
+chapterSkipColdOpen	跳过正片前段
+chapterSkipCredits	跳过制作人员
+chapterSkipIntro	跳过片头
+chapterSkipOutro	跳过片尾
+chapterSkipPreview	跳过下集预告
+chapterSkipRecap	跳过前情提要
+commonAdd	添加
+commonAll	全部
+commonAscending	升序
+commonAuto	自动
+commonCancel	取消
+commonCenter	居中
+commonClear	清除
+commonConfirm	确定
+commonCount	数量
+commonDanmaku	弹幕
+commonDate	日期
+commonDelete	删除
+commonDescending	降序
+commonDontAskAgain	不再提示
+commonDownload	下载
+commonDuration	时长
+commonEdit	编辑
+commonEnable	确定启用
+commonExternalTag	外挂
+commonFrameRate	帧率
+commonFullName	完整名称
+commonLogin	登录
+commonMoreActions	更多操作
+commonName	名称
+commonOff	关闭
+commonPath	路径
+commonProgress	进度
+commonReset	重置
+commonResolution	分辨率
+commonRetry	重试
+commonSave	保存
+commonSeconds	秒
+commonSecondsValue	{value} 秒
+commonSize	大小
+commonSubtitleIndicator	字幕指示器
+commonTime	时间
+commonTurnOn	确定开启
+commonTurnOnShort	开启
+commonVideo	视频
+danmakuColorModeFixed	指定颜色
+danmakuColorModeRandom	随机渐变色
+danmakuColorModeSource	跟随弹幕颜色
+danmakuFontModeCustom	自定义字体
+danmakuFontModeFollowApp	跟随App字体
+danmakuFontModeFollowSystem	跟随系统字体
+danmakuServerAdd	添加服务器
+danmakuServerAutoMatch	切集自动匹配弹幕
+danmakuServerAutoMatchDesc	切集时自动匹配并加载对应集弹幕
+danmakuServerBuiltIn	内置服务器，不可编辑、删除
+danmakuServerDedupe	搜索结果自动去重
+danmakuServerDedupeDialogBody	各服务器返回的结果仍然立刻显示，不会等全部返回。
+同一部番剧只保留一条；如果后续服务器返回的集数更全，会自动替换成更全的那条。
+因此某台服务器的结果可能不单独出现——那不代表它没搜到，而是被去重合并了。
+danmakuServerDedupeDialogTitle	开启搜索结果自动去重？
+danmakuServerDedupeOffDesc	每台服务器的结果各自展示，可自行挑选来源
+danmakuServerDedupeOnDesc	重复番剧合并为一条，保留集数最全的
+danmakuServerDelete	删除服务器
+danmakuServerDeleteConfirm	确定删除「{name}」吗？此操作不可撤销。
+danmakuServerEdit	编辑服务器
+danmakuServerGroupServers	服务器
+danmakuServerHelpLink	如何获取服务器地址
+danmakuServerIntro	启用的服务器将同时用于弹幕搜索与自动匹配，搜索结果按各服务器返回顺序实时呈现
+danmakuServerNameHint	例：我的服务器
+danmakuServerNameLabel	服务器名称
+danmakuServerNoBrowser	未找到可用的浏览器
+danmakuServerUrlLabel	服务器地址
+decodeModeAutoSafeDesc	自动选择安全硬解
+decodeModeHwCopy	硬解
+decodeModeHwCopyDesc	强制硬解，兼容字幕与超分
+decodeModeHwPlus	硬解+
+decodeModeHwPlusDesc	直通优先，失败自动回退
+decodeModeSw	软解
+decodeModeSwDesc	纯 CPU 解码
+decodePresetFast	快速
+decodePresetFastDesc	性能优先
+decodePresetGpuHq	GPU 高质量
+decodePresetGpuHqDesc	高画质渲染
+decodePresetHighQuality	高质量
+decodePresetHighQualityDesc	画质优先
+decodePresetLowLatency	低延迟
+decodePresetLowLatencyDesc	减少缓冲
+decodePresetStandard	默认
+decodePresetStandardDesc	标准配置
+decodePresetSwFast	软解快速
+decodePresetSwFastDesc	软解加速
+languageNameEn	English
+languageNameZh	简体中文
+languagePickerTitle	选择语言 / Choose Language
+loopModeLoopAll	列表循环
+loopModeRepeatOne	单集循环
+mainVideoOpenFailed	无法打开该视频
+mediaScanAddBlacklistFolder	添加黑名单文件夹
+mediaScanAddFolder	添加文件夹
+mediaScanAddWhitelistFolder	添加白名单文件夹
+mediaScanAll	全部扫描
+mediaScanAllDesc	扫描所有未跳过的文件夹
+mediaScanBlacklist	黑名单模式
+mediaScanBlacklistDesc	排除指定文件夹
+mediaScanBlacklistEmpty	暂无黑名单文件夹（未排除任何目录）
+mediaScanBlacklistList	黑名单文件夹列表
+mediaScanBrowseOther	浏览设备其他目录...
+mediaScanFolderItemSubtitle	{path}
+{count, plural, other{{count} 个视频}}
+mediaScanGoUp	上一级
+mediaScanGroupFilterMode	文件夹过滤模式
+mediaScanGroupRules	扫描规则
+mediaScanHiddenFolders	扫描以 . 开头的隐藏文件夹
+mediaScanHiddenFoldersDesc	扫描隐藏文件
+mediaScanNoMedia	扫描包含 .nomedia 的文件夹
+mediaScanNoMediaDesc	扫描系统忽略的目录
+mediaScanNoMediaDialogBody	此功能将扫描系统默认忽略的 .nomedia 文件夹。
+
+开启后，某些应用程序的缓存视频、临时文件或表情包也可能被展示在媒体列表中。是否继续？
+mediaScanNoMediaDialogTitle	开启提示
+mediaScanNoMoreFolders	未发现更多媒体文件夹
+mediaScanNoSubfolders	当前目录下无子文件夹
+mediaScanPickBlacklistHint	选择要排除的媒体文件夹（点击直接添加）：
+mediaScanPickCurrentFolder	选择当前文件夹 ({name})
+mediaScanPickFolder	选择文件夹
+mediaScanPickWhitelistHint	选择要仅保留扫描的媒体文件夹（点击直接添加）：
+mediaScanWhitelist	白名单模式
+mediaScanWhitelistDesc	仅扫描指定文件夹
+mediaScanWhitelistEmpty	暂无白名单文件夹（未添加时默认显示全部）
+mediaScanWhitelistList	白名单文件夹列表
+navHome	首页
+navMine	我的
+networkTierApi	常规 API
+networkTierDownload	文件下载
+networkTierStream	媒体流
+networkTierText	文本响应
+playerActionAspect	比例
+playerActionAudio	音频
+playerActionCast	投屏
+playerActionChapter	章节
+playerActionDecode	解码
+playerActionDiagnostics	播放诊断
+playerActionEqualizer	音频均衡器
+playerActionIntroOutro	片头片尾
+playerActionListen	听视频
+playerActionLoop	循环播放
+playerActionPip	画中画
+playerActionSubtitle	字幕
+playerDoubleTapMixed	混合模式
+playerDoubleTapPause	双击暂停/播放
+playerDoubleTapSeek	双击左退右进
+playerOrientationAuto	自动
+playerOrientationLandscape	锁定横屏
+playerOrientationPortrait	锁定竖屏
+playerVideoFitContain	自动
+playerVideoFitCover	裁剪
+playerVideoFitFill	拉伸
+playerVideoFitFitHeight	等高
+playerVideoFitFitWidth	等宽
+playerVideoFitNone	原始
+playerVideoFitScaleDown	限制
+playlistSortDateAsc	日期升序
+playlistSortDateDesc	日期降序
+playlistSortNameAsc	名称升序
+playlistSortNameDesc	名称降序
+settingsAbout	关于
+settingsAboutAppNameLoading	读取中
+settingsAboutAutoCheckUpdate	自动检查更新
+settingsAboutAutoCheckUpdateDesc	启动后自动检查新版本
+settingsAboutCacheManagement	缓存管理
+settingsAboutCacheManagementDesc	查看与清除各类缓存
+settingsAboutCannotOpenLink	无法打开链接
+settingsAboutCheckUpdate	手动检查更新
+settingsAboutCheckUpdateDesc	检查是否有新版本
+settingsAboutCheckUpdateFailed	检查更新失败，请稍后重试
+settingsAboutDesc	版本信息与工具
+settingsAboutErrorLogDesc	查看 / 导出 / 复制崩溃日志
+settingsAboutFeedbackSubject	播放器使用反馈
+settingsAboutGithubPending	GitHub 主页地址待接入
+settingsAboutGroupInfo	信息
+settingsAboutGroupTools	工具
+settingsAboutGroupUpdate	更新
+settingsAboutLicenses	许可证书
+settingsAboutLicensesDesc	查看本应用使用的全部开源许可
+settingsAboutNoEmailApp	未找到可用的邮件应用
+settingsAboutSendFeedback	发送使用反馈
+settingsAboutUpToDate	已是最新版本
+settingsAboutUserAgreement	用户协议
+settingsAboutUserAgreementDesc	预览用户服务协议与隐私政策
+settingsAppearanceAdjustWallpaper	调整
+settingsAppearanceAndFont	外观与字体
+settingsAppearanceAndFontDesc	调整应用外观与字体
+settingsAppearanceChooseWallpaper	选择壁纸
+settingsAppearanceCustomColor	自定义
+settingsAppearanceCustomColorTitle	自定义主题色
+settingsAppearanceCustomFontDesc	自定义全局字体
+settingsAppearanceDynamicColor	动态色
+settingsAppearanceGroupFont	字体
+settingsAppearanceGroupWallpaper	壁纸
+settingsAppearanceMode	外观模式
+settingsAppearanceNoImagePicker	这台设备没有可用的系统图片选择器
+settingsAppearancePaletteVariant	调色板风格
+settingsAppearanceReadWallpaperFailed	无法读取壁纸颜色
+settingsAppearanceReplaceWallpaper	替换壁纸
+settingsAppearanceSdkTooLow	安卓版本过低，不支持该功能
+settingsAppearanceThemeColor	主题色
+settingsAppearanceTitle	外观
+settingsAppearanceWallpaperActiveDesc	壁纸显示在页面内容与顶部栏之后
+settingsAppearanceWallpaperPickDesc	选一张图片，铺在页面内容与顶部栏之后
+settingsAppearanceWallpaperTitle	自定义壁纸
+settingsCacheAllCleared	已清除全部缓存
+settingsCacheCategoryCleared	已清除{label}
+settingsCacheClearAllBody	将删除全部缓存（当前共 {size}）：
+· 视频列表封面缩略图
+· 其他缓存
+
+此操作不可恢复。
+settingsCacheClearAllButton	一键清除所有缓存（{size}）
+settingsCacheClearAllTitle	清除所有缓存
+settingsCacheClearCategoryBody	将删除「{label}」缓存（{size}），确定？
+settingsCacheClearCategoryTitle	清除{label}
+settingsCacheClearFailed	清除失败
+settingsCacheConfirmAgainBody	确定要清除所有缓存吗？
+settingsCacheConfirmAgainTitle	再次确认
+settingsCacheFooterNote	列表封面缩略图会在下次扫描时重新生成；进度条缩略图为纯内存缓存，随播放页退出自动清空，不占用存储。
+settingsCacheGroupTitle	缓存
+settingsCacheReading	读取中…
+settingsCacheTitle	缓存管理
+settingsDanmakuDownload	弹幕下载
+settingsDanmakuDownloadDesc	B 站弹幕下载
+settingsDanmakuServer	弹幕服务器
+settingsDanmakuServerDesc	网络弹幕服务器与切集自动匹配
+settingsDecoderAcceleration	加速方式
+settingsDecoderAlias	别名
+settingsDecoderAlignment	对齐
+settingsDecoderAudioCapability	音频能力
+settingsDecoderAudioCodec	音频解码器
+settingsDecoderBasicInfo	基本信息
+settingsDecoderBitrateRange	码率范围
+settingsDecoderCanonicalName	规范名
+settingsDecoderColorFormats	色彩格式
+settingsDecoderHardwareAcceleration	硬件加速
+settingsDecoderHardwareFeatures	硬件特性
+settingsDecoderMaxChannels	最大声道数
+settingsDecoderMaxInstances	最大实例数
+settingsDecoderMaxResolution	最大分辨率
+settingsDecoderMimeType	MIME 类型
+settingsDecoderMinResolution	最小分辨率
+settingsDecoderProfiles	支持的 Profile / Level
+settingsDecoderResolutionCapability	分辨率与能力
+settingsDecoderSampleRates	采样率
+settingsDecoderSoftware	软件
+settingsDecoderType	类型
+settingsDecoderVideoCodec	视频解码器
+settingsDecoderYes	是
+settingsDeviceCapabilityError	无法读取设备能力（可能为不支持的原生通道）
+settingsDeviceChannels	{count} 声道
+settingsDeviceDecoderList	解码器清单
+settingsDeviceDecoderSummary	硬解 {hw} · 软解 {sw} · 视频 {video} · 音频 {audio}
+settingsDeviceHdrCapability	屏幕 HDR 能力
+settingsDeviceHdrUnsupported	当前屏幕不支持 HDR（或系统未报告 HDR 能力）
+settingsDeviceInfo	设备信息
+settingsDeviceInfoDesc	硬件与编解码能力检测
+settingsDeviceKeyVideoEncoders	关键视频编码器
+settingsDeviceNoMatchingDecoder	无匹配的解码器
+settingsDeviceSearchHint	搜索解码器（名称 / MIME / 格式 / Profile）
+settingsDeviceUnknown	未知设备
+settingsDeviceUnsupported	不支持
+settingsDownloadManager	下载管理
+settingsDownloadManagerDesc	查看下载任务进度
+settingsErrorLogClearAll	清空全部日志
+settingsErrorLogClearAllConfirm	将删除全部 {count} 个日志文件，此操作不可恢复。
+settingsErrorLogClearFailed	清空失败
+settingsErrorLogClearedAll	已清空全部日志
+settingsErrorLogCopied	日志内容已复制到剪贴板
+settingsErrorLogCopy	一键复制
+settingsErrorLogDelete	删除
+settingsErrorLogDeleteConfirm	确定删除「{name}」吗？
+settingsErrorLogDeleteFailed	删除失败
+settingsErrorLogDeleteTitle	删除日志
+settingsErrorLogDeleted	已删除
+settingsErrorLogEmpty	暂无错误日志
+settingsErrorLogEmptyDesc	应用崩溃时日志会自动记录到这里
+settingsErrorLogExport	导出
+settingsErrorLogExportFailed	导出失败
+settingsErrorLogExportedTo	已导出到
+{path}
+settingsErrorLogGroupCount	崩溃日志（{count}）
+settingsErrorLogRefresh	刷新
+settingsErrorLogRefreshRealtime	刷新（实时查看）
+settingsErrorLogSavePath	日志保存路径：
+{path}
+settingsErrorLogTitle	错误日志
+settingsFontApplied	已应用字体：{name}
+settingsFontCurrent	当前字体：{name}
+settingsFontDisabledDesc	已关闭：跟随系统字体
+settingsFontEnable	启用自定义字体
+settingsFontEnabledDesc	已开启：使用下方导入的字体
+settingsFontGroupFont	字体
+settingsFontImport	导入字体
+settingsFontImporting	正在导入...
+settingsFontParseFailed	字体解析失败，请更换字体文件
+settingsFontPickHint	点击选择 .ttf/.otf 字体文件
+settingsFontPreviewHint	部分字体可能不生效
+settingsFontPreviewText	生如夏花之绚烂，死如秋叶之静美。
+我把你的名字写在树叶上，风把它吹走了；
+我把你的名字写在沙滩上，浪把它冲走了；
+settingsFontReselect	重新选择
+settingsFontReset	重置字号与字重
+settingsFontSizeLabel	字体字号
+settingsFontTitle	App字体设置
+settingsFontWeightBlack	极粗
+settingsFontWeightBold	粗
+settingsFontWeightExtraBold	很粗
+settingsFontWeightExtraLight	很细
+settingsFontWeightLabel	字体字重
+settingsFontWeightLight	细
+settingsFontWeightMedium	中等
+settingsFontWeightNone	默认
+settingsFontWeightRegular	常规
+settingsFontWeightSemiBold	较粗
+settingsFontWeightThin	极细
+settingsGroupAppearance	外观
+settingsGroupLanguage	语言
+settingsGroupMediaLibrary	媒体库
+settingsGroupOther	其他
+settingsGroupPlayback	播放
+settingsHistoryClearAllBody	确定要清除全部播放历史吗？此操作不可恢复。
+settingsHistoryClearAllBodyWithProgress	确定要清除全部播放历史吗？
+
+同时会清除全部播放进度（含「已看完」标记），此操作不可恢复。
+settingsHistoryClearAllTitle	清除历史记录
+settingsHistoryClearAllTooltip	清除全部历史
+settingsHistoryClearProgressBlocked	需先开启上方的「播放历史记录」；关闭时不记录历史，但播放进度会一直保留
+settingsHistoryClearProgressOnDelete	删除历史时清除进度
+settingsHistoryClearProgressOnDeleteDesc	关闭时两套数据互相独立
+settingsHistoryClearProgressOnDesc	开启后，删除历史记录会同时清除该视频的播放进度
+settingsHistoryDeleteEntry	删除该条记录
+settingsHistoryDeleteEntryWithProgress	删除该条记录（同时清除播放进度）
+settingsHistoryEmpty	暂无播放历史
+settingsHistoryEmptyDisabled	暂无播放历史（记录已关闭）
+settingsHistoryEnabled	播放历史记录
+settingsHistoryEnabledDesc	关闭后不再记录新的播放
+settingsLanguage	语言设置
+settingsLicenseCopied	许可文本已复制
+settingsLicenseCopy	复制许可文本
+settingsLicenseCount	{count} 项许可
+settingsLicenseEmpty	暂无许可信息
+settingsLicenseLoadFailed	许可信息加载失败
+settingsLicenseOpenSource	开源许可
+settingsLicenseParagraphCount	{count, plural, =1{1 个许可段落} other{{count} 个许可段落}}
+settingsLicenseTitle	许可证书
+settingsLicenseVersionLoading	版本读取中
+settingsLoginRequired	需要登录哔哩哔哩账号
+settingsMediaScan	媒体扫描与过滤
+settingsMediaScanDesc	扫描规则与文件夹过滤
+settingsPaletteCandyPop	糖果型
+settingsPaletteChroma	饱和型
+settingsPaletteContent	柔和型
+settingsPaletteExpressive	鲜明型
+settingsPaletteFidelity	保真型
+settingsPaletteFruitSalad	果味型
+settingsPaletteHighContrast	对比型
+settingsPaletteJolly	欢快型
+settingsPaletteMaterial	经典型
+settingsPaletteMaterial3Legacy	旧版型
+settingsPaletteMonochrome	单色型
+settingsPaletteNeutral	中性型
+settingsPaletteOneHue	单色相
+settingsPaletteRainbow	彩虹型
+settingsPaletteSoft	淡雅型
+settingsPaletteTonalSpot	标准型
+settingsPaletteUltraContrast	超对比
+settingsPaletteVibrant	鲜艳型
+settingsPaletteVivid	生动型
+settingsPaletteVividBackground	亮背景
+settingsPaletteVividSurfaces	亮表面
+settingsPlaybackHistory	历史记录
+settingsPlaybackHistoryDesc	查看与管理播放历史
+settingsPlayerAutoExit	播放完毕自动退出
+settingsPlayerAutoExitDesc	最后一个播完自动退出
+settingsPlayerAutoNext	自动连播
+settingsPlayerAutoNextDesc	播完自动放下一集
+settingsPlayerBattery	电量
+settingsPlayerBoostCap	增强上限
+settingsPlayerBoostCapDesc	最高增强至 {percent}%音量
+settingsPlayerBrightnessSensitivity	亮度灵敏度
+settingsPlayerButtonBackground	按钮背景
+settingsPlayerButtonBackgroundDesc	为控制按钮加半透明背景
+settingsPlayerChapterProgressBar	显示章节进度条
+settingsPlayerChapterProgressBarDesc	进度条标记章节并显示章节名
+settingsPlayerDataType	数据类型
+settingsPlayerEnableGpuNext	启用 GPU-next
+settingsPlayerEnableVulkan	启用 Vulkan
+settingsPlayerGpuNextDesc	使用 libplacebo 新渲染器
+settingsPlayerGpuNextWarning	启用后超分辨率功能将无法使用；
+可尝试配合软解播放杜比视界视频。
+
+是否继续？
+settingsPlayerGravityDialogBody	生效前提（两个都要满足）：
+① 手机系统设置里已开启「自动旋转」；
+② 本页「视频方向」设为「自动」。
+
+两个前提满足后，再开启本开关，播放界面的横竖屏才会跟随手机方向（竖起来进竖屏播放页，横过来回横屏播放页）。前提不满足时仍按「视频方向」的设置播放，本开关不生效。
+
+「锁定竖屏 / 锁定横屏」是明确指定的方向，不受本开关影响。
+settingsPlayerGravityDialogTitle	开启界面跟随重力旋转
+settingsPlayerGroupBehavior	播放行为
+settingsPlayerGroupGesture	手势
+settingsPlayerGroupOrientation	视频方向
+settingsPlayerGroupTopInfo	顶部信息
+settingsPlayerLockExemptDialogBody	开启后，控制层锁定期间双击屏幕即可暂停/播放。
+
+只豁免这一个手势：左右滑动快进快退、上下滑动音量与亮度、长按倍速在锁定状态下依然不会生效；单击呼出解锁按钮也不受影响。
+
+锁定本是防误触用的，若视频会在口袋/包里误暂停，请保持关闭。
+settingsPlayerLockExemptDialogTitle	启用锁定状态豁免双击
+settingsPlayerLockExemptDoubleTap	锁定状态豁免双击
+settingsPlayerLockExemptDoubleTapDesc	启用锁定状态下双击屏幕播放/暂停的功能
+settingsPlayerLongPressSpeed	长按倍速
+settingsPlayerLongPressSpeedDesc	长按临时倍速，可左右滑动调速
+settingsPlayerNetSpeed	网速
+settingsPlayerNoBlackScreenHint	设备或驱动不支持时会自动回落 OpenGL，不会黑屏
+settingsPlayerOrientationAlwaysLandscape	始终横屏
+settingsPlayerOrientationAlwaysPortrait	始终竖屏
+settingsPlayerOrientationFollowVideo	跟随视频方向
+settingsPlayerPersistentProgressBar	常驻进度线
+settingsPlayerPersistentProgressBarDesc	隐藏控制层后底部显示细线
+settingsPlayerPinchToZoom	双指缩小视频
+settingsPlayerPinchToZoomDesc	双指缩放画面
+settingsPlayerRememberSpeed	记住上次倍速
+settingsPlayerRememberSpeedDesc	自动恢复上次倍速
+settingsPlayerRestartHint	切换后需重启播放器（重开视频）生效；
+settingsPlayerSaveVolumeToSystem	保存音量到系统
+settingsPlayerSaveVolumeToSystemDesc	退出时把音量写回系统
+settingsPlayerSeekRange	1 – {max} 秒
+settingsPlayerSeekSeconds	快进/快退时长
+settingsPlayerSettings	播放设置
+settingsPlayerSettingsDesc	调整播放相关设置
+settingsPlayerShowBatteryDesc	显示当前电量
+settingsPlayerShowDataTypeDesc	显示 WiFi / 移动数据
+settingsPlayerShowNetSpeedDesc	显示实时网速
+settingsPlayerShowTimeDesc	显示当前时间
+settingsPlayerSpeedIndicator	倍速播放指示器
+settingsPlayerSpeedIndicatorDesc	长按时顶部显示倍速提示
+settingsPlayerTapValueHint	点击数值可自定义秒数
+settingsPlayerThumbnailPreview	进度条缩略图
+settingsPlayerThumbnailPreviewDesc	拖动进度条时预览画面
+settingsPlayerUiAnimations	启用播放界面动画
+settingsPlayerUiAnimationsDesc	控制层与面板的进出场动画
+settingsPlayerUiFollowGravity	界面跟随重力旋转
+settingsPlayerVolumeBoost	音量增强
+settingsPlayerVolumeBoostDesc	系统音量满后继续放大
+settingsPlayerVolumeSensitivity	音量灵敏度
+settingsPlayerVulkanDesc	优先使用 Vulkan 渲染
+settingsPlayerVulkanNeedsGpuNext	需先启用上方的「GPU-next」：Vulkan 只对 GPU-next 渲染器生效
+settingsPlayerVulkanWarning	视频输出将优先使用 Vulkan 渲染，新建的上下文不再限定 OpenGL ES。
+
+若设备或驱动不支持，会自动回落 OpenGL，不会黑屏。
+
+注意：普通内核下 MediaCodec 直通只对 OpenGL 生效，开 Vulkan 后「硬解+」会直接走硬解拷贝（不再尝试直通）。
+
+切换后需重启播放器（重开视频）生效。
+settingsPlayerWatchThreshold	已观看进度阈值
+settingsPlayerWatchThresholdDesc	进度达到该比例即视为已看完
+settingsPlayerWatchThresholdTitle	「已观看」进度阈值
+settingsSubtitleDownload	字幕下载
+settingsSubtitleDownloadDesc	影视字幕下载
+settingsThemeColorAmber	琥珀色
+settingsThemeColorBlue	蓝色
+settingsThemeColorBlueGrey	蓝灰色
+settingsThemeColorBrown	棕色
+settingsThemeColorCyan	青色
+settingsThemeColorDeepOrange	橙红色
+settingsThemeColorDeepPurple	深紫色
+settingsThemeColorGreen	绿色
+settingsThemeColorGrey	灰色
+settingsThemeColorHotPink	亮粉色
+settingsThemeColorIndigo	靛蓝色
+settingsThemeColorLightBlue	浅蓝色
+settingsThemeColorLightGreen	浅绿色
+settingsThemeColorLime	酸橙色
+settingsThemeColorMint	薄荷绿
+settingsThemeColorOrange	橙色
+settingsThemeColorPink	粉红色
+settingsThemeColorPurple	紫色
+settingsThemeColorRed	红色
+settingsThemeColorSkyBlue	天蓝色
+settingsThemeColorTeal	蓝绿色
+settingsThemeColorViolet	紫罗兰
+settingsThemeColorYellow	黄色
+settingsThemeModeAmoled	AMOLED 纯黑
+settingsThemeModeDark	深色
+settingsThemeModeLight	浅色
+settingsThemeModeSystem	跟随系统
+settingsVideoDownload	视频下载
+settingsVideoDownloadDesc	B 站视频下载
+settingsWallpaperAdjustTitle	调整壁纸
+settingsWallpaperBlur	模糊
+settingsWallpaperDragHint	拖动以调整位置，双指捏合以缩放。
+settingsWallpaperImageUnavailable	图片已不可用，请重新选择
+settingsWallpaperOffsetX	水平位置
+settingsWallpaperOffsetY	垂直位置
+settingsWallpaperOpacity	透明度
+settingsWallpaperSave	保存壁纸
+settingsWallpaperSaveFailed	无法保存壁纸，请重新选择图片
+settingsWallpaperScale	缩放
+subtitleAlignLeft	左对齐
+subtitleAlignRight	右对齐
+subtitleBorderBox	背景框
+subtitleBorderNone	无
+subtitleBorderOutline	描边
+subtitlePresetBlack	黑色
+subtitlePresetCyan	青色
+subtitlePresetGreen	绿色
+subtitlePresetOpaqueBlack	纯黑
+subtitlePresetTranslucentBlack	半透明黑
+subtitlePresetTranslucentBlue	半透明蓝
+subtitlePresetTranslucentWhite	半透明白
+subtitlePresetWhite	白色
+subtitlePresetYellow	黄色
+subtitleSourceCustom	自定义字幕地址
+subtitleSourceWyzie	Wyzie 字幕服务
+subtitleTrackFallbackName	轨道 {id}
+superResolutionModeA	模式A
+superResolutionModeADesc	优化 1080p 动画
+高模糊度、重采样伪影
+superResolutionModeAPlus	模式A+
+superResolutionModeAPlusDesc	A+A 双段放大
+最高感知质量，更强的线条重建（较慢）
+superResolutionModeB	模式B
+superResolutionModeBDesc	优化 720p 动画
+低模糊度、下采样振铃
+superResolutionModeBPlus	模式B+
+superResolutionModeBPlusDesc	B+B 双段放大
+高感知质量，更好的 720p 效果（较慢）
+superResolutionModeC	模式C
+superResolutionModeCDesc	优化 480p 动画
+最高 PSNR、低感知质量
+superResolutionModeCPlus	模式C+
+superResolutionModeCPlusDesc	C+A 双段放大
+略高感知质量，改进的 480p 效果（较慢）
+superResolutionModeOffDesc	不启用超分辨率，输出原始画面
+superResolutionQualityBalanced	均衡
+superResolutionQualityBalancedDesc	速度与画质平衡，推荐
+superResolutionQualityFast	流畅
+superResolutionQualityFastDesc	低 GPU 占用，速度优先
+superResolutionQualityHigh	高清
+superResolutionQualityHighDesc	高 GPU 占用，画质最佳
+viewModeList	列表模式
+viewModeTree	树状模式
+wallpaperScaleFill	填充
+wallpaperScaleFit	适应

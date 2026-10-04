@@ -1,0 +1,7 @@
+feat: 迁移阶段 7 隐私政策与用户协议长文
+
+- 正文按语言拆 legal_zh 与 legal_en，入口 legalTextsFor
+- 删除 privacy_policy_content 的 4 个常量
+- 隐私弹窗与协议页改为按当前语言取正文
+- 新增 ARB 键 4 个，用户协议标题复用既有键
+- 新增长文兜底测试

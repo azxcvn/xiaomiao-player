@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/pages/bilibili/bili_season_page.dart';
 import 'package:moumou/services/bilibili/bili_bangumi_service.dart';
-import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/services/common_list_controller.dart';
 import 'package:moumou/utils/loading_state.dart';
 import 'package:moumou/widgets/bili_cover_image.dart';
@@ -39,7 +40,6 @@ class _BiliSearchPageState extends State<BiliSearchPage> {
         hasMore: page * _pageSize < result.numResults,
       );
     },
-    describeError: _errorText,
   );
 
   String _keyword = '';
@@ -77,6 +77,7 @@ class _BiliSearchPageState extends State<BiliSearchPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: TextField(
@@ -84,14 +85,14 @@ class _BiliSearchPageState extends State<BiliSearchPage> {
           autofocus: true,
           textInputAction: TextInputAction.search,
           onSubmitted: (_) => _search(),
-          decoration: const InputDecoration(
-            hintText: '搜索番剧',
+          decoration: InputDecoration(
+            hintText: l10n.biliSearchAnime,
             border: InputBorder.none,
           ),
         ),
         actions: [
           IconButton(
-            tooltip: '搜索',
+            tooltip: l10n.commonSearch,
             icon: const Icon(Icons.search),
             onPressed: _search,
           ),
@@ -106,32 +107,37 @@ class _BiliSearchPageState extends State<BiliSearchPage> {
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context);
     if (!_results.started) {
-      return const Center(child: Text('输入关键词搜索番剧'));
+      return Center(child: Text(l10n.biliSearchAnimeHint));
     }
     return switch (_results.state) {
       Loaded<List<BiliSearchItem>>(:final data) => data.isEmpty
-          ? const Center(child: Text('没有找到相关番剧'))
+          ? Center(child: Text(l10n.biliNoAnimeFound))
           : _resultList(data),
       LoadError<List<BiliSearchItem>>(:final message) => _errorView(message),
       _ => const Center(child: CircularProgressIndicator()),
     };
   }
 
-  Widget _errorView(String message) {
+  Widget _errorView(Object message) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(message, textAlign: TextAlign.center),
+            child: Text(
+              serviceErrorText(l10n, message),
+              textAlign: TextAlign.center,
+            ),
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
             onPressed: _search,
             icon: const Icon(Icons.refresh),
-            label: const Text('重试'),
+            label: Text(l10n.commonRetry),
           ),
         ],
       ),
@@ -161,9 +167,6 @@ class _BiliSearchPageState extends State<BiliSearchPage> {
       },
     );
   }
-
-  static String _errorText(Object e) =>
-      e is BiliApiException ? e.message : e.toString();
 }
 
 /// 搜索结果条目：封面 + 标题 + 元信息。

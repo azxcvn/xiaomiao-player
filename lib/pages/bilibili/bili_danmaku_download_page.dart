@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/pages/download/download_manager_page.dart';
 import 'package:moumou/services/bilibili/bili_download_service.dart';
 import 'package:moumou/services/download/download_manager.dart';
@@ -25,7 +27,7 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
   bool _busy = false;
   BiliDownloadTarget? _target;
   final Set<int> _selected = {};
-  String? _error;
+  Object? _error;
 
   @override
   void initState() {
@@ -55,7 +57,7 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
     final url = _urlCtrl.text.trim();
     if (url.isEmpty) return;
     if (!DownloadSettings.instance.hasDirectory) {
-      _toast('请先设置下载目录');
+      _toast(AppLocalizations.of(context).downloadSetDirFirst);
       await _pickDir();
       if (!DownloadSettings.instance.hasDirectory) return;
     }
@@ -71,7 +73,7 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
       setState(() => _target = target);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = _errText(e));
+      setState(() => _error = e);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -80,9 +82,10 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
   Future<void> _download() async {
     final target = _target;
     if (target == null || _selected.isEmpty) return;
+    final l10n = AppLocalizations.of(context);
     // 下载前校验存储路径真实存在（工作.md 第 3 点）。
     if (!DownloadSettings.instance.directoryExists) {
-      _toast('下载目录不存在，请重新选择');
+      _toast(l10n.downloadDirGone);
       await _pickDir();
       if (!DownloadSettings.instance.directoryExists) return;
     }
@@ -109,7 +112,7 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
       );
     }
     if (!mounted) return;
-    _toast('已添加 ${_selected.length} 个弹幕下载任务');
+    _toast(l10n.biliDanmakuTasksAdded(_selected.length));
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const DownloadManagerPage()),
     );
@@ -117,8 +120,9 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('弹幕下载')),
+      appBar: AppBar(title: Text(l10n.biliDanmakuDownloadTitle)),
       body: Column(
         children: [
           _buildInput(),
@@ -129,6 +133,7 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
   }
 
   Widget _buildInput() {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
       child: Row(
@@ -138,7 +143,7 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
               controller: _urlCtrl,
               onSubmitted: (_) => _parse(),
               decoration: InputDecoration(
-                hintText: '粘贴 B 站视频/番剧链接（BV / av / ss / ep / b23.tv）',
+                hintText: l10n.biliPasteVideoLinkHint,
                 isDense: true,
                 prefixIcon: const Icon(Icons.link),
                 border: OutlineInputBorder(
@@ -156,7 +161,7 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('解析'),
+                : Text(l10n.biliParse),
           ),
         ],
       ),
@@ -165,11 +170,15 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
 
   Widget _buildBody() {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     if (_error != null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text(_error!, textAlign: TextAlign.center),
+          child: Text(
+            serviceErrorText(l10n, _error!),
+            textAlign: TextAlign.center,
+          ),
         ),
       );
     }
@@ -182,7 +191,7 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
           const SizedBox(height: 24),
           Center(
             child: Text(
-              '粘贴链接后点「解析」',
+              l10n.biliPasteThenParse,
               style: TextStyle(color: scheme.onSurfaceVariant),
             ),
           ),
@@ -205,7 +214,7 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
                 ),
               ),
               Text(
-                '共 ${target.items.length} 集',
+                l10n.playerBiliTotalEpisodes(target.items.length),
                 style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
               ),
             ],
@@ -245,22 +254,24 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
 
   Widget _dirTile() {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     final dir = DownloadSettings.instance.directory;
     return ListTile(
       dense: true,
       leading: const Icon(Icons.folder_outlined),
       title: Text(
-        dir.isEmpty ? '未设置下载目录' : DownloadSettings.instance.directoryName,
+        dir.isEmpty ? l10n.downloadNoDir : DownloadSettings.instance.directoryName,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
       ),
-      trailing: TextButton(onPressed: _pickDir, child: const Text('设置目录')),
+      trailing: TextButton(onPressed: _pickDir, child: Text(l10n.downloadSetDir)),
     );
   }
 
   Widget _selectAllBar() {
     final target = _target!;
+    final l10n = AppLocalizations.of(context);
     final all = _selected.length == target.items.length && target.items.isNotEmpty;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -276,15 +287,16 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
               }
             }),
           ),
-          const Text('全选'),
+          Text(l10n.commonSelectAll),
           const Spacer(),
-          Text('已选 ${_selected.length} 集'),
+          Text(l10n.biliEpisodesSelected(_selected.length)),
         ],
       ),
     );
   }
 
   Widget _downloadBar() {
+    final l10n = AppLocalizations.of(context);
     return SafeArea(
       top: false,
       child: Padding(
@@ -294,7 +306,7 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
           child: FilledButton.icon(
             onPressed: _selected.isEmpty ? null : _download,
             icon: const Icon(Icons.download),
-            label: Text('下载弹幕（${_selected.length}）'),
+            label: Text(l10n.biliDownloadDanmaku(_selected.length)),
           ),
         ),
       ),
@@ -310,6 +322,4 @@ class _BiliDanmakuDownloadPageState extends State<BiliDanmakuDownloadPage> {
         behavior: SnackBarBehavior.floating,
       ));
   }
-
-  String _errText(Object e) => e.toString().replaceFirst('BiliApiException: ', '');
 }

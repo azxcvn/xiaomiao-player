@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/tree_node.dart';
 import 'package:moumou/models/video_file.dart';
 import 'package:moumou/pages/home/folder_detail_page.dart';
@@ -237,9 +238,10 @@ class _HomePageState extends State<HomePage>
     } catch (_) {
       // 个别 ROM 无此入口：静默降级为 toast 提示
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('请在系统设置中手动开启存储权限')));
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.homePermissionHintInSettings)),
+        );
       }
     }
   }
@@ -337,34 +339,35 @@ class _HomePageState extends State<HomePage>
   }
 
   PreferredSizeWidget _buildAppBar() {
+    final l10n = AppLocalizations.of(context);
     return AppBar(
       title: _searching
           ? TextField(
               controller: _searchController,
               autofocus: true,
-              decoration: const InputDecoration(
-                hintText: '搜索文件夹与视频',
+              decoration: InputDecoration(
+                hintText: l10n.homeSearchFoldersAndVideos,
                 border: InputBorder.none,
               ),
               onChanged: _onQueryChanged,
             )
-          : const Text('小喵Player'),
+          : Text(l10n.appTitle),
       actions: [
         if (_searching)
           IconButton(
             icon: const Icon(Icons.close),
-            tooltip: '取消搜索',
+            tooltip: l10n.commonCancelSearch,
             onPressed: _toggleSearch,
           )
         else
           IconButton(
             icon: const Icon(Icons.search),
-            tooltip: '搜索',
+            tooltip: l10n.commonSearch,
             onPressed: _toggleSearch,
           ),
         IconButton(
           icon: const Icon(Icons.sort),
-          tooltip: '排序与视图',
+          tooltip: l10n.homeSortAndView,
           onPressed: _showViewOptions,
         ),
       ],
@@ -373,6 +376,7 @@ class _HomePageState extends State<HomePage>
 
   /// 多选态顶部工具栏（`[×] 已选 N 项 [全选] [⋮]`）；全选范围 = 当前可见列表
   PreferredSizeWidget _buildSelectionAppBar() {
+    final l10n = AppLocalizations.of(context);
     final visible = _visibleNodes().map((n) => n.path).toList();
     final allSelected = _selection.containsAll(visible);
     return buildFileSelectionAppBar(
@@ -381,6 +385,7 @@ class _HomePageState extends State<HomePage>
       onExit: _selection.exit,
       onToggleAll: () => _selection.setAll(visible, selected: !allSelected),
       onOpenMenu: () => _openSelectionMenu(),
+      l10n: l10n,
     );
   }
 
@@ -389,27 +394,28 @@ class _HomePageState extends State<HomePage>
   /// 视频（工作.md：播放历史记录功能）；「打开链接」弹窗输入直链在线播放
   /// （工作.md：链接播放功能）。
   Widget _buildSpeedDial() {
+    final l10n = AppLocalizations.of(context);
     return SpeedDialFab(
       heroTag: 'home_speed_dial',
       actions: [
         SpeedDialAction(
           icon: Icons.history,
-          label: '最近播放',
+          label: l10n.homeRecentPlayed,
           onTap: _openRecent,
         ),
         SpeedDialAction(
           icon: Icons.link,
-          label: '打开链接',
+          label: l10n.homeOpenLink,
           onTap: _openLink,
         ),
         SpeedDialAction(
           icon: Icons.live_tv_outlined,
-          label: '哔哩番剧',
+          label: l10n.biliBangumi,
           onTap: _openBiliBangumi,
         ),
         SpeedDialAction(
           icon: Icons.cloud_outlined,
-          label: '网络存储',
+          label: l10n.networkStorageTitle,
           onTap: _openNetworkStorage,
         ),
       ],
@@ -426,16 +432,17 @@ class _HomePageState extends State<HomePage>
   /// 视频；进度由播放页按保存的播放进度自动恢复。无历史提示；本地文件
   /// 已被删除/移动时提示（条目保留，可在「历史记录」页管理删除）。
   Future<void> _openRecent() async {
+    final l10n = AppLocalizations.of(context);
     final history = PlaybackHistoryService.instance;
     await history.ensureLoaded();
     if (!mounted) return;
     final entry = history.mostRecent;
     if (entry == null) {
-      _toast('暂无播放历史');
+      _toast(l10n.settingsHistoryEmpty);
       return;
     }
     if (!entry.isUrl && !File(entry.path).existsSync()) {
-      _toast('文件不存在或已被移动：${entry.title}');
+      _toast(l10n.homeFileGone(entry.title));
       return;
     }
     await Navigator.of(context).push(
@@ -472,9 +479,10 @@ class _HomePageState extends State<HomePage>
   void _openBiliBangumi() {
     // 未登录哔哩哔哩账号时仅提示，不进入番剧页（番剧索引/详情接口需要登录态）。
     if (!BiliAccount.instance.isLogin) {
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(const SnackBar(content: Text('需要登录哔哩哔哩账号')));
+        ..showSnackBar(SnackBar(content: Text(l10n.settingsLoginRequired)));
       return;
     }
     Navigator.of(context).push(
@@ -504,6 +512,7 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context);
     // 只有首屏完全无数据时才展示整页转圈；已有数据时的重扫/文件变更均为原地静默刷新（P2-24）
     if (_loading && _roots.isEmpty && _folders.isEmpty && !_permissionDenied) {
       return const Center(child: CircularProgressIndicator());
@@ -513,9 +522,11 @@ class _HomePageState extends State<HomePage>
       return _buildMessage(
         icon: Icons.folder_open,
         message: _permissionBlocked
-            ? '存储权限已被拒绝，需要到系统设置里手动开启'
-            : '需要授予存储权限才能扫描视频',
-        buttonText: _permissionBlocked ? '去系统设置开启' : '授予权限',
+            ? l10n.homePermissionDeniedDetail
+            : l10n.homePermissionNeeded,
+        buttonText: _permissionBlocked
+            ? l10n.homeOpenSettings
+            : l10n.homeGrantPermission,
         buttonIcon: _permissionBlocked ? Icons.settings : Icons.lock_open,
         onPressed: _permissionBlocked ? _openAppSettings : _grantPermission,
       );
@@ -523,8 +534,8 @@ class _HomePageState extends State<HomePage>
     if (_roots.isEmpty) {
       return _buildMessage(
         icon: Icons.folder_off_outlined,
-        message: '没有找到视频',
-        buttonText: '重新扫描',
+        message: l10n.homeNoVideosFound,
+        buttonText: l10n.homeRescan,
         onPressed: _load,
       );
     }
@@ -542,7 +553,7 @@ class _HomePageState extends State<HomePage>
         final nodes = _visibleNodes();
         if (widget.viewSettings.viewMode == ViewMode.tree) {
           if (nodes.isEmpty && _query.isNotEmpty) {
-            return const Center(child: Text('没有匹配的内容'));
+            return Center(child: Text(l10n.homeNoMatchingContent));
           }
           return RefreshIndicator(
             onRefresh: () => _load(force: true),
@@ -562,7 +573,7 @@ class _HomePageState extends State<HomePage>
           );
         }
         if (nodes.isEmpty && _query.isNotEmpty) {
-          return const Center(child: Text('没有匹配的文件夹'));
+          return Center(child: Text(l10n.homeNoMatchingFolders));
         }
         return RefreshIndicator(
           onRefresh: () => _load(force: true),
@@ -730,6 +741,7 @@ class _HomePageState extends State<HomePage>
     required VoidCallback onPressed,
     IconData buttonIcon = Icons.refresh,
   }) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -749,7 +761,7 @@ class _HomePageState extends State<HomePage>
             const SizedBox(height: 8),
             TextButton(
               onPressed: _load,
-              child: const Text('我已开启，重新检查'),
+              child: Text(l10n.homeRecheckPermission),
             ),
           ],
         ],

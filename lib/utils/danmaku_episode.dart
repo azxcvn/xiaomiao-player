@@ -101,11 +101,24 @@ DandanEpisode? findMatchingEpisode(
   return null;
 }
 
+/// 自动定位失败的提示种类（**文案在 UI 层**：`label_maps.danmakuEpisodeLocateHint`）
+enum DanmakuEpisodeLocateHint {
+  /// 文件名里识别不出集数
+  noEpisodeNumber,
+
+  /// 识别出集数，但集列表里没有
+  episodeMissing,
+}
+
 /// 「按当前视频文件名定位到哪一集」的解析结果。
 ///
-/// [index] < 0 表示未命中（此时 [message] 为给用户看的说明）；命中的 [number]
-/// 是解析出的集数（失败时为 null），便于调用方做提示文案。
-typedef DanmakuEpisodeLocation = ({int index, double? number, String? message});
+/// [index] < 0 表示未命中（此时 [hint] 说明原因，文案由 UI 层翻译）；命中的
+/// [number] 是解析出的集数（失败时为 null），便于调用方做提示文案。
+typedef DanmakuEpisodeLocation = ({
+  int index,
+  double? number,
+  DanmakuEpisodeLocateHint? hint,
+});
 
 /// 从当前视频文件名解析集数，并在集列表里定位（供网络弹幕面板**自动定位**用）。
 ///
@@ -117,14 +130,14 @@ DanmakuEpisodeLocation locateCurrentEpisode(
   List<DandanEpisode> episodes,
 ) {
   if (fileName == null || fileName.isEmpty) {
-    return (index: -1, number: null, message: null);
+    return (index: -1, number: null, hint: null);
   }
   final number = extractEpisodeNumber(fileName);
   if (number == null) {
     return (
       index: -1,
       number: null,
-      message: '未能从文件名识别集数，可用上方输入框直接跳转',
+      hint: DanmakuEpisodeLocateHint.noEpisodeNumber,
     );
   }
   final match = findMatchingEpisode(episodes, number);
@@ -133,8 +146,8 @@ DanmakuEpisodeLocation locateCurrentEpisode(
     return (
       index: -1,
       number: number,
-      message: '未找到第 ${number.toInt()} 集，可用上方输入框直接跳转',
+      hint: DanmakuEpisodeLocateHint.episodeMissing,
     );
   }
-  return (index: index, number: number, message: null);
+  return (index: index, number: number, hint: null);
 }

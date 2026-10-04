@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/danmaku_font_mode.dart';
 import 'package:moumou/pages/home/home_page.dart';
 import 'package:moumou/pages/player/player_page.dart';
 import 'package:moumou/pages/settings/settings_page.dart';
 import 'package:moumou/services/app_font_settings.dart';
+import 'package:moumou/services/app_locale_settings.dart';
 import 'package:moumou/services/bilibili/bili_account.dart';
 import 'package:moumou/services/crash_log_service.dart';
 import 'package:moumou/services/danmaku_server_settings.dart';
@@ -39,6 +41,7 @@ import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/url_media.dart';
 import 'package:moumou/widgets/app_frame.dart';
 import 'package:moumou/widgets/capsule_nav_bar.dart';
+import 'package:moumou/widgets/language_picker_dialog.dart';
 import 'package:moumou/widgets/main_scaffold.dart';
 import 'package:moumou/widgets/privacy_policy_dialog.dart';
 import 'package:moumou/widgets/update_dialog.dart';
@@ -76,6 +79,9 @@ Future<void> main() async {
   // 隐私政策同意状态：runApp 前加载，确保首帧即可读到正确状态
   // （首次启动未同意 → 启动门禁弹隐私弹窗）。
   await PrivacyPolicySettings.instance.ensureLoaded();
+  // 界面语言偏好：runApp 前加载，确保首帧即按用户所选语言渲染
+  // （键 app_locale，缺省/非法值一律回落简体中文）。
+  await AppLocaleSettings.instance.ensureLoaded();
   // 更新设置：runApp 前加载，确保自动检查更新读正确开关/忽略版本状态。
   await UpdateSettings.instance.ensureLoaded();
   // 解码设置：必须 runApp 前 await —— 播放页 `initState` 是**同步**的，会用
@@ -242,6 +248,9 @@ class _MoumouAppState extends State<MoumouApp> {
     // 隐私政策同意状态：main() 已在 runApp 前 await 加载，这里补 ensureLoaded
     // 防测试/热重载路径竞态（与其他设置服务同模式）。
     PrivacyPolicySettings.instance.ensureLoaded();
+    // 界面语言偏好：main() 已在 runApp 前 await 加载，这里补 ensureLoaded
+    // 防测试/热重载路径竞态（与其他设置服务同模式）。
+    AppLocaleSettings.instance.ensureLoaded();
     // 更新设置：main() 已在 runApp 前 await 加载，这里补 ensureLoaded 防竞态。
     UpdateSettings.instance.ensureLoaded();
     // 杜比视界偏色提示设置（工作.md 迁移功能）：播放页检测杜比视界弹出
@@ -299,6 +308,12 @@ class _MoumouAppState extends State<MoumouApp> {
     final agreed = await showPrivacyPolicyDialog(context);
     if (agreed == true) {
       await PrivacyPolicySettings.instance.accept();
+      // 首启语言选择：只有「这一次刚同意隐私政策」的**全新安装**才会走到这里。
+      // 已同意过的老用户在上面就 return true 了，不进本分支 → 不弹语言窗、
+      // 保持简体中文（用户已拍板，见 02-实施方案.md §1.7 A）。
+      if (context.mounted) {
+        await showLanguagePickerDialog(context);
+      }
       return true;
     }
     // 取消：退出应用（Android 上结束当前 Activity）
@@ -328,7 +343,13 @@ class _MoumouAppState extends State<MoumouApp> {
       if (context != null && context.mounted) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(const SnackBar(content: Text('无法打开该视频')));
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context).mainVideoOpenFailed,
+              ),
+            ),
+          );
       }
       return;
     }
@@ -354,6 +375,9 @@ class _MoumouAppState extends State<MoumouApp> {
         _themeController,
         AppFontSettings.instance,
         WallpaperSettings.instance,
+        // 语言切换要立即生效：setLocale 的 notifyListeners 触发本 build，
+        // MaterialApp.locale 随之更新（无需重启）
+        AppLocaleSettings.instance,
       ]),
       builder: (context, _) {
         final seed = _themeController.seedColor;
@@ -414,7 +438,12 @@ class _MoumouAppState extends State<MoumouApp> {
         };
 
         return MaterialApp(
-          title: '小喵Player',
+          // 应用名跟随语言（zh=小喵Player / en=Meow Player）
+          onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          // 非空 Locale，默认简体中文（不提供「跟随系统」）
+          locale: AppLocaleSettings.instance.locale,
           debugShowCheckedModeBanner: false,
           theme: light,
           darkTheme: dark,
@@ -437,21 +466,30 @@ class _MoumouAppState extends State<MoumouApp> {
           },
           // 路由观察者：AppFrame 据此检测播放页，切换全屏行为
           navigatorObservers: [AppFrameObserver.instance],
-          home: MainScaffold(
-            items: [
-              CapsuleNavItem(
-                icon: Icons.home_outlined,
-                label: '首页',
-                page: HomePage(viewSettings: _viewSettings),
-              ),
-              CapsuleNavItem(
-                // 「我的」页：账号 + 设置（对齐手机系统设置的信息架构），
-                // 图标用联系人头像样式占位（登录后可换成用户头像）
-                icon: Icons.account_circle_outlined,
-                label: '我的',
-                page: SettingsPage(controller: _themeController),
-              ),
-            ],
+          // ⚠️ 导航文案必须用 **MaterialApp 之下**的 context 取：
+          // `Localizations` 是 MaterialApp 建在自己内部的，用外层（本 builder 的）
+          // context 调 `AppLocalizations.of()` 会拿到 null、它的 `!` 直接抛
+          // "Null check operator used on a null value"（启动即崩，analyze 查不出）。
+          home: Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context);
+              return MainScaffold(
+                items: [
+                  CapsuleNavItem(
+                    icon: Icons.home_outlined,
+                    label: l10n.navHome,
+                    page: HomePage(viewSettings: _viewSettings),
+                  ),
+                  CapsuleNavItem(
+                    // 「我的」页：账号 + 设置（对齐手机系统设置的信息架构），
+                    // 图标用联系人头像样式占位（登录后可换成用户头像）
+                    icon: Icons.account_circle_outlined,
+                    label: l10n.navMine,
+                    page: SettingsPage(controller: _themeController),
+                  ),
+                ],
+              );
+            },
           ),
         );
       },

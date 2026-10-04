@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/player_action.dart';
 import 'package:moumou/services/decode_settings.dart';
 import 'package:moumou/services/player_controls_settings.dart';
@@ -46,10 +48,11 @@ class PlayerSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final settings = PlayerControlsSettings.instance;
     final decodeSettings = DecodeSettings.instance;
     return Scaffold(
-      appBar: AppBar(title: const Text('播放设置')),
+      appBar: AppBar(title: Text(l10n.settingsPlayerSettings)),
       body: ListenableBuilder(
         listenable: Listenable.merge([settings, decodeSettings]),
         builder: (context, _) {
@@ -57,14 +60,14 @@ class PlayerSettingsPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
             children: [
               // ── 手势（工作.md 第 3 点：所有手势设置归为一张卡片）──
-              const SettingsGroupTitle(title: '手势'),
+              SettingsGroupTitle(title: l10n.settingsPlayerGroupGesture),
               SettingsCard(
                 child: Column(
                   children: [
                     for (final m in DoubleTapMode.values)
                       SettingsRadioTile(
                         icon: _modeIcon(m),
-                        title: m.label,
+                        title: playerDoubleTapModeLabel(l10n, m),
                         selected: settings.doubleTapMode == m,
                         onTap: () => settings.setDoubleTapMode(m),
                       ),
@@ -78,14 +81,14 @@ class PlayerSettingsPage extends StatelessWidget {
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     _SensitivityTile(
                       icon: Icons.volume_up_outlined,
-                      title: '音量灵敏度',
+                      title: l10n.settingsPlayerVolumeSensitivity,
                       value: settings.volumeSensitivity,
                       onChanged: settings.setVolumeSensitivity,
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     _SensitivityTile(
                       icon: Icons.brightness_6_outlined,
-                      title: '亮度灵敏度',
+                      title: l10n.settingsPlayerBrightnessSensitivity,
                       value: settings.brightnessSensitivity,
                       onChanged: settings.setBrightnessSensitivity,
                     ),
@@ -100,20 +103,21 @@ class PlayerSettingsPage extends StatelessWidget {
               ),
               // ── 视频方向（工作.md 第 5 点）────────────────
               const SizedBox(height: 16),
-              const SettingsGroupTitle(title: '视频方向'),
+              SettingsGroupTitle(title: l10n.settingsPlayerGroupOrientation),
               SettingsCard(
                 child: Column(
                   children: [
                     for (final m in VideoOrientationMode.values)
                       SettingsRadioTile(
                         icon: _orientationIcon(m),
-                        title: m.label,
+                        title: playerOrientationModeLabel(l10n, m),
                         subtitle: switch (m) {
-                          VideoOrientationMode.auto => const Text('跟随视频方向'),
+                          VideoOrientationMode.auto =>
+                            Text(l10n.settingsPlayerOrientationFollowVideo),
                           VideoOrientationMode.portrait =>
-                            const Text('始终竖屏'),
+                            Text(l10n.settingsPlayerOrientationAlwaysPortrait),
                           VideoOrientationMode.landscape =>
-                            const Text('始终横屏'),
+                            Text(l10n.settingsPlayerOrientationAlwaysLandscape),
                         },
                         selected: settings.videoOrientation == m,
                         onTap: () => settings.setVideoOrientation(m),
@@ -123,7 +127,7 @@ class PlayerSettingsPage extends StatelessWidget {
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsTile(
                       icon: Icons.screen_rotation,
-                      title: '界面跟随重力旋转',
+                      title: l10n.settingsPlayerUiFollowGravity,
                       trailing: Switch(
                         value: settings.followPhoneRotation,
                         onChanged: (v) =>
@@ -135,38 +139,38 @@ class PlayerSettingsPage extends StatelessWidget {
               ),
               // ── 顶部信息（工作.md 阶段1 第 1 点：时间/电量/网速/数据类型多选）──
               const SizedBox(height: 16),
-              const SettingsGroupTitle(title: '顶部信息'),
+              SettingsGroupTitle(title: l10n.settingsPlayerGroupTopInfo),
               SettingsCard(
                 child: Column(
                   children: [
                     SettingsCheckboxTile(
                       icon: Icons.access_time,
-                      title: '时间',
-                      subtitle: const Text('显示当前时间'),
+                      title: l10n.commonTime,
+                      subtitle: Text(l10n.settingsPlayerShowTimeDesc),
                       checked: settings.showTopTime,
                       onChanged: settings.setShowTopTime,
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsCheckboxTile(
                       icon: Icons.battery_full,
-                      title: '电量',
-                      subtitle: const Text('显示当前电量'),
+                      title: l10n.settingsPlayerBattery,
+                      subtitle: Text(l10n.settingsPlayerShowBatteryDesc),
                       checked: settings.showTopBattery,
                       onChanged: settings.setShowTopBattery,
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsCheckboxTile(
                       icon: Icons.speed_outlined,
-                      title: '网速',
-                      subtitle: const Text('显示实时网速'),
+                      title: l10n.settingsPlayerNetSpeed,
+                      subtitle: Text(l10n.settingsPlayerShowNetSpeedDesc),
                       checked: settings.showTopNetSpeed,
                       onChanged: settings.setShowTopNetSpeed,
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsCheckboxTile(
                       icon: Icons.wifi_outlined,
-                      title: '数据类型',
-                      subtitle: const Text('显示 WiFi / 移动数据'),
+                      title: l10n.settingsPlayerDataType,
+                      subtitle: Text(l10n.settingsPlayerShowDataTypeDesc),
                       checked: settings.showTopNetType,
                       onChanged: settings.setShowTopNetType,
                     ),
@@ -175,14 +179,14 @@ class PlayerSettingsPage extends StatelessWidget {
               ),
               // ── 播放行为（原「播放」组别改名）────────────
               const SizedBox(height: 16),
-              const SettingsGroupTitle(title: '播放行为'),
+              SettingsGroupTitle(title: l10n.settingsPlayerGroupBehavior),
               SettingsCard(
                 child: Column(
                   children: [
                     SettingsTile(
                       icon: Icons.horizontal_rule,
-                      title: '常驻进度线',
-                      subtitle: const Text('隐藏控制层后底部显示细线'),
+                      title: l10n.settingsPlayerPersistentProgressBar,
+                      subtitle: Text(l10n.settingsPlayerPersistentProgressBarDesc),
                       trailing: Switch(
                         value: settings.showProgressLine,
                         onChanged: (v) => settings.setShowProgressLine(v),
@@ -191,8 +195,8 @@ class PlayerSettingsPage extends StatelessWidget {
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsTile(
                       icon: Icons.bookmarks_outlined,
-                      title: '显示章节进度条',
-                      subtitle: const Text('进度条标记章节并显示章节名'),
+                      title: l10n.settingsPlayerChapterProgressBar,
+                      subtitle: Text(l10n.settingsPlayerChapterProgressBarDesc),
                       trailing: Switch(
                         value: settings.showChapterProgress,
                         onChanged: (v) => settings.setShowChapterProgress(v),
@@ -201,8 +205,8 @@ class PlayerSettingsPage extends StatelessWidget {
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsTile(
                       icon: Icons.image_outlined,
-                      title: '进度条缩略图',
-                      subtitle: const Text('拖动进度条时预览画面'),
+                      title: l10n.settingsPlayerThumbnailPreview,
+                      subtitle: Text(l10n.settingsPlayerThumbnailPreviewDesc),
                       trailing: Switch(
                         value: settings.showThumbnailPreview,
                         onChanged: (v) => settings.setShowThumbnailPreview(v),
@@ -211,8 +215,8 @@ class PlayerSettingsPage extends StatelessWidget {
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsTile(
                       icon: Icons.speed,
-                      title: '记住上次倍速',
-                      subtitle: const Text('自动恢复上次倍速'),
+                      title: l10n.settingsPlayerRememberSpeed,
+                      subtitle: Text(l10n.settingsPlayerRememberSpeedDesc),
                       trailing: Switch(
                         value: settings.rememberSpeed,
                         onChanged: (v) => settings.setRememberSpeed(v),
@@ -221,8 +225,8 @@ class PlayerSettingsPage extends StatelessWidget {
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsTile(
                       icon: Icons.volume_off_outlined,
-                      title: '保存音量到系统',
-                      subtitle: const Text('退出时把音量写回系统'),
+                      title: l10n.settingsPlayerSaveVolumeToSystem,
+                      subtitle: Text(l10n.settingsPlayerSaveVolumeToSystemDesc),
                       trailing: Switch(
                         value: settings.saveVolumeToSystem,
                         onChanged: (v) => settings.setSaveVolumeToSystem(v),
@@ -231,8 +235,8 @@ class PlayerSettingsPage extends StatelessWidget {
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsTile(
                       icon: Icons.pinch_outlined,
-                      title: '双指缩小视频',
-                      subtitle: const Text('双指缩放画面'),
+                      title: l10n.settingsPlayerPinchToZoom,
+                      subtitle: Text(l10n.settingsPlayerPinchToZoomDesc),
                       trailing: Switch(
                         value: settings.enableShrinkVideo,
                         onChanged: (v) => settings.setEnableShrinkVideo(v),
@@ -241,8 +245,8 @@ class PlayerSettingsPage extends StatelessWidget {
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsTile(
                       icon: Icons.radio_button_checked,
-                      title: '按钮背景',
-                      subtitle: const Text('为控制按钮加半透明背景'),
+                      title: l10n.settingsPlayerButtonBackground,
+                      subtitle: Text(l10n.settingsPlayerButtonBackgroundDesc),
                       trailing: Switch(
                         value: settings.showButtonBackground,
                         onChanged: (v) => settings.setShowButtonBackground(v),
@@ -251,8 +255,8 @@ class PlayerSettingsPage extends StatelessWidget {
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsTile(
                       icon: Icons.skip_next_rounded,
-                      title: '自动连播',
-                      subtitle: const Text('播完自动放下一集'),
+                      title: l10n.settingsPlayerAutoNext,
+                      subtitle: Text(l10n.settingsPlayerAutoNextDesc),
                       trailing: Switch(
                         value: settings.autoNext,
                         onChanged: (v) => settings.setAutoNext(v),
@@ -261,8 +265,8 @@ class PlayerSettingsPage extends StatelessWidget {
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsTile(
                       icon: Icons.exit_to_app,
-                      title: '播放完毕自动退出',
-                      subtitle: const Text('最后一个播完自动退出'),
+                      title: l10n.settingsPlayerAutoExit,
+                      subtitle: Text(l10n.settingsPlayerAutoExitDesc),
                       trailing: Switch(
                         value: settings.autoExit,
                         onChanged: (v) => settings.setAutoExit(v),
@@ -271,8 +275,8 @@ class PlayerSettingsPage extends StatelessWidget {
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsTile(
                       icon: Icons.speed_rounded,
-                      title: '倍速播放指示器',
-                      subtitle: const Text('长按时顶部显示倍速提示'),
+                      title: l10n.settingsPlayerSpeedIndicator,
+                      subtitle: Text(l10n.settingsPlayerSpeedIndicatorDesc),
                       trailing: Switch(
                         value: settings.showSpeedIndicator,
                         onChanged: (v) => settings.setShowSpeedIndicator(v),
@@ -281,8 +285,8 @@ class PlayerSettingsPage extends StatelessWidget {
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsTile(
                       icon: Icons.animation_outlined,
-                      title: '启用播放界面动画',
-                      subtitle: const Text('控制层与面板的进出场动画'),
+                      title: l10n.settingsPlayerUiAnimations,
+                      subtitle: Text(l10n.settingsPlayerUiAnimationsDesc),
                       trailing: Switch(
                         value: settings.playerAnimations,
                         onChanged: (v) => settings.setPlayerAnimations(v),
@@ -291,8 +295,8 @@ class PlayerSettingsPage extends StatelessWidget {
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsTile(
                       icon: Icons.lock_open_outlined,
-                      title: '锁定状态豁免双击',
-                      subtitle: const Text('启用锁定状态下双击屏幕播放/暂停的功能'),
+                      title: l10n.settingsPlayerLockExemptDoubleTap,
+                      subtitle: Text(l10n.settingsPlayerLockExemptDoubleTapDesc),
                       trailing: Switch(
                         value: settings.lockGestureExempt,
                         onChanged: (v) =>
@@ -303,8 +307,8 @@ class PlayerSettingsPage extends StatelessWidget {
                     // 音量增强（组内最后一项）：开关 + 可折叠的上限滑杆。
                     SettingsTile(
                       icon: Icons.volume_up_outlined,
-                      title: '音量增强',
-                      subtitle: const Text('系统音量满后继续放大'),
+                      title: l10n.settingsPlayerVolumeBoost,
+                      subtitle: Text(l10n.settingsPlayerVolumeBoostDesc),
                       trailing: Switch(
                         value: settings.volumeBoostEnabled,
                         onChanged: (v) => settings.setVolumeBoostEnabled(v),
@@ -335,7 +339,7 @@ class PlayerSettingsPage extends StatelessWidget {
                 ),
               ),
               // 已观看进度阈值（视频列表「进度」字段的完成判定）
-              const SettingsGroupTitle(title: '已观看进度阈值'),
+              SettingsGroupTitle(title: l10n.settingsPlayerWatchThreshold),
               SettingsCard(
                 child: _WatchThresholdTile(
                   value: settings.watchThreshold,
@@ -344,22 +348,22 @@ class PlayerSettingsPage extends StatelessWidget {
               ),
               // ── 解码（GPU-next / Vulkan 可选渲染后端，重启播放器生效）──
               const SizedBox(height: 16),
-              const SettingsGroupTitle(title: '解码'),
+              SettingsGroupTitle(title: l10n.playerActionDecode),
               SettingsCard(
                 child: Column(
                   children: [
                     SettingsSwitchTile(
                       icon: Icons.auto_awesome_outlined,
-                      title: '启用 GPU-next',
-                      subtitle: const Text('使用 libplacebo 新渲染器'),
+                      title: l10n.settingsPlayerEnableGpuNext,
+                      subtitle: Text(l10n.settingsPlayerGpuNextDesc),
                       value: decodeSettings.gpuNext,
                       onChanged: (v) => _onGpuNextChanged(context, v),
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SettingsSwitchTile(
                       icon: Icons.memory_outlined,
-                      title: '启用 Vulkan',
-                      subtitle: const Text('优先使用 Vulkan 渲染'),
+                      title: l10n.settingsPlayerEnableVulkan,
+                      subtitle: Text(l10n.settingsPlayerVulkanDesc),
                       value: decodeSettings.useVulkan,
                       onChanged: decodeSettings.gpuNext
                           ? (v) => _onVulkanChanged(context, v)
@@ -371,7 +375,7 @@ class PlayerSettingsPage extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
                         child: Text(
-                          '需先启用上方的「GPU-next」：Vulkan 只对 GPU-next 渲染器生效',
+                          l10n.settingsPlayerVulkanNeedsGpuNext,
                           style: TextStyle(
                             fontSize: 12,
                             color: Theme.of(context).colorScheme.error,
@@ -381,8 +385,8 @@ class PlayerSettingsPage extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                       child: Text(
-                        '切换后需重启播放器（重开视频）生效；'
-                        '设备或驱动不支持时会自动回落 OpenGL，不会黑屏',
+                        '${l10n.settingsPlayerRestartHint}'
+                        '${l10n.settingsPlayerNoBlackScreenHint}',
                         style: TextStyle(
                           fontSize: 12,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -412,22 +416,19 @@ class PlayerSettingsPage extends StatelessWidget {
     final ok = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('启用锁定状态豁免双击'),
-        content: const Text(
-          '开启后，控制层锁定期间双击屏幕即可暂停/播放。\n\n'
-          '只豁免这一个手势：左右滑动快进快退、上下滑动音量与亮度、长按倍速'
-          '在锁定状态下依然不会生效；单击呼出解锁按钮也不受影响。\n\n'
-          '锁定本是防误触用的，若视频会在口袋/包里误暂停，请保持关闭。',
-          style: TextStyle(fontSize: 14, height: 1.5),
+        title: Text(AppLocalizations.of(ctx).settingsPlayerLockExemptDialogTitle),
+        content: Text(
+          AppLocalizations.of(ctx).settingsPlayerLockExemptDialogBody,
+          style: const TextStyle(fontSize: 14, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
+            child: Text(AppLocalizations.of(ctx).commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('确定启用'),
+            child: Text(AppLocalizations.of(ctx).commonEnable),
           ),
         ],
       ),
@@ -453,25 +454,19 @@ class PlayerSettingsPage extends StatelessWidget {
     final ok = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('开启界面跟随重力旋转'),
-        content: const Text(
-          '生效前提（两个都要满足）：\n'
-          '① 手机系统设置里已开启「自动旋转」；\n'
-          '② 本页「视频方向」设为「自动」。\n\n'
-          '两个前提满足后，再开启本开关，播放界面的横竖屏才会跟随手机方向'
-          '（竖起来进竖屏播放页，横过来回横屏播放页）。前提不满足时仍按'
-          '「视频方向」的设置播放，本开关不生效。\n\n'
-          '「锁定竖屏 / 锁定横屏」是明确指定的方向，不受本开关影响。',
-          style: TextStyle(fontSize: 14, height: 1.5),
+        title: Text(AppLocalizations.of(ctx).settingsPlayerGravityDialogTitle),
+        content: Text(
+          AppLocalizations.of(ctx).settingsPlayerGravityDialogBody,
+          style: const TextStyle(fontSize: 14, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
+            child: Text(AppLocalizations.of(ctx).commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('确定开启'),
+            child: Text(AppLocalizations.of(ctx).commonTurnOn),
           ),
         ],
       ),
@@ -491,19 +486,19 @@ class PlayerSettingsPage extends StatelessWidget {
     final ok = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('启用 GPU-next'),
-        content: const Text(
-          '启用后超分辨率功能将无法使用；\n可尝试配合软解播放杜比视界视频。\n\n是否继续？',
-          style: TextStyle(fontSize: 14, height: 1.5),
+        title: Text(AppLocalizations.of(ctx).settingsPlayerEnableGpuNext),
+        content: Text(
+          AppLocalizations.of(ctx).settingsPlayerGpuNextWarning,
+          style: const TextStyle(fontSize: 14, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
+            child: Text(AppLocalizations.of(ctx).commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('确定启用'),
+            child: Text(AppLocalizations.of(ctx).commonEnable),
           ),
         ],
       ),
@@ -521,23 +516,19 @@ class PlayerSettingsPage extends StatelessWidget {
     final ok = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('启用 Vulkan'),
-        content: const Text(
-          '视频输出将优先使用 Vulkan 渲染，新建的上下文不再限定 OpenGL ES。\n\n'
-          '若设备或驱动不支持，会自动回落 OpenGL，不会黑屏。\n\n'
-          '注意：普通内核下 MediaCodec 直通只对 OpenGL 生效，开 Vulkan 后'
-          '「硬解+」会直接走硬解拷贝（不再尝试直通）。\n\n'
-          '切换后需重启播放器（重开视频）生效。',
-          style: TextStyle(fontSize: 14, height: 1.5),
+        title: Text(AppLocalizations.of(ctx).settingsPlayerEnableVulkan),
+        content: Text(
+          AppLocalizations.of(ctx).settingsPlayerVulkanWarning,
+          style: const TextStyle(fontSize: 14, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
+            child: Text(AppLocalizations.of(ctx).commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('确定启用'),
+            child: Text(AppLocalizations.of(ctx).commonEnable),
           ),
         ],
       ),
@@ -643,10 +634,13 @@ class _LongPressSpeedTile extends StatelessWidget {
               Icon(Icons.touch_app_outlined,
                   size: 22, color: scheme.onSurfaceVariant),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  '长按倍速',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  AppLocalizations.of(context).settingsPlayerLongPressSpeed,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -688,7 +682,7 @@ class _LongPressSpeedTile extends StatelessWidget {
             ),
           ),
           Text(
-            '长按临时倍速，可左右滑动调速',
+            AppLocalizations.of(context).settingsPlayerLongPressSpeedDesc,
             style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
           ),
         ],
@@ -735,8 +729,9 @@ class _SeekSettingTileState extends State<_SeekSettingTile> {
     final v = int.tryParse(_controller.text.trim());
     if (v == null || v < 1 || v > PlayerControlsSettings.maxSeekSeconds) {
       setState(
-        () => _error =
-            '1 – ${PlayerControlsSettings.maxSeekSeconds} 秒',
+        () => _error = AppLocalizations.of(context).settingsPlayerSeekRange(
+          PlayerControlsSettings.maxSeekSeconds,
+        ),
       );
       return;
     }
@@ -768,10 +763,13 @@ class _SeekSettingTileState extends State<_SeekSettingTile> {
                   size: 22, color: scheme.onSurfaceVariant),
               const SizedBox(width: 12),
               // 固定标题：用户只可自定义秒数，不可改文本
-              const Expanded(
+              Expanded(
                 child: Text(
-                  '快进/快退时长',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  AppLocalizations.of(context).settingsPlayerSeekSeconds,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -785,7 +783,7 @@ class _SeekSettingTileState extends State<_SeekSettingTile> {
                     keyboardType: TextInputType.number,
                     style: const TextStyle(fontSize: 14),
                     decoration: InputDecoration(
-                      suffixText: '秒',
+                      suffixText: AppLocalizations.of(context).commonSeconds,
                       isDense: true,
                       errorText: _error,
                       errorStyle: const TextStyle(fontSize: 11),
@@ -810,7 +808,9 @@ class _SeekSettingTileState extends State<_SeekSettingTile> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      '${widget.value} 秒',
+                      AppLocalizations.of(context).commonSecondsValue(
+                        widget.value,
+                      ),
                       style: TextStyle(
                         fontSize: 12,
                         color: scheme.onSecondaryContainer,
@@ -834,7 +834,7 @@ class _SeekSettingTileState extends State<_SeekSettingTile> {
             ),
           ),
           Text(
-            '点击数值可自定义秒数',
+            AppLocalizations.of(context).settingsPlayerTapValueHint,
             style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
           ),
         ],
@@ -868,10 +868,13 @@ class _WatchThresholdTile extends StatelessWidget {
               Icon(Icons.check_circle_outline,
                   size: 22, color: scheme.onSurfaceVariant),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  '「已观看」进度阈值',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  AppLocalizations.of(context).settingsPlayerWatchThresholdTitle,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -908,7 +911,7 @@ class _WatchThresholdTile extends StatelessWidget {
             ),
           ),
           Text(
-            '进度达到该比例即视为已看完',
+            AppLocalizations.of(context).settingsPlayerWatchThresholdDesc,
             style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
           ),
         ],
@@ -944,10 +947,10 @@ class _VolumeBoostCapTile extends StatelessWidget {
                 color: scheme.onSurfaceVariant,
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  '增强上限',
-                  style: TextStyle(
+                  AppLocalizations.of(context).settingsPlayerBoostCap,
+                  style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                   ),
@@ -988,7 +991,7 @@ class _VolumeBoostCapTile extends StatelessWidget {
             ),
           ),
           Text(
-            '最高增强至 ${100 + value}%音量',
+            AppLocalizations.of(context).settingsPlayerBoostCapDesc(100 + value),
             style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
           ),
         ],

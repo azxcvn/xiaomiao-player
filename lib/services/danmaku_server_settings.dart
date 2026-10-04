@@ -11,7 +11,7 @@
 /// **互斥约束（工作.md 第 7 点，收尾阶段恢复）**：默认弹弹Play 服务器启用时
 /// 不允许开启「切集自动匹配」。为避免 UI 与运行时各判一次而漂移，互斥统一
 /// 由本服务裁决——[autoMatchEnabled] 是唯一生效值（默认服务器启用时恒 false），
-/// [autoMatchAllowed] / [autoMatchBlockedReason] 供 UI 变灰与提示文案复用。
+/// [autoMatchAllowed] / [autoMatchBlockedByDefaultServer] 供 UI 变灰与提示复用。
 /// 用户原始偏好保留在 [autoMatchPreference]，停用默认服务器后自动恢复生效。
 library;
 
@@ -63,19 +63,11 @@ class DanmakuServerSettings extends ChangeNotifier {
   /// 当前是否允许开启「切集自动匹配」（默认服务器启用时不允许）
   bool get autoMatchAllowed => !isDefaultEnabled;
 
-  /// 不允许开启时的**短**原因文案（副标题用）；允许时为 null。
+  /// 是否**因为默认服务器启用**而不允许开启「切集自动匹配」（副标题/toast 用）。
   ///
-  /// 副标题空间有限（窄屏两行就显挤），这里只给动作指引；完整解释见
-  /// [autoMatchBlockedMessage]（点击时的 toast）。两句都放在服务层，
-  /// 页面里不出现文案字面量，避免多处措辞漂移。
-  String? get autoMatchBlockedReason =>
-      autoMatchAllowed ? null : '请先停用弹弹Play 服务器';
-
-  /// 不允许开启时的**完整**说明（toast 用）；允许时为 null。
-  String? get autoMatchBlockedMessage => autoMatchAllowed
-      ? null
-      : '已启用「${DanmakuServer.defaultName}」服务器时不可开启'
-            '「切集自动匹配弹幕」，如需使用请先停用该服务器';
+  /// 文案不在这里：服务层只给状态，页面按它取 l10n
+  /// （`danmakuServerAutoMatchBlocked` / `danmakuServerAutoMatchBlockedDetail`）。
+  bool get autoMatchBlockedByDefaultServer => !autoMatchAllowed;
 
   /// 默认（弹弹Play）服务器当前是否启用
   bool get isDefaultEnabled => _servers.any((s) => s.isDefault && s.isEnabled);
@@ -102,15 +94,13 @@ class DanmakuServerSettings extends ChangeNotifier {
 
   /// 服务器地址 → 展示名（弹幕「来源」显示的单一事实来源）。
   ///
-  /// - [url] 为 null（默认服务器）→ [DanmakuServer.defaultName]；
+  /// - [url] 为 null / 空（默认弹弹Play 服务器）→ **null**：默认服务器的显示名
+  ///   由 UI 层取 l10n（`danmakuServerDefaultName`），服务层不产出文案；
   /// - 命中自建服务器 → 其名称；
   /// - 地址已不存在（服务器被删除，但缓存里仍记着）→ 原样回显地址，
   ///   至少让用户知道"来自哪里"，而不是显示空白。
-  ///
-  /// ⚠️ 文案只在本层出现：网络弹幕面板与加载成功的 toast 都用它，
-  /// 避免"来源"在两处各写一份措辞而漂移（同 [autoMatchBlockedMessage] 的纪律）。
-  String serverLabelFor(String? url) {
-    if (url == null || url.isEmpty) return DanmakuServer.defaultName;
+  String? serverLabelFor(String? url) {
+    if (url == null || url.isEmpty) return null;
     for (final s in _servers) {
       if (!s.isDefault && s.url == url) return s.name;
     }

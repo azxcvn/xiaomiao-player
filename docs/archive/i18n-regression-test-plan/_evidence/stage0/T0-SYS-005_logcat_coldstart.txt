@@ -1,0 +1,473 @@
+﻿--------- beginning of main
+10-04 16:13:06.585  1436  1436 W WidgetOperateReceiver: onReceive: intent = Intent { act=com.mumu.LAUNCHER_LIFECYCLE flg=0x30 pkg=com.mumu.store cmp=com.mumu.store/.widget.receiver.WidgetOperateReceiver (has extras) } action = com.mumu.LAUNCHER_LIFECYCLE
+10-04 16:13:06.588  1436  1436 W WidgetOperateReceiver: onLauncherLifecycle: launcherLifecycle = ON_RESUME
+10-04 16:13:06.588  1436  1436 W WidgetManager: updateLauncherLifecycle: launcherLifecycleName = ON_RESUME
+10-04 16:13:06.589  1103  1396 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 16:13:06.589  1103  1103 D BaseDepthController: setSurface:
+10-04 16:13:06.589  1103  1103 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+10-04 16:13:06.589  1103  1103 D BaseDepthController: 	mSurface: Surface(name=app.lawnchair/app.lawnchair.LawnchairLauncher)/@0x1d49b17
+10-04 16:13:06.592  1103  1396 D HWUI    : HOOK FAILED! Expected 4 got = 3
+10-04 16:13:06.600  1103 24426 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 16:13:06.604  1103 24426 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 16:13:06.616  1436  1436 W AdBannerWidgetManager: onHoverAdBannerFlipper: appWidgetId = 2, isHovered = false, updatePreSwitchHovered = false, updateNextSwitchHovered = false
+10-04 16:13:06.636  1103  1103 D StatsLog: LAUNCHER_ONRESUME
+--------- beginning of system
+10-04 16:13:06.638  1144  1425 V WindowManagerShell: onTransitionReady(transaction=3715146718700)
+10-04 16:13:06.638   716  1628 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 16:13:06.638  1144  1267 V WindowManagerShell: onTransitionReady (#41) android.os.BinderProxy@a2c7701: {id=41 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[
+10-04 16:13:06.638  1144  1267 V WindowManagerShell:         {m=TO_FRONT f=SHOW_WALLPAPER|MOVE_TO_TOP leash=Surface(name=Task=1)/@0x517fe7 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0 taskParent=-1},
+10-04 16:13:06.638  1144  1267 V WindowManagerShell:         {m=CLOSE f=NONE leash=Surface(name=Task=41)/@0xb560794 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0 taskParent=-1},
+10-04 16:13:06.638  1144  1267 V WindowManagerShell:         {m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{a539775 token=android.os.Binder@507ceac})/@0xa68823d sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0}
+10-04 16:13:06.638  1144  1267 V WindowManagerShell:     ]}
+10-04 16:13:06.639  1144  1267 V WindowManagerShell: Playing animation for (#41) android.os.BinderProxy@a2c7701@0
+10-04 16:13:06.639  1144  1267 V ShellRecents: RecentsTransitionHandler.startAnimation: no controller found
+10-04 16:13:06.639  1144  1267 V WindowManagerShell: Transition doesn't have explicit remote, search filters for match for {id=41 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{m=TO_FRONT f=SHOW_WALLPAPER|MOVE_TO_TOP leash=Surface(name=Task=1)/@0x517fe7 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0 taskParent=-1},{m=CLOSE f=NONE leash=Surface(name=Task=41)/@0xb560794 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0 taskParent=-1},{m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{a539775 token=android.os.Binder@507ceac})/@0xa68823d sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0}]}
+10-04 16:13:06.639  1144  1267 V WindowManagerShell:  Checking filter Pair{{types=[] flags=0x0] notFlags=0x100 checks=[{atype=home independent=true modes=[OPEN,TO_FRONT] flags=NONE mustBeTask=false order=TOP topActivity=ComponentInfo{app.lawnchair/app.lawnchair.LawnchairLauncher} launchCookie=null windowingMode=undefined},{atype=standard independent=true modes=[CLOSE,TO_BACK] flags=NONE mustBeTask=false order=ANY topActivity=null launchCookie=null windowingMode=undefined},{NOT atype=undefined independent=true modes=[] flags=NONE mustBeTask=true order=ANY topActivity=null launchCookie=null windowingMode=undefined}]} RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@bdf2054, appThread = android.app.IApplicationThread$Stub$Proxy@ed28bfd, debugName = QuickstepLaunchHome }}
+10-04 16:13:06.639  1144  1267 V WindowManagerShell:  Delegate animation for (#41) to null
+10-04 16:13:06.639  1144  1267 V WindowManagerShell: start default transition animation, info = {id=41 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{m=TO_FRONT f=SHOW_WALLPAPER|MOVE_TO_TOP leash=Surface(name=Task=1)/@0x517fe7 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0 taskParent=-1},{m=CLOSE f=NONE leash=Surface(name=Task=41)/@0xb560794 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0 taskParent=-1},{m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{a539775 token=android.os.Binder@507ceac})/@0xa68823d sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0}]}
+10-04 16:13:06.639  1144  1267 V WindowManagerShell: loadAnimation: anim=android.view.animation.AnimationSet@3600539 animAttr=0x11 type=CLOSE isEntrance=false
+10-04 16:13:06.640  1144  1267 V WindowManagerShell: loadAnimation: anim=android.view.animation.AnimationSet@97484df animAttr=0x10 type=CLOSE isEntrance=true
+10-04 16:13:06.640  1144  1267 V WindowManagerShell:  animated by com.android.wm.shell.transition.DefaultTransitionHandler@ee8409f
+10-04 16:13:06.643   865   887 V WindowManager: Sent Transition (#41) createdAt=10-04 16:13:06.476 via request=TransitionRequestInfo { type = CLOSE, triggerTask = TaskInfo{userId=0 taskId=41 effectiveUid=10062 displayId=0 isRunning=false baseIntent=Intent { flg=0x10000000 cmp=com.azxcvn.moumou/.MainActivity } baseActivity=null topActivity=null origActivity=null realActivity=ComponentInfo{com.azxcvn.moumou/com.azxcvn.moumou.MainActivity} numActivities=0 lastActiveTime=2793776 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{362f0eb Task{86c9765 #41 type=standard I=com.azxcvn.moumou/.MainActivity}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 0 - 0, 0) topActivityInfo=null launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isTopActivityNoDisplay=false isSleeping=false locusId=null displayAreaFeatureId=1 isTopActivityTransparent=false isActivityStackTransparent=true lastNonFullscreenBounds=Rect(300, 608 - 1141, 2048) capturedLink=null capturedLinkTimestamp=0 requestedVisibleTypes=-9 topActivityRequestOpenInBrowserEducationTimestamp=0 appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false eligibleForLetterboxEducation= false isLetterboxEducationEnabled= false isLetterboxDoubleTapEnabled= false eligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 topActivityLetterboxAppWidth=-1 topActivityLetterboxAppHeight=-1 isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false hasMinAspectRatioOverride=false topActivityLetterboxBounds=null cameraCompatTaskInfo=CameraCompatTaskInfo { freeformCameraCompatMode=inactive}} topActivityMainWindowFrame=null}, pipChange = null, remoteTransition = null, displayChange = null, flags = 0, debugId = 41 }
+10-04 16:13:06.643  1144  1267 V WindowManagerShell: Transition animation finished (aborted=false), notifying core (#41) android.os.BinderProxy@a2c7701@0
+10-04 16:13:06.643   865   887 V WindowManager:     startWCT=WindowContainerTransaction { changes= {} hops= [] errorCallbackToken=null taskFragmentOrganizer=null }
+10-04 16:13:06.643   865   887 V WindowManager:     info={id=41 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[
+10-04 16:13:06.643   865   887 V WindowManager:         {WCT{RemoteToken{6a3d6ff Task{6be20c0 #1 type=home}}} m=TO_FRONT f=SHOW_WALLPAPER|MOVE_TO_TOP leash=Surface(name=Task=1)/@0x1fceb34 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0 taskParent=-1},
+10-04 16:13:06.643   865   887 V WindowManager:         {WCT{RemoteToken{362f0eb Task{86c9765 #41 type=standard I=com.azxcvn.moumou/.MainActivity}}} m=CLOSE f=NONE leash=Surface(name=Task=41)/@0x399f1bf sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0 taskParent=-1},
+10-04 16:13:06.643   865   887 V WindowManager:         {m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{a539775 token=android.os.Binder@507ceac})/@0x550e8ec sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0}
+10-04 16:13:06.643   865   887 V WindowManager:     ]}
+10-04 16:13:06.645   865   887 V WindowManager: Finish Transition (#41): created at 10-04 16:13:06.476 collect-started=0.044ms request-sent=0.165ms started=7.081ms ready=7.07ms sent=159.428ms finished=168.222ms
+10-04 16:13:06.645   865 10838 W UserManagerService: Requested status bar icon for non-badged user 0
+10-04 16:13:06.645   865   881 E IPCThreadState: Binder transaction failure. id: 619021, BR_*: 29189, error: -22 (Invalid argument)
+10-04 16:13:06.645   865   881 W ActivityManager: pid 865 system sent binder code 7 with flags 1 to frozen apps and got error -32
+10-04 16:13:06.645   865   881 D ActivityManager: Too many transaction errors, throttling freezer binder callback.
+10-04 16:13:06.652   865   881 W WindowManager: Exception thrown during dispatchAppVisibility Window{383bd7c u0 com.azxcvn.moumou/com.azxcvn.moumou.MainActivity EXITING}
+10-04 16:13:06.652   865   881 W WindowManager: android.os.DeadObjectException
+10-04 16:13:06.652   865   881 W WindowManager: 	at android.os.BinderProxy.transactNative(Native Method)
+10-04 16:13:06.652   865   881 W WindowManager: 	at android.os.BinderProxy.transact(BinderProxy.java:592)
+10-04 16:13:06.652   865   881 W WindowManager: 	at android.view.IWindow$Stub$Proxy.dispatchAppVisibility(IWindow.java:557)
+10-04 16:13:06.652   865   881 W WindowManager: 	at com.android.server.wm.WindowState.sendAppVisibilityToClients(WindowState.java:3298)
+10-04 16:13:06.652   865   881 W WindowManager: 	at com.android.server.wm.WindowContainer.sendAppVisibilityToClients(WindowContainer.java:1343)
+10-04 16:13:06.652   865   881 W WindowManager: 	at com.android.server.wm.WindowToken.setClientVisible(WindowToken.java:437)
+10-04 16:13:06.652   865   881 W WindowManager: 	at com.android.server.wm.ActivityRecord.setClientVisible(ActivityRecord.java:7158)
+10-04 16:13:06.652   865   881 W WindowManager: 	at com.android.server.wm.ActivityRecord.postApplyAnimation(ActivityRecord.java:5849)
+10-04 16:13:06.652   865   881 W WindowManager: 	at com.android.server.wm.ActivityRecord.commitVisibility(ActivityRecord.java:5792)
+10-04 16:13:06.652   865   881 W WindowManager: 	at com.android.server.wm.Transition.finishTransition(Transition.java:1373)
+10-04 16:13:06.652   865   881 W WindowManager: 	at com.android.server.wm.TransitionController.finishTransition(TransitionController.java:986)
+10-04 16:13:06.652   865   881 W WindowManager: 	at com.android.server.wm.WindowOrganizerController.finishTransition(WindowOrganizerController.java:526)
+10-04 16:13:06.652   865   881 W WindowManager: 	at android.window.IWindowOrganizerController$Stub.onTransact(IWindowOrganizerController.java:293)
+10-04 16:13:06.652   865   881 W WindowManager: 	at com.android.server.wm.WindowOrganizerController.onTransact(WindowOrganizerController.java:215)
+10-04 16:13:06.652   865   881 W WindowManager: 	at android.os.Binder.execTransactInternal(Binder.java:1406)
+10-04 16:13:06.652   865   881 W WindowManager: 	at android.os.Binder.execTransact(Binder.java:1350)
+10-04 16:13:06.652   865   881 W Process : Unable to open /proc/23588/status
+10-04 16:13:06.655  1144  1267 V WindowManagerShell: Track 0 became idle
+10-04 16:13:06.655  1144  1267 V WindowManagerShell: All active transition animations finished
+10-04 16:13:06.656   865  2585 W UserManagerService: Requested status bar icon for non-badged user 0
+10-04 16:13:06.657   865   977 I ImeTracker: app.lawnchair:8281ca3e: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+10-04 16:13:06.657   865   881 W UserManagerService: Requested status bar icon for non-badged user 0
+10-04 16:13:06.657  1103  1103 D InsetsController: hide(ime(), fromIme=false)
+10-04 16:13:06.657  1103  1103 I ImeTracker: app.lawnchair:8281ca3e: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+10-04 16:13:06.660  1103  1103 D RecentsView: onTaskRemoved: 41, not handling task stack changes
+10-04 16:13:06.660  1103  1103 D RecentsView: onTaskRemoved: 41, not handling task stack changes
+10-04 16:13:06.662   865   887 E ActivityManager: Sending non-protected broadcast uu.intent.action.STOP_ACCELERATE from system 865:system/1000 pkg android
+10-04 16:13:06.662   865   887 E ActivityManager: java.lang.Throwable
+10-04 16:13:06.662   865   887 E ActivityManager: 	at com.android.server.am.BroadcastController.checkBroadcastFromSystem(BroadcastController.java:2118)
+10-04 16:13:06.662   865   887 E ActivityManager: 	at com.android.server.am.BroadcastController.broadcastIntentLockedTraced(BroadcastController.java:1635)
+10-04 16:13:06.662   865   887 E ActivityManager: 	at com.android.server.am.BroadcastController.broadcastIntentLocked(BroadcastController.java:807)
+10-04 16:13:06.662   865   887 E ActivityManager: 	at com.android.server.am.BroadcastController.broadcastIntentWithFeature(BroadcastController.java:740)
+10-04 16:13:06.662   865   887 E ActivityManager: 	at com.android.server.am.ActivityManagerService.broadcastIntentWithFeature(ActivityManagerService.java:14410)
+10-04 16:13:06.662   865   887 E ActivityManager: 	at android.app.ContextImpl.sendBroadcastAsUser(ContextImpl.java:1509)
+10-04 16:13:06.662   865   887 E ActivityManager: 	at android.content.ContextWrapper.sendBroadcastAsUser(ContextWrapper.java:603)
+10-04 16:13:06.662   865   887 E ActivityManager: 	at com.android.server.wm.TaskUtils.$r8$lambda$jkqZqUV7W8pT107WPfSjHa5IqQE(TaskUtils.java:2124)
+10-04 16:13:06.662   865   887 E ActivityManager: 	at com.android.server.wm.TaskUtils$$ExternalSyntheticLambda4.run(R8$$SyntheticClass:0)
+10-04 16:13:06.662   865   887 E ActivityManager: 	at android.os.Handler.handleCallback(Handler.java:991)
+10-04 16:13:06.662   865   887 E ActivityManager: 	at android.os.Handler.dispatchMessage(Handler.java:102)
+10-04 16:13:06.662   865   887 E ActivityManager: 	at android.os.Looper.loopOnce(Looper.java:232)
+10-04 16:13:06.662   865   887 E ActivityManager: 	at android.os.Looper.loop(Looper.java:317)
+10-04 16:13:06.662   865   887 E ActivityManager: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+10-04 16:13:06.662   865   887 E ActivityManager: 	at com.android.server.ServiceThread.run(ServiceThread.java:49)
+10-04 16:13:06.664   716   716 E BpTransactionCompletedListener: Failed to transact (-32)
+10-04 16:13:06.664   716   716 E BpTransactionCompletedListener: Failed to transact (-32)
+10-04 16:13:06.664   865   881 I system_server: AssetManager2(0x76d2dbc7eb18) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.670  1144  1144 W Choreographer: Frame time is 0.246882 ms in the future!  Check that graphics HAL is generating vsync timestamps using the correct timebase.
+10-04 16:13:06.701   865   881 I system_server: AssetManager2(0x76d2dbc7d218) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.702   865   881 I system_server: AssetManager2(0x76d2dbc9f1d8) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.704   865   881 I system_server: AssetManager2(0x76d2dbc99d78) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.707   865   881 I system_server: AssetManager2(0x76d2dbc8d578) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.708   865   881 I system_server: AssetManager2(0x76d2dbc80418) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.710   865   881 I system_server: AssetManager2(0x76d2dbc7a658) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.718   865   881 I system_server: AssetManager2(0x76d2dbc78a38) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.719   865   881 I system_server: AssetManager2(0x76d2dbc800f8) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.721   865   881 I system_server: AssetManager2(0x76d2dbc7afb8) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.724   865   881 I system_server: AssetManager2(0x76d2dbc77db8) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.725   865   881 I system_server: AssetManager2(0x76d2dbc73f38) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.727   865   881 I system_server: AssetManager2(0x76d2dbc77458) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.728   865   881 I system_server: AssetManager2(0x76d2dbc75518) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.728   865   881 I system_server: AssetManager2(0x76d2dbc738f8) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.728   865   881 I system_server: AssetManager2(0x76d2dbc74258) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.730   865   881 I system_server: AssetManager2(0x76d2dbc9f818) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.732   865   881 I system_server: AssetManager2(0x76d2dbc6e178) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.733   865   881 I system_server: AssetManager2(0x76d2dbca0df8) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.737   865   881 I system_server: AssetManager2(0x76d2dbcac978) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.742   865  7835 W ActivityTaskManager: callingPackage for (uid=2000, pid=24452) has no WPC
+10-04 16:13:06.745   865  7835 V GrammaticalInflectionUtils: AttributionSource: android.content.AttributionSource@1e5c6172 does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+10-04 16:13:06.747   865  7835 W OptProp : Cannot read opt property android.window.PROPERTY_COMPAT_ALLOW_RESIZEABLE_ACTIVITY_OVERRIDES
+10-04 16:13:06.747   865  7835 W OptProp : Cannot read opt property android.window.PROPERTY_COMPAT_ALLOW_MIN_ASPECT_RATIO_OVERRIDE
+10-04 16:13:06.749   865  7835 E CellBroadcastUtils: getDefaultCellBroadcastReceiverPackageName: no package found
+10-04 16:13:06.753   865  7835 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=com.azxcvn.moumou/.MainActivity} with LAUNCH_SINGLE_TOP from uid 2000 (BAL_ALLOW_PERMISSION) result code=0
+10-04 16:13:06.753  1144  1267 V WindowManagerShell: Transition requested (#42): android.os.BinderProxy@d47dc4 TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=42 effectiveUid=10062 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=com.azxcvn.moumou/.MainActivity } baseActivity=ComponentInfo{com.azxcvn.moumou/com.azxcvn.moumou.MainActivity} topActivity=ComponentInfo{com.azxcvn.moumou/com.azxcvn.moumou.MainActivity} origActivity=null realActivity=ComponentInfo{com.azxcvn.moumou/com.azxcvn.moumou.MainActivity} numActivities=1 lastActiveTime=2893878 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@26374ad} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 0 - 0, 0) topActivityInfo=ActivityInfo{cb393e2 com.azxcvn.moumou.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isTopActivityNoDisplay=false isSleeping=false locusId=null displayAreaFeatureId=1 isTopActivityTransparent=false isActivityStackTransparent=false lastNonFullscreenBounds=Rect(300, 608 - 1141, 2048) capturedLink=null capturedLinkTimestamp=0 requestedVisibleTypes=-9 topActivityRequestOpenInBrowserEducationTimestamp=0 appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false eligibleForLetterboxEducation= false isLetterboxEducationEnabled= false isLetterboxDoubleTapEnabled= false eligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 topActivityLetterboxAppWidth=-1 topActivityLetterboxAppHeight=-1 isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false hasMinAspectRatioOverride=false topActivityLetterboxBounds=null cameraCompatTaskInfo=CameraCompatTaskInfo { freeformCameraCompatMode=inactive}} topActivityMainWindowFrame=null}, pipChange = null, remoteTransition = null, displayChange = null, flags = 0, debugId = 42 }
+10-04 16:13:06.753  1144  1273 I ndroid.systemui: AssetManager2(0x76d2dbc81d18) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.753  1144  1267 D ShellSplitScreen: logExit: no-op, mLoggerSessionId is null
+10-04 16:13:06.755   865   890 V GrammaticalInflectionUtils: AttributionSource: android.content.AttributionSource@1e5c6172 does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+10-04 16:13:06.755  1103  1103 W SplitSelectStateCtor: Missing session instanceIds
+10-04 16:13:06.755  1103  1103 D StatsLog: LAUNCHER_SPLIT_SELECTION_EXIT_INTERRUPTED
+10-04 16:13:06.757  1144  1267 D WindowManagerShell: setLauncherKeepClearAreaHeight: visible=false, height=316
+10-04 16:13:06.757   865   902 W ActivityManager: Unknown package:com.google.android.gms
+10-04 16:13:06.759   716   716 I BpBinder: onLastStrongRef automatically unlinking death recipients: 
+10-04 16:13:06.763   682   682 D Zygote  : Forked child process 24455
+10-04 16:13:06.764   865   902 I ActivityManager: Start proc 24455:com.azxcvn.moumou/u0a62 for next-top-activity {com.azxcvn.moumou/com.azxcvn.moumou.MainActivity}
+10-04 16:13:06.770  1436  1436 W WidgetOperateReceiver: onReceive: intent = Intent { act=com.mumu.LAUNCHER_LIFECYCLE flg=0x30 pkg=com.mumu.store cmp=com.mumu.store/.widget.receiver.WidgetOperateReceiver (has extras) } action = com.mumu.LAUNCHER_LIFECYCLE
+10-04 16:13:06.770  1436  1436 W WidgetOperateReceiver: onLauncherLifecycle: launcherLifecycle = ON_PAUSE
+10-04 16:13:06.770  1436  1436 W WidgetManager: updateLauncherLifecycle: launcherLifecycleName = ON_PAUSE
+10-04 16:13:06.770   865  1069 D BackgroundInstallControlService: Package event received: 0
+10-04 16:13:06.774  1144  1274 W HWUI    : Image decoding logging dropped!
+10-04 16:13:06.775   865  7835 W OptProp : Cannot read opt property android.window.PROPERTY_COMPAT_ALLOW_ORIENTATION_OVERRIDE
+10-04 16:13:06.777   865   881 I system_server: AssetManager2(0x76d2dbc86e58) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.779   865   881 I system_server: AssetManager2(0x76d2dbc780d8) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.782   865   881 I system_server: AssetManager2(0x76d2dbc73c18) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.785   865  7835 D CoreBackPreview: Window{be43c4f u0 Splash Screen com.azxcvn.moumou}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@4809e61, mPriority=0, mIsAnimationCallback=false, mOverrideBehavior=0}
+10-04 16:13:06.785   865   881 I system_server: AssetManager2(0x76d2dbc89d38) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.786   865   881 I system_server: AssetManager2(0x76d2dbc9b678) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.786   865   881 I system_server: AssetManager2(0x76d2dbc7d858) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.788  1144  1162 I ndroid.systemui: NativeAlloc concurrent mark compact GC freed 4136KB AllocSpace bytes, 1(1604KB) LOS objects, 49% free, 14MB/29MB, paused 421us,1.811ms total 142.972ms
+10-04 16:13:06.788   865   881 I system_server: AssetManager2(0x76d2dbc9b998) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.790   865   881 I system_server: AssetManager2(0x76d2dbcabcf8) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.790  1144  1301 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 16:13:06.790 24455 24455 W nativebridge: Failed to bind-mount /system/etc/cpuinfo.arm64.txt as /proc/cpuinfo: No such file or directory
+10-04 16:13:06.790 24455 24455 E Zygote  : pkg name is 0 => com.azxcvn.moumou, data dir is /data/user/0/com.azxcvn.moumou
+10-04 16:13:06.791 24455 24455 W zygote64: Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: nemuhotd
+10-04 16:13:06.793  1144  1301 D HWUI    : HOOK FAILED! Expected 4 got = 3
+10-04 16:13:06.801  1144 24457 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 16:13:06.803  1144 24457 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 16:13:06.815   865   881 I system_server: AssetManager2(0x76d2dbc7de98) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.821 24455 24455 I Zygote  : seccomp disabled by setenforce 0
+10-04 16:13:06.826  1144  1164 W System  : A resource failed to call release. 
+10-04 16:13:06.826  1144  1164 W System  : A resource failed to call release. 
+10-04 16:13:06.826  1144  1164 W System  : A resource failed to call release. 
+10-04 16:13:06.826  1144  1164 W System  : A resource failed to call release. 
+10-04 16:13:06.826  1144  1164 W System  : A resource failed to call release. 
+10-04 16:13:06.826  1144  1164 W System  : A resource failed to call release. 
+10-04 16:13:06.826  1144  1164 W System  : A resource failed to call release. 
+10-04 16:13:06.827  1436  1603 W AdBannerWidgetManager: onHoverAdBannerFlipper: newIsHovered = false
+10-04 16:13:06.827  1436  1603 W AdBannerWidgetManager: prepareAdBannerFlipperHover: isHovered = false  false  false
+10-04 16:13:06.831  1144  1164 W System  : A resource failed to call release. 
+10-04 16:13:06.831  1144  1164 W System  : A resource failed to call release. 
+10-04 16:13:06.831  1144  1164 W System  : A resource failed to call release. 
+10-04 16:13:06.831 24455 24455 I m.azxcvn.moumou: Late-enabling -Xcheck:jni
+10-04 16:13:06.833   865   887 V WindowManager: Sent Transition (#42) createdAt=10-04 16:13:06.747 via request=TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=42 effectiveUid=10062 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=com.azxcvn.moumou/.MainActivity } baseActivity=ComponentInfo{com.azxcvn.moumou/com.azxcvn.moumou.MainActivity} topActivity=ComponentInfo{com.azxcvn.moumou/com.azxcvn.moumou.MainActivity} origActivity=null realActivity=ComponentInfo{com.azxcvn.moumou/com.azxcvn.moumou.MainActivity} numActivities=1 lastActiveTime=2893878 supportsMultiWindow=true resizeMode=2 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{73662d6 Task{b19ee98 #42 type=standard I=com.azxcvn.moumou/.MainActivity}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 0 - 0, 0) topActivityInfo=ActivityInfo{c416875 com.azxcvn.moumou.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isTopActivityNoDisplay=false isSleeping=false locusId=null displayAreaFeatureId=1 isTopActivityTransparent=false isActivityStackTransparent=false lastNonFullscreenBounds=Rect(300, 608 - 1141, 2048) capturedLink=null capturedLinkTimestamp=0 requestedVisibleTypes=-9 topActivityRequestOpenInBrowserEducationTimestamp=0 appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false eligibleForLetterboxEducation= false isLetterboxEducationEnabled= false isLetterboxDoubleTapEnabled= false eligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 topActivityLetterboxAppWidth=-1 topActivityLetterboxAppHeight=-1 isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false hasMinAspectRatioOverride=false topActivityLetterboxBounds=null cameraCompatTaskInfo=CameraCompatTaskInfo { freeformCameraCompatMode=inactive}} topActivityMainWindowFrame=null}, pipChange = null, remoteTransition = null, displayChange = null, flags = 0, debugId = 42 }
+10-04 16:13:06.833   865   887 V WindowManager:     startWCT=WindowContainerTransaction { changes= {} hops= [] errorCallbackToken=null taskFragmentOrganizer=null }
+10-04 16:13:06.833   865   887 V WindowManager:     info={id=42 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[
+10-04 16:13:06.833   865   887 V WindowManager:         {WCT{RemoteToken{73662d6 Task{b19ee98 #42 type=standard I=com.azxcvn.moumou/.MainActivity}}} m=OPEN f=NONE leash=Surface(name=Task=42)/@0x572d73f sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0 taskParent=-1},
+10-04 16:13:06.833   865   887 V WindowManager:         {WCT{RemoteToken{6a3d6ff Task{6be20c0 #1 type=home}}} m=TO_BACK f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0x1fceb34 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0 taskParent=-1}
+10-04 16:13:06.833   865   887 V WindowManager:     ]}
+10-04 16:13:06.834  1144  1411 V WindowManagerShell: onTransitionReady(transaction=3715146718721)
+10-04 16:13:06.834  1144  1267 V WindowManagerShell: onTransitionReady (#42) android.os.BinderProxy@d47dc4: {id=42 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[
+10-04 16:13:06.834  1144  1267 V WindowManagerShell:         {m=OPEN f=NONE leash=Surface(name=Task=42)/@0xad2ab42 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0 taskParent=-1},
+10-04 16:13:06.834  1144  1267 V WindowManagerShell:         {m=TO_BACK f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0x2ed3753 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0 taskParent=-1}
+10-04 16:13:06.834  1144  1267 V WindowManagerShell:     ]}
+10-04 16:13:06.834  1144  1267 V WindowManagerShell: Playing animation for (#42) android.os.BinderProxy@d47dc4@0
+10-04 16:13:06.834  1144  1267 V ShellRecents: RecentsTransitionHandler.startAnimation: no controller found
+10-04 16:13:06.834  1144  1267 V WindowManagerShell: Transition doesn't have explicit remote, search filters for match for {id=42 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[{m=OPEN f=NONE leash=Surface(name=Task=42)/@0xad2ab42 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0 taskParent=-1},{m=TO_BACK f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0x2ed3753 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0 taskParent=-1}]}
+10-04 16:13:06.834  1144  1267 V WindowManagerShell:  Checking filter Pair{{types=[] flags=0x0] notFlags=0x100 checks=[{atype=home independent=true modes=[OPEN,TO_FRONT] flags=NONE mustBeTask=false order=TOP topActivity=ComponentInfo{app.lawnchair/app.lawnchair.LawnchairLauncher} launchCookie=null windowingMode=undefined},{atype=standard independent=true modes=[CLOSE,TO_BACK] flags=NONE mustBeTask=false order=ANY topActivity=null launchCookie=null windowingMode=undefined},{NOT atype=undefined independent=true modes=[] flags=NONE mustBeTask=true order=ANY topActivity=null launchCookie=null windowingMode=undefined}]} RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@bdf2054, appThread = android.app.IApplicationThread$Stub$Proxy@ed28bfd, debugName = QuickstepLaunchHome }}
+10-04 16:13:06.834  1144  1267 V WindowManagerShell:  Delegate animation for (#42) to null
+10-04 16:13:06.834  1144  1267 V WindowManagerShell: start default transition animation, info = {id=42 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[{m=OPEN f=NONE leash=Surface(name=Task=42)/@0xad2ab42 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0 taskParent=-1},{m=TO_BACK f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0x2ed3753 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 1440, 2560) epz=Point(1440, 2560) d=0 taskParent=-1}]}
+10-04 16:13:06.834  1144  1267 V WindowManagerShell: loadAnimation: anim=android.view.animation.AnimationSet@c89f5af animAttr=0x13 type=OPEN isEntrance=false
+10-04 16:13:06.835  1144  1267 V WindowManagerShell: loadAnimation: anim=android.view.animation.AnimationSet@8a3dcb animAttr=0x12 type=OPEN isEntrance=true
+10-04 16:13:06.835  1144  1267 V WindowManagerShell:  animated by com.android.wm.shell.transition.DefaultTransitionHandler@ee8409f
+10-04 16:13:06.836   865  7835 W UserManagerService: Requested status bar icon for non-badged user 0
+10-04 16:13:06.838  1144  1267 V WindowManagerShell: Transition animation finished (aborted=false), notifying core (#42) android.os.BinderProxy@d47dc4@0
+10-04 16:13:06.841   865   887 V WindowManager: Finish Transition (#42): created at 10-04 16:13:06.747 collect-started=0.034ms request-sent=5.34ms started=6.709ms ready=83.733ms sent=85.284ms finished=93.285ms
+10-04 16:13:06.841  1103  1103 D VRI[LawnchairLauncher]: visibilityChanged oldVisibility=true newVisibility=false
+10-04 16:13:06.848   865   881 I system_server: AssetManager2(0x76d2dbc9ad18) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.848  1144  1267 V WindowManagerShell: Track 0 became idle
+10-04 16:13:06.848  1144  1267 V WindowManagerShell: All active transition animations finished
+10-04 16:13:06.851   865 10838 W UserManagerService: Requested status bar icon for non-badged user 0
+10-04 16:13:06.851 24455 24455 I m.azxcvn.moumou: Using CollectorTypeCMC GC.
+10-04 16:13:06.851   865   881 I system_server: AssetManager2(0x76d2dbc735d8) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.852 24455 24455 W m.azxcvn.moumou: Unexpected CPU variant for x86: x86_64.
+10-04 16:13:06.852 24455 24455 W m.azxcvn.moumou: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, goldmont-without-sha-xsaves, tremont, kabylake, alderlake, default
+10-04 16:13:06.852 24455 24455 V libnb   : enter native_bridge2_initialize /data/user/0/com.azxcvn.moumou/code_cache arm64
+10-04 16:13:06.853   865 10838 W UserManagerService: Requested status bar icon for non-badged user 0
+10-04 16:13:06.853 24455 24455 E libnb   : The translator implementation library has not been set.
+10-04 16:13:06.853   865   881 I system_server: AssetManager2(0x76d2dbc98798) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.854   865   881 I system_server: AssetManager2(0x76d2dbc99a58) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.859   865   881 I system_server: AssetManager2(0x76d2dbc9df18) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.859   865   887 E [MUMU]TaskTab: setPresentationRotation 0 for com.azxcvn.moumou:42
+10-04 16:13:06.859   865   887 E [MUMU]TaskTab: java.lang.Exception
+10-04 16:13:06.859   865   887 E [MUMU]TaskTab: 	at com.android.server.mumu.tab.TaskTab.setPresentationRotation(TaskTab.java:52)
+10-04 16:13:06.859   865   887 E [MUMU]TaskTab: 	at com.android.server.wm.TaskUtils.getTopTaskOnDisplay(TaskUtils.java:557)
+10-04 16:13:06.859   865   887 E [MUMU]TaskTab: 	at com.android.server.wm.TaskUtils.updateTaskTabRotation(TaskUtils.java:1876)
+10-04 16:13:06.859   865   887 E [MUMU]TaskTab: 	at com.android.server.wm.TaskUtils.notifyOpen(TaskUtils.java:210)
+10-04 16:13:06.859   865   887 E [MUMU]TaskTab: 	at com.android.server.wm.WmBridge.notifyOpen(WmBridge.java:496)
+10-04 16:13:06.859   865   887 E [MUMU]TaskTab: 	at com.android.server.mumu.wm.TaskHandler.handleMessage(TaskHandler.java:32)
+10-04 16:13:06.859   865   887 E [MUMU]TaskTab: 	at android.os.Handler.dispatchMessage(Handler.java:109)
+10-04 16:13:06.859   865   887 E [MUMU]TaskTab: 	at android.os.Looper.loopOnce(Looper.java:232)
+10-04 16:13:06.859   865   887 E [MUMU]TaskTab: 	at android.os.Looper.loop(Looper.java:317)
+10-04 16:13:06.859   865   887 E [MUMU]TaskTab: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+10-04 16:13:06.859   865   887 E [MUMU]TaskTab: 	at com.android.server.ServiceThread.run(ServiceThread.java:49)
+10-04 16:13:06.861   865   881 I system_server: AssetManager2(0x76d2dbc98158) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.865   865   887 E ActivityManager: Sending non-protected broadcast nemu.intent.action.NEW_TASK from system 865:system/1000 pkg android
+10-04 16:13:06.865   865   887 E ActivityManager: java.lang.Throwable
+10-04 16:13:06.865   865   887 E ActivityManager: 	at com.android.server.am.BroadcastController.checkBroadcastFromSystem(BroadcastController.java:2118)
+10-04 16:13:06.865   865   887 E ActivityManager: 	at com.android.server.am.BroadcastController.broadcastIntentLockedTraced(BroadcastController.java:1635)
+10-04 16:13:06.865   865   887 E ActivityManager: 	at com.android.server.am.BroadcastController.broadcastIntentLocked(BroadcastController.java:807)
+10-04 16:13:06.865   865   887 E ActivityManager: 	at com.android.server.am.BroadcastController.broadcastIntentWithFeature(BroadcastController.java:740)
+10-04 16:13:06.865   865   887 E ActivityManager: 	at com.android.server.am.ActivityManagerService.broadcastIntentWithFeature(ActivityManagerService.java:14410)
+10-04 16:13:06.865   865   887 E ActivityManager: 	at android.app.ContextImpl.sendBroadcastAsUser(ContextImpl.java:1509)
+10-04 16:13:06.865   865   887 E ActivityManager: 	at android.content.ContextWrapper.sendBroadcastAsUser(ContextWrapper.java:603)
+10-04 16:13:06.865   865   887 E ActivityManager: 	at com.android.server.wm.TaskUtils.$r8$lambda$izZd96HXfmc2zvc_tMQT0zjG0cY(TaskUtils.java:2098)
+10-04 16:13:06.865   865   887 E ActivityManager: 	at com.android.server.wm.TaskUtils$$ExternalSyntheticLambda1.run(R8$$SyntheticClass:0)
+10-04 16:13:06.865   865   887 E ActivityManager: 	at android.os.Handler.handleCallback(Handler.java:991)
+10-04 16:13:06.865   865   887 E ActivityManager: 	at android.os.Handler.dispatchMessage(Handler.java:102)
+10-04 16:13:06.865   865   887 E ActivityManager: 	at android.os.Looper.loopOnce(Looper.java:232)
+10-04 16:13:06.865   865   887 E ActivityManager: 	at android.os.Looper.loop(Looper.java:317)
+10-04 16:13:06.865   865   887 E ActivityManager: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+10-04 16:13:06.865   865   887 E ActivityManager: 	at com.android.server.ServiceThread.run(ServiceThread.java:49)
+10-04 16:13:06.866 24455 24455 E libnb   : get_callbacks native_handle 0x886fa760fa689f23: 1 libnb:/system/lib64/libhoudini.so
+10-04 16:13:06.866 24455 24455 I libnb   : Found /system/lib64/libhoudini.so version 7
+10-04 16:13:06.867 24455 24455 E HP      : patch_houdini_linker_null_crash: patched +0x2FFECE (je->jmp) OK
+10-04 16:13:06.867 24455 24455 D HP      : no libmumuhooker.so
+10-04 16:13:06.859 24455 24455 I m.azxcvn.moumou: type=1400 audit(0.0:15839): avc:  denied  { write } for  name="property_service" dev="tmpfs" ino=664 scontext=u:r:untrusted_app:s0:c62,c256,c512,c768 tcontext=u:object_r:property_socket:s0 tclass=sock_file permissive=1 app=com.azxcvn.moumou
+10-04 16:13:06.859 24455 24455 I m.azxcvn.moumou: type=1400 audit(0.0:15840): avc:  denied  { connectto } for  path="/dev/socket/property_service" scontext=u:r:untrusted_app:s0:c62,c256,c512,c768 tcontext=u:r:init:s0 tclass=unix_stream_socket permissive=1 app=com.azxcvn.moumou
+10-04 16:13:06.871   865   881 I system_server: AssetManager2(0x76d2dbcae278) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.867 24464 24464 I sh      : type=1400 audit(0.0:15841): avc:  denied  { open } for  path="/data/tombstones" dev="sdc3" ino=7340033 scontext=u:r:untrusted_app:s0:c62,c256,c512,c768 tcontext=u:object_r:tombstone_data_file:s0 tclass=dir permissive=1 app=com.azxcvn.moumou
+10-04 16:13:06.875 24465 24465 I grep    : type=1400 audit(0.0:15842): avc:  denied  { open } for  path="/data/tombstones/tombstone_00" dev="sdc3" ino=7340352 scontext=u:r:untrusted_app:s0:c62,c256,c512,c768 tcontext=u:object_r:tombstone_data_file:s0 tclass=file permissive=1 app=com.azxcvn.moumou
+10-04 16:13:06.901   865   881 I system_server: AssetManager2(0x76d2dbca07b8) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.905 24455 24455 D HP      : mAbi = arm64 enableHighFrame = 0
+10-04 16:13:06.905 24455 24455 D houdini : [24455] Houdini now in android app mode
+10-04 16:13:06.905 24455 24455 D houdini : [24455] Intel Bridge Technology for Netease Mumu only, Copyright(C) Intel Corp. 2012-2025.
+10-04 16:13:06.905 24455 24455 D houdini : [24455] Use permitted only under a valid commercial software license agreement - all other rights reserved.
+10-04 16:13:06.905 24455 24455 D houdini : [24455] Initialize library(version: 15.0.0_z.Netease_com2.0 RELEASE)... successfully.
+10-04 16:13:06.905   865   881 I system_server: AssetManager2(0x76d2dbc80738) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.905 24455 24455 W HP      : x_initialize private_dir:/data/user/0/com.azxcvn.moumou/code_cache instruction_set:arm64 getMethodShorty:0x76d1ea73a700 ret:1
+10-04 16:13:06.914   865   876 I system_server: NativeAlloc concurrent mark compact GC freed 13MB AllocSpace bytes, 142(3652KB) LOS objects, 49% free, 20MB/40MB, paused 11.750ms,4.619ms total 202.859ms
+10-04 16:13:06.915   865   881 I system_server: AssetManager2(0x76d2dbc9d5b8) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.916   865   878 W System  : A resource failed to call release. 
+10-04 16:13:06.917   865   881 I system_server: AssetManager2(0x76d2dbc82fd8) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.920   865   881 I system_server: AssetManager2(0x76d2dbc82998) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.921   865   881 I system_server: AssetManager2(0x76d2dbc85558) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.923   865   881 I system_server: AssetManager2(0x76d2dbc7e7f8) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.926   865   881 I system_server: AssetManager2(0x76d2dbcaad58) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.928   865   881 I system_server: AssetManager2(0x76d2dbc9dbf8) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.929   865   881 I system_server: AssetManager2(0x76d2dbc74258) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.929   865   881 I system_server: AssetManager2(0x76d2dbc77458) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.933   865   881 I system_server: AssetManager2(0x76d2dbc73f38) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.938   865   881 I system_server: AssetManager2(0x76d2dbc79078) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.938   865   881 I system_server: AssetManager2(0x76d2dbc7afb8) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.939   722   802 I adbd    : jdwp connection from 24455
+10-04 16:13:06.940   865   881 I system_server: AssetManager2(0x76d2dbc800f8) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.941   865   881 I system_server: AssetManager2(0x76d2dbc78a38) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:06.944 24455 24455 D nativeloader: Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+10-04 16:13:06.951   865  1069 D BackgroundInstallControlService: Package event received: 0
+10-04 16:13:06.963 24455 24455 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+10-04 16:13:06.963 24455 24455 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.sidecar.jar
+10-04 16:13:06.963 24455 24455 W ziparchive: Unable to open '/data/app/~~WZyw6VnToZl-Z9JwDtjbvg==/com.azxcvn.moumou-VUGE46dxMBzd4ye7VcVung==/base.dm': No such file or directory
+10-04 16:13:06.963 24455 24455 W ziparchive: Unable to open '/data/app/~~WZyw6VnToZl-Z9JwDtjbvg==/com.azxcvn.moumou-VUGE46dxMBzd4ye7VcVung==/base.dm': No such file or directory
+10-04 16:13:07.039 24455 24455 D nativeloader: Configuring clns-7 for other apk /data/app/~~WZyw6VnToZl-Z9JwDtjbvg==/com.azxcvn.moumou-VUGE46dxMBzd4ye7VcVung==/base.apk. target_sdk_version=36, uses_libraries=, library_path=/data/app/~~WZyw6VnToZl-Z9JwDtjbvg==/com.azxcvn.moumou-VUGE46dxMBzd4ye7VcVung==/lib/arm64:/data/app/~~WZyw6VnToZl-Z9JwDtjbvg==/com.azxcvn.moumou-VUGE46dxMBzd4ye7VcVung==/base.apk!/lib/arm64-v8a, permitted_path=/data:/mnt/expand:/data/user/0/com.azxcvn.moumou
+10-04 16:13:07.041 24455 24455 I m.azxcvn.moumou: AssetManager2(0x76d2dbc76af8) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:07.044 24455 24455 V GraphicsEnvironment: Currently set values for:
+10-04 16:13:07.044 24455 24455 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[]
+10-04 16:13:07.044 24455 24455 V GraphicsEnvironment:   angle_gl_driver_selection_values=[]
+10-04 16:13:07.044 24455 24455 V GraphicsEnvironment: com.azxcvn.moumou is not listed in per-application setting
+10-04 16:13:07.044 24455 24455 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+10-04 16:13:07.055   865   887 E [MUMU]TaskTab: setPresentationRotation 0 for com.azxcvn.moumou:42
+10-04 16:13:07.055   865   887 E [MUMU]TaskTab: java.lang.Exception
+10-04 16:13:07.055   865   887 E [MUMU]TaskTab: 	at com.android.server.mumu.tab.TaskTab.setPresentationRotation(TaskTab.java:52)
+10-04 16:13:07.055   865   887 E [MUMU]TaskTab: 	at com.android.server.wm.TaskUtils.getTopTaskOnDisplay(TaskUtils.java:557)
+10-04 16:13:07.055   865   887 E [MUMU]TaskTab: 	at com.android.server.wm.TaskUtils.updateTaskTabRotation(TaskUtils.java:1876)
+10-04 16:13:07.055   865   887 E [MUMU]TaskTab: 	at com.android.server.wm.TaskUtils.notifyOpen(TaskUtils.java:210)
+10-04 16:13:07.055   865   887 E [MUMU]TaskTab: 	at com.android.server.wm.WmBridge.notifyOpen(WmBridge.java:496)
+10-04 16:13:07.055   865   887 E [MUMU]TaskTab: 	at com.android.server.mumu.wm.TaskHandler.handleMessage(TaskHandler.java:32)
+10-04 16:13:07.055   865   887 E [MUMU]TaskTab: 	at android.os.Handler.dispatchMessage(Handler.java:109)
+10-04 16:13:07.055   865   887 E [MUMU]TaskTab: 	at android.os.Looper.loopOnce(Looper.java:232)
+10-04 16:13:07.055   865   887 E [MUMU]TaskTab: 	at android.os.Looper.loop(Looper.java:317)
+10-04 16:13:07.055   865   887 E [MUMU]TaskTab: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+10-04 16:13:07.055   865   887 E [MUMU]TaskTab: 	at com.android.server.ServiceThread.run(ServiceThread.java:49)
+10-04 16:13:07.055   865  1069 D BackgroundInstallControlService: Package event received: 0
+10-04 16:13:07.055   865  1069 D BackgroundInstallControlService: Package event received: 0
+10-04 16:13:07.057 24455 24503 E libEGL  : intercept_property_get () for (persist.graphics.egl)
+10-04 16:13:07.058 24455 24455 I m.azxcvn.moumou: AssetManager2(0x76d2dbc6e178) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:07.069 24455 24503 I EGL_emulation: EGL display initialized (version 1.4, rendererVersion=0x3, configs=120)
+10-04 16:13:07.104 24455 24504 D FlutterJNI: Beginning load of flutter...
+10-04 16:13:07.104 24455 24505 I ResourceExtractor: Found extracted resources res_timestamp-4-1791101486303
+10-04 16:13:07.165  1917  1917 W AccMsgReceiver: AccMsgReceiver: onReceive action = uu.intent.action.STOP_ACCELERATE
+10-04 16:13:07.169  1917  1917 W AccMsgReceiver: AccMsgReceiver: onReceive action = nemu.intent.action.NEW_TASK
+10-04 16:13:07.170   865   881 W ActivityManager: Foreground service started from background can not have location/camera/microphone access: service com.mumu.acc/.AccService
+10-04 16:13:07.175   865  7835 W ActivityManager: Foreground service started from background can not have location/camera/microphone access: service com.mumu.acc/.AccService
+10-04 16:13:07.177  1917  1965 W AccServiceManager: onAppClose: packageName = com.azxcvn.moumou
+10-04 16:13:07.178  1917  1965 W AccServiceManager: onAppLaunch: packageName = com.azxcvn.moumou
+10-04 16:13:07.178  1917  1965 W TranslateGameManager: onAppLaunch: packageName = com.azxcvn.moumou, hasPackageLaunchedBefore = false, supportTranslateReally = false, isLocalTranslateEnabled = false
+10-04 16:13:07.175 24506 24506 I init    : type=1400 audit(0.0:15843): avc:  denied  { entrypoint } for  path="/system/xbin/serial_console" dev="sda6" ino=3974 scontext=u:r:su:s0 tcontext=u:object_r:system_file:s0 tclass=file permissive=1
+10-04 16:13:07.339   865  7835 W BestClock: java.time.DateTimeException: No network time available
+10-04 16:13:07.339   865  7835 W BestClock: java.time.DateTimeException: No network time available
+10-04 16:13:07.339   865  7835 W BestClock: java.time.DateTimeException: No network time available
+10-04 16:13:07.379 24455 24504 D FlutterJNI: flutter (null) was loaded normally!
+10-04 16:13:07.380   865  7835 D FileUtils: Rounded bytes from 9389056000 to 16000000000
+10-04 16:13:07.383 24455 24519 D skia    : [SkFontMgr Android Parser] '/product/etc/fonts_customization.xml' could not be opened
+10-04 16:13:07.385 24455 24455 I m.azxcvn.moumou: AssetManager2(0x76d2dbc69678) locale list changing from [] to [zh-Hans-CN]
+10-04 16:13:07.429 24455 24455 D DesktopModeFlagsUtil: Toggle override initialized to: OVERRIDE_OFF
+10-04 16:13:07.429 24455 24520 E vulkan  : intercept_property_get () for (ro.hardware.vulkan)
+10-04 16:13:07.446 24455 24520 D vulkan  : searching for layers in '/data/app/~~WZyw6VnToZl-Z9JwDtjbvg==/com.azxcvn.moumou-VUGE46dxMBzd4ye7VcVung==/lib/arm64'
+10-04 16:13:07.481 24455 24520 D vulkan  : added global layer 'VK_LAYER_KHRONOS_validation' from library '/data/app/~~WZyw6VnToZl-Z9JwDtjbvg==/com.azxcvn.moumou-VUGE46dxMBzd4ye7VcVung==/lib/arm64/libVkLayer_khronos_validation.so'
+10-04 16:13:07.482 24455 24520 D vulkan  : searching for layers in '/data/app/~~WZyw6VnToZl-Z9JwDtjbvg==/com.azxcvn.moumou-VUGE46dxMBzd4ye7VcVung==/base.apk!/lib/arm64-v8a'
+10-04 16:13:07.672   509   509 I hwservicemanager: getTransport: Cannot find entry android.hardware.configstore@1.0::ISurfaceFlingerConfigs/default in either framework or device VINTF manifest.
+10-04 16:13:07.673 24455 24520 E HidlServiceManagement: getService: Potential race detected, descriptor: android.hardware.configstore@1.0::ISurfaceFlingerConfigs instance: default
+10-04 16:13:07.706 24455 24520 I MESA    : on_vkMapMemoryIntoAddressSpaceGOOGLE: Got new host visible alloc. Sizeof void: 8 map size: 4194304 Range: [0x76d152a00000 0x76d152e00000]
+10-04 16:13:07.720 24455 24520 I flutter : [IMPORTANT:flutter/shell/platform/android/android_context_vk_impeller.cc(62)] Using the Impeller rendering backend (Vulkan).
+10-04 16:13:07.724 24455 24529 I flutter : The Dart VM service is listening on http://127.0.0.1:35715/GVy210sabTc=/
+10-04 16:13:07.929 24455 24455 I media_kit: package:media_kit_libs_android_video attached.
+10-04 16:13:07.931 24455 24455 D media_kit: Redmi
+10-04 16:13:07.931 24455 24455 D media_kit: vermeer
+10-04 16:13:07.931 24455 24455 D media_kit: Redmi/vermeer/vermeer:15/V417IR/972:user/release-keys
+10-04 16:13:07.931 24455 24455 D media_kit: Redmi
+10-04 16:13:07.931 24455 24455 D media_kit: 23113RKC6C
+10-04 16:13:07.931 24455 24455 D media_kit: Redmi
+10-04 16:13:07.931 24455 24455 D media_kit: vermeer
+10-04 16:13:07.931 24455 24455 I media_kit: Saved application context.
+10-04 16:13:07.944 24455 24455 D CrashHandler: 全局异常处理器已初始化
+10-04 16:13:07.955 24455 24481 I m.azxcvn.moumou: JIT allocated 52KB for compiled code of void android.view.View.<init>(android.content.Context, android.util.AttributeSet, int, int)
+10-04 16:13:07.964 24455 24455 W m.azxcvn.moumou: Accessing hidden method Landroid/view/accessibility/AccessibilityNodeInfo;->setChecked(I)V (blocked, linking, denied)
+10-04 16:13:07.964 24455 24455 W m.azxcvn.moumou: Accessing hidden method Landroid/view/accessibility/AccessibilityNodeInfo;->setExpandedState(I)V (blocked, linking, denied)
+10-04 16:13:07.964 24455 24455 W m.azxcvn.moumou: Accessing hidden method Landroid/view/accessibility/AccessibilityNodeInfo;->setChecked(I)V (blocked, linking, denied)
+10-04 16:13:07.964 24455 24455 W m.azxcvn.moumou: Accessing hidden method Landroid/view/accessibility/AccessibilityNodeInfo;->setExpandedState(I)V (blocked, linking, denied)
+10-04 16:13:07.964 24455 24455 W m.azxcvn.moumou: Accessing hidden method Landroid/view/accessibility/AccessibilityNodeInfo;->setChecked(I)V (blocked, linking, denied)
+10-04 16:13:07.964 24455 24455 W m.azxcvn.moumou: Accessing hidden method Landroid/view/accessibility/AccessibilityNodeInfo;->setExpandedState(I)V (blocked, linking, denied)
+10-04 16:13:07.964 24455 24455 W m.azxcvn.moumou: Accessing hidden method Landroid/view/accessibility/AccessibilityNodeInfo;->setChecked(I)V (blocked, linking, denied)
+10-04 16:13:07.964 24455 24455 W m.azxcvn.moumou: Accessing hidden method Landroid/view/accessibility/AccessibilityNodeInfo;->getSourceNodeId()J (unsupported,test-api, reflection, allowed)
+10-04 16:13:07.964 24455 24455 W m.azxcvn.moumou: Accessing hidden method Landroid/view/accessibility/AccessibilityRecord;->getSourceNodeId()J (unsupported, reflection, allowed)
+10-04 16:13:07.964 24455 24455 W m.azxcvn.moumou: Accessing hidden field Landroid/view/accessibility/AccessibilityNodeInfo;->mChildNodeIds:Landroid/util/LongArray; (unsupported, reflection, allowed)
+10-04 16:13:07.964 24455 24455 W m.azxcvn.moumou: Accessing hidden method Landroid/util/LongArray;->get(I)J (unsupported, reflection, allowed)
+10-04 16:13:07.979 24455 24455 D FlutterRenderer: Width is zero. 0,0
+10-04 16:13:07.989 24455 24455 W HWUI    : Unknown dataspace 0
+10-04 16:13:08.295 24455 24455 I Choreographer: Skipped 54 frames!  The application may be doing too much work on its main thread.
+10-04 16:13:08.298 24455 24455 I WindowExtensionsImpl: Initializing Window Extensions, vendor API level=8, activity embedding enabled=true
+10-04 16:13:08.304 24455 24455 D FlutterRenderer: Width is zero. 0,0
+10-04 16:13:08.305   865  7835 D CoreBackPreview: Window{a7d2f9 u0 com.azxcvn.moumou/com.azxcvn.moumou.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@a96e44a, mPriority=0, mIsAnimationCallback=false, mOverrideBehavior=0}
+10-04 16:13:08.307 24455 24500 I EGL_emulation: EGL display initialized (version 1.4, rendererVersion=0x3, configs=120)
+10-04 16:13:08.321 24455 24455 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 16:13:08.324 24455 24500 W HWUI    : Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+10-04 16:13:08.332   716   804 E HWComposer: getSupportedContentTypes: getSupportedContentTypes failed for display 4619827820427265280: UNSUPPORTED (8)
+10-04 16:13:08.332 24455 24500 E HidlServiceManagement: getService: Potential race detected, descriptor: android.hardware.graphics.mapper@2.0::IMapper instance: default
+10-04 16:13:08.334 24455 24500 E HidlServiceManagement: getService: Potential race detected, descriptor: android.hardware.graphics.allocator@2.0::IAllocator instance: default
+10-04 16:13:08.334 24455 24500 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 16:13:08.342 24455 24520 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 16:13:08.368 24455 24520 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 16:13:08.369 24455 24520 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 16:13:08.369 24455 24520 E gralloc_kona: gralloc_alloc: Unknown format 56
+10-04 16:13:08.369 24455 24520 E GraphicBufferAllocator: Failed to allocate (4 x 4) layerCount 1 format 56 usage b00: 3
+10-04 16:13:08.369 24455 24520 E AHardwareBuffer: GraphicBuffer(w=4, h=4, lc=1) failed (Unknown error -3), handle=0x0
+10-04 16:13:08.369 24455 24520 E gralloc_kona: gralloc_alloc: Unknown format 59
+10-04 16:13:08.369 24455 24520 E GraphicBufferAllocator: Failed to allocate (4 x 4) layerCount 1 format 59 usage b00: 3
+10-04 16:13:08.369 24455 24520 E AHardwareBuffer: GraphicBuffer(w=4, h=4, lc=1) failed (Unknown error -3), handle=0x0
+10-04 16:13:08.369 24455 24520 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 16:13:08.369 24455 24520 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 16:13:08.369 24455 24520 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 16:13:08.369 24455 24520 E gralloc_kona: gralloc_alloc: Unknown format 56
+10-04 16:13:08.369 24455 24520 E GraphicBufferAllocator: Failed to allocate (4 x 4) layerCount 1 format 56 usage b00: 3
+10-04 16:13:08.369 24455 24520 E AHardwareBuffer: GraphicBuffer(w=4, h=4, lc=1) failed (Unknown error -3), handle=0x0
+10-04 16:13:08.369 24455 24520 E gralloc_kona: gralloc_alloc: Unknown format 59
+10-04 16:13:08.369 24455 24520 E GraphicBufferAllocator: Failed to allocate (4 x 4) layerCount 1 format 59 usage b00: 3
+10-04 16:13:08.369 24455 24520 E AHardwareBuffer: GraphicBuffer(w=4, h=4, lc=1) failed (Unknown error -3), handle=0x0
+10-04 16:13:08.369 24455 24520 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 16:13:08.382 24455 24520 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 16:13:08.394 24455 24520 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 16:13:08.408 24455 24520 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 16:13:08.419 24455 24520 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 16:13:08.498 24455 24455 I flutter : media_kit: NativeReferenceHolder: Allocated 130644512957344
+10-04 16:13:08.568 24455 24455 I flutter : ━━━ Flutter 异常 2026-10-04 16:13:08.540794 ━━━
+10-04 16:13:08.569 24455 24455 I flutter : Zone mismatch.
+10-04 16:13:08.569 24455 24455 I flutter : The Flutter bindings were initialized in a different zone than is now being used. This will likely cause confusion and bugs as any zone-specific configuration will inconsistently use the configuration of the original binding initialization zone or this zone based on hard-to-predict factors such as which zone was active when a particular callback was set.
+10-04 16:13:08.569 24455 24455 I flutter : It is important to use the same zone when calling `ensureInitialized` on the binding as when calling `runApp` later.
+10-04 16:13:08.569 24455 24455 I flutter : To make this warning fatal, set BindingBase.debugZoneErrorsAreFatal to true before the bindings are initialized (i.e. as the first statement in `void main() { }`).
+10-04 16:13:08.569 24455 24455 I flutter : #0      BindingBase.debugCheckZone.<anonymous closure> (package:flutter/src/foundation/binding.dart:520:31)
+10-04 16:13:08.569 24455 24455 I flutter : #1      BindingBase.debugCheckZone (package:flutter/src/foundation/binding.dart:526:6)
+10-04 16:13:08.569 24455 24455 I flutter : #2      _runWidget (package:flutter/src/widgets/binding.dart:1949:18)
+10-04 16:13:08.569 24455 24455 I flutter : #3      runApp (package:flutter/src/widgets/binding.dart:1885:3)
+10-04 16:13:08.569 24455 24455 I flutter : #4      main.<anonymous closure> (package:moumou/main.dart:100:11)
+10-04 16:13:08.569 24455 24455 I flutter : #5      _rootRun (dart:async/zone_root.dart:35:13)
+10-04 16:13:08.569 24455 24455 I flutter : #6      _CustomZone.run (dart:async/zone.dart:726:19)
+10-04 16:13:08.569 24455 24455 I flutter : #7      _runZoned (dart:async/zone_api.dart:166:6)
+10-04 16:13:08.569 24455 24455 I flutter : #8      runZonedGuarded (dart:async/zone_api.dart:152:12)
+10-04 16:13:08.569 24455 24455 I flutter : #9      main (package:moumou/main.dart:99:3)
+10-04 16:13:08.570 24455 24455 I flutter : <asynchronous suspension>
+10-04 16:13:08.570 24455 24455 I flutter : 
+10-04 16:13:08.570 24455 24455 I flutter : ━━━━━━━━━━━━━━━━━━━━━━━━
+10-04 16:13:08.692   865   958 D ActivityManager: freezing 9966 tv.danmaku.bili:pushservice
+10-04 16:13:08.693   865   958 D ActivityManager: Reschedule freeze for process 9966 tv.danmaku.bili:pushservice (outstanding txns), timeout=2683
+10-04 16:13:09.184   865  9799 D SntpClient: request time failed: java.net.SocketTimeoutException: Poll timed out
+10-04 16:13:09.290   865  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 16:13:09.290   865  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 16:13:09.290   865  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 16:13:09.290   865  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 16:13:09.290   865  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 16:13:10.034   865  7835 W BestClock: java.time.DateTimeException: No network time available
+10-04 16:13:10.034   865  7835 W BestClock: java.time.DateTimeException: No network time available
+10-04 16:13:10.034   865  7835 W BestClock: java.time.DateTimeException: No network time available
+10-04 16:13:10.034   865  7835 W BestClock: java.time.DateTimeException: No network time available
+10-04 16:13:10.034   865  7835 W BestClock: java.time.DateTimeException: No network time available
+10-04 16:13:10.058   865   958 D ActivityManager: freezing 23854 tv.danmaku.bili
+10-04 16:13:10.058   865   958 D ActivityManager: freezing 24048 tv.danmaku.bili:download
+10-04 16:13:10.167   865   958 D ActivityManager: freezing 2145 com.android.webview:webview_service
+10-04 16:13:10.168   865  1029 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+10-04 16:13:10.168   865  1029 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+10-04 16:13:10.169   865  1029 D InetDiagMessage: Destroyed live tcp sockets for uids={10027} in 0ms
+10-04 16:13:10.176   865   958 D ActivityManager: freezing 24315 com.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+10-04 16:13:10.177   865  1029 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+10-04 16:13:10.177   865  1029 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+10-04 16:13:10.177   865  1029 D InetDiagMessage: Destroyed live tcp sockets for uids={99029} in 1ms
+10-04 16:13:10.504   530 24296 I keystore2: system/security/keystore2/watchdog/src/lib.rs:356 - Watchdog thread idle -> terminating. Have a great day.
+10-04 16:13:10.879 24455 24520 I MESA    : on_vkMapMemoryIntoAddressSpaceGOOGLE: Got new host visible alloc. Sizeof void: 8 map size: 4194304 Range: [0x76d14b3ef000 0x76d14b7ef000]
+10-04 16:13:10.919 24455 24455 I Choreographer: Skipped 469 frames!  The application may be doing too much work on its main thread.
+10-04 16:13:10.975 24455 24455 D WindowLayoutComponentImpl: Register WindowLayoutInfoListener on Context=com.azxcvn.moumou.MainActivity@f24e123, of which baseContext=android.app.ContextImpl@ca321aa
+10-04 16:13:11.042 24455 24455 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 16:13:11.050 24455 24500 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 16:13:11.054   865   887 W system_server: Failed to determine oat file name for dex location /data/app/~~WZyw6VnToZl-Z9JwDtjbvg==/com.azxcvn.moumou-VUGE46dxMBzd4ye7VcVung==/base.apk: Dalvik cache directory does not exist
+10-04 16:13:11.054   865   887 W ziparchive: Unable to open '/data/app/~~WZyw6VnToZl-Z9JwDtjbvg==/com.azxcvn.moumou-VUGE46dxMBzd4ye7VcVung==/base.dm': No such file or directory
+10-04 16:13:11.056   865   887 I ActivityTaskManager: Displayed com.azxcvn.moumou/.MainActivity for user 0: +4s312ms
+10-04 16:13:11.056   865   887 I ActivityTaskManager: Fully drawn com.azxcvn.moumou/.MainActivity: +4s312ms
+10-04 16:13:11.056   865   887 W system_server: Failed to determine oat file name for dex location /data/app/~~WZyw6VnToZl-Z9JwDtjbvg==/com.azxcvn.moumou-VUGE46dxMBzd4ye7VcVung==/base.apk: Dalvik cache directory does not exist
+10-04 16:13:11.056   865   887 W ziparchive: Unable to open '/data/app/~~WZyw6VnToZl-Z9JwDtjbvg==/com.azxcvn.moumou-VUGE46dxMBzd4ye7VcVung==/base.dm': No such file or directory
+10-04 16:13:11.084 24455 24455 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 16:13:11.126   865   977 I ImeTracker: com.azxcvn.moumou:3ff6b8b7: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+10-04 16:13:11.142  1144  1273 W Choreographer: Frame time is 0.30211 ms in the future!  Check that graphics HAL is generating vsync timestamps using the correct timebase.
+10-04 16:13:11.150 24455 24553 D FsVideoWalker: fs walk: elapsed=34ms truncated=false dirs=42 videos=13 frontier=0
+10-04 16:13:11.164  1144  1273 W Choreographer: Frame time is 0.382523 ms in the future!  Check that graphics HAL is generating vsync timestamps using the correct timebase.
+10-04 16:13:11.192  1144  1273 W Choreographer: Frame time is 0.411289 ms in the future!  Check that graphics HAL is generating vsync timestamps using the correct timebase.
+10-04 16:13:11.203  1144  1273 W Choreographer: Frame time is 0.289189 ms in the future!  Check that graphics HAL is generating vsync timestamps using the correct timebase.
+10-04 16:13:11.213 24455 24455 D InsetsController: hide(ime(), fromIme=false)
+10-04 16:13:11.213 24455 24455 I ImeTracker: com.azxcvn.moumou:3ff6b8b7: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+10-04 16:13:11.233  1144  1273 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda13@713a7db
+10-04 16:13:11.234   865 10838 D CoreBackPreview: Window{be43c4f u0 Splash Screen com.azxcvn.moumou EXITING}: Setting back callback null
+10-04 16:13:11.236  1103  1103 D BaseDepthController: setSurface:
+10-04 16:13:11.236  1103  1103 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+10-04 16:13:11.236  1103  1103 D BaseDepthController: 	mSurface: null
+10-04 16:13:11.239  1103  1103 D StateManager: goToState - fromState: Normal, toState: Normal, partial trace:
+10-04 16:13:11.239  1103  1103 D StateManager: 	at com.android.launcher3.statemanager.StateManager.moveToRestState(r8-map-id-d7032bd33b79b0b28d6df99c572710217772eb2e9291f31fcfb9e739b345f941:4)
+10-04 16:13:11.239  1103  1103 D StateManager: 	at com.android.launcher3.statemanager.StateManager.moveToRestState(r8-map-id-d7032bd33b79b0b28d6df99c572710217772eb2e9291f31fcfb9e739b345f941:1)
+10-04 16:13:11.239  1103  1103 D StateManager: 	at com.android.launcher3.statemanager.StatefulActivity.onStop(r8-map-id-d7032bd33b79b0b28d6df99c572710217772eb2e9291f31fcfb9e739b345f941:34)
+10-04 16:13:11.239  1103  1103 D StatsLog: LAUNCHER_ONSTOP
+10-04 16:13:11.243   865  1069 D BackgroundInstallControlService: Package event received: 0
+10-04 16:13:11.378   865   958 D ActivityManager: freezing 9966 tv.danmaku.bili:pushservice
+10-04 16:13:11.379   865  1029 D InetDiagMessage: Destroyed 2 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+10-04 16:13:11.379   865  1029 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+10-04 16:13:11.379   865  1029 D InetDiagMessage: Destroyed live tcp sockets for uids={10053} in 0ms
+10-04 16:13:12.159 24561 24561 I init    : type=1400 audit(0.0:15848): avc:  denied  { entrypoint } for  path="/system/xbin/serial_console" dev="sda6" ino=3974 scontext=u:r:su:s0 tcontext=u:object_r:system_file:s0 tclass=file permissive=1
+10-04 16:13:12.159 24561 24561 I serial_console: type=1400 audit(0.0:15849): avc:  denied  { map } for  path="/system/xbin/serial_console" dev="sda6" ino=3974 scontext=u:r:su:s0 tcontext=u:object_r:system_file:s0 tclass=file permissive=1
+10-04 16:13:12.159 24561 24561 I serial_console: type=1400 audit(0.0:15850): avc:  denied  { read execute } for  path="/system/xbin/serial_console" dev="sda6" ino=3974 scontext=u:r:su:s0 tcontext=u:object_r:system_file:s0 tclass=file permissive=1
+10-04 16:13:12.293   865  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 16:13:12.293   865  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 16:13:12.293   865  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 16:13:12.293   865  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 16:13:12.293   865  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 16:13:12.687 24455 24562 D ProfileInstaller: Installing profile for com.azxcvn.moumou
+10-04 16:13:14.191   865  9799 D SntpClient: request time failed: java.net.SocketTimeoutException: Poll timed out

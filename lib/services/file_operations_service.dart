@@ -3,16 +3,28 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:moumou/services/video_scanner.dart';
+import 'package:moumou/utils/error_codes.dart';
 import 'package:moumou/utils/file_ops.dart';
 
-/// 文件操作失败（复制/移动/重命名/删除）：[message] 为可直接展示的中文原因。
+/// 文件操作失败（复制/移动/重命名/删除）：[code] + [args]，文案在 UI 层
+/// （见 `lib/l10n/error_texts.dart` 的 `fileOpErrorText`）。
 class FileOpException implements Exception {
-  final String message;
+  /// 错误码
+  final FileOpErrorCode code;
 
-  const FileOpException(this.message);
+  /// 参数（键名与 ARB placeholder 一致：`name` / `error`）
+  final Map<String, Object?> args;
+
+  /// 本次失败是不是**用户取消**。
+  ///
+  /// 调用方一律按这个标记判断，**不要拿 [code] / [args] 比字符串**（取消路径
+  /// 只是给界面兜底的一条文案，不是判据；哨兵值因此不再参与逻辑）。
+  final bool cancelled;
+
+  const FileOpException(this.code, {this.args = const {}, this.cancelled = false});
 
   @override
-  String toString() => message;
+  String toString() => 'FileOpException(${code.name})';
 }
 
 /// 传输进度快照（复制 / 移动共用）
@@ -72,7 +84,8 @@ class FileOpCancelToken {
 ///
 /// 前置条件：App 已持有 `MANAGE_EXTERNAL_STORAGE`（首页权限门禁保证），
 /// 因此无需 SAF 中转，目录选择器直接给真实路径（见 `directory_picker_dialog`）。
-/// 所有方法失败抛 [FileOpException]，文案可直接进 SnackBar。
+/// 所有方法失败抛 [FileOpException]（码 + 参数），文案由 UI 层用
+/// `fileOpErrorText` 现取。
 class FileOperationsService {
   FileOperationsService._();
 
@@ -148,7 +161,7 @@ class FileOperationsService {
     final isDir = Directory(src).existsSync();
     final isFile = File(src).existsSync();
     if (!isDir && !isFile) {
-      throw const FileOpException('源文件不存在或已被移动');
+      throw const FileOpException(FileOpErrorCode.sourceMissing);
     }
 
     final error = FileOps.validateMoveTarget(
@@ -206,13 +219,16 @@ class FileOperationsService {
       try {
         await Directory(target).create(recursive: true);
       } catch (e) {
-        throw FileOpException('写入失败：$name（$e）');
+        throw FileOpException(
+          FileOpErrorCode.writeFailed,
+          args: {'name': name, 'error': '$e'},
+        );
       }
     }
 
     for (final entry in entries) {
       if (cancelToken?.isCancelled ?? false) {
-        throw const FileOpException('已取消');
+        throw const FileOpException(FileOpErrorCode.cancelled, cancelled: true);
       }
       final rel = entry.relPath;
       final outPath = rel.isEmpty ? target : '$target/$rel';
@@ -236,7 +252,10 @@ class FileOperationsService {
       } on FileOpException {
         rethrow;
       } catch (e) {
-        throw FileOpException('写入失败：${FileOps.baseName(outPath)}（$e）');
+        throw FileOpException(
+          FileOpErrorCode.writeFailed,
+          args: {'name': FileOps.baseName(outPath), 'error': '$e'},
+        );
       }
       itemsDone++;
       onProgress?.call(FileOpProgress(
@@ -256,7 +275,7 @@ class FileOperationsService {
           await File(src).delete();
         }
       } catch (_) {
-        throw const FileOpException('已复制到目标位置，但删除原文件失败，请手动清理');
+        throw const FileOpException(FileOpErrorCode.copiedButDeleteFailed);
       }
     }
     _markMediaChanged([src, target]);
@@ -289,7 +308,9 @@ class FileOperationsService {
         if (cancelToken?.isCancelled ?? false) {
           subscription.cancel();
           if (!completer.isCompleted) {
-            completer.completeError(const FileOpException('已取消'));
+            completer.completeError(
+              const FileOpException(FileOpErrorCode.cancelled, cancelled: true),
+            );
           }
           return;
         }
@@ -330,7 +351,10 @@ class FileOperationsService {
             final partFile = File(partTarget);
             if (await partFile.exists()) await partFile.delete();
           } catch (_) {}
-          throw FileOpException('重命名临时文件失败：$e');
+          throw FileOpException(
+            FileOpErrorCode.renameTempFailed,
+            args: {'error': '$e'},
+          );
         }
       } else {
         // 未成功完成（取消或错误）：清理 .part 临时文件，避免半成品残留
@@ -388,16 +412,20 @@ class FileOperationsService {
   /// 因为重命名是显式意图，静默改名叫 `xxx (1)` 会让用户困惑。
   static Future<String> rename(String path, String newName) async {
     final src = FileOps.stripTrailingSlash(path);
-    if (!exists(src)) throw const FileOpException('源文件不存在或已被移动');
+    if (!exists(src)) {
+      throw const FileOpException(FileOpErrorCode.sourceMissing);
+    }
 
     final check = FileOps.validateRenameName(newName);
-    if (!check.ok) throw FileOpException(check.error);
+    if (!check.ok) throw FileOpException(check.error!);
 
     final name = newName.trim();
     if (name == FileOps.baseName(src)) return src; // 没改，直接成功
 
     final target = '${FileOps.parentOf(src)}/$name';
-    if (exists(target)) throw const FileOpException('同目录下已存在同名文件或文件夹');
+    if (exists(target)) {
+      throw const FileOpException(FileOpErrorCode.targetExists);
+    }
 
     try {
       if (Directory(src).existsSync()) {
@@ -406,7 +434,10 @@ class FileOperationsService {
         await File(src).rename(target);
       }
     } catch (e) {
-      throw FileOpException('重命名失败：$e');
+      throw FileOpException(
+        FileOpErrorCode.renameFailed,
+        args: {'error': '$e'},
+      );
     }
     _markMediaChanged([src, target]);
     return target;
@@ -418,11 +449,16 @@ class FileOperationsService {
   static Future<void> deleteFile(String path) async {
     final src = FileOps.stripTrailingSlash(path);
     final file = File(src);
-    if (!file.existsSync()) throw const FileOpException('文件不存在或已被删除');
+    if (!file.existsSync()) {
+      throw const FileOpException(FileOpErrorCode.fileMissing);
+    }
     try {
       await file.delete();
     } catch (e) {
-      throw FileOpException('删除失败：$e');
+      throw FileOpException(
+        FileOpErrorCode.deleteFailed,
+        args: {'error': '$e'},
+      );
     }
     _markMediaChanged([src]);
   }
@@ -439,13 +475,18 @@ class FileOperationsService {
   }) async {
     final src = FileOps.stripTrailingSlash(path);
     final dir = Directory(src);
-    if (!dir.existsSync()) throw const FileOpException('文件夹不存在或已被删除');
+    if (!dir.existsSync()) {
+      throw const FileOpException(FileOpErrorCode.folderMissing);
+    }
 
     if (deleteWholeFolder) {
       try {
         await dir.delete(recursive: true);
       } catch (e) {
-        throw FileOpException('删除失败：$e');
+        throw FileOpException(
+          FileOpErrorCode.deleteFailed,
+          args: {'error': '$e'},
+        );
       }
       _markMediaChanged([src]);
       return 1;
@@ -460,10 +501,13 @@ class FileOperationsService {
         deleted++;
       }
     } catch (e) {
-      throw FileOpException('删除失败：$e');
+      throw FileOpException(
+        FileOpErrorCode.deleteFailed,
+        args: {'error': '$e'},
+      );
     }
     if (deleted == 0) {
-      throw const FileOpException('该文件夹内没有可删除的视频文件');
+      throw const FileOpException(FileOpErrorCode.noVideosInFolder);
     }
     _markMediaChanged([src]);
     return deleted;

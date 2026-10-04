@@ -1,10 +1,16 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/services/decode_settings.dart';
 import 'package:moumou/utils/decode_policy.dart';
 
 /// 解码链选择（对齐参照项目 MPVRX 的 `RendererBackendPolicy`）：
 /// 档位由用户定、链在开播前按渲染后端定一次，**任何情况下都不改写用户档位**。
 void main() {
+  // 表改造后档位名称由 l10n 提供（代码里不再有中文标签）
+  final zh = lookupAppLocalizations(const Locale('zh'));
+
   group('preferredDecodeChain', () {
     test('硬解+ / OpenGL：直通优先链', () {
       expect(
@@ -78,9 +84,9 @@ void main() {
       // 硬解+ 的 enum hwdec 是直通优先链；Vulkan 下写盘的是拷贝链，
       // 但用户看到的档位仍是「硬解+」（界面按 DecodeSettings.mode 显示）
       expect(DecodeMode.hwPlus.hwdec, 'mediacodec,mediacodec-copy,no');
-      expect(DecodeMode.hwPlus.label, '硬解+');
+      expect(decodeModeLabel(zh, DecodeMode.hwPlus), '硬解+');
       expect(DecodeMode.hwCopy.hwdec, 'mediacodec-copy');
-      expect(DecodeMode.hwCopy.label, '硬解');
+      expect(decodeModeLabel(zh, DecodeMode.hwCopy), '硬解');
     });
   });
 }

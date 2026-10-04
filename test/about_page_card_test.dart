@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/pages/settings/about_page.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 关于页顶部信息卡片测试（设计稿见 docs/archive/design-about-info-card.html）：
 /// - 上排 = 图标 + 名称 + GitHub/邮箱两个图标按钮（横排）；
 /// - 下排 = 版本 / 构建类型 / 提交哈希三枚等宽胶囊；
@@ -36,13 +38,23 @@ void main() {
     return null;
   }
 
-  Future<bool> loadTestFont() async {
+  /// 读字体文件并注册成 `TestCJK`。
+  ///
+  /// **必须包在 [WidgetTester.runAsync] 里**：`testWidgets` 的函数体跑在
+  /// flutter_test 的 fake-async 区，真实异步 I/O（`File.readAsBytes`）与引擎字体
+  /// 注册在那里**永远不会完成** —— 直接 `await` 会一挂不返（实测整轮
+  /// `flutter test` 被这一条拖到 10 分钟默认超时）。
+  Future<bool> loadTestFont(WidgetTester tester) async {
     final path = cjkFontPath();
     if (path == null) return false;
-    final bytes = await File(path).readAsBytes();
-    final loader = FontLoader('TestCJK')..addFont(Future.value(bytes.buffer.asByteData()));
-    await loader.load();
-    return true;
+    final loaded = await tester.runAsync(() async {
+      final bytes = await File(path).readAsBytes();
+      final loader = FontLoader('TestCJK')
+        ..addFont(Future.value(bytes.buffer.asByteData()));
+      await loader.load();
+      return true;
+    });
+    return loaded ?? false;
   }
 
   ThemeData themeWithFont() => ThemeData(useMaterial3: true, fontFamily: 'TestCJK');
@@ -72,6 +84,9 @@ void main() {
         data: MediaQueryData(textScaler: scaler),
         child: MaterialApp(
           theme: withFont ? themeWithFont() : null,
+          locale: kTestLocaleZh,
+          localizationsDelegates: kTestLocalizationDelegates,
+          supportedLocales: kTestSupportedLocales,
           home: const AboutPage(),
         ),
       ),
@@ -102,7 +117,7 @@ void main() {
   });
 
   testWidgets('真实字体 + 360dp：名称不被挤成省略号（13dp 内边距的余量验证）', (tester) async {
-    final loaded = await loadTestFont();
+    final loaded = await loadTestFont(tester);
     if (!loaded) {
       markTestSkipped('未找到真实 CJK 字体（参考项目不在本机），跳过字体度量验证');
       return;

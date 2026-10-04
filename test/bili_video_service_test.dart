@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/services/bilibili/bili_video_service.dart';
+import 'package:moumou/utils/error_codes.dart';
 
 void main() {
   Map<String, dynamic> pgcResp() => {
@@ -98,7 +99,7 @@ void main() {
     expect(v.title, '标题');
   });
 
-  test('错误码 -10403 抛大会员友好提示', () async {
+  test('错误码 -10403 抛大会员错误码', () async {
     final client = MockClient((req) async => http.Response(
           jsonEncode({'code': -10403, 'message': 'xxx'}),
           200,
@@ -106,8 +107,11 @@ void main() {
         ));
     expect(
       () => serviceWith(client).fetchPgcPlayUrl(epId: 1),
-      throwsA(isA<BiliApiException>()
-          .having((e) => e.message, 'message', '需要大会员权限')),
+      throwsA(isA<BiliApiException>().having(
+        (e) => e.code,
+        'code',
+        BiliApiErrorCode.videoVipRequired,
+      )),
     );
   });
 
@@ -137,8 +141,11 @@ void main() {
         ));
     expect(
       () => serviceWith(client).fetchUgcPlayUrl(bvid: 'BV1xx', cid: 200),
-      throwsA(isA<BiliApiException>()
-          .having((e) => e.message, 'message', contains('风控'))),
+      throwsA(isA<BiliApiException>().having(
+        (e) => e.code,
+        'code',
+        BiliApiErrorCode.riskControlTriggered,
+      )),
     );
   });
 
@@ -155,8 +162,11 @@ void main() {
         ));
     expect(
       () => serviceWith(client).fetchPgcPlayUrl(epId: 1, cid: 2),
-      throwsA(isA<BiliApiException>()
-          .having((e) => e.message, 'message', contains('风控'))),
+      throwsA(isA<BiliApiException>().having(
+        (e) => e.code,
+        'code',
+        BiliApiErrorCode.riskControlTriggered,
+      )),
     );
   });
 

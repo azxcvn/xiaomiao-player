@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/services/decode_settings.dart';
 import 'package:moumou/services/device_services.dart';
 import 'package:moumou/utils/app_dialog.dart';
@@ -67,22 +69,23 @@ class _PlayerDecodePanelState extends State<PlayerDecodePanel> {
   /// 稍后重启 → 仅关闭（改动已持久化，退出重开视频/应用后生效）。
   Future<void> _promptRestart() async {
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     final restartNow = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('需重启应用'),
-        content: const Text(
-          '解码配置已修改，重启应用后生效。\n\n是否立即重启？',
-          style: TextStyle(fontSize: 14, height: 1.5),
+        title: Text(l10n.playerRestartRequired),
+        content: Text(
+          l10n.playerDecodeRestartBody,
+          style: const TextStyle(fontSize: 14, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('稍后重启'),
+            child: Text(l10n.playerRestartLater),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('立即重启'),
+            child: Text(l10n.playerRestartNow),
           ),
         ],
       ),
@@ -99,7 +102,7 @@ class _PlayerDecodePanelState extends State<PlayerDecodePanel> {
           if (i > 0) const SizedBox(width: 8),
           Expanded(
             child: PlayerOptionChip(
-              label: modes[i].label,
+              label: decodeModeLabel(AppLocalizations.of(context), modes[i]),
               selected: _settings.mode == modes[i],
               onTap: () => _setMode(modes[i]),
               textAlign: TextAlign.center,
@@ -122,7 +125,10 @@ class _PlayerDecodePanelState extends State<PlayerDecodePanel> {
                 if (j > 0) const SizedBox(width: 8),
                 Expanded(
                   child: PlayerOptionChip(
-                    label: presets[i + j].label,
+                    label: decodePresetLabel(
+                      AppLocalizations.of(context),
+                      presets[i + j],
+                    ),
                     selected: _settings.preset == presets[i + j],
                     onTap: () => _setPreset(presets[i + j]),
                     textAlign: TextAlign.center,
@@ -152,6 +158,7 @@ class _PlayerDecodePanelState extends State<PlayerDecodePanel> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
       child: Column(
@@ -163,12 +170,12 @@ class _PlayerDecodePanelState extends State<PlayerDecodePanel> {
           _buildModeRow(const [DecodeMode.hwPlus, DecodeMode.sw]),
           const SizedBox(height: 16),
           // 解码预设
-          _sectionLabel('解码预设'),
+          _sectionLabel(l10n.playerDecodePreset),
           const SizedBox(height: 8),
           _buildPresetGrid(),
           const SizedBox(height: 12),
           Text(
-            '切换后需重启应用生效，可选立即重启',
+            l10n.playerDecodePresetDesc,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.45),
@@ -177,7 +184,7 @@ class _PlayerDecodePanelState extends State<PlayerDecodePanel> {
           ),
           const SizedBox(height: 4),
           Text(
-            '「硬解+」直通不可用时由内核依次回退硬解 / 软解',
+            l10n.playerDecodeHwPlusDesc,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.45),

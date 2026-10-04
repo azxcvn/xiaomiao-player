@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/pages/player/views/player_play_pause_button.dart';
 import 'package:moumou/pages/player/views/player_pressable.dart';
 
@@ -23,6 +24,7 @@ class PlayerCenterCluster extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -30,7 +32,7 @@ class PlayerCenterCluster extends StatelessWidget {
         PlayerPressable(
           onTap: onSeekBackward,
           child: Tooltip(
-            message: '快退 $seekSeconds 秒',
+            message: l10n.playerSeekBackSeconds(seekSeconds),
             child: Padding(
               padding: const EdgeInsets.all(4),
               child: const Icon(
@@ -47,7 +49,7 @@ class PlayerCenterCluster extends StatelessWidget {
         PlayerPressable(
           onTap: onSeekForward,
           child: Tooltip(
-            message: '快进 $seekSeconds 秒',
+            message: l10n.playerSeekForwardSeconds(seekSeconds),
             child: Padding(
               padding: const EdgeInsets.all(4),
               child: const Icon(

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/chapter_info.dart';
 import 'package:moumou/services/chapter_skip_settings.dart';
 
@@ -16,15 +18,16 @@ class PlayerChapterSkipPanel extends StatelessWidget {
     return ListenableBuilder(
       listenable: ChapterSkipSettings.instance,
       builder: (context, _) {
+        final l10n = AppLocalizations.of(context);
         final s = ChapterSkipSettings.instance;
         return SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '自动跳过',
-                style: TextStyle(
+              Text(
+                l10n.playerChapterSkipAuto,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -32,7 +35,7 @@ class PlayerChapterSkipPanel extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '进入对应片段时自动跳到片段结束；关闭则仅弹出跳过胶囊',
+                l10n.playerChapterSkipAutoDesc,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.45),
                   fontSize: 11,
@@ -48,9 +51,9 @@ class PlayerChapterSkipPanel extends StatelessWidget {
               const SizedBox(height: 16),
               const Divider(height: 1, color: Colors.white12),
               const SizedBox(height: 16),
-              const Text(
-                '自定义关键词',
-                style: TextStyle(
+              Text(
+                l10n.playerChapterSkipCustomKeywords,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -58,7 +61,7 @@ class PlayerChapterSkipPanel extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '按章节标题匹配，支持逗号 / 分号 / 换行分隔',
+                l10n.playerChapterSkipKeywordsHint,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.45),
                   fontSize: 11,
@@ -66,25 +69,23 @@ class PlayerChapterSkipPanel extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               _KeywordField(
-                label: '片头关键词',
+                label: l10n.playerIntroKeywords,
                 accent: ChapterSkipType.intro.color,
-                hint: '如 ap、op、开场',
+                hint: l10n.playerIntroKeywordsHint,
                 value: s.customIntroKeywords,
                 onChanged: s.setCustomIntroKeywords,
               ),
               const SizedBox(height: 12),
               _KeywordField(
-                label: '片尾关键词',
+                label: l10n.playerOutroKeywords,
                 accent: ChapterSkipType.outro.color,
-                hint: '如 ed、ending、结尾',
+                hint: l10n.playerOutroKeywordsHint,
                 value: s.customOutroKeywords,
                 onChanged: s.setCustomOutroKeywords,
               ),
               const SizedBox(height: 12),
               Text(
-                '关键词归属由你填入的位置决定：填进「片头关键词」即判为片头、'
-                '填进「片尾关键词」即判为片尾；同一标题命中多类时按固定优先级'
-                '（前情提要 > 正片前段 > 制作人员 > 下集预告 > 片尾 > 片头）取一类。',
+                l10n.playerChapterSkipKeywordOwnerHint,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.35),
                   fontSize: 11,
@@ -125,7 +126,7 @@ class _TypeToggleRow extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              type.label,
+              chapterSkipTypeLabel(AppLocalizations.of(context), type),
               style: const TextStyle(color: Colors.white, fontSize: 14),
             ),
           ),

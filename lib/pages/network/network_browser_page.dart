@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/network_connection.dart';
 import 'package:moumou/models/network_file.dart';
 import 'package:moumou/models/tree_node.dart';
@@ -14,6 +17,7 @@ import 'package:moumou/utils/async_session.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/network_entry_filter.dart';
 import 'package:moumou/utils/network_mime_types.dart';
+import 'package:moumou/utils/network_path.dart';
 import 'package:moumou/utils/network_sort.dart';
 import 'package:moumou/widgets/app_frame.dart';
 import 'package:moumou/widgets/folder_card.dart';
@@ -150,8 +154,11 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
       });
     } catch (e) {
       if (!mounted || !_loadSession.isCurrent(session)) return;
+      final l10n = AppLocalizations.of(context);
       setState(() {
-        _error = e is NetworkClientException ? e.message : '连接失败：$e';
+        _error = e is NetworkClientException || e is NetworkPathException
+            ? serviceErrorText(l10n, e)
+            : l10n.commonConnectFailed('$e');
         _loading = false;
       });
     }
@@ -314,6 +321,7 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
   /// 已废弃）。
   Future<void> _showSortSheet() async {
     final current = _netSettings.sort;
+    final l10n = AppLocalizations.of(context);
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -321,11 +329,14 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Padding(
-              padding: EdgeInsets.only(bottom: 4),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
               child: Text(
-                '排序方式',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                l10n.commonSortBy,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
             const SizedBox(height: 4),
@@ -333,7 +344,12 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
               for (final order in NetworkSortOrder.values)
                 ListTile(
                   dense: true,
-                  title: Text('按${field.label}${order.label}'),
+                  title: Text(
+                    l10n.networkSortByBoth(
+                      networkSortFieldLabel(l10n, field),
+                      networkSortOrderLabel(l10n, order),
+                    ),
+                  ),
                   trailing: current.field == field && current.order == order
                       ? Icon(Icons.check, color: Theme.of(sheetContext).colorScheme.primary)
                       : null,
@@ -377,14 +393,15 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
   }
 
   PreferredSizeWidget _buildAppBar() {
+    final l10n = AppLocalizations.of(context);
     return AppBar(
       leading: BackButton(onPressed: _popLevel),
       title: _searching
           ? TextField(
               controller: _searchController,
               autofocus: true,
-              decoration: const InputDecoration(
-                hintText: '搜索本目录',
+              decoration: InputDecoration(
+                hintText: l10n.networkSearchCurrentDir,
                 border: InputBorder.none,
               ),
               onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
@@ -393,16 +410,16 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
       actions: [
         IconButton(
           icon: Icon(_searching ? Icons.close : Icons.search),
-          tooltip: _searching ? '取消搜索' : '搜索',
+          tooltip: _searching ? l10n.commonCancelSearch : l10n.commonSearch,
           onPressed: _toggleSearch,
         ),
         IconButton(
           icon: const Icon(Icons.sort),
-          tooltip: '排序方式',
+          tooltip: l10n.commonSortBy,
           onPressed: _showSortSheet,
         ),
         PopupMenuButton<String>(
-          tooltip: '更多',
+          tooltip: l10n.commonMore,
           onSelected: (value) {
             switch (value) {
               case 'refresh':
@@ -414,13 +431,16 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
             }
           },
           itemBuilder: (_) => [
-            const PopupMenuItem(value: 'refresh', child: Text('刷新本目录')),
+            PopupMenuItem(
+              value: 'refresh',
+              child: Text(l10n.networkRefreshCurrentDir),
+            ),
             if (_stack.length > 1)
-              const PopupMenuItem(value: 'root', child: Text('回到共享根目录')),
+              PopupMenuItem(value: 'root', child: Text(l10n.networkBackToRoot)),
             CheckedPopupMenuItem(
               value: 'hidden',
               checked: _netSettings.showHidden,
-              child: const Text('显示隐藏文件'),
+              child: Text(l10n.networkShowHiddenFiles),
             ),
           ],
         ),
@@ -435,6 +455,7 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context);
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -442,7 +463,7 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
       return _message(
         icon: Icons.error_outline,
         message: _error!,
-        buttonText: '重试',
+        buttonText: l10n.commonRetry,
         onPressed: () => _load(force: true),
       );
     }
@@ -454,9 +475,12 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
       return _message(
         icon: Icons.folder_off_outlined,
         message: _query.isNotEmpty
-            ? '没有匹配的文件'
-            : (_entries.isEmpty ? '该目录为空' : '本目录只有隐藏文件'),
-        buttonText: _query.isNotEmpty ? '清除搜索' : '返回上一级',
+            ? l10n.networkNoMatchingFiles
+            : (_entries.isEmpty
+                  ? l10n.networkDirEmpty
+                  : l10n.networkOnlyHiddenFiles),
+        buttonText:
+            _query.isNotEmpty ? l10n.commonClearSearch : l10n.networkBackUp,
         onPressed: _query.isNotEmpty ? _toggleSearch : _popLevel,
       );
     }
@@ -515,6 +539,7 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
   /// 远端路径是排查「放哪了 / 字幕该放哪」的关键，两者都保留。
   /// 大小不列——服务器常给 0/-1，显示「未知」没有意义。
   void _showFileDetails(NetworkFile file) {
+    final l10n = AppLocalizations.of(context);
     final c = _connection;
     showModalBottomSheet<void>(
       context: context,
@@ -535,15 +560,18 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
               ),
               const SizedBox(height: 12),
               _detailRow(
-                '修改时间',
+                l10n.networkModifiedTime,
                 file.lastModified > 0
                     ? formatDate(
                         DateTime.fromMillisecondsSinceEpoch(file.lastModified),
                       )
-                    : '服务器未提供',
+                    : l10n.networkServerNotProvided,
               ),
-              _detailRow('位置', file.path),
-              _detailRow('连接', '${c.protocol.displayName} · ${c.host}:${c.port}'),
+              _detailRow(l10n.networkLocation, file.path),
+              _detailRow(
+                l10n.networkConnectionLabel,
+                '${c.protocol.displayName} · ${c.host}:${c.port}',
+              ),
             ],
           ),
         ),

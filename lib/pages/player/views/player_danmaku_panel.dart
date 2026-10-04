@@ -15,6 +15,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/services/device_services.dart';
 import 'package:moumou/services/danmaku_service.dart';
 import 'package:moumou/pages/player/views/subtitle_file_picker.dart';
@@ -77,27 +78,32 @@ class PlayerDanmakuPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 4),
       children: [
         _DanmakuOptionTile(
           icon: Icons.file_open_outlined,
-          label: '本地弹幕',
+          label: l10n.playerDanmakuLocal,
           onTap: () => _importLocalDanmaku(context),
         ),
         _DanmakuOptionTile(
           icon: Icons.cloud_outlined,
-          label: '网络弹幕',
-          onTap: onNetworkTap ?? () => _toast(context, '「网络弹幕」功能即将上线'),
+          label: l10n.playerDanmakuNetwork,
+          onTap:
+              onNetworkTap ??
+              () => _toast(context, l10n.playerDanmakuNetworkComingSoon),
         ),
         _DanmakuOptionTile(
           icon: Icons.auto_fix_high,
-          label: '自动匹配',
-          onTap: onAutoMatchTap ?? () => _toast(context, '「自动匹配」功能即将上线'),
+          label: l10n.playerDanmakuAutoMatch,
+          onTap:
+              onAutoMatchTap ??
+              () => _toast(context, l10n.playerDanmakuAutoMatchComingSoon),
         ),
         _DanmakuOptionTile(
           icon: Icons.settings_outlined,
-          label: '弹幕设置',
+          label: l10n.playerDanmakuSettings,
           onTap: onSettingsTap,
         ),
       ],
@@ -123,40 +129,66 @@ class PlayerDanmakuPanel extends StatelessWidget {
   ///   分区存储下非媒体文件只有 SAF 授权才读得到）；
   /// - Android 11 及以上（SDK ≥ 30）：自建选择器（复用 [SubtitleFilePickerPanel]，
   ///   面板二级页）。分派规则与理由见 [DeviceServices.shouldUseSystemPicker]。
+  ///
+  /// ⚠️ 提示用的 `l10n` 与 `ScaffoldMessenger` **必须在这里取好**（此刻面板还在
+  /// 树上）：自建选择器是**面板内二级页**，push 之后面板自身会被移出树
+  /// （[PlayerPanel] 只渲染页面栈顶那一页），文件选完时再对旧 context 调
+  /// `AppLocalizations.of` / `ScaffoldMessenger.of` 就会命中
+  /// 「Looking up a deactivated widget's ancestor is unsafe」——**debug 构建下
+  /// 回调直接抛异常：文件点了没反应、弹幕也没导入**（用户实测 `T4-DMK-002`，
+  /// Android 16 走自建选择器）。字幕/音频两个面板的 `onPicked` 不碰 context，
+  /// 所以只有弹幕这一处踩到。
   Future<void> _importLocalDanmaku(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
     final sdk = await DeviceServices.getSdkInt();
     if (!context.mounted || sdk <= 0) return;
     if (DeviceServices.shouldUseSystemPicker(sdk)) {
       final path = await DanmakuFileService.pickWithSystemPicker();
-      if (path == null || !context.mounted) return;
-      await _loadPickedFile(context, path);
+      if (path == null) return;
+      await _loadPickedFile(messenger, l10n, path);
       return;
     }
     // 自建选择器：作为面板二级页就地切换（复用字幕文件选择器外壳，
     // 只换文件过滤器/图标/记忆键——与音频选择器同款复用方式）
     _pushSubPage(
       context,
-      '选择弹幕文件',
+      l10n.playerPickDanmakuFile,
       SubtitleFilePickerPanel(
         fileFilter: isSupportedDanmakuFile,
         folderKey: DanmakuFileService.lastFolderKey,
         fileIcon: Icons.comment_outlined,
-        onPicked: (path) async {
-          await _loadPickedFile(context, path);
-        },
+        onPicked: (path) => _loadPickedFile(messenger, l10n, path),
         onClose: () => onPopSubPage?.call(),
       ),
     );
   }
 
-  /// 加载所选弹幕文件并给出轻提示（成功带条数；空文件/解析失败视为失败）
-  Future<void> _loadPickedFile(BuildContext context, String path) async {
+  /// 加载所选弹幕文件并给出轻提示（成功带**弹幕文件名**；空文件/解析失败视为失败）。
+  ///
+  /// 收 [ScaffoldMessengerState] 与 [AppLocalizations] 而不是 [BuildContext]：
+  /// 本方法在「面板已被二级页替换」之后才被调用，那时的 context 已失效
+  /// （见 [_importLocalDanmaku] 的注释）。
+  Future<void> _loadPickedFile(
+    ScaffoldMessengerState messenger,
+    AppLocalizations l10n,
+    String path,
+  ) async {
     final ok = await controller.loadDanmakuFromFile(path);
-    if (!context.mounted) return;
-    _toast(
-      context,
-      ok ? '已加载本地弹幕（${controller.danmakuCount} 条）' : '弹幕加载失败，请检查文件格式',
-    );
+    if (!messenger.mounted) return;
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            ok
+                ? l10n.playerLocalDanmakuLoaded(danmakuFileNameOf(path))
+                : l10n.playerDanmakuLoadFailedCheckFormat,
+          ),
+          duration: const Duration(milliseconds: 1500),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
   }
 
   void _toast(BuildContext context, String message) {

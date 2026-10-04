@@ -1,0 +1,5262 @@
+{
+  "@@locale": "zh",
+  "appTitle": "小喵Player",
+  "@appTitle": {
+    "description": "应用名（任务切换器 / 窗口标题）；英文侧固定 Meow Player"
+  },
+  "commonCancel": "取消",
+  "@commonCancel": {
+    "description": "通用按钮：取消"
+  },
+  "settingsThemeModeSystem": "跟随系统",
+  "@settingsThemeModeSystem": {
+    "description": "外观页 · 主题模式"
+  },
+  "settingsThemeModeLight": "浅色",
+  "@settingsThemeModeLight": {
+    "description": "外观页 · 主题模式"
+  },
+  "settingsThemeModeDark": "深色",
+  "@settingsThemeModeDark": {
+    "description": "外观页 · 主题模式"
+  },
+  "settingsThemeModeAmoled": "AMOLED 纯黑",
+  "@settingsThemeModeAmoled": {
+    "description": "外观页 · 主题模式"
+  },
+  "settingsThemeColorSkyBlue": "天蓝色",
+  "@settingsThemeColorSkyBlue": {
+    "description": "外观页 · 预设主题色（名称与 3 字中文对应，英文按色名直译）"
+  },
+  "settingsThemeColorBlue": "蓝色",
+  "settingsThemeColorLightBlue": "浅蓝色",
+  "settingsThemeColorIndigo": "靛蓝色",
+  "settingsThemeColorTeal": "蓝绿色",
+  "settingsThemeColorMint": "薄荷绿",
+  "settingsThemeColorLightGreen": "浅绿色",
+  "settingsThemeColorLime": "酸橙色",
+  "settingsThemeColorAmber": "琥珀色",
+  "settingsThemeColorOrange": "橙色",
+  "settingsThemeColorDeepOrange": "橙红色",
+  "settingsThemeColorRed": "红色",
+  "settingsThemeColorPink": "粉红色",
+  "settingsThemeColorHotPink": "亮粉色",
+  "settingsThemeColorViolet": "紫罗兰",
+  "settingsThemeColorPurple": "紫色",
+  "settingsThemeColorDeepPurple": "深紫色",
+  "settingsThemeColorBlueGrey": "蓝灰色",
+  "settingsThemeColorBrown": "棕色",
+  "settingsThemeColorGrey": "灰色",
+  "settingsPaletteTonalSpot": "标准型",
+  "@settingsPaletteTonalSpot": {
+    "description": "外观页 · 调色板风格（flex_seed_scheme 的 FlexSchemeVariant）"
+  },
+  "settingsPaletteFidelity": "保真型",
+  "settingsPaletteMonochrome": "单色型",
+  "settingsPaletteNeutral": "中性型",
+  "settingsPaletteVibrant": "鲜艳型",
+  "settingsPaletteExpressive": "鲜明型",
+  "settingsPaletteContent": "柔和型",
+  "settingsPaletteRainbow": "彩虹型",
+  "settingsPaletteFruitSalad": "果味型",
+  "settingsPaletteCandyPop": "糖果型",
+  "settingsPaletteChroma": "饱和型",
+  "settingsPaletteHighContrast": "对比型",
+  "settingsPaletteJolly": "欢快型",
+  "settingsPaletteMaterial": "经典型",
+  "settingsPaletteMaterial3Legacy": "旧版型",
+  "settingsPaletteOneHue": "单色相",
+  "settingsPaletteSoft": "淡雅型",
+  "settingsPaletteUltraContrast": "超对比",
+  "settingsPaletteVivid": "生动型",
+  "settingsPaletteVividBackground": "亮背景",
+  "settingsPaletteVividSurfaces": "亮表面",
+  "playerDoubleTapPause": "双击暂停/播放",
+  "@playerDoubleTapPause": {
+    "description": "播放器设置 · 双击手势模式"
+  },
+  "playerDoubleTapSeek": "双击左退右进",
+  "playerDoubleTapMixed": "混合模式",
+  "playerOrientationPortrait": "锁定竖屏",
+  "playerOrientationLandscape": "锁定横屏",
+  "playerVideoFitFill": "拉伸",
+  "@playerVideoFitFill": {
+    "description": "播放器 · 画面比例（4:3 / 16:9 两个比例项不自造文案，保持原样）"
+  },
+  "playerVideoFitCover": "裁剪",
+  "playerVideoFitFitWidth": "等宽",
+  "playerVideoFitFitHeight": "等高",
+  "playerVideoFitNone": "原始",
+  "playerVideoFitScaleDown": "限制",
+  "playerActionSubtitle": "字幕",
+  "@playerActionSubtitle": {
+    "description": "播放器顶栏可自定义按钮动作名"
+  },
+  "playerActionAudio": "音频",
+  "playerActionAspect": "比例",
+  "playerActionDecode": "解码",
+  "playerActionChapter": "章节",
+  "playerActionCast": "投屏",
+  "playerActionPip": "画中画",
+  "playerActionListen": "听视频",
+  "playerActionLoop": "循环播放",
+  "playerActionIntroOutro": "片头片尾",
+  "playerActionDiagnostics": "播放诊断",
+  "playerActionEqualizer": "音频均衡器",
+  "commonName": "名称",
+  "@commonName": {
+    "description": "通用：排序维度 / 字段名（多处复用，同一句中文只留一个键）"
+  },
+  "commonDate": "日期",
+  "commonSize": "大小",
+  "commonCount": "数量",
+  "commonDuration": "时长",
+  "commonAscending": "升序",
+  "commonDescending": "降序",
+  "commonPath": "路径",
+  "commonResolution": "分辨率",
+  "commonProgress": "进度",
+  "commonSubtitleIndicator": "字幕指示器",
+  "commonFrameRate": "帧率",
+  "commonFullName": "完整名称",
+  "viewModeTree": "树状模式",
+  "@viewModeTree": {
+    "description": "首页视图模式"
+  },
+  "viewModeList": "列表模式",
+  "superResolutionQualityFast": "流畅",
+  "@superResolutionQualityFast": {
+    "description": "超分 · 质量档（名称 + 说明）"
+  },
+  "superResolutionQualityFastDesc": "低 GPU 占用，速度优先",
+  "superResolutionQualityBalanced": "均衡",
+  "superResolutionQualityBalancedDesc": "速度与画质平衡，推荐",
+  "superResolutionQualityHigh": "高清",
+  "superResolutionQualityHighDesc": "高 GPU 占用，画质最佳",
+  "superResolutionModeOffDesc": "不启用超分辨率，输出原始画面",
+  "superResolutionModeA": "模式A",
+  "superResolutionModeADesc": "优化 1080p 动画\n高模糊度、重采样伪影",
+  "superResolutionModeB": "模式B",
+  "superResolutionModeBDesc": "优化 720p 动画\n低模糊度、下采样振铃",
+  "superResolutionModeC": "模式C",
+  "superResolutionModeCDesc": "优化 480p 动画\n最高 PSNR、低感知质量",
+  "superResolutionModeAPlus": "模式A+",
+  "superResolutionModeAPlusDesc": "A+A 双段放大\n最高感知质量，更强的线条重建（较慢）",
+  "superResolutionModeBPlus": "模式B+",
+  "superResolutionModeBPlusDesc": "B+B 双段放大\n高感知质量，更好的 720p 效果（较慢）",
+  "superResolutionModeCPlus": "模式C+",
+  "superResolutionModeCPlusDesc": "C+A 双段放大\n略高感知质量，改进的 480p 效果（较慢）",
+  "decodeModeAutoSafeDesc": "自动选择安全硬解",
+  "decodeModeHwCopy": "硬解",
+  "decodeModeHwCopyDesc": "强制硬解，兼容字幕与超分",
+  "decodeModeHwPlus": "硬解+",
+  "decodeModeHwPlusDesc": "直通优先，失败自动回退",
+  "decodeModeSw": "软解",
+  "decodeModeSwDesc": "纯 CPU 解码",
+  "decodePresetFast": "快速",
+  "@decodePresetFast": {
+    "description": "解码性能预设（名称 + 说明）"
+  },
+  "decodePresetFastDesc": "性能优先",
+  "decodePresetStandardDesc": "标准配置",
+  "decodePresetHighQuality": "高质量",
+  "decodePresetHighQualityDesc": "画质优先",
+  "decodePresetGpuHq": "GPU 高质量",
+  "decodePresetGpuHqDesc": "高画质渲染",
+  "decodePresetLowLatency": "低延迟",
+  "decodePresetLowLatencyDesc": "减少缓冲",
+  "decodePresetSwFast": "软解快速",
+  "decodePresetSwFastDesc": "软解加速",
+  "chapterSkipIntro": "跳过片头",
+  "@chapterSkipIntro": {
+    "description": "章节跳段类型胶囊文案"
+  },
+  "chapterSkipRecap": "跳过前情提要",
+  "chapterSkipOutro": "跳过片尾",
+  "chapterSkipCredits": "跳过制作人员",
+  "chapterSkipColdOpen": "跳过正片前段",
+  "chapterSkipPreview": "跳过下集预告",
+  "playlistSortNameAsc": "名称升序",
+  "@playlistSortNameAsc": {
+    "description": "播放列表排序胶囊"
+  },
+  "playlistSortNameDesc": "名称降序",
+  "playlistSortDateAsc": "日期升序",
+  "playlistSortDateDesc": "日期降序",
+  "subtitleAlignLeft": "左对齐",
+  "subtitleAlignRight": "右对齐",
+  "subtitleBorderOutline": "描边",
+  "subtitleBorderBox": "背景框",
+  "subtitlePresetWhite": "白色",
+  "@subtitlePresetWhite": {
+    "description": "字幕颜色预设名（按 hex 取；同一颜色多处复用同一个键）"
+  },
+  "subtitlePresetBlack": "黑色",
+  "subtitlePresetTranslucentBlack": "半透明黑",
+  "subtitlePresetOpaqueBlack": "纯黑",
+  "subtitlePresetTranslucentWhite": "半透明白",
+  "subtitlePresetTranslucentBlue": "半透明蓝",
+  "commonExternalTag": "外挂",
+  "@commonExternalTag": {
+    "description": "外挂轨道标记（字幕/音轨标签行共用，同一句中文只留一个键）"
+  },
+  "commonAuto": "自动",
+  "@commonAuto": {
+    "description": "通用：自动（解码档位 / 音频声道共用）"
+  },
+  "audioChannelAutoSafe": "安全自动",
+  "@audioChannelAutoSafe": {
+    "description": "音频声道（mpv audio-channels）"
+  },
+  "audioChannelMono": "单声道",
+  "audioChannelStereo": "立体声",
+  "audioChannelReverseStereo": "反向立体声",
+  "audioTrackFallbackName": "音轨 {id}",
+  "@audioTrackFallbackName": {
+    "description": "音轨既无标题也无语言时的回退名",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "subtitleTrackFallbackName": "轨道 {id}",
+  "@subtitleTrackFallbackName": {
+    "description": "字幕轨既无标题也无语言时的回退名",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "networkTierApi": "常规 API",
+  "@networkTierApi": {
+    "description": "网络请求超时分级档位名"
+  },
+  "networkTierText": "文本响应",
+  "networkTierDownload": "文件下载",
+  "networkTierStream": "媒体流",
+  "commonOff": "关闭",
+  "@commonOff": {
+    "description": "通用：关闭（超分模式 / 循环模式共用）"
+  },
+  "danmakuColorModeSource": "跟随弹幕颜色",
+  "@danmakuColorModeSource": {
+    "description": "弹幕颜色三态"
+  },
+  "danmakuColorModeRandom": "随机渐变色",
+  "danmakuColorModeFixed": "指定颜色",
+  "danmakuFontModeFollowSystem": "跟随系统字体",
+  "@danmakuFontModeFollowSystem": {
+    "description": "弹幕字体三态"
+  },
+  "danmakuFontModeFollowApp": "跟随App字体",
+  "danmakuFontModeCustom": "自定义字体",
+  "loopModeLoopAll": "列表循环",
+  "@loopModeLoopAll": {
+    "description": "循环播放模式（关闭复用 commonOff）"
+  },
+  "loopModeRepeatOne": "单集循环",
+  "wallpaperScaleFit": "适应",
+  "@wallpaperScaleFit": {
+    "description": "自定义壁纸缩放模式"
+  },
+  "wallpaperScaleFill": "填充",
+  "subtitleSourceWyzie": "Wyzie 字幕服务",
+  "@subtitleSourceWyzie": {
+    "description": "影视字幕下载来源（单选互斥）"
+  },
+  "subtitleSourceCustom": "自定义字幕地址",
+  "navHome": "首页",
+  "@navHome": {
+    "description": "底部导航项"
+  },
+  "navMine": "我的",
+  "commonLogin": "登录",
+  "@commonLogin": {
+    "description": "通用：登录"
+  },
+  "commonConfirm": "确定",
+  "@commonConfirm": {
+    "description": "通用按钮：确定"
+  },
+  "commonDanmaku": "弹幕",
+  "@commonDanmaku": {
+    "description": "通用：弹幕（设置组 / 播放器动作名共用）"
+  },
+  "commonDownload": "下载",
+  "@commonDownload": {
+    "description": "通用：下载（设置组名）"
+  },
+  "biliAccount": "哔哩哔哩账号",
+  "@biliAccount": {
+    "description": "「我的」页账号入口 / 登录页"
+  },
+  "settingsGroupAppearance": "外观",
+  "@settingsGroupAppearance": {
+    "description": "设置页分组标题"
+  },
+  "settingsAppearanceAndFont": "外观与字体",
+  "settingsAppearanceAndFontDesc": "调整应用外观与字体",
+  "settingsGroupPlayback": "播放",
+  "settingsPlayerSettings": "播放设置",
+  "settingsPlayerSettingsDesc": "调整播放相关设置",
+  "settingsPlaybackHistory": "历史记录",
+  "settingsPlaybackHistoryDesc": "查看与管理播放历史",
+  "settingsGroupMediaLibrary": "媒体库",
+  "settingsMediaScan": "媒体扫描与过滤",
+  "settingsMediaScanDesc": "扫描规则与文件夹过滤",
+  "settingsDanmakuServer": "弹幕服务器",
+  "settingsDanmakuServerDesc": "网络弹幕服务器与切集自动匹配",
+  "settingsDanmakuDownloadDesc": "B 站弹幕下载",
+  "settingsVideoDownloadDesc": "B 站视频下载",
+  "settingsSubtitleDownloadDesc": "影视字幕下载",
+  "settingsDownloadManagerDesc": "查看下载任务进度",
+  "settingsGroupOther": "其他",
+  "settingsDeviceInfo": "设备信息",
+  "settingsDeviceInfoDesc": "硬件与编解码能力检测",
+  "settingsAbout": "关于",
+  "settingsAboutDesc": "版本信息与工具",
+  "settingsLoginRequired": "需要登录哔哩哔哩账号",
+  "@settingsLoginRequired": {
+    "description": "未登录时打开 B 站下载页的提示"
+  },
+  "settingsLanguage": "语言设置",
+  "languageNameZh": "简体中文",
+  "@languageNameZh": {
+    "description": "语言自称，**中英两版内容相同**（不翻译；弹窗与设置页共用）"
+  },
+  "languageNameEn": "English",
+  "@languageNameEn": {
+    "description": "语言自称，**中英两版内容相同**（不翻译；弹窗与设置页共用）"
+  },
+  "languagePickerTitle": "选择语言 / Choose Language",
+  "@languagePickerTitle": {
+    "description": "首启语言弹窗标题：**中英两版内容相同**（刻意双语，让任何用户都看得懂）"
+  },
+  "mainVideoOpenFailed": "无法打开该视频",
+  "@mainVideoOpenFailed": {
+    "description": "外部打开视频失败提示"
+  },
+  "commonTime": "时间",
+  "@commonTime": {
+    "description": "通用：时间"
+  },
+  "settingsPlayerGroupGesture": "手势",
+  "@settingsPlayerGroupGesture": {
+    "description": "播放设置页：分组标题"
+  },
+  "settingsPlayerVolumeSensitivity": "音量灵敏度",
+  "settingsPlayerBrightnessSensitivity": "亮度灵敏度",
+  "settingsPlayerGroupOrientation": "视频方向",
+  "settingsPlayerOrientationFollowVideo": "跟随视频方向",
+  "settingsPlayerOrientationAlwaysPortrait": "始终竖屏",
+  "settingsPlayerOrientationAlwaysLandscape": "始终横屏",
+  "settingsPlayerUiFollowGravity": "界面跟随重力旋转",
+  "settingsPlayerGroupTopInfo": "顶部信息",
+  "settingsPlayerShowTimeDesc": "显示当前时间",
+  "settingsPlayerBattery": "电量",
+  "settingsPlayerShowBatteryDesc": "显示当前电量",
+  "settingsPlayerNetSpeed": "网速",
+  "settingsPlayerShowNetSpeedDesc": "显示实时网速",
+  "settingsPlayerDataType": "数据类型",
+  "settingsPlayerShowDataTypeDesc": "显示 WiFi / 移动数据",
+  "settingsPlayerGroupBehavior": "播放行为",
+  "settingsPlayerPersistentProgressBar": "常驻进度线",
+  "settingsPlayerPersistentProgressBarDesc": "隐藏控制层后底部显示细线",
+  "settingsPlayerChapterProgressBar": "显示章节进度条",
+  "settingsPlayerChapterProgressBarDesc": "进度条标记章节并显示章节名",
+  "settingsPlayerThumbnailPreview": "进度条缩略图",
+  "settingsPlayerThumbnailPreviewDesc": "拖动进度条时预览画面",
+  "settingsPlayerRememberSpeed": "记住上次倍速",
+  "settingsPlayerRememberSpeedDesc": "自动恢复上次倍速",
+  "settingsPlayerSaveVolumeToSystem": "保存音量到系统",
+  "settingsPlayerSaveVolumeToSystemDesc": "退出时把音量写回系统",
+  "settingsPlayerPinchToZoom": "双指缩小视频",
+  "settingsPlayerPinchToZoomDesc": "允许双指去缩小画面",
+  "settingsPlayerButtonBackground": "按钮背景",
+  "settingsPlayerButtonBackgroundDesc": "为控制按钮加半透明背景",
+  "settingsPlayerAutoNext": "自动连播",
+  "settingsPlayerAutoNextDesc": "播完自动放下一集",
+  "settingsPlayerAutoExit": "播放完毕自动退出",
+  "settingsPlayerAutoExitDesc": "最后一个播完自动退出",
+  "settingsPlayerSpeedIndicator": "倍速播放指示器",
+  "settingsPlayerSpeedIndicatorDesc": "长按时顶部显示倍速提示",
+  "settingsPlayerUiAnimations": "启用播放界面动画",
+  "settingsPlayerUiAnimationsDesc": "控制层与面板的进出场动画",
+  "settingsPlayerLockExemptDoubleTap": "锁定状态豁免双击",
+  "settingsPlayerLockExemptDoubleTapDesc": "启用锁定状态下双击屏幕播放/暂停的功能",
+  "settingsPlayerVolumeBoost": "音量增强",
+  "settingsPlayerVolumeBoostDesc": "系统音量满后继续放大",
+  "settingsPlayerWatchThreshold": "已观看进度阈值",
+  "@settingsPlayerWatchThreshold": {
+    "description": "播放设置页：分组标题（解码组标题复用 playerActionDecode）"
+  },
+  "settingsPlayerEnableGpuNext": "启用 GPU-next",
+  "settingsPlayerGpuNextDesc": "使用 libplacebo 新渲染器",
+  "settingsPlayerEnableVulkan": "启用 Vulkan",
+  "settingsPlayerVulkanDesc": "优先使用 Vulkan 渲染",
+  "settingsPlayerVulkanNeedsGpuNext": "需先启用上方的「GPU-next」：Vulkan 只对 GPU-next 渲染器生效",
+  "settingsPlayerRestartHint": "切换后需重启播放器（重开视频）生效；",
+  "settingsPlayerNoBlackScreenHint": "设备或驱动不支持时会自动回落 OpenGL，不会黑屏",
+  "commonEnable": "确定启用",
+  "@commonEnable": {
+    "description": "通用按钮：确定启用（二次确认弹窗）"
+  },
+  "commonTurnOn": "确定开启",
+  "@commonTurnOn": {
+    "description": "通用按钮：确定开启（二次确认弹窗）"
+  },
+  "settingsPlayerLockExemptDialogTitle": "启用锁定状态豁免双击",
+  "@settingsPlayerLockExemptDialogTitle": {
+    "description": "播放设置：二次确认弹窗（标题 + 正文，正文里的换行在 ARB 写 \\n）"
+  },
+  "settingsPlayerLockExemptDialogBody": "开启后，控制层锁定期间双击屏幕即可暂停/播放。\n\n只豁免这一个手势：左右滑动快进快退、上下滑动音量与亮度、长按倍速在锁定状态下依然不会生效；单击呼出解锁按钮也不受影响。\n\n锁定本是防误触用的，若视频会在口袋/包里误暂停，请保持关闭。",
+  "settingsPlayerGravityDialogTitle": "开启界面跟随重力旋转",
+  "settingsPlayerGravityDialogBody": "生效前提（两个都要满足）：\n① 手机系统设置里已开启「自动旋转」；\n② 本页「视频方向」设为「自动」。\n\n两个前提满足后，再开启本开关，播放界面的横竖屏才会跟随手机方向（竖起来进竖屏播放页，横过来回横屏播放页）。前提不满足时仍按「视频方向」的设置播放，本开关不生效。\n\n「锁定竖屏 / 锁定横屏」是明确指定的方向，不受本开关影响。",
+  "settingsPlayerGpuNextWarning": "启用后超分辨率功能将无法使用；\n可尝试配合软解播放杜比视界视频。\n\n是否继续？",
+  "settingsPlayerVulkanWarning": "视频输出将优先使用 Vulkan 渲染，新建的上下文不再限定 OpenGL ES。\n\n若设备或驱动不支持，会自动回落 OpenGL，不会黑屏。\n\n注意：普通内核下 MediaCodec 直通只对 OpenGL 生效，开 Vulkan 后「硬解+」会直接走硬解拷贝（不再尝试直通）。\n\n切换后需重启播放器（重开视频）生效。",
+  "commonSeconds": "秒",
+  "@commonSeconds": {
+    "description": "通用单位：秒"
+  },
+  "commonSecondsValue": "{value} 秒",
+  "@commonSecondsValue": {
+    "description": "通用：N 秒（数值 + 单位）",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsPlayerLongPressSpeed": "长按倍速",
+  "@settingsPlayerLongPressSpeed": {
+    "description": "播放设置：长按倍速 / 快进时长 / 已观看阈值 / 增强上限 四个滑杆项"
+  },
+  "settingsPlayerLongPressSpeedDesc": "长按临时倍速，可左右滑动调速",
+  "settingsPlayerSeekRange": "1 – {max} 秒",
+  "@settingsPlayerSeekRange": {
+    "description": "快进/快退时长输入框的越界提示",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsPlayerSeekSeconds": "快进/快退时长",
+  "settingsPlayerTapValueHint": "点击数值可自定义秒数",
+  "settingsPlayerWatchThresholdTitle": "「已观看」进度阈值",
+  "settingsPlayerWatchThresholdDesc": "进度达到该比例即视为已看完",
+  "settingsPlayerBoostCap": "增强上限",
+  "settingsPlayerBoostCapDesc": "最高增强至 {percent}%音量",
+  "@settingsPlayerBoostCapDesc": {
+    "description": "音量增强上限说明（percent = 100 + 上限值）",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "commonDelete": "删除",
+  "@commonDelete": {
+    "description": "通用按钮：删除"
+  },
+  "commonEdit": "编辑",
+  "@commonEdit": {
+    "description": "通用：编辑"
+  },
+  "commonAdd": "添加",
+  "@commonAdd": {
+    "description": "通用按钮：添加"
+  },
+  "commonSave": "保存",
+  "@commonSave": {
+    "description": "通用按钮：保存"
+  },
+  "commonMoreActions": "更多操作",
+  "@commonMoreActions": {
+    "description": "通用：更多操作（菜单 tooltip）"
+  },
+  "commonDontAskAgain": "不再提示",
+  "@commonDontAskAgain": {
+    "description": "通用：不再提示（二次确认勾选框）"
+  },
+  "commonTurnOnShort": "开启",
+  "@commonTurnOnShort": {
+    "description": "通用按钮：开启（区别于「确定开启」）"
+  },
+  "danmakuServerAdd": "添加服务器",
+  "@danmakuServerAdd": {
+    "description": "弹幕服务器页（页面标题复用 settingsDanmakuServer）"
+  },
+  "danmakuServerIntro": "启用的服务器将同时用于弹幕搜索与自动匹配，搜索结果按各服务器返回顺序实时呈现",
+  "danmakuServerGroupServers": "服务器",
+  "danmakuServerDelete": "删除服务器",
+  "danmakuServerDedupe": "搜索结果自动去重",
+  "danmakuServerDedupeOnDesc": "重复番剧合并为一条，保留集数最全的",
+  "danmakuServerDedupeOffDesc": "每台服务器的结果各自展示，可自行挑选来源",
+  "danmakuServerDedupeDialogTitle": "开启搜索结果自动去重？",
+  "danmakuServerDedupeDialogBody": "各服务器返回的结果仍然立刻显示，不会等全部返回。\n同一部番剧只保留一条；如果后续服务器返回的集数更全，会自动替换成更全的那条。\n因此某台服务器的结果可能不单独出现——那不代表它没搜到，而是被去重合并了。",
+  "danmakuServerAutoMatch": "切集自动匹配弹幕",
+  "danmakuServerAutoMatchDesc": "切集时自动匹配并加载对应集弹幕",
+  "danmakuServerBuiltIn": "内置服务器，不可编辑、删除",
+  "danmakuServerEdit": "编辑服务器",
+  "danmakuServerNameLabel": "服务器名称",
+  "danmakuServerNameHint": "例：我的服务器",
+  "danmakuServerUrlLabel": "服务器地址",
+  "danmakuServerNoBrowser": "未找到可用的浏览器",
+  "danmakuServerHelpLink": "如何获取服务器地址",
+  "mediaScanGroupRules": "扫描规则",
+  "@mediaScanGroupRules": {
+    "description": "媒体扫描与过滤页（页面标题复用 settingsMediaScan）"
+  },
+  "mediaScanNoMedia": "扫描包含 .nomedia 的文件夹",
+  "mediaScanNoMediaDesc": "扫描系统忽略的目录",
+  "mediaScanHiddenFolders": "扫描以 . 开头的隐藏文件夹",
+  "mediaScanHiddenFoldersDesc": "扫描隐藏文件",
+  "mediaScanGroupFilterMode": "文件夹过滤模式",
+  "mediaScanAll": "全部扫描",
+  "mediaScanAllDesc": "扫描所有未跳过的文件夹",
+  "mediaScanBlacklist": "黑名单模式",
+  "mediaScanBlacklistDesc": "排除指定文件夹",
+  "mediaScanWhitelist": "白名单模式",
+  "mediaScanWhitelistDesc": "仅扫描指定文件夹",
+  "mediaScanBlacklistList": "黑名单文件夹列表",
+  "mediaScanWhitelistList": "白名单文件夹列表",
+  "mediaScanAddFolder": "添加文件夹",
+  "mediaScanBlacklistEmpty": "暂无黑名单文件夹（未排除任何目录）",
+  "mediaScanWhitelistEmpty": "暂无白名单文件夹（未添加时默认显示全部）",
+  "mediaScanNoMediaDialogTitle": "开启提示",
+  "mediaScanNoMediaDialogBody": "此功能将扫描系统默认忽略的 .nomedia 文件夹。\n\n开启后，某些应用程序的缓存视频、临时文件或表情包也可能被展示在媒体列表中。是否继续？",
+  "mediaScanAddBlacklistFolder": "添加黑名单文件夹",
+  "mediaScanAddWhitelistFolder": "添加白名单文件夹",
+  "mediaScanPickBlacklistHint": "选择要排除的媒体文件夹（点击直接添加）：",
+  "mediaScanPickWhitelistHint": "选择要仅保留扫描的媒体文件夹（点击直接添加）：",
+  "mediaScanNoMoreFolders": "未发现更多媒体文件夹",
+  "mediaScanFolderItemSubtitle": "{path}\n{count, plural, other{{count} 个视频}}",
+  "@mediaScanFolderItemSubtitle": {
+    "description": "候选文件夹条目副标题：路径 + 视频个数",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaScanBrowseOther": "浏览设备其他目录...",
+  "mediaScanPickFolder": "选择文件夹",
+  "mediaScanGoUp": "上一级",
+  "mediaScanNoSubfolders": "当前目录下无子文件夹",
+  "mediaScanPickCurrentFolder": "选择当前文件夹 ({name})",
+  "@mediaScanPickCurrentFolder": {
+    "description": "自建目录选择器的确认按钮",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsErrorLogTitle": "错误日志",
+  "@settingsErrorLogTitle": {
+    "description": "错误日志页（设置 → 关于 → 工具 → 错误日志）页面标题"
+  },
+  "settingsErrorLogRefreshRealtime": "刷新（实时查看）",
+  "@settingsErrorLogRefreshRealtime": {
+    "description": "错误日志详情页：刷新按钮 tooltip（进入即读最新内容）"
+  },
+  "settingsErrorLogSavePath": "日志保存路径：\n{path}",
+  "@settingsErrorLogSavePath": {
+    "description": "错误日志页顶部：日志保存路径（path = 目录绝对路径）",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsErrorLogGroupCount": "崩溃日志（{count}）",
+  "@settingsErrorLogGroupCount": {
+    "description": "错误日志页分组标题（count = 日志文件个数）",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsErrorLogEmpty": "暂无错误日志",
+  "@settingsErrorLogEmpty": {
+    "description": "错误日志页：列表为空时的占位标题"
+  },
+  "settingsErrorLogEmptyDesc": "应用崩溃时日志会自动记录到这里",
+  "@settingsErrorLogEmptyDesc": {
+    "description": "错误日志页：列表为空时的占位说明"
+  },
+  "settingsErrorLogCopy": "一键复制",
+  "@settingsErrorLogCopy": {
+    "description": "错误日志：复制日志内容按钮（列表 tooltip 与详情页按钮共用）"
+  },
+  "settingsErrorLogExport": "导出",
+  "@settingsErrorLogExport": {
+    "description": "错误日志：导出日志按钮（列表 tooltip 与详情页按钮共用）"
+  },
+  "settingsErrorLogCopied": "日志内容已复制到剪贴板",
+  "@settingsErrorLogCopied": {
+    "description": "错误日志：复制成功的 toast"
+  },
+  "settingsErrorLogExportFailed": "导出失败",
+  "@settingsErrorLogExportFailed": {
+    "description": "错误日志：导出失败的 toast"
+  },
+  "settingsErrorLogExportedTo": "已导出到\n{path}",
+  "@settingsErrorLogExportedTo": {
+    "description": "错误日志：导出成功的 toast（path = 导出目标路径）",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsErrorLogDeleteTitle": "删除日志",
+  "@settingsErrorLogDeleteTitle": {
+    "description": "错误日志：删除单个日志的二次确认标题"
+  },
+  "settingsErrorLogDeleted": "已删除",
+  "@settingsErrorLogDeleted": {
+    "description": "错误日志：删除成功的 toast"
+  },
+  "settingsErrorLogDeleteFailed": "删除失败",
+  "@settingsErrorLogDeleteFailed": {
+    "description": "错误日志：删除失败的 toast"
+  },
+  "settingsErrorLogClearAll": "清空全部日志",
+  "@settingsErrorLogClearAll": {
+    "description": "错误日志页底部：清空全部日志按钮"
+  },
+  "settingsErrorLogClearAllConfirm": "将删除全部 {count} 个日志文件，此操作不可恢复。",
+  "@settingsErrorLogClearAllConfirm": {
+    "description": "错误日志：清空全部日志的二次确认正文（count = 日志文件个数）",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsErrorLogClearedAll": "已清空全部日志",
+  "@settingsErrorLogClearedAll": {
+    "description": "错误日志：清空全部成功的 toast"
+  },
+  "settingsErrorLogClearFailed": "清空失败",
+  "@settingsErrorLogClearFailed": {
+    "description": "错误日志：清空全部失败的 toast"
+  },
+  "settingsFontTitle": "App字体设置",
+  "@settingsFontTitle": {
+    "description": "App 字体设置页页面标题"
+  },
+  "settingsFontEnable": "启用自定义字体",
+  "@settingsFontEnable": {
+    "description": "App 字体设置页顶部：启用自定义字体开关标题"
+  },
+  "settingsFontEnabledDesc": "已开启：使用下方导入的字体",
+  "@settingsFontEnabledDesc": {
+    "description": "App 字体设置页：开关已开启时的副标题"
+  },
+  "settingsFontDisabledDesc": "已关闭：跟随系统字体",
+  "@settingsFontDisabledDesc": {
+    "description": "App 字体设置页：开关已关闭时的副标题"
+  },
+  "settingsFontPreviewText": "生如夏花之绚烂，死如秋叶之静美。\n我把你的名字写在树叶上，风把它吹走了；\n我把你的名字写在沙滩上，浪把它冲走了；",
+  "@settingsFontPreviewText": {
+    "description": "App 字体设置页：中文字体预览示例文字（三行，换行在 ARB 写 \\n；纯展示用）"
+  },
+  "settingsFontPreviewHint": "部分字体可能不生效",
+  "@settingsFontPreviewHint": {
+    "description": "App 字体设置页：预览区下方的说明小字"
+  },
+  "settingsFontGroupFont": "字体",
+  "@settingsFontGroupFont": {
+    "description": "App 字体设置页：字体分组标题"
+  },
+  "settingsFontSizeLabel": "字体字号",
+  "@settingsFontSizeLabel": {
+    "description": "App 字体设置页：字号滑杆标题"
+  },
+  "settingsFontWeightLabel": "字体字重",
+  "@settingsFontWeightLabel": {
+    "description": "App 字体设置页：字重滑杆标题"
+  },
+  "settingsFontWeightThin": "极细",
+  "@settingsFontWeightThin": {
+    "description": "App 字体设置页：字重档位 w100"
+  },
+  "settingsFontWeightExtraLight": "很细",
+  "@settingsFontWeightExtraLight": {
+    "description": "App 字体设置页：字重档位 w200"
+  },
+  "settingsFontWeightLight": "细",
+  "@settingsFontWeightLight": {
+    "description": "App 字体设置页：字重档位 w300"
+  },
+  "settingsFontWeightRegular": "常规",
+  "@settingsFontWeightRegular": {
+    "description": "App 字体设置页：字重档位 w400"
+  },
+  "settingsFontWeightMedium": "中等",
+  "@settingsFontWeightMedium": {
+    "description": "App 字体设置页：字重档位 w500"
+  },
+  "settingsFontWeightSemiBold": "较粗",
+  "@settingsFontWeightSemiBold": {
+    "description": "App 字体设置页：字重档位 w600"
+  },
+  "settingsFontWeightBold": "粗",
+  "@settingsFontWeightBold": {
+    "description": "App 字体设置页：字重档位 w700"
+  },
+  "settingsFontWeightExtraBold": "很粗",
+  "@settingsFontWeightExtraBold": {
+    "description": "App 字体设置页：字重档位 w800"
+  },
+  "settingsFontWeightBlack": "极粗",
+  "@settingsFontWeightBlack": {
+    "description": "App 字体设置页：字重档位 w900"
+  },
+  "settingsFontImport": "导入字体",
+  "@settingsFontImport": {
+    "description": "App 字体设置页：导入字体行标题"
+  },
+  "settingsFontImporting": "正在导入...",
+  "@settingsFontImporting": {
+    "description": "App 字体设置页：导入进行中的行标题"
+  },
+  "settingsFontCurrent": "当前字体：{name}",
+  "@settingsFontCurrent": {
+    "description": "App 字体设置页：导入行副标题（name = 当前字体文件族名）",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsFontPickHint": "点击选择 .ttf/.otf 字体文件",
+  "@settingsFontPickHint": {
+    "description": "App 字体设置页：未导入字体时导入行副标题"
+  },
+  "settingsFontReselect": "重新选择",
+  "@settingsFontReselect": {
+    "description": "App 字体设置页：重新选择字体按钮 tooltip"
+  },
+  "settingsFontReset": "重置字号与字重",
+  "@settingsFontReset": {
+    "description": "App 字体设置页：重置字号与字重按钮"
+  },
+  "settingsFontParseFailed": "字体解析失败，请更换字体文件",
+  "@settingsFontParseFailed": {
+    "description": "App 字体设置页：导入的字体解析不出族名时的 toast"
+  },
+  "settingsFontApplied": "已应用字体：{name}",
+  "@settingsFontApplied": {
+    "description": "App 字体设置页：导入成功的 toast（name = 字体文件族名）",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAboutGroupInfo": "信息",
+  "@settingsAboutGroupInfo": {
+    "description": "关于页：「信息」分组标题"
+  },
+  "settingsAboutGroupTools": "工具",
+  "@settingsAboutGroupTools": {
+    "description": "关于页：「工具」分组标题"
+  },
+  "settingsAboutGroupUpdate": "更新",
+  "@settingsAboutGroupUpdate": {
+    "description": "关于页：「更新」分组标题"
+  },
+  "settingsAboutLicenses": "许可证书",
+  "@settingsAboutLicenses": {
+    "description": "关于页：许可证书入口标题"
+  },
+  "settingsAboutLicensesDesc": "查看本应用使用的全部开源许可",
+  "@settingsAboutLicensesDesc": {
+    "description": "关于页：许可证书入口副标题"
+  },
+  "settingsAboutUserAgreement": "用户协议",
+  "@settingsAboutUserAgreement": {
+    "description": "关于页：用户协议入口标题"
+  },
+  "settingsAboutUserAgreementDesc": "预览用户服务协议与隐私政策",
+  "@settingsAboutUserAgreementDesc": {
+    "description": "关于页：用户协议入口副标题"
+  },
+  "settingsAboutCacheManagement": "缓存管理",
+  "@settingsAboutCacheManagement": {
+    "description": "关于页：缓存管理入口标题"
+  },
+  "settingsAboutCacheManagementDesc": "查看与清除各类缓存",
+  "@settingsAboutCacheManagementDesc": {
+    "description": "关于页：缓存管理入口副标题"
+  },
+  "settingsAboutErrorLogDesc": "查看 / 导出 / 复制崩溃日志",
+  "@settingsAboutErrorLogDesc": {
+    "description": "关于页：错误日志入口副标题"
+  },
+  "settingsAboutCheckUpdate": "手动检查更新",
+  "@settingsAboutCheckUpdate": {
+    "description": "关于页：手动检查更新项标题"
+  },
+  "settingsAboutCheckUpdateDesc": "检查是否有新版本",
+  "@settingsAboutCheckUpdateDesc": {
+    "description": "关于页：手动检查更新项副标题"
+  },
+  "settingsAboutAutoCheckUpdate": "自动检查更新",
+  "@settingsAboutAutoCheckUpdate": {
+    "description": "关于页：自动检查更新项标题"
+  },
+  "settingsAboutAutoCheckUpdateDesc": "启动后自动检查新版本",
+  "@settingsAboutAutoCheckUpdateDesc": {
+    "description": "关于页：自动检查更新项副标题"
+  },
+  "settingsAboutFeedbackSubject": "播放器使用反馈",
+  "@settingsAboutFeedbackSubject": {
+    "description": "关于页：邮件反馈的默认主题"
+  },
+  "settingsAboutNoEmailApp": "未找到可用的邮件应用",
+  "@settingsAboutNoEmailApp": {
+    "description": "关于页：跳转邮件失败时的 toast"
+  },
+  "settingsAboutGithubPending": "GitHub 主页地址待接入",
+  "@settingsAboutGithubPending": {
+    "description": "关于页：GitHub 地址未配置时的 toast"
+  },
+  "settingsAboutCannotOpenLink": "无法打开链接",
+  "@settingsAboutCannotOpenLink": {
+    "description": "关于页：链接打不开时的 toast"
+  },
+  "settingsAboutUpToDate": "已是最新版本",
+  "@settingsAboutUpToDate": {
+    "description": "关于页：手动检查更新时没有新版本的 toast"
+  },
+  "settingsAboutCheckUpdateFailed": "检查更新失败，请稍后重试",
+  "@settingsAboutCheckUpdateFailed": {
+    "description": "关于页：手动检查更新失败的 toast"
+  },
+  "settingsAboutSendFeedback": "发送使用反馈",
+  "@settingsAboutSendFeedback": {
+    "description": "关于页：顶部卡片邮箱按钮的 tooltip"
+  },
+  "settingsAboutAppNameLoading": "读取中",
+  "@settingsAboutAppNameLoading": {
+    "description": "关于页：构建信息还没读完时版本胶囊的占位文案"
+  },
+  "settingsLicenseOpenSource": "开源许可",
+  "@settingsLicenseOpenSource": {
+    "description": "许可证书页：列表分组标题"
+  },
+  "settingsLicenseEmpty": "暂无许可信息",
+  "@settingsLicenseEmpty": {
+    "description": "许可证书页：没有收集到任何许可时的空态"
+  },
+  "settingsLicenseVersionLoading": "版本读取中",
+  "@settingsLicenseVersionLoading": {
+    "description": "许可证书页：版本号还没读到时胶囊的占位文案"
+  },
+  "settingsLicenseCount": "{count} 项许可",
+  "@settingsLicenseCount": {
+    "description": "许可证书页：头部卡片的许可包数量胶囊",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsLicenseParagraphCount": "{count, plural, =1{1 个许可段落} other{{count} 个许可段落}}",
+  "@settingsLicenseParagraphCount": {
+    "description": "许可证书页：某个包包含的许可段落数（列表行副标题与详情页摘要卡片共用）",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsLicenseCopy": "复制许可文本",
+  "@settingsLicenseCopy": {
+    "description": "许可证书详情页：复制按钮 tooltip"
+  },
+  "settingsLicenseCopied": "许可文本已复制",
+  "@settingsLicenseCopied": {
+    "description": "许可证书详情页：复制成功的 toast"
+  },
+  "settingsLicenseLoadFailed": "许可信息加载失败",
+  "@settingsLicenseLoadFailed": {
+    "description": "许可证书页：许可收集失败的提示"
+  },
+  "settingsAppearanceMode": "外观模式",
+  "@settingsAppearanceMode": {
+    "description": "外观设置子页：主题模式分组标题"
+  },
+  "settingsAppearanceThemeColor": "主题色",
+  "@settingsAppearanceThemeColor": {
+    "description": "外观设置子页：主题色分组标题"
+  },
+  "settingsAppearancePaletteVariant": "调色板风格",
+  "@settingsAppearancePaletteVariant": {
+    "description": "外观设置子页：调色板风格分组标题"
+  },
+  "settingsAppearanceCustomFontDesc": "自定义全局字体",
+  "@settingsAppearanceCustomFontDesc": {
+    "description": "外观设置子页：App 字体设置项副标题"
+  },
+  "settingsAppearanceGroupWallpaper": "壁纸",
+  "@settingsAppearanceGroupWallpaper": {
+    "description": "外观设置子页：壁纸分组标题"
+  },
+  "settingsAppearanceDynamicColor": "动态色",
+  "@settingsAppearanceDynamicColor": {
+    "description": "外观设置子页：主题色网格第 24 格（取系统壁纸主色）"
+  },
+  "settingsAppearanceSdkTooLow": "安卓版本过低，不支持该功能",
+  "@settingsAppearanceSdkTooLow": {
+    "description": "外观设置子页：Android 12 以下点动态色的 toast"
+  },
+  "settingsAppearanceReadWallpaperFailed": "无法读取壁纸颜色",
+  "@settingsAppearanceReadWallpaperFailed": {
+    "description": "外观设置子页：取不到壁纸主色时的 toast"
+  },
+  "settingsAppearanceCustomColorTitle": "自定义主题色",
+  "@settingsAppearanceCustomColorTitle": {
+    "description": "外观设置子页：自定义选色弹窗标题"
+  },
+  "settingsAppearanceNoImagePicker": "这台设备没有可用的系统图片选择器",
+  "@settingsAppearanceNoImagePicker": {
+    "description": "外观设置子页：选壁纸时系统没有可用图片选择器的 toast"
+  },
+  "settingsAppearanceWallpaperTitle": "自定义壁纸",
+  "@settingsAppearanceWallpaperTitle": {
+    "description": "外观设置子页：壁纸卡片标题"
+  },
+  "settingsAppearanceWallpaperActiveDesc": "壁纸显示在页面内容与顶部栏之后",
+  "@settingsAppearanceWallpaperActiveDesc": {
+    "description": "外观设置子页：已设置壁纸时的说明"
+  },
+  "settingsAppearanceWallpaperPickDesc": "选一张图片，铺在页面内容与顶部栏之后",
+  "@settingsAppearanceWallpaperPickDesc": {
+    "description": "外观设置子页：未设置壁纸时的说明"
+  },
+  "settingsAppearanceReplaceWallpaper": "替换壁纸",
+  "@settingsAppearanceReplaceWallpaper": {
+    "description": "外观设置子页：已有壁纸时的选择按钮"
+  },
+  "settingsAppearanceChooseWallpaper": "选择壁纸",
+  "@settingsAppearanceChooseWallpaper": {
+    "description": "外观设置子页：没有壁纸时的选择按钮"
+  },
+  "settingsAppearanceAdjustWallpaper": "调整",
+  "@settingsAppearanceAdjustWallpaper": {
+    "description": "外观设置子页：进入壁纸编辑页的按钮"
+  },
+  "settingsDecoderBasicInfo": "基本信息",
+  "@settingsDecoderBasicInfo": {
+    "description": "解码器详情页：基本信息分组标题"
+  },
+  "settingsDecoderMimeType": "MIME 类型",
+  "@settingsDecoderMimeType": {
+    "description": "解码器详情页：MIME 类型字段名"
+  },
+  "settingsDecoderCanonicalName": "规范名",
+  "@settingsDecoderCanonicalName": {
+    "description": "解码器详情页：规范名字段名"
+  },
+  "settingsDecoderType": "类型",
+  "@settingsDecoderType": {
+    "description": "解码器详情页：编解码器类型字段名"
+  },
+  "settingsDecoderVideoCodec": "视频解码器",
+  "@settingsDecoderVideoCodec": {
+    "description": "解码器详情页：类型为视频时的取值"
+  },
+  "settingsDecoderAudioCodec": "音频解码器",
+  "@settingsDecoderAudioCodec": {
+    "description": "解码器详情页：类型为音频时的取值"
+  },
+  "settingsDecoderAcceleration": "加速方式",
+  "@settingsDecoderAcceleration": {
+    "description": "解码器详情页：加速方式字段名"
+  },
+  "settingsDecoderHardwareAcceleration": "硬件加速",
+  "@settingsDecoderHardwareAcceleration": {
+    "description": "解码器详情页：硬件解码时的取值"
+  },
+  "settingsDecoderSoftware": "软件",
+  "@settingsDecoderSoftware": {
+    "description": "解码器详情页：软件解码时的取值"
+  },
+  "settingsDecoderAlias": "别名",
+  "@settingsDecoderAlias": {
+    "description": "解码器详情页：别名字段名"
+  },
+  "settingsDecoderYes": "是",
+  "@settingsDecoderYes": {
+    "description": "解码器详情页：是 / 否布尔字段的肯定取值"
+  },
+  "settingsDecoderBitrateRange": "码率范围",
+  "@settingsDecoderBitrateRange": {
+    "description": "解码器详情页：码率范围字段名"
+  },
+  "settingsDecoderResolutionCapability": "分辨率与能力",
+  "@settingsDecoderResolutionCapability": {
+    "description": "解码器详情页：分辨率与能力分组标题"
+  },
+  "settingsDecoderMaxResolution": "最大分辨率",
+  "@settingsDecoderMaxResolution": {
+    "description": "解码器详情页：最大分辨率字段名"
+  },
+  "settingsDecoderMinResolution": "最小分辨率",
+  "@settingsDecoderMinResolution": {
+    "description": "解码器详情页：最小分辨率字段名"
+  },
+  "settingsDecoderAlignment": "对齐",
+  "@settingsDecoderAlignment": {
+    "description": "解码器详情页：对齐字段名"
+  },
+  "settingsDecoderMaxInstances": "最大实例数",
+  "@settingsDecoderMaxInstances": {
+    "description": "解码器详情页：最大实例数字段名"
+  },
+  "settingsDecoderAudioCapability": "音频能力",
+  "@settingsDecoderAudioCapability": {
+    "description": "解码器详情页：音频能力分组标题"
+  },
+  "settingsDecoderMaxChannels": "最大声道数",
+  "@settingsDecoderMaxChannels": {
+    "description": "解码器详情页：最大声道数字段名"
+  },
+  "settingsDecoderHardwareFeatures": "硬件特性",
+  "@settingsDecoderHardwareFeatures": {
+    "description": "解码器详情页：硬件特性胶囊分组标题"
+  },
+  "settingsDecoderColorFormats": "色彩格式",
+  "@settingsDecoderColorFormats": {
+    "description": "解码器详情页：色彩格式胶囊分组标题"
+  },
+  "settingsDecoderProfiles": "支持的 Profile / Level",
+  "@settingsDecoderProfiles": {
+    "description": "解码器详情页：supported profiles / levels 胶囊分组标题"
+  },
+  "settingsCacheGroupTitle": "缓存",
+  "@settingsCacheGroupTitle": {
+    "description": "缓存管理页：缓存类别分组标题"
+  },
+  "settingsCacheReading": "读取中…",
+  "@settingsCacheReading": {
+    "description": "缓存管理页：缓存大小尚未读出时的占位文字"
+  },
+  "settingsCacheClearCategoryTitle": "清除{label}",
+  "@settingsCacheClearCategoryTitle": {
+    "description": "缓存管理页：单类清除确认弹窗标题（label = 缓存类别名）",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheClearCategoryBody": "将删除「{label}」缓存（{size}），确定？",
+  "@settingsCacheClearCategoryBody": {
+    "description": "缓存管理页：单类清除确认弹窗正文（label = 缓存类别名；size = 已格式化的大小）",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheCategoryCleared": "已清除{label}",
+  "@settingsCacheCategoryCleared": {
+    "description": "缓存管理页：单类清除成功的 toast（label = 缓存类别名）",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheClearFailed": "清除失败",
+  "@settingsCacheClearFailed": {
+    "description": "缓存管理页：清除失败的 toast（单类与一键清除共用）"
+  },
+  "settingsCacheClearAllTitle": "清除所有缓存",
+  "@settingsCacheClearAllTitle": {
+    "description": "缓存管理页：一键清除的首次确认弹窗标题"
+  },
+  "settingsCacheClearAllBody": "将删除全部缓存（当前共 {size}）：\n{items}\n\n此操作不可恢复。",
+  "@settingsCacheClearAllBody": {
+    "description": "缓存管理页：一键清除的首次确认弹窗正文（size = 已格式化的总大小；两条类别名为举例，与 service 层 CacheCategory.label 同串）",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "items": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheConfirmAgainTitle": "再次确认",
+  "@settingsCacheConfirmAgainTitle": {
+    "description": "缓存管理页：一键清除的二次确认弹窗标题"
+  },
+  "settingsCacheConfirmAgainBody": "确定要清除所有缓存吗？",
+  "@settingsCacheConfirmAgainBody": {
+    "description": "缓存管理页：一键清除的二次确认弹窗正文"
+  },
+  "settingsCacheAllCleared": "已清除全部缓存",
+  "@settingsCacheAllCleared": {
+    "description": "缓存管理页：一键清除成功的 toast"
+  },
+  "settingsCacheClearAllButton": "一键清除所有缓存（{size}）",
+  "@settingsCacheClearAllButton": {
+    "description": "缓存管理页：一键清除按钮（size = 已格式化的总大小）",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsCacheFooterNote": "列表封面缩略图会在下次扫描时重新生成；进度条缩略图为纯内存缓存，随播放页退出自动清空，不占用存储。",
+  "@settingsCacheFooterNote": {
+    "description": "缓存管理页：底部说明文字"
+  },
+  "commonRetry": "重试",
+  "@commonRetry": {
+    "description": "通用按钮：重试（原 settingsLicenseRetry 归并到此）"
+  },
+  "commonVideo": "视频",
+  "@commonVideo": {
+    "description": "通用：视频（解码器清单筛选胶囊等）"
+  },
+  "commonAll": "全部",
+  "@commonAll": {
+    "description": "通用：全部"
+  },
+  "settingsDeviceUnsupported": "不支持",
+  "@settingsDeviceUnsupported": {
+    "description": "设备信息页（页面标题复用 settingsDeviceInfo；硬解/软解复用 decodeModeHwCopy/decodeModeSw，音频复用 playerActionAudio）"
+  },
+  "settingsDeviceUnknown": "未知设备",
+  "settingsDeviceHdrCapability": "屏幕 HDR 能力",
+  "settingsDeviceHdrUnsupported": "当前屏幕不支持 HDR（或系统未报告 HDR 能力）",
+  "settingsDeviceKeyVideoEncoders": "关键视频编码器",
+  "settingsDeviceDecoderList": "解码器清单",
+  "settingsDeviceDecoderSummary": "硬解 {hw} · 软解 {sw} · 视频 {video} · 音频 {audio}",
+  "@settingsDeviceDecoderSummary": {
+    "description": "解码器清单标题右侧的统计",
+    "placeholders": {
+      "hw": {
+        "type": "int"
+      },
+      "sw": {
+        "type": "int"
+      },
+      "video": {
+        "type": "int"
+      },
+      "audio": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsDeviceSearchHint": "搜索解码器（名称 / MIME / 格式 / Profile）",
+  "settingsDeviceNoMatchingDecoder": "无匹配的解码器",
+  "settingsDeviceChannels": "{count} 声道",
+  "@settingsDeviceChannels": {
+    "description": "解码器声道数标签",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsDeviceCapabilityError": "无法读取设备能力（可能为不支持的原生通道）",
+  "commonClear": "清除",
+  "@commonClear": {
+    "description": "通用按钮：清除（历史记录 / 壁纸等）"
+  },
+  "commonReset": "重置",
+  "@commonReset": {
+    "description": "通用按钮：重置"
+  },
+  "commonCenter": "居中",
+  "@commonCenter": {
+    "description": "通用：居中（字幕对齐 / 壁纸位置）"
+  },
+  "settingsHistoryClearAllTitle": "清除历史记录",
+  "@settingsHistoryClearAllTitle": {
+    "description": "播放历史页（页面标题复用 settingsPlaybackHistory）"
+  },
+  "settingsHistoryClearAllBodyWithProgress": "确定要清除全部播放历史吗？\n\n同时会清除全部播放进度（含「已看完」标记），此操作不可恢复。",
+  "settingsHistoryClearAllBody": "确定要清除全部播放历史吗？此操作不可恢复。",
+  "settingsHistoryClearAllTooltip": "清除全部历史",
+  "settingsHistoryEnabled": "播放历史记录",
+  "settingsHistoryEnabledDesc": "关闭后不再记录新的播放",
+  "settingsHistoryClearProgressOnDelete": "删除历史时清除进度",
+  "settingsHistoryClearProgressOnDeleteDesc": "关闭时两套数据互相独立",
+  "settingsHistoryClearProgressOnDesc": "开启后，删除历史记录会同时清除该视频的播放进度",
+  "settingsHistoryClearProgressBlocked": "需先开启上方的「播放历史记录」；关闭时不记录历史，但播放进度会一直保留",
+  "settingsHistoryEmpty": "暂无播放历史",
+  "settingsHistoryEmptyDisabled": "暂无播放历史（记录已关闭）",
+  "settingsHistoryDeleteEntryWithProgress": "删除该条记录（同时清除播放进度）",
+  "settingsHistoryDeleteEntry": "删除该条记录",
+  "settingsWallpaperSaveFailed": "无法保存壁纸，请重新选择图片",
+  "@settingsWallpaperSaveFailed": {
+    "description": "壁纸编辑页（页面标题 + 各滑杆标签）"
+  },
+  "settingsWallpaperAdjustTitle": "调整壁纸",
+  "settingsWallpaperSave": "保存壁纸",
+  "settingsWallpaperDragHint": "拖动以调整位置，双指捏合以缩放。",
+  "settingsWallpaperScale": "缩放",
+  "settingsWallpaperOffsetX": "水平位置",
+  "settingsWallpaperOpacity": "透明度",
+  "settingsWallpaperImageUnavailable": "图片已不可用，请重新选择",
+  "commonBack": "返回",
+  "@commonBack": {
+    "description": "通用按钮：返回（播放器顶栏 / 听视频页）"
+  },
+  "commonMore": "更多",
+  "@commonMore": {
+    "description": "通用按钮：更多（播放器顶栏「更多」面板入口）"
+  },
+  "commonPlay": "播放",
+  "@commonPlay": {
+    "description": "通用：播放（播放/暂停按钮、诊断面板分组名）"
+  },
+  "commonPause": "暂停",
+  "@commonPause": {
+    "description": "通用：暂停（播放/暂停按钮）"
+  },
+  "commonPlaying": "播放中",
+  "@commonPlaying": {
+    "description": "通用：播放中（列表当前项标记）"
+  },
+  "commonSearch": "搜索",
+  "@commonSearch": {
+    "description": "通用按钮：搜索"
+  },
+  "commonClearAll": "清空",
+  "@commonClearAll": {
+    "description": "通用按钮：清空（输入框 / 屏蔽词列表）"
+  },
+  "commonNone": "无",
+  "@commonNone": {
+    "description": "通用：无（数值为 0 时的读数）"
+  },
+  "commonNotSet": "未设置",
+  "@commonNotSet": {
+    "description": "通用：未设置（空态读数）"
+  },
+  "commonCustom": "自定义",
+  "@commonCustom": {
+    "description": "通用：自定义（定时关闭预设）"
+  },
+  "commonJump": "跳转",
+  "@commonJump": {
+    "description": "通用按钮：跳转（弹幕集数跳转）"
+  },
+  "commonSortBy": "排序方式",
+  "@commonSortBy": {
+    "description": "通用：排序方式（字幕文件选择器）"
+  },
+  "commonGoUp": "上级",
+  "@commonGoUp": {
+    "description": "通用按钮：上级目录（字幕文件选择器）"
+  },
+  "commonRefresh": "刷新",
+  "@commonRefresh": {
+    "description": "通用按钮：刷新（字体目录）"
+  },
+  "commonOneKeyReset": "一键重置",
+  "@commonOneKeyReset": {
+    "description": "通用按钮：一键重置（均衡器 / 片头片尾）"
+  },
+  "commonRestoreDefaults": "恢复默认设置",
+  "@commonRestoreDefaults": {
+    "description": "通用按钮：恢复默认设置（弹幕设置）"
+  },
+  "commonLoadingDots": "正在加载...",
+  "@commonLoadingDots": {
+    "description": "通用：正在加载（字体目录读取中）"
+  },
+  "commonTitle": "标题",
+  "@commonTitle": {
+    "description": "通用字段名：标题（诊断面板）"
+  },
+  "commonBlur": "模糊",
+  "@commonBlur": {
+    "description": "通用：模糊（字幕文字效果）"
+  },
+  "commonEpisodeUnit": "集",
+  "@commonEpisodeUnit": {
+    "description": "通用：集（弹幕集数跳转输入框后缀）"
+  },
+  "playerAutoLoadedSubtitle": "已自动加载字幕：{fileName}",
+  "@playerAutoLoadedSubtitle": {
+    "description": "播放页提示：自动匹配到并加载了外挂字幕",
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "playerAutoLoadedDanmaku": "已自动加载弹幕：{fileName}",
+  "@playerAutoLoadedDanmaku": {
+    "description": "播放页提示：自动匹配到并加载了弹幕文件",
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "playerDanmakuLoaded": "已加载弹幕：{message}",
+  "@playerDanmakuLoaded": {
+    "description": "播放页提示：加载弹幕成功（附加来源说明）",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "playerQualityUnavailableSwitched": "该清晰度不可用，已切换到 {name}",
+  "@playerQualityUnavailableSwitched": {
+    "description": "播放页提示：所选清晰度不可用后自动切换",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playerQualitySwitchFailed": "切换画质失败：{error}",
+  "@playerQualitySwitchFailed": {
+    "description": "播放页提示：切换清晰度异常",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "playerScreenshotFailed": "截图失败：{error}",
+  "@playerScreenshotFailed": {
+    "description": "播放页提示：截图异常",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "playerScreenshotNoImage": "截图失败：未获取到图像",
+  "@playerScreenshotNoImage": {
+    "description": "播放页提示：截图拿到空数据"
+  },
+  "playerSavedToGallery": "已保存到相册",
+  "@playerSavedToGallery": {
+    "description": "播放页提示：截图保存成功"
+  },
+  "playerScreenshotSaveFailed": "截图保存失败：{error}",
+  "@playerScreenshotSaveFailed": {
+    "description": "播放页提示：截图保存到相册失败",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "playerDanmakuSettings": "弹幕设置",
+  "@playerDanmakuSettings": {
+    "description": "播放器面板：弹幕设置入口 / 页标题"
+  },
+  "playerSkippedIntro": "已跳过片头",
+  "@playerSkippedIntro": {
+    "description": "播放页提示：已跳过片头"
+  },
+  "playerSkippedOutro": "已跳过片尾",
+  "@playerSkippedOutro": {
+    "description": "播放页提示：已跳过片尾"
+  },
+  "playerNoNetworkCannotSwitch": "网络连接不存在，无法切换",
+  "@playerNoNetworkCannotSwitch": {
+    "description": "播放页提示：离线时无法切集"
+  },
+  "playerSwitchFailed": "切换失败：{error}",
+  "@playerSwitchFailed": {
+    "description": "播放页提示：切集/切换失败",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "playerResolveUrlFailed": "解析播放地址失败",
+  "@playerResolveUrlFailed": {
+    "description": "播放页错误卡片：播放地址解析失败"
+  },
+  "playerSwitchEpisodeFailed": "切集失败：{error}",
+  "@playerSwitchEpisodeFailed": {
+    "description": "播放页提示：B 站切集失败",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "playerPlaybackSpeed": "播放倍速",
+  "@playerPlaybackSpeed": {
+    "description": "播放器面板：倍速（横竖屏一致）"
+  },
+  "playerSuperResolution": "超分辨率",
+  "@playerSuperResolution": {
+    "description": "播放器：超分辨率（面板标题 / 底栏按钮 / 记忆项）"
+  },
+  "playerAspectRatio": "画面比例",
+  "@playerAspectRatio": {
+    "description": "播放器面板：画面比例"
+  },
+  "playerCastUnsupportedSource": "暂不支持投屏该来源",
+  "@playerCastUnsupportedSource": {
+    "description": "播放页提示：该来源不支持投屏"
+  },
+  "playerFeatureNotPlaced": "未放置的功能",
+  "@playerFeatureNotPlaced": {
+    "description": "播放器「编辑控制栏」：未放置区标题"
+  },
+  "playerFeatureComingSoon": "功能即将上线",
+  "@playerFeatureComingSoon": {
+    "description": "播放器「更多」面板：未实现动作的副标题"
+  },
+  "playerEditControlBar": "编辑控制栏",
+  "@playerEditControlBar": {
+    "description": "播放器：编辑控制栏入口 / 页标题"
+  },
+  "playerActionsEnabledHint": "已启用（长按拖拽排序）",
+  "@playerActionsEnabledHint": {
+    "description": "播放器「编辑控制栏」：已启用区标题"
+  },
+  "playerNoEnabledActions": "暂无已启用动作，从下方添加",
+  "@playerNoEnabledActions": {
+    "description": "播放器「编辑控制栏」：已启用区空态"
+  },
+  "playerAddable": "可添加",
+  "@playerAddable": {
+    "description": "播放器「编辑控制栏」：可添加区标题"
+  },
+  "playerMaxActions": "{max, plural, other{最多允许放 {max} 个}}",
+  "@playerMaxActions": {
+    "description": "播放器「编辑控制栏」：槽位已满提示",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "playerResetControlBar": "重置控制栏",
+  "@playerResetControlBar": {
+    "description": "播放器「编辑控制栏」：重置按钮"
+  },
+  "playerDanmakuNetwork": "网络弹幕",
+  "@playerDanmakuNetwork": {
+    "description": "播放器：网络弹幕（弹幕面板入口 / 面板标题）"
+  },
+  "playerDanmakuLoadFailed": "弹幕加载失败",
+  "@playerDanmakuLoadFailed": {
+    "description": "播放器：弹幕加载失败（错误卡片标题）"
+  },
+  "playerDanmakuMatching": "正在匹配弹幕，请稍候…",
+  "@playerDanmakuMatching": {
+    "description": "播放器：网络弹幕匹配中"
+  },
+  "playerDanmakuNoMatch": "未找到匹配的弹幕",
+  "@playerDanmakuNoMatch": {
+    "description": "播放器：网络弹幕无匹配结果"
+  },
+  "playerDanmakuPickMatch": "选择匹配结果",
+  "@playerDanmakuPickMatch": {
+    "description": "播放器：选择弹幕匹配结果弹窗"
+  },
+  "playerPipUnsupported": "当前设备不支持画中画",
+  "@playerPipUnsupported": {
+    "description": "播放页提示：设备不支持画中画"
+  },
+  "playerPipFailed": "进入画中画失败",
+  "@playerPipFailed": {
+    "description": "播放页提示：进入画中画异常"
+  },
+  "playerPlaylist": "播放列表",
+  "@playerPlaylist": {
+    "description": "播放器：播放列表（面板标题 / 底栏按钮）"
+  },
+  "playerLock": "锁定",
+  "@playerLock": {
+    "description": "播放器：锁定控制层（按钮语义）"
+  },
+  "playerUnlock": "解锁",
+  "@playerUnlock": {
+    "description": "播放器：解锁控制层（按钮语义）"
+  },
+  "playerScreenshot": "截图",
+  "@playerScreenshot": {
+    "description": "播放器：截图按钮语义"
+  },
+  "playerRestoreView": "还原画面",
+  "@playerRestoreView": {
+    "description": "播放器：缩放后还原画面胶囊"
+  },
+  "playerAudioTrack": "音轨",
+  "@playerAudioTrack": {
+    "description": "播放器音轨面板：音轨分组标题"
+  },
+  "playerNoAudioTrackHint": "当前视频没有音轨，可在下方导入外部音轨",
+  "@playerNoAudioTrackHint": {
+    "description": "播放器音轨面板：无音轨空态"
+  },
+  "playerExternalAudioTrack": "外部音轨",
+  "@playerExternalAudioTrack": {
+    "description": "播放器音轨面板：外部音轨分组"
+  },
+  "playerImportExternalAudioTrack": "导入外部音轨",
+  "@playerImportExternalAudioTrack": {
+    "description": "播放器音轨面板：导入外部音轨入口"
+  },
+  "playerTempEffectHint": "临时生效，退出播放后不保留",
+  "@playerTempEffectHint": {
+    "description": "播放器音轨面板：外部音轨临时生效说明"
+  },
+  "playerAudioChannel": "音频声道",
+  "@playerAudioChannel": {
+    "description": "播放器音轨面板：音频声道"
+  },
+  "playerAudioProcessing": "音频处理",
+  "@playerAudioProcessing": {
+    "description": "播放器音轨面板：音频处理分组"
+  },
+  "playerVolumeNormalize": "音量标准化",
+  "@playerVolumeNormalize": {
+    "description": "播放器音轨面板：音量标准化开关"
+  },
+  "playerDynamicRangeCompress": "动态范围压缩",
+  "@playerDynamicRangeCompress": {
+    "description": "播放器音轨面板：动态范围压缩开关"
+  },
+  "playerPickAudioFile": "选择音频文件",
+  "@playerPickAudioFile": {
+    "description": "播放器音轨面板：选择音频文件"
+  },
+  "playerExternalAudioImported": "已导入外部音轨",
+  "@playerExternalAudioImported": {
+    "description": "播放器音轨面板：导入成功提示"
+  },
+  "playerImportFailedCheckFormat": "导入失败，请检查文件格式",
+  "@playerImportFailedCheckFormat": {
+    "description": "播放器：导入外挂音轨/字幕失败提示"
+  },
+  "playerRemoveAudioTrack": "移除已导入的音轨",
+  "@playerRemoveAudioTrack": {
+    "description": "播放器音轨面板：移除外部音轨按钮"
+  },
+  "audioPlaybackSpeed": "播放速度",
+  "@audioPlaybackSpeed": {
+    "description": "听视频：倍速面板标题"
+  },
+  "audioRepeatOff": "循环关闭",
+  "@audioRepeatOff": {
+    "description": "听视频：循环模式（关闭）"
+  },
+  "audioRepeatSingle": "单曲循环",
+  "@audioRepeatSingle": {
+    "description": "听视频：循环模式（单曲循环）；列表循环复用 loopModeLoopAll"
+  },
+  "audioSleepTimer": "定时关闭",
+  "@audioSleepTimer": {
+    "description": "听视频：定时关闭"
+  },
+  "audioSleepEndOfTrack": "播完当前",
+  "@audioSleepEndOfTrack": {
+    "description": "听视频：定时关闭（播完当前曲目）"
+  },
+  "audioSleepEndOfTrackHint": "将在当前曲目播放结束后停止",
+  "@audioSleepEndOfTrackHint": {
+    "description": "听视频：定时关闭（播完当前）说明"
+  },
+  "audioSleepRemaining": "剩余 {time}",
+  "@audioSleepRemaining": {
+    "description": "听视频：定时关闭剩余时间",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "audioSleepCustomTitle": "自定义定时关闭",
+  "@audioSleepCustomTitle": {
+    "description": "听视频：自定义定时关闭弹窗"
+  },
+  "audioSleepMinutes": "{minutes, plural, other{{minutes} 分钟}}",
+  "@audioSleepMinutes": {
+    "description": "听视频：定时关闭分钟档位（15 / 30 / 60 / 自定义输入）",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "audioShuffle": "随机播放",
+  "@audioShuffle": {
+    "description": "听视频：随机播放"
+  },
+  "playerPlaylistWithCount": "播放列表（{count}）",
+  "@playerPlaylistWithCount": {
+    "description": "听视频：播放列表面板标题（带曲目数）",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerEqualizerEnable": "启用均衡器",
+  "@playerEqualizerEnable": {
+    "description": "播放器均衡器面板：总开关"
+  },
+  "playerEqualizerDesc": "调节频段增益、低音增强和虚拟环绕",
+  "@playerEqualizerDesc": {
+    "description": "播放器均衡器面板：总开关说明"
+  },
+  "playerPreset": "预设",
+  "@playerPreset": {
+    "description": "播放器：预设（均衡器 / 倍速面板分组标题）"
+  },
+  "playerEqualizerBands": "频段调节",
+  "@playerEqualizerBands": {
+    "description": "播放器均衡器面板：频段调节分组"
+  },
+  "playerEqualizerBass": "低音增强",
+  "@playerEqualizerBass": {
+    "description": "播放器均衡器面板：低音增强"
+  },
+  "playerEqualizerSurround": "虚拟环绕",
+  "@playerEqualizerSurround": {
+    "description": "播放器均衡器面板：虚拟环绕"
+  },
+  "playerBiliNoEpisodes": "没有获取到剧集列表",
+  "@playerBiliNoEpisodes": {
+    "description": "播放器 B 站剧集面板：空态"
+  },
+  "playerBiliTotalEpisodes": "{total, plural, other{共 {total} 集}}",
+  "@playerBiliTotalEpisodes": {
+    "description": "播放器 B 站剧集面板：总集数",
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "playerBiliCurrentOfTotal": "第 {current} 集 / 共 {total, plural, other{{total} 集}}",
+  "@playerBiliCurrentOfTotal": {
+    "description": "播放器 B 站剧集面板：当前集 / 总集数",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "playerBiliFreeLimited": "限免",
+  "@playerBiliFreeLimited": {
+    "description": "播放器 B 站剧集面板：限免集标记"
+  },
+  "playerBiliPreview": "预告",
+  "@playerBiliPreview": {
+    "description": "播放器 B 站剧集面板：预告标记"
+  },
+  "playerNextEpisode": "下一集",
+  "@playerNextEpisode": {
+    "description": "播放器底栏：下一集按钮"
+  },
+  "playerCastSelectScreen": "选择屏幕",
+  "@playerCastSelectScreen": {
+    "description": "播放器底栏：选择投屏设备"
+  },
+  "playerSeekBackSeconds": "快退 {seconds} 秒",
+  "@playerSeekBackSeconds": {
+    "description": "播放器手势提示：双击左侧快退",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "playerSeekForwardSeconds": "快进 {seconds} 秒",
+  "@playerSeekForwardSeconds": {
+    "description": "播放器手势提示：双击右侧快进",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "playerChapterPanelTitle": "章节跳段",
+  "@playerChapterPanelTitle": {
+    "description": "播放器章节面板：标题"
+  },
+  "playerNoChapters": "当前视频无章节信息",
+  "@playerNoChapters": {
+    "description": "播放器章节面板：空态"
+  },
+  "playerChapterCount": "{count, plural, other{共 {count} 章}}",
+  "@playerChapterCount": {
+    "description": "播放器章节面板：章节总数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerChapterNumber": "第 {number} 章",
+  "@playerChapterNumber": {
+    "description": "播放器缩略图章节胶囊：章节无标题时的回退名（{number} 从 1 起算）",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "playerChapterSkipAuto": "自动跳过",
+  "@playerChapterSkipAuto": {
+    "description": "播放器章节跳段面板：自动跳过开关"
+  },
+  "playerChapterSkipAutoDesc": "进入对应片段时自动跳到片段结束；关闭则仅弹出跳过胶囊",
+  "@playerChapterSkipAutoDesc": {
+    "description": "播放器章节跳段面板：自动跳过说明"
+  },
+  "playerChapterSkipCustomKeywords": "自定义关键词",
+  "@playerChapterSkipCustomKeywords": {
+    "description": "播放器章节跳段面板：自定义关键词分组"
+  },
+  "playerChapterSkipKeywordsHint": "按章节标题匹配，支持逗号 / 分号 / 换行分隔",
+  "@playerChapterSkipKeywordsHint": {
+    "description": "播放器章节跳段面板：关键词输入说明"
+  },
+  "playerIntroKeywords": "片头关键词",
+  "@playerIntroKeywords": {
+    "description": "播放器章节跳段面板：片头关键词"
+  },
+  "playerIntroKeywordsHint": "如 ap、op、开场",
+  "@playerIntroKeywordsHint": {
+    "description": "播放器章节跳段面板：片头关键词提示"
+  },
+  "playerOutroKeywords": "片尾关键词",
+  "@playerOutroKeywords": {
+    "description": "播放器章节跳段面板：片尾关键词"
+  },
+  "playerOutroKeywordsHint": "如 ed、ending、结尾",
+  "@playerOutroKeywordsHint": {
+    "description": "播放器章节跳段面板：片尾关键词提示"
+  },
+  "playerChapterSkipKeywordOwnerHint": "关键词归属由你填入的位置决定：填进「片头关键词」即判为片头、填进「片尾关键词」即判为片尾；同一标题命中多类时按固定优先级（前情提要 > 正片前段 > 制作人员 > 下集预告 > 片尾 > 片头）取一类。",
+  "@playerChapterSkipKeywordOwnerHint": {
+    "description": "播放器章节跳段面板：关键词归属说明（多行拼接）"
+  },
+  "playerDanmakuClose": "关闭弹幕",
+  "@playerDanmakuClose": {
+    "description": "播放器弹幕按钮：关闭弹幕"
+  },
+  "playerDanmakuOpen": "打开弹幕",
+  "@playerDanmakuOpen": {
+    "description": "播放器弹幕按钮：打开弹幕"
+  },
+  "playerEpisodeInvalidInput": "请输入集数（数字）",
+  "@playerEpisodeInvalidInput": {
+    "description": "播放器弹幕集数跳转：非法输入提示"
+  },
+  "playerEpisodeNotFound": "没有第 {number} 集",
+  "@playerEpisodeNotFound": {
+    "description": "播放器弹幕集数跳转：集数不存在",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "playerEpisodeTotalFromServer": "{total, plural, other{共 {total} 集 · 来自 {server}}}",
+  "@playerEpisodeTotalFromServer": {
+    "description": "播放器弹幕集数面板：某台服务器的集数",
+    "placeholders": {
+      "total": {
+        "type": "int"
+      },
+      "server": {
+        "type": "String"
+      }
+    }
+  },
+  "playerJumpToEpisode": "跳至第",
+  "@playerJumpToEpisode": {
+    "description": "播放器弹幕集数跳转：输入行前缀"
+  },
+  "playerEpisodeNumber": "集数",
+  "@playerEpisodeNumber": {
+    "description": "播放器弹幕集数跳转：输入框标签"
+  },
+  "playerDanmakuNetworkSearchHint": "输入番剧名称",
+  "@playerDanmakuNetworkSearchHint": {
+    "description": "播放器网络弹幕面板：搜索框提示"
+  },
+  "playerDanmakuStopSearch": "停止搜索",
+  "@playerDanmakuStopSearch": {
+    "description": "播放器网络弹幕面板：停止搜索"
+  },
+  "playerDanmakuResultCountUnit": "{count, plural, other{{count} 部}}",
+  "@playerDanmakuResultCountUnit": {
+    "description": "播放器网络弹幕面板：搜索结果数（部）",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerDanmakuSearchingWithCount": "正在搜索 · 已获得 {count, plural, other{{count} 部}}",
+  "@playerDanmakuSearchingWithCount": {
+    "description": "播放器网络弹幕面板：搜索中状态",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerDanmakuSearchStoppedCount": "已停止搜索 · 共 {count, plural, other{{count} 部}}",
+  "@playerDanmakuSearchStoppedCount": {
+    "description": "播放器网络弹幕面板：已停止搜索状态",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerDanmakuPartialServerFailed": "部分服务器搜索失败：{errors}",
+  "@playerDanmakuPartialServerFailed": {
+    "description": "播放器网络弹幕面板：部分服务器失败",
+    "placeholders": {
+      "errors": {
+        "type": "String"
+      }
+    }
+  },
+  "playerDanmakuSearching": "搜索中…",
+  "@playerDanmakuSearching": {
+    "description": "播放器网络弹幕面板：搜索中"
+  },
+  "playerDanmakuNetworkInputHint": "输入关键词搜索网络弹幕",
+  "@playerDanmakuNetworkInputHint": {
+    "description": "播放器网络弹幕面板：空态提示"
+  },
+  "playerEpisodeCountUnit": "{count, plural, other{{count} 集}}",
+  "@playerEpisodeCountUnit": {
+    "description": "播放器网络弹幕面板：番剧集数（集）",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerDanmakuLocal": "本地弹幕",
+  "@playerDanmakuLocal": {
+    "description": "播放器弹幕面板：本地弹幕入口"
+  },
+  "playerDanmakuNetworkComingSoon": "「网络弹幕」功能即将上线",
+  "@playerDanmakuNetworkComingSoon": {
+    "description": "播放器弹幕面板：网络弹幕未实现提示"
+  },
+  "playerDanmakuAutoMatch": "自动匹配",
+  "@playerDanmakuAutoMatch": {
+    "description": "播放器弹幕面板：自动匹配入口"
+  },
+  "playerDanmakuAutoMatchComingSoon": "「自动匹配」功能即将上线",
+  "@playerDanmakuAutoMatchComingSoon": {
+    "description": "播放器弹幕面板：自动匹配未实现提示"
+  },
+  "playerPickDanmakuFile": "选择弹幕文件",
+  "@playerPickDanmakuFile": {
+    "description": "播放器弹幕面板：选择文件"
+  },
+  "playerLocalDanmakuLoaded": "已加载本地弹幕：{name}",
+  "@playerLocalDanmakuLoaded": {
+    "description": "播放器弹幕面板：本地弹幕导入成功（带弹幕文件名，与 playerAutoLoadedDanmaku 同款「前缀：文件名」写法）",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playerDanmakuLoadFailedCheckFormat": "弹幕加载失败，请检查文件格式",
+  "@playerDanmakuLoadFailedCheckFormat": {
+    "description": "播放器弹幕面板：导入失败提示"
+  },
+  "playerDanmakuStyle": "弹幕样式",
+  "@playerDanmakuStyle": {
+    "description": "播放器弹幕设置：弹幕样式分组"
+  },
+  "playerDanmakuFontSize": "弹幕字号",
+  "@playerDanmakuFontSize": {
+    "description": "播放器弹幕设置：弹幕字号"
+  },
+  "playerDanmakuSpeed": "弹幕速度",
+  "@playerDanmakuSpeed": {
+    "description": "播放器弹幕设置：弹幕速度"
+  },
+  "playerDanmakuSpeedDesc": "数值越小弹幕越快",
+  "@playerDanmakuSpeedDesc": {
+    "description": "播放器弹幕设置：弹幕速度说明"
+  },
+  "playerStrokeWidth": "描边粗细",
+  "@playerStrokeWidth": {
+    "description": "播放器：描边粗细（弹幕设置 / 字幕样式）"
+  },
+  "playerOpacity": "不透明度",
+  "@playerOpacity": {
+    "description": "播放器弹幕设置：不透明度"
+  },
+  "playerDanmakuConfig": "弹幕配置",
+  "@playerDanmakuConfig": {
+    "description": "播放器弹幕设置：弹幕配置分组"
+  },
+  "playerDanmakuDisplayArea": "显示区域",
+  "@playerDanmakuDisplayArea": {
+    "description": "播放器弹幕设置：显示区域"
+  },
+  "playerDanmakuLineHeight": "弹幕行高",
+  "@playerDanmakuLineHeight": {
+    "description": "播放器弹幕设置：弹幕行高"
+  },
+  "playerDanmakuTop": "顶部弹幕",
+  "@playerDanmakuTop": {
+    "description": "播放器弹幕设置：顶部弹幕"
+  },
+  "playerDanmakuBottom": "底部弹幕",
+  "@playerDanmakuBottom": {
+    "description": "播放器弹幕设置：底部弹幕"
+  },
+  "playerDanmakuScroll": "滚动弹幕",
+  "@playerDanmakuScroll": {
+    "description": "播放器弹幕设置：滚动弹幕"
+  },
+  "playerDanmakuMassive": "海量弹幕",
+  "@playerDanmakuMassive": {
+    "description": "播放器弹幕设置：海量弹幕"
+  },
+  "playerDanmakuMassiveDesc": "轨道占满时叠加绘制，弹幕过多不再丢弃",
+  "@playerDanmakuMassiveDesc": {
+    "description": "播放器弹幕设置：海量弹幕说明"
+  },
+  "playerDanmakuDedupe": "弹幕去重",
+  "@playerDanmakuDedupe": {
+    "description": "播放器弹幕设置：弹幕去重"
+  },
+  "playerDanmakuDedupeDesc": "相同时间下相同弹幕合并为一条",
+  "@playerDanmakuDedupeDesc": {
+    "description": "播放器弹幕设置：弹幕去重说明"
+  },
+  "playerDanmakuMerge": "弹幕合并",
+  "@playerDanmakuMerge": {
+    "description": "播放器弹幕设置：弹幕合并"
+  },
+  "playerDanmakuMergeDesc": "不同时间内相同弹幕合并且计数",
+  "@playerDanmakuMergeDesc": {
+    "description": "播放器弹幕设置：弹幕合并说明"
+  },
+  "playerDanmakuOffset": "弹幕偏移",
+  "@playerDanmakuOffset": {
+    "description": "播放器弹幕设置：弹幕偏移分组"
+  },
+  "playerDanmakuTimelineOffset": "时间轴偏移",
+  "@playerDanmakuTimelineOffset": {
+    "description": "播放器弹幕设置：时间轴偏移"
+  },
+  "playerDanmakuAdvanceOneSecond": "提前 1 秒",
+  "@playerDanmakuAdvanceOneSecond": {
+    "description": "播放器弹幕设置：时间轴提前 1 秒"
+  },
+  "playerDanmakuDelayOneSecond": "延后 1 秒",
+  "@playerDanmakuDelayOneSecond": {
+    "description": "播放器弹幕设置：时间轴延后 1 秒"
+  },
+  "playerDanmakuResetOffset": "重置偏移",
+  "@playerDanmakuResetOffset": {
+    "description": "播放器弹幕设置：重置偏移"
+  },
+  "playerDanmakuFont": "弹幕字体",
+  "@playerDanmakuFont": {
+    "description": "播放器弹幕设置：弹幕字体分组"
+  },
+  "danmakuColorModeSourceDesc": "保留弹幕自带颜色（含会员渐变彩色）",
+  "@danmakuColorModeSourceDesc": {
+    "description": "播放器弹幕设置：跟随弹幕颜色说明"
+  },
+  "danmakuColorModeRandomDesc": "忽略文件颜色，按色轮逐条随机着色",
+  "@danmakuColorModeRandomDesc": {
+    "description": "播放器弹幕设置：随机渐变色说明"
+  },
+  "danmakuColorModeFixedDesc": "弹幕从下面已选颜色里随机取色",
+  "@danmakuColorModeFixedDesc": {
+    "description": "播放器弹幕设置：指定颜色说明"
+  },
+  "playerDanmakuPaletteMaxHint": "{max, plural, other{最多选 {max} 种颜色}}",
+  "@playerDanmakuPaletteMaxHint": {
+    "description": "播放器弹幕设置：调色板上限提示",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "playerDanmakuPaletteTitle": "弹幕颜色（可多选，随机使用）",
+  "@playerDanmakuPaletteTitle": {
+    "description": "播放器弹幕设置：调色板标题"
+  },
+  "playerDanmakuColorExists": "该颜色已在调色板中",
+  "@playerDanmakuColorExists": {
+    "description": "播放器弹幕设置：重复添加颜色提示"
+  },
+  "playerDanmakuPaletteFull": "{max, plural, other{已选满 {max} 种}}",
+  "@playerDanmakuPaletteFull": {
+    "description": "播放器弹幕设置：调色板已满提示",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "playerDanmakuAddToPalette": "添加到调色板",
+  "@playerDanmakuAddToPalette": {
+    "description": "播放器弹幕设置：添加到调色板按钮"
+  },
+  "playerDanmakuPaletteSelected": "已选 {selected}/{max, plural, other{{max} 种}}",
+  "@playerDanmakuPaletteSelected": {
+    "description": "播放器弹幕设置：已选颜色数",
+    "placeholders": {
+      "selected": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "playerDanmakuBlockWords": "屏蔽词",
+  "@playerDanmakuBlockWords": {
+    "description": "播放器弹幕设置：屏蔽词分组"
+  },
+  "playerDanmakuBlockWordsHint": "输入要屏蔽的关键词",
+  "@playerDanmakuBlockWordsHint": {
+    "description": "播放器弹幕设置：屏蔽词输入提示"
+  },
+  "playerFontsImported": "已导入 {count} 个字体文件，共 {total, plural, other{{total} 种字体}}",
+  "@playerFontsImported": {
+    "description": "播放器：字体目录导入成功提示",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "playerPickFontDir": "选择字体目录",
+  "@playerPickFontDir": {
+    "description": "播放器：选择字体目录"
+  },
+  "playerFontDirImportHint": "点击导入包含 .ttf/.otf 字体的目录",
+  "@playerFontDirImportHint": {
+    "description": "播放器：导入字体目录提示"
+  },
+  "playerFontsLoaded": "已加载 {count, plural, other{{count} 种字体}}",
+  "@playerFontsLoaded": {
+    "description": "播放器：字体目录已加载数量",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerPickFont": "选择字体",
+  "@playerPickFont": {
+    "description": "播放器弹幕设置：选择字体"
+  },
+  "playerRestartRequired": "需重启应用",
+  "@playerRestartRequired": {
+    "description": "播放器解码面板：重启提示标题"
+  },
+  "playerDecodeRestartBody": "解码配置已修改，重启应用后生效。\n\n是否立即重启？",
+  "@playerDecodeRestartBody": {
+    "description": "播放器解码面板：重启提示正文"
+  },
+  "playerRestartLater": "稍后重启",
+  "@playerRestartLater": {
+    "description": "播放器解码面板：稍后重启"
+  },
+  "playerRestartNow": "立即重启",
+  "@playerRestartNow": {
+    "description": "播放器解码面板：立即重启"
+  },
+  "playerDecodePreset": "解码预设",
+  "@playerDecodePreset": {
+    "description": "播放器解码面板：解码预设分组"
+  },
+  "playerDecodePresetDesc": "切换后需重启应用生效，可选立即重启",
+  "@playerDecodePresetDesc": {
+    "description": "播放器解码面板：解码预设分组说明"
+  },
+  "playerDecodeHwPlusDesc": "「硬解+」直通不可用时由内核依次回退硬解 / 软解",
+  "@playerDecodeHwPlusDesc": {
+    "description": "播放器解码面板：硬解+ 档说明"
+  },
+  "playerDiagnosticsContainer": "容器",
+  "@playerDiagnosticsContainer": {
+    "description": "播放器诊断面板：容器格式"
+  },
+  "playerDiagnosticsAudioCodec": "音频编码",
+  "@playerDiagnosticsAudioCodec": {
+    "description": "播放器诊断面板：音频编码"
+  },
+  "playerDiagnosticsVideoOutput": "视频输出",
+  "@playerDiagnosticsVideoOutput": {
+    "description": "播放器诊断面板：视频输出"
+  },
+  "playerDiagnosticsSyncMode": "同步方式",
+  "@playerDiagnosticsSyncMode": {
+    "description": "播放器诊断面板：同步方式"
+  },
+  "playerDiagnosticsPixelFormat": "像素格式",
+  "@playerDiagnosticsPixelFormat": {
+    "description": "播放器诊断面板：像素格式"
+  },
+  "playerDiagnosticsContainerFps": "容器帧率",
+  "@playerDiagnosticsContainerFps": {
+    "description": "播放器诊断面板：容器帧率"
+  },
+  "playerDiagnosticsActualFps": "实际帧率",
+  "@playerDiagnosticsActualFps": {
+    "description": "播放器诊断面板：实际帧率"
+  },
+  "playerDiagnosticsVideoBitrate": "视频码率",
+  "@playerDiagnosticsVideoBitrate": {
+    "description": "播放器诊断面板：视频码率"
+  },
+  "playerDiagnosticsAudioParams": "音频参数",
+  "@playerDiagnosticsAudioParams": {
+    "description": "播放器诊断面板：音频参数"
+  },
+  "playerDiagnosticsAudioBitrate": "音频码率",
+  "@playerDiagnosticsAudioBitrate": {
+    "description": "播放器诊断面板：音频码率"
+  },
+  "playerDiagnosticsAvSync": "音画同步",
+  "@playerDiagnosticsAvSync": {
+    "description": "播放器诊断面板：音画同步"
+  },
+  "playerDiagnosticsCacheGroup": "缓存与丢帧",
+  "@playerDiagnosticsCacheGroup": {
+    "description": "播放器诊断面板：缓存与丢帧分组"
+  },
+  "playerDiagnosticsBufferDuration": "缓冲时长",
+  "@playerDiagnosticsBufferDuration": {
+    "description": "播放器诊断面板：缓冲时长"
+  },
+  "playerDiagnosticsPlayableDuration": "可播时长",
+  "@playerDiagnosticsPlayableDuration": {
+    "description": "播放器诊断面板：可播时长"
+  },
+  "playerDiagnosticsCacheUsage": "缓存占用",
+  "@playerDiagnosticsCacheUsage": {
+    "description": "播放器诊断面板：缓存占用"
+  },
+  "playerDiagnosticsDownlinkRate": "下行速率",
+  "@playerDiagnosticsDownlinkRate": {
+    "description": "播放器诊断面板：下行速率"
+  },
+  "playerDiagnosticsDroppedFrames": "丢帧",
+  "@playerDiagnosticsDroppedFrames": {
+    "description": "播放器诊断面板：丢帧"
+  },
+  "playerDiagnosticsDecodeDropped": "解码丢帧",
+  "@playerDiagnosticsDecodeDropped": {
+    "description": "播放器诊断面板：解码丢帧"
+  },
+  "playerDiagnosticsDelayedFrames": "延迟帧",
+  "@playerDiagnosticsDelayedFrames": {
+    "description": "播放器诊断面板：延迟帧"
+  },
+  "playerDiagnosticsAutoRefreshHint": "每秒自动刷新 · 数据来自 mpv 运行时属性",
+  "@playerDiagnosticsAutoRefreshHint": {
+    "description": "播放器诊断面板：刷新说明"
+  },
+  "playerDiagnosticsReadFailed": "无法读取播放器属性（播放器可能未就绪或已卡住）",
+  "@playerDiagnosticsReadFailed": {
+    "description": "播放器诊断面板：全部读取失败警告"
+  },
+  "playerDiagnosticsFailedValue": "读取失败：{keys}（显示的是上一次成功值）",
+  "@playerDiagnosticsFailedValue": {
+    "description": "播放器诊断面板：部分属性读取失败警告",
+    "placeholders": {
+      "keys": {
+        "type": "String"
+      }
+    }
+  },
+  "playerDiagnosticsFailedValueMore": "读取失败：{keys} 等 {count} 项（显示的是上一次成功值）",
+  "@playerDiagnosticsFailedValueMore": {
+    "description": "播放器诊断面板：部分属性读取失败警告（其余折成计数）",
+    "placeholders": {
+      "keys": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerIntroRange": "片头范围",
+  "@playerIntroRange": {
+    "description": "播放器片头片尾面板：片头范围"
+  },
+  "playerOutroRange": "片尾范围",
+  "@playerOutroRange": {
+    "description": "播放器片头片尾面板：片尾范围"
+  },
+  "playerRangeHint": "拖动或输入设置时间，可按需调整上方范围",
+  "@playerRangeHint": {
+    "description": "播放器片头片尾面板：范围设置说明"
+  },
+  "playerSetToCurrentTime": "设为当前时间",
+  "@playerSetToCurrentTime": {
+    "description": "播放器片头片尾面板：设为当前时间"
+  },
+  "playerSetToRemainingTime": "设为当前剩余时间",
+  "@playerSetToRemainingTime": {
+    "description": "播放器片头片尾面板：设为当前剩余时间"
+  },
+  "playerEnableIntroOutroSkip": "启用跳过片头片尾",
+  "@playerEnableIntroOutroSkip": {
+    "description": "播放器片头片尾面板：总开关"
+  },
+  "playerIntroOutroSkipDesc": "通过手动设置秒数来跳过片头片尾",
+  "@playerIntroOutroSkipDesc": {
+    "description": "播放器片头片尾面板：总开关说明"
+  },
+  "playerNoOtherVideos": "当前文件夹没有其他视频",
+  "@playerNoOtherVideos": {
+    "description": "播放器播放列表面板：空态"
+  },
+  "playerNoQuality": "暂无可用画质",
+  "@playerNoQuality": {
+    "description": "播放器画质面板：空态"
+  },
+  "playerQualitySwitchHint": "切换画质会重开播放并保持进度",
+  "@playerQualitySwitchHint": {
+    "description": "播放器画质面板：切换说明"
+  },
+  "playerResumeIndicator": "已恢复上次播放进度",
+  "@playerResumeIndicator": {
+    "description": "播放器进度恢复胶囊：提示"
+  },
+  "playerRestartFromBeginning": "重头开始",
+  "@playerRestartFromBeginning": {
+    "description": "播放器进度恢复胶囊：重头开始"
+  },
+  "playerSpeedPlaying": "正在 {speed} 倍速播放",
+  "@playerSpeedPlaying": {
+    "description": "播放器倍速指示器：当前倍速",
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSpeedSwipeHint": "左右滑动可临时调节长按倍数",
+  "@playerSpeedSwipeHint": {
+    "description": "播放器倍速指示器：滑动调节说明"
+  },
+  "playerSpeedAlreadyInPresets": "该倍速已在预设中",
+  "@playerSpeedAlreadyInPresets": {
+    "description": "播放器倍速面板：重复添加提示"
+  },
+  "playerSpeedPresetLimit": "{max, plural, other{自定义预设已达上限（{max} 个）}}",
+  "@playerSpeedPresetLimit": {
+    "description": "播放器倍速面板：自定义预设上限提示",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "playerMyPresets": "我的预设",
+  "@playerMyPresets": {
+    "description": "播放器倍速面板：我的预设分组"
+  },
+  "playerPreciseSpeed": "精确调速",
+  "@playerPreciseSpeed": {
+    "description": "播放器倍速面板：精确调速"
+  },
+  "playerApplyTemporarily": "临时应用",
+  "@playerApplyTemporarily": {
+    "description": "播放器倍速面板：临时应用按钮"
+  },
+  "playerAddToPresets": "添加到预设",
+  "@playerAddToPresets": {
+    "description": "播放器倍速面板：添加到预设"
+  },
+  "playerSpeedReset": "归位",
+  "@playerSpeedReset": {
+    "description": "播放器倍速面板：倍速归位（回到 1x）"
+  },
+  "playerResetPresets": "重置预设",
+  "@playerResetPresets": {
+    "description": "播放器倍速面板：重置预设"
+  },
+  "playerMode": "模式",
+  "@playerMode": {
+    "description": "播放器超分面板：模式"
+  },
+  "playerSuperResolutionQuality": "超分质量",
+  "@playerSuperResolutionQuality": {
+    "description": "播放器超分面板：超分质量"
+  },
+  "playerRememberSuperResolution": "记忆超分模式",
+  "@playerRememberSuperResolution": {
+    "description": "播放器超分面板：记忆超分模式开关"
+  },
+  "playerRememberSuperResolutionDesc": "开启后自动应用上次的超分模式与质量",
+  "@playerRememberSuperResolutionDesc": {
+    "description": "播放器超分面板：记忆超分模式说明"
+  },
+  "playerSubtitleTracks": "字幕轨道",
+  "@playerSubtitleTracks": {
+    "description": "播放器字幕面板：字幕轨道分组"
+  },
+  "playerNoSubtitleHint": "当前视频没有字幕，可在下方导入外挂字幕",
+  "@playerNoSubtitleHint": {
+    "description": "播放器字幕面板：无字幕空态"
+  },
+  "playerSubtitleOff": "关闭字幕",
+  "@playerSubtitleOff": {
+    "description": "播放器字幕面板：关闭字幕"
+  },
+  "playerExternalSubtitle": "外挂字幕",
+  "@playerExternalSubtitle": {
+    "description": "播放器字幕面板：外挂字幕分组"
+  },
+  "playerImportExternalSubtitle": "导入外部字幕",
+  "@playerImportExternalSubtitle": {
+    "description": "播放器字幕面板：导入外部字幕入口"
+  },
+  "playerSubtitleSettings": "字幕设置",
+  "@playerSubtitleSettings": {
+    "description": "播放器字幕面板：字幕设置分组"
+  },
+  "playerSubtitleDelay": "字幕延迟",
+  "@playerSubtitleDelay": {
+    "description": "播放器字幕面板：字幕延迟入口 / 页标题"
+  },
+  "playerSubtitleStyle": "字幕样式",
+  "@playerSubtitleStyle": {
+    "description": "播放器字幕面板：字幕样式入口 / 页标题"
+  },
+  "playerSubtitleMisc": "字幕杂项",
+  "@playerSubtitleMisc": {
+    "description": "播放器字幕面板：字幕杂项入口 / 页标题"
+  },
+  "playerSubtitleFont": "字幕字体",
+  "@playerSubtitleFont": {
+    "description": "播放器字幕面板：字幕字体入口 / 页标题"
+  },
+  "playerPickSubtitleFile": "选择字幕文件",
+  "@playerPickSubtitleFile": {
+    "description": "播放器字幕面板：选择字幕文件"
+  },
+  "playerExternalSubtitleImported": "已导入外挂字幕",
+  "@playerExternalSubtitleImported": {
+    "description": "播放器字幕面板：导入成功提示"
+  },
+  "playerRemoveSubtitle": "移除已导入的字幕",
+  "@playerRemoveSubtitle": {
+    "description": "播放器字幕面板：移除外部字幕按钮"
+  },
+  "playerQuickAdjust": "快捷调整",
+  "@playerQuickAdjust": {
+    "description": "播放器字幕延迟面板：快捷调整分组"
+  },
+  "playerResetToZeroSeconds": "重置为 0 秒",
+  "@playerResetToZeroSeconds": {
+    "description": "播放器字幕延迟面板：重置为 0 秒"
+  },
+  "playerTextColor": "文字颜色",
+  "@playerTextColor": {
+    "description": "播放器字幕样式面板：文字颜色"
+  },
+  "playerStrokeColor": "描边颜色",
+  "@playerStrokeColor": {
+    "description": "播放器字幕样式面板：描边颜色"
+  },
+  "playerBackgroundColor": "背景颜色",
+  "@playerBackgroundColor": {
+    "description": "播放器字幕样式面板：背景颜色"
+  },
+  "playerBackgroundBoxSize": "背景框大小",
+  "@playerBackgroundBoxSize": {
+    "description": "播放器字幕样式面板：背景框大小"
+  },
+  "playerTextEffects": "文字效果",
+  "@playerTextEffects": {
+    "description": "播放器字幕样式面板：文字效果分组"
+  },
+  "playerBold": "粗体",
+  "@playerBold": {
+    "description": "播放器字幕样式面板：粗体"
+  },
+  "playerItalic": "斜体",
+  "@playerItalic": {
+    "description": "播放器字幕样式面板：斜体"
+  },
+  "playerLetterSpacing": "字间距",
+  "@playerLetterSpacing": {
+    "description": "播放器字幕样式面板：字间距"
+  },
+  "playerPreferChineseSubtitle": "优先选中文字幕轨",
+  "@playerPreferChineseSubtitle": {
+    "description": "播放器字幕杂项面板：优先选中文字幕轨"
+  },
+  "playerPreferChineseSubtitleDesc": "默认启用中文轨（含「特效/双语」优先）；手动选过的不改",
+  "@playerPreferChineseSubtitleDesc": {
+    "description": "播放器字幕杂项面板：优先选中文字幕轨说明"
+  },
+  "playerSubtitleTrackAutoDesc": "交给内核默认挑选（通常是文件里的第一条）",
+  "@playerSubtitleTrackAutoDesc": {
+    "description": "播放器字幕杂项面板：不优先中文时的说明"
+  },
+  "playerForceOverrideStyle": "强制覆盖内嵌样式",
+  "@playerForceOverrideStyle": {
+    "description": "播放器字幕杂项面板：强制覆盖内嵌样式"
+  },
+  "playerForceOverrideStyleDesc": "使用上方设置渲染字幕样式",
+  "@playerForceOverrideStyleDesc": {
+    "description": "播放器字幕杂项面板：覆盖开启说明"
+  },
+  "playerStyleFromSubtitleDesc": "字幕使用自带的样式与字体",
+  "@playerStyleFromSubtitleDesc": {
+    "description": "播放器字幕杂项面板：覆盖关闭说明"
+  },
+  "playerResetAllStyles": "重置所有样式",
+  "@playerResetAllStyles": {
+    "description": "播放器字幕样式面板：重置所有样式"
+  },
+  "playerAssLimitTitle": "ASS 内嵌字幕的限制",
+  "@playerAssLimitTitle": {
+    "description": "播放器字幕样式面板：ASS 限制说明标题"
+  },
+  "playerAssLimitBoldItalicBlur": "粗体 / 斜体 / 模糊",
+  "@playerAssLimitBoldItalicBlur": {
+    "description": "播放器字幕样式面板：ASS 限制项（不生效）"
+  },
+  "playerAssLimitNoEffect": "开启覆盖也不生效（mpv 渲染限制）",
+  "@playerAssLimitNoEffect": {
+    "description": "播放器字幕样式面板：ASS 限制项说明"
+  },
+  "playerAssLimitStyleItems": "颜色 / 描边 / 背景 / 大小 / 位置 / 字间距",
+  "@playerAssLimitStyleItems": {
+    "description": "播放器字幕样式面板：ASS 可覆盖项"
+  },
+  "playerAssLimitTakesEffect": "开启覆盖后生效",
+  "@playerAssLimitTakesEffect": {
+    "description": "播放器字幕样式面板：ASS 可覆盖项说明"
+  },
+  "playerAssLimitTextFormats": "SRT / VTT 等文本字幕",
+  "@playerAssLimitTextFormats": {
+    "description": "播放器字幕样式面板：文本字幕"
+  },
+  "playerAssLimitAllEffective": "所有样式都直接生效",
+  "@playerAssLimitAllEffective": {
+    "description": "播放器字幕样式面板：文本字幕说明"
+  },
+  "playerSubtitleScalePosition": "字幕缩放与位置",
+  "@playerSubtitleScalePosition": {
+    "description": "播放器字幕样式面板：缩放与位置分组"
+  },
+  "playerScaleRatio": "缩放比例",
+  "@playerScaleRatio": {
+    "description": "播放器字幕样式面板：缩放比例"
+  },
+  "playerVerticalPosition": "垂直位置",
+  "@playerVerticalPosition": {
+    "description": "播放器字幕样式面板：垂直位置"
+  },
+  "playerVerticalPositionValue": "{value}（100=窗口底部）",
+  "@playerVerticalPositionValue": {
+    "description": "播放器字幕样式面板：垂直位置读数",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "playerResetScalePosition": "重置缩放与位置",
+  "@playerResetScalePosition": {
+    "description": "播放器字幕样式面板：重置缩放与位置"
+  },
+  "playerFontsRefreshed": "已刷新，共 {count, plural, other{{count} 种字体}}",
+  "@playerFontsRefreshed": {
+    "description": "播放器字幕字体面板：刷新字体目录提示",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerFontDirCleared": "已清除字体目录",
+  "@playerFontDirCleared": {
+    "description": "播放器字幕字体面板：清除字体目录提示"
+  },
+  "playerFontChangeHint": "字体更改需退出播放器并重新进入后生效",
+  "@playerFontChangeHint": {
+    "description": "播放器字幕字体面板：字体更改说明"
+  },
+  "playerFontDir": "字体目录",
+  "@playerFontDir": {
+    "description": "播放器字幕字体面板：字体目录"
+  },
+  "playerFontDirPickHint": "点击选择包含 .ttf/.otf 字体的目录",
+  "@playerFontDirPickHint": {
+    "description": "播放器字幕字体面板：选择字体目录提示"
+  },
+  "playerFontDirClear": "清除目录",
+  "@playerFontDirClear": {
+    "description": "播放器字幕字体面板：清除目录"
+  },
+  "playerCurrentFont": "当前字体",
+  "@playerCurrentFont": {
+    "description": "播放器字幕字体面板：当前字体"
+  },
+  "playerDefaultFont": "默认字体",
+  "@playerDefaultFont": {
+    "description": "播放器字幕字体面板：默认字体"
+  },
+  "playerPickFontDirFirst": "请先选择字体目录",
+  "@playerPickFontDirFirst": {
+    "description": "播放器字幕字体面板：未选目录提示"
+  },
+  "playerFollowSystemFonts": "跟随系统字库",
+  "@playerFollowSystemFonts": {
+    "description": "播放器字幕字体面板：跟随系统字库"
+  },
+  "playerFontChangeHintFull": "字体更改需退出播放器并重新进入后生效；内嵌 ASS 字幕需开启「强制覆盖内嵌样式」后字体设置才会生效。",
+  "@playerFontChangeHintFull": {
+    "description": "播放器字幕字体面板：字体更改完整说明"
+  },
+  "commonCopy": "复制",
+  "@commonCopy": {
+    "description": "通用按钮：复制（文件操作 / 媒体信息）"
+  },
+  "commonPaste": "粘贴",
+  "@commonPaste": {
+    "description": "通用按钮：粘贴（打开链接弹窗）"
+  },
+  "commonUnknown": "未知",
+  "@commonUnknown": {
+    "description": "通用：未知（值缺失时的兜底）"
+  },
+  "commonSaved": "已保存",
+  "@commonSaved": {
+    "description": "通用：已保存（副标题状态）"
+  },
+  "commonExpand": "展开",
+  "@commonExpand": {
+    "description": "通用按钮：展开"
+  },
+  "commonCollapse": "收起",
+  "@commonCollapse": {
+    "description": "通用按钮：收起"
+  },
+  "commonSelectAll": "全选",
+  "@commonSelectAll": {
+    "description": "通用：全选（勾选栏）"
+  },
+  "commonDeselectAll": "取消全选",
+  "@commonDeselectAll": {
+    "description": "通用：取消全选"
+  },
+  "commonTest": "测试",
+  "@commonTest": {
+    "description": "通用按钮：测试"
+  },
+  "commonTestConnection": "测试连接",
+  "@commonTestConnection": {
+    "description": "通用按钮：测试连接（网络账户 / 字幕来源）"
+  },
+  "commonTesting": "测试中…",
+  "@commonTesting": {
+    "description": "通用：测试中"
+  },
+  "commonSaving": "保存中…",
+  "@commonSaving": {
+    "description": "通用：保存中"
+  },
+  "commonMove": "移动",
+  "@commonMove": {
+    "description": "通用动作：移动（文件操作菜单）"
+  },
+  "commonRename": "重命名",
+  "@commonRename": {
+    "description": "通用动作：重命名"
+  },
+  "commonResume": "继续",
+  "@commonResume": {
+    "description": "通用动作：继续（下载任务）"
+  },
+  "commonOrderAsc": "正序",
+  "@commonOrderAsc": {
+    "description": "通用：正序（选集顺序）"
+  },
+  "commonOrderDesc": "倒序",
+  "@commonOrderDesc": {
+    "description": "通用：倒序（选集顺序）"
+  },
+  "commonSaveFailed": "保存失败",
+  "@commonSaveFailed": {
+    "description": "通用提示：保存失败"
+  },
+  "commonSaveFailedWith": "保存失败：{error}",
+  "@commonSaveFailedWith": {
+    "description": "通用提示：保存失败（带原因）",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "commonConnectOk": "连接成功",
+  "@commonConnectOk": {
+    "description": "通用提示：连接成功"
+  },
+  "commonConnectFailed": "连接失败：{error}",
+  "@commonConnectFailed": {
+    "description": "通用提示：连接失败",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "commonCancelSearch": "取消搜索",
+  "@commonCancelSearch": {
+    "description": "通用：取消搜索（首页 / 目录页 / 网络浏览）"
+  },
+  "commonClearSearch": "清除搜索",
+  "@commonClearSearch": {
+    "description": "通用：清除搜索"
+  },
+  "biliIndexTitle": "索引",
+  "@biliIndexTitle": {
+    "description": "B 站页：索引 tab / 入口"
+  },
+  "biliRecommend": "推荐",
+  "@biliRecommend": {
+    "description": "B 站索引页：推荐 tab"
+  },
+  "biliBangumi": "哔哩番剧",
+  "@biliBangumi": {
+    "description": "B 站入口名 / 首页入口"
+  },
+  "biliParseLink": "解析链接",
+  "@biliParseLink": {
+    "description": "B 站索引页：解析链接入口"
+  },
+  "biliParse": "解析",
+  "@biliParse": {
+    "description": "B 站下载页：解析按钮"
+  },
+  "biliNothingHere": "暂无内容",
+  "@biliNothingHere": {
+    "description": "B 站番剧索引页：空态"
+  },
+  "biliTimeline": "追番时间表",
+  "@biliTimeline": {
+    "description": "B 站索引页：追番时间表"
+  },
+  "biliToday": "今天",
+  "@biliToday": {
+    "description": "B 站追番时间表：今天 tab"
+  },
+  "biliWeekdayMon": "周一",
+  "@biliWeekdayMon": {
+    "description": "B 站追番时间表：周一"
+  },
+  "biliWeekdayTue": "周二",
+  "@biliWeekdayTue": {
+    "description": "B 站追番时间表：周二"
+  },
+  "biliWeekdayWed": "周三",
+  "@biliWeekdayWed": {
+    "description": "B 站追番时间表：周三"
+  },
+  "biliWeekdayThu": "周四",
+  "@biliWeekdayThu": {
+    "description": "B 站追番时间表：周四"
+  },
+  "biliWeekdayFri": "周五",
+  "@biliWeekdayFri": {
+    "description": "B 站追番时间表：周五"
+  },
+  "biliWeekdaySat": "周六",
+  "@biliWeekdaySat": {
+    "description": "B 站追番时间表：周六"
+  },
+  "biliWeekdaySun": "周日",
+  "@biliWeekdaySun": {
+    "description": "B 站追番时间表：周日"
+  },
+  "biliFollowed": "已追番",
+  "@biliFollowed": {
+    "description": "B 站剧集卡片角标：已追番"
+  },
+  "biliLinkUnrecognized": "无法识别该链接（支持 ss/ep/BV/av 号与 b23.tv 短链）",
+  "@biliLinkUnrecognized": {
+    "description": "B 站：链接无法识别"
+  },
+  "biliParseBangumiLink": "解析番剧链接",
+  "@biliParseBangumiLink": {
+    "description": "B 站：解析番剧链接弹窗标题"
+  },
+  "biliPasteAnimeLinkHint": "粘贴番剧/视频链接或 b23.tv 短链",
+  "@biliPasteAnimeLinkHint": {
+    "description": "B 站：解析链接输入提示"
+  },
+  "biliSearchAnime": "搜索番剧",
+  "@biliSearchAnime": {
+    "description": "B 站搜索页标题"
+  },
+  "biliSearchAnimeHint": "输入关键词搜索番剧",
+  "@biliSearchAnimeHint": {
+    "description": "B 站搜索页输入提示"
+  },
+  "biliNoAnimeFound": "没有找到相关番剧",
+  "@biliNoAnimeFound": {
+    "description": "B 站搜索页空态"
+  },
+  "biliSeasonDetail": "番剧详情",
+  "@biliSeasonDetail": {
+    "description": "B 站番剧详情页标题（兜底）"
+  },
+  "biliNoEpisodeSelection": "暂无选集",
+  "@biliNoEpisodeSelection": {
+    "description": "B 站番剧详情页：无选集"
+  },
+  "biliViewAll": "查看全部",
+  "@biliViewAll": {
+    "description": "B 站番剧详情页：查看全部"
+  },
+  "biliSelectEpisode": "选集",
+  "@biliSelectEpisode": {
+    "description": "B 站：选集"
+  },
+  "biliRating": "评分 {score}",
+  "@biliRating": {
+    "description": "B 站番剧详情页：评分",
+    "placeholders": {
+      "score": {
+        "type": "String"
+      }
+    }
+  },
+  "biliCountHundredMillion": "{value}亿",
+  "@biliCountHundredMillion": {
+    "description": "B 站播放量：亿级（value 已按 1e8 折算）",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "biliCountTenThousand": "{value}万",
+  "@biliCountTenThousand": {
+    "description": "B 站播放量：万级（value 已按 1e4 折算）",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "biliIntro": "简介",
+  "@biliIntro": {
+    "description": "B 站番剧详情页：简介"
+  },
+  "biliMultiSeason": "多季",
+  "@biliMultiSeason": {
+    "description": "B 站番剧详情页：多季"
+  },
+  "biliEpisodeNo": "第 {number} 话",
+  "@biliEpisodeNo": {
+    "description": "B 站剧集卡片：第 N 话",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "biliVideoFallbackTitle": "B 站视频",
+  "@biliVideoFallbackTitle": {
+    "description": "B 站 UGC：拿不到标题时的兜底标题"
+  },
+  "biliPlayFailed": "播放失败：{error}",
+  "@biliPlayFailed": {
+    "description": "B 站：播放失败提示",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "biliLevel": "等级",
+  "@biliLevel": {
+    "description": "B 站账号页：等级"
+  },
+  "biliAssets": "资产",
+  "@biliAssets": {
+    "description": "B 站账号页：资产分组"
+  },
+  "biliCoins": "硬币",
+  "@biliCoins": {
+    "description": "B 站账号页：硬币"
+  },
+  "biliCoinsDesc": "用于投币等操作",
+  "@biliCoinsDesc": {
+    "description": "B 站账号页：硬币说明"
+  },
+  "biliSignOut": "退出登录",
+  "@biliSignOut": {
+    "description": "B 站账号页：退出登录"
+  },
+  "biliMaxLevel": "已满级",
+  "@biliMaxLevel": {
+    "description": "B 站账号页：已满级"
+  },
+  "biliExpValue": "经验值 {current} / {next}",
+  "@biliExpValue": {
+    "description": "B 站账号页：经验值",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "next": {
+        "type": "int"
+      }
+    }
+  },
+  "biliSignOutConfirm": "确定退出哔哩哔哩账号吗？",
+  "@biliSignOutConfirm": {
+    "description": "B 站账号页：退出确认"
+  },
+  "biliSignOutAction": "退出",
+  "@biliSignOutAction": {
+    "description": "B 站账号页：退出确认按钮"
+  },
+  "biliLoginQrLoading": "正在获取二维码...",
+  "@biliLoginQrLoading": {
+    "description": "B 站登录：二维码获取中"
+  },
+  "biliLoginScanHint": "请使用哔哩哔哩客户端扫码",
+  "@biliLoginScanHint": {
+    "description": "B 站登录：扫码提示"
+  },
+  "biliLoginQrFailed": "获取二维码失败，请重试",
+  "@biliLoginQrFailed": {
+    "description": "B 站登录：二维码获取失败"
+  },
+  "biliLoginQrRefreshing": "二维码已失效，正在刷新...",
+  "@biliLoginQrRefreshing": {
+    "description": "B 站登录：二维码失效刷新中"
+  },
+  "biliLoginScannedConfirm": "已扫码，请在手机上确认",
+  "@biliLoginScannedConfirm": {
+    "description": "B 站登录：已扫码待确认"
+  },
+  "biliLoginCredentialFailed": "登录凭证获取失败，请重试",
+  "@biliLoginCredentialFailed": {
+    "description": "B 站登录：凭证获取失败"
+  },
+  "biliLoginSuccess": "登录成功：{nickname}",
+  "@biliLoginSuccess": {
+    "description": "B 站登录：成功提示",
+    "placeholders": {
+      "nickname": {
+        "type": "String"
+      }
+    }
+  },
+  "biliLoginFailedRetry": "登录失败，请重试",
+  "@biliLoginFailedRetry": {
+    "description": "B 站登录：失败提示"
+  },
+  "biliQrSavedToGallery": "二维码已保存到相册",
+  "@biliQrSavedToGallery": {
+    "description": "B 站登录：二维码保存成功"
+  },
+  "biliClientNotFound": "未检测到哔哩哔哩客户端",
+  "@biliClientNotFound": {
+    "description": "B 站登录：未装客户端"
+  },
+  "biliPasteCookieFirst": "请先粘贴 Cookie",
+  "@biliPasteCookieFirst": {
+    "description": "B 站登录：Cookie 为空提示"
+  },
+  "biliCookieInvalid": "登录失败：Cookie 无效或已过期",
+  "@biliCookieInvalid": {
+    "description": "B 站登录：Cookie 无效"
+  },
+  "biliCookieMissingSessdata": "Cookie 缺少 SESSDATA，无法登录",
+  "@biliCookieMissingSessdata": {
+    "description": "B 站登录：Cookie 里根本没有 SESSDATA（与「无效或已过期」区分，见 error_texts.dart）"
+  },
+  "biliLoginCredentialParseFailed": "登录凭证解析失败（缺少 SESSDATA）",
+  "@biliLoginCredentialParseFailed": {
+    "description": "B 站登录：扫码返回的登录凭证解析失败（缺少 SESSDATA）"
+  },
+  "biliLoginTitle": "哔哩哔哩登录",
+  "@biliLoginTitle": {
+    "description": "B 站登录页标题"
+  },
+  "biliLoginQrTab": "扫码登录",
+  "@biliLoginQrTab": {
+    "description": "B 站登录：扫码 tab"
+  },
+  "biliLoginCookieTab": "Cookie 登录",
+  "@biliLoginCookieTab": {
+    "description": "B 站登录：Cookie tab"
+  },
+  "biliLoginRemaining": "剩余有效时间：{seconds} 秒",
+  "@biliLoginRemaining": {
+    "description": "B 站登录：二维码剩余时间",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "biliQrRefresh": "刷新二维码",
+  "@biliQrRefresh": {
+    "description": "B 站登录：刷新二维码按钮"
+  },
+  "biliSaveToGallery": "保存到相册",
+  "@biliSaveToGallery": {
+    "description": "B 站登录：保存二维码按钮"
+  },
+  "biliOpenApp": "打开哔哩哔哩",
+  "@biliOpenApp": {
+    "description": "B 站登录：唤起 App 按钮"
+  },
+  "biliOpenAppDesc": "「打开哔哩哔哩」会在已安装的哔哩哔哩客户端中自动唤起扫码确认。",
+  "@biliOpenAppDesc": {
+    "description": "B 站登录：唤起 App 说明"
+  },
+  "biliCookieLoginDesc": "从浏览器复制 Cookie 粘贴登录（扫码异常时的备用方式）",
+  "@biliCookieLoginDesc": {
+    "description": "B 站登录：Cookie 登录说明"
+  },
+  "biliLoggingIn": "登录中...",
+  "@biliLoggingIn": {
+    "description": "B 站登录：登录中"
+  },
+  "biliCookiePrivacy": "Cookie 仅本地加密保存，不会上传或记录日志。",
+  "@biliCookiePrivacy": {
+    "description": "B 站登录：Cookie 隐私说明"
+  },
+  "downloadSetDirFirst": "请先设置下载目录",
+  "@downloadSetDirFirst": {
+    "description": "下载：未设置目录（B 站视频/弹幕/字幕三处共用）"
+  },
+  "downloadDirGone": "下载目录不存在，请重新选择",
+  "@downloadDirGone": {
+    "description": "下载：目录失效"
+  },
+  "biliDanmakuTasksAdded": "{count, plural, other{已添加 {count} 个弹幕下载任务}}",
+  "@biliDanmakuTasksAdded": {
+    "description": "B 站弹幕下载：加入任务提示",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "biliVideoTasksAdded": "{count, plural, other{已添加 {count} 个视频下载任务}}",
+  "@biliVideoTasksAdded": {
+    "description": "B 站视频下载：加入任务提示",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "biliPasteVideoLinkHint": "粘贴 B 站视频/番剧链接（BV / av / ss / ep / b23.tv）",
+  "@biliPasteVideoLinkHint": {
+    "description": "B 站下载：链接输入提示"
+  },
+  "biliPasteThenParse": "粘贴链接后点「解析」",
+  "@biliPasteThenParse": {
+    "description": "B 站下载：空态提示"
+  },
+  "downloadNoDir": "未设置下载目录",
+  "@downloadNoDir": {
+    "description": "下载：目录未设置"
+  },
+  "downloadSetDir": "设置目录",
+  "@downloadSetDir": {
+    "description": "下载：设置目录按钮"
+  },
+  "biliEpisodesSelected": "{count, plural, other{已选 {count} 集}}",
+  "@biliEpisodesSelected": {
+    "description": "B 站弹幕下载：已选集数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "biliEpisodesSelectedOfTotal": "已选 {selected} / 共 {total, plural, other{{total} 集}}",
+  "@biliEpisodesSelectedOfTotal": {
+    "description": "B 站视频下载：已选 / 总数",
+    "placeholders": {
+      "selected": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "biliDownloadDanmaku": "下载弹幕（{count}）",
+  "@biliDownloadDanmaku": {
+    "description": "B 站弹幕下载：下载按钮",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "biliDownloadVideo": "下载视频（{count}）",
+  "@biliDownloadVideo": {
+    "description": "B 站视频下载：下载按钮",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "biliSyncDanmaku": "同步下载弹幕",
+  "@biliSyncDanmaku": {
+    "description": "B 站视频下载：同步弹幕开关"
+  },
+  "subtitleSourceSection": "字幕来源",
+  "@subtitleSourceSection": {
+    "description": "字幕下载设置：字幕来源分组"
+  },
+  "subtitleWyzieDesc": "经 sub.wyzie.io 搜索，需要 API 密钥",
+  "@subtitleWyzieDesc": {
+    "description": "字幕来源：Wyzie 说明"
+  },
+  "subtitleCustomDesc": "自填接口地址，片名会发送到该地址",
+  "@subtitleCustomDesc": {
+    "description": "字幕来源：自定义说明"
+  },
+  "subtitleCustomParams": "自定义参数",
+  "@subtitleCustomParams": {
+    "description": "字幕来源：自定义参数分组"
+  },
+  "subtitleWyzieParams": "Wyzie 参数",
+  "@subtitleWyzieParams": {
+    "description": "字幕来源：Wyzie 参数分组"
+  },
+  "subtitleWyzieApiKey": "WYZIE API 密钥",
+  "@subtitleWyzieApiKey": {
+    "description": "字幕来源：密钥项"
+  },
+  "subtitleWyzieSources": "Wyzie 来源",
+  "@subtitleWyzieSources": {
+    "description": "字幕来源：Wyzie 来源列表"
+  },
+  "subtitleLanguage": "字幕语言",
+  "@subtitleLanguage": {
+    "description": "字幕下载：字幕语言"
+  },
+  "subtitlePreferredFormat": "首选格式",
+  "@subtitlePreferredFormat": {
+    "description": "字幕下载：首选格式"
+  },
+  "subtitlePreferredEncoding": "首选编码",
+  "@subtitlePreferredEncoding": {
+    "description": "字幕下载：首选编码"
+  },
+  "subtitleApiEndpoint": "接口地址",
+  "@subtitleApiEndpoint": {
+    "description": "字幕来源：自定义接口地址"
+  },
+  "subtitleCustomTestHint": "用一个片名试搜一次，看能否解析出字幕",
+  "@subtitleCustomTestHint": {
+    "description": "字幕来源：测试说明"
+  },
+  "subtitleTesting": "正在测试…",
+  "@subtitleTesting": {
+    "description": "字幕来源：测试中"
+  },
+  "subtitleTestNoResult": "连接成功，但没解析出字幕",
+  "@subtitleTestNoResult": {
+    "description": "字幕来源：测试成功但无结果"
+  },
+  "subtitleTestOk": "{count, plural, other{连接成功，解析出 {count} 条字幕}}",
+  "@subtitleTestOk": {
+    "description": "字幕来源：测试成功",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "subtitleTestFailed": "测试失败：{error}",
+  "@subtitleTestFailed": {
+    "description": "字幕来源：测试失败",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "subtitleAllSources": "全部来源",
+  "@subtitleAllSources": {
+    "description": "字幕来源筛选：全部来源"
+  },
+  "subtitleAllLanguages": "全部语言",
+  "@subtitleAllLanguages": {
+    "description": "字幕语言筛选：全部语言"
+  },
+  "subtitleAllFormats": "全部格式",
+  "@subtitleAllFormats": {
+    "description": "字幕格式筛选：全部格式"
+  },
+  "subtitleAllEncodings": "全部编码",
+  "@subtitleAllEncodings": {
+    "description": "字幕编码筛选：全部编码"
+  },
+  "subtitlePasteKeyHint": "粘贴密钥（wyzie-…）",
+  "@subtitlePasteKeyHint": {
+    "description": "字幕来源：密钥输入提示"
+  },
+  "subtitleHowToGetKey": "如何获取密钥",
+  "@subtitleHowToGetKey": {
+    "description": "字幕来源：获取密钥帮助"
+  },
+  "subtitleKeyType": "密钥类型：{type}",
+  "@subtitleKeyType": {
+    "description": "字幕来源：密钥类型",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "subtitleKeyInvalid": "密钥无效",
+  "@subtitleKeyInvalid": {
+    "description": "字幕来源：密钥无效"
+  },
+  "subtitleFreeSource": "免费来源",
+  "@subtitleFreeSource": {
+    "description": "字幕来源筛选：免费来源分组"
+  },
+  "subtitlePaidSource": "付费来源",
+  "@subtitlePaidSource": {
+    "description": "字幕来源筛选：付费来源分组"
+  },
+  "subtitleCustomSourceHelp": "地址里可用 {placeholder} 作为片名占位（不写占位符则把片名拼到末尾）。\n搜索时片名会发送到你填写的地址，请自行确认该服务的条款与可用性；本应用不内置、也不代理任何第三方字幕服务。",
+  "@subtitleCustomSourceHelp": {
+    "description": "字幕来源：自定义地址说明。{placeholder} 是语法记号，调用点传字面量 {name}（ARB 里的裸花括号会被 gen_l10n 当成占位符，ICU 单引号转义不生效 —— 见 06 遗留）",
+    "placeholders": {
+      "placeholder": {
+        "type": "String"
+      }
+    }
+  },
+  "subtitlePlaceholderHelp": "用 {placeholder} 占位片名；没有占位符时片名会拼到末尾。",
+  "@subtitlePlaceholderHelp": {
+    "description": "字幕来源：自定义地址输入说明。{placeholder} 是语法记号，调用点传字面量 {name}",
+    "placeholders": {
+      "placeholder": {
+        "type": "String"
+      }
+    }
+  },
+  "subtitleHowToCustomEndpoint": "如何自定义接口地址",
+  "@subtitleHowToCustomEndpoint": {
+    "description": "字幕来源：自定义接口帮助"
+  },
+  "subtitleTestNameHint": "填一个片名（如 你的名字）",
+  "@subtitleTestNameHint": {
+    "description": "字幕来源：测试弹窗输入提示"
+  },
+  "subtitleTestNameDesc": "用这个片名请求一次，看能否解析出字幕。",
+  "@subtitleTestNameDesc": {
+    "description": "字幕来源：测试弹窗说明"
+  },
+  "subtitleSetWyzieKeyFirst": "请先设置 WYZIE API 密钥",
+  "@subtitleSetWyzieKeyFirst": {
+    "description": "字幕下载：未设密钥"
+  },
+  "subtitleSetCustomUrlFirst": "请先设置自定义字幕地址",
+  "@subtitleSetCustomUrlFirst": {
+    "description": "字幕下载：未设自定义地址"
+  },
+  "subtitleDownloadedCount": "{count, plural, other{已下载 {count} 个字幕}}",
+  "@subtitleDownloadedCount": {
+    "description": "字幕下载：全部成功提示",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "subtitleDownloadResult": "下载完成：成功 {ok}，失败 {fail}",
+  "@subtitleDownloadResult": {
+    "description": "字幕下载：部分失败提示",
+    "placeholders": {
+      "ok": {
+        "type": "int"
+      },
+      "fail": {
+        "type": "int"
+      }
+    }
+  },
+  "subtitleSearchHint": "输入影视名称或 IMDB / TMDB ID",
+  "@subtitleSearchHint": {
+    "description": "字幕下载：搜索框提示"
+  },
+  "subtitleBackToSettings": "返回设置",
+  "@subtitleBackToSettings": {
+    "description": "字幕下载：返回设置"
+  },
+  "subtitleNoResultHint": "未找到字幕，请换个关键词或调整字幕设置",
+  "@subtitleNoResultHint": {
+    "description": "字幕下载：无结果提示"
+  },
+  "subtitleDownloadSettings": "字幕下载设置",
+  "@subtitleDownloadSettings": {
+    "description": "字幕下载：设置面板标题"
+  },
+  "subtitleCurrentSource": "当前来源",
+  "@subtitleCurrentSource": {
+    "description": "字幕下载：设置项副标题的前缀（配 commonLabelWithColon 用，后面跟来源名）"
+  },
+  "subtitleSearchHintShort": "输入关键词后点「确定」搜索字幕",
+  "@subtitleSearchHintShort": {
+    "description": "字幕下载：空态提示"
+  },
+  "subtitleResultHeader": "{query} · {count, plural, other{{count} 条}}",
+  "@subtitleResultHeader": {
+    "description": "字幕下载：结果头（关键词 + 条数）",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "subtitleSearchAgain": "重新搜索",
+  "@subtitleSearchAgain": {
+    "description": "字幕下载：重新搜索"
+  },
+  "subtitleSelectedOfTotal": "已选 {selected} / {total, plural, other{{total} 条}}",
+  "@subtitleSelectedOfTotal": {
+    "description": "字幕下载：已选 / 总数",
+    "placeholders": {
+      "selected": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "subtitleUnknownSource": "未知来源",
+  "@subtitleUnknownSource": {
+    "description": "字幕下载：来源未知"
+  },
+  "subtitleDownloadingNow": "下载中…",
+  "@subtitleDownloadingNow": {
+    "description": "字幕下载：下载中"
+  },
+  "subtitleDownloadButton": "下载字幕（{count}）",
+  "@subtitleDownloadButton": {
+    "description": "字幕下载：下载按钮",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaInfoItem": "媒体信息",
+  "@mediaInfoItem": {
+    "description": "视频卡片菜单：媒体信息"
+  },
+  "mediaInfoCopied": "媒体信息已复制",
+  "@mediaInfoCopied": {
+    "description": "媒体信息页：复制成功"
+  },
+  "mediaInfoTitleWithName": "媒体信息 - {title}",
+  "@mediaInfoTitleWithName": {
+    "description": "媒体信息页标题（带文件名）",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaInfoGeneralHeader": "【通用信息】",
+  "@mediaInfoGeneralHeader": {
+    "description": "媒体信息页：通用信息大标题"
+  },
+  "mediaInfoVideoStreams": "视频流",
+  "@mediaInfoVideoStreams": {
+    "description": "媒体信息页：视频流分组"
+  },
+  "mediaInfoAudioStreams": "音频流",
+  "@mediaInfoAudioStreams": {
+    "description": "媒体信息页：音频流分组"
+  },
+  "mediaInfoSubtitleStreams": "字幕流",
+  "@mediaInfoSubtitleStreams": {
+    "description": "媒体信息页：字幕流分组"
+  },
+  "mediaInfoFetchFailed": "媒体信息获取失败",
+  "@mediaInfoFetchFailed": {
+    "description": "媒体信息页：获取失败"
+  },
+  "mediaInfoGeneral": "通用信息",
+  "@mediaInfoGeneral": {
+    "description": "媒体信息页：通用信息分组"
+  },
+  "mediaInfoFormat": "格式",
+  "@mediaInfoFormat": {
+    "description": "媒体信息字段：格式"
+  },
+  "mediaInfoFormatVersion": "格式版本",
+  "@mediaInfoFormatVersion": {
+    "description": "媒体信息字段：格式版本"
+  },
+  "mediaInfoFileSize": "文件大小",
+  "@mediaInfoFileSize": {
+    "description": "媒体信息字段：文件大小"
+  },
+  "mediaInfoOverallBitrate": "总比特率",
+  "@mediaInfoOverallBitrate": {
+    "description": "媒体信息字段：总比特率"
+  },
+  "mediaInfoEncodedDate": "编码日期",
+  "@mediaInfoEncodedDate": {
+    "description": "媒体信息字段：编码日期"
+  },
+  "mediaInfoWritingApp": "编码应用",
+  "@mediaInfoWritingApp": {
+    "description": "媒体信息字段：编码应用"
+  },
+  "mediaInfoWritingLibrary": "编码库",
+  "@mediaInfoWritingLibrary": {
+    "description": "媒体信息字段：编码库"
+  },
+  "mediaInfoVideoStreamNo": "视频流 #{index}",
+  "@mediaInfoVideoStreamNo": {
+    "description": "媒体信息字段：第 N 条视频流",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaInfoAudioStreamNo": "音频流 #{index}",
+  "@mediaInfoAudioStreamNo": {
+    "description": "媒体信息字段：第 N 条音频流",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaInfoSubtitleStreamNo": "字幕流 #{index}",
+  "@mediaInfoSubtitleStreamNo": {
+    "description": "媒体信息字段：第 N 条字幕流",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaInfoNoInfo": "未获取到媒体信息",
+  "@mediaInfoNoInfo": {
+    "description": "媒体信息页：空态"
+  },
+  "mediaInfoCodec": "编码",
+  "@mediaInfoCodec": {
+    "description": "媒体信息字段：编码"
+  },
+  "mediaInfoProfile": "配置",
+  "@mediaInfoProfile": {
+    "description": "媒体信息字段：配置"
+  },
+  "mediaInfoCodecId": "编码ID",
+  "@mediaInfoCodecId": {
+    "description": "媒体信息字段：编码 ID"
+  },
+  "mediaInfoWidth": "宽",
+  "@mediaInfoWidth": {
+    "description": "媒体信息字段：宽"
+  },
+  "mediaInfoHeight": "高",
+  "@mediaInfoHeight": {
+    "description": "媒体信息字段：高"
+  },
+  "mediaInfoAspectRatio": "宽高比",
+  "@mediaInfoAspectRatio": {
+    "description": "媒体信息字段：宽高比"
+  },
+  "mediaInfoFrameRateMode": "帧率模式",
+  "@mediaInfoFrameRateMode": {
+    "description": "媒体信息字段：帧率模式"
+  },
+  "mediaInfoBitrate": "比特率",
+  "@mediaInfoBitrate": {
+    "description": "媒体信息字段：比特率"
+  },
+  "mediaInfoBitDepth": "位深度",
+  "@mediaInfoBitDepth": {
+    "description": "媒体信息字段：位深度"
+  },
+  "mediaInfoColorSpace": "色彩空间",
+  "@mediaInfoColorSpace": {
+    "description": "媒体信息字段：色彩空间"
+  },
+  "mediaInfoChromaSubsampling": "色度子采样",
+  "@mediaInfoChromaSubsampling": {
+    "description": "媒体信息字段：色度子采样"
+  },
+  "mediaInfoHdrFormat": "HDR格式",
+  "@mediaInfoHdrFormat": {
+    "description": "媒体信息字段：HDR 格式"
+  },
+  "mediaInfoChannels": "声道",
+  "@mediaInfoChannels": {
+    "description": "媒体信息字段：声道"
+  },
+  "mediaInfoStreamSize": "流大小",
+  "@mediaInfoStreamSize": {
+    "description": "媒体信息字段：流大小"
+  },
+  "mediaInfoStream": "流",
+  "@mediaInfoStream": {
+    "description": "媒体信息页：流选项卡"
+  },
+  "networkStorageTitle": "网络存储",
+  "@networkStorageTitle": {
+    "description": "网络存储页标题 / 首页入口"
+  },
+  "networkHostInputRequired": "请先填写主机地址",
+  "@networkHostInputRequired": {
+    "description": "账户编辑：主机为空"
+  },
+  "networkPortInvalid": "端口需为 1-65535",
+  "@networkPortInvalid": {
+    "description": "账户编辑：端口非法"
+  },
+  "networkDefaultPortWithSynology": "默认 {port}（群晖 5005/5006）",
+  "@networkDefaultPortWithSynology": {
+    "description": "账户编辑：默认端口提示（SMB）",
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "networkDefaultPort": "默认 {port}",
+  "@networkDefaultPort": {
+    "description": "账户编辑：默认端口提示",
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "networkEditAccount": "编辑账户",
+  "@networkEditAccount": {
+    "description": "账户编辑页：标题"
+  },
+  "networkAddAccount": "添加账户",
+  "@networkAddAccount": {
+    "description": "账户编辑页 / 网络存储页：添加账户"
+  },
+  "networkDisplayName": "显示名称",
+  "@networkDisplayName": {
+    "description": "账户编辑：显示名称"
+  },
+  "networkDisplayNameHint": "例如：家庭 NAS",
+  "@networkDisplayNameHint": {
+    "description": "账户编辑：名称提示"
+  },
+  "networkNameRequired": "请输入名称",
+  "@networkNameRequired": {
+    "description": "账户编辑：名称为空"
+  },
+  "networkProtocolLabel": "协议",
+  "@networkProtocolLabel": {
+    "description": "账户编辑：协议"
+  },
+  "networkHostLabel": "主机地址",
+  "@networkHostLabel": {
+    "description": "账户编辑：主机地址"
+  },
+  "networkHostHint": "IP 或域名",
+  "@networkHostHint": {
+    "description": "账户编辑：主机提示"
+  },
+  "networkHostRequiredInput": "请输入主机地址",
+  "@networkHostRequiredInput": {
+    "description": "账户编辑：主机为空提示"
+  },
+  "networkPortLabel": "端口",
+  "@networkPortLabel": {
+    "description": "账户编辑：端口"
+  },
+  "networkPathDefaultHint": "默认为 /",
+  "@networkPathDefaultHint": {
+    "description": "账户编辑：路径提示"
+  },
+  "networkAnonymous": "匿名登录",
+  "@networkAnonymous": {
+    "description": "账户编辑：匿名登录"
+  },
+  "networkAnonymousDesc": "FTP / SMB 匿名访问时开启",
+  "@networkAnonymousDesc": {
+    "description": "账户编辑：匿名登录说明"
+  },
+  "networkUseHttps": "使用 HTTPS",
+  "@networkUseHttps": {
+    "description": "账户编辑：使用 HTTPS"
+  },
+  "networkUseHttpsDesc": "启用后使用加密连接（默认端口 443）",
+  "@networkUseHttpsDesc": {
+    "description": "账户编辑：HTTPS 说明"
+  },
+  "networkUsername": "账号",
+  "@networkUsername": {
+    "description": "账户编辑：账号"
+  },
+  "networkPassword": "密码",
+  "@networkPassword": {
+    "description": "账户编辑：密码"
+  },
+  "networkHidePassword": "隐藏密码",
+  "@networkHidePassword": {
+    "description": "账户编辑：隐藏密码"
+  },
+  "networkShowPassword": "显示密码",
+  "@networkShowPassword": {
+    "description": "账户编辑：显示密码"
+  },
+  "networkSortByBoth": "按{field}{order}",
+  "@networkSortByBoth": {
+    "description": "网络浏览：排序胶囊标题（字段 + 方向拼成一句，英文靠空格）",
+    "placeholders": {
+      "field": {
+        "type": "String"
+      },
+      "order": {
+        "type": "String"
+      }
+    }
+  },
+  "networkSearchCurrentDir": "搜索本目录",
+  "@networkSearchCurrentDir": {
+    "description": "网络浏览：搜索入口"
+  },
+  "networkRefreshCurrentDir": "刷新本目录",
+  "@networkRefreshCurrentDir": {
+    "description": "网络浏览：刷新"
+  },
+  "networkBackToRoot": "回到共享根目录",
+  "@networkBackToRoot": {
+    "description": "网络浏览：回到根目录"
+  },
+  "networkShowHiddenFiles": "显示隐藏文件",
+  "@networkShowHiddenFiles": {
+    "description": "网络浏览：显示隐藏文件"
+  },
+  "networkNoMatchingFiles": "没有匹配的文件",
+  "@networkNoMatchingFiles": {
+    "description": "网络浏览：无匹配"
+  },
+  "networkDirEmpty": "该目录为空",
+  "@networkDirEmpty": {
+    "description": "网络浏览：空目录"
+  },
+  "networkOnlyHiddenFiles": "本目录只有隐藏文件",
+  "@networkOnlyHiddenFiles": {
+    "description": "网络浏览：只有隐藏文件"
+  },
+  "networkBackUp": "返回上一级",
+  "@networkBackUp": {
+    "description": "网络浏览：返回上一级"
+  },
+  "networkModifiedTime": "修改时间",
+  "@networkModifiedTime": {
+    "description": "网络浏览：修改时间"
+  },
+  "networkServerNotProvided": "服务器未提供",
+  "@networkServerNotProvided": {
+    "description": "网络浏览：字段缺失"
+  },
+  "networkLocation": "位置",
+  "@networkLocation": {
+    "description": "网络浏览：位置"
+  },
+  "networkConnectionLabel": "连接",
+  "@networkConnectionLabel": {
+    "description": "网络浏览：连接"
+  },
+  "networkDeleteAccount": "删除账户",
+  "@networkDeleteAccount": {
+    "description": "网络存储：删除账户"
+  },
+  "networkNoAccounts": "还没有网络存储账户",
+  "@networkNoAccounts": {
+    "description": "网络存储：空态"
+  },
+  "networkNoAccountsHint": "点击右下角 + 添加 WebDAV / SMB / FTP 账户",
+  "@networkNoAccountsHint": {
+    "description": "网络存储：空态说明"
+  },
+  "homeSearchVideos": "搜索视频",
+  "@homeSearchVideos": {
+    "description": "文件夹详情页：搜索视频"
+  },
+  "homeSearchFoldersAndVideos": "搜索文件夹与视频",
+  "@homeSearchFoldersAndVideos": {
+    "description": "首页 / 目录页：搜索提示"
+  },
+  "homeSortAndFields": "排序与字段",
+  "@homeSortAndFields": {
+    "description": "排序与字段弹窗标题"
+  },
+  "homeSortAndView": "排序与视图",
+  "@homeSortAndView": {
+    "description": "首页：排序与视图入口"
+  },
+  "homeNoVideosInFolder": "该文件夹没有视频",
+  "@homeNoVideosInFolder": {
+    "description": "文件夹空态"
+  },
+  "homeNoMatchingVideos": "没有匹配的视频",
+  "@homeNoMatchingVideos": {
+    "description": "文件夹详情：无匹配视频"
+  },
+  "homeNoMatchingContent": "没有匹配的内容",
+  "@homeNoMatchingContent": {
+    "description": "首页 / 目录页：无匹配"
+  },
+  "homeNoMatchingFolders": "没有匹配的文件夹",
+  "@homeNoMatchingFolders": {
+    "description": "首页：无匹配文件夹"
+  },
+  "homeRecentPlayed": "最近播放",
+  "@homeRecentPlayed": {
+    "description": "首页：最近播放入口"
+  },
+  "homeOpenLink": "打开链接",
+  "@homeOpenLink": {
+    "description": "首页 / 弹窗：打开链接"
+  },
+  "homeFileGone": "文件不存在或已被移动：{title}",
+  "@homeFileGone": {
+    "description": "首页：文件缺失提示",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "homePermissionHintInSettings": "请在系统设置中手动开启存储权限",
+  "@homePermissionHintInSettings": {
+    "description": "首页：权限提示"
+  },
+  "homePermissionDeniedDetail": "存储权限已被拒绝，需要到系统设置里手动开启",
+  "@homePermissionDeniedDetail": {
+    "description": "首页：权限被拒说明"
+  },
+  "homePermissionNeeded": "需要授予存储权限才能扫描视频",
+  "@homePermissionNeeded": {
+    "description": "首页：权限说明"
+  },
+  "homeOpenSettings": "去系统设置开启",
+  "@homeOpenSettings": {
+    "description": "首页：去设置按钮"
+  },
+  "homeGrantPermission": "授予权限",
+  "@homeGrantPermission": {
+    "description": "首页：授予权限按钮"
+  },
+  "homeNoVideosFound": "没有找到视频",
+  "@homeNoVideosFound": {
+    "description": "首页：无视频"
+  },
+  "homeRescan": "重新扫描",
+  "@homeRescan": {
+    "description": "首页：重新扫描"
+  },
+  "homeRecheckPermission": "我已开启，重新检查",
+  "@homeRecheckPermission": {
+    "description": "首页：重新检查权限"
+  },
+  "openLinkClipboardEmpty": "剪贴板为空",
+  "@openLinkClipboardEmpty": {
+    "description": "打开链接：剪贴板空"
+  },
+  "openLinkInvalid": "链接无效，支持 http/https/rtmp/rtsp 等流媒体协议",
+  "@openLinkInvalid": {
+    "description": "打开链接：链接非法"
+  },
+  "openLinkHint": "输入视频直链，将在线播放",
+  "@openLinkHint": {
+    "description": "打开链接：输入提示"
+  },
+  "downloadClearFinished": "清除已完成",
+  "@downloadClearFinished": {
+    "description": "下载管理：清除已完成"
+  },
+  "downloadClearFinishedDesc": "只清除已完成和失败的下载记录，不会删除已下载的文件。",
+  "@downloadClearFinishedDesc": {
+    "description": "下载管理：清除已完成说明"
+  },
+  "downloadNoTasks": "暂无下载任务",
+  "@downloadNoTasks": {
+    "description": "下载管理：空态"
+  },
+  "downloadFailed": "下载失败",
+  "@downloadFailed": {
+    "description": "下载管理：失败兜底文案"
+  },
+  "downloadStatusCompleted": "完成",
+  "@downloadStatusCompleted": {
+    "description": "下载状态：完成"
+  },
+  "downloadStatusFailed": "失败",
+  "@downloadStatusFailed": {
+    "description": "下载状态：失败"
+  },
+  "downloadStatusMerging": "合并",
+  "@downloadStatusMerging": {
+    "description": "下载状态：合并中"
+  },
+  "downloadStatusDownloading": "下载中",
+  "@downloadStatusDownloading": {
+    "description": "下载状态：下载中"
+  },
+  "downloadStatusPending": "等待",
+  "@downloadStatusPending": {
+    "description": "下载状态：等待"
+  },
+  "downloadMergingCannotPause": "合并中，无法暂停",
+  "@downloadMergingCannotPause": {
+    "description": "下载管理：合并中不可暂停"
+  },
+  "castSearchStartFailed": "投屏搜索启动失败：{error}",
+  "@castSearchStartFailed": {
+    "description": "投屏：搜索启动失败",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "castConnected": "已投屏到 {device}",
+  "@castConnected": {
+    "description": "投屏：已投屏",
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "castFailed": "投屏失败：{error}",
+  "@castFailed": {
+    "description": "投屏：失败",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "castSearching": "正在搜索投屏设备…",
+  "@castSearching": {
+    "description": "投屏：搜索中"
+  },
+  "castNoDevicesFound": "未发现可投屏设备，请确认手机与电视连接同一 WiFi 后重试。",
+  "@castNoDevicesFound": {
+    "description": "投屏：未发现设备"
+  },
+  "colorEditorCustom": "自定义调色",
+  "@colorEditorCustom": {
+    "description": "调色组件：展开自定义调色"
+  },
+  "colorEditorCollapseCustom": "收起自定义调色",
+  "@colorEditorCollapseCustom": {
+    "description": "调色组件：收起自定义调色"
+  },
+  "directoryPickerUnreadable": "目录不可读或不存在",
+  "@directoryPickerUnreadable": {
+    "description": "目录选择器：目录不可读"
+  },
+  "directoryPickerTitle": "选择下载目录",
+  "@directoryPickerTitle": {
+    "description": "目录选择器：标题"
+  },
+  "directoryPickerUp": "上级目录",
+  "@directoryPickerUp": {
+    "description": "目录选择器：上级目录"
+  },
+  "directoryPickerSelectThis": "选择此目录",
+  "@directoryPickerSelectThis": {
+    "description": "目录选择器：确认按钮"
+  },
+  "directoryPickerEmpty": "该目录下没有子目录",
+  "@directoryPickerEmpty": {
+    "description": "目录选择器：空态"
+  },
+  "fileOpPin": "固定",
+  "@fileOpPin": {
+    "description": "文件操作菜单：固定"
+  },
+  "fileOpUnpin": "取消固定",
+  "@fileOpUnpin": {
+    "description": "文件操作菜单：取消固定"
+  },
+  "fileOpMultiSelect": "多选",
+  "@fileOpMultiSelect": {
+    "description": "文件操作菜单：多选"
+  },
+  "fileOpNewName": "新名称",
+  "@fileOpNewName": {
+    "description": "重命名弹窗：名称标签"
+  },
+  "fileOpNameHint": "扩展名之前的名称",
+  "@fileOpNameHint": {
+    "description": "重命名弹窗：提示"
+  },
+  "fileOpLockedExt": "扩展名固定为 {ext}，不可修改",
+  "@fileOpLockedExt": {
+    "description": "重命名弹窗：扩展名锁定说明",
+    "placeholders": {
+      "ext": {
+        "type": "String"
+      }
+    }
+  },
+  "fileOpDeleteFolderVideosOnly": "仅删除该文件夹内的视频文件，其它文件不会被删除。",
+  "@fileOpDeleteFolderVideosOnly": {
+    "description": "删除确认：文件夹默认语义"
+  },
+  "fileOpDeleteSelectedVideos": "{count, plural, other{确定删除选中的 {count} 个视频吗？}}",
+  "@fileOpDeleteSelectedVideos": {
+    "description": "删除确认：多选纯视频",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fileOpDeleteSelectedMixed": "{count, plural, other{将删除选中的 {count} 项：文件夹只删除里面的视频文件，其它文件不会被删除。}}",
+  "@fileOpDeleteSelectedMixed": {
+    "description": "删除确认：多选含文件夹",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fileOpDeleteAllFiles": "删除所有文件",
+  "@fileOpDeleteAllFiles": {
+    "description": "删除确认：删除所有文件勾选"
+  },
+  "fileOpPreparing": "准备中…",
+  "@fileOpPreparing": {
+    "description": "传输进度：准备中"
+  },
+  "fileOpProgressItem": "第 {current}/{total} 项",
+  "@fileOpProgressItem": {
+    "description": "传输进度：整批第几项",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "fileOpProgressItems": "{done} / {total, plural, other{{total} 项}}",
+  "@fileOpProgressItems": {
+    "description": "传输进度：单项计数",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "fileOpProcessing": "处理中…",
+  "@fileOpProcessing": {
+    "description": "传输进度：处理中"
+  },
+  "fileOpBytesProgress": "{done} / {total}（{percent}%）",
+  "@fileOpBytesProgress": {
+    "description": "传输进度：字节进度（含百分比）",
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSelectionExit": "退出多选",
+  "@fileSelectionExit": {
+    "description": "多选工具栏：退出多选"
+  },
+  "fileSelectionSelected": "{count, plural, other{已选 {count} 项}}",
+  "@fileSelectionSelected": {
+    "description": "多选工具栏：已选数量",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fileSelectionOps": "文件操作",
+  "@fileSelectionOps": {
+    "description": "多选工具栏：文件操作菜单"
+  },
+  "folderTransferMoving": "正在移动…",
+  "@folderTransferMoving": {
+    "description": "文件操作进度：正在移动"
+  },
+  "folderTransferCopying": "正在复制…",
+  "@folderTransferCopying": {
+    "description": "文件操作进度：正在复制"
+  },
+  "folderActionCancelled": "已取消",
+  "@folderActionCancelled": {
+    "description": "文件操作：已取消"
+  },
+  "folderMovedTo": "已移动「{title}」到 {dest}",
+  "@folderMovedTo": {
+    "description": "文件操作：移动成功",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "dest": {
+        "type": "String"
+      }
+    }
+  },
+  "folderCopiedTo": "已复制「{title}」到 {dest}",
+  "@folderCopiedTo": {
+    "description": "文件操作：复制成功",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "dest": {
+        "type": "String"
+      }
+    }
+  },
+  "folderActionMovedProgressFailed": "已移动 {done}/{total, plural, other{{total} 项}}，失败：{failures}",
+  "@folderActionMovedProgressFailed": {
+    "description": "文件操作：批量移动（含失败项）",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "String"
+      }
+    }
+  },
+  "folderActionCopiedProgressFailed": "已复制 {done}/{total, plural, other{{total} 项}}，失败：{failures}",
+  "@folderActionCopiedProgressFailed": {
+    "description": "文件操作：批量复制（含失败项）",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "String"
+      }
+    }
+  },
+  "folderActionDeletedProgressFailed": "已删除 {done}/{total, plural, other{{total} 项}}，失败：{failures}",
+  "@folderActionDeletedProgressFailed": {
+    "description": "文件操作：批量删除（含失败项）",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "String"
+      }
+    }
+  },
+  "folderActionMovedProgressFailedMore": "已移动 {done}/{total, plural, other{{total} 项}}，失败：{failures} 等 {count} 项",
+  "@folderActionMovedProgressFailedMore": {
+    "description": "文件操作：批量移动（失败项过多只列前 3）",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "folderActionCopiedProgressFailedMore": "已复制 {done}/{total, plural, other{{total} 项}}，失败：{failures} 等 {count} 项",
+  "@folderActionCopiedProgressFailedMore": {
+    "description": "文件操作：批量复制（失败项过多只列前 3）",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "folderActionDeletedProgressFailedMore": "已删除 {done}/{total, plural, other{{total} 项}}，失败：{failures} 等 {count} 项",
+  "@folderActionDeletedProgressFailedMore": {
+    "description": "文件操作：批量删除（失败项过多只列前 3）",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "folderActionCancelledThenMoved": "已取消（已移动 {done, plural, other{{done} 项}}）",
+  "@folderActionCancelledThenMoved": {
+    "description": "文件操作：取消但已移动部分",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      }
+    }
+  },
+  "folderActionCancelledThenCopied": "已取消（已复制 {done, plural, other{{done} 项}}）",
+  "@folderActionCancelledThenCopied": {
+    "description": "文件操作：取消但已复制部分",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      }
+    }
+  },
+  "folderActionMovedCount": "已移动 {done, plural, other{{done} 项}}到 {dest}",
+  "@folderActionMovedCount": {
+    "description": "文件操作：批量移动完成",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "dest": {
+        "type": "String"
+      }
+    }
+  },
+  "folderActionCopiedCount": "已复制 {done, plural, other{{done} 项}}到 {dest}",
+  "@folderActionCopiedCount": {
+    "description": "文件操作：批量复制完成",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "dest": {
+        "type": "String"
+      }
+    }
+  },
+  "folderNameUnchanged": "名称没有变化",
+  "@folderNameUnchanged": {
+    "description": "文件操作：重命名无变化"
+  },
+  "folderRenamedTo": "已重命名为 {newName}",
+  "@folderRenamedTo": {
+    "description": "文件操作：重命名成功",
+    "placeholders": {
+      "newName": {
+        "type": "String"
+      }
+    }
+  },
+  "folderDeletedOne": "已删除「{title}」",
+  "@folderDeletedOne": {
+    "description": "文件操作：删除单项",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "folderDeletedCount": "已删除 {done, plural, other{{done} 项}}",
+  "@folderDeletedCount": {
+    "description": "文件操作：批量删除完成",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      }
+    }
+  },
+  "folderVideoCount": "{count, plural, other{{count} 个视频}}",
+  "@folderVideoCount": {
+    "description": "文件夹卡片：视频个数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "optionsSheetFolderSort": "文件夹排序方式",
+  "@optionsSheetFolderSort": {
+    "description": "排序与字段：文件夹排序方式"
+  },
+  "optionsSheetFolderSortDir": "文件夹排序方向",
+  "@optionsSheetFolderSortDir": {
+    "description": "排序与字段：文件夹排序方向"
+  },
+  "optionsSheetFolderFields": "文件夹显示字段",
+  "@optionsSheetFolderFields": {
+    "description": "排序与字段：文件夹显示字段"
+  },
+  "optionsSheetVideoSort": "视频排序方式",
+  "@optionsSheetVideoSort": {
+    "description": "排序与字段：视频排序方式"
+  },
+  "optionsSheetVideoSortDir": "视频排序方向",
+  "@optionsSheetVideoSortDir": {
+    "description": "排序与字段：视频排序方向"
+  },
+  "optionsSheetVideoFields": "视频显示字段",
+  "@optionsSheetVideoFields": {
+    "description": "排序与字段：视频显示字段"
+  },
+  "optionsSheetViewMode": "显示模式",
+  "@optionsSheetViewMode": {
+    "description": "排序与字段：显示模式"
+  },
+  "updatePrimarySource": "主下载站",
+  "@updatePrimarySource": {
+    "description": "更新弹窗：主下载站"
+  },
+  "updateBackupSource": "备用下载站",
+  "@updateBackupSource": {
+    "description": "更新弹窗：备用下载站"
+  },
+  "updateLinkPending": "{label}链接待接入",
+  "@updateLinkPending": {
+    "description": "更新弹窗：下载链接待接入",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "updateOpenLinkFailed": "无法打开{label}链接",
+  "@updateOpenLinkFailed": {
+    "description": "更新弹窗：链接打不开",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "updateNewVersion": "发现新版本 {version}",
+  "@updateNewVersion": {
+    "description": "更新弹窗：发现新版本",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateIgnore": "忽略",
+  "@updateIgnore": {
+    "description": "更新弹窗：忽略本版本"
+  },
+  "updateLater": "稍后提醒",
+  "@updateLater": {
+    "description": "更新弹窗：稍后提醒"
+  },
+  "updateNow": "立即更新",
+  "@updateNow": {
+    "description": "更新弹窗：立即更新"
+  },
+  "updateChooseMethod": "选择下载方式",
+  "@updateChooseMethod": {
+    "description": "更新弹窗：选择下载方式"
+  },
+  "updatePending": "待接入",
+  "@updatePending": {
+    "description": "更新弹窗：下载方式待接入"
+  },
+  "videoCardWatched": "已看完",
+  "@videoCardWatched": {
+    "description": "视频卡片：已看完"
+  },
+  "videoCardUnwatched": "未观看",
+  "@videoCardUnwatched": {
+    "description": "视频卡片：未观看"
+  },
+  "videoCardDetectingSubtitle": "字幕检测中…",
+  "@videoCardDetectingSubtitle": {
+    "description": "视频卡片：字幕检测中"
+  },
+  "videoCardHasSubtitle": "含字幕",
+  "@videoCardHasSubtitle": {
+    "description": "视频卡片：含字幕"
+  },
+  "videoCardSubtitleCodec": "字幕 · {codec}",
+  "@videoCardSubtitleCodec": {
+    "description": "视频卡片：字幕格式",
+    "placeholders": {
+      "codec": {
+        "type": "String"
+      }
+    }
+  },
+  "videoCardNoSubtitle": "无字幕",
+  "@videoCardNoSubtitle": {
+    "description": "视频卡片：无字幕"
+  },
+  "biliCoverUnavailable": "哔哩封面不可用（缓存未命中且下载失败）",
+  "@biliCoverUnavailable": {
+    "description": "B 站封面图兜底提示"
+  },
+  "errorNetworkRequestFailed": "网络请求失败: {error}",
+  "@errorNetworkRequestFailed": {
+    "description": "错误：网络请求异常（bili / 弹弹Play / Wyzie / 自定义字幕共用）",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorHttpRequestFailed": "请求失败（HTTP {status}）",
+  "@errorHttpRequestFailed": {
+    "description": "错误：HTTP 非 2xx（bili / 弹弹Play / Wyzie / 下载共用）",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "errorHttpSearchFailed": "搜索失败（HTTP {status}）",
+  "@errorHttpSearchFailed": {
+    "description": "错误：搜索接口 HTTP 非 2xx（Wyzie / 自定义字幕）",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "errorHttpDownloadFailed": "下载失败（HTTP {status}）",
+  "@errorHttpDownloadFailed": {
+    "description": "错误：下载 HTTP 非 2xx（Wyzie / 自定义字幕 / WebDAV / 下载任务）",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "errorResponseNotJson": "响应不是 JSON 对象",
+  "@errorResponseNotJson": {
+    "description": "错误：响应不是 JSON 对象"
+  },
+  "errorResponseParseFailed": "响应解析失败：{error}",
+  "@errorResponseParseFailed": {
+    "description": "错误：响应解析异常（bili / 弹弹Play）",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorResponseDecodeFailed": "响应解码失败：{error}",
+  "@errorResponseDecodeFailed": {
+    "description": "错误：响应解码异常（弹弹Play）",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDownloadFailed": "下载失败: {error}",
+  "@errorDownloadFailed": {
+    "description": "错误：下载异常（Wyzie / 自定义字幕）",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDownloadTooLarge": "下载失败：文件过大（{received} 字节）",
+  "@errorDownloadTooLarge": {
+    "description": "错误：下载体积超上限（Wyzie / 自定义字幕）",
+    "placeholders": {
+      "received": {
+        "type": "String"
+      }
+    }
+  },
+  "errorResponseTooLarge": "响应异常（已读 {received} 字节，超过 {max} 上限）",
+  "@errorResponseTooLarge": {
+    "description": "错误：响应体积超上限（Wyzie / 自定义字幕）",
+    "placeholders": {
+      "received": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "errorResponseTooLargeAborted": "响应过大（{received} 字节），已放弃解析",
+  "@errorResponseTooLargeAborted": {
+    "description": "错误：响应过大已放弃解析（弹弹Play / Wyzie）",
+    "placeholders": {
+      "received": {
+        "type": "String"
+      }
+    }
+  },
+  "errorServerReturned": "服务器返回错误",
+  "@errorServerReturned": {
+    "description": "错误：服务端返回失败（弹弹Play / bili）"
+  },
+  "errorServerReturnedCode": "服务器返回错误（code={code}）",
+  "@errorServerReturnedCode": {
+    "description": "错误：服务端返回失败（带业务 code；bili / 弹弹Play）",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "errorUnknown": "未知错误",
+  "@errorUnknown": {
+    "description": "错误：兜底未知错误"
+  },
+  "errorNetworkConnectionMissing": "网络连接不存在",
+  "@errorNetworkConnectionMissing": {
+    "description": "错误：网络连接缺失（播放列表源 / 网络字幕流）"
+  },
+  "biliWbiKeyMissingPlay": "未获取到 WBI 密钥，无法解析播放地址",
+  "@biliWbiKeyMissingPlay": {
+    "description": "B 站错误：缺少 WBI 密钥（播放地址）"
+  },
+  "biliWbiKeyMissingSearch": "未获取到 WBI 密钥，无法搜索",
+  "@biliWbiKeyMissingSearch": {
+    "description": "B 站错误：缺少 WBI 密钥（搜索）"
+  },
+  "biliRiskControlTriggered": "触发风控验证（v_voucher），请稍后重试或切换网络",
+  "@biliRiskControlTriggered": {
+    "description": "B 站错误：触发风控验证"
+  },
+  "biliVideoNotFound": "视频不存在或无权访问",
+  "@biliVideoNotFound": {
+    "description": "B 站错误：视频不存在（code -404）"
+  },
+  "biliVideoNoAccess": "无权访问，可能需要登录或大会员",
+  "@biliVideoNoAccess": {
+    "description": "B 站错误：无权访问（code -403）"
+  },
+  "biliVideoVipRequired": "需要大会员权限",
+  "@biliVideoVipRequired": {
+    "description": "B 站错误：需要大会员（code -10403）"
+  },
+  "biliVideoRiskControlFailed": "风控验证失败，请稍后重试",
+  "@biliVideoRiskControlFailed": {
+    "description": "B 站错误：风控验证失败（code -352）"
+  },
+  "biliVideoExclusive": "专属视频，需开通相应权限",
+  "@biliVideoExclusive": {
+    "description": "B 站错误：专属视频（code 87008）"
+  },
+  "biliDownloadLinkUnrecognized": "无法识别 B 站链接（支持 BV / av / ss / ep / 合集链接 / b23.tv 短链）",
+  "@biliDownloadLinkUnrecognized": {
+    "description": "B 站下载：链接无法识别"
+  },
+  "biliDownloadNoVideoParts": "未解析到视频分 P",
+  "@biliDownloadNoVideoParts": {
+    "description": "B 站下载：没有分 P"
+  },
+  "biliDownloadBangumiNoEpisodes": "该番剧没有可下载的集数",
+  "@biliDownloadBangumiNoEpisodes": {
+    "description": "B 站下载：番剧无集数"
+  },
+  "biliDownloadCollectionNoVideos": "该合集没有可下载的视频",
+  "@biliDownloadCollectionNoVideos": {
+    "description": "B 站下载：合集无可下载视频"
+  },
+  "biliDownloadCollectionEmpty": "该合集暂无内容",
+  "@biliDownloadCollectionEmpty": {
+    "description": "B 站下载：合集暂无内容"
+  },
+  "biliDownloadNoDanmaku": "该集没有弹幕",
+  "@biliDownloadNoDanmaku": {
+    "description": "B 站下载：该集无弹幕"
+  },
+  "biliDownloadNoVideoStream": "未获取到视频流",
+  "@biliDownloadNoVideoStream": {
+    "description": "B 站下载：未取到视频流"
+  },
+  "biliDownloadMergeFailed": "音视频合并失败",
+  "@biliDownloadMergeFailed": {
+    "description": "B 站下载：音视频合并失败"
+  },
+  "biliDownloadNetworkFailed": "网络请求失败",
+  "@biliDownloadNetworkFailed": {
+    "description": "B 站下载：网络请求失败（无详情）"
+  },
+  "biliDownloadWriteFailed": "写入文件失败（磁盘空间或权限）",
+  "@biliDownloadWriteFailed": {
+    "description": "B 站下载：写盘失败"
+  },
+  "biliDownloadWriteFailedDetail": "写入文件失败（磁盘空间或权限）：{error}",
+  "@biliDownloadWriteFailedDetail": {
+    "description": "B 站下载：写盘失败（带异常详情）",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "wyzieSearchNoSubtitles": "搜索失败（HTTP 400）",
+  "@wyzieSearchNoSubtitles": {
+    "description": "Wyzie：HTTP 400（接口判定为无结果）"
+  },
+  "wyzieNoMatch": "未找到匹配的影视，请换个关键词",
+  "@wyzieNoMatch": {
+    "description": "Wyzie：没有匹配的影视"
+  },
+  "customSubtitleUrlInvalid": "自定义字幕地址无效（需要 http/https 地址）",
+  "@customSubtitleUrlInvalid": {
+    "description": "自定义字幕：接口地址无效"
+  },
+  "customSubtitleResponseUnparsable": "无法解析该地址的响应：{message}",
+  "@customSubtitleResponseUnparsable": {
+    "description": "自定义字幕：响应无法解析（内嵌解析失败原因）",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "customSubtitleResponseNotJson": "响应不是合法 JSON",
+  "@customSubtitleResponseNotJson": {
+    "description": "自定义字幕解析：不是合法 JSON"
+  },
+  "customSubtitleResponseNoList": "响应里找不到字幕列表",
+  "@customSubtitleResponseNoList": {
+    "description": "自定义字幕解析：没有字幕列表"
+  },
+  "dandanServerUrlInvalid": "服务器地址无效（需以 http/https 开头）: {url}",
+  "@dandanServerUrlInvalid": {
+    "description": "弹弹Play：自建服务器地址无效",
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "networkConnectTimeout": "连接超时：服务器无响应，请检查地址与端口",
+  "@networkConnectTimeout": {
+    "description": "网络错误：连接超时（FTP / WebDAV 共用）"
+  },
+  "ftpRefusedConnection": "FTP 服务器拒绝连接（代码 {code}）",
+  "@ftpRefusedConnection": {
+    "description": "FTP 错误：拒绝连接",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpResumeUnsupported": "FTP 服务器不支持断点续传（REST）",
+  "@ftpResumeUnsupported": {
+    "description": "FTP 错误：不支持断点续传"
+  },
+  "ftpTransferRejected": "FTP 服务器拒绝文件传输（代码 {code}）",
+  "@ftpTransferRejected": {
+    "description": "FTP 错误：拒绝文件传输",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpRootUnavailable": "FTP 根目录不可用（代码 {code}）",
+  "@ftpRootUnavailable": {
+    "description": "FTP 错误：根目录不可用",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpLoginFailed": "FTP 登录失败，请检查账号密码",
+  "@ftpLoginFailed": {
+    "description": "FTP 错误：登录失败"
+  },
+  "ftpBinaryModeRejected": "FTP 服务器拒绝二进制模式",
+  "@ftpBinaryModeRejected": {
+    "description": "FTP 错误：拒绝二进制模式"
+  },
+  "ftpListFailed": "FTP 目录列表失败（代码 {code}）",
+  "@ftpListFailed": {
+    "description": "FTP 错误：目录列表失败",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpConnectionClosed": "FTP 连接被服务器关闭",
+  "@ftpConnectionClosed": {
+    "description": "FTP 错误：连接被关闭"
+  },
+  "ftpUnexpectedResponse": "FTP 服务器返回异常响应",
+  "@ftpUnexpectedResponse": {
+    "description": "FTP 错误：异常响应"
+  },
+  "ftpConnectionInterrupted": "FTP 连接中断",
+  "@ftpConnectionInterrupted": {
+    "description": "FTP 错误：连接中断"
+  },
+  "ftpPassiveUnsupported": "FTP 服务器不支持被动模式",
+  "@ftpPassiveUnsupported": {
+    "description": "FTP 错误：不支持被动模式"
+  },
+  "ftpPassiveParseFailed": "FTP 被动模式响应无法解析",
+  "@ftpPassiveParseFailed": {
+    "description": "FTP 错误：被动模式响应无法解析"
+  },
+  "webdavNotAFile": "文件不存在或不是文件",
+  "@webdavNotAFile": {
+    "description": "WebDAV 错误：目标不是文件"
+  },
+  "webdavTargetIsDirectory": "目标是一个目录",
+  "@webdavTargetIsDirectory": {
+    "description": "WebDAV 错误：目标是目录"
+  },
+  "webdavRangeIgnored": "服务器忽略了分段请求，无法精确跳转",
+  "@webdavRangeIgnored": {
+    "description": "WebDAV 错误：忽略 Range 请求"
+  },
+  "webdavRangeFailed": "分段请求失败（HTTP {status}）",
+  "@webdavRangeFailed": {
+    "description": "WebDAV 错误：Range 请求失败",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "webdavRangeStartMismatch": "服务器返回的分段起点与请求不一致",
+  "@webdavRangeStartMismatch": {
+    "description": "WebDAV 错误：Range 起点不一致"
+  },
+  "webdavDownloadFailedAuth": "下载失败（HTTP {status}，认证失败）",
+  "@webdavDownloadFailedAuth": {
+    "description": "WebDAV 错误：下载 401",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "webdavDirectoryTooLarge": "目录过大：响应超过 {mb}MB",
+  "@webdavDirectoryTooLarge": {
+    "description": "WebDAV 错误：目录响应超上限",
+    "placeholders": {
+      "mb": {
+        "type": "String"
+      }
+    }
+  },
+  "webdavRequestFailed": "WebDAV 请求失败（HTTP {status}）",
+  "@webdavRequestFailed": {
+    "description": "WebDAV 错误：请求失败",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "webdavRequestFailedAuth": "WebDAV 请求失败（HTTP {status}，认证失败）",
+  "@webdavRequestFailedAuth": {
+    "description": "WebDAV 错误：请求 401",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "smbNotConnected": "SMB 尚未连接",
+  "@smbNotConnected": {
+    "description": "SMB 错误：尚未连接"
+  },
+  "smbAuthFailed": "用户名或密码错误",
+  "@smbAuthFailed": {
+    "description": "SMB 错误：账号密码错误"
+  },
+  "smbAccessDenied": "拒绝访问（权限不足）",
+  "@smbAccessDenied": {
+    "description": "SMB 错误：拒绝访问"
+  },
+  "smbPathNotFound": "路径不存在",
+  "@smbPathNotFound": {
+    "description": "SMB 错误：路径不存在"
+  },
+  "smbRequestFailed": "SMB 请求失败",
+  "@smbRequestFailed": {
+    "description": "SMB 错误：请求失败"
+  },
+  "netPathScheme": "网络路径不能包含 URI scheme",
+  "@netPathScheme": {
+    "description": "网络路径校验：含 scheme"
+  },
+  "netPathTooLong": "网络路径过长",
+  "@netPathTooLong": {
+    "description": "网络路径校验：整体过长"
+  },
+  "netPathTooManySegments": "网络路径段数过多",
+  "@netPathTooManySegments": {
+    "description": "网络路径校验：段数过多"
+  },
+  "netPathSegmentEmpty": "路径段不能为空",
+  "@netPathSegmentEmpty": {
+    "description": "网络路径校验：空段"
+  },
+  "netPathSegmentTooLong": "路径段过长",
+  "@netPathSegmentTooLong": {
+    "description": "网络路径校验：单段过长"
+  },
+  "netPathDotSegment": "网络路径不能包含 . 或 ..",
+  "@netPathDotSegment": {
+    "description": "网络路径校验：. / .. 段"
+  },
+  "netPathSegmentSeparator": "路径段不能包含分隔符",
+  "@netPathSegmentSeparator": {
+    "description": "网络路径校验：段内含分隔符"
+  },
+  "netPathSegmentControlChar": "路径段不能包含控制字符",
+  "@netPathSegmentControlChar": {
+    "description": "网络路径校验：段内含控制字符"
+  },
+  "fileOpSourceMissing": "源文件不存在或已被移动",
+  "@fileOpSourceMissing": {
+    "description": "文件操作：源文件缺失"
+  },
+  "fileOpWriteFailed": "写入失败：{name}（{error}）",
+  "@fileOpWriteFailed": {
+    "description": "文件操作：写入失败（文件名 + 异常）",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileOpCopiedButDeleteFailed": "已复制到目标位置，但删除原文件失败，请手动清理",
+  "@fileOpCopiedButDeleteFailed": {
+    "description": "文件操作：复制成功但删除源失败"
+  },
+  "fileOpRenameTempFailed": "重命名临时文件失败：{error}",
+  "@fileOpRenameTempFailed": {
+    "description": "文件操作：临时文件重命名失败",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileOpTargetExists": "同目录下已存在同名文件或文件夹",
+  "@fileOpTargetExists": {
+    "description": "文件操作：目标已存在同名项"
+  },
+  "fileOpRenameFailed": "重命名失败：{error}",
+  "@fileOpRenameFailed": {
+    "description": "文件操作：重命名失败",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileOpFileMissing": "文件不存在或已被删除",
+  "@fileOpFileMissing": {
+    "description": "文件操作：文件缺失"
+  },
+  "fileOpDeleteFailed": "删除失败：{error}",
+  "@fileOpDeleteFailed": {
+    "description": "文件操作：删除失败",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileOpFolderMissing": "文件夹不存在或已被删除",
+  "@fileOpFolderMissing": {
+    "description": "文件操作：文件夹缺失"
+  },
+  "fileOpNoVideosInFolder": "该文件夹内没有可删除的视频文件",
+  "@fileOpNoVideosInFolder": {
+    "description": "文件操作：文件夹内无视频"
+  },
+  "fileOpSelectTargetFolder": "请选择目标文件夹",
+  "@fileOpSelectTargetFolder": {
+    "description": "文件操作校验：未选目标文件夹"
+  },
+  "fileOpTargetUnreadable": "目标文件夹不存在或不可读",
+  "@fileOpTargetUnreadable": {
+    "description": "文件操作校验：目标文件夹不可用"
+  },
+  "fileOpAlreadyInFolder": "该文件夹已经在这个目录里了",
+  "@fileOpAlreadyInFolder": {
+    "description": "文件操作校验：文件夹已在目标目录"
+  },
+  "fileOpAlreadyInFolderVideo": "该视频已经在这个目录里了",
+  "@fileOpAlreadyInFolderVideo": {
+    "description": "文件操作校验：视频已在目标目录"
+  },
+  "fileOpIntoItself": "不能把文件夹复制或移动到它自己的子目录里",
+  "@fileOpIntoItself": {
+    "description": "文件操作校验：不能移到自己的子目录"
+  },
+  "fileOpNameEmpty": "名称不能为空",
+  "@fileOpNameEmpty": {
+    "description": "文件名校验：空"
+  },
+  "fileOpNameInvalid": "名称不合法",
+  "@fileOpNameInvalid": {
+    "description": "文件名校验：不合法"
+  },
+  "fileOpNameHasSeparator": "名称不能包含路径分隔符",
+  "@fileOpNameHasSeparator": {
+    "description": "文件名校验：含路径分隔符"
+  },
+  "fileOpNameIllegalChars": "名称不能包含 \\ / : * ? \" < > | 等字符",
+  "@fileOpNameIllegalChars": {
+    "description": "文件名校验：含非法字符"
+  },
+  "fileOpNameEmptyBeforeExt": "请输入扩展名之前的名称",
+  "@fileOpNameEmptyBeforeExt": {
+    "description": "重命名输入校验：扩展名前为空"
+  },
+  "commonGotIt": "知道了",
+  "@commonGotIt": {
+    "description": "通用按钮：知道了（杜比视界提示）"
+  },
+  "commonErrorsSeparator": "；",
+  "@commonErrorsSeparator": {
+    "description": "通用：多条错误拼接用的分隔符（弹幕搜索失败原因）"
+  },
+  "playerEqualizerPresetFlat": "平直",
+  "@playerEqualizerPresetFlat": {
+    "description": "均衡器预设：平直"
+  },
+  "playerEqualizerPresetDialogue": "对白增强",
+  "@playerEqualizerPresetDialogue": {
+    "description": "均衡器预设：对白增强"
+  },
+  "playerEqualizerPresetCinema": "电影",
+  "@playerEqualizerPresetCinema": {
+    "description": "均衡器预设：电影"
+  },
+  "playerEqualizerPresetBass": "低音震撼",
+  "@playerEqualizerPresetBass": {
+    "description": "均衡器预设：低音震撼"
+  },
+  "playerEqualizerPresetTreble": "高音清晰",
+  "@playerEqualizerPresetTreble": {
+    "description": "均衡器预设：高音清晰"
+  },
+  "playerEqualizerPresetNight": "柔和夜间",
+  "@playerEqualizerPresetNight": {
+    "description": "均衡器预设：柔和夜间"
+  },
+  "biliVipNormal": "普通会员",
+  "@biliVipNormal": {
+    "description": "B 站账号：普通会员"
+  },
+  "biliVipAnnual": "年度大会员",
+  "@biliVipAnnual": {
+    "description": "B 站账号：年度大会员"
+  },
+  "biliVipMember": "大会员",
+  "@biliVipMember": {
+    "description": "B 站账号：大会员"
+  },
+  "biliPlaylistEpisode": "第 {index} 集",
+  "@biliPlaylistEpisode": {
+    "description": "B 站播放列表：无标题时的集名",
+    "placeholders": {
+      "index": {
+        "type": "String"
+      }
+    }
+  },
+  "subtitleUnknownName": "未知字幕",
+  "@subtitleUnknownName": {
+    "description": "字幕条目：无展示名时的占位"
+  },
+  "subtitleUnknownLanguage": "未知语言",
+  "@subtitleUnknownLanguage": {
+    "description": "字幕条目：无语言时的占位"
+  },
+  "danmakuServerDefaultName": "弹弹Play（默认）",
+  "@danmakuServerDefaultName": {
+    "description": "弹幕：内置默认服务器的显示名（仅显示，持久化值不变）"
+  },
+  "danmakuServerAutoMatchBlocked": "请先停用弹弹Play 服务器",
+  "@danmakuServerAutoMatchBlocked": {
+    "description": "弹幕设置：禁止开启自动匹配的短原因"
+  },
+  "danmakuServerAutoMatchBlockedDetail": "已启用「{name}」服务器时不可开启「切集自动匹配弹幕」，如需使用请先停用该服务器",
+  "@danmakuServerAutoMatchBlockedDetail": {
+    "description": "弹幕设置：禁止开启自动匹配的完整说明",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "danmakuSearchNoResult": "未找到相关番剧，请尝试其他关键词",
+  "@danmakuSearchNoResult": {
+    "description": "弹幕搜索：无结果"
+  },
+  "danmakuSearchFailed": "搜索失败：{errors}",
+  "@danmakuSearchFailed": {
+    "description": "弹幕搜索：各服务器错误汇总",
+    "placeholders": {
+      "errors": {
+        "type": "String"
+      }
+    }
+  },
+  "danmakuOffsetNone": "无偏移",
+  "@danmakuOffsetNone": {
+    "description": "弹幕时间轴偏移：0"
+  },
+  "danmakuOffsetDelay": "延后 {time}",
+  "@danmakuOffsetDelay": {
+    "description": "弹幕时间轴偏移：正",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "danmakuOffsetAdvance": "提前 {time}",
+  "@danmakuOffsetAdvance": {
+    "description": "弹幕时间轴偏移：负",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "playerAudioFallbackNoTrack": "当前音轨无法播放，且没有其它可切换的音轨",
+  "@playerAudioFallbackNoTrack": {
+    "description": "播放器：音轨回退失败提示"
+  },
+  "playerAudioFallbackSwitched": "当前音轨无法播放，已自动切换到「{name}」",
+  "@playerAudioFallbackSwitched": {
+    "description": "播放器：音轨自动回退提示",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playerPlaybackFailed": "播放失败：{error}",
+  "@playerPlaybackFailed": {
+    "description": "播放器：mpv 报告打开/播放失败时的提示（附失败原因）",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "playerAudioEffectsUnsupported": "当前播放内核不支持所选音效，已自动跳过",
+  "@playerAudioEffectsUnsupported": {
+    "description": "播放器：内核缺音频滤镜（音量标准化/压缩/低音/环绕等）时，服务层摘掉或停用 af 链后的提示"
+  },
+  "playerDiagnosticsDuration": "{minutes} 分 {seconds} 秒",
+  "@playerDiagnosticsDuration": {
+    "description": "播放器诊断：≥60 秒的时长文本",
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "playerDiagnosticsAvsyncAudioAhead": "{value} 音频超前",
+  "@playerDiagnosticsAvsyncAudioAhead": {
+    "description": "播放器诊断：音画同步（音频超前）",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "playerDiagnosticsAvsyncVideoAhead": "{value} 视频超前",
+  "@playerDiagnosticsAvsyncVideoAhead": {
+    "description": "播放器诊断：音画同步（视频超前）",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "playerDiagnosticsWarnDroppedFrames": "已丢帧 {dropped} 帧：渲染跟不上，可尝试降超分档位或改硬解",
+  "@playerDiagnosticsWarnDroppedFrames": {
+    "description": "播放器诊断：丢帧告警",
+    "placeholders": {
+      "dropped": {
+        "type": "int"
+      }
+    }
+  },
+  "playerDiagnosticsWarnSoftwareDecode": "当前为软解（CPU 解码）：高码率/高分辨率可能掉帧发热",
+  "@playerDiagnosticsWarnSoftwareDecode": {
+    "description": "播放器诊断：软解告警"
+  },
+  "playerDiagnosticsWarnAvsync": "音画不同步：{value}",
+  "@playerDiagnosticsWarnAvsync": {
+    "description": "播放器诊断：音画不同步告警",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "cacheCategoryListThumbs": "视频列表封面缩略图",
+  "@cacheCategoryListThumbs": {
+    "description": "缓存类别：视频列表封面缩略图"
+  },
+  "cacheCategoryNetworkDanmaku": "网络弹幕缓存",
+  "@cacheCategoryNetworkDanmaku": {
+    "description": "缓存类别：网络弹幕缓存"
+  },
+  "cacheCategoryBiliCovers": "哔哩封面缓存",
+  "@cacheCategoryBiliCovers": {
+    "description": "缓存类别：哔哩封面缓存"
+  },
+  "cacheCategoryOther": "其他缓存",
+  "@cacheCategoryOther": {
+    "description": "缓存类别：其他缓存"
+  },
+  "updateNoNotes": "暂无更新说明",
+  "@updateNoNotes": {
+    "description": "检查更新：Release 正文为空时的占位"
+  },
+  "buildInfoNoRevision": "本次构建未注入提交哈希（需用 tools/ 里的构建脚本编译）",
+  "@buildInfoNoRevision": {
+    "description": "关于页：构建信息没有提交哈希"
+  },
+  "buildInfoCopied": "已复制 {revision}",
+  "@buildInfoCopied": {
+    "description": "关于页：复制提交哈希提示",
+    "placeholders": {
+      "revision": {
+        "type": "String"
+      }
+    }
+  },
+  "buildInfoCopiedDirty": "已复制 {revision}（工作区有未提交改动）",
+  "@buildInfoCopiedDirty": {
+    "description": "关于页：复制提交哈希提示（工作区有改动）",
+    "placeholders": {
+      "revision": {
+        "type": "String"
+      }
+    }
+  },
+  "castDeviceOffline": "设备已离线",
+  "@castDeviceOffline": {
+    "description": "投屏：设备离线"
+  },
+  "castNoLanIpv4": "未找到局域网 IPv4 地址",
+  "@castNoLanIpv4": {
+    "description": "投屏：本机没有局域网 IPv4"
+  },
+  "castFileMissing": "文件不存在",
+  "@castFileMissing": {
+    "description": "投屏：待投屏文件不存在"
+  },
+  "dolbyVisionHintTitle": "杜比视界视频",
+  "@dolbyVisionHintTitle": {
+    "description": "播放器：杜比视界引导弹窗标题"
+  },
+  "dolbyVisionHintBody": "该视频为杜比视界（Dolby Vision）编码。\n若画面发绿/发紫，请在「播放设置 → 解码」启用 GPU-next 渲染并切换软解；\n若仍无法解决，则该设备可能不支持杜比视界播放。",
+  "@dolbyVisionHintBody": {
+    "description": "播放器：杜比视界引导弹窗正文"
+  },
+  "playerNetworkDanmakuLoadedManual": "{anime} · {episode}（{server}）",
+  "@playerNetworkDanmakuLoadedManual": {
+    "description": "播放器：网络弹幕手动下载成功的回执（服务器名由 UI 侧取 l10n 显示名）",
+    "placeholders": {
+      "anime": {
+        "type": "String"
+      },
+      "episode": {
+        "type": "String"
+      },
+      "server": {
+        "type": "String"
+      }
+    }
+  },
+  "playerNetworkDanmakuLoadedAuto": "{anime} {episode}（{server}）",
+  "@playerNetworkDanmakuLoadedAuto": {
+    "description": "播放器：切集自动匹配命中弹幕的回执（服务器名由 UI 侧取 l10n 显示名）",
+    "placeholders": {
+      "anime": {
+        "type": "String"
+      },
+      "episode": {
+        "type": "String"
+      },
+      "server": {
+        "type": "String"
+      }
+    }
+  },
+  "playerDanmakuLocateNoEpisode": "未能从文件名识别集数，可用上方输入框直接跳转",
+  "@playerDanmakuLocateNoEpisode": {
+    "description": "播放器 · 网络弹幕集数面板：自动定位失败（识别不出集数）"
+  },
+  "playerDanmakuLocateEpisodeMissing": "未找到第 {number} 集，可用上方输入框直接跳转",
+  "@playerDanmakuLocateEpisodeMissing": {
+    "description": "播放器 · 网络弹幕集数面板：自动定位失败（集列表里没有该集）",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "legalAgreeCheckbox": "我已阅读并同意以上隐私政策",
+  "@legalAgreeCheckbox": {
+    "description": "隐私弹窗：同意复选框文案"
+  },
+  "legalDisagreeExit": "不同意并退出",
+  "@legalDisagreeExit": {
+    "description": "隐私弹窗：不同意（退出应用）按钮"
+  },
+  "legalAgreeWithCountdown": "同意并继续 ({seconds} 秒)",
+  "@legalAgreeWithCountdown": {
+    "description": "隐私弹窗：倒计时中的同意按钮",
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "legalAgreeContinue": "同意并继续",
+  "@legalAgreeContinue": {
+    "description": "隐私弹窗：倒计时结束后的同意按钮"
+  },
+  "commonListSeparator": "、",
+  "@commonListSeparator": {
+    "description": "通用：并列项之间的分隔符（弹幕屏蔽词 / 诊断项 / 字幕来源语言格式编码的摘要）"
+  },
+  "commonLabelWithColon": "{label}：",
+  "@commonLabelWithColon": {
+    "description": "通用：给一段内容加「标签：」前缀（字幕 ASS 限制说明）",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaInfoStreamsGroupTitle": "【{title}】",
+  "@mediaInfoStreamsGroupTitle": {
+    "description": "媒体信息：复制出的文本里给流分组加方括号标题",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsFontPreviewSample": "0123456789，。！？；：“”（）【】…·",
+  "@settingsFontPreviewSample": {
+    "description": "字体设置页：字体效果预览样例（中文侧顺带展示全角标点字形覆盖）"
+  },
+  "folderActionDestWithTarget": "{dest}：{target}",
+  "@folderActionDestWithTarget": {
+    "description": "文件操作：目标位置与最终条目名（「已移动到 X」的 X）",
+    "placeholders": {
+      "dest": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "fileOpItemIssue": "「{name}」{reason}",
+  "@fileOpItemIssue": {
+    "description": "文件操作：条目名 + 校验失败原因（批量移动/复制预校验）",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "fileOpItemFailed": "{name}：{reason}",
+  "@fileOpItemFailed": {
+    "description": "文件操作：条目名 + 失败原因（批量移动/复制/删除的失败汇总）",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "commonColorCyan": "青色",
+  "@commonColorCyan": {
+    "description": "通用颜色名：青色（主题色 / 字幕颜色预设共用）"
+  },
+  "commonColorGreen": "绿色",
+  "@commonColorGreen": {
+    "description": "通用颜色名：绿色（主题色 / 字幕颜色预设共用）"
+  },
+  "commonColorYellow": "黄色",
+  "@commonColorYellow": {
+    "description": "通用颜色名：黄色（主题色 / 字幕颜色预设共用）"
+  },
+  "commonDefault": "默认",
+  "@commonDefault": {
+    "description": "通用：默认（解码档位 / 字体字重等「未自定义」状态）"
+  },
+  "commonDeleteConfirm": "确定删除「{name}」吗？",
+  "@commonDeleteConfirm": {
+    "description": "错误日志：删除单个日志的二次确认正文",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "commonDeleteConfirmIrreversible": "确定删除「{name}」吗？此操作不可撤销。",
+  "@commonDeleteConfirmIrreversible": {
+    "description": "删除服务器二次确认",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaInfoSampleRates": "采样率",
+  "@mediaInfoSampleRates": {
+    "description": "解码器详情页：采样率胶囊分组标题"
+  },
+  "commonLanguage": "语言",
+  "@commonLanguage": {
+    "description": "设置页「语言」组（在弹幕组下方、下载组上方）"
+  },
+  "downloadManagerTitle": "下载管理",
+  "biliVideoDownloadTitle": "视频下载",
+  "biliDanmakuDownloadTitle": "弹幕下载",
+  "biliSubtitleDownloadTitle": "字幕下载",
+  "commonQuality": "清晰度",
+  "@commonQuality": {
+    "description": "播放器「更多」面板 / 清晰度面板：清晰度"
+  },
+  "playerDelaySeconds": "{value} 秒",
+  "@playerDelaySeconds": {
+    "description": "播放器字幕延迟面板：带正负号的延迟读数",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

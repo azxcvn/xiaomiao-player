@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/chapter_info.dart';
 import 'package:moumou/pages/player/player_metrics.dart';
 import 'package:moumou/pages/player/views/player_pressable.dart';
@@ -87,7 +89,7 @@ class ChapterSkipChip extends StatelessWidget {
             const Icon(Icons.skip_next_rounded, size: 18, color: Colors.white),
             const SizedBox(width: 4),
             Text(
-              type.label,
+              chapterSkipTypeLabel(AppLocalizations.of(context), type),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 13,

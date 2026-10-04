@@ -5,12 +5,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///
 /// 两者**互斥**（UI 上是单选，不是两个开关）：单选天然不会出现
 /// 「都开」「都关」这种无意义状态。默认 Wyzie（保持原有行为）。
+///
+/// 名称在 `lib/l10n/label_maps.dart` 的 [subtitleSourceKindLabel]。
 enum SubtitleSourceKind {
-  wyzie('Wyzie 字幕服务'),
-  custom('自定义字幕地址');
-
-  final String label;
-  const SubtitleSourceKind(this.label);
+  wyzie,
+  custom;
 
   static SubtitleSourceKind byName(String? name) {
     for (final k in values) {

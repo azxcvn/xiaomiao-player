@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/player_loop.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/widgets/player_option_chip.dart';
@@ -33,7 +35,7 @@ class PlayerLoopPanel extends StatelessWidget {
                 if (mode != LoopMode.off) const SizedBox(width: 8),
                 Expanded(
                   child: PlayerOptionChip(
-                    label: mode.label,
+                    label: loopModeLabel(AppLocalizations.of(context), mode),
                     selected: settings.loopMode == mode,
                     onTap: () => settings.setLoopMode(mode),
                     textAlign: TextAlign.center,

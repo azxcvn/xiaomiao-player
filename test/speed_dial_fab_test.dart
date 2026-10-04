@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/widgets/speed_dial_fab.dart';
 
+import 'l10n_test_helper.dart';
+
 void main() {
   Future<void> pump(WidgetTester tester, List<SpeedDialAction> actions) async {
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Scaffold(
           floatingActionButton: SpeedDialFab(actions: actions),
         ),

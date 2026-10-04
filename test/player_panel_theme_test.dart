@@ -5,6 +5,8 @@ import 'package:moumou/widgets/player_option_chip.dart';
 import 'package:moumou/widgets/settings_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 播放器暗色面板强调色跟随主题（字幕/弹幕面板滑杆不再写死 0xFF4FC3F7）。
 ///
 /// 断言方式：同一面板在两种主题色下渲染，取实际生效的 [SliderThemeData]
@@ -23,6 +25,9 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(
@@ -69,6 +74,9 @@ void main() {
     late Color accentFromLight;
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(
@@ -103,6 +111,9 @@ void main() {
     late ColorScheme second;
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(
@@ -134,6 +145,9 @@ void main() {
     late Color expectedAccent;
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(

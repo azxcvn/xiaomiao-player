@@ -14,15 +14,17 @@ import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:moumou/services/decode_settings.dart';
 import 'package:moumou/services/player_renderer_settings.dart';
+import 'package:moumou/services/tls_ca_bundle.dart';
 import 'package:moumou/utils/decode_policy.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/mpv_tuning.dart';
 
 /// 把 [buildMpvTuning] 的结果写进 [player]；[path] 用于判定本地/在线档。
 ///
-/// `demuxer-lavf-o` 先读旧值再合并（media_kit 在里面放了
-/// `protocol_whitelist`，整串覆盖会让 m3u8 等协议失效）；读不到旧值则
-/// **不写该键**（[buildMpvTuning] 返回的表里不含它）。
+/// `demuxer-lavf-o`（含 ffmpeg 协议白名单）由 [buildDemuxerLavfO] **整串重建**：
+/// 早期写法是「读 mpv 现值再合并」，但 mpv 读回来时方括号会丢，合并会把
+/// `protocol_whitelist=[udp,rtp,…]` 切碎成只剩 `udp`，导致所有 http/https 被
+/// ffmpeg 拒绝（在线播放全灭，本地不受影响）——2026-10 实测定位并改掉。
 ///
 /// 失败一律静默（播放器未就绪 / 属性不支持）：调参是优化项，不该阻断起播。
 Future<void> applyPlaybackTuning(Player player, String path) async {
@@ -50,15 +52,11 @@ Future<void> applyPlaybackTuning(Player player, String path) async {
   try {
     final native = player.platform as NativePlayer;
     await native.waitForPlayerInitialization;
-    String? lavfO;
-    try {
-      lavfO = await native.getProperty('demuxer-lavf-o');
-    } catch (_) {
-      lavfO = null;
-    }
+    // CA 证书库（首次从 assets 拷到沙盒；失败返回 null → 不写该属性）
+    final tlsCaFile = await TlsCaBundle.ensurePath();
     final tuning = buildMpvTuning(
       isOnline: isOnlineMedia(path),
-      existingDemuxerLavfO: lavfO,
+      tlsCaFile: tlsCaFile,
     );
     for (final entry in tuning.entries) {
       await native.setProperty(entry.key, entry.value);

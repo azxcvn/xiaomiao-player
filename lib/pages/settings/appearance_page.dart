@@ -4,6 +4,8 @@ import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_color_picker_plus/flutter_color_picker_plus.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/pages/settings/font_page.dart';
 import 'package:moumou/pages/settings/wallpaper_editor_page.dart';
 import 'package:moumou/services/device_services.dart';
@@ -36,24 +38,26 @@ class AppearancePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('外观')),
+      appBar: AppBar(title: Text(l10n.settingsGroupAppearance)),
       body: ListenableBuilder(
         listenable: controller,
         builder: (context, _) {
+          final l10n = AppLocalizations.of(context);
           // 底部安全区已由全局 SafeArea 处理
           return ListView(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
             children: [
               // 外观模式
-              const SettingsGroupTitle(title: '外观模式'),
+              SettingsGroupTitle(title: l10n.settingsAppearanceMode),
               SettingsCard(
                 child: Column(
                   children: [
                     for (final mode in AppThemeMode.values)
                       SettingsRadioTile(
                         icon: _modeIcon(mode),
-                        title: mode.label,
+                        title: appThemeModeLabel(l10n, mode),
                         selected: controller.mode == mode,
                         onTap: () => controller.setMode(mode),
                       ),
@@ -62,26 +66,26 @@ class AppearancePage extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               // 主题色：纯代表色块 + 名称（固定 4 列网格，卡片包裹）
-              const SettingsGroupTitle(title: '主题色'),
+              SettingsGroupTitle(title: l10n.settingsAppearanceThemeColor),
               SettingsCard(
                 padding: const EdgeInsets.all(12),
-                child: _buildThemeColorSection(context, controller),
+                child: _buildThemeColorSection(context, controller, l10n),
               ),
               const SizedBox(height: 20),
               // 调色板风格：标准型独占首行 + 其余 20 个 4×5（卡片包裹）
-              const SettingsGroupTitle(title: '调色板风格'),
+              SettingsGroupTitle(title: l10n.settingsAppearancePaletteVariant),
               SettingsCard(
                 padding: const EdgeInsets.all(12),
-                child: _buildVariantSection(context, controller),
+                child: _buildVariantSection(context, controller, l10n),
               ),
               const SizedBox(height: 20),
               // ── App 字体设置（工作.md 第 3 点：调色板风格下方）────
-              const SettingsGroupTitle(title: '字体'),
+              SettingsGroupTitle(title: l10n.settingsFontGroupFont),
               SettingsCard(
                 child: SettingsTile(
                   icon: Icons.font_download_outlined,
-                  title: 'App字体设置',
-                  subtitle: const Text('自定义全局字体'),
+                  title: l10n.settingsFontTitle,
+                  subtitle: Text(l10n.settingsAppearanceCustomFontDesc),
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -93,7 +97,7 @@ class AppearancePage extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               // ── 自定义壁纸 ──────────────────────────────
-              const SettingsGroupTitle(title: '壁纸'),
+              SettingsGroupTitle(title: l10n.settingsAppearanceGroupWallpaper),
               const _WallpaperCard(),
             ],
           );
@@ -106,6 +110,7 @@ class AppearancePage extends StatelessWidget {
   Widget _buildThemeColorSection(
     BuildContext context,
     ThemeController controller,
+    AppLocalizations l10n,
   ) {
     final presets = ThemeController.presetColors; // 23 个
     const totalCells = 24; // 23 预设 + 1 动态色
@@ -125,16 +130,19 @@ class AppearancePage extends StatelessWidget {
           itemCount: totalCells,
           itemBuilder: (context, index) {
             if (index < presets.length) {
-              final preset = presets[index];
-              return _colorTile(preset.color, preset.label, controller);
+              return _colorTile(
+                presets[index],
+                themeColorLabel(l10n, index),
+                controller,
+              );
             }
             // 第 24 格：动态色
-            return _buildDynamicTile(context, controller);
+            return _buildDynamicTile(context, controller, l10n);
           },
         ),
         const SizedBox(height: 12),
         // 自定义（通栏胶囊，唯一保持现状的一行）
-        _buildCustomTile(context, controller),
+        _buildCustomTile(context, controller, l10n),
       ],
     );
   }
@@ -164,10 +172,11 @@ class AppearancePage extends StatelessWidget {
   Widget _buildDynamicTile(
     BuildContext context,
     ThemeController controller,
+    AppLocalizations l10n,
   ) {
     final scheme = Theme.of(context).colorScheme;
     return _SelectionTile(
-      label: '动态色',
+      label: l10n.settingsAppearanceDynamicColor,
       selected: controller.usingDynamicColor,
       onTap: () => _applyDynamicColor(context, controller),
       pill: false,
@@ -195,6 +204,7 @@ class AppearancePage extends StatelessWidget {
   Widget _buildCustomTile(
     BuildContext context,
     ThemeController controller,
+    AppLocalizations l10n,
   ) {
     final scheme = Theme.of(context).colorScheme;
     final custom = controller.customColor;
@@ -220,7 +230,7 @@ class AppearancePage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                '自定义',
+                l10n.commonCustom,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
@@ -257,13 +267,14 @@ class AppearancePage extends StatelessWidget {
     BuildContext context,
     ThemeController controller,
   ) async {
+    final l10n = AppLocalizations.of(context);
     final sdk = await DeviceServices.getSdkInt();
     if (sdk > 0 && sdk < 31) {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(
-            const SnackBar(content: Text('安卓版本过低，不支持该功能')),
+            SnackBar(content: Text(l10n.settingsAppearanceSdkTooLow)),
           );
       }
       return;
@@ -273,7 +284,9 @@ class AppearancePage extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(const SnackBar(content: Text('无法读取壁纸颜色')));
+          ..showSnackBar(
+            SnackBar(content: Text(l10n.settingsAppearanceReadWallpaperFailed)),
+          );
       }
       return;
     }
@@ -284,25 +297,28 @@ class AppearancePage extends StatelessWidget {
   Widget _buildVariantSection(
     BuildContext context,
     ThemeController controller,
+    AppLocalizations l10n,
   ) {
-    final entries = ThemeController.variantLabels.entries.toList();
-    // 标准型 = tonalSpot 固定在首行；其余按地图顺序排
+    // 展示顺序来自 ThemeController.variantOrder（与 FlexSchemeVariant.values 不同）
+    final entries = ThemeController.variantOrder;
+    // 标准型 = tonalSpot 固定在首行；其余按列表顺序排
     final standard =
-        entries.firstWhere((e) => e.key == FlexSchemeVariant.tonalSpot);
-    final rest = entries.where((e) => e.key != FlexSchemeVariant.tonalSpot).toList();
+        entries.firstWhere((v) => v == FlexSchemeVariant.tonalSpot);
+    final rest =
+        entries.where((v) => v != FlexSchemeVariant.tonalSpot).toList();
     const perRow = 4;
 
     Widget variantTile(
-      MapEntry<FlexSchemeVariant, String> entry, {
+      FlexSchemeVariant variant, {
       double aspectRatio = 1.8,
     }) {
-      final selected = controller.variant == entry.key;
+      final selected = controller.variant == variant;
       final scheme = Theme.of(context).colorScheme;
       return AspectRatio(
         aspectRatio: aspectRatio,
         child: _SelectionTile(
           selected: selected,
-          onTap: () => controller.setVariant(entry.key),
+          onTap: () => controller.setVariant(variant),
           pill: true,
           child: Center(
             child: AnimatedDefaultTextStyle(
@@ -316,7 +332,7 @@ class AppearancePage extends StatelessWidget {
                     Theme.of(context).textTheme.bodyMedium?.fontFamily,
               ),
               child: Text(
-                entry.value,
+                paletteVariantLabel(l10n, variant),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -488,8 +504,9 @@ class _CustomColorDialogState extends State<_CustomColorDialog> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
-      title: const Text('自定义主题色'),
+      title: Text(l10n.settingsAppearanceCustomColorTitle),
       content: SingleChildScrollView(
         child: SizedBox(
           width: 320,
@@ -615,11 +632,11 @@ class _CustomColorDialogState extends State<_CustomColorDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(_color),
-          child: const Text('确定'),
+          child: Text(l10n.commonConfirm),
         ),
       ],
     );
@@ -669,11 +686,12 @@ class _WallpaperCard extends StatelessWidget {
     } on PlatformException {
       // 这台设备没有任何可用的系统图片选择器：明确提示，别让用户以为点了没反应
       if (!context.mounted) return;
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
-            content: Text('这台设备没有可用的系统图片选择器'),
+          SnackBar(
+            content: Text(l10n.settingsAppearanceNoImagePicker),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -706,6 +724,7 @@ class _WallpaperCard extends StatelessWidget {
       listenable: settings,
       builder: (context, _) {
         final scheme = Theme.of(context).colorScheme;
+        final l10n = AppLocalizations.of(context);
         final path = settings.path;
         final hasWallpaper = settings.active;
         return SettingsCard(
@@ -722,9 +741,9 @@ class _WallpaperCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            '自定义壁纸',
-                            style: TextStyle(
+                          Text(
+                            l10n.settingsAppearanceWallpaperTitle,
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -732,8 +751,8 @@ class _WallpaperCard extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             hasWallpaper
-                                ? '壁纸显示在页面内容与顶部栏之后'
-                                : '选一张图片，铺在页面内容与顶部栏之后',
+                                ? l10n.settingsAppearanceWallpaperActiveDesc
+                                : l10n.settingsAppearanceWallpaperPickDesc,
                             style: TextStyle(
                               fontSize: 13,
                               color: scheme.onSurfaceVariant,
@@ -751,7 +770,9 @@ class _WallpaperCard extends StatelessWidget {
                       child: FilledButton.tonal(
                         onPressed: () => _pick(context),
                         child: Text(
-                          hasWallpaper ? '替换壁纸' : '选择壁纸',
+                          hasWallpaper
+                              ? l10n.settingsAppearanceReplaceWallpaper
+                              : l10n.settingsAppearanceChooseWallpaper,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -761,12 +782,12 @@ class _WallpaperCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       OutlinedButton(
                         onPressed: () => _adjust(context),
-                        child: const Text('调整'),
+                        child: Text(l10n.settingsAppearanceAdjustWallpaper),
                       ),
                       const SizedBox(width: 4),
                       TextButton(
                         onPressed: settings.clear,
-                        child: const Text('清除'),
+                        child: Text(l10n.commonClear),
                       ),
                     ],
                   ],

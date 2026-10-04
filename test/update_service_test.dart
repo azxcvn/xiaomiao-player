@@ -84,7 +84,7 @@ void main() {
       expect(info, isNull);
     });
 
-    test('body 为空 → 回退「暂无更新说明」', () async {
+    test('body 为空 → 返回空正文（占位文案在 UI 层）', () async {
       final client = MockClient(
         (_) async => http.Response(jsonEncode({'tag_name': '1.4.0'}), 200),
       );
@@ -94,7 +94,7 @@ void main() {
         localVersion: '1.3.3',
       );
 
-      expect(info!.body, '暂无更新说明');
+      expect(info!.body, isEmpty);
     });
 
     test('网络失败 → 抛 UpdateCheckException', () async {

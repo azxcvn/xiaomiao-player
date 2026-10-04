@@ -114,10 +114,8 @@ void main() {
     await s.ensureLoaded();
     expect(s.isDefaultEnabled, isTrue);
     expect(s.autoMatchAllowed, isFalse);
-    // 副标题用短指引；toast 用含服务器名的完整说明
-    expect(s.autoMatchBlockedReason, '请先停用弹弹Play 服务器');
-    expect(s.autoMatchBlockedMessage, contains(DanmakuServer.defaultName));
-    expect(s.autoMatchBlockedMessage, contains('切集自动匹配弹幕'));
+    // 服务层只给状态，文案由页面侧取 l10n（danmakuServerAutoMatchBlocked*）
+    expect(s.autoMatchBlockedByDefaultServer, isTrue);
 
     expect(await s.setAutoMatchEnabled(true), isFalse);
     expect(s.autoMatchPreference, isFalse);
@@ -138,8 +136,7 @@ void main() {
     // 再次停用默认服务器 → 用户此前的选择自动恢复
     await s.setServerEnabled(DanmakuServer.defaultId, false);
     expect(s.autoMatchEnabled, isTrue);
-    expect(s.autoMatchBlockedReason, isNull);
-    expect(s.autoMatchBlockedMessage, isNull);
+    expect(s.autoMatchBlockedByDefaultServer, isFalse);
   });
 
   test('默认服务器启用时：关闭动作永远允许', () async {
@@ -216,10 +213,10 @@ void main() {
 
   // ── 弹幕来源显示（issue #1 需求 4：「来源信息无法完整显示」）──────────
   group('serverLabelFor：服务器地址 → 展示名', () {
-    test('null / 空串 → 默认服务器名（弹弹Play）', () async {
+    test('null / 空串 → null（默认服务器显示名由 UI 侧取 l10n）', () async {
       await s.ensureLoaded();
-      expect(s.serverLabelFor(null), DanmakuServer.defaultName);
-      expect(s.serverLabelFor(''), DanmakuServer.defaultName);
+      expect(s.serverLabelFor(null), isNull);
+      expect(s.serverLabelFor(''), isNull);
     });
 
     test('命中自建服务器 → 其名称（不只显示地址）', () async {

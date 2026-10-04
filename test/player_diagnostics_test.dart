@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moumou/l10n/app_localizations_zh.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/player_diagnostics.dart';
 import 'package:moumou/utils/player_diagnostics.dart';
 
@@ -7,6 +9,9 @@ import 'package:moumou/utils/player_diagnostics.dart';
 /// - 格式化（字节 / 码率 / 网速 / 秒 / 毫秒 / 帧率 / 分辨率 / 音画同步）；
 /// - 健康提示（丢帧 / 渲染延迟 / 软解 / 音画不同步 / 时间戳异常）。
 void main() {
+  // 秒 / 音画同步 / 健康提示的文案已搬到 UI 层（label_maps）：测试用中文夹具
+  final l10n = AppLocalizationsZh();
+
   group('PlayerDiagnosticsSnapshot.fromProperties', () {
     test('字段映射齐全', () {
       final s = PlayerDiagnosticsSnapshot.fromProperties(const {
@@ -119,9 +124,9 @@ void main() {
     });
 
     test('秒/毫秒/帧率/分辨率', () {
-      expect(formatDiagnosticSeconds(null), kDiagnosticPlaceholder);
-      expect(formatDiagnosticSeconds(3.24), '3.2 s');
-      expect(formatDiagnosticSeconds(125), '2 分 5 秒');
+      expect(diagnosticSecondsText(l10n, null), kDiagnosticPlaceholder);
+      expect(diagnosticSecondsText(l10n, 3.24), '3.2 s');
+      expect(diagnosticSecondsText(l10n, 125), '2 分 5 秒');
       expect(formatDiagnosticMillis(12.34), '12.3 ms');
       expect(formatDiagnosticMillis(null), kDiagnosticPlaceholder);
       expect(formatDiagnosticFps(23.976), '23.98 fps');
@@ -133,10 +138,10 @@ void main() {
     });
 
     test('音画同步正负与占位', () {
-      expect(formatDiagnosticAvsync(null), kDiagnosticPlaceholder);
-      expect(formatDiagnosticAvsync(0.02), '+20 ms 音频超前');
-      expect(formatDiagnosticAvsync(-0.35), '-350 ms 视频超前');
-      expect(formatDiagnosticAvsync(0), '+0 ms 音频超前');
+      expect(diagnosticAvsyncText(l10n, null), kDiagnosticPlaceholder);
+      expect(diagnosticAvsyncText(l10n, 0.02), '+20 ms 音频超前');
+      expect(diagnosticAvsyncText(l10n, -0.35), '-350 ms 视频超前');
+      expect(diagnosticAvsyncText(l10n, 0), '+0 ms 音频超前');
     });
 
     test('文本占位归一', () {
@@ -161,14 +166,14 @@ void main() {
     });
   });
 
-  group('diagnosticsWarnings', () {
+  group('diagnosticWarnings', () {
     test('一切正常时无提示', () {
       const s = PlayerDiagnosticsSnapshot(
         hwdec: 'mediacodec-copy',
         droppedFrames: 0,
         avsync: 0.01,
       );
-      expect(diagnosticsWarnings(s), isEmpty);
+      expect(diagnosticWarnings(l10n, s), isEmpty);
     });
 
     test('丢帧 / 软解 / 音画不同步各自命中', () {
@@ -176,16 +181,16 @@ void main() {
         hwdec: 'mediacodec-copy',
         droppedFrames: 7,
       );
-      expect(diagnosticsWarnings(dropped).single, contains('已丢帧 7 帧'));
+      expect(diagnosticWarnings(l10n, dropped).single, contains('已丢帧 7 帧'));
 
       const soft = PlayerDiagnosticsSnapshot(hwdec: 'no');
-      expect(diagnosticsWarnings(soft).single, contains('软解'));
+      expect(diagnosticWarnings(l10n, soft).single, contains('软解'));
 
       const desync = PlayerDiagnosticsSnapshot(
         hwdec: 'mediacodec-copy',
         avsync: -0.4,
       );
-      expect(diagnosticsWarnings(desync).single, contains('音画不同步'));
+      expect(diagnosticWarnings(l10n, desync).single, contains('音画不同步'));
     });
 
     test('多项异常按优先级全部列出', () {
@@ -194,7 +199,7 @@ void main() {
         droppedFrames: 2,
         avsync: 0.5,
       );
-      final warnings = diagnosticsWarnings(s);
+      final warnings = diagnosticWarnings(l10n, s);
       expect(warnings.length, 3);
       expect(warnings.first, contains('已丢帧'));
       expect(warnings[1], contains('软解'));

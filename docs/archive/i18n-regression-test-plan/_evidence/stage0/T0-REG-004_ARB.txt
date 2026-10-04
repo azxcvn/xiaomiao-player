@@ -1,0 +1,9 @@
+=== T0-REG-004 ARB 对称性与未翻译清单（口径：排除所有 @ 开头的元数据键） ===
+zh 真实键数: 1276   en 真实键数: 1276
+只在 zh: 0   只在 en: 0
+空值: zh=0 en=0
+占位符键: 176   复数键: 44   多行键: 21
+英文侧含汉字的键: 2  ['languageNameZh', 'languagePickerTitle']
+占位符集合不一致: 0 []
+ARB 元数据键（@ 开头）: zh=981
+l10n_untranslated.json = {}

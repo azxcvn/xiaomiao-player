@@ -17,16 +17,14 @@ import 'package:flutter/foundation.dart';
 /// - 柔和夜间：压低音轰鸣与刺耳高频、保对白，深夜观影不扰邻。
 @immutable
 class EqualizerPreset {
-  /// 稳定标识（持久化用）
+  /// 稳定标识（持久化用；展示名在 `lib/l10n/label_maps.dart` 的
+  /// [equalizerPresetLabel] 里按 id 映射）
   final String id;
-
-  /// 展示名（中文）
-  final String label;
 
   /// 5 段增益（dB），范围 -15 ~ +15，长度恒为 5
   final List<double> bands;
 
-  const EqualizerPreset(this.id, this.label, this.bands);
+  const EqualizerPreset(this.id, this.bands);
 }
 
 /// 5 段中心频率展示标签（与小喵 player 一致）
@@ -49,12 +47,12 @@ const double kEqualizerMaxBandDb = 15;
 ///
 /// 增益为相对 0dB 的幅度，关键频段用 ±6~8dB 以保证可闻、不刺耳。
 const List<EqualizerPreset> kEqualizerPresets = [
-  EqualizerPreset('flat', '平直', [0, 0, 0, 0, 0]),
-  EqualizerPreset('dialogue', '对白增强', [-3, -1, 3, 6, 4]),
-  EqualizerPreset('cinema', '电影', [6, 3, -1, 3, 6]),
-  EqualizerPreset('bass', '低音震撼', [8, 4, 0, 0, 0]),
-  EqualizerPreset('treble', '高音清晰', [0, 0, 2, 5, 7]),
-  EqualizerPreset('night', '柔和夜间', [-6, -3, 2, 3, -5]),
+  EqualizerPreset('flat', [0, 0, 0, 0, 0]),
+  EqualizerPreset('dialogue', [-3, -1, 3, 6, 4]),
+  EqualizerPreset('cinema', [6, 3, -1, 3, 6]),
+  EqualizerPreset('bass', [8, 4, 0, 0, 0]),
+  EqualizerPreset('treble', [0, 0, 2, 5, 7]),
+  EqualizerPreset('night', [-6, -3, 2, 3, -5]),
 ];
 
 /// 按 id 反查预设，找不到返回 null（如旧数据指向已删除的预设）。

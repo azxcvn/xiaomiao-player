@@ -37,11 +37,15 @@ class AudioTrack {
     this.sourcePath,
   });
 
-  /// 展示名：优先标题，其次语言，最后回退「音轨 N」
+  /// 展示名的**数据部分**：优先标题，其次语言；两者都没有时返回**空串**。
+  ///
+  /// 空串表示「调用方负责按本地化文案兜底」（如「音轨 2」）——本层是纯数据模型，
+  /// 不许 import l10n：兜底文案见 `lib/l10n/label_maps.dart` 的
+  /// `audioTrackDisplayName`。
   String get displayTitle {
     if (title != null && title!.trim().isNotEmpty) return title!.trim();
     if (language != null && language!.trim().isNotEmpty) return language!.trim();
-    return '音轨 $id';
+    return '';
   }
 }
 
@@ -51,17 +55,19 @@ class AudioTrack {
 /// [reverseStereo]（反向立体声）通过 `af` 滤镜 `pan=[stereo|c0=c1|c1=c0]`
 /// 交换左右声道实现，此时 `audio-channels` 需先重置为 `auto-safe`（见
 /// [audioChannelsPropertyValue]）。
+///
+/// 名称在 `lib/l10n/label_maps.dart` 的 [audioChannelsLabel]；
+/// **顺序即持久化语义**（按枚举 name 存），不许调整。
 enum AudioChannels {
-  auto('自动', 'audio-channels', 'auto'),
-  autoSafe('安全自动', 'audio-channels', 'auto-safe'),
-  mono('单声道', 'audio-channels', 'mono'),
-  stereo('立体声', 'audio-channels', 'stereo'),
-  reverseStereo('反向立体声', 'af', 'pan=[stereo|c0=c1|c1=c0]');
+  auto('audio-channels', 'auto'),
+  autoSafe('audio-channels', 'auto-safe'),
+  mono('audio-channels', 'mono'),
+  stereo('audio-channels', 'stereo'),
+  reverseStereo('af', 'pan=[stereo|c0=c1|c1=c0]');
 
-  final String label;
   final String property;
   final String value;
-  const AudioChannels(this.label, this.property, this.value);
+  const AudioChannels(this.property, this.value);
 
   /// 按持久化标识（枚举 name）反查，找不到返回 [autoSafe]。
   static AudioChannels byName(String? name) {
@@ -89,17 +95,6 @@ bool isSupportedAudioFile(String filename) {
   return kSupportedAudioExtensions.contains(ext);
 }
 
-/// 音轨在面板中的展示名（纯函数，可单测）。
-/// 返回 `displayTitle` + 外挂标记 + 格式后缀，如「国语 · 外挂 · aac」。
-String audioTrackLabel(AudioTrack track) {
-  final parts = <String>[track.displayTitle];
-  if (track.external) parts.add('外挂');
-  if (track.codec != null && track.codec!.trim().isNotEmpty) {
-    parts.add(track.codec!.trim());
-  }
-  return parts.join(' · ');
-}
-
 /// 计算 `audio-channels` 属性实际写入值（纯函数，可单测）。
 ///
 /// 反向立体声不改声道布局，而是用 `af` 滤镜交换左右声道，故先把布局
@@ -114,7 +109,11 @@ String audioChannelsPropertyValue(AudioChannels channels) {
 /// `PlayerViewModel.updateMpvAfProperty` 的 DRC / 音量标准化 / 反向立体声，
 /// 并追加小喵 player 的 5 段均衡器 / 低音增强 / 虚拟环绕）：
 ///
-/// - 动态范围压缩 → `lavfi=[acompressor=threshold=-20dB:ratio=4:attack=5:release=50:makeup=2]`
+/// - 动态范围压缩 → `lavfi=[acompressor=threshold=0.1:ratio=4:attack=5:release=50:makeup=2]`
+///   （**threshold 是线性值，不是 dB**：ffmpeg `acompressor` 的 threshold 取值范围
+///   0.000976563–1、默认 0.125，写 `-20dB` 属于超范围 + 非法后缀，会让整条 lavfi 图
+///   建不起来 → mpv「Audio filter initialized failed」→ 音频链初始化失败、**整段无声**
+///   （issue #8）。0.1 就是 -20 dB）
 /// - 音量标准化 → `dynaudnorm`
 /// - 反向立体声 → `pan=[stereo|c0=c1|c1=c0]`
 /// - 均衡器 → `@eq:lavfi=[equalizer=f=60:t=o:w=2:g=…,equalizer=f=230:…, …]`
@@ -125,6 +124,11 @@ String audioChannelsPropertyValue(AudioChannels channels) {
 /// 返回逗号拼接串；无滤镜时返回空串（`af` 置空即清除滤镜链）。
 /// 均衡器各段/低音/虚拟环绕用命名滤镜（`@eq`/`@bass`/`@virt`），与小喵 player
 /// 的 `af add @xxx:…` 命名一致，便于后续按名移除。
+///
+/// [unavailableFilters]：**内核里不存在的滤镜名**（`dynaudnorm` / `pan` 这类直接写
+/// 名字的；`lavfi=[…]` 里的那些内核报不出名字，由调用方整条停用 af 处理）。
+/// 传进来的一律不写进链——写了就会让整条 af 建不起来、连声音一起没（见
+/// `AudioController` 的 `_unsupportedAudioFilters`）。
 String buildAudioFilterChain({
   required AudioChannels channels,
   required bool volumeNormalization,
@@ -133,17 +137,19 @@ String buildAudioFilterChain({
   bool eqEnabled = false,
   int bassBoost = 0,
   int virtualizer = 0,
+  Set<String> unavailableFilters = const {},
 }) {
   final parts = <String>[];
   if (drc) {
     parts.add(
-      'lavfi=[acompressor=threshold=-20dB:ratio=4:attack=5:release=50:makeup=2]',
+      'lavfi=[acompressor=threshold=0.1:ratio=4:attack=5:release=50:makeup=2]',
     );
   }
-  if (volumeNormalization) {
+  if (volumeNormalization && !unavailableFilters.contains('dynaudnorm')) {
     parts.add('dynaudnorm');
   }
-  if (channels == AudioChannels.reverseStereo) {
+  if (channels == AudioChannels.reverseStereo &&
+      !unavailableFilters.contains('pan')) {
     parts.add('pan=[stereo|c0=c1|c1=c0]');
   }
   if (eqEnabled && !eqBands.every((b) => b.abs() < 0.01)) {

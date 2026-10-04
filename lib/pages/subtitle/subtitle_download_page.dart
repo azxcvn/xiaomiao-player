@@ -1,6 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/subtitle_entry.dart';
 import 'package:moumou/pages/subtitle/subtitle_settings_page.dart';
 import 'package:moumou/services/download/download_settings.dart';
@@ -115,28 +118,29 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
 
   /// 按当前来源校验前置配置：缺什么提示什么（不再一律提示 Wyzie 密钥）。
   /// 返回 false = 前置条件未满足，调用方直接返回。
-  Future<bool> _ensureSourceReady() async {
+  Future<bool> _ensureSourceReady(AppLocalizations l10n) async {
     await _source.ensureLoaded();
     if (_source.kind == SubtitleSourceKind.wyzie) {
       if (WyzieSettings.instance.apiKey.isEmpty) {
-        _toast('请先设置 WYZIE API 密钥');
+        _toast(l10n.subtitleSetWyzieKeyFirst);
         return false;
       }
       return true;
     }
     if (!_source.customConfigured) {
-      _toast('请先设置自定义字幕地址');
+      _toast(l10n.subtitleSetCustomUrlFirst);
       return false;
     }
     return true;
   }
 
   Future<void> _search() async {
+    final l10n = AppLocalizations.of(context);
     final keyword = _keywordCtrl.text.trim();
     if (keyword.isEmpty) return;
-    if (!await _ensureSourceReady()) return;
+    if (!await _ensureSourceReady(l10n)) return;
     if (!DownloadSettings.instance.hasDirectory) {
-      _toast('请先设置下载目录');
+      _toast(l10n.downloadSetDirFirst);
       await _pickDir();
       if (!DownloadSettings.instance.hasDirectory) return;
     }
@@ -161,7 +165,7 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
       });
     } catch (e) {
       if (!mounted || !_searchSession.isCurrent(session)) return;
-      setState(() => _error = _errText(e));
+      setState(() => _error = _errText(l10n, e));
     } finally {
       // 旧会话回来时不能把转圈提前关掉（新搜索还在跑）
       if (mounted && _searchSession.isCurrent(session)) {
@@ -197,8 +201,9 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
 
   Future<void> _download() async {
     if (_selected.isEmpty || _downloading) return;
+    final l10n = AppLocalizations.of(context);
     if (!DownloadSettings.instance.directoryExists) {
-      _toast('下载目录不存在，请重新选择');
+      _toast(l10n.downloadDirGone);
       await _pickDir();
       if (!DownloadSettings.instance.directoryExists) return;
     }
@@ -234,7 +239,9 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
       if (mounted) setState(() => _downloading = false);
     }
     if (!mounted) return;
-    _toast(fail == 0 ? '已下载 $ok 个字幕' : '下载完成：成功 $ok，失败 $fail');
+    _toast(fail == 0
+        ? l10n.subtitleDownloadedCount(ok)
+        : l10n.subtitleDownloadResult(ok, fail));
   }
 
   /// 下载字节：按**搜出这批结果的来源**选客户端（不按当前选择——
@@ -261,12 +268,13 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final hasResults = _results.isNotEmpty;
     // 监听来源设置：设置页里换了来源，返回本页时摘要/校验口径立刻跟着变
     return ListenableBuilder(
       listenable: _source,
       builder: (context, _) => Scaffold(
-        appBar: AppBar(title: const Text('字幕下载')),
+        appBar: AppBar(title: Text(l10n.biliSubtitleDownloadTitle)),
         body: Column(
           children: [
             _buildInput(),
@@ -279,6 +287,7 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
   }
 
   Widget _buildInput() {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
@@ -289,7 +298,7 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
               controller: _keywordCtrl,
               onSubmitted: (_) => _search(),
               decoration: InputDecoration(
-                hintText: '输入影视名称或 IMDB / TMDB ID',
+                hintText: l10n.subtitleSearchHint,
                 isDense: true,
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
@@ -314,7 +323,7 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
                       color: scheme.onPrimary,
                     ),
                   )
-                : const Text('确定'),
+                : Text(l10n.commonConfirm),
           ),
         ],
       ),
@@ -322,6 +331,7 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     if (_error != null) {
       return Center(
@@ -332,7 +342,7 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
               padding: const EdgeInsets.all(24),
               child: Text(_error!, textAlign: TextAlign.center),
             ),
-            TextButton(onPressed: _resetSearch, child: const Text('返回设置')),
+            TextButton(onPressed: _resetSearch, child: Text(l10n.subtitleBackToSettings)),
           ],
         ),
       );
@@ -346,12 +356,12 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  '未找到字幕，请换个关键词或调整字幕设置',
+                  l10n.subtitleNoResultHint,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: scheme.onSurfaceVariant),
                 ),
               ),
-              TextButton(onPressed: _resetSearch, child: const Text('返回设置')),
+              TextButton(onPressed: _resetSearch, child: Text(l10n.subtitleBackToSettings)),
             ],
           ),
         );
@@ -363,8 +373,11 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
           SettingsCard(
             child: SettingsTile(
               icon: Icons.tune,
-              title: '字幕下载设置',
-              subtitle: Text('当前来源：${_source.kind.label}'),
+              title: l10n.subtitleDownloadSettings,
+              subtitle: Text(
+                '${l10n.commonLabelWithColon(l10n.subtitleCurrentSource)}'
+                '${subtitleSourceKindLabel(l10n, _source.kind)}',
+              ),
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const SubtitleSettingsPage()),
@@ -375,7 +388,7 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
           const SizedBox(height: 24),
           Center(
             child: Text(
-              '输入关键词后点「确定」搜索字幕',
+              l10n.subtitleSearchHintShort,
               style: TextStyle(color: scheme.onSurfaceVariant),
             ),
           ),
@@ -393,41 +406,44 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
   }
 
   Widget _dirTile() {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final dir = DownloadSettings.instance.directory;
     return ListTile(
       dense: true,
       leading: const Icon(Icons.folder_outlined),
       title: Text(
-        dir.isEmpty ? '未设置下载目录' : DownloadSettings.instance.directoryName,
+        dir.isEmpty ? l10n.downloadNoDir : DownloadSettings.instance.directoryName,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
       ),
-      trailing: TextButton(onPressed: _pickDir, child: const Text('设置目录')),
+      trailing: TextButton(onPressed: _pickDir, child: Text(l10n.downloadSetDir)),
     );
   }
 
   Widget _headerBar() {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 8, 0),
       child: Row(
         children: [
           Expanded(
             child: Text(
-              '$_query · ${_results.length} 条',
+              l10n.subtitleResultHeader(_query, _results.length),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
             ),
           ),
-          TextButton(onPressed: _resetSearch, child: const Text('重新搜索')),
+          TextButton(onPressed: _resetSearch, child: Text(l10n.subtitleSearchAgain)),
         ],
       ),
     );
   }
 
   Widget _selectAllBar() {
+    final l10n = AppLocalizations.of(context);
     final all = _selected.length == _results.length && _results.isNotEmpty;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -443,15 +459,16 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
               }
             }),
           ),
-          const Text('全选'),
+          Text(l10n.commonSelectAll),
           const Spacer(),
-          Text('已选 ${_selected.length} / ${_results.length} 条'),
+          Text(l10n.subtitleSelectedOfTotal(_selected.length, _results.length)),
         ],
       ),
     );
   }
 
   Widget _resultsList() {
+    final l10n = AppLocalizations.of(context);
     return ListView.builder(
       itemCount: _results.length,
       itemBuilder: (_, i) {
@@ -468,7 +485,7 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
             }
           }),
           title: Text(
-            sub.displayName,
+            subtitleEntryDisplayName(l10n, sub),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 14),
@@ -479,8 +496,10 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
               spacing: 6,
               runSpacing: 4,
               children: [
-                _metaChip(sub.displayLanguage),
-                _metaChip(sub.source.isNotEmpty ? sub.source : '未知来源'),
+                _metaChip(subtitleEntryDisplayLanguage(l10n, sub)),
+                _metaChip(sub.source.isNotEmpty
+                    ? subtitleEntrySourceLabel(l10n, sub)
+                    : l10n.subtitleUnknownSource),
                 if (sub.format.isNotEmpty) _metaChip(sub.format.toUpperCase()),
               ],
             ),
@@ -511,6 +530,7 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
   }
 
   Widget _downloadBar() {
+    final l10n = AppLocalizations.of(context);
     return SafeArea(
       top: false,
       child: Padding(
@@ -526,7 +546,9 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.download),
-            label: Text(_downloading ? '下载中…' : '下载字幕（${_selected.length}）'),
+            label: Text(_downloading
+                ? l10n.subtitleDownloadingNow
+                : l10n.subtitleDownloadButton(_selected.length)),
           ),
         ),
       ),
@@ -547,15 +569,10 @@ class _SubtitleDownloadPageState extends State<SubtitleDownloadPage> {
   static Future<void> _writeFileBytes(String path, List<int> bytes) =>
       File(path).writeAsBytes(bytes, flush: true);
 
-  /// 去掉异常类名前缀，只把给用户看的那句话显示出来（两条来源链路共用）
-  String _errText(Object e) {
-    final text = e.toString();
-    for (final prefix in const [
-      'WyzieApiException: ',
-      'CustomSubtitleApiException: ',
-    ]) {
-      if (text.startsWith(prefix)) return text.substring(prefix.length);
-    }
-    return text;
-  }
+  /// 异常 → 展示文案（两条来源链路共用，按错误码取文，不再剥类名前缀）
+  String _errText(AppLocalizations l10n, Object e) => switch (e) {
+        WyzieApiException error => wyzieErrorText(l10n, error),
+        CustomSubtitleApiException error => customSubtitleErrorText(l10n, error),
+        _ => '$e',
+      };
 }

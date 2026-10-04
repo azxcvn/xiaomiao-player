@@ -30,6 +30,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # 多语言：官方 gen_l10n（ARB → AppLocalizations）；intl 交给 pub 解析版本
+  flutter_localizations:
+    sdk: flutter
+  intl: any
 
   # 本地播放器
   media_kit: ^1.1.11
@@ -110,6 +114,9 @@ dependency_overrides:
 # The following section is specific to Flutter packages.
 flutter:
 
+  # 多语言：每次构建/生成时由 gen_l10n 读 l10n.yaml 生成 AppLocalizations
+  generate: true
+
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
@@ -120,6 +127,10 @@ flutter:
     - assets/shaders/
     - assets/icons/
     - assets/icon/
+    # https 播放所需的 CA 证书库：自编 libmpv 静态链接 mbedTLS，而 ffmpeg 的
+    # mbedTLS 后端没有默认证书库路径 → 必须由 App 用 mpv `tls-ca-file` 指过去，
+    # 否则所有 https 都在证书校验阶段失败（详见 lib/services/tls_ca_bundle.dart）
+    - assets/certs/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -16,6 +16,8 @@ import 'package:moumou/services/wyzie/wyzie_api.dart';
 import 'package:moumou/services/wyzie/wyzie_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 假 Wyzie API：按关键词回结果，可挂起（验证搜索会话号与下载快照）。
 class _FakeWyzieApi extends WyzieApi {
   _FakeWyzieApi()
@@ -113,6 +115,9 @@ void main() {
     List<String>? written,
   }) async {
     await tester.pumpWidget(MaterialApp(
+      locale: kTestLocaleZh,
+      localizationsDelegates: kTestLocalizationDelegates,
+      supportedLocales: kTestSupportedLocales,
       home: SubtitleDownloadPage(
         api: api,
         customApi: custom,

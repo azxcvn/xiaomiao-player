@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/player_action.dart';
 import 'package:moumou/pages/player/views/portrait_player_top_bar.dart';
 import 'package:moumou/services/player_controls_settings.dart';
@@ -26,6 +28,7 @@ class PortraitEditControlPanel extends StatelessWidget {
     return ListenableBuilder(
       listenable: PlayerControlsSettings.instance,
       builder: (context, _) {
+        final l10n = AppLocalizations.of(context);
         final settings = PlayerControlsSettings.instance;
         final enabled = settings.topActions;
         final disabled = PlayerTopAction.values
@@ -37,7 +40,7 @@ class PortraitEditControlPanel extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 4),
           children: [
             if (enabled.isNotEmpty) ...[
-              const PortraitPanelSectionLabel('已启用（长按拖拽排序）'),
+              PortraitPanelSectionLabel(l10n.playerActionsEnabledHint),
               ReorderableListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -69,7 +72,7 @@ class PortraitEditControlPanel extends StatelessWidget {
                     key: ValueKey(a.id),
                     leading: Icon(a.icon, color: Colors.white),
                     title: Text(
-                      a.label,
+                      playerTopActionLabel(l10n, a),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 15,
@@ -85,7 +88,7 @@ class PortraitEditControlPanel extends StatelessWidget {
                         ),
                       ),
                       onPressed: () => settings.removeTopAction(a),
-                      child: const Text('删除'),
+                      child: Text(l10n.commonDelete),
                     ),
                   );
                 },
@@ -93,12 +96,12 @@ class PortraitEditControlPanel extends StatelessWidget {
               const Divider(height: 1, color: Colors.white12),
             ],
             if (disabled.isNotEmpty) ...[
-              const PortraitPanelSectionLabel('可添加'),
+              PortraitPanelSectionLabel(l10n.playerAddable),
               for (final a in disabled)
                 ListTile(
                   leading: Icon(a.icon, color: Colors.white),
                   title: Text(
-                    a.label,
+                    playerTopActionLabel(l10n, a),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 15,
@@ -115,19 +118,24 @@ class PortraitEditControlPanel extends StatelessWidget {
                     ),
                     onPressed: () {
                       if (full) {
-                        _showToast(context, '最多允许放 5 个');
+                        _showToast(
+                          context,
+                          l10n.playerMaxActions(
+                            PlayerControlsSettings.maxTopActions,
+                          ),
+                        );
                       } else {
                         settings.addTopAction(a);
                       }
                     },
-                    child: const Text('添加'),
+                    child: Text(l10n.commonAdd),
                   ),
                 ),
               const Divider(height: 1, color: Colors.white12),
             ],
             PortraitPanelActionTile(
               icon: Icons.restart_alt,
-              label: '重置控制栏',
+              label: l10n.playerResetControlBar,
               onTap: settings.resetTopActions,
             ),
           ],

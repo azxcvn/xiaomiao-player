@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/pages/home/open_link_dialog.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 「打开链接」弹窗测试（工作.md：链接播放功能）：
 /// 有效链接回调规范化 URL 并关弹窗；无效链接行内提示不关弹窗；
 /// 粘贴按钮读取剪贴板。
@@ -11,14 +13,19 @@ void main() {
     required void Function(String url) onPlay,
   }) async {
     await tester.pumpWidget(
-      MaterialApp(home: Builder(
-        builder: (context) => Center(
-          child: TextButton(
-            onPressed: () => showOpenLinkDialog(context, onPlay: onPlay),
-            child: const Text('open'),
+      MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
+        home: Builder(
+          builder: (context) => Center(
+            child: TextButton(
+              onPressed: () => showOpenLinkDialog(context, onPlay: onPlay),
+              child: const Text('open'),
+            ),
           ),
         ),
-      )),
+      ),
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
@@ -97,6 +104,9 @@ void main() {
     late BuildContext homeContext;
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Builder(
           builder: (context) {
             homeContext = context;

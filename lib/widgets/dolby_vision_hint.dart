@@ -4,9 +4,13 @@
 /// （竖屏连看剧集时遇到杜比视界视频，画面发绿/发紫却没有任何提示）。
 /// 抽成共用函数后两页行为一致；「每个媒体只测一次」由调用方用自身标志位控制
 /// （切集时重置），与本函数内的设置/抑制判断分离。
+///
+/// 文案在 ARB：`dolbyVisionHintTitle` / `dolbyVisionHintBody` /
+/// `commonDontAskAgain` / `commonGotIt`。
 library;
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/services/decode_settings.dart';
 import 'package:moumou/services/dolby_vision_settings.dart';
 import 'package:moumou/services/video_info_service.dart';
@@ -30,24 +34,24 @@ Future<void> showDolbyVisionHintIfNeeded(
   final detected = await VideoInfoService.detectDolbyVision(path);
   if (!context.mounted) return;
   if (!detected.isDolbyVision) return;
+  // 上面的 await 之后 context 可能已换帧，l10n 在弹窗**前**现取一次
+  final l10n = AppLocalizations.of(context);
   final suppressed = await showAppDialog<String>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('杜比视界视频'),
-      content: const Text(
-        '该视频为杜比视界（Dolby Vision）编码。\n'
-        '若画面发绿/发紫，请在「播放设置 → 解码」启用 GPU-next 渲染并切换软解；\n'
-        '若仍无法解决，则该设备可能不支持杜比视界播放。',
-        style: TextStyle(fontSize: 14, height: 1.5),
+      title: Text(l10n.dolbyVisionHintTitle),
+      content: Text(
+        l10n.dolbyVisionHintBody,
+        style: const TextStyle(fontSize: 14, height: 1.5),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop('dismiss'),
-          child: const Text('不再提示'),
+          child: Text(l10n.commonDontAskAgain),
         ),
         FilledButton(
           onPressed: () => Navigator.of(ctx).pop(null),
-          child: const Text('知道了'),
+          child: Text(l10n.commonGotIt),
         ),
       ],
     ),

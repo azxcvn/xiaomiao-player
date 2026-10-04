@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moumou/l10n/app_localizations_zh.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/bili_bangumi.dart';
 import 'package:moumou/models/bili_playlist.dart';
 
@@ -8,6 +10,9 @@ import 'package:moumou/models/bili_playlist.dart';
 /// - hasNextAt / itemAt 边界；
 /// - 展示名回落（long_title → title → 「第 N 集」）与角标透传。
 void main() {
+  // 展示名回落已搬到 UI 层（label_maps）：测试用中文夹具取文案
+  final l10n = AppLocalizationsZh();
+
   BiliEpisode ep(
     int epId, {
     String title = '',
@@ -134,9 +139,9 @@ void main() {
           cover: '',
         ),
       ]);
-      expect(playlist.items[0].title, '第1话 你即将死去');
-      expect(playlist.items[1].title, '第2话');
-      expect(playlist.items[2].title, '第 3 集');
+      expect(biliPlaylistItemTitle(l10n, playlist.items[0]), '第1话 你即将死去');
+      expect(biliPlaylistItemTitle(l10n, playlist.items[1]), '第2话');
+      expect(biliPlaylistItemTitle(l10n, playlist.items[2]), '第 3 集');
     });
 
     test('角标与 cid/aid 透传', () {

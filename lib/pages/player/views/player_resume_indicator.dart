@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 
 /// 恢复上次播放进度指示器（顶部弹出，独立于控制层显隐）。
 ///
@@ -97,6 +98,7 @@ class _PlayerResumeIndicatorState extends State<PlayerResumeIndicator>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return FadeTransition(
       opacity: _fade,
       child: ScaleTransition(
@@ -119,11 +121,14 @@ class _PlayerResumeIndicatorState extends State<PlayerResumeIndicator>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.only(right: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
                     child: Text(
-                      '已恢复上次播放进度',
-                      style: TextStyle(color: Colors.white, fontSize: 13),
+                      l10n.playerResumeIndicator,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                   TextButton(
@@ -138,9 +143,9 @@ class _PlayerResumeIndicatorState extends State<PlayerResumeIndicator>
                       minimumSize: const Size(0, 34),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    child: const Text(
-                      '重头开始',
-                      style: TextStyle(
+                    child: Text(
+                      l10n.playerRestartFromBeginning,
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -157,7 +162,10 @@ class _PlayerResumeIndicatorState extends State<PlayerResumeIndicator>
                       minimumSize: const Size(0, 34),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    child: const Text('关闭', style: TextStyle(fontSize: 13)),
+                    child: Text(
+                      l10n.commonOff,
+                      style: const TextStyle(fontSize: 13),
+                    ),
                   ),
                 ],
               ),

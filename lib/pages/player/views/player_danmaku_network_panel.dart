@@ -35,6 +35,8 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/error_texts.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/danmaku_search_history.dart';
 import 'package:moumou/services/danmaku_search_store.dart';
@@ -215,6 +217,7 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
   /// 搜索中右侧换成「转圈 + 停止」：此时唯一有意义的动作就是停止（问题 2），
   /// 搜索箭头隐藏以免误触重搜；键盘搜索键与历史胶囊仍可发起新搜索。
   Widget _buildSearchField() {
+    final l10n = AppLocalizations.of(context);
     final searching = _store.searching;
     return Container(
       height: 40,
@@ -241,9 +244,9 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
               ),
               cursorColor: _accentOf(context),
               cursorHeight: 16,
-              decoration: const InputDecoration.collapsed(
-                hintText: '输入番剧名称',
-                hintStyle: TextStyle(color: Colors.white38, fontSize: 14),
+              decoration: InputDecoration.collapsed(
+                hintText: l10n.playerDanmakuNetworkSearchHint,
+                hintStyle: const TextStyle(color: Colors.white38, fontSize: 14),
               ),
             ),
           ),
@@ -261,7 +264,7 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
             ),
             _MiniIconButton(
               icon: Icons.stop_rounded,
-              tooltip: '停止搜索',
+              tooltip: l10n.playerDanmakuStopSearch,
               color: Colors.white70,
               onTap: _store.stop,
             ),
@@ -269,13 +272,13 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
             if (_searchController.text.isNotEmpty)
               _MiniIconButton(
                 icon: Icons.close_rounded,
-                tooltip: '清空',
+                tooltip: l10n.commonClearAll,
                 color: Colors.white54,
                 onTap: () => setState(_searchController.clear),
               ),
             _MiniIconButton(
               icon: Icons.arrow_forward_rounded,
-              tooltip: '搜索',
+              tooltip: l10n.commonSearch,
               color: _accentOf(context),
               onTap: () => _doSearch(_searchController.text),
             ),
@@ -287,6 +290,7 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
 
   /// 关键词历史：胶囊 Wrap 直接贴在搜索框下方，末尾跟一枚「清除」胶囊
   Widget _buildHistoryCapsules() {
+    final l10n = AppLocalizations.of(context);
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -300,7 +304,7 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
             },
           ),
         _HistoryCapsule(
-          keyword: '清除',
+          keyword: l10n.commonClear,
           icon: Icons.delete_outline,
           dimmed: true,
           onTap: () async {
@@ -314,6 +318,7 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
 
   /// 折叠态：34dp 关键词胶囊条（点击回到搜索框），把高度让给结果区
   Widget _buildCollapsedSearchBar() {
+    final l10n = AppLocalizations.of(context);
     return Material(
       color: Colors.white.withValues(alpha: 0.06),
       borderRadius: BorderRadius.circular(999),
@@ -337,7 +342,7 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
               ),
               const SizedBox(width: 8),
               Text(
-                '${_store.results.length} 部',
+                l10n.playerDanmakuResultCountUnit(_store.results.length),
                 style: const TextStyle(color: Colors.white38, fontSize: 12),
               ),
               const SizedBox(width: 2),
@@ -355,27 +360,48 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
   ///
   /// 「已获得 N 部」是问题 1 里"用户不知道在搜、没搜到还是卡了"的直接解法：
   /// 数字在涨 = 在搜；转圈消失 + 数字不动 = 搜完了。
-  String? get _statusText {
+  String? _statusTextOf(AppLocalizations l10n) {
     final results = _store.results;
-    if (_store.searching) return '正在搜索 · 已获得 ${results.length} 部';
-    if (_store.stopped) return '已停止搜索 · 共 ${results.length} 部';
+    if (_store.searching) {
+      return l10n.playerDanmakuSearchingWithCount(results.length);
+    }
+    if (_store.stopped) {
+      return l10n.playerDanmakuSearchStoppedCount(results.length);
+    }
     if (results.isNotEmpty && _store.serverErrors.isNotEmpty) {
-      return '部分服务器搜索失败：${_store.serverErrors.join('；')}';
+      return l10n.playerDanmakuPartialServerFailed(_serverErrorsText(l10n));
     }
     return null;
   }
 
+  /// 各服务器失败原因（「服务器名: 失败原因」，分隔符走 l10n）：
+  /// 服务层只给「服务器名 + 异常对象」，文案在这里翻译。
+  String _serverErrorsText(AppLocalizations l10n) => _store.serverErrors
+      .map(
+        (failure) =>
+            '${failure.serverName.isEmpty ? l10n.danmakuServerDefaultName : failure.serverName}'
+            ': ${serviceErrorText(l10n, failure.error)}',
+      )
+      .join(l10n.commonErrorsSeparator);
+
+  /// 一条结果都没有时的整条错误文案（服务层只给失败种类）。
+  String _errorTextOf(AppLocalizations l10n) =>
+      _store.errorKind == DanmakuSearchError.noResult
+      ? l10n.danmakuSearchNoResult
+      : l10n.danmakuSearchFailed(_serverErrorsText(l10n));
+
   Widget _buildBody() {
     final results = _store.results;
-    final error = _store.error;
+    final errorKind = _store.errorKind;
     // 还没拿到任何结果：整屏转圈（有结果后就让位给列表，转圈留在搜索框里）
     if (_store.searching && results.isEmpty) return _buildLoading();
     // 停在空态：没搜过，或搜完确实没命中（用户手动停止不算——那种情况
     // 要显示「已停止搜索 · 共 0 部」让他知道是自己停的）
-    if (results.isEmpty && error == null && !_store.stopped) {
+    if (results.isEmpty && errorKind == null && !_store.stopped) {
       return _buildEmpty();
     }
-    final status = _statusText;
+    final l10n = AppLocalizations.of(context);
+    final status = _statusTextOf(l10n);
     return ListView(
       // 关键词做 key：换关键词 = 全新列表，从顶部开始（不继承上一轮滚动位置）
       key: ValueKey(_store.keyword),
@@ -386,8 +412,8 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
           _buildStatusStrip(status),
           const SizedBox(height: 8),
         ],
-        if (error != null) ...[
-          _buildErrorBanner(error),
+        if (errorKind != null) ...[
+          _buildErrorBanner(_errorTextOf(l10n)),
           const SizedBox(height: 10),
         ],
         for (var i = 0; i < results.length; i++) ...[
@@ -425,6 +451,7 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
   }
 
   Widget _buildLoading() {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -438,9 +465,9 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            '搜索中…',
-            style: TextStyle(color: Colors.white70, fontSize: 13),
+          Text(
+            l10n.playerDanmakuSearching,
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
           ),
         ],
       ),
@@ -448,15 +475,16 @@ class _PlayerDanmakuNetworkPanelState extends State<PlayerDanmakuNetworkPanel> {
   }
 
   Widget _buildEmpty() {
-    return const Center(
+    final l10n = AppLocalizations.of(context);
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.manage_search, size: 40, color: Colors.white24),
-          SizedBox(height: 10),
+          const Icon(Icons.manage_search, size: 40, color: Colors.white24),
+          const SizedBox(height: 10),
           Text(
-            '输入关键词搜索网络弹幕',
-            style: TextStyle(color: Colors.white38, fontSize: 13),
+            l10n.playerDanmakuNetworkInputHint,
+            style: const TextStyle(color: Colors.white38, fontSize: 13),
           ),
         ],
       ),
@@ -598,6 +626,7 @@ class _AnimeResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final anime = item.anime;
     return Material(
       color: Colors.white.withValues(alpha: 0.06),
@@ -629,10 +658,17 @@ class _AnimeResultCard extends StatelessWidget {
                       children: [
                         if (anime.typeDescription.isNotEmpty)
                           _CapsuleLabel(anime.typeDescription),
-                        _CapsuleLabel('${anime.episodes.length} 集'),
+                        _CapsuleLabel(
+                          l10n.playerEpisodeCountUnit(anime.episodes.length),
+                        ),
                         // **每个**结果都标来源服务器名，用户点选集前就能
-                        // 判断这条来自哪里（issue #1 需求 4）。
-                        _CapsuleLabel(item.serverName),
+                        // 判断这条来自哪里（issue #1 需求 4）。默认服务器在
+                        // 服务层存空串，显示名在这里取 l10n。
+                        _CapsuleLabel(
+                          item.serverName.isEmpty
+                              ? l10n.danmakuServerDefaultName
+                              : item.serverName,
+                        ),
                       ],
                     ),
                   ],

@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/player_diagnostics.dart';
 import 'package:moumou/utils/player_diagnostics.dart';
 
@@ -115,8 +117,9 @@ class _PlayerDiagnosticsPanelState extends State<PlayerDiagnosticsPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final s = _snapshot;
-    final warnings = diagnosticsWarnings(s);
+    final warnings = diagnosticWarnings(l10n, s);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
       child: Column(
@@ -125,7 +128,7 @@ class _PlayerDiagnosticsPanelState extends State<PlayerDiagnosticsPanel> {
           if (_failed) ...[
             _WarningCard(
               color: Colors.orangeAccent,
-              lines: [_readFailureMessage(_failedKeys)],
+              lines: [_readFailureMessage(l10n, _failedKeys)],
             ),
             const SizedBox(height: 12),
           ],
@@ -134,55 +137,68 @@ class _PlayerDiagnosticsPanelState extends State<PlayerDiagnosticsPanel> {
             const SizedBox(height: 12),
           ],
           _DiagGroup(
-            title: '播放',
+            title: l10n.commonPlay,
             rows: [
-              ('标题', formatDiagnosticText(s.mediaTitle)),
-              ('容器', formatDiagnosticText(s.fileFormat)),
-              ('音频编码', formatDiagnosticText(s.audioCodec)),
-              ('硬解', formatDiagnosticText(s.hwdec)),
+              (l10n.commonTitle, formatDiagnosticText(s.mediaTitle)),
+              (l10n.playerDiagnosticsContainer, formatDiagnosticText(s.fileFormat)),
+              (l10n.playerDiagnosticsAudioCodec, formatDiagnosticText(s.audioCodec)),
+              (l10n.decodeModeHwCopy, formatDiagnosticText(s.hwdec)),
               // 视频输出 + 实际图形后端：`gpu-next · androidvk`（Vulkan）/
               // `gpu-next · android`（OpenGL ES）。开关设了 Vulkan 但这里仍显示
               // android，就说明没生效——判断渲染后端只能看这个实测值。
-              ('视频输出', formatVideoOutput(s.vo, s.gpuContext)),
-              ('同步方式', formatDiagnosticText(s.videoSync)),
+              (l10n.playerDiagnosticsVideoOutput,
+                  formatVideoOutput(s.vo, s.gpuContext)),
+              (l10n.playerDiagnosticsSyncMode, formatDiagnosticText(s.videoSync)),
             ],
           ),
           const SizedBox(height: 12),
           _DiagGroup(
-            title: '视频',
+            title: l10n.commonVideo,
             rows: [
-              ('分辨率', formatDiagnosticResolution(s.width, s.height)),
-              ('像素格式', formatDiagnosticText(s.pixelFormat)),
-              ('容器帧率', formatDiagnosticFps(s.containerFps)),
-              ('实际帧率', formatDiagnosticFps(s.estimatedFps)),
-              ('视频码率', formatDiagnosticBitrate(s.videoBitrate)),
+              (l10n.commonResolution,
+                  formatDiagnosticResolution(s.width, s.height)),
+              (l10n.playerDiagnosticsPixelFormat,
+                  formatDiagnosticText(s.pixelFormat)),
+              (l10n.playerDiagnosticsContainerFps,
+                  formatDiagnosticFps(s.containerFps)),
+              (l10n.playerDiagnosticsActualFps,
+                  formatDiagnosticFps(s.estimatedFps)),
+              (l10n.playerDiagnosticsVideoBitrate,
+                  formatDiagnosticBitrate(s.videoBitrate)),
             ],
           ),
           const SizedBox(height: 12),
           _DiagGroup(
-            title: '音频',
+            title: l10n.playerActionAudio,
             rows: [
-              ('音频参数', formatDiagnosticText(s.audioParams)),
-              ('音频码率', formatDiagnosticBitrate(s.audioBitrate)),
-              ('音画同步', formatDiagnosticAvsync(s.avsync)),
+              (l10n.playerDiagnosticsAudioParams,
+                  formatDiagnosticText(s.audioParams)),
+              (l10n.playerDiagnosticsAudioBitrate,
+                  formatDiagnosticBitrate(s.audioBitrate)),
+              (l10n.playerDiagnosticsAvSync, diagnosticAvsyncText(l10n, s.avsync)),
             ],
           ),
           const SizedBox(height: 12),
           _DiagGroup(
-            title: '缓存与丢帧',
+            title: l10n.playerDiagnosticsCacheGroup,
             rows: [
-              ('缓冲时长', formatDiagnosticSeconds(s.demuxerCacheDurationSec)),
-              ('可播时长', formatDiagnosticSeconds(s.demuxerCacheTimeSec)),
-              ('缓存占用', formatDiagnosticBytes(s.cacheUsedBytes)),
-              ('下行速率', formatDiagnosticSpeed(s.cacheSpeedBytesPerSec)),
-              ('丢帧', _countText(s.droppedFrames)),
-              ('解码丢帧', _countText(s.decoderDroppedFrames)),
-              ('延迟帧', _countText(s.delayedFrames)),
+              (l10n.playerDiagnosticsBufferDuration,
+                  diagnosticSecondsText(l10n, s.demuxerCacheDurationSec)),
+              (l10n.playerDiagnosticsPlayableDuration,
+                  diagnosticSecondsText(l10n, s.demuxerCacheTimeSec)),
+              (l10n.playerDiagnosticsCacheUsage,
+                  formatDiagnosticBytes(s.cacheUsedBytes)),
+              (l10n.playerDiagnosticsDownlinkRate,
+                  formatDiagnosticSpeed(s.cacheSpeedBytesPerSec)),
+              (l10n.playerDiagnosticsDroppedFrames, _countText(s.droppedFrames)),
+              (l10n.playerDiagnosticsDecodeDropped,
+                  _countText(s.decoderDroppedFrames)),
+              (l10n.playerDiagnosticsDelayedFrames, _countText(s.delayedFrames)),
             ],
           ),
           const SizedBox(height: 12),
           Text(
-            '每秒自动刷新 · 数据来自 mpv 运行时属性',
+            l10n.playerDiagnosticsAutoRefreshHint,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.45),
@@ -199,15 +215,19 @@ class _PlayerDiagnosticsPanelState extends State<PlayerDiagnosticsPanel> {
 
   /// 读取失败提示：**列出具体键名**（最多 6 个，其余折成计数）——
   /// 排障时直接知道是哪些属性读不到，不必靠数横杠猜。
-  static String _readFailureMessage(List<String> failedKeys) {
+  static String _readFailureMessage(
+    AppLocalizations l10n,
+    List<String> failedKeys,
+  ) {
     if (failedKeys.isEmpty) {
-      return '无法读取播放器属性（播放器可能未就绪或已卡住）';
+      return l10n.playerDiagnosticsReadFailed;
     }
     const maxNames = 6;
-    final shown = failedKeys.take(maxNames).join('、');
+    final shown = failedKeys.take(maxNames).join(l10n.commonListSeparator);
     final rest = failedKeys.length - maxNames;
-    final suffix = rest > 0 ? ' 等 ${failedKeys.length} 项' : '';
-    return '读取失败：$shown$suffix（显示的是上一次成功值）';
+    return rest > 0
+        ? l10n.playerDiagnosticsFailedValueMore(shown, failedKeys.length)
+        : l10n.playerDiagnosticsFailedValue(shown);
   }
 }
 

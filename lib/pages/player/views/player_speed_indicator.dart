@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/utils/formatters.dart';
 
 /// 长按倍速指示器（顶部居中，kt 项目 `LongPressSpeedOverlay` 的 Flutter 版）：
@@ -44,6 +45,7 @@ class PlayerSpeedIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AnimatedOpacity(
       opacity: visible ? 1.0 : 0.0,
       duration: const Duration(milliseconds: 200),
@@ -67,7 +69,7 @@ class PlayerSpeedIndicator extends StatelessWidget {
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 150),
                     child: Text(
-                      '正在 ${formatSpeed(speed)} 倍速播放',
+                      l10n.playerSpeedPlaying(formatSpeed(speed)),
                       key: ValueKey(speed.toStringAsFixed(2)),
                       style: const TextStyle(
                         color: Colors.white,
@@ -91,9 +93,9 @@ class PlayerSpeedIndicator extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: _capsuleDecoration,
-                        child: const Text(
-                          '左右滑动可临时调节长按倍数',
-                          style: TextStyle(
+                        child: Text(
+                          l10n.playerSpeedSwipeHint,
+                          style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 12,
                           ),

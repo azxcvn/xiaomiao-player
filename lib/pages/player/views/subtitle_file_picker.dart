@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/subtitle_dir.dart';
 import 'package:moumou/models/subtitle_track.dart';
 import 'package:moumou/services/device_services.dart';
@@ -244,6 +246,7 @@ class _SubtitleFilePickerPanelState extends State<SubtitleFilePickerPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -255,7 +258,7 @@ class _SubtitleFilePickerPanelState extends State<SubtitleFilePickerPanel> {
               TextButton.icon(
                 onPressed: _goUp,
                 icon: const Icon(Icons.arrow_back_rounded, size: 16),
-                label: const Text('上级'),
+                label: Text(l10n.commonGoUp),
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.white70,
                   visualDensity: VisualDensity.compact,
@@ -373,11 +376,14 @@ class _SortMenu extends StatelessWidget {
     required this.onSelect,
   });
 
-  String get _label => '${sort.label}${ascending ? '升序' : '降序'}';
+  String _label(AppLocalizations l10n) =>
+      '${subtitleDirSortLabel(l10n, sort)}'
+      '${ascending ? l10n.commonAscending : l10n.commonDescending}';
 
   @override
   Widget build(BuildContext context) {
     const accent = Color(0xFF4FC3F7);
+    final l10n = AppLocalizations.of(context);
     const options = <(SubtitleDirSort, bool)>[
       (SubtitleDirSort.name, true),
       (SubtitleDirSort.name, false),
@@ -386,7 +392,7 @@ class _SortMenu extends StatelessWidget {
     ];
     return PopupMenuButton<(SubtitleDirSort, bool)>(
       onSelected: (v) => onSelect(v.$1, v.$2),
-      tooltip: '排序方式',
+      tooltip: l10n.commonSortBy,
       color: const Color(0xFF242424),
       itemBuilder: (context) => [
         for (final o in options)
@@ -404,7 +410,8 @@ class _SortMenu extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '${o.$1.label}${o.$2 ? '升序' : '降序'}',
+                  '${subtitleDirSortLabel(l10n, o.$1)}'
+                  '${o.$2 ? l10n.commonAscending : l10n.commonDescending}',
                   style: TextStyle(
                     color: o == (sort, ascending) ? accent : Colors.white,
                     fontSize: 13,
@@ -424,7 +431,7 @@ class _SortMenu extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              _label,
+              _label(AppLocalizations.of(context)),
               style: const TextStyle(color: Colors.white, fontSize: 12),
             ),
             const SizedBox(width: 2),

@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:moumou/utils/error_codes.dart';
+
 /// 应用内文件管理（复制 / 移动 / 重命名 / 删除）的**纯函数**部分：
 /// 路径细分、目标校验、重命名校验、重名避让、失效固定路径推导、
 /// 视频扩展名判定（扫描与删除共用同一份唯一真值）。
@@ -7,6 +9,9 @@ import 'dart:io';
 /// 真正的磁盘读写（含进度与取消）在 `services/file_operations_service.dart`；
 /// 本文件不碰磁盘（[directoryContains] 除外，用于防「移动到自己内部」）。
 /// 目录分隔符统一按 `/` 处理（Android 绝对路径）。
+///
+/// 校验失败只返回 [FileOpErrorCode]（不返回文案）：文案由 UI 层翻译，
+/// 见 `lib/l10n/error_texts.dart` 的 `fileOpErrorText`。
 class FileOps {
   FileOps._();
 
@@ -46,41 +51,49 @@ class FileOps {
     return t == s || t.startsWith('$s/');
   }
 
-  /// 复制/移动的目标目录校验；返回 null 表示合法，否则返回给用户看的原因。
+  /// 复制/移动的目标目录校验；返回 null 表示合法，否则返回给用户看的原因码。
   ///
   /// - 目标目录不存在 / 不是目录 → 提示不可用
   /// - 目标与源同目录 → 提示无需操作（重名会走自动避让加序号，语义混乱）
   /// - 目标是源自身或其子孙 → 提示不允许
-  static String? validateMoveTarget({
+  static FileOpErrorCode? validateMoveTarget({
     required String sourcePath,
     required bool sourceIsDirectory,
     required String destinationDir,
   }) {
     final dest = stripTrailingSlash(destinationDir);
-    if (dest.isEmpty) return '请选择目标文件夹';
-    if (!Directory(dest).existsSync()) return '目标文件夹不存在或不可读';
+    if (dest.isEmpty) return FileOpErrorCode.selectTargetFolder;
+    if (!Directory(dest).existsSync()) {
+      return FileOpErrorCode.targetUnreadable;
+    }
     if (parentOf(sourcePath) == dest) {
-      return sourceIsDirectory ? '该文件夹已经在这个目录里了' : '该视频已经在这个目录里了';
+      return sourceIsDirectory
+          ? FileOpErrorCode.alreadyInFolder
+          : FileOpErrorCode.alreadyInFolderVideo;
     }
     if (sourceIsDirectory && directoryContains(sourcePath, dest)) {
-      return '不能把文件夹复制或移动到它自己的子目录里';
+      return FileOpErrorCode.intoItself;
     }
     return null;
   }
 
   /// 重命名校验（只校验新名字本身，不碰磁盘）。
-  /// 通过返回 `(ok: true)`；不通过返回 `(ok: false, error: 原因)`。
-  static ({bool ok, String error}) validateRenameName(String rawName) {
+  /// 通过返回 `(ok: true, error: null)`；不通过返回 `(ok: false, error: 原因码)`。
+  static ({bool ok, FileOpErrorCode? error}) validateRenameName(String rawName) {
     final name = rawName.trim();
-    if (name.isEmpty) return (ok: false, error: '名称不能为空');
-    if (name == '.' || name == '..') return (ok: false, error: '名称不合法');
+    if (name.isEmpty) {
+      return (ok: false, error: FileOpErrorCode.nameEmpty);
+    }
+    if (name == '.' || name == '..') {
+      return (ok: false, error: FileOpErrorCode.nameInvalid);
+    }
     if (name.contains('/') || name.contains(r'\')) {
-      return (ok: false, error: '名称不能包含路径分隔符');
+      return (ok: false, error: FileOpErrorCode.nameHasSeparator);
     }
     if (name.contains(_illegalNameChars)) {
-      return (ok: false, error: '名称不能包含 \\ / : * ? " < > | 等字符');
+      return (ok: false, error: FileOpErrorCode.nameIllegalChars);
     }
-    return (ok: true, error: '');
+    return (ok: true, error: null);
   }
 
   static final RegExp _illegalNameChars = RegExp(r'[<>:"|?*\x00-\x1F]');
@@ -153,7 +166,7 @@ class FileOps {
   /// [originalExtension] 非空时表示「扩展名被锁定」（视频/其它文件）：
   /// 输入 `456.mp4` 视为 `456` 并接受；只输入 `.mp4`（主体为空）则报错，
   /// 避免生成一个只有扩展名的文件。
-  static ({bool ok, String error}) validateRenameInput(
+  static ({bool ok, FileOpErrorCode? error}) validateRenameInput(
     String input, {
     String originalExtension = '',
   }) {
@@ -166,9 +179,9 @@ class FileOps {
         ? trimmed.substring(0, trimmed.length - originalExtension.length)
         : trimmed;
     if (stem.trim().isEmpty) {
-      return (ok: false, error: '请输入扩展名之前的名称');
+      return (ok: false, error: FileOpErrorCode.nameEmptyBeforeExt);
     }
-    return (ok: true, error: '');
+    return (ok: true, error: null);
   }
 
   /// 重名避让：在目标目录里为 [desiredName] 找一个不冲突的名字。

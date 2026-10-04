@@ -29,6 +29,8 @@ library;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/dandan_models.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/danmaku_search_store.dart';
@@ -136,8 +138,13 @@ class _PlayerDanmakuEpisodesPanelState extends State<PlayerDanmakuEpisodesPanel>
       widget.item.anime.episodes,
     );
     if (loc.index < 0) {
-      final message = loc.message;
-      if (message != null) setState(() => _locateHint = message);
+      final hint = loc.hint;
+      if (hint != null) {
+        final l10n = AppLocalizations.of(context);
+        setState(
+          () => _locateHint = danmakuEpisodeLocateHint(l10n, hint, loc.number),
+        );
+      }
       return;
     }
     _focusEpisode(loc.index);
@@ -184,16 +191,19 @@ class _PlayerDanmakuEpisodesPanelState extends State<PlayerDanmakuEpisodesPanel>
   /// 「跳至第 N 集」：按**集标题里的集数**优先匹配，失败按「第 N 集 = 第 N 项」
   /// 回退（与 [findMatchingEpisode] 同一套语义，保证和自动匹配一致）。
   void _jumpToEpisode() {
+    final l10n = AppLocalizations.of(context);
     final episodes = widget.item.anime.episodes;
     final number = double.tryParse(_jumpController.text.trim());
     if (number == null) {
-      setState(() => _locateHint = '请输入集数（数字）');
+      setState(() => _locateHint = l10n.playerEpisodeInvalidInput);
       return;
     }
     final match = findMatchingEpisode(episodes, number);
     final index = match == null ? -1 : episodes.indexOf(match);
     if (index < 0) {
-      setState(() => _locateHint = '没有第 ${number.toInt()} 集');
+      setState(
+        () => _locateHint = l10n.playerEpisodeNotFound(number.toInt()),
+      );
       return;
     }
     FocusScope.of(context).unfocus();
@@ -254,8 +264,15 @@ class _PlayerDanmakuEpisodesPanelState extends State<PlayerDanmakuEpisodesPanel>
   }
 
   /// 集数 / 来源信息（原顶部信息区的内容，现在压进跳转条右侧的小字）
-  String _metaText(int total) =>
-      '共 $total 集 · 来自 ${widget.item.serverName}';
+  String _metaText(int total) {
+    final l10n = AppLocalizations.of(context);
+    // 服务层对内置默认服务器给空串（持久化里存的仍是原名），显示名走 l10n
+    final server = widget.item.serverName;
+    return l10n.playerEpisodeTotalFromServer(
+      total,
+      server.isEmpty ? l10n.danmakuServerDefaultName : server,
+    );
+  }
 
   /// 只有 1 集：没有可跳转的目标，就只留一行极简的来源信息
   Widget _buildMetaOnlyLine(int total) {
@@ -276,6 +293,7 @@ class _PlayerDanmakuEpisodesPanelState extends State<PlayerDanmakuEpisodesPanel>
   /// 「跳至第 N 集」定位条 + 右侧「共 N 集 · 来自 X」淡字（集数上下限与来源
   /// 都给用户一个预期，且不额外占一块高度）
   Widget _buildEpisodeLocator(int total) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
       child: Row(
@@ -290,9 +308,9 @@ class _PlayerDanmakuEpisodesPanelState extends State<PlayerDanmakuEpisodesPanel>
               ),
               child: Row(
                 children: [
-                  const Text(
-                    '跳至第',
-                    style: TextStyle(color: Colors.white54, fontSize: 12),
+                  Text(
+                    l10n.playerJumpToEpisode,
+                    style: const TextStyle(color: Colors.white54, fontSize: 12),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -308,9 +326,9 @@ class _PlayerDanmakuEpisodesPanelState extends State<PlayerDanmakuEpisodesPanel>
                       ),
                       cursorColor: _accentOf(context),
                       cursorHeight: 14,
-                      decoration: const InputDecoration.collapsed(
-                        hintText: '集数',
-                        hintStyle: TextStyle(
+                      decoration: InputDecoration.collapsed(
+                        hintText: l10n.playerEpisodeNumber,
+                        hintStyle: const TextStyle(
                           color: Colors.white38,
                           fontSize: 13,
                         ),
@@ -318,9 +336,9 @@ class _PlayerDanmakuEpisodesPanelState extends State<PlayerDanmakuEpisodesPanel>
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Text(
-                    '集',
-                    style: TextStyle(color: Colors.white54, fontSize: 12),
+                  Text(
+                    l10n.commonEpisodeUnit,
+                    style: const TextStyle(color: Colors.white54, fontSize: 12),
                   ),
                 ],
               ),
@@ -340,7 +358,7 @@ class _PlayerDanmakuEpisodesPanelState extends State<PlayerDanmakuEpisodesPanel>
           const SizedBox(width: 4),
           _MiniIconButton(
             icon: Icons.arrow_forward_rounded,
-            tooltip: '跳转',
+            tooltip: l10n.commonJump,
             color: _accentOf(context),
             onTap: _jumpToEpisode,
           ),

@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/pages/settings/device_info_page.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 设备信息页测试（工作.md 迁移功能：设备硬件与编解码能力检测页）：
 /// 设备信息、屏幕 HDR 能力、关键编码器、解码器清单渲染与筛选/失败降级。
 void main() {
@@ -83,7 +85,14 @@ void main() {
       };
 
   Future<void> pumpPage(WidgetTester tester) async {
-    await tester.pumpWidget(const MaterialApp(home: DeviceInfoPage()));
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
+        home: const DeviceInfoPage(),
+      ),
+    );
     await tester.pumpAndSettle();
   }
 

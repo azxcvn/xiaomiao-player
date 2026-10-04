@@ -4,6 +4,8 @@ import 'package:moumou/pages/player/player_metrics.dart';
 import 'package:moumou/pages/player/views/player_seek_bar.dart';
 import 'package:moumou/pages/player/views/portrait_player_bottom_bar.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 竖屏播放页底栏布局回归测试（v3 更新 + 弹幕第 5 点 + B4/P1-6 对齐基准）：
 /// - 时间文本位于「下一集」按钮右侧、同一行（v3 用户反馈：改回此款式）；
 /// - 「下一集」图标左缘、进度条轨道开端、章节名左缘三者同为
@@ -18,6 +20,9 @@ import 'package:moumou/pages/player/views/portrait_player_bottom_bar.dart';
 void main() {
   Widget buildBar({String? chapterName, bool danmakuOn = true}) {
     return MaterialApp(
+      locale: kTestLocaleZh,
+      localizationsDelegates: kTestLocalizationDelegates,
+      supportedLocales: kTestSupportedLocales,
       home: Scaffold(
         body: PortraitPlayerBottomBar(
           valueMs: 1000,

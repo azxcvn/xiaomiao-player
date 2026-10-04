@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/widgets/file_operations_ui.dart';
 import 'package:moumou/widgets/file_selection_ui.dart';
+
+import 'l10n_test_helper.dart';
 
 /// 多选 / 文件管理 UI 测试：
 /// 1. 选择工具栏（数量、全选 ↔ 取消全选、⋮ 在 0 项时置灰）；
@@ -19,15 +22,21 @@ void main() {
   }) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          appBar: buildFileSelectionAppBar(
-            count: count,
-            allSelected: allSelected,
-            onExit: onExit ?? () {},
-            onToggleAll: () {},
-            onOpenMenu: onOpenMenu ?? () {},
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
+        home: Builder(
+          builder: (context) => Scaffold(
+            appBar: buildFileSelectionAppBar(
+              l10n: AppLocalizations.of(context),
+              count: count,
+              allSelected: allSelected,
+              onExit: onExit ?? () {},
+              onToggleAll: () {},
+              onOpenMenu: onOpenMenu ?? () {},
+            ),
+            body: const SizedBox.shrink(),
           ),
-          body: const SizedBox.shrink(),
         ),
       ),
     );
@@ -102,6 +111,9 @@ void main() {
   }) async {
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Scaffold(
           body: Builder(
             builder: (context) => TextButton(
@@ -176,6 +188,9 @@ void main() {
       result = null;
       await tester.pumpWidget(
         MaterialApp(
+          locale: kTestLocaleZh,
+          localizationsDelegates: kTestLocalizationDelegates,
+          supportedLocales: kTestSupportedLocales,
           home: Scaffold(
             body: Builder(
               builder: (context) => TextButton(

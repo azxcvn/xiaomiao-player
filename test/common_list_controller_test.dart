@@ -64,7 +64,9 @@ void main() {
       final c = CommonListController<int>(fetchPage: src.fetch);
       await c.refresh();
       expect(c.state, isA<LoadError<List<int>>>());
-      expect(c.state.errorOrNull, contains('网络炸了'));
+      // 错误对象原样保留（文案由 UI 层翻译）
+      expect(c.state.errorOrNull, isA<StateError>());
+      expect('${c.state.errorOrNull}', contains('网络炸了'));
       expect(c.items, isEmpty);
       c.dispose();
     });
@@ -95,7 +97,8 @@ void main() {
 
       expect(c.items, before); // 旧数据仍在
       expect(c.state, isA<Loaded<List<int>>>()); // 仍是 Loaded
-      expect(c.error, contains('抖了一下')); // 错误另存
+      expect(c.error, isA<StateError>()); // 错误另存（对象，文案由 UI 层翻译）
+      expect('${c.error}', contains('抖了一下'));
       c.dispose();
     });
 
@@ -202,7 +205,7 @@ void main() {
       c.dispose();
     });
 
-    test('describeError 自定义文案', () async {
+    test('describeError 自定义错误对象', () async {
       final src = FakeSource()..failWith = StateError('原始错误');
       final c = CommonListController<int>(
         fetchPage: src.fetch,

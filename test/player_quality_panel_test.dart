@@ -6,6 +6,8 @@ import 'package:moumou/models/bili_dash.dart';
 import 'package:moumou/pages/player/views/player_quality_panel.dart';
 import 'package:moumou/widgets/player_option_chip.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 清晰度面板高亮仲裁（§4.15/§7）：
 /// - 成功 → 高亮钉到父级返回的**真实**档位（服务端可能因权限回落）；
 /// - 失败 → 回到**切换前**那一档，而不是「开面板时」那一档；
@@ -23,6 +25,9 @@ void main() {
     required Future<int?> Function(int qn) onSelect,
   }) {
     return tester.pumpWidget(MaterialApp(
+      locale: kTestLocaleZh,
+      localizationsDelegates: kTestLocalizationDelegates,
+      supportedLocales: kTestSupportedLocales,
       home: Scaffold(
         body: PlayerQualityPanel(
           qualities: qualities,
@@ -104,6 +109,9 @@ void main() {
 
   testWidgets('空画质列表显示占位', (tester) async {
     await tester.pumpWidget(MaterialApp(
+      locale: kTestLocaleZh,
+      localizationsDelegates: kTestLocalizationDelegates,
+      supportedLocales: kTestSupportedLocales,
       home: Scaffold(
         body: PlayerQualityPanel(
           qualities: const [],

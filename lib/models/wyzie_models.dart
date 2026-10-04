@@ -51,18 +51,8 @@ class WyzieSubtitle {
     this.ai = false,
   });
 
-  /// 展示名：优先文件名，其次发布名 / 媒体标题，兜底占位。
-  String get displayName {
-    if (fileName.isNotEmpty) return fileName;
-    if (release.isNotEmpty) return release;
-    if (media.isNotEmpty) return media;
-    return '未知字幕';
-  }
-
-  /// 语言展示名：优先 API 下发的人类可读名，其次语言代码。
-  String get displayLanguage => display.isNotEmpty
-      ? display
-      : (language.isNotEmpty ? language : '未知语言');
+  /// 展示名（文件名 / 发布名 / 媒体标题）与语言展示名的**占位兜底**在 UI 层：
+  /// 通用条目 `SubtitleEntry` 走 `label_maps.subtitleEntryDisplayName`。
 
   static WyzieSubtitle? fromJson(Map<String, dynamic> json) {
     final url = json['url'];
@@ -415,8 +405,10 @@ const Map<String, String> wyzieEncodings = {
 };
 
 /// 来源 key → 兜底展示名（`/sources` 拉取失败时用，对齐 mpvRx `WyzieSources.ALL`）。
+///
+/// 注意：`all`（全部）不在表里——那是界面文案，由 UI 侧用 `l10n.commonAll`
+/// 渲染（选择器本身也会把它过滤掉）。
 const Map<String, String> wyzieFallbackSources = {
-  'all': '全部',
   'bravo': 'Bravo',
   'charlie': 'Charlie',
   'foxtrot': 'Foxtrot',

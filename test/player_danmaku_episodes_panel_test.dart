@@ -5,6 +5,8 @@ import 'package:moumou/pages/player/views/player_danmaku_episodes_panel.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/danmaku_search_store.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 网络弹幕**集数二级界面**测试（问题 3）：
 /// 集名完整换行（不截断/不长按弹窗）、跳转输入框、进页自动定位到当前集并
 /// **把命中集滚到首行** + 较长时间的闪烁高亮、定位失败的内联提示、
@@ -55,6 +57,9 @@ void main() {
   }) async {
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Scaffold(
           body: Center(
             child: SizedBox(
@@ -199,6 +204,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Scaffold(
           body: Builder(
             builder: (context) => Center(

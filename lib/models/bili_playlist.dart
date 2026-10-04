@@ -25,11 +25,12 @@ class BiliPlaylistItem {
   int get cid => episode.cid;
   int get aid => episode.aid;
 
-  /// 展示名（长标题优先，缺失回落短标题，再回落「第 N 集」）
+  /// 展示名（长标题优先，缺失回落短标题；两者都缺失时返回空串，
+  /// 由 UI 侧回落「第 N 集」，见 `label_maps.biliPlaylistItemTitle`）
   String get title {
     if (episode.longTitle.isNotEmpty) return episode.longTitle;
     if (episode.title.isNotEmpty) return episode.title;
-    return '第 $index 集';
+    return '';
   }
 
   /// 角标（会员 / 限免 / 预告…）

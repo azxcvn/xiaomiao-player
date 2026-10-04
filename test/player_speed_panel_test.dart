@@ -4,6 +4,8 @@ import 'package:moumou/pages/player/views/player_speed_panel.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 倍速面板回归测试：
 /// - 我的预设「✕」单个删除；
 /// - 「添加到预设」随滑杆值联动禁用/恢复；
@@ -22,6 +24,9 @@ void main() {
     addTearDown(speed.dispose);
     await tester.pumpWidget(
       MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Scaffold(
           backgroundColor: Colors.black,
           body: SingleChildScrollView(

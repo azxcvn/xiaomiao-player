@@ -15,9 +15,11 @@ import 'package:moumou/utils/loading_state.dart';
 ///     final r = await service.searchBangumi(_keyword, page: page);
 ///     return PageResult(r.list, hasMore: page * _pageSize < r.numResults);
 ///   },
-///   describeError: (e) => e is BiliApiException ? e.message : '$e',
 /// );
 /// ```
+///
+/// [error] / `LoadError.message` 存的是**服务层错误对象**，文案由页面用
+/// `l10n/error_texts.dart` 的 `serviceErrorText` 翻译（分层约定 §1.8）。
 ///
 /// 语义要点：
 /// - **刷新失败不清空列表**：已有数据时出错只记录 [error]（页面可弹 toast），
@@ -37,8 +39,8 @@ class CommonListController<T> extends ChangeNotifier {
   /// 拉取第 [page] 页（页码从 1 开始）
   final Future<PageResult<T>> Function(int page) fetchPage;
 
-  /// 异常 → 展示文案（默认 `toString()`；页面可传入自己的语义化映射）
-  final String Function(Object error)? describeError;
+  /// 异常 → 错误对象（默认原样保留；页面可传入自己的映射）
+  final Object Function(Object error)? describeError;
 
   final List<T> _items = [];
   int _page = 0;
@@ -47,7 +49,7 @@ class CommonListController<T> extends ChangeNotifier {
   bool _hasMore = true;
   bool _started = false;
   bool _hasLoadedOnce = false;
-  String? _error;
+  Object? _error;
   bool _disposed = false;
 
   /// 会话号（§4.29）：[reset] 作废在飞请求，旧结果不再回写（P1-37）
@@ -68,8 +70,8 @@ class CommonListController<T> extends ChangeNotifier {
   /// 是否还有下一页
   bool get hasMore => _hasMore;
 
-  /// 最近一次错误（成功后清空；有数据时不影响展示）
-  String? get error => _error;
+  /// 最近一次错误对象（成功后清空；有数据时不影响展示；文案由 UI 层翻译）
+  Object? get error => _error;
 
   /// 已加载到第几页（0 = 未加载）
   int get page => _page;
@@ -163,7 +165,7 @@ class CommonListController<T> extends ChangeNotifier {
     _notify();
   }
 
-  String _describe(Object e) => describeError?.call(e) ?? e.toString();
+  Object _describe(Object e) => describeError?.call(e) ?? e;
 
   void _notify() {
     if (!_disposed) notifyListeners();

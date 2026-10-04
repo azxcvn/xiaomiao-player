@@ -59,14 +59,17 @@ void main() {
     });
 
     test('copyHint：注入成功 / dirty / 未注入三种反馈', () {
-      expect(const BuildInfo(revision: 'b7734f1').copyHint(), '已复制 b7734f1');
+      expect(
+        const BuildInfo(revision: 'b7734f1').copyHint(),
+        BuildInfoCopyHint.copied,
+      );
       expect(
         const BuildInfo(revision: 'b7734f1-dirty').copyHint(),
-        '已复制 b7734f1（工作区有未提交改动）',
+        BuildInfoCopyHint.copiedDirty,
       );
       expect(
         const BuildInfo(revision: BuildInfo.unknownRevision).copyHint(),
-        contains('未注入'),
+        BuildInfoCopyHint.noRevision,
       );
     });
   });

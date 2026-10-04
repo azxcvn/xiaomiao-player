@@ -170,30 +170,47 @@ int? currentChapterIndex(List<ChapterInfo> chapters, double positionSeconds) {
   return null;
 }
 
-/// 任意时间点所属的章节名（进度条拖动时的缩略图章节胶囊用）。
+/// 任意时间点所属的章节（进度条拖动时的缩略图章节胶囊用）。
 ///
 /// 与 [currentChapterIndex] 同一套查找规则（最后一个 `startSeconds <= 位置`
 /// 的章节），但作用在**拖动位置**上——拖动时播放位置还在原处，因此不能用
 /// `ChapterTracker.currentChapterTitle`（那是按当前播放位置算的）。
 ///
 /// - 无章节 / 位置在第一章之前 → null（气泡不显示章节胶囊）；
-/// - 章节标题为空白 → 回退「第 N 章」（见 [chapterNumberFallbackLabel]）。
-///   实测不少 MKV 的章节只有时间没有标题（title 为空串），回退比不显示有用。
-String? chapterTitleAt(
+/// - 章节标题为空白 → [ChapterHeading.number]（文案由 UI 侧取，见
+///   `l10n/label_maps.dart` 的 `chapterHeadingLabel`）。实测不少 MKV 的章节
+///   只有时间没有标题（title 为空串），回退比不显示有用。
+ChapterHeading? chapterHeadingAt(
   List<ChapterInfo> chapters,
   double positionSeconds,
 ) {
   final index = currentChapterIndex(chapters, positionSeconds);
   if (index == null) return null;
   final title = chapters[index].title.trim();
-  if (title.isNotEmpty) return title;
-  return chapterNumberFallbackLabel(index);
+  if (title.isNotEmpty) return ChapterHeading.text(title);
+  return ChapterHeading.number(index + 1);
 }
 
-/// 章节无标题时的回退文案（第 index+1 章）。
+/// 章节展示查询结果（纯数据，不含文案）。
 ///
-/// 单独抽出来便于单测与将来统一改文案。
-String chapterNumberFallbackLabel(int index) => '第 ${index + 1} 章';
+/// `utils/` 按分层约定不许 import l10n，所以这里只回「真实标题」或「章节序号」，
+/// 文案一律由 UI 层现取（`label_maps.chapterHeadingLabel`）。
+class ChapterHeading {
+  /// 章节自带标题（已 trim 且非空）。
+  const ChapterHeading.text(String this.text) : number = null;
+
+  /// 章节无标题时的回退序号（**从 1 起算**）。
+  const ChapterHeading.number(int this.number) : text = null;
+
+  /// 真实标题；无标题回退时为 null。
+  final String? text;
+
+  /// 回退序号；有真实标题时为 null。
+  final int? number;
+
+  /// 回退序号（仅 [ChapterHeading.number] 构造时可用，届时必非空）。
+  int get fallbackNumber => number!;
+}
 /// 当前位置所在的可跳过片段（参考小喵 updateSkipChipState）：
 /// - 片段必须有效，且位置在 [startSeconds, endSeconds] 区间内；
 /// - 距片段结束不足 1 秒时不返回（跳过已无意义）。

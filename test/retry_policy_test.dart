@@ -3,9 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/utils/retry_policy.dart';
 
 /// 统一网络重试 / 超时分级 / 内容嗅探快速失败纯函数测试（§4.28）：
@@ -16,13 +19,16 @@ import 'package:moumou/utils/retry_policy.dart';
 /// - 体积上限（content-length 预判 + 边读边判 + 快速失败不重试）；
 /// - fetchTextCapped / fetchBytesCapped 端到端（MockClient）。
 void main() {
+  // 表改造后档位名由 l10n 提供（代码里不再有中文标签）
+  final zh = lookupAppLocalizations(const Locale('zh'));
+
   group('超时分级', () {
     test('四档时长与标签', () {
       expect(NetworkTimeoutTier.api.timeout, const Duration(seconds: 12));
       expect(NetworkTimeoutTier.text.timeout, const Duration(seconds: 15));
       expect(NetworkTimeoutTier.download.timeout, const Duration(seconds: 30));
       expect(NetworkTimeoutTier.stream.timeout, const Duration(minutes: 30));
-      expect(NetworkTimeoutTier.api.label, '常规 API');
+      expect(networkTimeoutTierLabel(zh, NetworkTimeoutTier.api), '常规 API');
     });
   });
 

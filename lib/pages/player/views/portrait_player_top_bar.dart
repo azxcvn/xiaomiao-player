@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/player_action.dart';
 import 'package:moumou/pages/player/player_metrics.dart';
 import 'package:moumou/pages/player/views/player_pressable.dart';
@@ -44,6 +46,7 @@ class PortraitPlayerTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final showBg = PlayerControlsSettings.instance.showButtonBackground;
     return SafeArea(
       left: false,
@@ -62,7 +65,7 @@ class PortraitPlayerTopBar extends StatelessWidget {
               children: [
                 _PortraitTopIconButton(
                   icon: Icons.arrow_back,
-                  tooltip: '返回',
+                  tooltip: l10n.commonBack,
                   showBackground: showBg,
                   onPressed: onBack,
                 ),
@@ -84,6 +87,7 @@ class PortraitPlayerTopBar extends StatelessWidget {
             ListenableBuilder(
               listenable: PlayerControlsSettings.instance,
               builder: (context, _) {
+                final l10n = AppLocalizations.of(context);
                 final actions = PlayerControlsSettings.instance.topActions;
                 if (actions.isEmpty) {
                   // 无槽位：更多按钮固定右侧（不参与均分）
@@ -92,7 +96,7 @@ class PortraitPlayerTopBar extends StatelessWidget {
                     children: [
                       _PortraitTopIconButton(
                         icon: Icons.more_vert,
-                        tooltip: '更多',
+                        tooltip: l10n.commonMore,
                         showBackground: showBg,
                         onPressed: onMore,
                       ),
@@ -106,7 +110,7 @@ class PortraitPlayerTopBar extends StatelessWidget {
                         child: Center(
                           child: _PortraitTopIconButton(
                             icon: a.icon,
-                            tooltip: a.label,
+                            tooltip: playerTopActionLabel(l10n, a),
                             showBackground: showBg,
                             onPressed: () => onActionTap(a),
                           ),
@@ -116,7 +120,7 @@ class PortraitPlayerTopBar extends StatelessWidget {
                       child: Center(
                         child: _PortraitTopIconButton(
                           icon: Icons.more_vert,
-                          tooltip: '更多',
+                          tooltip: l10n.commonMore,
                           showBackground: showBg,
                           onPressed: onMore,
                         ),

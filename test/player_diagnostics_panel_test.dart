@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/pages/player/views/player_diagnostics_panel.dart';
 import 'package:moumou/utils/player_diagnostics.dart';
 
+import 'l10n_test_helper.dart';
+
 /// 播放诊断面板测试（§4.27）：
 /// - 四组数值渲染（播放/视频/音频/缓存与丢帧）；
 /// - 属性缺失显示占位符；
@@ -14,6 +16,9 @@ import 'package:moumou/utils/player_diagnostics.dart';
 /// - **读取容错**：读不到时保留上次值、点名失败键、卡死超时后不冻结面板。
 void main() {
   Widget host(Widget child) => MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
         home: Scaffold(backgroundColor: Colors.black, body: child),
       );
 

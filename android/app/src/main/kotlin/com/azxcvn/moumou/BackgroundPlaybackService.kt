@@ -33,10 +33,11 @@ class BackgroundPlaybackService : Service() {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "听视频后台播放",
+                context.getString(R.string.background_playback_channel_name),
                 NotificationManager.IMPORTANCE_LOW,
             ).apply {
-                description = "在后台继续播放视频音频"
+                description =
+                    context.getString(R.string.background_playback_channel_description)
                 setShowBadge(false)
                 enableLights(false)
                 enableVibration(false)
@@ -50,7 +51,7 @@ class BackgroundPlaybackService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         var title = intent?.getStringExtra("media_title")
-        if (title.isNullOrBlank()) title = "听视频"
+        if (title.isNullOrBlank()) title = getString(R.string.background_playback_title)
         try {
             // 点击通知回到本 Activity（singleTop，不新建实例）
             val openIntent = Intent(this, MainActivity::class.java).apply {
@@ -63,7 +64,7 @@ class BackgroundPlaybackService : Service() {
 
             val notification = Notification.Builder(this, CHANNEL_ID)
                 .setContentTitle(title)
-                .setContentText("正在后台播放")
+                .setContentText(getString(R.string.background_playback_text))
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)

@@ -3,6 +3,7 @@ import 'package:moumou/services/bilibili/bili_account.dart';
 import 'package:moumou/services/bilibili/bili_api.dart';
 import 'package:moumou/services/bilibili/bili_http.dart';
 import 'package:moumou/utils/bili_wbi.dart';
+import 'package:moumou/utils/error_codes.dart';
 
 /// 哔哩哔哩番剧（PGC）服务：索引筛选条件 / 分页结果 / 推荐 / 搜索 / 季详情 /
 /// 新番时间表。请求参数对齐 PiliPlus `http/pgc.dart`：
@@ -82,7 +83,7 @@ class BiliBangumiService {
   Future<BiliSearchResult> searchBangumi(String keyword, {int page = 1}) async {
     final mixinKey = await _mixinKeyProvider();
     if (mixinKey.isEmpty) {
-      throw const BiliApiException('未获取到 WBI 密钥，无法搜索');
+      throw const BiliApiException(BiliApiErrorCode.wbiKeyMissingSearch);
     }
     final params = <String, Object>{
       'search_type': 'media_bangumi',
@@ -198,7 +199,15 @@ class BiliBangumiService {
     final code = (response['code'] as num?)?.toInt() ?? -1;
     if (code != 0) {
       final message = response['message'] as String? ?? '';
-      throw BiliApiException(message.isEmpty ? '服务器返回错误（code=$code）' : message);
+      throw message.isEmpty
+          ? BiliApiException(
+              BiliApiErrorCode.serverReturnedCode,
+              args: {'code': '$code'},
+            )
+          : BiliApiException(
+              BiliApiErrorCode.serverMessage,
+              args: {'message': message},
+            );
     }
   }
 }
