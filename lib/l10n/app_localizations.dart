@@ -7485,6 +7485,12 @@ abstract class AppLocalizations {
   /// **'当前音轨无法播放，已自动切换到「{name}」'**
   String playerAudioFallbackSwitched(String name);
 
+  /// 播放器：mpv 报告打开/播放失败时的提示（附失败原因）
+  ///
+  /// In zh, this message translates to:
+  /// **'播放失败：{error}'**
+  String playerPlaybackFailed(String error);
+
   /// 播放器诊断：≥60 秒的时长文本
   ///
   /// In zh, this message translates to:

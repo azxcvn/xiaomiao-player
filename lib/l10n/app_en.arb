@@ -1229,6 +1229,7 @@
   "danmakuOffsetAdvance": "Advanced {time}",
   "playerAudioFallbackNoTrack": "The current audio track cannot be played and there is no other track to switch to",
   "playerAudioFallbackSwitched": "The current audio track cannot be played; switched to \"{name}\" automatically",
+  "playerPlaybackFailed": "Playback failed: {error}",
   "playerDiagnosticsDuration": "{minutes} min {seconds} s",
   "playerDiagnosticsAvsyncAudioAhead": "{value} audio ahead",
   "playerDiagnosticsAvsyncVideoAhead": "{value} video ahead",

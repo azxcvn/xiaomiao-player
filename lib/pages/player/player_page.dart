@@ -81,6 +81,7 @@ import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/utils/cast_source.dart';
 import 'package:moumou/utils/formatters.dart';
 import 'package:moumou/utils/intro_outro_skip.dart';
+import 'package:moumou/utils/mpv_tuning.dart';
 import 'package:moumou/utils/network_mime_types.dart';
 import 'package:moumou/utils/network_playlist.dart';
 import 'package:moumou/utils/pip_aspect.dart';
@@ -467,6 +468,9 @@ class _PlayerPageState extends State<PlayerPage>
         libass: true,
         libassAndroidFontsDir: fontInjection.fontsDir,
         libassAndroidFontName: fontInjection.fontName,
+        // 协议白名单与 open 前重建的 demuxer-lavf-o 用同一份常量
+        // （见 utils/mpv_tuning.dart：不能靠读回来合并，方括号会丢）。
+        protocolWhitelist: kPlaybackProtocolWhitelist,
       ),
     );
     // 解码档位注入（方案 A）：创建时传入 hwdec/vo，换档后下次打开视频生效
@@ -504,6 +508,29 @@ class _PlayerPageState extends State<PlayerPage>
       }
     };
     unawaited(_audioController.applyOnInit());
+    // mpv 的错误/日志必须被消费（2026-10 实测教训）：此前应用侧完全不看
+    // `Player.stream.error`，在线播放失败时只剩「无限转圈、没有任何提示」——
+    // 用户和对着一堆日志排障的人都拿不到原因（https 证书库缺失那次就是这样
+    // 藏了很久）。这里把 error 变成一句可读提示（附 mpv 的原因），并把
+    // warn/error 级日志写进 logcat 便于定位。
+    _subs.add(
+      _player.stream.error.listen((message) {
+        final text = message.trim();
+        if (text.isEmpty) return;
+        debugPrint('[mpv error] $text');
+        if (!mounted) return;
+        final brief = text.length > 120 ? '${text.substring(0, 120)}…' : text;
+        _toast(AppLocalizations.of(context).playerPlaybackFailed(brief));
+      }),
+    );
+    _subs.add(
+      _player.stream.log.listen((event) {
+        final level = event.level.toLowerCase();
+        if (level == 'error' || level == 'fatal' || level == 'warn') {
+          debugPrint('[mpv $level] ${event.prefix}: ${event.text}');
+        }
+      }),
+    );
     // 弹幕控制器：绑定同一播放器（本地同名弹幕加载 + 1s 秒桶发射 +
     // 渲染层暂停/倍速同步；首开加载在 _openAndSetRate 的 open 完成后）
     _danmakuController = DanmakuController(_player);

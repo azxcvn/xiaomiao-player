@@ -396,7 +396,18 @@ private class FsRootInfo(
 internal object FsVideoWalker {
     private const val WALK_BUDGET_MS = 1500L
     private const val DIR_RESCAN_INTERVAL_MS = 15 * 60_000L
-    private const val PRIMARY_MAX_DEPTH = 6
+    /**
+     * 主卷（内部存储）最大递归深度。
+     *
+     * 原来只有 6 —— 深度判定卡的是**目录**（文件不判），depth ≥ 7 的目录整个不被
+     * 列目录，里面的视频永远不出现。用户 2026-10 实测：`.nomedia` / 隐藏目录放在
+     * `/storage/emulated/0/素材收集清单/M07/多级子目录/子目录1/…/子目录4/xxx`（8 层）
+     * 这类深路径下扫不到，放在根目录或一两层则正常。
+     *
+     * 递归成本由 [WALK_BUDGET_MS] 时间预算 + 广度优先 + frontier 续扫 +
+     * [DIR_RESCAN_INTERVAL_MS] 控制，不靠深度上限兜 → 与非主卷统一到 20。
+     */
+    private const val PRIMARY_MAX_DEPTH = 20
 
     /**
      * 非主卷最大递归深度。

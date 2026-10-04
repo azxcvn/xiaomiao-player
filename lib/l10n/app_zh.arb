@@ -4947,6 +4947,15 @@
       }
     }
   },
+  "playerPlaybackFailed": "播放失败：{error}",
+  "@playerPlaybackFailed": {
+    "description": "播放器：mpv 报告打开/播放失败时的提示（附失败原因）",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "playerDiagnosticsDuration": "{minutes} 分 {seconds} 秒",
   "@playerDiagnosticsDuration": {
     "description": "播放器诊断：≥60 秒的时长文本",

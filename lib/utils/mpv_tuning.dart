@@ -4,10 +4,13 @@
 /// 写对当前文件的解封装器无效）。本地与在线来源走不同档：在线加大解封装缓存、
 /// 开启有界重连、放宽连接超时；本地只做与来源无关的播放平滑项。
 ///
-/// ⚠️ `demuxer-lavf-o` 必须与 media_kit 已写入的值**合并**再设置——该属性是
-/// 整串覆盖，而 media_kit 在里面放了 `protocol_whitelist=[udp,rtp,...]`
-/// （值内含逗号）。直接覆盖会让 m3u8/自定义协议失效；读不到旧值时**宁可不设**
-/// 也不冒险覆盖（[mergeDemuxerLavfOptions] 返回 null）。
+/// ⚠️ **`demuxer-lavf-o` 必须整串重建，不能「读回来再合并」**（2026-10 实测教训）：
+/// 该属性是 keyvalue-list，mpv 读回来时**方括号会丢**，实测得到
+/// `protocol_whitelist=udp,rtp,tcp,...`；按「括号内逗号不切分」去合并会把列表值
+/// 切碎，写回去只剩 `protocol_whitelist=udp` —— 之后**所有 http/https 都被 ffmpeg
+/// 拒掉**（`Protocol 'https' not on whitelist 'udp'`），在线播放全军覆没。
+/// 本地文件不走这条路，所以这个坑藏了很久。
+/// 现在按 [kPlaybackProtocolWhitelist] 显式重建：[buildDemuxerLavfO]。
 library;
 
 /// 本地文件解封装缓存上限（字节）：沿用 media_kit 默认 32MiB，显式写入保证确定性。
@@ -21,6 +24,37 @@ const int kOnlineDemuxerBackBytes = 32 * 1024 * 1024;
 
 /// 本地「回看缓存」上限（字节）：与 media_kit 默认一致。
 const int kLocalDemuxerBackBytes = 32 * 1024 * 1024;
+
+/// 允许的协议白名单（写入 `demuxer-lavf-o` 时必须用 `[...]` 包起来）。
+///
+/// 前 9 项与 media_kit 的 `PlayerConfiguration.protocolWhitelist` **默认值一致**
+/// （`third_party/media_kit/lib/src/player/platform_player.dart`）；后 8 项是本项目
+/// 「打开链接 / 外部直链」允许直接播放的协议（见 `utils/url_media.dart`）。
+///
+/// [kPlaybackProtocolWhitelist] 同时传给 `PlayerConfiguration.protocolWhitelist`
+/// （创建播放器时 media_kit 自己会写一次），保证「创建期」与「open 前重建」两处
+/// 白名单始终一致。
+const List<String> kPlaybackProtocolWhitelist = [
+  // media_kit 默认（勿删：udp/rtp 是它特意补上的）
+  'udp',
+  'rtp',
+  'tcp',
+  'tls',
+  'data',
+  'file',
+  'http',
+  'https',
+  'crypto',
+  // 本项目直接播放协议白名单
+  'rtmp',
+  'rtmps',
+  'rtsp',
+  'rtsps',
+  'mms',
+  'mmst',
+  'mmsh',
+  'ftp',
+];
 
 /// 在线来源写入 `demuxer-lavf-o` 的有界重连参数（FFmpeg http 协议 AVOption）。
 ///
@@ -36,13 +70,33 @@ const Map<String, String> kOnlineLavfOverrides = {
   'reconnect_delay_total_max': '20',
 };
 
+/// 重建 `demuxer-lavf-o` 整串（整串覆盖是安全的：内容我们自己拼，白名单在 [kPlaybackProtocolWhitelist]）。
+///
+/// 组成：media_kit 的三项默认值（`seg_max_retry` / `strict` / `allowed_extensions`）
+/// + 协议白名单 +（在线档）[kOnlineLavfOverrides]。
+String buildDemuxerLavfO({required bool isOnline}) {
+  final entries = <String>[
+    'seg_max_retry=5',
+    'strict=experimental',
+    'allowed_extensions=ALL',
+    'protocol_whitelist=[${kPlaybackProtocolWhitelist.join(',')}]',
+  ];
+  if (isOnline) {
+    for (final entry in kOnlineLavfOverrides.entries) {
+      entries.add('${entry.key}=${entry.value}');
+    }
+  }
+  return entries.join(',');
+}
+
 /// 构造本次 open 要写入的 mpv 调参表。
 ///
-/// [existingDemuxerLavfO] 为当前 `demuxer-lavf-o` 的值（读取失败传 null）——
-/// 仅在线档需要合并重连参数；读不到时该键整体不写入。
+/// [tlsCaFile] 为沙盒内 CA 证书库的绝对路径（见 `TlsCaBundle`）：自编 libmpv 的
+/// mbedTLS 后端没有默认证书库路径，不给它就会让**所有 https 在证书校验阶段失败**
+/// （http 正常）。为空/null 时该键不写入。
 Map<String, String> buildMpvTuning({
   required bool isOnline,
-  String? existingDemuxerLavfO,
+  String? tlsCaFile,
 }) {
   final tuning = <String, String>{
     // 以音频为主时钟：24fps 内容在 60Hz 屏上不再周期性丢帧/抖动。
@@ -50,6 +104,10 @@ Map<String, String> buildMpvTuning({
     // 只丢「已晚于显示窗口」的帧：渲染跟不上时不再让抖动持续累积。
     'framedrop': 'vo',
   };
+  // CA 证书库：与来源无关（本地用不到，但设了无害），统一在这里写入。
+  if (tlsCaFile != null && tlsCaFile.isNotEmpty) {
+    tuning['tls-ca-file'] = tlsCaFile;
+  }
   if (isOnline) {
     tuning.addAll({
       // 流式播放开缓存 + 缓冲不足时暂停（避免「播一点卡一下」）。
@@ -64,10 +122,9 @@ Map<String, String> buildMpvTuning({
       'http-allow-redirect': 'yes',
       // HLS 自适应码率，不强制拉最高码率（省流量/降发热）。
       'hls-bitrate': 'no',
+      // 解封装器与协议白名单：**整串重建**（见文件头说明），不能读回来再合并。
+      'demuxer-lavf-o': buildDemuxerLavfO(isOnline: true),
     });
-    final merged =
-        mergeDemuxerLavfOptions(existingDemuxerLavfO, kOnlineLavfOverrides);
-    if (merged != null) tuning['demuxer-lavf-o'] = merged;
   } else {
     tuning.addAll({
       'demuxer-max-bytes': '$kLocalDemuxerMaxBytes',
@@ -75,57 +132,4 @@ Map<String, String> buildMpvTuning({
     });
   }
   return tuning;
-}
-
-/// 把 [overrides] 合并进已有的 `demuxer-lavf-o` 串（保留其余键与原顺序）。
-///
-/// 返回 null 表示 [existing] 不可用（null/空）——此时调用方**必须**放弃设置该
-/// 属性，否则会抹掉 media_kit 的 `protocol_whitelist`。
-String? mergeDemuxerLavfOptions(
-  String? existing,
-  Map<String, String> overrides,
-) {
-  if (existing == null || existing.trim().isEmpty) return null;
-  final entries = <String, String>{};
-  for (final token in splitLavfOptions(existing)) {
-    final eq = token.indexOf('=');
-    if (eq < 0) {
-      entries[token.trim()] = '';
-    } else {
-      entries[token.substring(0, eq).trim()] = token.substring(eq + 1).trim();
-    }
-  }
-  for (final entry in overrides.entries) {
-    // 覆盖已存在的键时保持原位置（LinkedHashMap 语义），新键追加到末尾
-    entries[entry.key] = entry.value;
-  }
-  return entries.entries
-      .map((e) => e.value.isEmpty ? e.key : '${e.key}=${e.value}')
-      .join(',');
-}
-
-/// 按**顶层**逗号切分 `demuxer-lavf-o` 串（`[...]` 内的逗号不算分隔符）。
-///
-/// 例：`a=1,protocol_whitelist=[udp,rtp,tcp],b=2` → 3 段，
-/// `protocol_whitelist=[udp,rtp,tcp]` 保持完整。
-List<String> splitLavfOptions(String raw) {
-  final parts = <String>[];
-  final buffer = StringBuffer();
-  var depth = 0;
-  for (var i = 0; i < raw.length; i++) {
-    final ch = raw[i];
-    if (ch == '[' || ch == '{' || ch == '(') {
-      depth++;
-    } else if (ch == ']' || ch == '}' || ch == ')') {
-      if (depth > 0) depth--;
-    }
-    if (ch == ',' && depth == 0) {
-      parts.add(buffer.toString());
-      buffer.clear();
-      continue;
-    }
-    buffer.write(ch);
-  }
-  parts.add(buffer.toString());
-  return parts.map((p) => p.trim()).where((p) => p.isNotEmpty).toList();
 }

@@ -1016,6 +1016,14 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
   纯 Dart 复刻为 `BiliStreamProxy`：`HttpClient`（BoringSSL）出站拉流 + `HttpServer`
   监听 127.0.0.1 明文喂 mpv；转发 `Range`/`content-range`/`accept-ranges` 支持拖动；
   播放结束 `dispose` 时 `stop()` 释放端口。**根治方案**见下方「内核重编」。
+  - 补充（2026-10）：「打开链接 / 外部直链」这条路**不经过任何代理**，URL 直接交 mpv，
+    所以它同时踩两个坑：① 协议白名单被合并逻辑切碎成 `udp`（见 §4.26）② mbedTLS 没有
+    默认 CA 证书库 → https 必然失败。已在应用层修掉：白名单整串重建 + `TlsCaBundle`
+    把 `assets/certs/cacert.pem` 交给 mpv 的 `tls-ca-file`。真机/模拟器实测：http 与
+    https 直链、HLS 均能正常播放（时长识别正确）。
+  - 另外：mpv 的错误此前**没有任何消费者**（只有音轨回退那 4 秒窗口订阅了 `stream.log`），
+    所以在线失败时只有「无限转圈、无提示」。现已把 `Player.stream.error` 接成
+    「播放失败：<原因>」提示，并落 warn/error 级日志到 logcat。
 - **清晰度**：默认请求 **1080P**（`defaultQn = 80`，服务端按账户权限**向下取最接近的可用档**
   ——用户设计口径，2026-09 拍板），可选档来自 `accept_quality` + `accept_description`；
   切换档位重新请求 playurl（换 URL 重开 + `seek` 保持进度），不做 DASH 动态自适应。
@@ -1481,15 +1489,22 @@ push 即 CI 出包）。升级内核：换 jar → **无需改任何 Dart 代码
 **仅在线**：`cache=yes` / `cache-pause=yes` / `cache-pause-wait=2`、`network-timeout=15`
 （media_kit 默认 5s 对弱网过于激进）、`demuxer-max-bytes=64MiB` /
 `demuxer-max-back-bytes=32MiB`（本地为 32MiB/32MiB）、`http-allow-redirect=yes`、
-`hls-bitrate=no`（HLS 自适应码率，不强制最高档）、`demuxer-lavf-o` 合并有界重连。
+`hls-bitrate=no`（HLS 自适应码率，不强制最高档）、`demuxer-lavf-o` **整串重建**（白名单 + 有界重连）。
 
 **关键决策**：
-- **`demuxer-lavf-o` 必须合并而不是覆盖**：media_kit 初始化时已写入
-  `protocol_whitelist=[udp,rtp,...]`（值内含逗号），整串覆盖会让 m3u8/自定义协议失效；
-  读不到旧值时**宁可不写该键**（`mergeDemuxerLavfOptions` 返回 null）。
+- **`demuxer-lavf-o` 必须整串重建，不能「读回来再合并」**（2026-10 实测踩爆过）：
+  该属性是 keyvalue-list，**mpv 读回来时方括号会丢**，实测得到
+  `protocol_whitelist=udp,rtp,tcp,...`；早先按「括号内逗号不切分」合并，会把列表值
+  切碎、写回去只剩 `protocol_whitelist=udp` → 之后**所有 http/https 都被 ffmpeg 拒绝**
+  （`Protocol 'https' not on whitelist 'udp'`），在线播放全灭而本地播放正常（极能藏）。
+  现在由 `buildDemuxerLavfO()` 按 `kPlaybackProtocolWhitelist` 显式重建整串，
+  该常量同时传给 `PlayerConfiguration.protocolWhitelist`（创建期与 open 前两处一致）。
 - **明确不用 `reconnect_at_eof`**：合法 VOD 的 EOF 必须正常结束，否则播完会一直重连、
   永远不触发「播放完毕」（mpvRx 同款决策）。其余重连参数有界（`reconnect_max_retries=5`、
   `reconnect_delay_total_max=20`）。
+- **CA 证书库必须显式给**（`tls-ca-file`）：自编 libmpv 是 mbedTLS 后端，ffmpeg 的
+  mbedTLS **没有默认证书库路径**（OpenSSL 才会读系统库）→ 不给就所有 https 校验失败。
+  `TlsCaBundle` 把 `assets/certs/cacert.pem` 拷到沙盒并写入该属性。
 - **本地/在线分档**：复用 `isOnlineMedia(path)` 判定；切集时来源可能从本地切到在线，
   所以调参在**每次 open 前**重写，而不是只在 initState 写一次。
 
@@ -2604,7 +2619,7 @@ return try {
 | 着色器优化改了算法但沙盒里还是旧文件（改了等于没改） | 用 `.patch_version` 记录补丁版本，算法改动必须 bump `kAnime4kPatchVersion` 才会重写已拷出的着色器（§4.25） |
 | Anime4K 头与正文之间的空行让精度注入整体失效（mpvRx 原实现遇到空行即放弃该 pass） | 空行视为头部间隙继续找首个正文行；pass 边界用 `//!DESC` 切分（缺失回退 `//!HOOK`），勿按 `//!HOOK` 切（会把一个 pass 拆两块）（§4.25） |
 | C.R.E.L.U. 采样合并遇到 >3×3 偏移会引用未声明的 `t_unknown_*` → 整个着色器编译失败被 mpv 丢弃 | 合并结果含 `_unknown` 时**整体退回原 pass**（正确性不依赖内核是 3×3）（§4.25） |
-| 覆盖 `demuxer-lavf-o` 抹掉 media_kit 的 `protocol_whitelist=[udp,rtp,...]`（值内含逗号）→ m3u8/自定义协议失效 | 按**括号深度**切分后合并再写；读不到旧值就不写该键（§4.26） |
+| 覆盖 `demuxer-lavf-o` 抹掉 media_kit 的 `protocol_whitelist=[udp,rtp,...]`（值内含逗号）→ m3u8/自定义协议失效 | **别去读它再合并**：mpv 读回来时方括号会丢（`protocol_whitelist=udp,rtp,...`），按括号切分会把白名单切碎成只剩 `udp`，之后 http/https 全被 ffmpeg 拒绝、在线播放全灭（本地正常，极难发现）。改为按 `kPlaybackProtocolWhitelist` **整串重建**（`buildDemuxerLavfO()`，§4.26）；症状关键词：`Protocol 'https' not on whitelist 'udp'` |
 | 播放调参在 open 之后写入 → 对当前文件无效 | 解封装缓存/重连参数只在 open 前生效：调参放 `_applyPlaybackTuning(path)`，首开/切集/B 站三处 open 前各调一次（§4.26） |
 | 重试时复用同一个 `http.Request` → 「Request has already been sent」 | 重试闭包内**新建** Request（`sendGet`、短链展开每跳都新建）（§4.28） |
 | 响应超限时用 `drain()` 丢弃 → 把上游巨量响应全部下载下来 | 超限一律 `stream.listen(null).cancel()` 取消订阅（一个字节都不读）；错误响应的丢弃用 `drainStreamCapped`（带上限）（§4.28） |

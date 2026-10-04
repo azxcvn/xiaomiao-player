@@ -4266,6 +4266,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String playerPlaybackFailed(String error) {
+    return '播放失败：$error';
+  }
+
+  @override
   String playerDiagnosticsDuration(String minutes, String seconds) {
     return '$minutes 分 $seconds 秒';
   }

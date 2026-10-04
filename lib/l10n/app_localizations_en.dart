@@ -4487,6 +4487,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String playerPlaybackFailed(String error) {
+    return 'Playback failed: $error';
+  }
+
+  @override
   String playerDiagnosticsDuration(String minutes, String seconds) {
     return '$minutes min $seconds s';
   }
