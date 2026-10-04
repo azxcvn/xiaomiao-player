@@ -1,0 +1,116 @@
+# 阶段 5 · 分组 B 残留文案与键位建议
+
+- `bili_bangumi_index_page.dart` L136：`'索引'` → l10n.biliIndexTitle
+- `bili_bangumi_index_page.dart` L158：`'重试'` → l10n.commonRetry
+- `bili_bangumi_index_page.dart` L192：`'收起'` → l10n.commonCollapse
+- `bili_bangumi_index_page.dart` L192：`'展开'` → l10n.commonExpand
+- `bili_bangumi_index_page.dart` L273：`'暂无内容'` → l10n.biliNothingHere
+- `bili_bangumi_index_page.dart` L288：`'重试'` → l10n.commonRetry
+- `bili_danmaku_download_page.dart` L58：`'请先设置下载目录'` → l10n.downloadSetDirFirst
+- `bili_danmaku_download_page.dart` L85：`'下载目录不存在，请重新选择'` → l10n.downloadDirGone
+- `bili_danmaku_download_page.dart` L112：`'已添加 ${_selected.length} 个弹幕下载任务'` → l10n.biliDanmakuTasksAdded(_selected.length)
+- `bili_danmaku_download_page.dart` L121：`'弹幕下载'` → l10n.settingsDanmakuDownload
+- `bili_danmaku_download_page.dart` L141：`'粘贴 B 站视频/番剧链接（BV / av / ss / ep / b23.tv）'` → l10n.biliPasteVideoLinkHint
+- `bili_danmaku_download_page.dart` L159：`'解析'` → l10n.biliParse
+- `bili_danmaku_download_page.dart` L185：`'粘贴链接后点「解析」'` → l10n.biliPasteThenParse
+- `bili_danmaku_download_page.dart` L208：`'共 ${target.items.length} 集'` → l10n.playerBiliTotalEpisodes(target.items.length)
+- `bili_danmaku_download_page.dart` L253：`'未设置下载目录'` → l10n.downloadNoDir
+- `bili_danmaku_download_page.dart` L258：`'设置目录'` → l10n.downloadSetDir
+- `bili_danmaku_download_page.dart` L279：`'全选'` → l10n.commonSelectAll
+- `bili_danmaku_download_page.dart` L281：`'已选 ${_selected.length} 集'` → l10n.biliEpisodesSelected(_selected.length)
+- `bili_danmaku_download_page.dart` L297：`'下载弹幕（${_selected.length}）'` → l10n.biliDownloadDanmaku(_selected.length)
+- `bili_episode_picker_page.dart` L88：`'选集'` → l10n.biliSelectEpisode
+- `bili_episode_picker_page.dart` L93：`'正序'` → l10n.commonOrderAsc
+- `bili_episode_picker_page.dart` L93：`'倒序'` → l10n.commonOrderDesc
+- `bili_login_page.dart` L35：`'正在获取二维码...'` → l10n.biliLoginQrLoading
+- `bili_login_page.dart` L58：`'正在获取二维码...'` → l10n.biliLoginQrLoading
+- `bili_login_page.dart` L66：`'请使用哔哩哔哩客户端扫码'` → l10n.biliLoginScanHint
+- `bili_login_page.dart` L72：`'获取二维码失败，请重试'` → l10n.biliLoginQrFailed
+- `bili_login_page.dart` L82：`'二维码已失效，正在刷新...'` → l10n.biliLoginQrRefreshing
+- `bili_login_page.dart` L93：`'已扫码，请在手机上确认'` → l10n.biliLoginScannedConfirm
+- `bili_login_page.dart` L97：`'二维码已失效，正在刷新...'` → l10n.biliLoginQrRefreshing
+- `bili_login_page.dart` L108：`'登录凭证获取失败，请重试'` → l10n.biliLoginCredentialFailed
+- `bili_login_page.dart` L127：`'登录成功：${user.nickname}'` → l10n.biliLoginSuccess(user.nickname)
+- `bili_login_page.dart` L133：`'登录失败，请重试'` → l10n.biliLoginFailedRetry
+- `bili_login_page.dart` L145：`'保存失败'` → l10n.commonSaveFailed
+- `bili_login_page.dart` L153：`'保存失败'` → l10n.commonSaveFailed
+- `bili_login_page.dart` L160：`'小喵Player'` → ⚠ 不要改：这是截图相册名 albumPath（与阶段 4 一致保持「小喵Player」），白名单由协调者加
+- `bili_login_page.dart` L163：`'二维码已保存到相册'` → l10n.biliQrSavedToGallery
+- `bili_login_page.dart` L163：`'保存失败：${result.errorMessage}'` → l10n.commonSaveFailedWith(result.errorMessage)
+- `bili_login_page.dart` L165：`'保存失败：$e'` → l10n.commonSaveFailedWith(e)
+- `bili_login_page.dart` L174：`'未检测到哔哩哔哩客户端'` → l10n.biliClientNotFound
+- `bili_login_page.dart` L180：`'请先粘贴 Cookie'` → l10n.biliPasteCookieFirst
+- `bili_login_page.dart` L187：`'登录成功：${user.nickname}'` → l10n.biliLoginSuccess(user.nickname)
+- `bili_login_page.dart` L192：`'登录失败：Cookie 无效或已过期'` → l10n.biliCookieInvalid
+- `bili_login_page.dart` L214：`'哔哩哔哩登录'` → l10n.biliLoginTitle
+- `bili_login_page.dart` L217：`'扫码登录'` → l10n.biliLoginQrTab
+- `bili_login_page.dart` L218：`'Cookie 登录'` → l10n.biliLoginCookieTab
+- `bili_login_page.dart` L268：`'剩余有效时间：$_remaining 秒'` → l10n.biliLoginRemaining(_remaining)
+- `bili_login_page.dart` L285：`'刷新二维码'` → l10n.biliQrRefresh
+- `bili_login_page.dart` L290：`'保存到相册'` → l10n.biliSaveToGallery
+- `bili_login_page.dart` L295：`'打开哔哩哔哩'` → l10n.biliOpenApp
+- `bili_login_page.dart` L301：`'「打开哔哩哔哩」会在已安装的哔哩哔哩客户端中自动唤起扫码确认。'` → l10n.biliOpenAppDesc
+- `bili_login_page.dart` L318：`'从浏览器复制 Cookie 粘贴登录（扫码异常时的备用方式）'` → l10n.biliCookieLoginDesc
+- `bili_login_page.dart` L337：`'登录中...'` → l10n.biliLoggingIn
+- `bili_login_page.dart` L337：`'登录'` → l10n.commonLogin
+- `bili_login_page.dart` L341：`'Cookie 仅本地加密保存，不会上传或记录日志。'` → l10n.biliCookiePrivacy
+- `bili_play_launcher.dart` L46：`'解析播放地址失败'` → l10n.playerResolveUrlFailed
+- `bili_play_launcher.dart` L60：`'播放失败：${_errText(e)}'` → l10n.biliPlayFailed(_errText(e))
+- `bili_play_launcher.dart` L103：`'解析播放地址失败'` → l10n.playerResolveUrlFailed
+- `bili_play_launcher.dart` L118：`'播放失败：${_errText(e)}'` → l10n.biliPlayFailed(_errText(e))
+- `bili_play_launcher.dart` L140：`'B 站视频'` → l10n.biliVideoFallbackTitle
+- `bili_search_page.dart` L88：`'搜索番剧'` → l10n.biliSearchAnime
+- `bili_search_page.dart` L94：`'搜索'` → l10n.commonSearch
+- `bili_search_page.dart` L110：`'输入关键词搜索番剧'` → l10n.biliSearchAnimeHint
+- `bili_search_page.dart` L114：`'没有找到相关番剧'` → l10n.biliNoAnimeFound
+- `bili_search_page.dart` L134：`'重试'` → l10n.commonRetry
+- `bili_season_page.dart` L80：`'番剧详情'` → l10n.biliSeasonDetail
+- `bili_season_page.dart` L102：`'重试'` → l10n.commonRetry
+- `bili_season_page.dart` L133：`'暂无选集'` → l10n.biliNoEpisodeSelection
+- `bili_season_page.dart` L177：`'查看全部'` → l10n.biliViewAll
+- `bili_season_page.dart` L186：`'选集'` → l10n.biliSelectEpisode
+- `bili_season_page.dart` L191：`'共 $count 集'` → l10n.playerBiliTotalEpisodes(count)
+- `bili_season_page.dart` L198：`'正序'` → l10n.commonOrderAsc
+- `bili_season_page.dart` L198：`'倒序'` → l10n.commonOrderDesc
+- `bili_season_page.dart` L262：`'评分 ${detail.ratingScore.toStringAsFixed(1)}'` → l10n.biliRating(detail.ratingScore.toStringAsFixed(1))
+- `bili_season_page.dart` L292：`'共 ${detail.episodes.length} 集'` → l10n.playerBiliTotalEpisodes(detail.episodes.length)
+- `bili_season_page.dart` L361：`'${(n / 100000000).toStringAsFixed(1)}亿'` → l10n.biliCountHundredMillion((n / 100000000).toStringAsFixed(1))
+- `bili_season_page.dart` L362：`'${(n / 10000).toStringAsFixed(1)}万'` → l10n.biliCountTenThousand((n / 10000).toStringAsFixed(1))
+- `bili_season_page.dart` L403：`'简介'` → l10n.biliIntro
+- `bili_season_page.dart` L410：`'收起'` → l10n.commonCollapse
+- `bili_season_page.dart` L410：`'展开'` → l10n.commonExpand
+- `bili_season_page.dart` L472：`'多季'` → l10n.biliMultiSeason
+- `bili_user_page.dart` L17：`'哔哩哔哩账号'` → l10n.biliAccount
+- `bili_user_page.dart` L28：`'等级'` → l10n.biliLevel
+- `bili_user_page.dart` L68：`'资产'` → l10n.biliAssets
+- `bili_user_page.dart` L72：`'硬币'` → l10n.biliCoins
+- `bili_user_page.dart` L73：`'用于投币等操作'` → l10n.biliCoinsDesc
+- `bili_user_page.dart` L90：`'退出登录'` → l10n.biliSignOut
+- `bili_user_page.dart` L110：`'已满级'` → l10n.biliMaxLevel
+- `bili_user_page.dart` L111：`'经验值 ${user.currentExp} / ${user.nextExp}'` → l10n.biliExpValue(user.currentExp, user.nextExp)
+- `bili_user_page.dart` L118：`'退出登录'` → l10n.biliSignOut
+- `bili_user_page.dart` L119：`'确定退出哔哩哔哩账号吗？'` → l10n.biliSignOutConfirm
+- `bili_user_page.dart` L123：`'取消'` → l10n.commonCancel
+- `bili_user_page.dart` L127：`'退出'` → l10n.biliSignOutAction
+- `bili_video_download_page.dart` L64：`'请先设置下载目录'` → l10n.downloadSetDirFirst
+- `bili_video_download_page.dart` L99：`'下载目录不存在，请重新选择'` → l10n.downloadDirGone
+- `bili_video_download_page.dart` L126：`'已添加 ${_selected.length} 个视频下载任务'` → l10n.biliVideoTasksAdded(_selected.length)
+- `bili_video_download_page.dart` L135：`'视频下载'` → l10n.settingsVideoDownload
+- `bili_video_download_page.dart` L155：`'粘贴 B 站视频/番剧链接（BV / av / ss / ep / b23.tv）'` → l10n.biliPasteVideoLinkHint
+- `bili_video_download_page.dart` L173：`'解析'` → l10n.biliParse
+- `bili_video_download_page.dart` L199：`'粘贴链接后点「解析」'` → l10n.biliPasteThenParse
+- `bili_video_download_page.dart` L250：`'未设置下载目录'` → l10n.downloadNoDir
+- `bili_video_download_page.dart` L255：`'设置目录'` → l10n.downloadSetDir
+- `bili_video_download_page.dart` L268：`'清晰度'` → l10n.playerQuality
+- `bili_video_download_page.dart` L311：`'同步下载弹幕'` → l10n.biliSyncDanmaku
+- `bili_video_download_page.dart` L339：`'全选'` → l10n.commonSelectAll
+- `bili_video_download_page.dart` L341：`'已选 ${_selected.length} / 共 ${target.items.length} 集'` → l10n.biliEpisodesSelectedOfTotal(_selected.length, target.items.length)
+- `bili_video_download_page.dart` L357：`'下载视频（${_selected.length}）'` → l10n.biliDownloadVideo(_selected.length)
+- `bili_episode_tile.dart` L17：`'第 ${episode.epId} 话'` → l10n.biliEpisodeNo(episode.epId)
+- `bili_episode_tile.dart` L76：`'会员'` → ⚠ 不要改：B 站角标匹配键（white-list 由协调者加）
+- `bili_episode_tile.dart` L77：`'限免'` → l10n.playerBiliFreeLimited
+- `bili_episode_tile.dart` L77：`'限免'` → l10n.playerBiliFreeLimited
+- `bili_episode_tile.dart` L78：`'预告'` → l10n.playerBiliPreview
+- `bili_episode_tile.dart` L78：`'预告'` → l10n.playerBiliPreview
+
+（共 112 条，未匹配/多候选 0 条）

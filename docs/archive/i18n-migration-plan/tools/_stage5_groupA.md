@@ -1,0 +1,82 @@
+# 阶段 5 · 分组 A 残留文案与键位建议
+
+- `media_info_page.dart` L49：`'媒体信息已复制'` → l10n.mediaInfoCopied
+- `media_info_page.dart` L58：`'媒体信息 - ${widget.title}'` → l10n.mediaInfoTitleWithName(widget.title)
+- `media_info_page.dart` L62：`'【通用信息】'` → l10n.mediaInfoGeneralHeader
+- `media_info_page.dart` L68：`'视频流'` → l10n.mediaInfoVideoStreams
+- `media_info_page.dart` L69：`'音频流'` → l10n.mediaInfoAudioStreams
+- `media_info_page.dart` L70：`'字幕流'` → l10n.mediaInfoSubtitleStreams
+- `media_info_page.dart` L98：`'复制'` → l10n.commonCopy
+- `media_info_page.dart` L106：`'媒体信息获取失败'` → l10n.mediaInfoFetchFailed
+- `media_info_page.dart` L122：`'通用信息'` → l10n.mediaInfoGeneral
+- `media_info_page.dart` L126：`'格式'` → l10n.mediaInfoFormat
+- `media_info_page.dart` L127：`'格式版本'` → l10n.mediaInfoFormatVersion
+- `media_info_page.dart` L128：`'文件大小'` → l10n.mediaInfoFileSize
+- `media_info_page.dart` L129：`'时长'` → l10n.commonDuration
+- `media_info_page.dart` L130：`'总比特率'` → l10n.mediaInfoOverallBitrate
+- `media_info_page.dart` L131：`'帧率'` → l10n.commonFrameRate
+- `media_info_page.dart` L132：`'标题'` → l10n.commonTitle
+- `media_info_page.dart` L133：`'编码日期'` → l10n.mediaInfoEncodedDate
+- `media_info_page.dart` L134：`'编码应用'` → l10n.mediaInfoWritingApp
+- `media_info_page.dart` L135：`'编码库'` → l10n.mediaInfoWritingLibrary
+- `media_info_page.dart` L141：`'视频流'` → l10n.mediaInfoVideoStreams
+- `media_info_page.dart` L143：`'视频流 #${i + 1}'` → l10n.mediaInfoVideoStreamNo(i + 1)
+- `media_info_page.dart` L147：`'音频流'` → l10n.mediaInfoAudioStreams
+- `media_info_page.dart` L149：`'音频流 #${i + 1}'` → l10n.mediaInfoAudioStreamNo(i + 1)
+- `media_info_page.dart` L153：`'字幕流'` → l10n.mediaInfoSubtitleStreams
+- `media_info_page.dart` L155：`'字幕流 #${i + 1}'` → l10n.mediaInfoSubtitleStreamNo(i + 1)
+- `media_info_page.dart` L163：`'未获取到媒体信息'` → l10n.mediaInfoNoInfo
+- `media_info_page.dart` L172：`'编码'` → l10n.mediaInfoCodec
+- `media_info_page.dart` L173：`'配置'` → l10n.mediaInfoProfile
+- `media_info_page.dart` L174：`'编码ID'` → l10n.mediaInfoCodecId
+- `media_info_page.dart` L175：`'宽'` → l10n.mediaInfoWidth
+- `media_info_page.dart` L176：`'高'` → l10n.mediaInfoHeight
+- `media_info_page.dart` L177：`'宽高比'` → l10n.mediaInfoAspectRatio
+- `media_info_page.dart` L178：`'帧率'` → l10n.commonFrameRate
+- `media_info_page.dart` L179：`'帧率模式'` → l10n.mediaInfoFrameRateMode
+- `media_info_page.dart` L180：`'比特率'` → l10n.mediaInfoBitrate
+- `media_info_page.dart` L181：`'位深度'` → l10n.mediaInfoBitDepth
+- `media_info_page.dart` L182：`'色彩空间'` → l10n.mediaInfoColorSpace
+- `media_info_page.dart` L183：`'色度子采样'` → l10n.mediaInfoChromaSubsampling
+- `media_info_page.dart` L184：`'HDR格式'` → l10n.mediaInfoHdrFormat
+- `media_info_page.dart` L185：`'声道'` → l10n.mediaInfoChannels
+- `media_info_page.dart` L186：`'采样率'` → l10n.settingsDecoderSampleRates
+- `media_info_page.dart` L187：`'语言'` → l10n.settingsGroupLanguage
+- `media_info_page.dart` L188：`'标题'` → l10n.commonTitle
+- `media_info_page.dart` L189：`'时长'` → l10n.commonDuration
+- `media_info_page.dart` L190：`'流大小'` → l10n.mediaInfoStreamSize
+- `media_info_page.dart` L198：`'流'` → l10n.mediaInfoStream
+- `subtitle_download_page.dart` L124：`'请先设置 WYZIE API 密钥'` → l10n.subtitleSetWyzieKeyFirst
+- `subtitle_download_page.dart` L130：`'请先设置自定义字幕地址'` → l10n.subtitleSetCustomUrlFirst
+- `subtitle_download_page.dart` L141：`'请先设置下载目录'` → l10n.downloadSetDirFirst
+- `subtitle_download_page.dart` L203：`'下载目录不存在，请重新选择'` → l10n.downloadDirGone
+- `subtitle_download_page.dart` L239：`'已下载 $ok 个字幕'` → l10n.subtitleDownloadedCount(ok)
+- `subtitle_download_page.dart` L239：`'下载完成：成功 $ok，失败 $fail'` → l10n.subtitleDownloadResult(ok, fail)
+- `subtitle_download_page.dart` L271：`'字幕下载'` → l10n.settingsSubtitleDownload
+- `subtitle_download_page.dart` L294：`'输入影视名称或 IMDB / TMDB ID'` → l10n.subtitleSearchHint
+- `subtitle_download_page.dart` L319：`'确定'` → l10n.commonConfirm
+- `subtitle_download_page.dart` L337：`'返回设置'` → l10n.subtitleBackToSettings
+- `subtitle_download_page.dart` L351：`'未找到字幕，请换个关键词或调整字幕设置'` → l10n.subtitleNoResultHint
+- `subtitle_download_page.dart` L356：`'返回设置'` → l10n.subtitleBackToSettings
+- `subtitle_download_page.dart` L368：`'字幕下载设置'` → l10n.subtitleDownloadSettings
+- `subtitle_download_page.dart` L385：`'输入关键词后点「确定」搜索字幕'` → l10n.subtitleSearchHintShort
+- `subtitle_download_page.dart` L409：`'未设置下载目录'` → l10n.downloadNoDir
+- `subtitle_download_page.dart` L414：`'设置目录'` → l10n.downloadSetDir
+- `subtitle_download_page.dart` L425：`'$_query · ${_results.length} 条'` → l10n.subtitleResultHeader(_query, _results.length)
+- `subtitle_download_page.dart` L431：`'重新搜索'` → l10n.subtitleSearchAgain
+- `subtitle_download_page.dart` L453：`'全选'` → l10n.commonSelectAll
+- `subtitle_download_page.dart` L455：`'已选 ${_selected.length} / ${_results.length} 条'` → l10n.subtitleSelectedOfTotal(_selected.length, _results.length)
+- `subtitle_download_page.dart` L490：`'未知来源'` → l10n.subtitleUnknownSource
+- `subtitle_download_page.dart` L536：`'下载中…'` → l10n.subtitleDownloadingNow
+- `subtitle_download_page.dart` L536：`'下载字幕（${_selected.length}）'` → l10n.subtitleDownloadButton(_selected.length)
+- `bili_cover_image.dart` L202：`'哔哩封面不可用（缓存未命中且下载失败）'` → l10n.biliCoverUnavailable
+- `folder_card.dart` L133：`'${node.videoCount} 个视频'` → l10n.folderVideoCount(node.videoCount)
+- `video_card.dart` L196：`'已看完'` → l10n.videoCardWatched
+- `video_card.dart` L197：`'未观看'` → l10n.videoCardUnwatched
+- `video_card.dart` L216：`'字幕检测中…'` → l10n.videoCardDetectingSubtitle
+- `video_card.dart` L218：`'含字幕'` → l10n.videoCardHasSubtitle
+- `video_card.dart` L218：`'字幕 · $codec'` → l10n.videoCardSubtitleCodec(codec)
+- `video_card.dart` L219：`'无字幕'` → l10n.videoCardNoSubtitle
+- `video_card.dart` L351：`'媒体信息'` → l10n.mediaInfoItem
+
+（共 78 条，未匹配/多候选 0 条）

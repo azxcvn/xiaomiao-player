@@ -1,0 +1,94 @@
+# 阶段 5 · 分组 D 残留文案与键位建议
+
+- `account_edit_page.dart` L133：`'请先填写主机地址'` → l10n.networkHostInputRequired
+- `account_edit_page.dart` L141：`'端口需为 1-65535'` → l10n.networkPortInvalid
+- `account_edit_page.dart` L169：`'连接成功'` → l10n.commonConnectOk
+- `account_edit_page.dart` L175：`'连接失败：$e'` → l10n.commonConnectFailed(e)
+- `account_edit_page.dart` L224：`'默认 $def（群晖 5005/5006）'` → l10n.networkDefaultPortWithSynology(def)
+- `account_edit_page.dart` L226：`'默认 $def'` → l10n.networkDefaultPort(def)
+- `account_edit_page.dart` L234：`'编辑账户'` → l10n.networkEditAccount
+- `account_edit_page.dart` L234：`'添加账户'` → l10n.networkAddAccount
+- `account_edit_page.dart` L243：`'显示名称'` → l10n.networkDisplayName
+- `account_edit_page.dart` L244：`'例如：家庭 NAS'` → l10n.networkDisplayNameHint
+- `account_edit_page.dart` L249：`'请输入名称'` → l10n.networkNameRequired
+- `account_edit_page.dart` L255：`'协议'` → l10n.networkProtocolLabel
+- `account_edit_page.dart` L281：`'主机地址'` → l10n.networkHostLabel
+- `account_edit_page.dart` L282：`'IP 或域名'` → l10n.networkHostHint
+- `account_edit_page.dart` L289：`'请输入主机地址'` → l10n.networkHostRequiredInput
+- `account_edit_page.dart` L300：`'端口'` → l10n.networkPortLabel
+- `account_edit_page.dart` L325：`'路径'` → l10n.commonPath
+- `account_edit_page.dart` L326：`'默认为 /'` → l10n.networkPathDefaultHint
+- `account_edit_page.dart` L371：`'匿名登录'` → l10n.networkAnonymous
+- `account_edit_page.dart` L372：`'FTP / SMB 匿名访问时开启'` → l10n.networkAnonymousDesc
+- `account_edit_page.dart` L381：`'使用 HTTPS'` → l10n.networkUseHttps
+- `account_edit_page.dart` L382：`'启用后使用加密连接（默认端口 443）'` → l10n.networkUseHttpsDesc
+- `account_edit_page.dart` L396：`'账号'` → l10n.networkUsername
+- `account_edit_page.dart` L407：`'密码'` → l10n.networkPassword
+- `account_edit_page.dart` L410：`'隐藏密码'` → l10n.networkHidePassword
+- `account_edit_page.dart` L410：`'显示密码'` → l10n.networkShowPassword
+- `account_edit_page.dart` L437：`'测试中…'` → l10n.commonTesting
+- `account_edit_page.dart` L437：`'测试连接'` → l10n.commonTestConnection
+- `account_edit_page.dart` L477：`'保存中…'` → l10n.commonSaving
+- `account_edit_page.dart` L477：`'保存'` → l10n.commonSave
+- `network_browser_page.dart` L156：`'连接失败：$e'` → l10n.commonConnectFailed(e)
+- `network_browser_page.dart` L330：`'排序方式'` → l10n.commonSortBy
+- `network_browser_page.dart` L340：`'按${networkSortFieldLabel(l10n, field)}'` → l10n.networkSortByPrefix(networkSortFieldLabel(l10n, field))
+- `network_browser_page.dart` L393：`'搜索本目录'` → l10n.networkSearchCurrentDir
+- `network_browser_page.dart` L402：`'取消搜索'` → l10n.commonCancelSearch
+- `network_browser_page.dart` L402：`'搜索'` → l10n.commonSearch
+- `network_browser_page.dart` L407：`'排序方式'` → l10n.commonSortBy
+- `network_browser_page.dart` L411：`'更多'` → l10n.commonMore
+- `network_browser_page.dart` L423：`'刷新本目录'` → l10n.networkRefreshCurrentDir
+- `network_browser_page.dart` L425：`'回到共享根目录'` → l10n.networkBackToRoot
+- `network_browser_page.dart` L429：`'显示隐藏文件'` → l10n.networkShowHiddenFiles
+- `network_browser_page.dart` L451：`'重试'` → l10n.commonRetry
+- `network_browser_page.dart` L463：`'没有匹配的文件'` → l10n.networkNoMatchingFiles
+- `network_browser_page.dart` L464：`'该目录为空'` → l10n.networkDirEmpty
+- `network_browser_page.dart` L464：`'本目录只有隐藏文件'` → l10n.networkOnlyHiddenFiles
+- `network_browser_page.dart` L465：`'清除搜索'` → l10n.commonClearSearch
+- `network_browser_page.dart` L465：`'返回上一级'` → l10n.networkBackUp
+- `network_browser_page.dart` L544：`'修改时间'` → l10n.networkModifiedTime
+- `network_browser_page.dart` L549：`'服务器未提供'` → l10n.networkServerNotProvided
+- `network_browser_page.dart` L551：`'位置'` → l10n.networkLocation
+- `network_browser_page.dart` L552：`'连接'` → l10n.networkConnectionLabel
+- `network_storage_page.dart` L41：`'删除账户'` → l10n.networkDeleteAccount
+- `network_storage_page.dart` L42：`'确定删除「${connection.name}」吗？此操作不可撤销。'` → l10n.danmakuServerDeleteConfirm(connection.name)
+- `network_storage_page.dart` L46：`'取消'` → l10n.commonCancel
+- `network_storage_page.dart` L50：`'删除'` → l10n.commonDelete
+- `network_storage_page.dart` L63：`'网络存储'` → l10n.networkStorageTitle
+- `network_storage_page.dart` L68：`'添加账户'` → l10n.networkAddAccount
+- `network_storage_page.dart` L105：`'还没有网络存储账户'` → l10n.networkNoAccounts
+- `network_storage_page.dart` L108：`'点击右下角 + 添加 WebDAV / SMB / FTP 账户'` → l10n.networkNoAccountsHint
+- `network_storage_page.dart` L185：`'更多操作'` → l10n.commonMoreActions
+- `network_storage_page.dart` L191：`'编辑'` → l10n.commonEdit
+- `network_storage_page.dart` L192：`'删除'` → l10n.commonDelete
+- `cast_device_dialog.dart` L68：`'投屏搜索启动失败：$e'` → l10n.castSearchStartFailed(e)
+- `cast_device_dialog.dart` L88：`'暂不支持投屏该来源'` → l10n.playerCastUnsupportedSource
+- `cast_device_dialog.dart` L93：`'已投屏到 ${device.friendlyName}'` → l10n.castConnected(device.friendlyName)
+- `cast_device_dialog.dart` L98：`'投屏失败：$e'` → l10n.castFailed(e)
+- `cast_device_dialog.dart` L123：`'投屏'` → l10n.playerActionCast
+- `cast_device_dialog.dart` L133：`'取消'` → l10n.commonCancel
+- `cast_device_dialog.dart` L149：`'正在搜索投屏设备…'` → l10n.castSearching
+- `cast_device_dialog.dart` L168：`'未发现可投屏设备，请确认手机与电视连接同一 WiFi 后重试。'` → l10n.castNoDevicesFound
+- `color_editor_row.dart` L216：`'收起自定义调色'` → l10n.colorEditorCollapseCustom
+- `color_editor_row.dart` L216：`'自定义调色'` → l10n.colorEditorCustom
+- `color_editor_row.dart` L254：`'无'` → l10n.commonNone
+- `player_bottom_panel.dart` L200：`'返回'` → l10n.commonBack
+- `player_bottom_panel.dart` L212：`'关闭'` → l10n.commonOff
+- `player_panel.dart` L187：`'返回'` → l10n.commonBack
+- `player_panel.dart` L198：`'关闭'` → l10n.commonOff
+- `update_dialog.dart` L60：`'主下载站'` → l10n.updatePrimarySource
+- `update_dialog.dart` L60：`'备用下载站'` → l10n.updateBackupSource
+- `update_dialog.dart` L62：`'$label链接待接入'` → l10n.updateLinkPending(label)
+- `update_dialog.dart` L71：`'无法打开$label链接'` → l10n.updateOpenLinkFailed(label)
+- `update_dialog.dart` L168：`'发现新版本 ${info.version}'` → l10n.updateNewVersion(info.version)
+- `update_dialog.dart` L202：`'忽略'` → l10n.updateIgnore
+- `update_dialog.dart` L214：`'稍后提醒'` → l10n.updateLater
+- `update_dialog.dart` L226：`'立即更新'` → l10n.updateNow
+- `update_dialog.dart` L249：`'选择下载方式'` → l10n.updateChooseMethod
+- `update_dialog.dart` L257：`'主下载站'` → l10n.updatePrimarySource
+- `update_dialog.dart` L264：`'备用下载站'` → l10n.updateBackupSource
+- `update_dialog.dart` L273：`'取消'` → l10n.commonCancel
+- `update_dialog.dart` L294：`'待接入'` → l10n.updatePending
+
+（共 90 条，未匹配/多候选 0 条）

@@ -1,0 +1,86 @@
+# 阶段 5 · 分组 C 残留文案与键位建议
+
+- `download_manager_page.dart` L24：`'清除已完成'` → l10n.downloadClearFinished
+- `download_manager_page.dart` L25：`'只清除已完成和失败的下载记录，不会删除已下载的文件。'` → l10n.downloadClearFinishedDesc
+- `download_manager_page.dart` L29：`'取消'` → l10n.commonCancel
+- `download_manager_page.dart` L33：`'清除'` → l10n.commonClear
+- `download_manager_page.dart` L47：`'下载管理'` → l10n.settingsDownloadManager
+- `download_manager_page.dart` L52：`'清除已完成'` → l10n.downloadClearFinished
+- `download_manager_page.dart` L61：`'暂无下载任务'` → l10n.downloadNoTasks
+- `download_manager_page.dart` L133：`'下载失败'` → l10n.downloadFailed
+- `download_manager_page.dart` L174：`'完成'` → l10n.downloadStatusCompleted
+- `download_manager_page.dart` L175：`'失败'` → l10n.downloadStatusFailed
+- `download_manager_page.dart` L176：`'暂停'` → l10n.commonPause
+- `download_manager_page.dart` L177：`'合并'` → l10n.downloadStatusMerging
+- `download_manager_page.dart` L178：`'下载中'` → l10n.downloadStatusDownloading
+- `download_manager_page.dart` L179：`'等待'` → l10n.downloadStatusPending
+- `download_manager_page.dart` L219：`'暂停'` → l10n.commonPause
+- `download_manager_page.dart` L225：`'合并中，无法暂停'` → l10n.downloadMergingCannotPause
+- `download_manager_page.dart` L233：`'继续'` → l10n.commonResume
+- `download_manager_page.dart` L239：`'删除'` → l10n.commonDelete
+- `download_manager_page.dart` L251：`'重试'` → l10n.commonRetry
+- `download_manager_page.dart` L257：`'删除'` → l10n.commonDelete
+- `download_manager_page.dart` L267：`'删除'` → l10n.commonDelete
+- `folder_detail_page.dart` L239：`'搜索视频'` → l10n.homeSearchVideos
+- `folder_detail_page.dart` L249：`'取消搜索'` → l10n.commonCancelSearch
+- `folder_detail_page.dart` L255：`'搜索'` → l10n.commonSearch
+- `folder_detail_page.dart` L260：`'排序与字段'` → l10n.homeSortAndFields
+- `folder_detail_page.dart` L301：`'该文件夹没有视频'` → l10n.homeNoVideosInFolder
+- `folder_detail_page.dart` L312：`'没有匹配的视频'` → l10n.homeNoMatchingVideos
+- `home_page.dart` L242：`'请在系统设置中手动开启存储权限'` → l10n.homePermissionHintInSettings
+- `home_page.dart` L346：`'搜索文件夹与视频'` → l10n.homeSearchFoldersAndVideos
+- `home_page.dart` L351：`'小喵Player'` → l10n.appTitle
+- `home_page.dart` L356：`'取消搜索'` → l10n.commonCancelSearch
+- `home_page.dart` L362：`'搜索'` → l10n.commonSearch
+- `home_page.dart` L367：`'排序与视图'` → l10n.homeSortAndView
+- `home_page.dart` L397：`'最近播放'` → l10n.homeRecentPlayed
+- `home_page.dart` L402：`'打开链接'` → l10n.homeOpenLink
+- `home_page.dart` L407：`'哔哩番剧'` → l10n.biliBangumi
+- `home_page.dart` L412：`'网络存储'` → l10n.networkStorageTitle
+- `home_page.dart` L434：`'暂无播放历史'` → l10n.settingsHistoryEmpty
+- `home_page.dart` L438：`'文件不存在或已被移动：${entry.title}'` → l10n.homeFileGone(entry.title)
+- `home_page.dart` L477：`'需要登录哔哩哔哩账号'` → l10n.settingsLoginRequired
+- `home_page.dart` L516：`'存储权限已被拒绝，需要到系统设置里手动开启'` → l10n.homePermissionDeniedDetail
+- `home_page.dart` L517：`'需要授予存储权限才能扫描视频'` → l10n.homePermissionNeeded
+- `home_page.dart` L518：`'去系统设置开启'` → l10n.homeOpenSettings
+- `home_page.dart` L518：`'授予权限'` → l10n.homeGrantPermission
+- `home_page.dart` L526：`'没有找到视频'` → l10n.homeNoVideosFound
+- `home_page.dart` L527：`'重新扫描'` → l10n.homeRescan
+- `home_page.dart` L545：`'没有匹配的内容'` → l10n.homeNoMatchingContent
+- `home_page.dart` L565：`'没有匹配的文件夹'` → l10n.homeNoMatchingFolders
+- `home_page.dart` L752：`'我已开启，重新检查'` → l10n.homeRecheckPermission
+- `open_link_dialog.dart` L51：`'剪贴板为空'` → l10n.openLinkClipboardEmpty
+- `open_link_dialog.dart` L65：`'链接无效，支持 http/https/rtmp/rtsp 等流媒体协议'` → l10n.openLinkInvalid
+- `open_link_dialog.dart` L79：`'打开链接'` → l10n.homeOpenLink
+- `open_link_dialog.dart` L84：`'输入视频直链，将在线播放'` → l10n.openLinkHint
+- `open_link_dialog.dart` L97：`'粘贴'` → l10n.commonPaste
+- `open_link_dialog.dart` L108：`'取消'` → l10n.commonCancel
+- `open_link_dialog.dart` L112：`'播放'` → l10n.commonPlay
+- `tree_folder_page.dart` L162：`'小喵Player'` → l10n.appTitle
+- `tree_folder_page.dart` L373：`'搜索文件夹与视频'` → l10n.homeSearchFoldersAndVideos
+- `tree_folder_page.dart` L383：`'取消搜索'` → l10n.commonCancelSearch
+- `tree_folder_page.dart` L389：`'搜索'` → l10n.commonSearch
+- `tree_folder_page.dart` L396：`'排序与字段'` → l10n.homeSortAndFields
+- `tree_folder_page.dart` L445：`'该文件夹没有视频'` → l10n.homeNoVideosInFolder
+- `tree_folder_page.dart` L459：`'没有匹配的内容'` → l10n.homeNoMatchingContent
+- `directory_picker_dialog.dart` L49：`'目录不可读或不存在'` → l10n.directoryPickerUnreadable
+- `directory_picker_dialog.dart` L77：`'选择下载目录'` → l10n.directoryPickerTitle
+- `directory_picker_dialog.dart` L92：`'上级目录'` → l10n.directoryPickerUp
+- `directory_picker_dialog.dart` L111：`'取消'` → l10n.commonCancel
+- `directory_picker_dialog.dart` L115：`'选择此目录'` → l10n.directoryPickerSelectThis
+- `directory_picker_dialog.dart` L125：`'该目录下没有子目录'` → l10n.directoryPickerEmpty
+- `file_selection_ui.dart` L23：`'退出多选'` → l10n.fileSelectionExit
+- `file_selection_ui.dart` L26：`'已选 $count 项'` → l10n.fileSelectionSelected(count)
+- `file_selection_ui.dart` L30：`'取消全选'` → l10n.commonDeselectAll / l10n.commonSelectAll（同行两处）
+- `file_selection_ui.dart` L30：`'全选'` → l10n.commonDeselectAll / l10n.commonSelectAll（同行两处）
+- `file_selection_ui.dart` L35：`'文件操作'` → l10n.fileSelectionOps
+- `options_sheet.dart` L60：`'文件夹排序方式'` → l10n.optionsSheetFolderSort
+- `options_sheet.dart` L76：`'文件夹排序方向'` → l10n.optionsSheetFolderSortDir
+- `options_sheet.dart` L92：`'文件夹显示字段'` → l10n.optionsSheetFolderFields
+- `options_sheet.dart` L117：`'视频排序方式'` → l10n.optionsSheetVideoSort
+- `options_sheet.dart` L133：`'视频排序方向'` → l10n.optionsSheetVideoSortDir
+- `options_sheet.dart` L149：`'视频显示字段'` → l10n.optionsSheetVideoFields
+- `options_sheet.dart` L163：`'显示模式'` → l10n.optionsSheetViewMode
+- `options_sheet.dart` L188：`'排序与字段'` → l10n.homeSortAndFields
+
+（共 82 条，未匹配/多候选 0 条）

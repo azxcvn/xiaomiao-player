@@ -1,0 +1,51 @@
+﻿--------- beginning of main
+10-04 17:21:45.652 10344 10344 I Choreographer: Skipped 32 frames!  The application may be doing too much work on its main thread.
+10-04 17:21:45.681 10344 10344 I ImeTracker: com.azxcvn.moumou:b73e89f7: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false
+10-04 17:21:45.681 10344 10344 D InsetsController: hide(ime(), fromIme=false)
+--------- beginning of system
+10-04 17:21:45.681 10344 10344 D InsetsController: Setting requestedVisibleTypes to -9 (was -1)
+10-04 17:21:45.690 10344 10344 I VideoOutputManager: com.alexmercerind.media_kit_video.VideoOutputManager.create: 124548773013552
+10-04 17:21:45.691 10344 10344 D InsetsController: Setting requestedVisibleTypes to -12 (was -9)
+10-04 17:21:45.693 10344 10344 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:21:45.694 10344 10344 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:21:45.755 10344 10344 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:21:45.766 10344 10344 I m.azxcvn.moumou: AssetManager2(0x71476555df98) locale list changing from [] to [zh-Hans-CN]
+10-04 17:21:45.773 10344 10344 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:21:45.774 10344 10344 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:21:45.774 10344 10381 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:21:45.792 10344 10381 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:21:45.827 10344 10398 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 17:21:45.827 10344 10398 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 17:21:45.828 10344 10398 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 17:21:45.828 10344 10398 E gralloc_kona: gralloc_alloc: Unknown format 56
+10-04 17:21:45.828 10344 10344 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:21:45.828 10344 10398 E GraphicBufferAllocator: Failed to allocate (4 x 4) layerCount 1 format 56 usage b00: 3
+10-04 17:21:45.828 10344 10398 E AHardwareBuffer: GraphicBuffer(w=4, h=4, lc=1) failed (Unknown error -3), handle=0x0
+10-04 17:21:45.828 10344 10398 E gralloc_kona: gralloc_alloc: Unknown format 59
+10-04 17:21:45.828 10344 10398 E GraphicBufferAllocator: Failed to allocate (4 x 4) layerCount 1 format 59 usage b00: 3
+10-04 17:21:45.828 10344 10398 E AHardwareBuffer: GraphicBuffer(w=4, h=4, lc=1) failed (Unknown error -3), handle=0x0
+10-04 17:21:45.828 10344 10398 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 17:21:45.828 10344 10398 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 17:21:45.828 10344 10398 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 17:21:45.828 10344 10398 E gralloc_kona: gralloc_alloc: Unknown format 56
+10-04 17:21:45.828 10344 10398 E GraphicBufferAllocator: Failed to allocate (4 x 4) layerCount 1 format 56 usage b00: 3
+10-04 17:21:45.828 10344 10398 E AHardwareBuffer: GraphicBuffer(w=4, h=4, lc=1) failed (Unknown error -3), handle=0x0
+10-04 17:21:45.828 10344 10398 E gralloc_kona: gralloc_alloc: Unknown format 59
+10-04 17:21:45.828 10344 10398 E GraphicBufferAllocator: Failed to allocate (4 x 4) layerCount 1 format 59 usage b00: 3
+10-04 17:21:45.828 10344 10398 E AHardwareBuffer: GraphicBuffer(w=4, h=4, lc=1) failed (Unknown error -3), handle=0x0
+10-04 17:21:45.828 10344 10398 E Surface : freeAllBuffers: 1 buffers were freed while being dequeued!
+10-04 17:21:45.829 10344 10344 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:21:45.833 10344 10381 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:21:45.835 10344 10398 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:21:45.838 10344 10344 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:21:45.841 10344 10344 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:21:45.845 10344 10381 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:21:45.847 10344 10344 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:21:45.847 10344 10398 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:21:45.854 10344 10344 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:21:45.854 10344 10344 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:21:45.855 10344 10344 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:21:45.858 10344 10398 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:21:45.868 10344 10398 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:21:45.878 10344 10398 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:21:45.925 10344 10344 D FlutterJNI: Sending viewport metrics to the engine.

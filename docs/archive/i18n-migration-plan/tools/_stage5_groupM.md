@@ -1,0 +1,133 @@
+# 阶段 5 · 分组 M 残留文案与键位建议
+
+- `bili_index_page.dart` L133：`'哔哩番剧'` → l10n.biliBangumi
+- `bili_index_page.dart` L136：`'解析链接'` → l10n.biliParseLink
+- `bili_index_page.dart` L141：`'搜索'` → l10n.commonSearch
+- `bili_index_page.dart` L173：`'推荐'` → l10n.biliRecommend
+- `bili_index_page.dart` L180：`'索引'` → l10n.biliIndexTitle
+- `bili_index_page.dart` L209：`'重试'` → l10n.commonRetry
+- `bili_index_page.dart` L268：`'一'` → 删除该 const 列表，改用 l10n.biliWeekdayMon..biliWeekdaySun（7 个键）
+- `bili_index_page.dart` L268：`'二'` → 删除该 const 列表，改用 l10n.biliWeekdayMon..biliWeekdaySun（7 个键）
+- `bili_index_page.dart` L268：`'三'` → 删除该 const 列表，改用 l10n.biliWeekdayMon..biliWeekdaySun（7 个键）
+- `bili_index_page.dart` L268：`'四'` → 删除该 const 列表，改用 l10n.biliWeekdayMon..biliWeekdaySun（7 个键）
+- `bili_index_page.dart` L268：`'五'` → 删除该 const 列表，改用 l10n.biliWeekdayMon..biliWeekdaySun（7 个键）
+- `bili_index_page.dart` L268：`'六'` → 删除该 const 列表，改用 l10n.biliWeekdayMon..biliWeekdaySun（7 个键）
+- `bili_index_page.dart` L268：`'日'` → 删除该 const 列表，改用 l10n.biliWeekdayMon..biliWeekdaySun（7 个键）
+- `bili_index_page.dart` L282：`'周${_week[i]}'` → 按 i 返回 l10n.biliWeekdayMon..biliWeekdaySun
+- `bili_index_page.dart` L326：`'追番时间表'` → l10n.biliTimeline
+- `bili_index_page.dart` L377：`'已追番'` → l10n.biliFollowed
+- `bili_index_page.dart` L444：`'无法识别该链接（支持 ss/ep/BV/av 号与 b23.tv 短链）'` → l10n.biliLinkUnrecognized
+- `bili_index_page.dart` L462：`'解析番剧链接'` → l10n.biliParseBangumiLink
+- `bili_index_page.dart` L470：`'粘贴番剧/视频链接或 b23.tv 短链'` → l10n.biliPasteAnimeLinkHint
+- `bili_index_page.dart` L483：`'取消'` → l10n.commonCancel
+- `bili_index_page.dart` L494：`'解析'` → l10n.biliParse
+- `subtitle_settings_section.dart` L83：`'字幕来源'` → l10n.subtitleSourceSection
+- `subtitle_settings_section.dart` L89：`'Wyzie 字幕服务'` → l10n.subtitleSourceWyzie
+- `subtitle_settings_section.dart` L90：`'经 sub.wyzie.io 搜索，需要 API 密钥'` → l10n.subtitleWyzieDesc
+- `subtitle_settings_section.dart` L97：`'自定义字幕地址'` → l10n.subtitleSourceCustom
+- `subtitle_settings_section.dart` L98：`'自填接口地址，片名会发送到该地址'` → l10n.subtitleCustomDesc
+- `subtitle_settings_section.dart` L106：`'自定义参数'` → l10n.subtitleCustomParams
+- `subtitle_settings_section.dart` L106：`'Wyzie 参数'` → l10n.subtitleWyzieParams
+- `subtitle_settings_section.dart` L126：`'WYZIE API 密钥'` → l10n.subtitleWyzieApiKey
+- `subtitle_settings_section.dart` L127：`'未设置'` → l10n.commonNotSet
+- `subtitle_settings_section.dart` L127：`'已保存'` → l10n.commonSaved
+- `subtitle_settings_section.dart` L133：`'Wyzie 来源'` → l10n.subtitleWyzieSources
+- `subtitle_settings_section.dart` L140：`'字幕语言'` → l10n.subtitleLanguage
+- `subtitle_settings_section.dart` L147：`'首选格式'` → l10n.subtitlePreferredFormat
+- `subtitle_settings_section.dart` L154：`'首选编码'` → l10n.subtitlePreferredEncoding
+- `subtitle_settings_section.dart` L164：`'接口地址'` → l10n.subtitleApiEndpoint
+- `subtitle_settings_section.dart` L166：`'未设置'` → l10n.commonNotSet
+- `subtitle_settings_section.dart` L175：`'测试连接'` → l10n.commonTestConnection
+- `subtitle_settings_section.dart` L176：`'用一个片名试搜一次，看能否解析出字幕'` → l10n.subtitleCustomTestHint
+- `subtitle_settings_section.dart` L205：`'正在测试…'` → l10n.subtitleTesting
+- `subtitle_settings_section.dart` L212：`'连接成功，但没解析出字幕'` → l10n.subtitleTestNoResult
+- `subtitle_settings_section.dart` L212：`'连接成功，解析出 ${entries.length} 条字幕'` → l10n.subtitleTestOk(entries.length)
+- `subtitle_settings_section.dart` L218：`'测试失败：$e'` → l10n.subtitleTestFailed(e)
+- `subtitle_settings_section.dart` L234：`'全部来源'` → l10n.subtitleAllSources
+- `subtitle_settings_section.dart` L240：`'全部语言'` → l10n.subtitleAllLanguages
+- `subtitle_settings_section.dart` L246：`'全部格式'` → l10n.subtitleAllFormats
+- `subtitle_settings_section.dart` L252：`'全部编码'` → l10n.subtitleAllEncodings
+- `subtitle_settings_section.dart` L300：`'字幕语言'` → l10n.subtitleLanguage
+- `subtitle_settings_section.dart` L308：`'首选格式'` → l10n.subtitlePreferredFormat
+- `subtitle_settings_section.dart` L316：`'首选编码'` → l10n.subtitlePreferredEncoding
+- `subtitle_settings_section.dart` L366：`'全部'` → l10n.commonAll
+- `subtitle_settings_section.dart` L382：`'取消'` → l10n.commonCancel
+- `subtitle_settings_section.dart` L389：`'确定'` → l10n.commonConfirm
+- `subtitle_settings_section.dart` L439：`'WYZIE API 密钥'` → l10n.subtitleWyzieApiKey
+- `subtitle_settings_section.dart` L448：`'粘贴密钥（wyzie-…）'` → l10n.subtitlePasteKeyHint
+- `subtitle_settings_section.dart` L458：`'如何获取密钥'` → l10n.subtitleHowToGetKey
+- `subtitle_settings_section.dart` L466：`'取消'` → l10n.commonCancel
+- `subtitle_settings_section.dart` L473：`'确定'` → l10n.commonConfirm
+- `subtitle_settings_section.dart` L564：`'字幕来源'` → l10n.subtitleSourceSection
+- `subtitle_settings_section.dart` L574：`'刷新'` → l10n.commonRefresh
+- `subtitle_settings_section.dart` L588：`'密钥类型：${keyInfo.type.isNotEmpty ? keyInfo.type : '` → l10n.subtitleKeyType(keyInfo.type.isNotEmpty ? keyInfo.type : l10n.commonUnknown)
+- `subtitle_settings_section.dart` L589：`'密钥无效'` → l10n.subtitleKeyInvalid
+- `subtitle_settings_section.dart` L607：`'全部'` → l10n.commonAll
+- `subtitle_settings_section.dart` L610：`'免费来源'` → l10n.subtitleFreeSource
+- `subtitle_settings_section.dart` L614：`'付费来源'` → l10n.subtitlePaidSource
+- `subtitle_settings_section.dart` L623：`'取消'` → l10n.commonCancel
+- `subtitle_settings_section.dart` L627：`'确定'` → l10n.commonConfirm
+- `subtitle_settings_section.dart` L679：`'地址里可用 {name} 作为片名占位（不写占位符则把片名拼到末尾）。\n'` → l10n.subtitleCustomSourceHelp('{name}')（L679-681 三条合并）
+- `subtitle_settings_section.dart` L680：`'搜索时片名会发送到你填写的地址，请自行确认该服务的条款与可用性；'` → （同上，删除本行字面量）
+- `subtitle_settings_section.dart` L681：`'本应用不内置、也不代理任何第三方字幕服务。'` → （同上，删除本行字面量）
+- `subtitle_settings_section.dart` L728：`'自定义字幕地址'` → l10n.subtitleSourceCustom
+- `subtitle_settings_section.dart` L745：`'用 {name} 占位片名；没有占位符时片名会拼到末尾。'` → l10n.subtitlePlaceholderHelp('{name}')
+- `subtitle_settings_section.dart` L754：`'如何自定义接口地址'` → l10n.subtitleHowToCustomEndpoint
+- `subtitle_settings_section.dart` L762：`'取消'` → l10n.commonCancel
+- `subtitle_settings_section.dart` L766：`'保存'` → l10n.commonSave
+- `subtitle_settings_section.dart` L793：`'测试连接'` → l10n.commonTestConnection
+- `subtitle_settings_section.dart` L802：`'填一个片名（如 你的名字）'` → l10n.subtitleTestNameHint
+- `subtitle_settings_section.dart` L808：`'用这个片名请求一次，看能否解析出字幕。'` → l10n.subtitleTestNameDesc
+- `subtitle_settings_section.dart` L819：`'取消'` → l10n.commonCancel
+- `subtitle_settings_section.dart` L823：`'测试'` → l10n.commonTest
+- `file_operations_ui.dart` L57：`'取消固定'` → l10n.fileOpUnpin
+- `file_operations_ui.dart` L57：`'固定'` → l10n.fileOpPin
+- `file_operations_ui.dart` L58：`'复制'` → l10n.commonCopy
+- `file_operations_ui.dart` L59：`'移动'` → l10n.commonMove
+- `file_operations_ui.dart` L63：`'重命名'` → l10n.commonRename
+- `file_operations_ui.dart` L65：`'删除'` → l10n.commonDelete
+- `file_operations_ui.dart` L70：`'多选'` → l10n.fileOpMultiSelect
+- `file_operations_ui.dart` L174：`'重命名'` → l10n.commonRename
+- `file_operations_ui.dart` L182：`'新名称'` → l10n.fileOpNewName
+- `file_operations_ui.dart` L183：`'扩展名之前的名称'` → l10n.fileOpNameHint
+- `file_operations_ui.dart` L184：`'扩展名固定为 $_lockedExt，不可修改'` → l10n.fileOpLockedExt(_lockedExt)
+- `file_operations_ui.dart` L195：`'取消'` → l10n.commonCancel
+- `file_operations_ui.dart` L199：`'确定'` → l10n.commonConfirm
+- `file_operations_ui.dart` L283：`'仅删除该文件夹内的视频文件，其它文件不会被删除。'` → l10n.fileOpDeleteFolderVideosOnly
+- `file_operations_ui.dart` L284：`'确定删除「${widget.title}」吗？'` → l10n.settingsErrorLogDeleteConfirm(widget.title)
+- `file_operations_ui.dart` L286：`'确定删除选中的 ${widget.itemCount} 个视频吗？'` → l10n.fileOpDeleteSelectedVideos(widget.itemCount)
+- `file_operations_ui.dart` L287：`'将删除选中的 ${widget.itemCount} 项：文件夹只删除里面的视频文件，'` → l10n.fileOpDeleteSelectedMixed(widget.itemCount)（L287-288 两条合并成一条）
+- `file_operations_ui.dart` L288：`'其它文件不会被删除。'` → （同上，删除本行字面量）
+- `file_operations_ui.dart` L295：`'删除'` → l10n.commonDelete
+- `file_operations_ui.dart` L307：`'删除所有文件'` → l10n.fileOpDeleteAllFiles
+- `file_operations_ui.dart` L316：`'取消'` → l10n.commonCancel
+- `file_operations_ui.dart` L326：`'删除'` → l10n.commonDelete
+- `file_operations_ui.dart` L365：`'准备中…'` → l10n.fileOpPreparing
+- `file_operations_ui.dart` L380：`'取消'` → l10n.commonCancel
+- `file_operations_ui.dart` L391：`'第 $current/${p.itemsTotal} 项'` → l10n.fileOpProgressItem(current, p.itemsTotal)
+- `file_operations_ui.dart` L399：`'${p.itemsDone} / ${p.itemsTotal} 项'` → l10n.fileOpProgressItems(p.itemsDone, p.itemsTotal)
+- `file_operations_ui.dart` L401：`'处理中…'` → l10n.fileOpProcessing
+- `folder_actions.dart` L199：`'已$verb $done/$total 项'` → _batchSummary 改成按 move/delete 选整句（见说明）
+- `folder_actions.dart` L200：`'$head，失败：${failures.join('` → l10n.folderAction{Moved,Copied,Deleted}ProgressFailed
+- `folder_actions.dart` L201：`'$head，失败：${failures.take(3).join('` → l10n.folderAction{Moved,Copied,Deleted}ProgressFailedMore
+- `folder_actions.dart` L201：`')} 等 ${failures.length} 项'` → l10n.folderAction{Moved,Copied,Deleted}ProgressFailedMore
+- `folder_actions.dart` L234：`'正在移动…'` → l10n.folderTransferMoving / l10n.folderTransferCopying
+- `folder_actions.dart` L234：`'正在复制…'` → l10n.folderTransferMoving / l10n.folderTransferCopying
+- `folder_actions.dart` L265：`'已取消'` → l10n.folderActionCancelled
+- `folder_actions.dart` L303：`'已移动「$title」到 ${FileOps.baseName(destination)}$targetName'` → l10n.folderMovedTo(title, ...)（dest 含 targetName 后缀，见说明）
+- `folder_actions.dart` L304：`'已复制「$title」到 ${FileOps.baseName(destination)}$targetName'` → l10n.folderCopiedTo(title, ...)
+- `folder_actions.dart` L336：`'移动'` → l10n.commonMove / l10n.commonCopy（verb 变量改用 bool move）
+- `folder_actions.dart` L336：`'复制'` → l10n.commonMove / l10n.commonCopy（verb 变量改用 bool move）
+- `folder_actions.dart` L347：`'正在移动…'` → l10n.folderTransferMoving / l10n.folderTransferCopying
+- `folder_actions.dart` L347：`'正在复制…'` → l10n.folderTransferMoving / l10n.folderTransferCopying
+- `folder_actions.dart` L398：`'已取消'` → l10n.folderActionCancelled
+- `folder_actions.dart` L441：`'已取消（已$verb $done 项）'` → l10n.folderActionCancelledThenMoved / ...Copied
+- `folder_actions.dart` L445：`'已$verb $done 项到 ${FileOps.baseName(destination)}'` → l10n.folderActionMovedCount / l10n.folderActionCopiedCount
+- `folder_actions.dart` L485：`'名称没有变化'` → l10n.folderNameUnchanged
+- `folder_actions.dart` L512：`'已重命名为 $newName'` → l10n.folderRenamedTo(newName)
+- `folder_actions.dart` L549：`'已删除「$title」'` → l10n.folderDeletedOne(title)
+- `folder_actions.dart` L605：`'已删除「${items.first.name}」'` → l10n.folderDeletedOne(items.first.name) / l10n.folderDeletedCount(done)
+- `folder_actions.dart` L605：`'已删除 $done 项'` → l10n.folderDeletedOne(items.first.name) / l10n.folderDeletedCount(done)
+- `folder_actions.dart` L610：`'删除'` → _batchSummary 改传 move/delete 变体（见说明）
+
+（共 129 条，未匹配/多候选 0 条）

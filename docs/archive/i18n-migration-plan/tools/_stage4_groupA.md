@@ -1,0 +1,51 @@
+# 阶段 4 · 分组 A 残留文案与键位建议
+
+- `audio_player_page.dart` L656：`'返回'` → l10n.commonBack
+- `audio_player_page.dart` L661：`'听视频'` → l10n.playerActionListen
+- `audio_panel.dart` L63：`'音轨'` → l10n.playerAudioTrack
+- `audio_panel.dart` L68：`'当前视频没有音轨，可在下方导入外部音轨'` → l10n.playerNoAudioTrackHint
+- `audio_panel.dart` L84：`'外部音轨'` → l10n.playerExternalAudioTrack
+- `audio_panel.dart` L90：`'导入外部音轨'` → l10n.playerImportExternalAudioTrack
+- `audio_panel.dart` L94：`'临时生效，退出播放后不保留'` → l10n.playerTempEffectHint
+- `audio_panel.dart` L101：`'音频声道'` → l10n.playerAudioChannel
+- `audio_panel.dart` L152：`'音频处理'` → l10n.playerAudioProcessing
+- `audio_panel.dart` L160：`'音量标准化'` → l10n.playerVolumeNormalize
+- `audio_panel.dart` L167：`'动态范围压缩'` → l10n.playerDynamicRangeCompress
+- `audio_panel.dart` L209：`'选择音频文件'` → l10n.playerPickAudioFile
+- `audio_panel.dart` L230：`'已导入外部音轨'` → l10n.playerExternalAudioImported
+- `audio_panel.dart` L230：`'导入失败，请检查文件格式'` → l10n.playerImportFailedCheckFormat
+- `audio_panel.dart` L301：`'外挂'` → l10n.commonExternalTag
+- `audio_panel.dart` L316：`'移除已导入的音轨'` → l10n.playerRemoveAudioTrack
+- `audio_player_panels.dart` L21：`'循环关闭'` → l10n.audioRepeatOff
+- `audio_player_panels.dart` L22：`'单曲循环'` → l10n.audioRepeatSingle
+- `audio_player_panels.dart` L23：`'列表循环'` → l10n.loopModeLoopAll
+- `audio_player_panels.dart` L39：`'关闭'` → l10n.commonOff
+- `audio_player_panels.dart` L40：`'15 分钟'` → l10n.audioSleepMinutes(15)
+- `audio_player_panels.dart` L41：`'30 分钟'` → l10n.audioSleepMinutes(30)
+- `audio_player_panels.dart` L42：`'60 分钟'` → l10n.audioSleepMinutes(60)
+- `audio_player_panels.dart` L43：`'自定义'` → l10n.commonCustom
+- `audio_player_panels.dart` L44：`'播完当前'` → l10n.audioSleepEndOfTrack
+- `audio_player_panels.dart` L83：`'播放速度'` → l10n.audioPlaybackSpeed
+- `audio_player_panels.dart` L103：`'定时关闭'` → l10n.audioSleepTimer
+- `audio_player_panels.dart` L195：`'播放列表（${videos.length}）'` → l10n.playerPlaylistWithCount(videos.length)
+- `audio_player_panels.dart` L246：`'随机播放'` → l10n.audioShuffle
+- `audio_player_panels.dart` L304：`'关闭'` → l10n.commonOff
+- `audio_player_panels.dart` L333：`'将在当前曲目播放结束后停止'` → l10n.audioSleepEndOfTrackHint
+- `audio_player_panels.dart` L341：`'剩余 ${_fmtDuration(Duration.zero)}'` → l10n.audioSleepRemaining(_fmtDuration(Duration.zero))
+- `audio_player_panels.dart` L349：`'剩余 ${_fmtDuration(value ?? Duration.zero)}'` → l10n.audioSleepRemaining(_fmtDuration(value ?? Duration.zero))
+- `audio_player_panels.dart` L512：`'自定义定时关闭'` → l10n.audioSleepCustomTitle
+- `audio_player_panels.dart` L519：`'$minutes 分钟'` → l10n.audioSleepMinutes(minutes)
+- `audio_player_panels.dart` L547：`'取消'` → l10n.commonCancel
+- `audio_player_panels.dart` L554：`'确定'` → l10n.commonConfirm
+- `equalizer_panel.dart` L80：`'启用均衡器'` → l10n.playerEqualizerEnable
+- `equalizer_panel.dart` L84：`'调节频段增益、低音增强和虚拟环绕'` → l10n.playerEqualizerDesc
+- `equalizer_panel.dart` L92：`'预设'` → l10n.playerPreset
+- `equalizer_panel.dart` L114：`'频段调节'` → l10n.playerEqualizerBands
+- `equalizer_panel.dart` L142：`'低音增强'` → l10n.playerEqualizerBass
+- `equalizer_panel.dart` L158：`'虚拟环绕'` → l10n.playerEqualizerSurround
+- `equalizer_panel.dart` L180：`'一键重置'` → l10n.commonOneKeyReset
+- `player_gesture_indicator.dart` L144：`'音量增强'` → l10n.settingsPlayerVolumeBoost
+- `subtitle_file_picker.dart` L260：`'上级'` → l10n.commonGoUp
+- `subtitle_file_picker.dart` L394：`'排序方式'` → l10n.commonSortBy
+
+（共 47 条，未匹配 0 条）

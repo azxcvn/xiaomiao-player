@@ -1,0 +1,15 @@
+﻿=== T0-REG-003 residual 三口径 16:13:20 ===
+--- [1] residual ---
+== residual ==
+  residual: 0  expired whitelist: 0  logs(excluded): 58
+  report: C:\Users\root\Desktop\moumou\�����ļ�\������֧�ַ���\05-�������ı���.md
+
+--- [2] residual --include-android ---
+== residual ==
+  residual: 0  expired whitelist: 0  logs(excluded): 70
+  report: C:\Users\root\Desktop\moumou\�����ļ�\������֧�ַ���\05-�������ı���.md
+
+--- [3] residual --include-android --fullwidth ---
+== residual ==
+  residual: 0  expired whitelist: 0  logs(excluded): 70
+  report: C:\Users\root\Desktop\moumou\�����ļ�\������֧�ַ���\05-�������ı���.md

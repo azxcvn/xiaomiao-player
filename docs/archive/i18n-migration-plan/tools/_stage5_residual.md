@@ -1,0 +1,495 @@
+# 阶段 5 残留明细（自动生成）
+
+- `lib/pages/bilibili/bili_bangumi_index_page.dart` L136：`'索引'` → 未匹配
+- `lib/pages/bilibili/bili_bangumi_index_page.dart` L158：`'重试'` → `commonRetry`
+- `lib/pages/bilibili/bili_bangumi_index_page.dart` L192：`'收起'` → 未匹配
+- `lib/pages/bilibili/bili_bangumi_index_page.dart` L192：`'展开'` → 未匹配
+- `lib/pages/bilibili/bili_bangumi_index_page.dart` L273：`'暂无内容'` → 未匹配
+- `lib/pages/bilibili/bili_bangumi_index_page.dart` L288：`'重试'` → `commonRetry`
+- `lib/pages/bilibili/bili_danmaku_download_page.dart` L58：`'请先设置下载目录'` → 未匹配
+- `lib/pages/bilibili/bili_danmaku_download_page.dart` L85：`'下载目录不存在，请重新选择'` → 未匹配
+- `lib/pages/bilibili/bili_danmaku_download_page.dart` L112：`'已添加 ${_selected.length} 个弹幕下载任务'` → 未匹配
+- `lib/pages/bilibili/bili_danmaku_download_page.dart` L121：`'弹幕下载'` → `settingsDanmakuDownload`
+- `lib/pages/bilibili/bili_danmaku_download_page.dart` L141：`'粘贴 B 站视频/番剧链接（BV / av / ss / ep / b23.tv）'` → 未匹配
+- `lib/pages/bilibili/bili_danmaku_download_page.dart` L159：`'解析'` → 未匹配
+- `lib/pages/bilibili/bili_danmaku_download_page.dart` L185：`'粘贴链接后点「解析」'` → 未匹配
+- `lib/pages/bilibili/bili_danmaku_download_page.dart` L208：`'共 ${target.items.length} 集'` → `playerBiliTotalEpisodes`
+- `lib/pages/bilibili/bili_danmaku_download_page.dart` L253：`'未设置下载目录'` → 未匹配
+- `lib/pages/bilibili/bili_danmaku_download_page.dart` L258：`'设置目录'` → 未匹配
+- `lib/pages/bilibili/bili_danmaku_download_page.dart` L279：`'全选'` → 未匹配
+- `lib/pages/bilibili/bili_danmaku_download_page.dart` L281：`'已选 ${_selected.length} 集'` → 未匹配
+- `lib/pages/bilibili/bili_danmaku_download_page.dart` L297：`'下载弹幕（${_selected.length}）'` → 未匹配
+- `lib/pages/bilibili/bili_episode_picker_page.dart` L88：`'选集'` → 未匹配
+- `lib/pages/bilibili/bili_episode_picker_page.dart` L93：`'正序'` → 未匹配
+- `lib/pages/bilibili/bili_episode_picker_page.dart` L93：`'倒序'` → 未匹配
+- `lib/pages/bilibili/bili_index_page.dart` L133：`'哔哩番剧'` → 未匹配
+- `lib/pages/bilibili/bili_index_page.dart` L136：`'解析链接'` → 未匹配
+- `lib/pages/bilibili/bili_index_page.dart` L141：`'搜索'` → `commonSearch`
+- `lib/pages/bilibili/bili_index_page.dart` L173：`'推荐'` → 未匹配
+- `lib/pages/bilibili/bili_index_page.dart` L180：`'索引'` → 未匹配
+- `lib/pages/bilibili/bili_index_page.dart` L209：`'重试'` → `commonRetry`
+- `lib/pages/bilibili/bili_index_page.dart` L268：`'一'` → 未匹配
+- `lib/pages/bilibili/bili_index_page.dart` L268：`'二'` → 未匹配
+- `lib/pages/bilibili/bili_index_page.dart` L268：`'三'` → 未匹配
+- `lib/pages/bilibili/bili_index_page.dart` L268：`'四'` → 未匹配
+- `lib/pages/bilibili/bili_index_page.dart` L268：`'五'` → 未匹配
+- `lib/pages/bilibili/bili_index_page.dart` L268：`'六'` → 未匹配
+- `lib/pages/bilibili/bili_index_page.dart` L268：`'日'` → 未匹配
+- `lib/pages/bilibili/bili_index_page.dart` L282：`'周${_week[i]}'` → 未匹配
+- `lib/pages/bilibili/bili_index_page.dart` L326：`'追番时间表'` → 未匹配
+- `lib/pages/bilibili/bili_index_page.dart` L377：`'已追番'` → 未匹配
+- `lib/pages/bilibili/bili_index_page.dart` L444：`'无法识别该链接（支持 ss/ep/BV/av 号与 b23.tv 短链）'` → 未匹配
+- `lib/pages/bilibili/bili_index_page.dart` L462：`'解析番剧链接'` → 未匹配
+- `lib/pages/bilibili/bili_index_page.dart` L470：`'粘贴番剧/视频链接或 b23.tv 短链'` → 未匹配
+- `lib/pages/bilibili/bili_index_page.dart` L483：`'取消'` → `commonCancel`
+- `lib/pages/bilibili/bili_index_page.dart` L494：`'解析'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L35：`'正在获取二维码...'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L58：`'正在获取二维码...'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L66：`'请使用哔哩哔哩客户端扫码'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L72：`'获取二维码失败，请重试'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L82：`'二维码已失效，正在刷新...'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L93：`'已扫码，请在手机上确认'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L97：`'二维码已失效，正在刷新...'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L108：`'登录凭证获取失败，请重试'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L127：`'登录成功：${user.nickname}'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L133：`'登录失败，请重试'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L145：`'保存失败'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L153：`'保存失败'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L160：`'小喵Player'` → `appTitle`
+- `lib/pages/bilibili/bili_login_page.dart` L163：`'二维码已保存到相册'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L163：`'保存失败：${result.errorMessage}'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L165：`'保存失败：$e'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L174：`'未检测到哔哩哔哩客户端'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L180：`'请先粘贴 Cookie'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L187：`'登录成功：${user.nickname}'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L192：`'登录失败：Cookie 无效或已过期'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L214：`'哔哩哔哩登录'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L217：`'扫码登录'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L218：`'Cookie 登录'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L268：`'剩余有效时间：$_remaining 秒'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L285：`'刷新二维码'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L290：`'保存到相册'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L295：`'打开哔哩哔哩'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L301：`'「打开哔哩哔哩」会在已安装的哔哩哔哩客户端中自动唤起扫码确认。'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L318：`'从浏览器复制 Cookie 粘贴登录（扫码异常时的备用方式）'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L337：`'登录中...'` → 未匹配
+- `lib/pages/bilibili/bili_login_page.dart` L337：`'登录'` → `commonLogin`
+- `lib/pages/bilibili/bili_login_page.dart` L341：`'Cookie 仅本地加密保存，不会上传或记录日志。'` → 未匹配
+- `lib/pages/bilibili/bili_play_launcher.dart` L46：`'解析播放地址失败'` → `playerResolveUrlFailed`
+- `lib/pages/bilibili/bili_play_launcher.dart` L60：`'播放失败：${_errText(e)}'` → 未匹配
+- `lib/pages/bilibili/bili_play_launcher.dart` L103：`'解析播放地址失败'` → `playerResolveUrlFailed`
+- `lib/pages/bilibili/bili_play_launcher.dart` L118：`'播放失败：${_errText(e)}'` → 未匹配
+- `lib/pages/bilibili/bili_play_launcher.dart` L140：`'B 站视频'` → 未匹配
+- `lib/pages/bilibili/bili_search_page.dart` L88：`'搜索番剧'` → 未匹配
+- `lib/pages/bilibili/bili_search_page.dart` L94：`'搜索'` → `commonSearch`
+- `lib/pages/bilibili/bili_search_page.dart` L110：`'输入关键词搜索番剧'` → 未匹配
+- `lib/pages/bilibili/bili_search_page.dart` L114：`'没有找到相关番剧'` → 未匹配
+- `lib/pages/bilibili/bili_search_page.dart` L134：`'重试'` → `commonRetry`
+- `lib/pages/bilibili/bili_season_page.dart` L80：`'番剧详情'` → 未匹配
+- `lib/pages/bilibili/bili_season_page.dart` L102：`'重试'` → `commonRetry`
+- `lib/pages/bilibili/bili_season_page.dart` L133：`'暂无选集'` → 未匹配
+- `lib/pages/bilibili/bili_season_page.dart` L177：`'查看全部'` → 未匹配
+- `lib/pages/bilibili/bili_season_page.dart` L186：`'选集'` → 未匹配
+- `lib/pages/bilibili/bili_season_page.dart` L191：`'共 $count 集'` → `playerBiliTotalEpisodes`
+- `lib/pages/bilibili/bili_season_page.dart` L198：`'正序'` → 未匹配
+- `lib/pages/bilibili/bili_season_page.dart` L198：`'倒序'` → 未匹配
+- `lib/pages/bilibili/bili_season_page.dart` L262：`'评分 ${detail.ratingScore.toStringAsFixed(1)}'` → 未匹配
+- `lib/pages/bilibili/bili_season_page.dart` L292：`'共 ${detail.episodes.length} 集'` → `playerBiliTotalEpisodes`
+- `lib/pages/bilibili/bili_season_page.dart` L361：`'${(n / 100000000).toStringAsFixed(1)}亿'` → 未匹配
+- `lib/pages/bilibili/bili_season_page.dart` L362：`'${(n / 10000).toStringAsFixed(1)}万'` → 未匹配
+- `lib/pages/bilibili/bili_season_page.dart` L403：`'简介'` → 未匹配
+- `lib/pages/bilibili/bili_season_page.dart` L410：`'收起'` → 未匹配
+- `lib/pages/bilibili/bili_season_page.dart` L410：`'展开'` → 未匹配
+- `lib/pages/bilibili/bili_season_page.dart` L472：`'多季'` → 未匹配
+- `lib/pages/bilibili/bili_user_page.dart` L17：`'哔哩哔哩账号'` → `biliAccount`
+- `lib/pages/bilibili/bili_user_page.dart` L28：`'等级'` → 未匹配
+- `lib/pages/bilibili/bili_user_page.dart` L68：`'资产'` → 未匹配
+- `lib/pages/bilibili/bili_user_page.dart` L72：`'硬币'` → 未匹配
+- `lib/pages/bilibili/bili_user_page.dart` L73：`'用于投币等操作'` → 未匹配
+- `lib/pages/bilibili/bili_user_page.dart` L90：`'退出登录'` → 未匹配
+- `lib/pages/bilibili/bili_user_page.dart` L110：`'已满级'` → 未匹配
+- `lib/pages/bilibili/bili_user_page.dart` L111：`'经验值 ${user.currentExp} / ${user.nextExp}'` → 未匹配
+- `lib/pages/bilibili/bili_user_page.dart` L118：`'退出登录'` → 未匹配
+- `lib/pages/bilibili/bili_user_page.dart` L119：`'确定退出哔哩哔哩账号吗？'` → 未匹配
+- `lib/pages/bilibili/bili_user_page.dart` L123：`'取消'` → `commonCancel`
+- `lib/pages/bilibili/bili_user_page.dart` L127：`'退出'` → 未匹配
+- `lib/pages/bilibili/bili_video_download_page.dart` L64：`'请先设置下载目录'` → 未匹配
+- `lib/pages/bilibili/bili_video_download_page.dart` L99：`'下载目录不存在，请重新选择'` → 未匹配
+- `lib/pages/bilibili/bili_video_download_page.dart` L126：`'已添加 ${_selected.length} 个视频下载任务'` → 未匹配
+- `lib/pages/bilibili/bili_video_download_page.dart` L135：`'视频下载'` → `settingsVideoDownload`
+- `lib/pages/bilibili/bili_video_download_page.dart` L155：`'粘贴 B 站视频/番剧链接（BV / av / ss / ep / b23.tv）'` → 未匹配
+- `lib/pages/bilibili/bili_video_download_page.dart` L173：`'解析'` → 未匹配
+- `lib/pages/bilibili/bili_video_download_page.dart` L199：`'粘贴链接后点「解析」'` → 未匹配
+- `lib/pages/bilibili/bili_video_download_page.dart` L250：`'未设置下载目录'` → 未匹配
+- `lib/pages/bilibili/bili_video_download_page.dart` L255：`'设置目录'` → 未匹配
+- `lib/pages/bilibili/bili_video_download_page.dart` L268：`'清晰度'` → `playerQuality`
+- `lib/pages/bilibili/bili_video_download_page.dart` L311：`'同步下载弹幕'` → 未匹配
+- `lib/pages/bilibili/bili_video_download_page.dart` L339：`'全选'` → 未匹配
+- `lib/pages/bilibili/bili_video_download_page.dart` L341：`'已选 ${_selected.length} / 共 ${target.items.length} 集'` → 未匹配
+- `lib/pages/bilibili/bili_video_download_page.dart` L357：`'下载视频（${_selected.length}）'` → 未匹配
+- `lib/pages/download/download_manager_page.dart` L24：`'清除已完成'` → 未匹配
+- `lib/pages/download/download_manager_page.dart` L25：`'只清除已完成和失败的下载记录，不会删除已下载的文件。'` → 未匹配
+- `lib/pages/download/download_manager_page.dart` L29：`'取消'` → `commonCancel`
+- `lib/pages/download/download_manager_page.dart` L33：`'清除'` → `commonClear`
+- `lib/pages/download/download_manager_page.dart` L47：`'下载管理'` → `settingsDownloadManager`
+- `lib/pages/download/download_manager_page.dart` L52：`'清除已完成'` → 未匹配
+- `lib/pages/download/download_manager_page.dart` L61：`'暂无下载任务'` → 未匹配
+- `lib/pages/download/download_manager_page.dart` L133：`'下载失败'` → 未匹配
+- `lib/pages/download/download_manager_page.dart` L174：`'完成'` → 未匹配
+- `lib/pages/download/download_manager_page.dart` L175：`'失败'` → 未匹配
+- `lib/pages/download/download_manager_page.dart` L176：`'暂停'` → `commonPause`
+- `lib/pages/download/download_manager_page.dart` L177：`'合并'` → 未匹配
+- `lib/pages/download/download_manager_page.dart` L178：`'下载中'` → 未匹配
+- `lib/pages/download/download_manager_page.dart` L179：`'等待'` → 未匹配
+- `lib/pages/download/download_manager_page.dart` L219：`'暂停'` → `commonPause`
+- `lib/pages/download/download_manager_page.dart` L225：`'合并中，无法暂停'` → 未匹配
+- `lib/pages/download/download_manager_page.dart` L233：`'继续'` → 未匹配
+- `lib/pages/download/download_manager_page.dart` L239：`'删除'` → ⚠ 多候选：commonDelete | settingsErrorLogDelete
+- `lib/pages/download/download_manager_page.dart` L251：`'重试'` → `commonRetry`
+- `lib/pages/download/download_manager_page.dart` L257：`'删除'` → ⚠ 多候选：commonDelete | settingsErrorLogDelete
+- `lib/pages/download/download_manager_page.dart` L267：`'删除'` → ⚠ 多候选：commonDelete | settingsErrorLogDelete
+- `lib/pages/home/folder_detail_page.dart` L239：`'搜索视频'` → 未匹配
+- `lib/pages/home/folder_detail_page.dart` L249：`'取消搜索'` → 未匹配
+- `lib/pages/home/folder_detail_page.dart` L255：`'搜索'` → `commonSearch`
+- `lib/pages/home/folder_detail_page.dart` L260：`'排序与字段'` → 未匹配
+- `lib/pages/home/folder_detail_page.dart` L301：`'该文件夹没有视频'` → 未匹配
+- `lib/pages/home/folder_detail_page.dart` L312：`'没有匹配的视频'` → 未匹配
+- `lib/pages/home/home_page.dart` L242：`'请在系统设置中手动开启存储权限'` → 未匹配
+- `lib/pages/home/home_page.dart` L346：`'搜索文件夹与视频'` → 未匹配
+- `lib/pages/home/home_page.dart` L351：`'小喵Player'` → `appTitle`
+- `lib/pages/home/home_page.dart` L356：`'取消搜索'` → 未匹配
+- `lib/pages/home/home_page.dart` L362：`'搜索'` → `commonSearch`
+- `lib/pages/home/home_page.dart` L367：`'排序与视图'` → 未匹配
+- `lib/pages/home/home_page.dart` L397：`'最近播放'` → 未匹配
+- `lib/pages/home/home_page.dart` L402：`'打开链接'` → 未匹配
+- `lib/pages/home/home_page.dart` L407：`'哔哩番剧'` → 未匹配
+- `lib/pages/home/home_page.dart` L412：`'网络存储'` → 未匹配
+- `lib/pages/home/home_page.dart` L434：`'暂无播放历史'` → `settingsHistoryEmpty`
+- `lib/pages/home/home_page.dart` L438：`'文件不存在或已被移动：${entry.title}'` → 未匹配
+- `lib/pages/home/home_page.dart` L477：`'需要登录哔哩哔哩账号'` → `settingsLoginRequired`
+- `lib/pages/home/home_page.dart` L516：`'存储权限已被拒绝，需要到系统设置里手动开启'` → 未匹配
+- `lib/pages/home/home_page.dart` L517：`'需要授予存储权限才能扫描视频'` → 未匹配
+- `lib/pages/home/home_page.dart` L518：`'去系统设置开启'` → 未匹配
+- `lib/pages/home/home_page.dart` L518：`'授予权限'` → 未匹配
+- `lib/pages/home/home_page.dart` L526：`'没有找到视频'` → 未匹配
+- `lib/pages/home/home_page.dart` L527：`'重新扫描'` → 未匹配
+- `lib/pages/home/home_page.dart` L545：`'没有匹配的内容'` → 未匹配
+- `lib/pages/home/home_page.dart` L565：`'没有匹配的文件夹'` → 未匹配
+- `lib/pages/home/home_page.dart` L752：`'我已开启，重新检查'` → 未匹配
+- `lib/pages/home/open_link_dialog.dart` L51：`'剪贴板为空'` → 未匹配
+- `lib/pages/home/open_link_dialog.dart` L65：`'链接无效，支持 http/https/rtmp/rtsp 等流媒体协议'` → 未匹配
+- `lib/pages/home/open_link_dialog.dart` L79：`'打开链接'` → 未匹配
+- `lib/pages/home/open_link_dialog.dart` L84：`'输入视频直链，将在线播放'` → 未匹配
+- `lib/pages/home/open_link_dialog.dart` L97：`'粘贴'` → 未匹配
+- `lib/pages/home/open_link_dialog.dart` L108：`'取消'` → `commonCancel`
+- `lib/pages/home/open_link_dialog.dart` L112：`'播放'` → ⚠ 多候选：settingsGroupPlayback | commonPlay
+- `lib/pages/home/tree_folder_page.dart` L162：`'小喵Player'` → `appTitle`
+- `lib/pages/home/tree_folder_page.dart` L373：`'搜索文件夹与视频'` → 未匹配
+- `lib/pages/home/tree_folder_page.dart` L383：`'取消搜索'` → 未匹配
+- `lib/pages/home/tree_folder_page.dart` L389：`'搜索'` → `commonSearch`
+- `lib/pages/home/tree_folder_page.dart` L396：`'排序与字段'` → 未匹配
+- `lib/pages/home/tree_folder_page.dart` L445：`'该文件夹没有视频'` → 未匹配
+- `lib/pages/home/tree_folder_page.dart` L459：`'没有匹配的内容'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L49：`'媒体信息已复制'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L58：`'媒体信息 - ${widget.title}'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L62：`'【通用信息】'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L68：`'视频流'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L69：`'音频流'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L70：`'字幕流'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L98：`'复制'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L106：`'媒体信息获取失败'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L122：`'通用信息'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L126：`'格式'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L127：`'格式版本'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L128：`'文件大小'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L129：`'时长'` → `commonDuration`
+- `lib/pages/media_info/media_info_page.dart` L130：`'总比特率'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L131：`'帧率'` → `commonFrameRate`
+- `lib/pages/media_info/media_info_page.dart` L132：`'标题'` → `commonTitle`
+- `lib/pages/media_info/media_info_page.dart` L133：`'编码日期'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L134：`'编码应用'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L135：`'编码库'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L141：`'视频流'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L143：`'视频流 #${i + 1}'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L147：`'音频流'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L149：`'音频流 #${i + 1}'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L153：`'字幕流'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L155：`'字幕流 #${i + 1}'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L163：`'未获取到媒体信息'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L172：`'编码'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L173：`'配置'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L174：`'编码ID'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L175：`'宽'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L176：`'高'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L177：`'宽高比'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L178：`'帧率'` → `commonFrameRate`
+- `lib/pages/media_info/media_info_page.dart` L179：`'帧率模式'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L180：`'比特率'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L181：`'位深度'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L182：`'色彩空间'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L183：`'色度子采样'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L184：`'HDR格式'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L185：`'声道'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L186：`'采样率'` → `settingsDecoderSampleRates`
+- `lib/pages/media_info/media_info_page.dart` L187：`'语言'` → `settingsGroupLanguage`
+- `lib/pages/media_info/media_info_page.dart` L188：`'标题'` → `commonTitle`
+- `lib/pages/media_info/media_info_page.dart` L189：`'时长'` → `commonDuration`
+- `lib/pages/media_info/media_info_page.dart` L190：`'流大小'` → 未匹配
+- `lib/pages/media_info/media_info_page.dart` L198：`'流'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L133：`'请先填写主机地址'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L141：`'端口需为 1-65535'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L169：`'连接成功'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L175：`'连接失败：$e'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L224：`'默认 $def（群晖 5005/5006）'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L226：`'默认 $def'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L234：`'编辑账户'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L234：`'添加账户'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L243：`'显示名称'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L244：`'例如：家庭 NAS'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L249：`'请输入名称'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L255：`'协议'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L281：`'主机地址'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L282：`'IP 或域名'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L289：`'请输入主机地址'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L300：`'端口'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L325：`'路径'` → `commonPath`
+- `lib/pages/network/account_edit_page.dart` L326：`'默认为 /'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L371：`'匿名登录'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L372：`'FTP / SMB 匿名访问时开启'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L381：`'使用 HTTPS'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L382：`'启用后使用加密连接（默认端口 443）'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L396：`'账号'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L407：`'密码'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L410：`'隐藏密码'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L410：`'显示密码'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L437：`'测试中…'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L437：`'测试连接'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L477：`'保存中…'` → 未匹配
+- `lib/pages/network/account_edit_page.dart` L477：`'保存'` → `commonSave`
+- `lib/pages/network/network_browser_page.dart` L156：`'连接失败：$e'` → 未匹配
+- `lib/pages/network/network_browser_page.dart` L330：`'排序方式'` → `commonSortBy`
+- `lib/pages/network/network_browser_page.dart` L340：`'按${networkSortFieldLabel(l10n, field)}'` → 未匹配
+- `lib/pages/network/network_browser_page.dart` L393：`'搜索本目录'` → 未匹配
+- `lib/pages/network/network_browser_page.dart` L402：`'取消搜索'` → 未匹配
+- `lib/pages/network/network_browser_page.dart` L402：`'搜索'` → `commonSearch`
+- `lib/pages/network/network_browser_page.dart` L407：`'排序方式'` → `commonSortBy`
+- `lib/pages/network/network_browser_page.dart` L411：`'更多'` → `commonMore`
+- `lib/pages/network/network_browser_page.dart` L423：`'刷新本目录'` → 未匹配
+- `lib/pages/network/network_browser_page.dart` L425：`'回到共享根目录'` → 未匹配
+- `lib/pages/network/network_browser_page.dart` L429：`'显示隐藏文件'` → 未匹配
+- `lib/pages/network/network_browser_page.dart` L451：`'重试'` → `commonRetry`
+- `lib/pages/network/network_browser_page.dart` L463：`'没有匹配的文件'` → 未匹配
+- `lib/pages/network/network_browser_page.dart` L464：`'该目录为空'` → 未匹配
+- `lib/pages/network/network_browser_page.dart` L464：`'本目录只有隐藏文件'` → 未匹配
+- `lib/pages/network/network_browser_page.dart` L465：`'清除搜索'` → 未匹配
+- `lib/pages/network/network_browser_page.dart` L465：`'返回上一级'` → 未匹配
+- `lib/pages/network/network_browser_page.dart` L544：`'修改时间'` → 未匹配
+- `lib/pages/network/network_browser_page.dart` L549：`'服务器未提供'` → 未匹配
+- `lib/pages/network/network_browser_page.dart` L551：`'位置'` → 未匹配
+- `lib/pages/network/network_browser_page.dart` L552：`'连接'` → 未匹配
+- `lib/pages/network/network_storage_page.dart` L41：`'删除账户'` → 未匹配
+- `lib/pages/network/network_storage_page.dart` L42：`'确定删除「${connection.name}」吗？此操作不可撤销。'` → `danmakuServerDeleteConfirm`
+- `lib/pages/network/network_storage_page.dart` L46：`'取消'` → `commonCancel`
+- `lib/pages/network/network_storage_page.dart` L50：`'删除'` → ⚠ 多候选：commonDelete | settingsErrorLogDelete
+- `lib/pages/network/network_storage_page.dart` L63：`'网络存储'` → 未匹配
+- `lib/pages/network/network_storage_page.dart` L68：`'添加账户'` → 未匹配
+- `lib/pages/network/network_storage_page.dart` L105：`'还没有网络存储账户'` → 未匹配
+- `lib/pages/network/network_storage_page.dart` L108：`'点击右下角 + 添加 WebDAV / SMB / FTP 账户'` → 未匹配
+- `lib/pages/network/network_storage_page.dart` L185：`'更多操作'` → `commonMoreActions`
+- `lib/pages/network/network_storage_page.dart` L191：`'编辑'` → `commonEdit`
+- `lib/pages/network/network_storage_page.dart` L192：`'删除'` → ⚠ 多候选：commonDelete | settingsErrorLogDelete
+- `lib/pages/subtitle/subtitle_download_page.dart` L124：`'请先设置 WYZIE API 密钥'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L130：`'请先设置自定义字幕地址'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L141：`'请先设置下载目录'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L203：`'下载目录不存在，请重新选择'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L239：`'已下载 $ok 个字幕'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L239：`'下载完成：成功 $ok，失败 $fail'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L271：`'字幕下载'` → `settingsSubtitleDownload`
+- `lib/pages/subtitle/subtitle_download_page.dart` L294：`'输入影视名称或 IMDB / TMDB ID'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L319：`'确定'` → `commonConfirm`
+- `lib/pages/subtitle/subtitle_download_page.dart` L337：`'返回设置'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L351：`'未找到字幕，请换个关键词或调整字幕设置'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L356：`'返回设置'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L368：`'字幕下载设置'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L385：`'输入关键词后点「确定」搜索字幕'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L409：`'未设置下载目录'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L414：`'设置目录'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L425：`'$_query · ${_results.length} 条'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L431：`'重新搜索'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L453：`'全选'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L455：`'已选 ${_selected.length} / ${_results.length} 条'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L490：`'未知来源'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L536：`'下载中…'` → 未匹配
+- `lib/pages/subtitle/subtitle_download_page.dart` L536：`'下载字幕（${_selected.length}）'` → 未匹配
+- `lib/pages/subtitle/subtitle_settings_page.dart` L14：`'字幕设置'` → `playerSubtitleSettings`
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L83：`'字幕来源'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L89：`'Wyzie 字幕服务'` → `subtitleSourceWyzie`
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L90：`'经 sub.wyzie.io 搜索，需要 API 密钥'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L97：`'自定义字幕地址'` → `subtitleSourceCustom`
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L98：`'自填接口地址，片名会发送到该地址'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L106：`'自定义参数'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L106：`'Wyzie 参数'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L126：`'WYZIE API 密钥'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L127：`'未设置'` → `commonNotSet`
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L127：`'已保存'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L133：`'Wyzie 来源'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L140：`'字幕语言'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L147：`'首选格式'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L154：`'首选编码'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L164：`'接口地址'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L166：`'未设置'` → `commonNotSet`
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L175：`'测试连接'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L176：`'用一个片名试搜一次，看能否解析出字幕'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L205：`'正在测试…'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L212：`'连接成功，但没解析出字幕'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L212：`'连接成功，解析出 ${entries.length} 条字幕'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L218：`'测试失败：$e'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L234：`'全部来源'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L240：`'全部语言'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L246：`'全部格式'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L252：`'全部编码'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L300：`'字幕语言'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L308：`'首选格式'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L316：`'首选编码'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L366：`'全部'` → `commonAll`
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L382：`'取消'` → `commonCancel`
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L389：`'确定'` → `commonConfirm`
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L439：`'WYZIE API 密钥'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L448：`'粘贴密钥（wyzie-…）'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L458：`'如何获取密钥'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L466：`'取消'` → `commonCancel`
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L473：`'确定'` → `commonConfirm`
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L564：`'字幕来源'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L574：`'刷新'` → ⚠ 多候选：settingsErrorLogRefresh | commonRefresh
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L588：`'密钥类型：${keyInfo.type.isNotEmpty ? keyInfo.type : '` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L589：`'密钥无效'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L607：`'全部'` → `commonAll`
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L610：`'免费来源'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L614：`'付费来源'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L623：`'取消'` → `commonCancel`
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L627：`'确定'` → `commonConfirm`
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L679：`'地址里可用 {name} 作为片名占位（不写占位符则把片名拼到末尾）。\n'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L680：`'搜索时片名会发送到你填写的地址，请自行确认该服务的条款与可用性；'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L681：`'本应用不内置、也不代理任何第三方字幕服务。'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L728：`'自定义字幕地址'` → `subtitleSourceCustom`
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L745：`'用 {name} 占位片名；没有占位符时片名会拼到末尾。'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L754：`'如何自定义接口地址'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L762：`'取消'` → `commonCancel`
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L766：`'保存'` → `commonSave`
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L793：`'测试连接'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L802：`'填一个片名（如 你的名字）'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L808：`'用这个片名请求一次，看能否解析出字幕。'` → 未匹配
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L819：`'取消'` → `commonCancel`
+- `lib/pages/subtitle/views/subtitle_settings_section.dart` L823：`'测试'` → 未匹配
+- `lib/widgets/bili_cover_image.dart` L202：`'哔哩封面不可用（缓存未命中且下载失败）'` → 未匹配
+- `lib/widgets/bili_episode_tile.dart` L17：`'第 ${episode.epId} 话'` → 未匹配
+- `lib/widgets/bili_episode_tile.dart` L76：`'会员'` → 未匹配
+- `lib/widgets/bili_episode_tile.dart` L77：`'限免'` → `playerBiliFreeLimited`
+- `lib/widgets/bili_episode_tile.dart` L77：`'限免'` → `playerBiliFreeLimited`
+- `lib/widgets/bili_episode_tile.dart` L78：`'预告'` → `playerBiliPreview`
+- `lib/widgets/bili_episode_tile.dart` L78：`'预告'` → `playerBiliPreview`
+- `lib/widgets/cast_device_dialog.dart` L68：`'投屏搜索启动失败：$e'` → 未匹配
+- `lib/widgets/cast_device_dialog.dart` L88：`'暂不支持投屏该来源'` → `playerCastUnsupportedSource`
+- `lib/widgets/cast_device_dialog.dart` L93：`'已投屏到 ${device.friendlyName}'` → 未匹配
+- `lib/widgets/cast_device_dialog.dart` L98：`'投屏失败：$e'` → 未匹配
+- `lib/widgets/cast_device_dialog.dart` L123：`'投屏'` → `playerActionCast`
+- `lib/widgets/cast_device_dialog.dart` L133：`'取消'` → `commonCancel`
+- `lib/widgets/cast_device_dialog.dart` L149：`'正在搜索投屏设备…'` → 未匹配
+- `lib/widgets/cast_device_dialog.dart` L168：`'未发现可投屏设备，请确认手机与电视连接同一 WiFi 后重试。'` → 未匹配
+- `lib/widgets/color_editor_row.dart` L216：`'收起自定义调色'` → 未匹配
+- `lib/widgets/color_editor_row.dart` L216：`'自定义调色'` → 未匹配
+- `lib/widgets/color_editor_row.dart` L254：`'无'` → ⚠ 多候选：subtitleBorderNone | commonNone
+- `lib/widgets/directory_picker_dialog.dart` L49：`'目录不可读或不存在'` → 未匹配
+- `lib/widgets/directory_picker_dialog.dart` L77：`'选择下载目录'` → 未匹配
+- `lib/widgets/directory_picker_dialog.dart` L92：`'上级目录'` → 未匹配
+- `lib/widgets/directory_picker_dialog.dart` L111：`'取消'` → `commonCancel`
+- `lib/widgets/directory_picker_dialog.dart` L115：`'选择此目录'` → 未匹配
+- `lib/widgets/directory_picker_dialog.dart` L125：`'该目录下没有子目录'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L57：`'取消固定'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L57：`'固定'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L58：`'复制'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L59：`'移动'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L63：`'重命名'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L65：`'删除'` → ⚠ 多候选：commonDelete | settingsErrorLogDelete
+- `lib/widgets/file_operations_ui.dart` L70：`'多选'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L174：`'重命名'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L182：`'新名称'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L183：`'扩展名之前的名称'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L184：`'扩展名固定为 $_lockedExt，不可修改'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L195：`'取消'` → `commonCancel`
+- `lib/widgets/file_operations_ui.dart` L199：`'确定'` → `commonConfirm`
+- `lib/widgets/file_operations_ui.dart` L283：`'仅删除该文件夹内的视频文件，其它文件不会被删除。'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L284：`'确定删除「${widget.title}」吗？'` → `settingsErrorLogDeleteConfirm`
+- `lib/widgets/file_operations_ui.dart` L286：`'确定删除选中的 ${widget.itemCount} 个视频吗？'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L287：`'将删除选中的 ${widget.itemCount} 项：文件夹只删除里面的视频文件，'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L288：`'其它文件不会被删除。'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L295：`'删除'` → ⚠ 多候选：commonDelete | settingsErrorLogDelete
+- `lib/widgets/file_operations_ui.dart` L307：`'删除所有文件'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L316：`'取消'` → `commonCancel`
+- `lib/widgets/file_operations_ui.dart` L326：`'删除'` → ⚠ 多候选：commonDelete | settingsErrorLogDelete
+- `lib/widgets/file_operations_ui.dart` L365：`'准备中…'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L380：`'取消'` → `commonCancel`
+- `lib/widgets/file_operations_ui.dart` L391：`'第 $current/${p.itemsTotal} 项'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L399：`'${p.itemsDone} / ${p.itemsTotal} 项'` → 未匹配
+- `lib/widgets/file_operations_ui.dart` L401：`'处理中…'` → 未匹配
+- `lib/widgets/file_selection_ui.dart` L23：`'退出多选'` → 未匹配
+- `lib/widgets/file_selection_ui.dart` L26：`'已选 $count 项'` → 未匹配
+- `lib/widgets/file_selection_ui.dart` L30：`'取消全选'` → 未匹配
+- `lib/widgets/file_selection_ui.dart` L30：`'全选'` → 未匹配
+- `lib/widgets/file_selection_ui.dart` L35：`'文件操作'` → 未匹配
+- `lib/widgets/folder_actions.dart` L199：`'已$verb $done/$total 项'` → 未匹配
+- `lib/widgets/folder_actions.dart` L200：`'$head，失败：${failures.join('` → 未匹配
+- `lib/widgets/folder_actions.dart` L201：`'$head，失败：${failures.take(3).join('` → 未匹配
+- `lib/widgets/folder_actions.dart` L201：`')} 等 ${failures.length} 项'` → 未匹配
+- `lib/widgets/folder_actions.dart` L234：`'正在移动…'` → 未匹配
+- `lib/widgets/folder_actions.dart` L234：`'正在复制…'` → 未匹配
+- `lib/widgets/folder_actions.dart` L265：`'已取消'` → 未匹配
+- `lib/widgets/folder_actions.dart` L303：`'已移动「$title」到 ${FileOps.baseName(destination)}$targetName'` → 未匹配
+- `lib/widgets/folder_actions.dart` L304：`'已复制「$title」到 ${FileOps.baseName(destination)}$targetName'` → 未匹配
+- `lib/widgets/folder_actions.dart` L336：`'移动'` → 未匹配
+- `lib/widgets/folder_actions.dart` L336：`'复制'` → 未匹配
+- `lib/widgets/folder_actions.dart` L347：`'正在移动…'` → 未匹配
+- `lib/widgets/folder_actions.dart` L347：`'正在复制…'` → 未匹配
+- `lib/widgets/folder_actions.dart` L398：`'已取消'` → 未匹配
+- `lib/widgets/folder_actions.dart` L441：`'已取消（已$verb $done 项）'` → 未匹配
+- `lib/widgets/folder_actions.dart` L445：`'已$verb $done 项到 ${FileOps.baseName(destination)}'` → 未匹配
+- `lib/widgets/folder_actions.dart` L485：`'名称没有变化'` → 未匹配
+- `lib/widgets/folder_actions.dart` L512：`'已重命名为 $newName'` → 未匹配
+- `lib/widgets/folder_actions.dart` L549：`'已删除「$title」'` → 未匹配
+- `lib/widgets/folder_actions.dart` L605：`'已删除「${items.first.name}」'` → 未匹配
+- `lib/widgets/folder_actions.dart` L605：`'已删除 $done 项'` → 未匹配
+- `lib/widgets/folder_actions.dart` L610：`'删除'` → ⚠ 多候选：commonDelete | settingsErrorLogDelete
+- `lib/widgets/folder_card.dart` L133：`'${node.videoCount} 个视频'` → 未匹配
+- `lib/widgets/options_sheet.dart` L60：`'文件夹排序方式'` → 未匹配
+- `lib/widgets/options_sheet.dart` L76：`'文件夹排序方向'` → 未匹配
+- `lib/widgets/options_sheet.dart` L92：`'文件夹显示字段'` → 未匹配
+- `lib/widgets/options_sheet.dart` L117：`'视频排序方式'` → 未匹配
+- `lib/widgets/options_sheet.dart` L133：`'视频排序方向'` → 未匹配
+- `lib/widgets/options_sheet.dart` L149：`'视频显示字段'` → 未匹配
+- `lib/widgets/options_sheet.dart` L163：`'显示模式'` → 未匹配
+- `lib/widgets/options_sheet.dart` L188：`'排序与字段'` → 未匹配
+- `lib/widgets/player_bottom_panel.dart` L200：`'返回'` → `commonBack`
+- `lib/widgets/player_bottom_panel.dart` L212：`'关闭'` → `commonOff`
+- `lib/widgets/player_panel.dart` L187：`'返回'` → `commonBack`
+- `lib/widgets/player_panel.dart` L198：`'关闭'` → `commonOff`
+- `lib/widgets/speed_dial_fab.dart` L83：`'更多'` → `commonMore`
+- `lib/widgets/update_dialog.dart` L60：`'主下载站'` → 未匹配
+- `lib/widgets/update_dialog.dart` L60：`'备用下载站'` → 未匹配
+- `lib/widgets/update_dialog.dart` L62：`'$label链接待接入'` → 未匹配
+- `lib/widgets/update_dialog.dart` L71：`'无法打开$label链接'` → 未匹配
+- `lib/widgets/update_dialog.dart` L168：`'发现新版本 ${info.version}'` → 未匹配
+- `lib/widgets/update_dialog.dart` L202：`'忽略'` → 未匹配
+- `lib/widgets/update_dialog.dart` L214：`'稍后提醒'` → 未匹配
+- `lib/widgets/update_dialog.dart` L226：`'立即更新'` → 未匹配
+- `lib/widgets/update_dialog.dart` L249：`'选择下载方式'` → 未匹配
+- `lib/widgets/update_dialog.dart` L257：`'主下载站'` → 未匹配
+- `lib/widgets/update_dialog.dart` L264：`'备用下载站'` → 未匹配
+- `lib/widgets/update_dialog.dart` L273：`'取消'` → `commonCancel`
+- `lib/widgets/update_dialog.dart` L294：`'待接入'` → 未匹配
+- `lib/widgets/video_card.dart` L196：`'已看完'` → 未匹配
+- `lib/widgets/video_card.dart` L197：`'未观看'` → 未匹配
+- `lib/widgets/video_card.dart` L216：`'字幕检测中…'` → 未匹配
+- `lib/widgets/video_card.dart` L218：`'含字幕'` → 未匹配
+- `lib/widgets/video_card.dart` L218：`'字幕 · $codec'` → 未匹配
+- `lib/widgets/video_card.dart` L219：`'无字幕'` → 未匹配
+- `lib/widgets/video_card.dart` L351：`'媒体信息'` → 未匹配

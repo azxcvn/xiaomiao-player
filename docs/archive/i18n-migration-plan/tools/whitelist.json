@@ -1,0 +1,210 @@
+{
+  "_说明": "残留中文扫描白名单：这里列出的中文**不允许被翻译**。files = 整文件豁免；lines = 单行豁免（行号变了会报“过期项”，必须同步维护）。详见 ../04-数据基线.md「不可翻译清单」。",
+  "files": [
+    {
+      "path": "lib/utils/subtitle_language.dart",
+      "reason": "中文字幕轨判定关键词（中文/中字/简体/繁体/特效 + zh/chs/cht 等），认的是视频自带字幕轨的语言与标题，翻译后功能即失效"
+    },
+    {
+      "path": "lib/utils/subtitle_auto_match.dart",
+      "reason": "同名外挂字幕后缀优先（含「简」「繁」），认的是文件名"
+    },
+    {
+      "path": "lib/utils/chapter_utils.dart",
+      "reason": "章节关键词表（片头/片尾/前情提要/制作人员等），已是中英日法意多语并存，加语言只追加不修改"
+    },
+    {
+      "path": "lib/l10n/app_localizations_zh.dart",
+      "reason": "gen_l10n 生成的中文语言表（生成物入库）：里面的中文就是译文本身，不是待翻译的硬编码文案；扫描脚本 GENERATED_SKIP 亦跳过"
+    },
+    {
+      "path": "lib/l10n/legal_zh.dart",
+      "reason": "隐私政策/用户协议中文正文（阶段 7 新建，按语言拆 Dart 文件、不进 ARB）：中文是源文，不是待翻译的硬编码文案"
+    },
+    {
+      "path": "lib/l10n/legal_en.dart",
+      "reason": "隐私政策/用户协议英文正文（阶段 7 新建）：英文是译文本身（对应语言文件），不是待翻译文案；扫描脚本 GENERATED_SKIP 亦跳过"
+    },
+    {
+      "path": "android/app/src/main/res/values/strings.xml",
+      "reason": "Android 默认（中文）资源本身（阶段 8 新建）：里面的中文就是该语言的资源值，对应 Dart 侧 app_zh.arb，不是待翻译的硬编码文案；英文侧在 values-en/strings.xml"
+    }
+  ],
+  "lines": [
+    {
+      "path": "lib/utils/danmaku_episode.dart",
+      "line": 56,
+      "reason": "从文件名识别集数的正则「第X话/集/回」（匹配键，数据）：整文件豁免改为按行豁免（阶段 6），同一文件的两条用户提示已迁 l10n"
+    },
+    {
+      "path": "lib/utils/danmaku_episode.dart",
+      "line": 65,
+      "reason": "集数正则里的全角方括号【】（匹配键，数据；扩口径 --fullwidth 才会命中）"
+    },
+    {
+      "path": "lib/utils/danmaku_episode.dart",
+      "line": 66,
+      "reason": "同上：集数正则末尾的【】/［］兼容匹配（数据）"
+    },
+    {
+      "path": "android/app/src/main/kotlin/com/azxcvn/moumou/VideoFsWalker.kt",
+      "line": 182,
+      "reason": "capacityNote 用「、」拼接日志内容（只被 Log.w 使用，红线 13）"
+    },
+    {
+      "path": "lib/utils/formatters.dart",
+      "line": 24,
+      "reason": "截图文件名前缀「小喵Player-yyyy-MM-dd_HH-mm-ss」（红线 14：不随界面语言变化，与相册名同一套命名）"
+    },
+    {
+      "path": "lib/utils/danmaku_local_file.dart",
+      "line": 16,
+      "reason": "本地同名弹幕文件的候选匹配名「弹幕.xml」（数据/匹配键，同列表另有 danmaku.xml 等 ASCII；翻译后匹配不到中文名文件）"
+    },
+    {
+      "path": "lib/models/network_connection.dart",
+      "line": 133,
+      "reason": "fromJson 里持久化字段 name 的兜底值「未命名」（数据，会被 toJson 写回；不随界面语言变）"
+    },
+    {
+      "path": "lib/models/danmaku_server.dart",
+      "line": 48,
+      "reason": "内置默认服务器写入持久化（prefs/缓存）的名字「弹弹Play（默认）」（数据；界面显示走 l10n.danmakuServerDefaultName，见 label_maps.danmakuServerDisplayName）"
+    },
+    {
+      "path": "lib/utils/wyzie_filename.dart",
+      "line": 15,
+      "reason": "写盘文件名兜底「未命名」（数据；字幕落盘名与去重键）"
+    },
+    {
+      "path": "lib/services/update/update_service.dart",
+      "line": 166,
+      "reason": "开发/测试样例更新说明（_devBody，只被 test/update_dialog_test.dart 渲染；生产真源是 GitHub Release 正文，属内容不是界面文案）"
+    },
+    {
+      "path": "android/app/src/main/kotlin/com/azxcvn/moumou/CrashHandler.kt",
+      "line": 76,
+      "reason": "崩溃日志**文件内容**（红线 13：日志永远保持中文）——崩溃路径只迁了用户可见的那条 Toast（R.string.crash_dialog_message），文件内容不翻译"
+    },
+    {
+      "path": "android/app/src/main/kotlin/com/azxcvn/moumou/CrashHandler.kt",
+      "line": 79,
+      "reason": "同上：崩溃日志文件表头【时间】"
+    },
+    {
+      "path": "android/app/src/main/kotlin/com/azxcvn/moumou/CrashHandler.kt",
+      "line": 80,
+      "reason": "同上：崩溃日志文件表头【应用版本】"
+    },
+    {
+      "path": "android/app/src/main/kotlin/com/azxcvn/moumou/CrashHandler.kt",
+      "line": 81,
+      "reason": "同上：崩溃日志文件表头【设备型号】"
+    },
+    {
+      "path": "android/app/src/main/kotlin/com/azxcvn/moumou/CrashHandler.kt",
+      "line": 82,
+      "reason": "同上：崩溃日志文件表头【系统版本】"
+    },
+    {
+      "path": "android/app/src/main/kotlin/com/azxcvn/moumou/CrashHandler.kt",
+      "line": 83,
+      "reason": "同上：崩溃日志文件表头【CPU架构】"
+    },
+    {
+      "path": "android/app/src/main/kotlin/com/azxcvn/moumou/CrashHandler.kt",
+      "line": 85,
+      "reason": "同上：崩溃日志文件表头【异常类型】"
+    },
+    {
+      "path": "android/app/src/main/kotlin/com/azxcvn/moumou/CrashHandler.kt",
+      "line": 86,
+      "reason": "同上：崩溃日志文件表头【异常消息】"
+    },
+    {
+      "path": "android/app/src/main/kotlin/com/azxcvn/moumou/CrashHandler.kt",
+      "line": 88,
+      "reason": "同上：崩溃日志文件表头【堆栈跟踪】"
+    },
+    {
+      "path": "android/app/src/main/kotlin/com/azxcvn/moumou/CrashHandler.kt",
+      "line": 92,
+      "reason": "同上：崩溃日志文件末尾的反馈提示"
+    },
+    {
+      "path": "android/app/src/main/kotlin/com/azxcvn/moumou/CrashHandler.kt",
+      "line": 93,
+      "reason": "同上：崩溃日志文件里的「文件位置」"
+    },
+    {
+      "path": "android/app/src/main/kotlin/com/azxcvn/moumou/VideoFsWalker.kt",
+      "line": 179,
+      "reason": "扫描索引容量提示（capacityNote）只被 Log.w 使用，属日志内容（红线 13）"
+    },
+    {
+      "path": "android/app/src/main/kotlin/com/azxcvn/moumou/VideoFsWalker.kt",
+      "line": 180,
+      "reason": "同上：capacityNote 的「视频目录」段"
+    },
+    {
+      "path": "android/app/src/main/kotlin/com/azxcvn/moumou/VideoFsWalker.kt",
+      "line": 181,
+      "reason": "同上：capacityNote 的「待扫队列」段"
+    },
+    {
+      "path": "lib/services/network/ftp_client.dart",
+      "line": 311,
+      "reason": "FTP 目录列表非 UTF-8 时按 GBK 解码（中文服务器兼容），与界面语言无关（行号随阶段 6 改动漂移）"
+    },
+    {
+      "path": "lib/pages/player/player_page.dart",
+      "line": 1454,
+      "reason": "截图存入系统相册的相册名：与截图文件名前缀「小喵Player-yyyy-MM-dd_HH-mm-ss.png」（红线 14 固定不变）保持同一套命名，不随界面语言变（行号随改动漂移：阶段 6 时 1417 → 阶段 3/4 修复后 1454，测试包收口时已同步）"
+    },
+    {
+      "path": "lib/pages/player/player_portrait_page.dart",
+      "line": 694,
+      "reason": "同上：竖屏页截图相册名，与截图文件名前缀一致（行号随阶段 6 改动漂移）"
+    },
+    {
+      "path": "lib/pages/player/views/player_bili_playlist_panel.dart",
+      "line": 209,
+      "reason": "switch 匹配键 = B 站接口返回的角标原值「会员」（数据，不是 UI 文案；显示文案是固定 ASCII「VIP」），翻译后匹配失效"
+    },
+    {
+      "path": "lib/pages/player/views/player_bili_playlist_panel.dart",
+      "line": 210,
+      "reason": "同上：B 站角标原值「限免」是匹配键，显示文案走 l10n.playerBiliFreeLimited"
+    },
+    {
+      "path": "lib/pages/player/views/player_bili_playlist_panel.dart",
+      "line": 211,
+      "reason": "同上：B 站角标原值「预告」是匹配键，显示文案走 l10n.playerBiliPreview"
+    },
+    {
+      "path": "lib/services/download/download_task.dart",
+      "line": 605,
+      "reason": "写盘文件名兜底「未命名」（数据；_sanitizeFileName 产物，落盘名与去重键）"
+    },
+    {
+      "path": "lib/pages/bilibili/bili_login_page.dart",
+      "line": 169,
+      "reason": "截图（登录二维码）存入系统相册的相册名：与截图文件名前缀「小喵Player-…」（红线 13 固定不变）保持同一套命名，不随界面语言变"
+    },
+    {
+      "path": "lib/widgets/bili_episode_tile.dart",
+      "line": 81,
+      "reason": "switch 匹配键 = B 站接口返回的角标原值「会员」（数据，不是 UI 文案；显示文案是固定 ASCII「VIP」），翻译后匹配失效"
+    },
+    {
+      "path": "lib/widgets/bili_episode_tile.dart",
+      "line": 82,
+      "reason": "同上：B 站角标原值「限免」是匹配键，显示文案走 l10n.playerBiliFreeLimited"
+    },
+    {
+      "path": "lib/widgets/bili_episode_tile.dart",
+      "line": 83,
+      "reason": "同上：B 站角标原值「预告」是匹配键，显示文案走 l10n.playerBiliPreview"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+feat: 迁移阶段 4 播放器群文案到官方 l10n
+
+- 播放器 35 个文件的中文改用 AppLocalizations
+- 新增 285 个 ARB 键（中英双语）
+- AudioRepeatMode / AudioSleepPreset 删掉中文 label 字段
+- 截图相册名与 B 站角标匹配键保持中文
+- 11 个 widget 测试补中文 l10n 夹具

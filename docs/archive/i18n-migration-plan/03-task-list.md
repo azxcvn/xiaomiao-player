@@ -1,0 +1,234 @@
+# 任务清单与进度
+
+> 本文件由 `tools/i18n_scan.py tasks` 生成；**手工勾选会被保留**，可安全反复生成。
+> 一条任务 = 一个文件。做完一个文件就跑一次 `flutter analyze`，阶段收口再跑全量 `flutter test`。
+
+## 进度总览
+
+- lib 文案文件：**0** 个，已完成 **0**
+- 新增文件任务：**19** 个，已完成 **17**
+- 测试文件（收口）：**188** 个
+- 合计任务：**207**
+
+> 勾选方式：把 `- [ ]` 改成 `- [x]`。
+
+## 新增文件任务（方案新增，不在扫描范围内）
+
+> 这些文件当前不存在，由本方案新建；阶段归属见行尾。勾选同样会被保留。
+
+- [x] `pubspec.yaml` — 加 flutter_localizations + intl + flutter: generate: true（只允许这一处依赖改动）（阶段 0 · 基建与测试夹具）
+- [x] `l10n.yaml` — 新建：arb-dir=lib/l10n、template=app_zh.arb、nullable-getter: false、preferred-supported-locales: [zh]（阶段 0 · 基建与测试夹具）
+- [x] `lib/l10n/app_zh.arb` — 新建：模板（源语言中文），先放 appTitle / commonCancel 两个键（阶段 0 · 基建与测试夹具）
+- [x] `lib/l10n/app_en.arb` — 新建：英文（appTitle = Meow Player）（阶段 0 · 基建与测试夹具）
+- [x] `lib/services/app_locale_settings.dart` — 新建：语言偏好持久化，键 app_locale，值只允许 'zh' | 'en'，默认 'zh'（无「跟随系统」）（阶段 0 · 基建与测试夹具）
+- [x] `test/l10n_test_helper.dart` — 新建：测试夹具（钉 Locale('zh')），保住 535 处 find.text('中文') 断言（阶段 0 · 基建与测试夹具）
+- [x] `lib/l10n/label_maps.dart` — 新建：31 个枚举 / 表 → 文案的 UI 侧映射（禁止在 models/utils 里 import l10n）（阶段 1 · 公共层与表改造）
+- [x] `lib/widgets/language_picker_dialog.dart` — 新建：首启语言选择弹窗（隐私同意后弹一次；默认选中简体中文；选项 简体中文 / English）（阶段 2 · 入口、导航与语言入口）
+- [x] `test/language_picker_test.dart` — 新建（AI 追加，方案未列）：语言入口回归测试——弹窗默认选中简体中文 / 选 English 写入 app_locale / 取消不改 / 设置页「语言」组在弹幕与下载之间（阶段 2 · 入口、导航与语言入口）
+- [x] `test/app_smoke_test.dart` — 新建（AI 追加，方案未列）：**真实 MoumouApp 冒烟测试**——阶段 2 曾因 main.dart 用 MaterialApp 之上的 context 取 l10n 而启动即崩（analyze 与当时全部测试都拦不住），本测试是那道防线（阶段 2 · 入口、导航与语言入口）
+- [x] `lib/l10n/legal_zh.dart` — 新建：隐私政策/用户协议中文正文（从 privacy_policy_content.dart 迁入，保留多行原文排版）（阶段 7 · 长文（隐私政策/用户协议））
+- [x] `lib/l10n/legal_en.dart` — 新建：英文正文（AI 翻译即可，用户已确认无需专业/法务审校）（阶段 7 · 长文（隐私政策/用户协议））
+- [x] `lib/l10n/legal.dart` — 新建（方案 §1.11 的可选入口文件）：按 locale 取长文正文（legalTextsFor），未知语言回落中文（阶段 7 · 长文（隐私政策/用户协议））
+- [x] `test/legal_texts_test.dart` — 新建（AI 追加，方案 §1.11 第 6 步要求）：断言 zh / en 两套长文的 4 段都非空、en 无残留汉字（阶段 7 · 长文（隐私政策/用户协议））
+- [x] `lib/utils/error_codes.dart` — 新建（阶段 6）：服务层错误码表（纯数据，无 Flutter / l10n 依赖）——services/models/utils 只产出「码 + 参数」（阶段 6 · 服务/模型/工具层）
+- [x] `lib/l10n/error_texts.dart` — 新建（阶段 6）：服务层「码 + 参数」→ 文案 的 UI 侧翻译 + 统一入口 serviceErrorText（阶段 6 · 服务/模型/工具层）
+- [x] `lib/widgets/dolby_vision_hint.dart` — 新建（阶段 6）：杜比视界引导弹窗从 lib/utils 搬到 UI 层（utils 不许 import l10n），原 lib/utils/dolby_vision_hint.dart 删除（阶段 6 · 服务/模型/工具层）
+- [x] `android/app/src/main/res/values/strings.xml` — 新建：默认（中文）资源，app_name = 小喵Player（阶段 8 · Android 原生与收尾）
+- [x] `android/app/src/main/res/values-en/strings.xml` — 新建：英文资源，app_name = Meow Player（阶段 8 · Android 原生与收尾）
+
+## 测试收口清单（阶段 0 建夹具，阶段 8 收口）
+
+> `find.text 中文` 一列 > 0 的文件属于**强耦合**：接入 l10n 后若未钉 locale 会直接失败。
+> `label 访问` 一列 > 0 的文件在枚举删除中文标签字段后会编译失败，需改为 `labelOf(l10n, x)`。
+
+- 强耦合（find.text 中文）文件：**40** 个
+- 访问枚举标签（label/title/desc）文件：**14** 个
+
+- [ ] `test/player_danmaku_network_panel_test.dart` — 157 处中文 · find.text 中文 64 处
+- [ ] `test/danmaku_network_service_test.dart` — 117 处中文
+- [ ] `test/subtitle_download_page_test.dart` — 91 处中文 · find.text 中文 61 处
+- [ ] `test/player_danmaku_settings_panel_test.dart` — 87 处中文 · find.text 中文 61 处
+- [ ] `test/file_ops_test.dart` — 69 处中文
+- [ ] `test/chapter_utils_test.dart` — 68 处中文 · label 访问 1 处
+- [ ] `test/danmaku_server_page_test.dart` — 64 处中文 · find.text 中文 41 处
+- [ ] `test/bili_bangumi_test.dart` — 60 处中文 · label 访问 4 处
+- [ ] `test/danmaku_server_settings_test.dart` — 58 处中文
+- [ ] `test/danmaku_search_store_test.dart` — 57 处中文
+- [ ] `test/download_task_test.dart` — 54 处中文
+- [ ] `test/file_operations_ui_test.dart` — 50 处中文 · find.text 中文 32 处
+- [ ] `test/danmaku_episode_test.dart` — 48 处中文
+- [ ] `test/file_operations_service_test.dart` — 48 处中文
+- [ ] `test/danmaku_settings_test.dart` — 46 处中文
+- [ ] `test/player_controls_settings_test.dart` — 42 处中文
+- [ ] `test/player_diagnostics_test.dart` — 41 处中文
+- [ ] `test/player_danmaku_episodes_panel_test.dart` — 40 处中文 · find.text 中文 14 处
+- [ ] `test/playlist_sort_test.dart` — 38 处中文
+- [ ] `test/audio_track_test.dart` — 37 处中文
+- [ ] `test/chapter_tracker_test.dart` — 37 处中文 · label 访问 2 处
+- [ ] `test/danmaku_blocklist_test.dart` — 36 处中文
+- [ ] `test/video_scanner_payload_test.dart` — 36 处中文
+- [ ] `test/danmaku_scheduler_test.dart` — 35 处中文
+- [ ] `test/common_list_controller_test.dart` — 34 处中文
+- [ ] `test/playback_history_page_test.dart` — 33 处中文 · find.text 中文 8 处
+- [ ] `test/player_settings_page_test.dart` — 33 处中文 · find.text 中文 19 处
+- [ ] `test/subtitle_auto_match_test.dart` — 33 处中文
+- [ ] `test/bili_short_link_test.dart` — 32 处中文
+- [ ] `test/danmaku_dedup_test.dart` — 32 处中文
+- [ ] `test/subtitle_track_test.dart` — 32 处中文
+- [ ] `test/view_settings_test.dart` — 31 处中文 · label 访问 2 处
+- [ ] `test/wallpaper_editor_page_test.dart` — 31 处中文 · find.text 中文 22 处
+- [ ] `test/danmaku_pipeline_test.dart` — 30 处中文
+- [ ] `test/bili_bangumi_service_test.dart` — 29 处中文 · label 访问 2 处
+- [ ] `test/danmaku_merge_test.dart` — 29 处中文
+- [ ] `test/danmaku_xml_test.dart` — 29 处中文
+- [ ] `test/player_session_state_test.dart` — 29 处中文
+- [ ] `test/network_browser_page_test.dart` — 28 处中文 · find.text 中文 14 处
+- [ ] `test/dandan_comment_test.dart` — 27 处中文
+- [ ] `test/bili_danmaku_service_test.dart` — 26 处中文
+- [ ] `test/bili_dash_test.dart` — 26 处中文 · label 访问 2 处
+- [ ] `test/bili_fingerprint_test.dart` — 26 处中文 · label 访问 1 处
+- [ ] `test/subtitle_language_test.dart` — 26 处中文
+- [ ] `test/subtitle_style_properties_test.dart` — 26 处中文
+- [ ] `test/video_scanner_test.dart` — 26 处中文
+- [ ] `test/player_quality_panel_test.dart` — 25 处中文 · find.text 中文 6 处 · label 访问 1 处
+- [ ] `test/network_subtitle_match_test.dart` — 24 处中文
+- [ ] `test/playback_progress_service_test.dart` — 24 处中文
+- [ ] `test/player_diagnostics_panel_test.dart` — 24 处中文 · find.text 中文 13 处
+- [ ] `test/retry_policy_test.dart` — 24 处中文
+- [ ] `test/appearance_page_test.dart` — 23 处中文 · find.text 中文 19 处
+- [ ] `test/bilibili_user_test.dart` — 23 处中文
+- [ ] `test/dandan_models_test.dart` — 23 处中文
+- [ ] `test/bili_playlist_test.dart` — 22 处中文
+- [ ] `test/portrait_player_bottom_bar_test.dart` — 22 处中文 · find.text 中文 4 处
+- [ ] `test/bili_search_page_test.dart` — 21 处中文 · find.text 中文 9 处
+- [ ] `test/player_bili_playlist_panel_test.dart` — 21 处中文 · find.text 中文 11 处
+- [ ] `test/anime4k_patch_test.dart` — 20 处中文
+- [ ] `test/device_info_page_test.dart` — 20 处中文 · find.text 中文 16 处
+- [ ] `test/network_playlist_test.dart` — 20 处中文
+- [ ] `test/open_link_dialog_test.dart` — 20 处中文 · find.text 中文 13 处
+- [ ] `test/player_gestures_test.dart` — 20 处中文
+- [ ] `test/player_orientation_test.dart` — 20 处中文
+- [ ] `test/smb_pipeline_test.dart` — 20 处中文
+- [ ] `test/subtitle_settings_test.dart` — 20 处中文
+- [ ] `test/danmaku_timeline_test.dart` — 19 处中文
+- [ ] `test/ftp_client_test.dart` — 19 处中文
+- [ ] `test/playback_history_test.dart` — 19 处中文 · label 访问 1 处
+- [ ] `test/update_dialog_test.dart` — 19 处中文 · find.text 中文 12 处
+- [x] `test/language_picker_test.dart` — 18 处中文 · find.text 中文 13 处
+- [ ] `test/natural_compare_test.dart` — 18 处中文
+- [ ] `test/network_connection_settings_test.dart` — 18 处中文
+- [ ] `test/wallpaper_settings_test.dart` — 18 处中文
+- [ ] `test/custom_subtitle_parser_test.dart` — 17 处中文
+- [ ] `test/danmaku_local_file_test.dart` — 17 处中文
+- [ ] `test/network_sort_test.dart` — 17 处中文 · label 访问 4 处
+- [ ] `test/player_thumbnail_preview_test.dart` — 17 处中文 · find.text 中文 3 处
+- [ ] `test/speed_dial_fab_test.dart` — 17 处中文 · find.text 中文 9 处
+- [ ] `test/super_resolution_service_test.dart` — 17 处中文
+- [ ] `test/theme_controller_test.dart` — 17 处中文
+- [ ] `test/url_media_test.dart` — 17 处中文
+- [ ] `test/async_primitives_test.dart` — 16 处中文
+- [ ] `test/bili_image_url_test.dart` — 16 处中文
+- [ ] `test/danmaku_search_history_test.dart` — 16 处中文
+- [ ] `test/network_connection_test.dart` — 16 处中文
+- [ ] `test/player_bottom_bar_test.dart` — 16 处中文 · find.text 中文 1 处
+- [ ] `test/player_danmaku_panel_test.dart` — 16 处中文 · find.text 中文 10 处
+- [ ] `test/storage_root_test.dart` — 16 处中文
+- [ ] `test/video_info_service_test.dart` — 16 处中文
+- [ ] `test/audio_fallback_test.dart` — 15 处中文
+- [ ] `test/equalizer_preset_test.dart` — 15 处中文
+- [ ] `test/intro_outro_panel_test.dart` — 15 处中文 · find.text 中文 9 处
+- [ ] `test/intro_outro_skip_test.dart` — 15 处中文
+- [ ] `test/intro_outro_tracker_test.dart` — 15 处中文
+- [ ] `test/player_bottom_panel_test.dart` — 15 处中文 · find.text 中文 8 处
+- [ ] `test/subtitle_font_injection_test.dart` — 15 处中文
+- [ ] `test/super_resolution_mode_test.dart` — 15 处中文
+- [ ] `test/player_panel_test.dart` — 14 处中文 · find.text 中文 6 处
+- [ ] `test/about_page_card_test.dart` — 13 处中文 · find.text 中文 3 处
+- [ ] `test/bili_video_service_test.dart` — 13 处中文 · label 访问 1 处
+- [ ] `test/danmaku_auto_match_cache_test.dart` — 13 处中文
+- [ ] `test/network_entry_filter_test.dart` — 13 处中文
+- [ ] `test/network_streaming_proxy_test.dart` — 13 处中文
+- [ ] `test/pinned_folders_settings_test.dart` — 13 处中文
+- [ ] `test/playback_restore_test.dart` — 13 处中文
+- [ ] `test/danmaku_memory_test.dart` — 12 处中文
+- [ ] `test/file_picker_dispatch_test.dart` — 12 处中文
+- [ ] `test/formatters_test.dart` — 12 处中文
+- [ ] `test/home_page_permission_test.dart` — 12 处中文 · find.text 中文 8 处
+- [ ] `test/network_playlist_source_test.dart` — 12 处中文
+- [ ] `test/privacy_policy_dialog_test.dart` — 12 处中文 · find.text 中文 5 处
+- [ ] `test/thumbnail_cache_test.dart` — 12 处中文
+- [ ] `test/async_coalesced_reload_test.dart` — 11 处中文
+- [ ] `test/bili_wbi_test.dart` — 11 处中文
+- [ ] `test/decode_policy_test.dart` — 11 处中文
+- [ ] `test/file_selection_controller_test.dart` — 11 处中文
+- [ ] `test/folder_pin_test.dart` — 11 处中文
+- [ ] `test/mpv_tuning_test.dart` — 11 处中文
+- [ ] `test/player_speed_panel_test.dart` — 11 处中文 · find.text 中文 7 处
+- [ ] `test/update_service_test.dart` — 11 处中文
+- [ ] `test/watch_state_test.dart` — 11 处中文
+- [ ] `test/danmaku_server_test.dart` — 10 处中文
+- [ ] `test/ftp_parser_test.dart` — 10 处中文
+- [x] `test/legal_texts_test.dart` — 10 处中文
+- [ ] `test/options_sheet_video_fields_test.dart` — 10 处中文 · find.text 中文 8 处
+- [ ] `test/player_panel_theme_test.dart` — 10 处中文
+- [ ] `test/subtitle_file_picker_panel_test.dart` — 10 处中文 · find.text 中文 3 处
+- [ ] `test/wyzie_api_test.dart` — 10 处中文
+- [ ] `test/bili_pb_test.dart` — 9 处中文
+- [ ] `test/formatters_network_test.dart` — 9 处中文
+- [ ] `test/marquee_text_test.dart` — 9 处中文
+- [ ] `test/network_directory_cache_test.dart` — 9 处中文
+- [ ] `test/network_path_test.dart` — 9 处中文
+- [ ] `test/playback_completion_test.dart` — 9 处中文
+- [ ] `test/player_status_bar_net_speed_test.dart` — 9 处中文
+- [ ] `test/audio_shuffle_test.dart` — 8 处中文
+- [ ] `test/danmaku_random_color_test.dart` — 8 处中文
+- [ ] `test/device_services_external_video_test.dart` — 8 处中文 · label 访问 2 处
+- [ ] `test/equalizer_settings_test.dart` — 8 处中文
+- [ ] `test/file_selection_test.dart` — 8 处中文
+- [ ] `test/intro_outro_settings_test.dart` — 8 处中文
+- [ ] `test/pip_aspect_test.dart` — 8 处中文
+- [ ] `test/player_decode_panel_test.dart` — 8 处中文 · find.text 中文 4 处
+- [ ] `test/settings_page_bili_login_test.dart` — 8 处中文 · find.text 中文 6 处
+- [ ] `test/video_card_full_name_test.dart` — 8 处中文
+- [ ] `test/webdav_client_test.dart` — 8 处中文
+- [ ] `test/wyzie_models_test.dart` — 8 处中文 · label 访问 1 处
+- [ ] `test/bili_auth_service_test.dart` — 7 处中文
+- [ ] `test/bili_credential_test.dart` — 7 处中文
+- [ ] `test/bili_image_cache_service_test.dart` — 7 处中文
+- [ ] `test/danmaku_palette_color_test.dart` — 7 处中文
+- [ ] `test/http_byte_range_test.dart` — 7 处中文
+- [ ] `test/media_scan_settings_test.dart` — 7 处中文
+- [ ] `test/subtitle_memory_test.dart` — 7 处中文
+- [ ] `test/webdav_xml_test.dart` — 7 处中文
+- [ ] `test/audio_settings_test.dart` — 6 处中文
+- [ ] `test/build_info_service_test.dart` — 6 处中文
+- [ ] `test/subtitle_source_settings_test.dart` — 6 处中文
+- [ ] `test/thumbnail_bucket_test.dart` — 6 处中文
+- [ ] `test/video_card_duration_fallback_test.dart` — 6 处中文 · find.text 中文 2 处
+- [ ] `test/wyzie_settings_test.dart` — 6 处中文
+- [ ] `test/app_font_settings_test.dart` — 5 处中文
+- [ ] `test/bili_stream_proxy_test.dart` — 5 处中文
+- [ ] `test/chapter_skip_settings_test.dart` — 5 处中文
+- [ ] `test/download_manager_test.dart` — 5 处中文 · label 访问 2 处
+- [ ] `test/subtitle_sort_test.dart` — 5 处中文
+- [ ] `test/version_compare_test.dart` — 5 处中文
+- [ ] `test/widget_test.dart` — 5 处中文 · find.text 中文 2 处
+- [ ] `test/wyzie_filename_test.dart` — 5 处中文
+- [x] `test/app_smoke_test.dart` — 4 处中文 · find.text 中文 2 处
+- [ ] `test/bili_episode_picker_page_test.dart` — 4 处中文 · find.text 中文 2 处
+- [ ] `test/bili_http_test.dart` — 4 处中文
+- [ ] `test/dandan_signature_test.dart` — 4 处中文
+- [ ] `test/fast_thumbnails_test.dart` — 4 处中文
+- [ ] `test/lan_media_server_test.dart` — 4 处中文
+- [ ] `test/privacy_policy_settings_test.dart` — 4 处中文
+- [ ] `test/update_settings_test.dart` — 4 处中文
+- [ ] `test/wyzie_query_test.dart` — 4 处中文
+- [ ] `test/app_frame_test.dart` — 3 处中文
+- [ ] `test/cast_service_test.dart` — 3 处中文
+- [ ] `test/cast_source_test.dart` — 3 处中文
+- [ ] `test/danmaku_font_mode_test.dart` — 3 处中文
+- [ ] `test/network_mime_types_test.dart` — 3 处中文
+- [ ] `test/player_zoom_restore_chip_test.dart` — 3 处中文
+- [ ] `test/video_scanner_playlist_test.dart` — 3 处中文
+- [ ] `test/bili_app_sign_test.dart` — 2 处中文
+- [ ] `test/dolby_vision_settings_test.dart` — 2 处中文

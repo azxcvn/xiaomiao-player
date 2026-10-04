@@ -1,0 +1,53 @@
+# 阶段 4 · 分组 C 残留文案与键位建议
+
+- `player_bili_playlist_panel.dart` L84：`'没有获取到剧集列表'` → l10n.playerBiliNoEpisodes
+- `player_bili_playlist_panel.dart` L125：`'共 $total 集'` → l10n.playerBiliTotalEpisodes(total)
+- `player_bili_playlist_panel.dart` L125：`'第 $current 集 / 共 $total 集'` → l10n.playerBiliCurrentOfTotal(current, total)
+- `player_bili_playlist_panel.dart` L181：`'播放中'` → l10n.commonPlaying
+- `player_bili_playlist_panel.dart` L199：`'会员'` → l10n.playerBiliVip
+- `player_bili_playlist_panel.dart` L200：`'限免'` → l10n.playerBiliFreeLimited
+- `player_bili_playlist_panel.dart` L200：`'限免'` → l10n.playerBiliFreeLimited
+- `player_bili_playlist_panel.dart` L201：`'预告'` → l10n.playerBiliPreview
+- `player_bili_playlist_panel.dart` L201：`'预告'` → l10n.playerBiliPreview
+- `player_bottom_bar.dart` L156：`'下一集'` → l10n.playerNextEpisode
+- `player_bottom_bar.dart` L235：`'播放列表'` → l10n.playerPlaylist
+- `player_bottom_bar.dart` L248：`'选择屏幕'` → l10n.playerCastSelectScreen
+- `player_center_cluster.dart` L33：`'快退 $seekSeconds 秒'` → l10n.playerSeekBackSeconds(seekSeconds)
+- `player_center_cluster.dart` L50：`'快进 $seekSeconds 秒'` → l10n.playerSeekForwardSeconds(seekSeconds)
+- `player_chapter_panel.dart` L44：`'章节跳段'` → l10n.playerChapterPanelTitle
+- `player_chapter_panel.dart` L49：`'章节跳段'` → l10n.playerChapterPanelTitle
+- `player_chapter_panel.dart` L61：`'章节跳段'` → l10n.playerChapterPanelTitle
+- `player_chapter_panel.dart` L77：`'当前视频无章节信息'` → l10n.playerNoChapters
+- `player_chapter_panel.dart` L93：`'共 ${chapters.length} 章'` → l10n.playerChapterCount(chapters.length)
+- `player_chapter_skip_panel.dart` L28：`'自动跳过'` → l10n.playerChapterSkipAuto
+- `player_chapter_skip_panel.dart` L37：`'进入对应片段时自动跳到片段结束；关闭则仅弹出跳过胶囊'` → l10n.playerChapterSkipAutoDesc
+- `player_chapter_skip_panel.dart` L54：`'自定义关键词'` → l10n.playerChapterSkipCustomKeywords
+- `player_chapter_skip_panel.dart` L63：`'按章节标题匹配，支持逗号 / 分号 / 换行分隔'` → l10n.playerChapterSkipKeywordsHint
+- `player_chapter_skip_panel.dart` L71：`'片头关键词'` → l10n.playerIntroKeywords
+- `player_chapter_skip_panel.dart` L73：`'如 ap、op、开场'` → l10n.playerIntroKeywordsHint
+- `player_chapter_skip_panel.dart` L79：`'片尾关键词'` → l10n.playerOutroKeywords
+- `player_chapter_skip_panel.dart` L81：`'如 ed、ending、结尾'` → l10n.playerOutroKeywordsHint
+- `player_chapter_skip_panel.dart` L87：`'关键词归属由你填入的位置决定：填进「片头关键词」即判为片头、'` → l10n.playerChapterSkipKeywordOwnerHint（L87-89 三段相邻字面量合并为一条）
+- `player_chapter_skip_panel.dart` L88：`'填进「片尾关键词」即判为片尾；同一标题命中多类时按固定优先级'` → （同上，删除本行字面量）
+- `player_chapter_skip_panel.dart` L89：`'（前情提要 > 正片前段 > 制作人员 > 下集预告 > 片尾 > 片头）取一类。'` → （同上，删除本行字面量）
+- `player_decode_panel.dart` L75：`'需重启应用'` → l10n.playerRestartRequired
+- `player_decode_panel.dart` L77：`'解码配置已修改，重启应用后生效。\n\n是否立即重启？'` → l10n.playerDecodeRestartBody
+- `player_decode_panel.dart` L83：`'稍后重启'` → l10n.playerRestartLater
+- `player_decode_panel.dart` L87：`'立即重启'` → l10n.playerRestartNow
+- `player_decode_panel.dart` L171：`'解码预设'` → l10n.playerDecodePreset
+- `player_decode_panel.dart` L176：`'切换后需重启应用生效，可选立即重启'` → l10n.playerDecodePresetDesc
+- `player_decode_panel.dart` L185：`'「硬解+」直通不可用时由内核依次回退硬解 / 软解'` → l10n.playerDecodeHwPlusDesc
+- `player_intro_outro_panel.dart` L51：`'跳过片头'` → l10n.chapterSkipIntro
+- `player_intro_outro_panel.dart` L55：`'片头范围'` → l10n.playerIntroRange
+- `player_intro_outro_panel.dart` L56：`'拖动或输入设置时间，可按需调整上方范围'` → l10n.playerRangeHint
+- `player_intro_outro_panel.dart` L57：`'设为当前时间'` → l10n.playerSetToCurrentTime
+- `player_intro_outro_panel.dart` L67：`'跳过片尾'` → l10n.chapterSkipOutro
+- `player_intro_outro_panel.dart` L71：`'片尾范围'` → l10n.playerOutroRange
+- `player_intro_outro_panel.dart` L72：`'拖动或输入设置时间，可按需调整上方范围'` → l10n.playerRangeHint
+- `player_intro_outro_panel.dart` L73：`'设为当前剩余时间'` → l10n.playerSetToRemainingTime
+- `player_intro_outro_panel.dart` L100：`'启用跳过片头片尾'` → l10n.playerEnableIntroOutroSkip
+- `player_intro_outro_panel.dart` L109：`'通过手动设置秒数来跳过片头片尾'` → l10n.playerIntroOutroSkipDesc
+- `player_intro_outro_panel.dart` L251：`'秒'` → l10n.commonSeconds
+- `player_intro_outro_panel.dart` L416：`'一键重置'` → l10n.commonOneKeyReset
+
+（共 49 条，未匹配 0 条）

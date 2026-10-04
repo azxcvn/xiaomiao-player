@@ -1,0 +1,372 @@
+﻿--------- beginning of main
+10-04 17:41:58.799 14275 14275 I Choreographer: Skipped 191 frames!  The application may be doing too much work on its main thread.
+10-04 17:41:58.834 14275 14275 I flutter : [mpv error] media_kit: error: property not found _setProperty(osc, 1)
+10-04 17:41:58.923 14275 14275 I ImeTracker: com.azxcvn.moumou:479a3e3: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false
+10-04 17:41:58.923 14275 14275 D InsetsController: hide(ime(), fromIme=false)
+10-04 17:41:58.923 14275 14275 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=ImeCallback=ImeOnBackInvokedCallback@257971903 Callback=android.window.IOnBackInvokedCallback$Stub$Proxy@14c74cb
+--------- beginning of system
+10-04 17:41:58.923 14275 14275 D InsetsController: Setting requestedVisibleTypes to -9 (was -1)
+10-04 17:41:58.923   864   937 D CoreBackPreview: Window{ddfc06e u0 com.azxcvn.moumou/com.azxcvn.moumou.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@1028b2e, mPriority=0, mIsAnimationCallback=false, mOverrideBehavior=0}
+10-04 17:41:58.957   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:41:58.958   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:41:58.958   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:41:58.958   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:41:58.958   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:41:58.998 14275 14275 I VideoOutputManager: com.alexmercerind.media_kit_video.VideoOutputManager.create: 124548773039600
+10-04 17:41:59.115 14275 14275 I Choreographer: Skipped 33 frames!  The application may be doing too much work on its main thread.
+10-04 17:41:59.116 14275 14275 D InsetsController: Setting requestedVisibleTypes to -12 (was -9)
+10-04 17:41:59.117  1640  1640 I ImeTracker: com.sohu.inputmethod.sogou.chuizi:7c83e52e: onRequestHide at ORIGIN_IME reason HIDE_SOFT_INPUT_LEGACY_DIRECT fromUser false
+10-04 17:41:59.117 14275 14275 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:41:59.118  1640  1640 I ImeTracker: com.sohu.inputmethod.sogou.chuizi:7c83e52e: onHidden
+10-04 17:41:59.120 14275 14275 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:41:59.157  1124  1124 W Choreographer: Frame time is 0.112278 ms in the future!  Check that graphics HAL is generating vsync timestamps using the correct timebase.
+10-04 17:41:59.192  1124  1243 V WindowManagerShell: Transition requested (#109): android.os.BinderProxy@1addeaf TransitionRequestInfo { type = CHANGE, triggerTask = null, pipChange = null, remoteTransition = null, displayChange = DisplayChange { displayId = 0, startAbsBounds = null, endAbsBounds = null, startRotation = 0, endRotation = 1, physicalDisplayChanged = false }, flags = 0, debugId = 109 }
+10-04 17:41:59.193   864   916 D BrightnessThermalClamper: Thermal status observer already started
+10-04 17:41:59.193   864   937 I ActivityTaskManager: Config changes=20000480 {1.0 460mcc?mnc [zh_CN_#Hans] ldltr sw360dp w640dp h360dp 640dpi nrml long land finger -keyb/v/v dpad/v winConfig={ mBounds=Rect(0, 0 - 2560, 1440) mAppBounds=Rect(0, 0 - 2560, 1440) mMaxBounds=Rect(0, 0 - 2560, 1440) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.985 fontWeightAdjustment=0}
+10-04 17:41:59.193   864   937 I WindowManager: Override config changes=20000480 {1.0 460mcc?mnc [zh_CN_#Hans] ldltr sw360dp w640dp h360dp 640dpi nrml long land finger -keyb/v/v dpad/v winConfig={ mBounds=Rect(0, 0 - 2560, 1440) mAppBounds=Rect(0, 0 - 2560, 1440) mMaxBounds=Rect(0, 0 - 2560, 1440) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.985 fontWeightAdjustment=0} for displayId=0
+10-04 17:41:59.194   864  1069 D BackgroundInstallControlService: Package event received: 0
+10-04 17:41:59.195   708  1621 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:41:59.198   864   937 W ImageReader_JNI: Unable to acquire a buffer item, very likely client tried to acquire more than maxImages buffers
+10-04 17:41:59.206   864   864 W WindowTokenClientController: Can't find attached WindowTokenClient for android.window.WindowTokenClient@418ba3d
+10-04 17:41:59.208   864   937 W WindowManager: applyWithNextDraw with mSyncState=1, Window{581ba8b u0 InputMethod}, com.android.server.wm.InsetsSourceProvider.updateInsetsControlPosition:416 com.android.server.wm.InsetsSourceProvider.onPostLayout:388 com.android.server.wm.ImeInsetsSourceProvider.onPostLayout:94 com.android.server.wm.InsetsStateController.onPostLayout:175 com.android.server.wm.DisplayContent.applySurfaceChangesTransaction:5099 com.android.server.wm.RootWindowContainer.applySurfaceChangesTransaction:979 com.android.server.wm.RootWindowContainer.performSurfacePlacementNoTrace:793 com.android.server.wm.RootWindowContainer.performSurfacePlacement:759 
+10-04 17:41:59.208  1101  1101 I app.lawnchair: AssetManager2(0x714765520d78) locale list changing from [] to [zh-Hans-CN]
+10-04 17:41:59.208  1640  1640 I od.sogou.chuizi: AssetManager2(0x71476550ead8) locale list changing from [] to [zh-Hans-CN]
+10-04 17:41:59.208  1124  1243 I ndroid.systemui: AssetManager2(0x714765530458) locale list changing from [] to [zh-Hans-CN]
+10-04 17:41:59.208  1124  1243 I ndroid.systemui: AssetManager2(0x71476551a018) locale list changing from [] to [zh-Hans-CN]
+10-04 17:41:59.208  1101  1101 D b/254119092: TaskbarManager#mComponentCallbacks.onConfigurationChanged: {1.0 460mcc?mnc [zh_CN_#Hans] ldltr sw360dp w640dp h360dp 640dpi nrml long land finger -keyb/v/v dpad/v winConfig={ mBounds=Rect(0, 0 - 2560, 1440) mAppBounds=Rect(0, 0 - 2560, 1440) mMaxBounds=Rect(0, 0 - 2560, 1440) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.985 fontWeightAdjustment=0}
+10-04 17:41:59.208  1101  1101 D b/254119092: mActivity and mWindowContext agree taskbarIsPresent=false
+10-04 17:41:59.208  1101  1101 D b/254119092: ComponentCallbacks#onConfigurationChanged() configDiff={}
+10-04 17:41:59.208  1101  1101 D b/254119092: mActivity and mWindowContext agree taskbarIsPresent=false
+10-04 17:41:59.208  1101  1101 D b/254119092: destroyTaskbarForDisplay: null displayId=0
+10-04 17:41:59.208  1101  1101 D b/254119092: mActivity and mWindowContext agree taskbarIsPresent=false
+10-04 17:41:59.208  1101  1101 D b/254119092: recreateTaskbar: isTaskbarEnabled=false [dp != null (i.e. mUserUnlocked)]=true FLAG_HIDE_NAVBAR_WINDOW=false dp.isTaskbarPresent=false
+10-04 17:41:59.208  1101  1101 D b/254119092: mActivity and mWindowContext agree taskbarIsPresent=false
+10-04 17:41:59.208  1124  1243 V ShellDragAndDrop: Display changed: 0
+10-04 17:41:59.209  1101  1101 D b/254119092: DisplayController#onConfigurationChanged: {1.0 460mcc?mnc [zh_CN_#Hans] ldltr sw360dp w640dp h360dp 640dpi nrml long land finger -keyb/v/v dpad/v winConfig={ mBounds=Rect(0, 0 - 2560, 1440) mAppBounds=Rect(0, 0 - 2560, 1440) mMaxBounds=Rect(0, 0 - 2560, 1440) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.985 fontWeightAdjustment=0}
+10-04 17:41:59.209  1124  1243 D ShellSplitScreen: onTaskInfoChanged: taskId=4 taskAct=null stageId=MAIN
+10-04 17:41:59.209  1124  1124 I NoBackGesture: Config changed: newConfig={1.0 460mcc?mnc [zh_CN_#Hans] ldltr sw360dp w640dp h360dp 640dpi nrml long land finger -keyb/v/v dpad/v winConfig={ mBounds=Rect(0, 0 - 2560, 1440) mAppBounds=Rect(0, 0 - 2560, 1440) mMaxBounds=Rect(0, 0 - 2560, 1440) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.1007 fontWeightAdjustment=0} lastReportedConfig={1.0 460mcc?mnc [zh_CN_#Hans] ldltr sw360dp w360dp h640dp 640dpi nrml long port finger -keyb/v/v dpad/v winConfig={ mBounds=Rect(0, 0 - 1440, 2560) mAppBounds=Rect(0, 0 - 1440, 2560) mMaxBounds=Rect(0, 0 - 1440, 2560) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.980 fontWeightAdjustment=0}
+10-04 17:41:59.209  1124  1124 I NoBackGesture: NavbarController: newConfig={1.0 460mcc?mnc [zh_CN_#Hans] ldltr sw360dp w640dp h360dp 640dpi nrml long land finger -keyb/v/v dpad/v winConfig={ mBounds=Rect(0, 0 - 2560, 1440) mAppBounds=Rect(0, 0 - 2560, 1440) mMaxBounds=Rect(0, 0 - 2560, 1440) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.1007 fontWeightAdjustment=0} mTaskbarDelegate initialized=false willApplyConfigToNavbars=false navBarCount=0
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: setPresentationRotation 1 for com.azxcvn.moumou:32
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: java.lang.Exception
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at com.android.server.mumu.tab.TaskTab.setPresentationRotation(TaskTab.java:52)
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at com.android.server.wm.TaskUtils.getTopTaskOnDisplay(TaskUtils.java:557)
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at com.android.server.mumu.utils.RotationUtil$1.$r8$lambda$s9qJmtKP-HFPdJrU6h_-HJ5JzF4(RotationUtil.java:43)
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at com.android.server.mumu.utils.RotationUtil$1$$ExternalSyntheticLambda0.run(R8$$SyntheticClass:0)
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at android.os.Handler.handleCallback(Handler.java:991)
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at android.os.Handler.dispatchMessage(Handler.java:102)
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at android.os.Looper.loopOnce(Looper.java:232)
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at android.os.Looper.loop(Looper.java:317)
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at com.android.server.ServiceThread.run(ServiceThread.java:49)
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: setPresentationRotation 1 for com.azxcvn.moumou:32
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: java.lang.Exception
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at com.android.server.mumu.tab.TaskTab.setPresentationRotation(TaskTab.java:52)
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at com.android.server.mumu.utils.RotationUtil$1.$r8$lambda$s9qJmtKP-HFPdJrU6h_-HJ5JzF4(RotationUtil.java:50)
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at com.android.server.mumu.utils.RotationUtil$1$$ExternalSyntheticLambda0.run(R8$$SyntheticClass:0)
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at android.os.Handler.handleCallback(Handler.java:991)
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at android.os.Handler.dispatchMessage(Handler.java:102)
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at android.os.Looper.loopOnce(Looper.java:232)
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at android.os.Looper.loop(Looper.java:317)
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+10-04 17:41:59.209   864   884 E [MUMU]TaskTab: 	at com.android.server.ServiceThread.run(ServiceThread.java:49)
+10-04 17:41:59.210   864   887 I InputManager-JNI: Viewport [0] to add: local:4619827820427265280, isActive: true
+10-04 17:41:59.210   864  1028 I system_server: AssetManager2(0x71476553c618) locale list changing from [] to [zh-Hans-CN]
+10-04 17:41:59.210   864   975 I InputReader: Reconfiguring input devices, changes=DISPLAY_INFO
+10-04 17:41:59.210   864   975 W InputReader: Input device Xiaomi integration should be associated with display id: 1794 but the corresponding viewport cannot be found
+10-04 17:41:59.210   864  1043 I system_server: AssetManager2(0x714765571818) locale list changing from [] to [zh-Hans-CN]
+10-04 17:41:59.214  1640  1694 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 12288
+10-04 17:41:59.215  1124  1124 I ndroid.systemui: AssetManager2(0x714765532398) locale list changing from [] to [zh-Hans-CN]
+10-04 17:41:59.224  1124  1299 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 987136
+10-04 17:41:59.224   708   708 I BpBinder: onLastStrongRef automatically unlinking death recipients: 
+10-04 17:41:59.225  1124  1299 D HWUI    : HOOK FAILED! Expected 4 got = 3
+10-04 17:41:59.226  1124  1299 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 987136
+10-04 17:41:59.227  1124  1299 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 987136
+10-04 17:41:59.228  1124  1124 D DefaultDeviceEntrySection: isUdfpsSupported=false
+10-04 17:41:59.278 14275 14275 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:41:59.374 14275 14275 I m.azxcvn.moumou: AssetManager2(0x7147655584f8) locale list changing from [] to [zh-Hans-CN]
+10-04 17:41:59.389 14275 14275 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:41:59.390 14275 14275 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:41:59.391 14275 14275 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:41:59.393 14275 14275 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:41:59.393 14275 14311 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:41:59.398 14275 14311 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:41:59.399   864  9646 I WindowManager: finishDrawing of orientation change: Window{ddfc06e u0 com.azxcvn.moumou/com.azxcvn.moumou.MainActivity} 191ms
+10-04 17:41:59.400   864   884 V WindowManager: Sent Transition (#109) createdAt=10-04 17:41:59.192 via request=TransitionRequestInfo { type = CHANGE, triggerTask = null, pipChange = null, remoteTransition = null, displayChange = DisplayChange { displayId = 0, startAbsBounds = null, endAbsBounds = null, startRotation = 0, endRotation = 1, physicalDisplayChanged = false }, flags = 0, debugId = 109 }
+10-04 17:41:59.400   864   884 V WindowManager:     startWCT=WindowContainerTransaction { changes= {} hops= [] errorCallbackToken=null taskFragmentOrganizer=null }
+10-04 17:41:59.401   864   884 V WindowManager:     info={id=109 t=CHANGE f=0x0 trk=0 r=[0@Point(0, 0)] c=[
+10-04 17:41:59.401   864   884 V WindowManager:         {WCT{RemoteToken{f7194e0 Task{d9f2b12 #32 type=standard I=com.azxcvn.moumou/.MainActivity}}} m=CHANGE f=NONE p=WCT{RemoteToken{acfe52f DefaultTaskDisplayArea@36459283}} leash=Surface(name=Task=32)/@0x1cd6336 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 2560, 1440) epz=Point(2560, 1440) d=0 r=0->1:0 taskParent=-1},
+10-04 17:41:59.401   864   884 V WindowManager:         {WCT{RemoteToken{acfe52f DefaultTaskDisplayArea@36459283}} m=CHANGE f=FLAG_IS_TASK_DISPLAY_AREA p=WCT{RemoteToken{3b3173c Display{#0 state=ON size=2560x1440 ROTATION_90}}} leash=Surface(name=DefaultTaskDisplayArea)/@0xaa33909 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 2560, 1440) epz=Point(2560, 1440) d=0 r=0->1:-1},
+10-04 17:41:59.401   864   884 V WindowManager:         {WCT{RemoteToken{3b3173c Display{#0 state=ON size=2560x1440 ROTATION_90}}} m=CHANGE f=IS_DISPLAY leash=Surface(name=WindowedMagnification:0:31)/@0xd3ee284 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 2560, 1440) epz=Point(2560, 1440) d=0 r=0->1:-1}
+10-04 17:41:59.401   864   884 V WindowManager:     ]}
+10-04 17:41:59.401  1124  1153 V WindowManagerShell: onTransitionReady(transaction=3710851755147)
+10-04 17:41:59.401  1124  1243 V WindowManagerShell: onTransitionReady (#109) android.os.BinderProxy@1addeaf: {id=109 t=CHANGE f=0x0 trk=0 r=[0@Point(0, 0)] c=[
+10-04 17:41:59.401  1124  1243 V WindowManagerShell:         {m=CHANGE f=NONE p=WCT{android.window.IWindowContainerToken$Stub$Proxy@7006b29} leash=Surface(name=Task=32)/@0xdff7444 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 2560, 1440) epz=Point(2560, 1440) d=0 r=0->1:0 taskParent=-1},
+10-04 17:41:59.401  1124  1243 V WindowManagerShell:         {m=CHANGE f=FLAG_IS_TASK_DISPLAY_AREA p=WCT{android.window.IWindowContainerToken$Stub$Proxy@68a4eae} leash=Surface(name=DefaultTaskDisplayArea)/@0xbc9692d sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 2560, 1440) epz=Point(2560, 1440) d=0 r=0->1:-1},
+10-04 17:41:59.401  1124  1243 V WindowManagerShell:         {m=CHANGE f=IS_DISPLAY leash=Surface(name=WindowedMagnification:0:31)/@0x89bae62 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 2560, 1440) epz=Point(2560, 1440) d=0 r=0->1:-1 snapshot=Surface(name=RotationLayer)/@0xb374bf3}
+10-04 17:41:59.401  1124  1243 V WindowManagerShell:     ]}
+10-04 17:41:59.401  1124  1243 V WindowManagerShell: Playing animation for (#109) android.os.BinderProxy@1addeaf@0
+10-04 17:41:59.401  1124  1243 V ShellRecents: RecentsTransitionHandler.startAnimation: no controller found
+10-04 17:41:59.401   864  1796 W UserManagerService: Requested status bar icon for non-badged user 0
+10-04 17:41:59.401  1124  1243 V WindowManagerShell: start default transition animation, info = {id=109 t=CHANGE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{m=CHANGE f=NONE p=WCT{android.window.IWindowContainerToken$Stub$Proxy@7006b29} leash=Surface(name=Task=32)/@0xdff7444 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 2560, 1440) epz=Point(2560, 1440) d=0 r=0->1:0 taskParent=-1},{m=CHANGE f=FLAG_IS_TASK_DISPLAY_AREA p=WCT{android.window.IWindowContainerToken$Stub$Proxy@68a4eae} leash=Surface(name=DefaultTaskDisplayArea)/@0xbc9692d sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 2560, 1440) epz=Point(2560, 1440) d=0 r=0->1:-1},{m=CHANGE f=IS_DISPLAY leash=Surface(name=WindowedMagnification:0:31)/@0x89bae62 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 2560, 1440) epz=Point(2560, 1440) d=0 r=0->1:-1 snapshot=Surface(name=RotationLayer)/@0xb374bf3}]}
+10-04 17:41:59.401  1124  1243 V WindowManagerShell: Display is changing, resolve the animation hint.
+10-04 17:41:59.401  1124  1243 V WindowManagerShell:   task 32 isn't requesting seamless, so not seamless.
+10-04 17:41:59.405  1124  1243 V WindowManagerShell:  animated by com.android.wm.shell.transition.DefaultTransitionHandler@31d5e15
+10-04 17:41:59.407 14275 14275 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:41:59.407  1124  1243 V WindowManagerShell: Transition animation finished (aborted=false), notifying core (#109) android.os.BinderProxy@1addeaf@0
+10-04 17:41:59.408   864   884 V WindowManager: Finish Transition (#109): created at 10-04 17:41:59.192 collect-started=0.031ms request-sent=0.046ms started=22.978ms ready=23.183ms sent=208.452ms finished=215.744ms
+10-04 17:41:59.408  1124  1243 V WindowManagerShell: Track 0 became idle
+10-04 17:41:59.408  1124  1243 V WindowManagerShell: All active transition animations finished
+10-04 17:41:59.412  1124  1124 W Choreographer: Frame time is 0.069689 ms in the future!  Check that graphics HAL is generating vsync timestamps using the correct timebase.
+10-04 17:41:59.507 14275 14340 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 17:41:59.507 14275 14340 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 17:41:59.508 14275 14340 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 17:41:59.508 14275 14340 E gralloc_kona: gralloc_alloc: Unknown format 56
+10-04 17:41:59.508 14275 14340 E GraphicBufferAllocator: Failed to allocate (4 x 4) layerCount 1 format 56 usage b00: 3
+10-04 17:41:59.508 14275 14340 E AHardwareBuffer: GraphicBuffer(w=4, h=4, lc=1) failed (Unknown error -3), handle=0x0
+10-04 17:41:59.508 14275 14340 E gralloc_kona: gralloc_alloc: Unknown format 59
+10-04 17:41:59.508 14275 14340 E GraphicBufferAllocator: Failed to allocate (4 x 4) layerCount 1 format 59 usage b00: 3
+10-04 17:41:59.508 14275 14340 E AHardwareBuffer: GraphicBuffer(w=4, h=4, lc=1) failed (Unknown error -3), handle=0x0
+10-04 17:41:59.508 14275 14340 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 17:41:59.508 14275 14340 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 17:41:59.508 14275 14340 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 17:41:59.508 14275 14340 E gralloc_kona: gralloc_alloc: Unknown format 56
+10-04 17:41:59.508 14275 14340 E GraphicBufferAllocator: Failed to allocate (4 x 4) layerCount 1 format 56 usage b00: 3
+10-04 17:41:59.508 14275 14340 E AHardwareBuffer: GraphicBuffer(w=4, h=4, lc=1) failed (Unknown error -3), handle=0x0
+10-04 17:41:59.508 14275 14340 E gralloc_kona: gralloc_alloc: Unknown format 59
+10-04 17:41:59.508 14275 14340 E GraphicBufferAllocator: Failed to allocate (4 x 4) layerCount 1 format 59 usage b00: 3
+10-04 17:41:59.508 14275 14340 E AHardwareBuffer: GraphicBuffer(w=4, h=4, lc=1) failed (Unknown error -3), handle=0x0
+10-04 17:41:59.509 14275 14340 E Surface : freeAllBuffers: 1 buffers were freed while being dequeued!
+10-04 17:41:59.511 14275 14275 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:41:59.513 14275 14311 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:41:59.514 14275 14340 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:41:59.526 14275 14340 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:41:59.536 14275 14340 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:41:59.547 14275 14340 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:41:59.557 14275 14340 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:41:59.761  1124  3192 D PowerUI : can't show warning due to - plugged: true status unknown: false
+10-04 17:41:59.767  1124  1124 W Choreographer: Frame time is 0.40569898 ms in the future!  Check that graphics HAL is generating vsync timestamps using the correct timebase.
+10-04 17:42:01.959   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:01.959   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:01.959   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:01.959   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:01.959   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:02.272 14433 14433 I init    : type=1400 audit(0.0:1540): avc:  denied  { entrypoint } for  path="/system/xbin/serial_console" dev="sda6" ino=3974 scontext=u:r:su:s0 tcontext=u:object_r:system_file:s0 tclass=file permissive=1
+10-04 17:42:02.272 14433 14433 I serial_console: type=1400 audit(0.0:1541): avc:  denied  { map } for  path="/system/xbin/serial_console" dev="sda6" ino=3974 scontext=u:r:su:s0 tcontext=u:object_r:system_file:s0 tclass=file permissive=1
+10-04 17:42:02.272 14433 14433 I serial_console: type=1400 audit(0.0:1542): avc:  denied  { read execute } for  path="/system/xbin/serial_console" dev="sda6" ino=3974 scontext=u:r:su:s0 tcontext=u:object_r:system_file:s0 tclass=file permissive=1
+10-04 17:42:02.941 14275 14411 D AudioSystem: onNewServiceWithAdapter: media.audio_flinger service obtained 0x7148155dba60
+10-04 17:42:02.942 14275 14411 D AudioSystem: getService: checking for service media.audio_flinger: 0x7147c55839b0
+10-04 17:42:02.942 14275 14411 D m.azxcvn.moumou: PlayerBase::PlayerBase()
+10-04 17:42:02.942 14275 14411 D m.azxcvn.moumou: TrackPlayerBase::TrackPlayerBase()
+10-04 17:42:02.942 14275 14411 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x3, using default mask 0x3 based on channel count of 2)
+10-04 17:42:02.943   704   704 E ServiceUtilities: Request requires android.permission.MODIFY_PHONE_STATE or android.permission.WRITE_SECURE_SETTINGS
+10-04 17:42:02.943   704   704 W AudioFlinger: createTrack_l(): mismatch between requested flags (00000104) and output flags (00000006)
+10-04 17:42:02.943   704   704 D AudioFlinger: Client defaulted notificationFrames to 512 for frameCount 4096
+10-04 17:42:02.944 14275 14411 I AudioTrack: createTrack_l(0): AUDIO_OUTPUT_FLAG_FAST successful; frameCount 0 -> 4096
+10-04 17:42:02.945   704   704 I APM::AudioPolicyEngine: getDevicesForStrategyInt no device found for strategy 7
+10-04 17:42:02.945   704   704 D audioserver: logFgsApiBegin: FGS Logger Transaction failed, -129
+10-04 17:42:02.945 14275 14442 D m.azxcvn.moumou: PlayerBase::stop() from IPlayer
+10-04 17:42:02.945 14275 14442 D AudioTrack: stop(23): called with 0 frames delivered
+10-04 17:42:02.945 14275 14411 E libOpenSLES: Configuration error: unknown key
+10-04 17:42:02.945 14275 14411 W libOpenSLES: Leaving AndroidConfiguration::GetConfiguration (SL_RESULT_PARAMETER_INVALID)
+10-04 17:42:02.950   688  2444 D audio_hw_primary: tunnel_pcm_open called!
+10-04 17:42:02.989 14275 14275 I flutter : [mpv error] lavf: Failed to create file cache.
+10-04 17:42:02.992 14275 14275 I VideoOutputManager: com.alexmercerind.media_kit_video.VideoOutputManager.setSurfaceSize: 124548773039600 1920 1080
+10-04 17:42:02.992 14275 14275 I VideoOutput: onSurfaceAvailable
+10-04 17:42:02.993 14275 14275 I VideoOutput: newGlobalRef: object = Surface(name=null mNativeObject=124552799525552)/@0xc3ee8ec
+10-04 17:42:02.997 14275 14275 I flutter : VideoOutput.Resize
+10-04 17:42:03.000 14275 14275 I flutter : {rect: {top: 0, left: 0, width: 1920, height: 1080}, wid: 13422, handle: 124548773039600, id: 0}
+10-04 17:42:03.002 14275 14304 W System  : A resource failed to call close. 
+10-04 17:42:03.002 14275 14304 W System  : A resource failed to call close. 
+10-04 17:42:03.129 14275 14442 D m.azxcvn.moumou: PlayerBase::stop() from IPlayer
+10-04 17:42:03.129 14275 14442 D AudioTrack: stop(23): called with 8704 frames delivered
+10-04 17:42:03.148 14275 14454 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 8298496
+10-04 17:42:03.192 14275 14454 E eglCodecCommon: computePixelSize:888 unknown format/type 0x8227 0x1403
+10-04 17:42:03.192 14275 14454 E eglCodecCommon: unknown pixel size: width: 64 height: 64 format: 33319 type: 5123 pack: 0 align: 4
+10-04 17:42:03.192 14275 14454 E eglCodecCommon: computePixelSize:888 unknown format/type 0x1907 0x1403
+10-04 17:42:03.192 14275 14454 E eglCodecCommon: unknown pixel size: width: 64 height: 64 format: 6407 type: 5123 pack: 0 align: 4
+10-04 17:42:03.204 14275 14454 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 8298496
+10-04 17:42:03.374   704   828 D audioserver: logFgsApiEnd: FGS Logger Transaction failed, -129
+10-04 17:42:03.375   704   820 I APM::AudioPolicyEngine: getDevicesForStrategyInt no device found for strategy 7
+10-04 17:42:03.375   704   820 I APM::AudioPolicyEngine: getDevicesForStrategyInt no device found for strategy 7
+10-04 17:42:03.433 14275 14454 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 8298496
+10-04 17:42:03.439   704   704 I APM::AudioPolicyEngine: getDevicesForStrategyInt no device found for strategy 7
+10-04 17:42:03.439   704   704 I APM::AudioPolicyEngine: getDevicesForStrategyInt no device found for strategy 7
+10-04 17:42:03.439   704   704 D audioserver: logFgsApiBegin: FGS Logger Transaction failed, -129
+10-04 17:42:03.500 14275 14275 I flutter : [mpv error] ffmpeg/video: h264: co located POCs unavailable
+10-04 17:42:03.500 14275 14275 I flutter : [mpv error] vo/gpu/opengl: after rendering: OpenGL error INVALID_OPERATION.
+10-04 17:42:03.509 14275 14442 D m.azxcvn.moumou: PlayerBase::stop() from IPlayer
+10-04 17:42:03.509 14275 14442 D AudioTrack: stop(23): called with 7680 frames delivered
+10-04 17:42:03.525 14275 14275 I Choreographer: Skipped 56 frames!  The application may be doing too much work on its main thread.
+10-04 17:42:03.569 14275 14454 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 8298496
+10-04 17:42:03.583 14275 14454 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 8298496
+10-04 17:42:03.619 14275 14454 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 8298496
+10-04 17:42:03.659 14275 14442 D m.azxcvn.moumou: PlayerBase::stop() from IPlayer
+10-04 17:42:03.659 14275 14442 D AudioTrack: stop(23): called with 7168 frames delivered
+10-04 17:42:03.710 14275 14275 I flutter : [mpv error] ffmpeg: tls: mbedtls_ssl_handshake returned -0x7280
+10-04 17:42:03.813   704   828 D audioserver: logFgsApiEnd: FGS Logger Transaction failed, -129
+10-04 17:42:03.813   704   820 I APM::AudioPolicyEngine: getDevicesForStrategyInt no device found for strategy 7
+10-04 17:42:03.813   704   820 I APM::AudioPolicyEngine: getDevicesForStrategyInt no device found for strategy 7
+10-04 17:42:04.962   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:04.962   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:04.962   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:04.962   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:04.962   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:05.060   704   704 I APM::AudioPolicyEngine: getDevicesForStrategyInt no device found for strategy 7
+10-04 17:42:05.060   704   704 D audioserver: logFgsApiBegin: FGS Logger Transaction failed, -129
+10-04 17:42:05.265   704   828 D AudioFlinger: mixer(0x7a378af95760) throttle end: throttle time(12)
+10-04 17:42:06.586   864  1005 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:06.612   864  1005 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:07.272 14470 14470 I serial_console: type=1400 audit(0.0:1543): avc:  denied  { read write } for  name="ttyS1" dev="tmpfs" ino=674 scontext=u:r:su:s0 tcontext=u:object_r:serial_device:s0 tclass=chr_file permissive=1
+10-04 17:42:07.272 14470 14470 I serial_console: type=1400 audit(0.0:1544): avc:  denied  { open } for  path="/dev/ttyS1" dev="tmpfs" ino=674 scontext=u:r:su:s0 tcontext=u:object_r:serial_device:s0 tclass=chr_file permissive=1
+10-04 17:42:07.966   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:07.966   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:07.966   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:07.966   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:07.966   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:08.929   864   979 I ImeTracker: com.azxcvn.moumou:479a3e3: setFinished at PHASE_CLIENT_ANIMATION_FINISHED_HIDE with STATUS_TIMEOUT
+10-04 17:42:09.799 14275 14442 D m.azxcvn.moumou: PlayerBase::stop() from IPlayer
+10-04 17:42:09.799 14275 14442 D AudioTrack: stop(23): called with 230400 frames delivered
+10-04 17:42:09.951   704   828 D audioserver: logFgsApiEnd: FGS Logger Transaction failed, -129
+10-04 17:42:09.952   704   820 I APM::AudioPolicyEngine: getDevicesForStrategyInt no device found for strategy 7
+10-04 17:42:09.952   704   820 I APM::AudioPolicyEngine: getDevicesForStrategyInt no device found for strategy 7
+10-04 17:42:10.132   748   748 I opengl-gc: type=1400 audit(0.0:1545): avc:  denied  { read } for  scontext=u:r:opengl_gc:s0 tcontext=u:r:mediaserver:s0 tclass=file permissive=1
+10-04 17:42:10.356 14483 14483 W screencap: Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: SurfaceFlingerAIDL
+10-04 17:42:10.356 14483 14483 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+10-04 17:42:10.356 14483 14483 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+10-04 17:42:10.357   708  1480 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:42:10.360 14483 14485 E HidlServiceManagement: getService: Potential race detected, descriptor: android.hardware.graphics.mapper@2.0::IMapper instance: default
+10-04 17:42:10.361 14483 14485 W screencap: Cannot open renderer configuration file (nemuhotd pid=527)
+10-04 17:42:10.372   864  1005 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:10.408   864  1005 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:10.408   864  1008 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:10.408   864  1008 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:10.408   864  1008 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:10.408   864  1008 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:10.947   864  1796 I ActivityManager: Broadcasting: Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }
+10-04 17:42:10.948   864  1796 I ActivityManager: Enqueued broadcast Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }: 0
+10-04 17:42:10.949   864   937 W JobInfo : Job 'com.android.providers.media.module/com.android.providers.media.MediaService#-300' has a deadline with no functional constraints. The deadline won't improve job execution latency. Consider removing the deadline.
+10-04 17:42:10.951   864   900 D ActivityManager: sync unfroze 9547 app.gyrolet.mpvrx for 3
+10-04 17:42:10.951  9547  9547 D ActivityThread: Package [com.azxcvn.moumou] reported as REPLACED, but missing application info. Assuming REMOVED.
+10-04 17:42:10.951  9547  9547 D ActivityThread: Package [com.azxcvn.moumou] reported as REPLACED, but missing application info. Assuming REMOVED.
+10-04 17:42:10.951  9547  9547 D ActivityThread: Package [com.azxcvn.moumou] reported as REPLACED, but missing application info. Assuming REMOVED.
+10-04 17:42:10.952  1653  1816 I MediaProvider: Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.android.providers.media.module/com.android.providers.media.MediaService }
+10-04 17:42:10.948  1653  1653 I com.android.providers.media.module: type=1400 audit(0.0:1546): avc:  denied  { search } for  comm=4173796E635461736B202331 name="tmp" dev="sdc3" ino=3932162 scontext=u:r:mediaprovider_app:s0:c37,c256,c512,c768 tcontext=u:object_r:shell_data_file:s0 tclass=dir permissive=1 app=com.android.providers.media.module
+10-04 17:42:10.956   864   900 D ActivityManager: sync unfroze 9580 app.marlboroadvance.mpvex for 3
+10-04 17:42:10.957  9580  9580 D ActivityThread: Package [com.azxcvn.moumou] reported as REPLACED, but missing application info. Assuming REMOVED.
+10-04 17:42:10.957  9580  9580 D ActivityThread: Package [com.azxcvn.moumou] reported as REPLACED, but missing application info. Assuming REMOVED.
+10-04 17:42:10.957  9580  9580 D ActivityThread: Package [com.azxcvn.moumou] reported as REPLACED, but missing application info. Assuming REMOVED.
+10-04 17:42:10.952  1653  1653 I com.android.providers.media.module: type=1400 audit(0.0:1547): avc:  denied  { read } for  comm=4173796E635461736B202331 name="s.png" dev="sdc3" ino=3932182 scontext=u:r:mediaprovider_app:s0:c37,c256,c512,c768 tcontext=u:object_r:shell_data_file:s0 tclass=file permissive=1 app=com.android.providers.media.module
+10-04 17:42:10.952  1653  1653 I com.android.providers.media.module: type=1400 audit(0.0:1548): avc:  denied  { open } for  comm=4173796E635461736B202331 path="/data/local/tmp/s.png" dev="sdc3" ino=3932182 scontext=u:r:mediaprovider_app:s0:c37,c256,c512,c768 tcontext=u:object_r:shell_data_file:s0 tclass=file permissive=1 app=com.android.providers.media.module
+10-04 17:42:10.959  9580  9580 D MediaScanReceiver: Media scan event: android.intent.action.MEDIA_SCANNER_SCAN_FILE, data: file:///data/local/tmp/s.png
+10-04 17:42:10.959   864   884 I ActivityManager: Broadcast completed: result=0
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: Failed to apply ContentProviderOperation(type=insert uri=content://media/internal/file values={instance_id=null, compilation=null, disc_number=null, duration=null, album_artist=null, description=null, resolution=2560×1440, orientation=null, artist=null, author=null, height=1440, is_drm=0, date_modified=1788507594, writer=null, composer=null, _modifier=3, datetaken=null, mime_type=image/png, bitrate=null, cd_track_number=null, xmp=[], year=null, _data=/data/local/tmp/s.png, _size=2488238, album=null, genre=null, title=s, width=2560, document_id=null, capture_framerate=null, _special_format=0, num_tracks=null, original_document_id=null, media_type=1} exceptionAllowed)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: java.lang.IllegalArgumentException: Requested path /data/local/tmp/s.png doesn't appear under [/system/media, /oem/media, /system/product/media]
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.MediaProvider.insert(MediaProvider.java:5558)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at android.content.ContentProviderOperation.applyInternal(ContentProviderOperation.java:375)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at android.content.ContentProviderOperation.apply(ContentProviderOperation.java:347)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at android.content.ContentProvider.applyBatch(ContentProvider.java:2696)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.MediaProvider.applyBatch(MediaProvider.java:5916)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at android.content.ContentProvider.applyBatch(ContentProvider.java:2687)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at android.content.ContentResolver.applyBatch(ContentResolver.java:2246)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.applyPending(ModernMediaScanner.java:1122)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.walkFileTree(ModernMediaScanner.java:569)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.runInternal(ModernMediaScanner.java:531)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.run(ModernMediaScanner.java:520)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.scan.ModernMediaScanner.scanFile(ModernMediaScanner.java:369)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.MediaProvider.scanFile(MediaProvider.java:2265)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.MediaService.onScanFile(MediaService.java:237)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.MediaService.onHandleWork(MediaService.java:85)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at androidx.core.app.JobIntentService$CommandProcessor.doInBackground(JobIntentService.java:396)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at androidx.core.app.JobIntentService$CommandProcessor.doInBackground(JobIntentService.java:387)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at android.os.AsyncTask$3.call(AsyncTask.java:394)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at java.util.concurrent.FutureTask.run(FutureTask.java:317)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+10-04 17:42:10.961  1653  1816 W ModernMediaScanner: 	at java.lang.Thread.run(Thread.java:1119)
+10-04 17:42:10.968   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:10.969   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:10.969   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:10.969   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:10.969   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:10.969  1653  1816 I MediaProvider: End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.android.providers.media.module/com.android.providers.media.MediaService }
+10-04 17:42:12.005   864  1005 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:12.027   864  1005 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:12.260 14497 14497 I init    : type=1400 audit(0.0:1549): avc:  denied  { transition } for  path="/system/xbin/serial_console" dev="sda6" ino=3974 scontext=u:r:init:s0 tcontext=u:r:su:s0 tclass=process permissive=1
+10-04 17:42:12.260 14497 14497 I init    : type=1400 audit(0.0:1550): avc:  denied  { noatsecure } for  scontext=u:r:init:s0 tcontext=u:r:su:s0 tclass=process permissive=1
+10-04 17:42:12.260 14497 14497 I serial_console: type=1400 audit(0.0:1551): avc:  denied  { rlimitinh } for  scontext=u:r:init:s0 tcontext=u:r:su:s0 tclass=process permissive=1
+10-04 17:42:12.260 14497 14497 I serial_console: type=1400 audit(0.0:1552): avc:  denied  { siginh } for  scontext=u:r:init:s0 tcontext=u:r:su:s0 tclass=process permissive=1
+10-04 17:42:13.974   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:13.974   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:13.974   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:13.974   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:13.974   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:15.958   864  1028 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+10-04 17:42:15.958   864  1028 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+10-04 17:42:15.958   864  1028 D InetDiagMessage: Destroyed live tcp sockets for uids={10069} in 0ms
+10-04 17:42:15.958   864  1028 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+10-04 17:42:15.958   864  1028 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+10-04 17:42:15.958   864  1028 D InetDiagMessage: Destroyed live tcp sockets for uids={20069} in 0ms
+10-04 17:42:15.959   864  1028 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+10-04 17:42:15.959   864  1028 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+10-04 17:42:15.959   864  1028 D InetDiagMessage: Destroyed live tcp sockets for uids={10072} in 0ms
+10-04 17:42:15.959   864  1028 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+10-04 17:42:15.959   864  1028 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+10-04 17:42:15.959   864  1028 D InetDiagMessage: Destroyed live tcp sockets for uids={20072} in 0ms
+10-04 17:42:16.520   864  1005 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:16.535   864  1005 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:16.536   864  1008 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:16.536   864  1008 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:16.536   864  1008 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:16.536   864  1008 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:16.978   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:16.978   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:16.978   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:16.978   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:16.978   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:19.068   704   704 I APM::AudioPolicyEngine: getDevicesForStrategyInt no device found for strategy 7
+10-04 17:42:19.068   704   704 D audioserver: logFgsApiBegin: FGS Logger Transaction failed, -129
+10-04 17:42:19.072   688  2444 D audio_hw_primary: tunnel_pcm_open called!
+10-04 17:42:19.175   864   962 D ActivityManager: freezing 1801 com.android.keychain
+10-04 17:42:19.176   864   962 D ActivityManager: freezing 2012 com.android.localtransport
+10-04 17:42:19.621 14516 14516 W screencap: Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: SurfaceFlingerAIDL
+10-04 17:42:19.621 14516 14516 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+10-04 17:42:19.621 14516 14516 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+10-04 17:42:19.621   708  1480 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:42:19.623 14516 14521 E HidlServiceManagement: getService: Potential race detected, descriptor: android.hardware.graphics.mapper@2.0::IMapper instance: default
+10-04 17:42:19.624 14516 14521 W screencap: Cannot open renderer configuration file (nemuhotd pid=527)
+10-04 17:42:19.983   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:19.983   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:19.983   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:19.983   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:19.983   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:42:20.181   864   937 I ActivityManager: Broadcasting: Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }
+10-04 17:42:20.181   864   937 I ActivityManager: Enqueued broadcast Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }: 0
+10-04 17:42:20.182   864   938 W JobInfo : Job 'com.android.providers.media.module/com.android.providers.media.MediaService#-300' has a deadline with no functional constraints. The deadline won't improve job execution latency. Consider removing the deadline.
+10-04 17:42:20.183  1653  1816 I MediaProvider: Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.android.providers.media.module/com.android.providers.media.MediaService }
+10-04 17:42:20.184  9580  9580 D MediaScanReceiver: Media scan event: android.intent.action.MEDIA_SCANNER_SCAN_FILE, data: file:///data/local/tmp/s.png
+10-04 17:42:20.184   864   884 I ActivityManager: Broadcast completed: result=0
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: Failed to apply ContentProviderOperation(type=insert uri=content://media/internal/file values={instance_id=null, compilation=null, disc_number=null, duration=null, album_artist=null, description=null, resolution=2560×1440, orientation=null, artist=null, author=null, height=1440, is_drm=0, date_modified=1788507594, writer=null, composer=null, _modifier=3, datetaken=null, mime_type=image/png, bitrate=null, cd_track_number=null, xmp=[], year=null, _data=/data/local/tmp/s.png, _size=2296556, album=null, genre=null, title=s, width=2560, document_id=null, capture_framerate=null, _special_format=0, num_tracks=null, original_document_id=null, media_type=1} exceptionAllowed)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: java.lang.IllegalArgumentException: Requested path /data/local/tmp/s.png doesn't appear under [/system/media, /oem/media, /system/product/media]
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.MediaProvider.insert(MediaProvider.java:5558)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at android.content.ContentProviderOperation.applyInternal(ContentProviderOperation.java:375)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at android.content.ContentProviderOperation.apply(ContentProviderOperation.java:347)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at android.content.ContentProvider.applyBatch(ContentProvider.java:2696)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.MediaProvider.applyBatch(MediaProvider.java:5916)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at android.content.ContentProvider.applyBatch(ContentProvider.java:2687)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at android.content.ContentResolver.applyBatch(ContentResolver.java:2246)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.applyPending(ModernMediaScanner.java:1122)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.walkFileTree(ModernMediaScanner.java:569)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.runInternal(ModernMediaScanner.java:531)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.run(ModernMediaScanner.java:520)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.scan.ModernMediaScanner.scanFile(ModernMediaScanner.java:369)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.MediaProvider.scanFile(MediaProvider.java:2265)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.MediaService.onScanFile(MediaService.java:237)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at com.android.providers.media.MediaService.onHandleWork(MediaService.java:85)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at androidx.core.app.JobIntentService$CommandProcessor.doInBackground(JobIntentService.java:396)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at androidx.core.app.JobIntentService$CommandProcessor.doInBackground(JobIntentService.java:387)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at android.os.AsyncTask$3.call(AsyncTask.java:394)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at java.util.concurrent.FutureTask.run(FutureTask.java:317)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+10-04 17:42:20.187  1653  1816 W ModernMediaScanner: 	at java.lang.Thread.run(Thread.java:1119)
+10-04 17:42:20.187  1653  1816 I MediaProvider: End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.android.providers.media.module/com.android.providers.media.MediaService }

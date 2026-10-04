@@ -1,0 +1,1474 @@
+﻿--------- beginning of main
+10-04 17:40:00.361 13943 13943 I ImeTracker: com.azxcvn.moumou:7fb71515: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false
+10-04 17:40:00.361 13943 13943 D InsetsController: hide(ime(), fromIme=false)
+10-04 17:40:00.361 13943 13943 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=ImeCallback=ImeOnBackInvokedCallback@257971903 Callback=android.window.IOnBackInvokedCallback$Stub$Proxy@f8b139a
+--------- beginning of system
+10-04 17:40:00.361 13943 13943 D InsetsController: Setting requestedVisibleTypes to -9 (was -1)
+10-04 17:40:00.361   864  9176 D CoreBackPreview: Window{a1b6e1b u0 com.azxcvn.moumou/com.azxcvn.moumou.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@9e43cb, mPriority=0, mIsAnimationCallback=false, mOverrideBehavior=0}
+10-04 17:40:00.363 13943 13943 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:40:01.368 13943 13943 I Choreographer: Skipped 179 frames!  The application may be doing too much work on its main thread.
+10-04 17:40:01.368 13943 13943 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:40:01.374 13943 14036 I HWUI    : Davey! duration=1003ms; Flags=0, FrameTimelineVsyncId=1565472, IntendedVsync=2221446222300, Vsync=2222440666645, InputEventId=0, HandleInputStart=2222446365338, AnimationStart=2222446365969, PerformTraversalsStart=2222448613193, DrawStart=2222448666653, FrameDeadline=2221456333410, FrameInterval=2222446190030, FrameStartTime=5555555, SyncQueued=2222448733708, SyncStart=2222448776950, IssueDrawCommandsStart=2222448806535, SwapBuffers=2222449075119, FrameCompleted=2222449426085, DequeueBufferDuration=2796, QueueBufferDuration=138350, GpuCompleted=2222449075119, SwapBuffersCompleted=2222449426085, DisplayPresentTime=0, CommandSubmissionCompleted=2222449075119, 
+10-04 17:40:01.404 13943 13943 I flutter : [mpv error] media_kit: error: property not found _setProperty(osc, 1)
+10-04 17:40:01.561 13943 13943 I Choreographer: Skipped 33 frames!  The application may be doing too much work on its main thread.
+10-04 17:40:01.562 13943 13943 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:40:01.563 13943 13943 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:40:01.564  1640  1640 I ImeTracker: com.azxcvn.moumou:7fb71515: onHidden
+10-04 17:40:01.564 13943 13943 D InsetsController: Setting requestedVisibleTypes to -12 (was -9)
+10-04 17:40:01.565 13943 13943 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:40:01.569 13943 13943 I VideoOutputManager: com.alexmercerind.media_kit_video.VideoOutputManager.create: 124548772801024
+10-04 17:40:01.570  1124  1243 V WindowManagerShell: Transition requested (#105): android.os.BinderProxy@a236558 TransitionRequestInfo { type = CHANGE, triggerTask = null, pipChange = null, remoteTransition = null, displayChange = DisplayChange { displayId = 0, startAbsBounds = null, endAbsBounds = null, startRotation = 0, endRotation = 1, physicalDisplayChanged = false }, flags = 0, debugId = 105 }
+10-04 17:40:01.571   864   916 D BrightnessThermalClamper: Thermal status observer already started
+10-04 17:40:01.571   864  9176 I ActivityTaskManager: Config changes=20000480 {1.0 460mcc?mnc [zh_CN_#Hans] ldltr sw360dp w640dp h360dp 640dpi nrml long land finger -keyb/v/v dpad/v winConfig={ mBounds=Rect(0, 0 - 2560, 1440) mAppBounds=Rect(0, 0 - 2560, 1440) mMaxBounds=Rect(0, 0 - 2560, 1440) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.932 fontWeightAdjustment=0}
+10-04 17:40:01.571   864  1069 D BackgroundInstallControlService: Package event received: 0
+10-04 17:40:01.572   864  9176 I WindowManager: Override config changes=20000480 {1.0 460mcc?mnc [zh_CN_#Hans] ldltr sw360dp w640dp h360dp 640dpi nrml long land finger -keyb/v/v dpad/v winConfig={ mBounds=Rect(0, 0 - 2560, 1440) mAppBounds=Rect(0, 0 - 2560, 1440) mMaxBounds=Rect(0, 0 - 2560, 1440) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.932 fontWeightAdjustment=0} for displayId=0
+10-04 17:40:01.573  1640  1640 W Choreographer: Frame time is 0.369694 ms in the future!  Check that graphics HAL is generating vsync timestamps using the correct timebase.
+10-04 17:40:01.575   708   799 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:40:01.588   864  9176 W ImageReader_JNI: Unable to acquire a buffer item, very likely client tried to acquire more than maxImages buffers
+10-04 17:40:01.592   864   864 W WindowTokenClientController: Can't find attached WindowTokenClient for android.window.WindowTokenClient@418ba3d
+10-04 17:40:01.594   864  9176 W WindowManager: applyWithNextDraw with mSyncState=1, Window{581ba8b u0 InputMethod}, com.android.server.wm.InsetsSourceProvider.updateInsetsControlPosition:416 com.android.server.wm.InsetsSourceProvider.onPostLayout:388 com.android.server.wm.ImeInsetsSourceProvider.onPostLayout:94 com.android.server.wm.InsetsStateController.onPostLayout:175 com.android.server.wm.DisplayContent.applySurfaceChangesTransaction:5099 com.android.server.wm.RootWindowContainer.applySurfaceChangesTransaction:979 com.android.server.wm.RootWindowContainer.performSurfacePlacementNoTrace:793 com.android.server.wm.RootWindowContainer.performSurfacePlacement:759 
+10-04 17:40:01.594  1101  1101 D b/254119092: TaskbarManager#mComponentCallbacks.onConfigurationChanged: {1.0 460mcc?mnc [zh_CN_#Hans] ldltr sw360dp w640dp h360dp 640dpi nrml long land finger -keyb/v/v dpad/v winConfig={ mBounds=Rect(0, 0 - 2560, 1440) mAppBounds=Rect(0, 0 - 2560, 1440) mMaxBounds=Rect(0, 0 - 2560, 1440) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.932 fontWeightAdjustment=0}
+10-04 17:40:01.594  1101  1101 D b/254119092: mActivity and mWindowContext agree taskbarIsPresent=false
+10-04 17:40:01.594  1101  1101 D b/254119092: ComponentCallbacks#onConfigurationChanged() configDiff={}
+10-04 17:40:01.594  1101  1101 D b/254119092: mActivity and mWindowContext agree taskbarIsPresent=false
+10-04 17:40:01.594  1101  1101 D b/254119092: destroyTaskbarForDisplay: null displayId=0
+10-04 17:40:01.594  1101  1101 D b/254119092: mActivity and mWindowContext agree taskbarIsPresent=false
+10-04 17:40:01.594  1101  1101 D b/254119092: recreateTaskbar: isTaskbarEnabled=false [dp != null (i.e. mUserUnlocked)]=true FLAG_HIDE_NAVBAR_WINDOW=false dp.isTaskbarPresent=false
+10-04 17:40:01.594  1101  1101 D b/254119092: mActivity and mWindowContext agree taskbarIsPresent=false
+10-04 17:40:01.594  1101  1101 D b/254119092: DisplayController#onConfigurationChanged: {1.0 460mcc?mnc [zh_CN_#Hans] ldltr sw360dp w640dp h360dp 640dpi nrml long land finger -keyb/v/v dpad/v winConfig={ mBounds=Rect(0, 0 - 2560, 1440) mAppBounds=Rect(0, 0 - 2560, 1440) mMaxBounds=Rect(0, 0 - 2560, 1440) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.932 fontWeightAdjustment=0}
+10-04 17:40:01.594  1124  1243 I ndroid.systemui: AssetManager2(0x714765528118) locale list changing from [] to [zh-Hans-CN]
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: setPresentationRotation 1 for com.azxcvn.moumou:31
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: java.lang.Exception
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at com.android.server.mumu.tab.TaskTab.setPresentationRotation(TaskTab.java:52)
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at com.android.server.wm.TaskUtils.getTopTaskOnDisplay(TaskUtils.java:557)
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at com.android.server.mumu.utils.RotationUtil$1.$r8$lambda$s9qJmtKP-HFPdJrU6h_-HJ5JzF4(RotationUtil.java:43)
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at com.android.server.mumu.utils.RotationUtil$1$$ExternalSyntheticLambda0.run(R8$$SyntheticClass:0)
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at android.os.Handler.handleCallback(Handler.java:991)
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at android.os.Handler.dispatchMessage(Handler.java:102)
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at android.os.Looper.loopOnce(Looper.java:232)
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at android.os.Looper.loop(Looper.java:317)
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at com.android.server.ServiceThread.run(ServiceThread.java:49)
+10-04 17:40:01.594  1124  1243 I ndroid.systemui: AssetManager2(0x7147655216d8) locale list changing from [] to [zh-Hans-CN]
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: setPresentationRotation 1 for com.azxcvn.moumou:31
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: java.lang.Exception
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at com.android.server.mumu.tab.TaskTab.setPresentationRotation(TaskTab.java:52)
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at com.android.server.mumu.utils.RotationUtil$1.$r8$lambda$s9qJmtKP-HFPdJrU6h_-HJ5JzF4(RotationUtil.java:50)
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at com.android.server.mumu.utils.RotationUtil$1$$ExternalSyntheticLambda0.run(R8$$SyntheticClass:0)
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at android.os.Handler.handleCallback(Handler.java:991)
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at android.os.Handler.dispatchMessage(Handler.java:102)
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at android.os.Looper.loopOnce(Looper.java:232)
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at android.os.Looper.loop(Looper.java:317)
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+10-04 17:40:01.594   864   884 E [MUMU]TaskTab: 	at com.android.server.ServiceThread.run(ServiceThread.java:49)
+10-04 17:40:01.595  1124  1243 V ShellDragAndDrop: Display changed: 0
+10-04 17:40:01.595  1124  1243 D ShellSplitScreen: onTaskInfoChanged: taskId=4 taskAct=null stageId=MAIN
+10-04 17:40:01.595   864   887 I InputManager-JNI: Viewport [0] to add: local:4619827820427265280, isActive: true
+10-04 17:40:01.596   864   975 I InputReader: Reconfiguring input devices, changes=DISPLAY_INFO
+10-04 17:40:01.596   864   975 W InputReader: Input device Xiaomi integration should be associated with display id: 1794 but the corresponding viewport cannot be found
+10-04 17:40:01.597   864  1043 I system_server: AssetManager2(0x714765571818) locale list changing from [] to [zh-Hans-CN]
+10-04 17:40:01.597   864  1028 I system_server: AssetManager2(0x71476553c618) locale list changing from [] to [zh-Hans-CN]
+10-04 17:40:01.597  1124  1124 I NoBackGesture: Config changed: newConfig={1.0 460mcc?mnc [zh_CN_#Hans] ldltr sw360dp w640dp h360dp 640dpi nrml long land finger -keyb/v/v dpad/v winConfig={ mBounds=Rect(0, 0 - 2560, 1440) mAppBounds=Rect(0, 0 - 2560, 1440) mMaxBounds=Rect(0, 0 - 2560, 1440) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.954 fontWeightAdjustment=0} lastReportedConfig={1.0 460mcc?mnc [zh_CN_#Hans] ldltr sw360dp w360dp h640dp 640dpi nrml long port finger -keyb/v/v dpad/v winConfig={ mBounds=Rect(0, 0 - 1440, 2560) mAppBounds=Rect(0, 0 - 1440, 2560) mMaxBounds=Rect(0, 0 - 1440, 2560) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.927 fontWeightAdjustment=0}
+10-04 17:40:01.597  1124  1124 I NoBackGesture: NavbarController: newConfig={1.0 460mcc?mnc [zh_CN_#Hans] ldltr sw360dp w640dp h360dp 640dpi nrml long land finger -keyb/v/v dpad/v winConfig={ mBounds=Rect(0, 0 - 2560, 1440) mAppBounds=Rect(0, 0 - 2560, 1440) mMaxBounds=Rect(0, 0 - 2560, 1440) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.954 fontWeightAdjustment=0} mTaskbarDelegate initialized=false willApplyConfigToNavbars=false navBarCount=0
+10-04 17:40:01.598  1640  1694 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 12288
+10-04 17:40:01.600   708   708 I BpBinder: onLastStrongRef automatically unlinking death recipients: 
+10-04 17:40:01.603  1124  1124 I ndroid.systemui: AssetManager2(0x71476551a018) locale list changing from [] to [zh-Hans-CN]
+10-04 17:40:01.612  1124  1299 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 987136
+10-04 17:40:01.612  1124  1299 D HWUI    : HOOK FAILED! Expected 4 got = 3
+10-04 17:40:01.613  1124  1299 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 987136
+10-04 17:40:01.614  1124  1299 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 987136
+10-04 17:40:01.616  1124  1124 D DefaultDeviceEntrySection: isUdfpsSupported=false
+10-04 17:40:01.617  1124  1124 W Choreographer: Frame time is 0.281474 ms in the future!  Check that graphics HAL is generating vsync timestamps using the correct timebase.
+10-04 17:40:01.651  1124  1124 W Choreographer: Frame time is 0.137806 ms in the future!  Check that graphics HAL is generating vsync timestamps using the correct timebase.
+10-04 17:40:01.793 13943 13943 I flutter : applyPlaybackTuning: RAW demuxer-lavf-o = seg_max_retry=5,strict=experimental,allowed_extensions=ALL,protocol_whitelist=udp,rtp,tcp,tls,data,file,http,https,crypto
+10-04 17:40:01.813   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:01.813   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:01.813   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:01.813   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:01.813   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:01.846 13943 13943 I m.azxcvn.moumou: AssetManager2(0x71476551d858) locale list changing from [] to [zh-Hans-CN]
+10-04 17:40:01.929 13943 13943 I Choreographer: Skipped 59 frames!  The application may be doing too much work on its main thread.
+10-04 17:40:01.930 13943 13943 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:40:01.931 13943 13943 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:40:01.931 13943 13979 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:40:01.937 13943 13979 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:40:01.938   864  1258 I WindowManager: finishDrawing of orientation change: Window{a1b6e1b u0 com.azxcvn.moumou/com.azxcvn.moumou.MainActivity} 344ms
+10-04 17:40:01.939   864   884 V WindowManager: Sent Transition (#105) createdAt=10-04 17:40:01.570 via request=TransitionRequestInfo { type = CHANGE, triggerTask = null, pipChange = null, remoteTransition = null, displayChange = DisplayChange { displayId = 0, startAbsBounds = null, endAbsBounds = null, startRotation = 0, endRotation = 1, physicalDisplayChanged = false }, flags = 0, debugId = 105 }
+10-04 17:40:01.939   864   884 V WindowManager:     startWCT=WindowContainerTransaction { changes= {} hops= [] errorCallbackToken=null taskFragmentOrganizer=null }
+10-04 17:40:01.939   864   884 V WindowManager:     info={id=105 t=CHANGE f=0x0 trk=0 r=[0@Point(0, 0)] c=[
+10-04 17:40:01.939   864   884 V WindowManager:         {WCT{RemoteToken{b4f511a Task{b997a3c #31 type=standard I=com.azxcvn.moumou/.MainActivity}}} m=CHANGE f=NONE p=WCT{RemoteToken{acfe52f DefaultTaskDisplayArea@36459283}} leash=Surface(name=Task=31)/@0x2ec6a40 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 2560, 1440) epz=Point(2560, 1440) d=0 r=0->1:0 taskParent=-1},
+10-04 17:40:01.939   864   884 V WindowManager:         {WCT{RemoteToken{acfe52f DefaultTaskDisplayArea@36459283}} m=CHANGE f=FLAG_IS_TASK_DISPLAY_AREA p=WCT{RemoteToken{3b3173c Display{#0 state=ON size=2560x1440 ROTATION_90}}} leash=Surface(name=DefaultTaskDisplayArea)/@0xaa33909 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 2560, 1440) epz=Point(2560, 1440) d=0 r=0->1:-1},
+10-04 17:40:01.939   864   884 V WindowManager:         {WCT{RemoteToken{3b3173c Display{#0 state=ON size=2560x1440 ROTATION_90}}} m=CHANGE f=IS_DISPLAY leash=Surface(name=WindowedMagnification:0:31)/@0xd3ee284 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 2560, 1440) epz=Point(2560, 1440) d=0 r=0->1:-1}
+10-04 17:40:01.939   864   884 V WindowManager:     ]}
+10-04 17:40:01.940   864  1258 W UserManagerService: Requested status bar icon for non-badged user 0
+10-04 17:40:01.940  1124  1159 V WindowManagerShell: onTransitionReady(transaction=3710851755006)
+10-04 17:40:01.940  1124  1243 V WindowManagerShell: onTransitionReady (#105) android.os.BinderProxy@a236558: {id=105 t=CHANGE f=0x0 trk=0 r=[0@Point(0, 0)] c=[
+10-04 17:40:01.940  1124  1243 V WindowManagerShell:         {m=CHANGE f=NONE p=WCT{android.window.IWindowContainerToken$Stub$Proxy@3dd4aea} leash=Surface(name=Task=31)/@0xd219e19 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 2560, 1440) epz=Point(2560, 1440) d=0 r=0->1:0 taskParent=-1},
+10-04 17:40:01.940  1124  1243 V WindowManagerShell:         {m=CHANGE f=FLAG_IS_TASK_DISPLAY_AREA p=WCT{android.window.IWindowContainerToken$Stub$Proxy@d0861db} leash=Surface(name=DefaultTaskDisplayArea)/@0x5d21ede sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 2560, 1440) epz=Point(2560, 1440) d=0 r=0->1:-1},
+10-04 17:40:01.940  1124  1243 V WindowManagerShell:         {m=CHANGE f=IS_DISPLAY leash=Surface(name=WindowedMagnification:0:31)/@0xd92f8bf sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 2560, 1440) epz=Point(2560, 1440) d=0 r=0->1:-1 snapshot=Surface(name=RotationLayer)/@0x2184b8c}
+10-04 17:40:01.940  1124  1243 V WindowManagerShell:     ]}
+10-04 17:40:01.940  1124  1243 V WindowManagerShell: Playing animation for (#105) android.os.BinderProxy@a236558@0
+10-04 17:40:01.940  1124  1243 V ShellRecents: RecentsTransitionHandler.startAnimation: no controller found
+10-04 17:40:01.940  1124  1243 V WindowManagerShell: start default transition animation, info = {id=105 t=CHANGE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{m=CHANGE f=NONE p=WCT{android.window.IWindowContainerToken$Stub$Proxy@3dd4aea} leash=Surface(name=Task=31)/@0xd219e19 sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 2560, 1440) epz=Point(2560, 1440) d=0 r=0->1:0 taskParent=-1},{m=CHANGE f=FLAG_IS_TASK_DISPLAY_AREA p=WCT{android.window.IWindowContainerToken$Stub$Proxy@d0861db} leash=Surface(name=DefaultTaskDisplayArea)/@0x5d21ede sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 2560, 1440) epz=Point(2560, 1440) d=0 r=0->1:-1},{m=CHANGE f=IS_DISPLAY leash=Surface(name=WindowedMagnification:0:31)/@0xd92f8bf sb=Rect(0, 0 - 1440, 2560) eb=Rect(0, 0 - 2560, 1440) epz=Point(2560, 1440) d=0 r=0->1:-1 snapshot=Surface(name=RotationLayer)/@0x2184b8c}]}
+10-04 17:40:01.940  1124  1243 V WindowManagerShell: Display is changing, resolve the animation hint.
+10-04 17:40:01.940  1124  1243 V WindowManagerShell:   task 31 isn't requesting seamless, so not seamless.
+10-04 17:40:01.944  1124  1243 V WindowManagerShell:  animated by com.android.wm.shell.transition.DefaultTransitionHandler@31d5e15
+10-04 17:40:01.946  1124  1243 V WindowManagerShell: Transition animation finished (aborted=false), notifying core (#105) android.os.BinderProxy@a236558@0
+10-04 17:40:01.947   864   884 V WindowManager: Finish Transition (#105): created at 10-04 17:40:01.570 collect-started=0.021ms request-sent=0.032ms started=25.279ms ready=27.188ms sent=368.906ms finished=376.347ms
+10-04 17:40:01.947  1124  1243 V WindowManagerShell: Track 0 became idle
+10-04 17:40:01.947  1124  1243 V WindowManagerShell: All active transition animations finished
+10-04 17:40:02.046 13943 14008 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 17:40:02.046 13943 14008 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 17:40:02.046 13943 14008 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 17:40:02.046 13943 14008 E gralloc_kona: gralloc_alloc: Unknown format 56
+10-04 17:40:02.046 13943 14008 E GraphicBufferAllocator: Failed to allocate (4 x 4) layerCount 1 format 56 usage b00: 3
+10-04 17:40:02.046 13943 14008 E AHardwareBuffer: GraphicBuffer(w=4, h=4, lc=1) failed (Unknown error -3), handle=0x0
+10-04 17:40:02.046 13943 14008 E gralloc_kona: gralloc_alloc: Unknown format 59
+10-04 17:40:02.046 13943 14008 E GraphicBufferAllocator: Failed to allocate (4 x 4) layerCount 1 format 59 usage b00: 3
+10-04 17:40:02.046 13943 14008 E AHardwareBuffer: GraphicBuffer(w=4, h=4, lc=1) failed (Unknown error -3), handle=0x0
+10-04 17:40:02.046 13943 14008 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 17:40:02.046 13943 14008 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 17:40:02.047 13943 14008 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 4096
+10-04 17:40:02.047 13943 14008 E gralloc_kona: gralloc_alloc: Unknown format 56
+10-04 17:40:02.047 13943 14008 E GraphicBufferAllocator: Failed to allocate (4 x 4) layerCount 1 format 56 usage b00: 3
+10-04 17:40:02.047 13943 14008 E AHardwareBuffer: GraphicBuffer(w=4, h=4, lc=1) failed (Unknown error -3), handle=0x0
+10-04 17:40:02.047 13943 14008 E gralloc_kona: gralloc_alloc: Unknown format 59
+10-04 17:40:02.047 13943 14008 E GraphicBufferAllocator: Failed to allocate (4 x 4) layerCount 1 format 59 usage b00: 3
+10-04 17:40:02.047 13943 14008 E AHardwareBuffer: GraphicBuffer(w=4, h=4, lc=1) failed (Unknown error -3), handle=0x0
+10-04 17:40:02.047 13943 14008 E Surface : freeAllBuffers: 1 buffers were freed while being dequeued!
+10-04 17:40:02.047 13943 13943 D FlutterJNI: Sending viewport metrics to the engine.
+10-04 17:40:02.049 13943 13979 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:40:02.055 13943 14008 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:40:02.065 13943 14008 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:40:02.075 13943 14008 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:40:02.085 13943 14008 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:40:02.095 13943 14008 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 14749696
+10-04 17:40:02.156 14094 14094 I init    : type=1400 audit(0.0:1515): avc:  denied  { transition } for  path="/system/xbin/serial_console" dev="sda6" ino=3974 scontext=u:r:init:s0 tcontext=u:r:su:s0 tclass=process permissive=1
+10-04 17:40:02.156 14094 14094 I init    : type=1400 audit(0.0:1516): avc:  denied  { noatsecure } for  scontext=u:r:init:s0 tcontext=u:r:su:s0 tclass=process permissive=1
+10-04 17:40:02.156 14094 14094 I serial_console: type=1400 audit(0.0:1517): avc:  denied  { rlimitinh } for  scontext=u:r:init:s0 tcontext=u:r:su:s0 tclass=process permissive=1
+10-04 17:40:02.156 14094 14094 I serial_console: type=1400 audit(0.0:1518): avc:  denied  { siginh } for  scontext=u:r:init:s0 tcontext=u:r:su:s0 tclass=process permissive=1
+10-04 17:40:02.156 14094 14094 I serial_console: type=1400 audit(0.0:1519): avc:  denied  { read write } for  name="ttyS1" dev="tmpfs" ino=674 scontext=u:r:su:s0 tcontext=u:object_r:serial_device:s0 tclass=chr_file permissive=1
+10-04 17:40:02.156 14094 14094 I serial_console: type=1400 audit(0.0:1520): avc:  denied  { open } for  path="/dev/ttyS1" dev="tmpfs" ino=674 scontext=u:r:su:s0 tcontext=u:object_r:serial_device:s0 tclass=chr_file permissive=1
+10-04 17:40:02.861 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:02.867 13943 13943 I flutter : [mpv error] lavf: avformat_open_input() failed
+10-04 17:40:02.870 13943 13943 I flutter : [mpv error] playlist: Failed to create file cache.
+10-04 17:40:03.091   864  1252 D WifiNl80211Manager: Scan result ready event
+10-04 17:40:03.091   864  1252 D WifiNative: Scan result ready event
+10-04 17:40:03.091   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:03.091   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:03.091   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:03.713 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.714 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.715 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.715 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.716 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.717 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.717 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.718 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.719 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.719 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.720 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.721 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.721 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.722 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.722 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.723 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.723 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.724 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.724 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.725 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.726 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.727 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.727 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.728 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.729 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.741 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.742 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.743 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.743 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.744 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.745 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:03.745 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 22 messages skipped
+10-04 17:40:03.746 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 33 messages skipped
+10-04 17:40:03.746 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 27 messages skipped
+10-04 17:40:03.747 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 21 messages skipped
+10-04 17:40:03.748 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 24 messages skipped
+10-04 17:40:03.748 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 36 messages skipped
+10-04 17:40:03.749 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 25 messages skipped
+10-04 17:40:03.749 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 28 messages skipped
+10-04 17:40:03.750 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 24 messages skipped
+10-04 17:40:03.750 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 20 messages skipped
+10-04 17:40:03.751 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 15 messages skipped
+10-04 17:40:03.751 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 17 messages skipped
+10-04 17:40:03.751 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 11 messages skipped
+10-04 17:40:03.752 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 12 messages skipped
+10-04 17:40:03.752 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 11 messages skipped
+10-04 17:40:03.752 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 11 messages skipped
+10-04 17:40:03.752 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 9 messages skipped
+10-04 17:40:03.752 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 11 messages skipped
+10-04 17:40:03.753 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 9 messages skipped
+10-04 17:40:03.753 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 9 messages skipped
+10-04 17:40:03.753 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 7 messages skipped
+10-04 17:40:03.753 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 8 messages skipped
+10-04 17:40:03.753 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 7 messages skipped
+10-04 17:40:03.753 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 7 messages skipped
+10-04 17:40:03.754 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 7 messages skipped
+10-04 17:40:03.754 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 6 messages skipped
+10-04 17:40:03.754 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 9 messages skipped
+10-04 17:40:03.754 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 8 messages skipped
+10-04 17:40:03.754 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 7 messages skipped
+10-04 17:40:03.754 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 8 messages skipped
+10-04 17:40:03.755 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 7 messages skipped
+10-04 17:40:03.755 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 7 messages skipped
+10-04 17:40:03.755 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 6 messages skipped
+10-04 17:40:03.755 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 7 messages skipped
+10-04 17:40:03.755 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 6 messages skipped
+10-04 17:40:03.755 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 6 messages skipped
+10-04 17:40:03.755 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 5 messages skipped
+10-04 17:40:03.755 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 7 messages skipped
+10-04 17:40:03.756 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 6 messages skipped
+10-04 17:40:03.756 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 6 messages skipped
+10-04 17:40:03.756 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:03.756 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 7 messages skipped
+10-04 17:40:03.756 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 6 messages skipped
+10-04 17:40:03.756 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 5 messages skipped
+10-04 17:40:03.756 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 5 messages skipped
+10-04 17:40:03.756 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:03.756 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:03.756 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 5 messages skipped
+10-04 17:40:03.757 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:03.757 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:03.757 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 5 messages skipped
+10-04 17:40:03.757 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:03.757 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:03.757 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 5 messages skipped
+10-04 17:40:03.757 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 5 messages skipped
+10-04 17:40:03.757 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:03.757 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.757 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:03.757 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.757 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:03.757 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.757 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.757 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.758 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.758 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:03.758 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:03.758 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.758 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.758 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.758 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.758 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.758 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.758 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:03.758 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.758 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.758 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.758 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.758 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.758 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.759 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 6 messages skipped
+10-04 17:40:03.759 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 18 messages skipped
+10-04 17:40:03.759 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:03.759 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.759 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.759 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:03.759 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.759 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.759 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.759 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.760 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.761 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.762 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.762 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.762 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.762 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.762 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.762 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.762 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.762 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.762 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.762 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:03.762 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.762 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.762 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:03.762 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 14 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 1 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 1 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 1 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 1 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 1 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 1 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 1 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 5 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 1 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 91 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 29 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 10 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 5 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 3 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 1 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 1 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 6 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 1 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 1 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 4 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 2 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 1 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv fatal] overflow: log message buffer overflow: 1 messages skipped
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.768 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:04.814   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:04.815   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:04.815   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:04.815   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:04.815   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:05.687   864   909 D KernelCpuUidUserSysTimeReader: Removing uids 99008-99008
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: Cannot acquire BluetoothActivityEnergyInfo
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: java.util.concurrent.ExecutionException: java.lang.RuntimeException: error: 9
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at java.util.concurrent.CompletableFuture.reportGet(CompletableFuture.java:372)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at java.util.concurrent.CompletableFuture.get(CompletableFuture.java:2072)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at com.android.server.power.stats.BluetoothPowerStatsCollector.collectBluetoothActivityInfo(BluetoothPowerStatsCollector.java:181)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at com.android.server.power.stats.BluetoothPowerStatsCollector.collectStats(BluetoothPowerStatsCollector.java:149)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at com.android.server.power.stats.PowerStatsCollector.collectAndDeliverStats(PowerStatsCollector.java:176)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at com.android.server.power.stats.PowerStatsCollector$$ExternalSyntheticLambda0.run(R8$$SyntheticClass:0)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at android.os.Handler.handleCallback(Handler.java:991)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at android.os.Handler.dispatchMessage(Handler.java:102)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at android.os.Looper.loopOnce(Looper.java:232)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at android.os.Looper.loop(Looper.java:317)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: Caused by: java.lang.RuntimeException: error: 9
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at com.android.server.power.stats.BluetoothPowerStatsCollector$1.onBluetoothActivityEnergyInfoError(BluetoothPowerStatsCollector.java:170)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at android.bluetooth.BluetoothAdapter$OnBluetoothActivityEnergyInfoProxy.lambda$onError$2(BluetoothAdapter.java:1063)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at android.bluetooth.BluetoothAdapter$OnBluetoothActivityEnergyInfoProxy$$ExternalSyntheticLambda0.run(D8$$SyntheticClass:0)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at android.bluetooth.BluetoothUtils.lambda$executeFromBinder$0(BluetoothUtils.java:343)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at android.bluetooth.BluetoothUtils$$ExternalSyntheticLambda1.run(D8$$SyntheticClass:0)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at com.android.server.SystemServerInitThreadPool$$ExternalSyntheticLambda0.execute(R8$$SyntheticClass:0)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at android.bluetooth.BluetoothUtils.executeFromBinder(BluetoothUtils.java:343)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at android.bluetooth.BluetoothAdapter$OnBluetoothActivityEnergyInfoProxy.onError(BluetoothAdapter.java:1062)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at android.bluetooth.BluetoothAdapter.requestControllerActivityEnergyInfo(BluetoothAdapter.java:2769)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at com.android.server.power.stats.BatteryStatsImpl$BluetoothStatsRetrieverImpl.requestControllerActivityEnergyInfo(BatteryStatsImpl.java:401)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	at com.android.server.power.stats.BluetoothPowerStatsCollector.collectBluetoothActivityInfo(BluetoothPowerStatsCollector.java:159)
+10-04 17:40:05.688   864   909 E BluetoothPowerStatsCollector: 	... 8 more
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.772 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:05.773 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.792 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.793 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.793 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.793 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.793 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.793 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.793 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.793 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.793 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.793 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.793 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:06.793 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.085 13943 13943 I VideoOutputManager: com.alexmercerind.media_kit_video.VideoOutputManager.setSurfaceSize: 124548772801024 1920 1080
+10-04 17:40:07.085 13943 13943 I VideoOutput: onSurfaceAvailable
+10-04 17:40:07.086 13943 13943 I VideoOutput: newGlobalRef: object = Surface(name=null mNativeObject=124552799508112)/@0xc3ee8ec
+10-04 17:40:07.095 13943 13971 W System  : A resource failed to call close. 
+10-04 17:40:07.095 13943 13971 W System  : A resource failed to call close. 
+10-04 17:40:07.126 13943 14126 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 8298496
+10-04 17:40:07.150 13943 14126 E eglCodecCommon: computePixelSize:888 unknown format/type 0x8227 0x1403
+10-04 17:40:07.150 13943 14126 E eglCodecCommon: unknown pixel size: width: 64 height: 64 format: 33319 type: 5123 pack: 0 align: 4
+10-04 17:40:07.151 13943 14126 E eglCodecCommon: computePixelSize:888 unknown format/type 0x1907 0x1403
+10-04 17:40:07.151 13943 14126 E eglCodecCommon: unknown pixel size: width: 64 height: 64 format: 6407 type: 5123 pack: 0 align: 4
+10-04 17:40:07.163 13943 14126 D gralloc_kona: gralloc_alloc: Creating ashmem region of size 8298496
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.794 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.795 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:07.817   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:07.817   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:07.817   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:07.817   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:07.817   864  1012 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:08.491   864  1005 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:08.519   864  1005 W BestClock: java.time.DateTimeException: No network time available
+10-04 17:40:08.798 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.799 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.800 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.800 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.800 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.800 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:08.800 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.801 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg: https: Protocol 'https' not on whitelist 'udp'!
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg/demuxer: hls: Error when loading first segment 'https://player.yzzyvip-35.com/20260726/11936_f9949979/3000k/hls/7ef5c2b0c607cea291c72c36cd892ccd.ts'
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] lavf: avformat_open_input() failed
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] playlist: Failed to create file cache.
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] lavf: Failed to create file cache.
+10-04 17:40:09.802 13943 13943 I flutter : VideoOutput.Resize
+10-04 17:40:09.802 13943 13943 I flutter : {rect: {top: 0, left: 0, width: 1920, height: 1080}, wid: 13422, handle: 124548772801024, id: 0}
+10-04 17:40:09.802 13943 13943 I flutter : [mpv error] ffmpeg/video: h264: co located POCs unavailable
