@@ -13,7 +13,7 @@
 | 分支（基线文档记载） | `English` |
 | `lib/**` dart 文件数 | 306 |
 | `test/**` dart 文件数 | 190（其中 `l10n_test_helper.dart`、`pb_test_helper.dart` 为夹具，非测试用例） |
-| 本地化键总数（zh 侧） | 1272（普通 getter 1097 + 带占位符方法 175）—— 这是**扫描时**（`629389e`）的快照；收口后为 **1276**，以 `04-数据基线.md` §4 为准 |
+| 本地化键总数（zh 侧） | 1272（普通 getter 1097 + 带占位符方法 175）—— 这是**扫描时**（`629389e`）的快照；收口后为 **1276**，以 `04-data-baseline.md` §4 为准 |
 | 已接入 l10n 的 page/widget 文件 | 86 个（`lib/pages/**` + `lib/widgets/**` 中调用 `l10n.xxx` 的文件） |
 | 可选语言 | **只有 简体中文 / English**，**没有「跟随系统」**（`AppLocaleSettings._normalize` 非法值恒回落 `zh`） |
 | 语言持久化键 | `app_locale`（值 `'zh'` / `'en'`） |

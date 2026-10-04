@@ -1,6 +1,6 @@
 /// 表（枚举 / 映射表）→ 文案 的 **UI 侧**映射。
 ///
-/// 约定（见 `杂项文件/多语言支持方案/02-实施方案.md` §1.9）：
+/// 约定（见 `docs/archive/i18n-migration-plan/02-implementation-plan.md` §1.9）：
 /// - `models/`、`utils/`、`services/` 里**不许** import l10n，所以中文标签一律在
 ///   本文件用 `AppLocalizations` 现取；
 /// - 命名 `<模块><表名>Label`，`switch` 用表达式形式，穷尽性由 `flutter analyze` 兜住；

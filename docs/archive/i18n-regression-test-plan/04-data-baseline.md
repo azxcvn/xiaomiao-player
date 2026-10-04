@@ -16,11 +16,11 @@
 | 迁移提交链 | `7276793`(阶段0-3) → `331b03f`(4) → `d831326`(5) → `4425fb1`(6) → `ee0514d`(7) → `8b741bc`(8) → `629389e`(docs) → `8227c21`(收口：R1/R2/R4 三处残留 + 长文星号) → `a326a34`(阶段1-2 缺陷修复：深层目录补扫 + 在线播放白名单/CA 库 + mpv 错误提示) → `0c491bf`(阶段 3 缺陷修复：定时关闭胶囊溢出 / 外部音轨移除后落回内嵌轨 / 双指缩小副标题 / 动态范围压缩参数 / 音频滤镜失败兜底) → `8c6a931`(换入新 libmpv 内核产物：补开 pan/dynaudnorm/acompressor/lowshelf/extrastereo) → `3f90e50`(阶段 4 缺陷修复：本地弹幕导入不再用失效 context + 成功提示带文件名) |
 | 改造前基线 | `7276793^`（用于 `git diff` 对照） |
 | 包名 | `com.azxcvn.moumou` |
-| 版本 | `pubspec.yaml` 的 `version: 1.3.6+4` → versionName `1.3.6` / versionCode `4`（**测试期间不许改版本号**）。⚠️ 新包的 versionCode 恒为 `4`；设备上若残留 versionCode `4004` 的旧包（策划时的状态），`install -r` 会撞版本降级 → **先卸载再装**。用仓库脚本 `tools/build_and_install.ps1 -Debug` 时会带 `-r`，所以先手动 `adb uninstall`（见 `01-执行协议.md` §3.1） |
+| 版本 | `pubspec.yaml` 的 `version: 1.3.6+4` → versionName `1.3.6` / versionCode `4`（**测试期间不许改版本号**）。⚠️ 新包的 versionCode 恒为 `4`；设备上若残留 versionCode `4004` 的旧包（策划时的状态），`install -r` 会撞版本降级 → **先卸载再装**。用仓库脚本 `tools/build_and_install.ps1 -Debug` 时会带 `-r`，所以先手动 `adb uninstall`（见 `01-execution-protocol.md` §3.1） |
 | 应用名 | zh = `小喵Player`，en = `Meow Player`（ARB `appTitle` + Android `@string/app_name`） |
 | 规模 | `lib/**` 306 个 dart 文件；`test/**` 190 个 dart 文件；迁移共改 246 个文件（+30313 / −2727 行） |
 
-**注意**：如果被测 commit 已经不是 `3f90e50`（比如又修了缺陷重新提交），必须在本文件与 `07-遗留与待办.md` 里登记新 commit，并在报告里写明「本轮测的是哪个 commit」。
+**注意**：如果被测 commit 已经不是 `3f90e50`（比如又修了缺陷重新提交），必须在本文件与 `07-open-items-and-todo.md` 里登记新 commit，并在报告里写明「本轮测的是哪个 commit」。
 
 ---
 
@@ -47,7 +47,7 @@
 
 > 仓库根 `AGENTS.md` 写着「禁止私自编译、不 `flutter run`、不 `adb install`」。
 > **那是给「改代码」任务的约束；本轮测试任务由用户特批放开**，理由：不编译新包就无法验证真实行为。
-> 执行测试的 AI 以**本文件与 `01-执行协议.md`** 为准；红线只保留：不改版本号、不 force push、不动 `main`。
+> 执行测试的 AI 以**本文件与 `01-execution-protocol.md`** 为准；红线只保留：不改版本号、不 force push、不动 `main`。
 
 | 项 | 口径 |
 |---|---|
@@ -55,7 +55,7 @@
 | 安装 | 允许 `adb -s emulator-5554 install -r <apk>` |
 | 运行 | 允许 `flutter run`、`adb shell am start -n com.azxcvn.moumou/.MainActivity`、`am force-stop`（重启验证用） |
 | 判定「装的是哪个包」 | 关于页底部有 `v1.3.6 / debug|release / <git 短号>` 徽标；**每次开始一轮测试前先核对短号 = 当前 HEAD** |
-| 被测模式 | 默认 **debug**（能抓 Flutter 异常日志、能连 Dart VM）；**release 专项**见 `03-测试用例清单.md` 的 R 系列用例 |
+| 被测模式 | 默认 **debug**（能抓 Flutter 异常日志、能连 Dart VM）；**release 专项**见 `03-test-case-list.md` 的 R 系列用例 |
 | 打包体积/时机 | 首次构建较慢（含 libmpv），后续增量；构建日志写进 `tools/_build_*.log` 备查 |
 | 权限 | 首次启动需授予「所有文件访问权限」（`MANAGE_EXTERNAL_STORAGE`），首页会走权限门禁 |
 
@@ -72,7 +72,7 @@
 | 持久化键 | `app_locale`，值只允许 `'zh'` / `'en'`，缺省/非法值回落 `'zh'`（默认中文） |
 | 语言入口 | 「我的」页 → 「语言」组 → 「语言设置」项（组位置在「弹幕」下方、「下载」上方） |
 | 首启弹窗 | 仅**全新安装**、且**本次刚同意隐私政策**时弹一次；默认选中简体中文；可取消（取消=保持中文） |
-| ARB 键数 | **1278**（zh / en **完全对称**，无空值）—— 迁移完成时是 1272；本地修复 R1/R2/R4 新增 `subtitleCurrentSource`、`playerChapterNumber`、`biliCookieMissingSessdata`、`biliLoginCredentialParseFailed` 四键（已随 `8227c21` 提交，见 `07-遗留与待办.md` §4）；2026-10-04 修 `DEF-2-02` 时新增 `playerPlaybackFailed`、修阶段 3 缺陷时新增 `playerAudioEffectsUnsupported`（见 §9 O6 与 `07` §12） |
+| ARB 键数 | **1278**（zh / en **完全对称**，无空值）—— 迁移完成时是 1272；本地修复 R1/R2/R4 新增 `subtitleCurrentSource`、`playerChapterNumber`、`biliCookieMissingSessdata`、`biliLoginCredentialParseFailed` 四键（已随 `8227c21` 提交，见 `07-open-items-and-todo.md` §4）；2026-10-04 修 `DEF-2-02` 时新增 `playerPlaybackFailed`、修阶段 3 缺陷时新增 `playerAudioEffectsUnsupported`（见 §9 O6 与 `07` §12） |
 | 占位符键 | 176 个；复数（plural）键 44 个；多行（含 `\n`）键 21 个 |
 | 中文侧含全角标点的键 | 249 个（这是设计：中文用全角，英文用半角） |
 | 英文侧含汉字的键 | **只有 2 个，且是故意的**：`languageNameZh`（`简体中文`，语言自称不翻译）、`languagePickerTitle`（`选择语言 / Choose Language`，双语标题） |
@@ -130,14 +130,14 @@
 |---|---|---|
 | 静态分析 | `flutter analyze` | `No issues found!` |
 | 全量测试 | `flutter test --timeout=30s` | `All tests passed!`（改造完成时 `+1817 ~13`；收口后 `+1816 ~13`——少的那条是随 R2 删除的 `chapterNumberFallbackLabel` 测试；**skip 数会随环境浮动，以「无 failed」为准**） |
-| 残留中文（默认口径） | `python "杂项文件\多语言支持方案\tools\i18n_scan.py" residual` | 0 |
+| 残留中文（默认口径） | `python "docs\archive\i18n-migration-plan\tools\i18n_scan.py" residual` | 0 |
 | 残留中文（含 Android） | 同上 `--include-android` | 0 |
 | 残留中文（含全角标点） | 同上 `--include-android --fullwidth` | 0 |
 | 白名单过期 | `residual` 报告里的「过期项」 | 0 |
 | 未翻译清单 | `lib/../l10n_untranslated.json` | `{}` |
 | ARB 对称性 | 见 §4 | zh/en 各 1278 键、无空值 |
 
-> 扫描脚本只读源码；`residual` 会覆盖写 `杂项文件/多语言支持方案/05-残留中文报告.md`（那是迁移方案目录的产物，测试期间**只读参考**，不要删）。
+> 扫描脚本只读源码；`residual` 会覆盖写 `docs/archive/i18n-migration-plan/05-residual-chinese-report.md`（那是迁移方案目录的产物，测试期间**只读参考**，不要删）。
 > `flutter` 命令常把 "Flutter assets will be downloaded…" 写进 stderr，PowerShell 可能报 `[exit code: 1]` 假失败 —— **以 flutter 自己打印的 `All tests passed!` / `No issues found!` 为准**。
 
 ### ⚠️ 5.1 `residual = 0` **不等于**没有残留（重要）
@@ -151,7 +151,7 @@
 
 结论：**脚本门禁只是底线，英文全量走查（`T7-I18N-*`）是必做项**。发现新残留时按「新发现」登记（不要改基线数字），并在报告里写明「脚本口径之外的第 N 处」。
 
-> **进展（2026-10）**：这两处已修复并随 `8227c21` 提交（见 `07-遗留与待办.md` §4）。表格保留，作为「扫描口径盲区」的证据；对应回归用例 `T7-I18N-107` / `T3-PLR-123` 改为**验证修复生效**。
+> **进展（2026-10）**：这两处已修复并随 `8227c21` 提交（见 `07-open-items-and-todo.md` §4）。表格保留，作为「扫描口径盲区」的证据；对应回归用例 `T7-I18N-107` / `T3-PLR-123` 改为**验证修复生效**。
 
 ---
 
@@ -194,13 +194,13 @@ flutter --version
 
 ## 8. 已知限制（写进最终报告，别当成测过了）
 
-1. ~~**Android 原生侧的 l10n 从未编译验证过**~~ → **用户已于 2026-10 自测通过**（应用名、通知渠道名/描述、存储卷回退名、崩溃提示）。测试 AI 在阶段 7 只需抽查，不必重复深挖；通知渠道名的卸载重装验证**用户已明确不要求**（见 `07-遗留与待办.md` §1）。
+1. ~~**Android 原生侧的 l10n 从未编译验证过**~~ → **用户已于 2026-10 自测通过**（应用名、通知渠道名/描述、存储卷回退名、崩溃提示）。测试 AI 在阶段 7 只需抽查，不必重复深挖；通知渠道名的卸载重装验证**用户已明确不要求**（见 `07-open-items-and-todo.md` §1）。
 2. **模拟器环境 ≠ 真机**：x86_64 + Houdini 翻译层、软硬解支持与真实手机不同；解码能力类结论（硬解/软解/不支持）只代表模拟器。
-3. **崩溃路径**：主动触发崩溃的方式由用户提供（见 `05-素材需求清单.md` M13）；未提供则该项记为「未验证」。
-4. **网络依赖项**：B 站、GitHub 更新源、Wyzie/自定义字幕源、局域网设备是否可达，取决于本机网络与素材（见 `05-素材需求清单.md`）。
+3. **崩溃路径**：主动触发崩溃的方式由用户提供（见 `05-material-requirements.md` M13）；未提供则该项记为「未验证」。
+4. **网络依赖项**：B 站、GitHub 更新源、Wyzie/自定义字幕源、局域网设备是否可达，取决于本机网络与素材（见 `05-material-requirements.md`）。
 5. **通知渠道名**只在全新安装时生效；若要验证 en 渠道名，必须**卸载后重装**（会清掉 App 数据，需先记录当前设置项）。
 6. 模拟器共享目录里的素材（`MuMuShared` 等）属于**用户数据**，界面显示中文不算残留 —— 判定残留只以脚本 + 界面框架文案为准。
-7. **开工前已定位 29 条回归风险（高 2 / 中 6 / 低 21）+ 11 条结构性隐患 + 2 处确认残留 + 4 条未确认项**：全部列在 `07-遗留与待办.md` §1.1（R1–R19），并已转成 `03-测试用例清单.md` 附录 B 的 20 条定向核查用例。**这些不是「待发现的问题」，而是「待你给结论的问题」**。
+7. **开工前已定位 29 条回归风险（高 2 / 中 6 / 低 21）+ 11 条结构性隐患 + 2 处确认残留 + 4 条未确认项**：全部列在 `07-open-items-and-todo.md` §1.1（R1–R19），并已转成 `03-test-case-list.md` 附录 B 的 20 条定向核查用例。**这些不是「待发现的问题」，而是「待你给结论的问题」**。
 8. **迁移提交里混入了至少 1 处与 l10n 无关的行为改动**（`lib/utils/bili_image_url.dart:52-61`，非图床封面 URL 不再被规整，其单元测试在基线是红的、本提交才转绿）—— 提醒：不要默认「这批提交只有文案改动」，逐条回归仍必要。
 
 ---
@@ -208,7 +208,7 @@ flutter --version
 ## 9. 开工前准备核查（2026-10-04，由策划者实测，不是测试结论）
 
 > 这一节是「开工前把环境和素材摸清」的记录，用来省掉你重复摸索。**它不是测试证据**，阶段 0 仍要自己复跑一遍。
-> 证据截图：`_evidence/阶段0/READY_0*.png`。
+> 证据截图：`_evidence/stage0/READY_0*.png`。
 
 | 项 | 实测结果 |
 |---|---|
@@ -217,7 +217,7 @@ flutter --version
 | 素材落位 | 设备侧 `/sdcard/素材收集清单/`，M01–M20 **20 个目录、49 个文件**，MT管理器可见；PC 侧源目录 `C:\Users\root\Desktop\素材收集清单` |
 | 素材完整性 | 与 PC 侧**逐文件比对字节数**：仅 **1 个文件没过来**——M05 的「超长文件名 mp4」（文件名 22×「超级长的视频文件」+「名.mp4」，UTF-8 远超 Android 的 255 字节文件名上限，物理上装不下）。其余 49 个文件字节数完全一致 |
 | 额外素材 | `/sdcard/测试路径/`（约 3.0 GB：内嵌字幕、自带章节、系列集、音频、字体文件、背景测试图等）。**不在 M01–M20 清单里**，可作补充素材用 |
-| 现装包（**2026-10-04 16:11 已更新为修复后的包**） | 策划时设备上装的是**修复前**的 debug 包（`versionCode 4004`；kernel_blob 里有 `chapterNumberFallbackLabel`、没有 `subtitleCurrentSource`/`chapterHeadingLabel`）。策划者随后用仓库脚本 `tools/build_and_install.ps1 -Debug` **卸载旧包 + 重新构建 + 安装**：现装 `versionName 1.3.6` / `versionCode 4` / DEBUGGABLE / `--dart-define=GIT_HASH=8227c21`，关于页徽标实测 **`v1.3.6 / debug / 8227c21`**；kernel_blob 里新键齐全、`chapterNumberFallbackLabel` 已消失 → **确认装的就是修复后的包**（证据 `_evidence/阶段0/READY_07`–`READY_10`）。⚠️ 这次是**全新安装**（卸载清掉了 App 数据），首启隐私弹窗与语言弹窗已各走过一遍 |
+| 现装包（**2026-10-04 16:11 已更新为修复后的包**） | 策划时设备上装的是**修复前**的 debug 包（`versionCode 4004`；kernel_blob 里有 `chapterNumberFallbackLabel`、没有 `subtitleCurrentSource`/`chapterHeadingLabel`）。策划者随后用仓库脚本 `tools/build_and_install.ps1 -Debug` **卸载旧包 + 重新构建 + 安装**：现装 `versionName 1.3.6` / `versionCode 4` / DEBUGGABLE / `--dart-define=GIT_HASH=8227c21`，关于页徽标实测 **`v1.3.6 / debug / 8227c21`**；kernel_blob 里新键齐全、`chapterNumberFallbackLabel` 已消失 → **确认装的就是修复后的包**（证据 `_evidence/stage0/READY_07`–`READY_10`）。⚠️ 这次是**全新安装**（卸载清掉了 App 数据），首启隐私弹窗与语言弹窗已各走过一遍 |
 | 第二存储卷（M16） | `/storage` 下只有 `emulated`（**单卷**）；MuMu 的共享目录在 `/mnt/shared/MuMuShared`，不是 Android 认可的存储卷 → 「第二个存储卷」大概率**不可测**，阶段 2 用界面上的存储卷列表实测确认后再下结论 |
-| adb pull 注意 | 目标路径请用**正斜杠**：`adb pull /data/local/tmp/s.png "…/_evidence/阶段0/x.png"`。用反斜杠写到这个中文目录会报 `cannot create file/directory`（本机 2026-10-04 实测、可复现）。备用做法：先 pull 到 `$env:TEMP` 再 `Copy-Item` 落位 |
+| adb pull 注意 | 目标路径请用**正斜杠**：`adb pull /data/local/tmp/s.png "…/_evidence/stage0/x.png"`。用反斜杠写到这个中文目录会报 `cannot create file/directory`（本机 2026-10-04 实测、可复现）。备用做法：先 pull 到 `$env:TEMP` 再 `Copy-Item` 落位 |
 | 首页观察 | App 首页出现**重复卡片**（`M01`、`M02` 各两张，另有一张名为 `1` 的目录），但设备上只有一份副本 → 疑为媒体库**缓存/索引残留**（与 l10n 无关）。阶段 2 先刷新/重扫再判定，别当回归报 |

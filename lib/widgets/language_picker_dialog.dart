@@ -5,7 +5,7 @@ import 'package:moumou/utils/app_dialog.dart';
 
 /// 语言选择弹窗（首启门禁与设置页「语言设置」共用）。
 ///
-/// 约定（用户已拍板，见 `杂项文件/多语言支持方案/02-实施方案.md` §1.7）：
+/// 约定（用户已拍板，见 `docs/archive/i18n-migration-plan/02-implementation-plan.md` §1.7）：
 /// - 选项只有 **简体中文 / English** 两项（**自称，不翻译**），没有「跟随系统」；
 /// - **默认选中简体中文**（`app_locale` 缺省即 `'zh'`）；
 /// - 确认后写入 `app_locale` 并**立即生效**（`AppLocaleSettings` 是 ChangeNotifier，

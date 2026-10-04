@@ -43,12 +43,12 @@ Text(l10n.commonBack)
 
 ```
 & "C:\Users\root\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\python.exe" `
-  "杂项文件\多语言支持方案\tools\i18n_scan.py" residual --path "lib/pages/player/views/你的文件.dart"
+  "docs\archive\i18n-migration-plan\tools\i18n_scan.py" residual --path "lib/pages/player/views/你的文件.dart"
 ```
 
 看到打印的 `residual: N` → 要求 **N = 0**（日志里的中文由脚本排除，不计入）。不是 0 就继续改到 0。
 
-> `05-残留中文报告.md` 是共享文件，可能被别人覆盖，**只看命令行打印的数字**。
+> `05-residual-chinese-report.md` 是共享文件，可能被别人覆盖，**只看命令行打印的数字**。
 
 ## 回报格式
 ```

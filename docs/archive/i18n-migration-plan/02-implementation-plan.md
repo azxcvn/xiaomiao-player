@@ -1,8 +1,8 @@
 # 02 · 实施方案（英文阶段 / AI 执行版）
 
-> **本文件回答"怎么改"。** 硬约束在 `01-执行协议.md`，现状数字与不可翻译清单在 `04-数据基线.md`，逐文件待办在 `03-任务清单.md`。
-> 与本文冲突时：`AGENTS.md` > `01-执行协议.md` > 本文。
-> 涉及具体数字（处数/文件数/枚举清单）时**一律引用 `04-数据基线.md`，不要自己重新统计**。
+> **本文件回答"怎么改"。** 硬约束在 `01-execution-protocol.md`，现状数字与不可翻译清单在 `04-data-baseline.md`，逐文件待办在 `03-task-list.md`。
+> 与本文冲突时：`AGENTS.md` > `01-execution-protocol.md` > 本文。
+> 涉及具体数字（处数/文件数/枚举清单）时**一律引用 `04-data-baseline.md`，不要自己重新统计**。
 
 ---
 
@@ -82,7 +82,7 @@ untranslated-messages-file: l10n_untranslated.json
 | `template-arb-file: app_zh.arb` | 源语言是中文；模板是键的唯一权威。英文缺键时生成器只警告并用模板语言回退（并在 `untranslated` 里列出） |
 | `nullable-getter: false` | 调用处不用 `!`，与仓库"少写防御式样板"的风格一致 |
 | `preferred-supported-locales: [zh]` | 设备语言不在支持列表时回落中文，**不改变老用户现状** |
-| `untranslated-messages-file` | 阶段收口的硬门禁（见 `01-执行协议.md` §5 G3） |
+| `untranslated-messages-file` | 阶段收口的硬门禁（见 `01-execution-protocol.md` §5 G3） |
 
 ### 1.4 生成物入库（决策依据）
 
@@ -164,7 +164,7 @@ SettingsItem(                       // 沿用本页现有 item 组件与样式
 
 ### 1.9 表改造规范（方案 C 执行细则）
 
-**范围**：31 个枚举 / 128 项 + 主题色 23 + 调色板风格 21 + 101 条 `'键': '中文值'` 映射项（清单见 `04-数据基线.md` §6 与附录 B）。
+**范围**：31 个枚举 / 128 项 + 主题色 23 + 调色板风格 21 + 101 条 `'键': '中文值'` 映射项（清单见 `04-data-baseline.md` §6 与附录 B）。
 
 **枚举**：
 
@@ -245,8 +245,8 @@ String playerVideoFitLabel(AppLocalizations l10n, PlayerVideoFit v) => switch (v
 
 ## 2. 阶段 0–8
 
-> 每阶段的固定要求：单文件循环 + 阶段收口（见 `01-执行协议.md` §2），门禁 G1–G6，收口后按 §9 模板报告并**停下来等用户确认**。
-> 每阶段的文件清单与处数：直接看 `03-任务清单.md` 对应小节（已按阶段分组）。
+> 每阶段的固定要求：单文件循环 + 阶段收口（见 `01-execution-protocol.md` §2），门禁 G1–G6，收口后按 §9 模板报告并**停下来等用户确认**。
+> 每阶段的文件清单与处数：直接看 `03-task-list.md` 对应小节（已按阶段分组）。
 
 ### 阶段 0 · 基建与测试夹具（**必须最先做，且此时不许改任何业务文案**）
 
@@ -261,7 +261,7 @@ String playerVideoFitLabel(AppLocalizations l10n, PlayerVideoFit v) => switch (v
 7. **测试夹具**（关键）：
    - 新增 `test/l10n_test_helper.dart`，提供 `pumpAppZh(tester, widget)`；或
    - 在测试入口统一设 `tester.binding.platformDispatcher.localeTestValue = const Locale('zh')`。
-   - 目的：让 185 个既有测试文件在"支持 en 之后"仍解析到中文，**保住 535 处 `find.text('中文')` 断言**（依据：测试默认 locale = `en_US`，见 `04-数据基线.md` §10）。
+   - 目的：让 185 个既有测试文件在"支持 en 之后"仍解析到中文，**保住 535 处 `find.text('中文')` 断言**（依据：测试默认 locale = `en_US`，见 `04-data-baseline.md` §10）。
 8. 跑**全量** `flutter test`，确认**仍然全绿**（此时未改任何文案，绿即证明夹具有效）。
 
 **验收**：G1 通过；`flutter gen-l10n` 成功；全量 `flutter test` 全绿；`l10n_untranslated.json` 只含阶段 0 的少量键。
@@ -272,10 +272,10 @@ String playerVideoFitLabel(AppLocalizations l10n, PlayerVideoFit v) => switch (v
 **步骤**
 
 1. **第一件事**：把 `lib/widgets/folder_actions.dart:260,380` 的 `'取消'` 哨兵值改成常量/枚举（行为必须完全等价），改完从 `tools/whitelist.json` 删除对应两条白名单并重跑 `residual`。
-2. 按 `03-任务清单.md` 阶段 1 的文件逐条推进（枚举所在 models/services/theme、主题色与调色板表、映射表项、`switch` 返回中文的服务）。
+2. 按 `03-task-list.md` 阶段 1 的文件逐条推进（枚举所在 models/services/theme、主题色与调色板表、映射表项、`switch` 返回中文的服务）。
 3. 建立 `common.*` 词表并归并 189 条重复文案。
 4. 建 `lib/l10n/label_maps.dart`（§1.9）。
-5. 阶段收口：`residual --path lib/models`、`--path lib/services`、`--path lib/utils`、`--path lib/theme` 全部为 0（白名单项除外，见 `04-数据基线.md` §13）。
+5. 阶段收口：`residual --path lib/models`、`--path lib/services`、`--path lib/utils`、`--path lib/theme` 全部为 0（白名单项除外，见 `04-data-baseline.md` §13）。
 
 **必测界面**（人工，由用户执行）：
 
@@ -287,7 +287,7 @@ String playerVideoFitLabel(AppLocalizations l10n, PlayerVideoFit v) => switch (v
 | 媒体信息页 | 19 条映射表项全部有译文 |
 | 播放器自定义控制栏（顶/底按钮增删） | 按钮名英文后胶囊是否溢出；重启后自定义顺序保留 |
 
-**风险**：G5（枚举顺序）必须逐文件 `git diff` 核对；`const` 报错按 `01-执行协议.md` §7 处理。
+**风险**：G5（枚举顺序）必须逐文件 `git diff` 核对；`const` 报错按 `01-execution-protocol.md` §7 处理。
 
 ### 阶段 2 · 入口、导航与语言入口（2 文件 / 39 处 + 1 个新建文件）
 
@@ -317,7 +317,7 @@ String playerVideoFitLabel(AppLocalizations l10n, PlayerVideoFit v) => switch (v
 
 ### 阶段 3 · 设置页群（13 文件 / 375 处）
 
-从 `03-任务清单.md` 阶段 3 小节取清单（`player_settings_page.dart` 94 处最大）。
+从 `03-task-list.md` 阶段 3 小节取清单（`player_settings_page.dart` 94 处最大）。
 
 **必测**：播放器设置（逐项标题+副标题+选项，长句换行）、媒体扫描设置（黑白名单模式说明文案）、缓存管理/字体/解码器详情（数值单位、字体名保持原文）、设备信息（技术字段中英混排）、播放历史（日期格式、空态、清空确认）、关于页/许可证书/隐私政策（第三方许可全文是英文，**不要翻**）、错误日志页（表头英文后列宽；日志内容仍是中文，预期）、壁纸编辑。
 
@@ -335,7 +335,7 @@ String playerVideoFitLabel(AppLocalizations l10n, PlayerVideoFit v) => switch (v
 
 ### 阶段 6 · 服务/模型/工具层（48 文件 / 264 处）
 
-按 §1.8 执行。文件清单见 `03-任务清单.md` 阶段 6。
+按 §1.8 执行。文件清单见 `03-task-list.md` 阶段 6。
 
 **必测**：网络存储断网/错密码/服务器拒绝（错误提示是否英文且**信息完整**，含 530 之类插值）、播放 URL 失效（播放页错误卡片长句是否溢出）、B 站未登录/登录过期、字幕下载无结果与接口异常、下载失败/空间不足、检查更新失败与「已是最新」、文件操作失败（含文件名插值）、投屏失败。
 
@@ -386,7 +386,7 @@ Future<void> pumpAppZh(WidgetTester tester, Widget child) async {
 
 ### 3.2 自动化门禁
 
-复用 `01-执行协议.md` §3 的命令；门禁标准见其 §5（G1–G6）。
+复用 `01-execution-protocol.md` §3 的命令；门禁标准见其 §5（G1–G6）。
 **每次改 ARB 后必须** `flutter gen-l10n`；**每阶段收口必须** 全量 `flutter test` + `residual` + `untranslated` 检查。
 
 ### 3.3 人工验收清单（阶段 8 前必须逐项过）

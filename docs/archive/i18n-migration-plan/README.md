@@ -10,11 +10,11 @@
 
 | 文件 | 给谁看 | 内容 |
 |---|---|---|
-| `01-执行协议.md` | **AI 执行者必读（第一份）** | 12 条红线、单文件/单阶段工作循环、门禁 G1–G6、必须停下来提问的 8 种情况、失败处理、命名与风格、阶段报告模板、进度维护 |
-| `02-实施方案.md` | AI 执行者 | 技术方案（目录/依赖/l10n.yaml/接线/持久化/无 context 层规则/表改造规范/ARB 键规范/长文/Android）+ 阶段 0–8 的步骤与必测界面 + 问题对策 |
-| `03-任务清单.md` | AI 执行者 | **逐文件待办**（164 个 lib 文件按 8 个阶段分组 + 185 个测试文件），带处数/去重数/中文字数；勾选进度写在这里。由脚本生成，**勾选会被保留** |
-| `04-数据基线.md` | AI 执行者 + 用户 | 全部实测数字、不可翻译清单、持久化审计、附录（45 大文件、31 枚举、测试耦合、无 context 层）、数据口径、未验证项 |
-| `05-残留中文报告.md` | AI 执行者 | 由脚本生成的当前残留快照（含白名单过期项提示）。阶段门禁产物 |
+| `01-execution-protocol.md` | **AI 执行者必读（第一份）** | 12 条红线、单文件/单阶段工作循环、门禁 G1–G6、必须停下来提问的 8 种情况、失败处理、命名与风格、阶段报告模板、进度维护 |
+| `02-implementation-plan.md` | AI 执行者 | 技术方案（目录/依赖/l10n.yaml/接线/持久化/无 context 层规则/表改造规范/ARB 键规范/长文/Android）+ 阶段 0–8 的步骤与必测界面 + 问题对策 |
+| `03-task-list.md` | AI 执行者 | **逐文件待办**（164 个 lib 文件按 8 个阶段分组 + 185 个测试文件），带处数/去重数/中文字数；勾选进度写在这里。由脚本生成，**勾选会被保留** |
+| `04-data-baseline.md` | AI 执行者 + 用户 | 全部实测数字、不可翻译清单、持久化审计、附录（45 大文件、31 枚举、测试耦合、无 context 层）、数据口径、未验证项 |
+| `05-residual-chinese-report.md` | AI 执行者 | 由脚本生成的当前残留快照（含白名单过期项提示）。阶段门禁产物 |
 | `tools/i18n_scan.py` | 工具 | 扫描/门禁/清单生成（**只读**，仅 `tasks`/`residual` 写上面两份 md） |
 | `tools/whitelist.json` | 工具配置 | 不可翻译中文的白名单（整文件 / 单行 + 原因） |
 
@@ -30,24 +30,24 @@ Flutter 官方 l10n（gen_l10n + ARB）。严格按以下顺序工作，不要�
 
 1. 先读这六份文件（按序）：
    AGENTS.md
-   杂项文件/多语言支持方案/01-执行协议.md
-   杂项文件/多语言支持方案/02-实施方案.md
-   杂项文件/多语言支持方案/04-数据基线.md
-   杂项文件/多语言支持方案/03-任务清单.md
+   docs/archive/i18n-migration-plan/01-execution-protocol.md
+   docs/archive/i18n-migration-plan/02-implementation-plan.md
+   docs/archive/i18n-migration-plan/04-data-baseline.md
+   docs/archive/i18n-migration-plan/03-task-list.md
    docs/PROJECT.md
-2. 01-执行协议.md 里的红线是硬约束（禁止 flutter build/run、禁止 dart format、禁止 git commit/push、
+2. 01-execution-protocol.md 里的红线是硬约束（禁止 flutter build/run、禁止 dart format、禁止 git commit/push、
    禁止改 version、禁止改业务逻辑、禁止重排枚举顺序、禁止翻译不可翻译清单）。
 3. 从「阶段 0」开始：一条任务 = 一个文件，做完一个文件立刻 flutter analyze，通过后把
-   03-任务清单.md 里该行的 - [ ] 改成 - [x]，再进入下一条。
+   03-task-list.md 里该行的 - [ ] 改成 - [x]，再进入下一条。
 4. 每个阶段收口时：flutter analyze 无问题、全量 flutter test 通过、
-   python "杂项文件/多语言支持方案/tools/i18n_scan.py" residual --path <本阶段目录> 残留为 0、
+   python "docs/archive/i18n-migration-plan/tools/i18n_scan.py" residual --path <本阶段目录> 残留为 0、
    检查 gen-l10n 的未翻译清单为空。
-5. 每阶段收口后按 01-执行协议.md §9 的模板输出报告，然后停下来等我确认，不要自动进入下一阶段。
-6. 遇到 02-实施方案.md §6.2「由答复推导出的约定」你不认同、出现新的决策点、或与代码现状不一致、
+5. 每阶段收口后按 01-execution-protocol.md §9 的模板输出报告，然后停下来等我确认，不要自动进入下一阶段。
+6. 遇到 02-implementation-plan.md §6.2「由答复推导出的约定」你不认同、出现新的决策点、或与代码现状不一致、
    或需要改业务逻辑，立刻停下来问我，不要自己决定。
 7. 不许为了"完成任务"而降级实现或跳过验证；没做的事要如实写在报告里。
 
-已拍板的约束（详见 02-实施方案.md §0 与 §6，不要再问、不要自行更改）：
+已拍板的约束（详见 02-implementation-plan.md §0 与 §6，不要再问、不要自行更改）：
    - 默认语言 = 简体中文；语言选项只有 简体中文 / English（没有「跟随系统」）
    - 首次启动「同意隐私政策之后」立即弹语言选择窗（默认选中简体中文，只对全新安装弹一次，
      升级老用户不弹）；设置页新增「语言」组 +「语言设置」项，位置在「弹幕」组下方、「下载」组上方
@@ -94,7 +94,7 @@ Flutter 官方 l10n（gen_l10n + ARB）。严格按以下顺序工作，不要�
 
 ---
 
-## 4. 已拍板结论（2026 版，见 `02-实施方案.md` §6）
+## 4. 已拍板结论（2026 版，见 `02-implementation-plan.md` §6）
 
 | # | 问题 | 结论 |
 |---|---|---|
@@ -108,7 +108,7 @@ Flutter 官方 l10n（gen_l10n + ARB）。严格按以下顺序工作，不要�
 | 8 | 截图文件名 | **不跟随语言**，保持 `小喵Player-yyyy-…` |
 | 9 | 阶段停止确认 | **每阶段结束停下来等确认** |
 
-**由答复推导出的 4 条约定**（已写进文档，如不认同请告知，见 `02-实施方案.md` §6.2）：
+**由答复推导出的 4 条约定**（已写进文档，如不认同请告知，见 `02-implementation-plan.md` §6.2）：
 
 | # | 约定 |
 |---|---|
@@ -123,7 +123,7 @@ Flutter 官方 l10n（gen_l10n + ARB）。严格按以下顺序工作，不要�
 
 | 执行方式 | 工程侧 | 说明 |
 |---|---|---|
-| 人工按方案做 | 11.5–17.5 人日 | 见 `02-实施方案.md` 各阶段；已含首启语言选择弹窗（约 +0.5 天） |
+| 人工按方案做 | 11.5–17.5 人日 | 见 `02-implementation-plan.md` 各阶段；已含首启语言选择弹窗（约 +0.5 天） |
 | AI 执行 + 人工审阅/验证 | **约 7.5–10.5 人日**（压缩 35–40%） | 其中约 3–4 天是**不可压缩的人工部分**：真机验证、阶段 1/2/6 的关键审阅、长文通读、溢出目视 |
 
 说明：以上为估算，未在本仓库实测过 AI 执行。最大不确定项是"AI 修自己造成的 `const` 编译错误与测试红需要几轮"。
@@ -134,17 +134,17 @@ Flutter 官方 l10n（gen_l10n + ARB）。严格按以下顺序工作，不要�
 
 ```powershell
 # 工作目录 = 工程根
-python "杂项文件\多语言支持方案\tools\i18n_scan.py" baseline        # 总量/分层/ARB 语法冲突
-python "杂项文件\多语言支持方案\tools\i18n_scan.py" enums           # 枚举表清单（表改造范围）
-python "杂项文件\多语言支持方案\tools\i18n_scan.py" dupes           # 跨文件重复文案（common.* 依据）
-python "杂项文件\多语言支持方案\tools\i18n_scan.py" residual        # 全仓残留中文（有残留 exit 1）
-python "杂项文件\多语言支持方案\tools\i18n_scan.py" residual --path lib/pages/settings   # 阶段门禁
-python "杂项文件\多语言支持方案\tools\i18n_scan.py" tasks           # 重新生成 03-任务清单.md（保留勾选）
+python "docs\archive\i18n-migration-plan\tools\i18n_scan.py" baseline        # 总量/分层/ARB 语法冲突
+python "docs\archive\i18n-migration-plan\tools\i18n_scan.py" enums           # 枚举表清单（表改造范围）
+python "docs\archive\i18n-migration-plan\tools\i18n_scan.py" dupes           # 跨文件重复文案（common.* 依据）
+python "docs\archive\i18n-migration-plan\tools\i18n_scan.py" residual        # 全仓残留中文（有残留 exit 1）
+python "docs\archive\i18n-migration-plan\tools\i18n_scan.py" residual --path lib/pages/settings   # 阶段门禁
+python "docs\archive\i18n-migration-plan\tools\i18n_scan.py" tasks           # 重新生成 03-task-list.md（保留勾选）
 ```
 
 约定：
 
-- 脚本**只读源码**；只写 `03-任务清单.md` 与 `05-残留中文报告.md`。
+- 脚本**只读源码**；只写 `03-task-list.md` 与 `05-residual-chinese-report.md`。
 - 控制台输出保持 ASCII（避免 Windows 终端中文乱码）；中文明细写进报告文件。
 - 本机若没有 `python`，用：`C:\Users\root\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\python.exe`。
 - 白名单（不可翻译）在 `tools/whitelist.json`；**行号漂移会报"白名单过期项"**，需要同步维护。
@@ -153,10 +153,10 @@ python "杂项文件\多语言支持方案\tools\i18n_scan.py" tasks           #
 
 ## 7. 重要提醒
 
-1. **本目录在 `.gitignore:58`（`/杂项文件/`）内，不进 Git**。也就是说这些文档**不会随仓库提交**；如果你希望它们进版本控制，需要把目录移到 `docs/` 下，或调整 `.gitignore`。这是有意的取舍——请你自己决定。
+1. **本目录已进 Git**：原先在 `.gitignore:58`（`/杂项文件/`）内、不随仓库提交；2026-10-04 用户要求全部改成英文文件名并归档到 `docs/archive/i18n-migration-plan/`，**现已入库**（原来那条「要进版本控制就把目录移到 `docs/` 下」的待办已由本次归档完成）。
 2. **不要用 PowerShell 文本命令**（`Get-Content` / `Set-Content` / `-replace`）改 UTF-8 源码（`AGENTS.md` 规定），一律用编辑工具。
 3. 本仓库只做静态分析与测试：`flutter analyze` 无问题 + `flutter test` 通过即收工；**编译与真机验证由你自己用 Android Studio 完成**。
-4. 方案里的所有数字都是实测（口径见 `04-数据基线.md` §19），可用工具复现；**若复现结果与文档不符，说明代码已变化，执行者必须停下来报告**。
+4. 方案里的所有数字都是实测（口径见 `04-data-baseline.md` §19），可用工具复现；**若复现结果与文档不符，说明代码已变化，执行者必须停下来报告**。
 
 ---
 
@@ -169,6 +169,6 @@ python "杂项文件\多语言支持方案\tools\i18n_scan.py" tasks           #
 | 其中无 `BuildContext` 层 | 459 处 / 396 条 / 73 文件 |
 | 表改造范围 | 31 枚举 128 项 + 主题色 23 + 调色板 21 + 101 条映射项 |
 | 测试耦合 | 37 文件含 `find.text('中文')`（535 处）、24 文件访问 `.label` |
-| 任务总数 | **361**（164 个 lib 文案文件 + **12 个新增文件** + 185 个测试文件），见 `03-任务清单.md` |
-| 残留中文（白名单外） | **1792 处**（`05-残留中文报告.md`，阶段 8 必须清零） |
+| 任务总数 | **361**（164 个 lib 文案文件 + **12 个新增文件** + 185 个测试文件），见 `03-task-list.md` |
+| 残留中文（白名单外） | **1792 处**（`05-residual-chinese-report.md`，阶段 8 必须清零） |
 | 现有 l10n 基建 | 零（无 `flutter_localizations` / `intl` / `l10n.yaml` / `localizationsDelegates`） |

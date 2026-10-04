@@ -10,7 +10,7 @@ import sys
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 ROOT = r'C:\Users\root\Desktop\moumou'
-REPORT = ROOT + r'\杂项文件\多语言支持方案\05-残留中文报告.md'
+REPORT = ROOT + r'\docs\archive\i18n-migration-plan\05-residual-chinese-report.md'
 ZH = ROOT + r'\lib\l10n\app_zh.arb'
 
 GROUPS = {

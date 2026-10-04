@@ -1,7 +1,7 @@
 # 01 · 执行协议（AI 执行者必读，先读这一份）
 
 > 你（AI）要在这个仓库里把中文硬编码文案迁移到 Flutter 官方 l10n（`gen_l10n` + ARB）。
-> 本协议是**硬约束**：与 `02-实施方案.md` 冲突时以本协议为准；与仓库根目录 `AGENTS.md` 冲突时以 `AGENTS.md` 为准。
+> 本协议是**硬约束**：与 `02-implementation-plan.md` 冲突时以本协议为准；与仓库根目录 `AGENTS.md` 冲突时以 `AGENTS.md` 为准。
 > 本协议中「必须 / 禁止 / 不允许」都是门禁级要求，**违反即回滚该次改动并在报告里说明**。
 
 ---
@@ -11,10 +11,10 @@
 | 顺序 | 文件 | 读它是为了 |
 |---|---|---|
 | 1 | `AGENTS.md`（仓库根目录） | 仓库协作规则：只做静态分析与测试、禁编译、禁提交、不升版本号、不跑 format |
-| 2 | `杂项文件/多语言支持方案/01-执行协议.md` | 本文件：红线与门禁 |
-| 3 | `杂项文件/多语言支持方案/02-实施方案.md` | 技术方案与阶段步骤（怎么改） |
-| 4 | `杂项文件/多语言支持方案/04-数据基线.md` | 现状数字、不可翻译清单、持久化审计（**不要自己重新统计**） |
-| 5 | `杂项文件/多语言支持方案/03-任务清单.md` | 你的待办：一条 = 一个文件，勾选进度写在这里 |
+| 2 | `docs/archive/i18n-migration-plan/01-execution-protocol.md` | 本文件：红线与门禁 |
+| 3 | `docs/archive/i18n-migration-plan/02-implementation-plan.md` | 技术方案与阶段步骤（怎么改） |
+| 4 | `docs/archive/i18n-migration-plan/04-data-baseline.md` | 现状数字、不可翻译清单、持久化审计（**不要自己重新统计**） |
+| 5 | `docs/archive/i18n-migration-plan/03-task-list.md` | 你的待办：一条 = 一个文件，勾选进度写在这里 |
 | 6 | `docs/PROJECT.md` | 改动落点涉及的模块职责（防止改错层） |
 
 ---
@@ -26,13 +26,13 @@
 3. **禁止提交与推送**：不 `git commit`、不 `git push`、不建 tag、不改历史。改动只停在本地工作区。
 4. **禁止改 `pubspec.yaml` 的 `version:`**（除非用户点名"升版本号"，且按 `AGENTS.md` 的 `a.b.c+N` 规则递增）。
 5. **禁止改业务逻辑**。唯一例外：`lib/widgets/folder_actions.dart` 的哨兵值 `'取消'`（第 260、380 行）改成常量/枚举——这是阶段 1 的第一步，且必须保持行为完全等价。
-6. **禁止翻译不可翻译清单**（`04-数据基线.md` §13 = `tools/whitelist.json`）：字幕轨语言判定、外挂字幕后缀、集数正则、章节关键词、FTP GBK 分支、哨兵值。
-7. **禁止调整任何枚举项的顺序、禁止删除枚举项、禁止改枚举名**。持久化用 index / `.name` / `.id`（证据见 `04-数据基线.md` §14），重排会让老用户设置错乱。
+6. **禁止翻译不可翻译清单**（`04-data-baseline.md` §13 = `tools/whitelist.json`）：字幕轨语言判定、外挂字幕后缀、集数正则、章节关键词、FTP GBK 分支、哨兵值。
+7. **禁止调整任何枚举项的顺序、禁止删除枚举项、禁止改枚举名**。持久化用 index / `.name` / `.id`（证据见 `04-data-baseline.md` §14），重排会让老用户设置错乱。
 8. **禁止修改既有持久化键名与取值格式**。新增键只允许 `app_locale`，且**值只允许 `'zh'` / `'en'`**（**不允许 `'system'`**，用户已定不提供「跟随系统」）；缺省、空值、非法值一律回落 `'zh'`。
 9. **禁止在 `lib/models/`、`lib/utils/` 里 `import` Flutter 或 l10n**：这些层刻意保持纯 Dart 可单测（文件头注释常写"纯函数，可单测"）。翻译一律在 UI 层做映射。
 10. **禁止引入新的第三方依赖**，阶段 0 只允许加 `flutter_localizations`（SDK）与 `intl`。也**不要**引入任何第三方 i18n 迁移工具（用户已明确否决）。
 11. **禁止在中途留下编译不过的状态**：每改完一个文件必须立刻 `flutter analyze` 通过，才能进入下一个文件。
-12. **禁止自行决定已拍板项的细节或新增要求**：决策见 `02-实施方案.md` §6（如英文应用名、长文做法、语言弹窗时机、默认语言）。`§6.2` 里"推导出的约定"如果不认同，**先问再改**。
+12. **禁止自行决定已拍板项的细节或新增要求**：决策见 `02-implementation-plan.md` §6（如英文应用名、长文做法、语言弹窗时机、默认语言）。`§6.2` 里"推导出的约定"如果不认同，**先问再改**。
 13. **日志永远保持中文**（用户已定：无论将来增加多少语言，日志都不翻译）。日志输出既不算"残留中文"，也不许顺手英文化。
 14. **截图文件名保持现状**：`lib/utils/formatters.dart:24` 的 `小喵Player-yyyy-…` 不随语言变化。
 15. **应用名固定**：中文 `小喵Player`、英文 `Meow Player`。Dart `appTitle`（zh/en）与 Android `app_name`（`values/`、`values-en/`）都只能用这两串，**不许自创**。
@@ -42,21 +42,21 @@
 
 ## 2. 工作粒度与循环
 
-**粒度**：严格按 `03-任务清单.md` **一条任务 = 一个文件** 推进。禁止一次改多个文件（除非该文件与其测试文件是同一处改动的两半）。
+**粒度**：严格按 `03-task-list.md` **一条任务 = 一个文件** 推进。禁止一次改多个文件（除非该文件与其测试文件是同一处改动的两半）。
 
 **单文件循环**：
 
-1. 从 `03-任务清单.md` 取当前阶段的第一条未勾选任务。
+1. 从 `03-task-list.md` 取当前阶段的第一条未勾选任务。
 2. 读该文件全文（不要只读片段），确认它属于哪一类：
    - UI 文案（`pages` / `widgets`）→ 用 `AppLocalizations.of(context).xxx`
-   - 表（枚举 / 映射表 / `switch` 返回中文）→ 按 `02-实施方案.md` §2.8
+   - 表（枚举 / 映射表 / `switch` 返回中文）→ 按 `02-implementation-plan.md` §2.8
    - 无 context 层（`services` / `models` / `utils`）→ 按 §2.7（只产出码/枚举 + 参数）
    - 不可翻译清单命中 → 跳过，不动它
 3. 改这一个文件：加 ARB 键（中英双语）→ 改调用点 → 去掉多余的 `const`。
 4. 跑 `flutter gen-l10n`（ARB 变了就要跑）。
 5. 跑 `flutter analyze`：**必须无问题**。有问题就地修，不许留给下一个文件。
 6. 若该文件有对应测试文件（`test/<同名>_test.dart`），跑 `flutter test test/<该文件>`；失败要判断是"预期红（夹具未做）"还是"自己改坏了"。
-7. 在 `03-任务清单.md` 把该行 `- [ ]` 改成 `- [x]`。
+7. 在 `03-task-list.md` 把该行 `- [ ]` 改成 `- [x]`。
 8. 记一句话进度（改了哪些键、有无遗留），进入下一条。
 
 **阶段循环**（每阶段收口）：
@@ -65,7 +65,7 @@
 2. `flutter analyze` 无问题。
 3. `flutter test`（**全量**）通过。
 4. `python tools/i18n_scan.py residual --path <本阶段目录>` → 残留数必须为 0（不可翻译清单里的白名单项除外）。
-5. 更新 `03-任务清单.md` 的进度总览（`python tools/i18n_scan.py tasks` 重新生成即可，勾选会被保留）。
+5. 更新 `03-task-list.md` 的进度总览（`python tools/i18n_scan.py tasks` 重新生成即可，勾选会被保留）。
 6. 按 §9 的模板输出阶段报告，然后**停下来等用户确认**，不要自动进入下一阶段。
 
 ---
@@ -86,16 +86,16 @@ flutter test test/xxx_test.dart
 flutter test
 
 # 4) 残留中文门禁（有残留 exit code = 1）
-python "杂项文件\多语言支持方案\tools\i18n_scan.py" residual --path lib/pages/settings
+python "docs\archive\i18n-migration-plan\tools\i18n_scan.py" residual --path lib/pages/settings
 
 # 5) 未翻译清单（阶段收口必须为空）
 #    l10n.yaml 里配置 --untranslated-messages-file 的输出文件，检查其内容
 
 # 6) 重新生成任务清单（保留勾选）
-python "杂项文件\多语言支持方案\tools\i18n_scan.py" tasks
+python "docs\archive\i18n-migration-plan\tools\i18n_scan.py" tasks
 ```
 
-说明：扫描脚本是**只读**的（除 `tasks` 写 `03-任务清单.md`、`residual` 写 `05-残留中文报告.md`）。
+说明：扫描脚本是**只读**的（除 `tasks` 写 `03-task-list.md`、`residual` 写 `05-residual-chinese-report.md`）。
 若本机没有 `python`，用 DSH 提供的解释器：`C:\Users\root\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\python.exe`。
 
 ---
@@ -111,7 +111,7 @@ python "杂项文件\多语言支持方案\tools\i18n_scan.py" tasks
 
 **阶段 0 的夹具没绿之前，禁止改任何业务文案**——否则测试一片红，你无法区分"预期红"与"自己改坏"。
 
-**新增文件任务**（`l10n.yaml`、ARB、`app_locale_settings.dart`、`label_maps.dart`、语言弹窗、`legal_*.dart`、Android `strings.xml`、测试夹具）不在扫描范围内，因此单独列在 `03-任务清单.md` 的「新增文件任务」小节，**同样要逐条勾选**；文件命名若与清单不一致，必须先把清单改掉再动手。
+**新增文件任务**（`l10n.yaml`、ARB、`app_locale_settings.dart`、`label_maps.dart`、语言弹窗、`legal_*.dart`、Android `strings.xml`、测试夹具）不在扫描范围内，因此单独列在 `03-task-list.md` 的「新增文件任务」小节，**同样要逐条勾选**；文件命名若与清单不一致，必须先把清单改掉再动手。
 
 ---
 
@@ -132,7 +132,7 @@ python "杂项文件\多语言支持方案\tools\i18n_scan.py" tasks
 
 ## 6. 必须停下来提问的情况（不许自行决定）
 
-1. **`02-实施方案.md` §6.2 的"推导约定"你并不认同**，或用户临时改主意、或出现新的决策点（例如语言弹窗要不要强制选择、要不要支持第三种语言）。§6.1 的九项已拍板，**不要再问**、也不要自行更改。
+1. **`02-implementation-plan.md` §6.2 的"推导约定"你并不认同**，或用户临时改主意、或出现新的决策点（例如语言弹窗要不要强制选择、要不要支持第三种语言）。§6.1 的九项已拍板，**不要再问**、也不要自行更改。
 2. 本协议/方案与代码现状**不一致**（例如文档说某文件有 X 处中文，实际是 Y 处；某行号对不上）。
 3. 需要**改业务逻辑**才能完成迁移（例如某个中文值既当文案又当逻辑判断——`folder_actions` 那种）。
 4. 测试红了，且判断不出原因是"夹具/预期"还是"自己改坏了"。
@@ -174,7 +174,7 @@ python "杂项文件\多语言支持方案\tools\i18n_scan.py" tasks
 | 语言偏好持久化 | 键 `app_locale`，值**只允许 `'zh'` / `'en'`**（ASCII，不含中文，**没有 `'system'`**），默认 `'zh'` |
 | 语言选项文案 | 用**自称**且**不翻译**：`简体中文` / `English`（弹窗与设置页都一致） |
 | 长文文件 | `lib/l10n/legal_zh.dart` / `lib/l10n/legal_en.dart`，保留 `'''…'''` 多行排版；文件头写明"改中文必须同步改英文" |
-| 语言弹窗文件 | `lib/widgets/language_picker_dialog.dart`（如需改名，先同步 `03-任务清单.md`） |
+| 语言弹窗文件 | `lib/widgets/language_picker_dialog.dart`（如需改名，先同步 `03-task-list.md`） |
 | 应用名 | zh=`小喵Player`、en=`Meow Player`；Dart 用 `appTitle` 键，Android 用 `@string/app_name` |
 
 ---
@@ -203,7 +203,7 @@ python "杂项文件\多语言支持方案\tools\i18n_scan.py" tasks
 
 ## 10. 进度与交接
 
-- 进度唯一真源 = `03-任务清单.md` 的勾选框（`- [x]`）。**每完成一个文件就勾一个**，不要批量补勾。
-- 每次 `residual` 会覆盖 `05-残留中文报告.md`，它是当前残留快照，不需要手工维护。
+- 进度唯一真源 = `03-task-list.md` 的勾选框（`- [x]`）。**每完成一个文件就勾一个**，不要批量补勾。
+- 每次 `residual` 会覆盖 `05-residual-chinese-report.md`，它是当前残留快照，不需要手工维护。
 - 每次改完 ARB 后跑 `python tools/i18n_scan.py tasks` 刷新清单（勾选保留）。
-- 交接给下一个会话/下一个 AI 时，让对方先读本协议 §0 的六份文件，再看 `03-任务清单.md` 的勾选状态继续做。
+- 交接给下一个会话/下一个 AI 时，让对方先读本协议 §0 的六份文件，再看 `03-task-list.md` 的勾选状态继续做。

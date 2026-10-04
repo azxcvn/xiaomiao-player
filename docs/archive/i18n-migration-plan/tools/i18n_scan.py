@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 """多语言迁移：扫描 / 门禁 / 任务清单生成工具（只读扫描，除 tasks --write 外不改任何文件）。
 
-用途（配合 ../01-执行协议.md 使用）：
-  python i18n_scan.py baseline               # 总体数字（与 04-数据基线.md 对账）
+用途（配合 ../01-execution-protocol.md 使用）：
+  python i18n_scan.py baseline               # 总体数字（与 04-data-baseline.md 对账）
   python i18n_scan.py residual               # 全仓残留中文（白名单外）→ 有残留 exit 1
   python i18n_scan.py residual --path lib/pages/settings   # 只查某目录（阶段门禁）
   python i18n_scan.py enums                  # 枚举/表清单（表改造范围）
   python i18n_scan.py dupes                  # 跨文件重复文案（common.* 归并依据）
-  python i18n_scan.py tasks                  # 生成/更新 ../03-任务清单.md（保留已勾选状态）
+  python i18n_scan.py tasks                  # 生成/更新 ../03-task-list.md（保留已勾选状态）
   python i18n_scan.py all                    # 以上全部摘要（不含写文件）
 
 约定：
-  * 只统计数据，不修改源码；`tasks` 只写 ../03-任务清单.md 与 ../05-残留中文报告.md。
+  * 只统计数据，不修改源码；`tasks` 只写 ../03-task-list.md 与 ../05-residual-chinese-report.md。
   * 控制台输出保持 ASCII（避免 Windows 终端中文乱码）；中文内容写入 UTF-8 报告文件。
-  * 口径见 ../04-数据基线.md「数据口径」一节；白名单见同目录 whitelist.json。
+  * 口径见 ../04-data-baseline.md「数据口径」一节；白名单见同目录 whitelist.json。
 
 退出码：0 = 通过；1 = residual 发现残留（或白名单过期项）；2 = 用法/环境错误。
 """
@@ -39,8 +39,8 @@ MAP_ENTRY = re.compile(r"['\"][^'\"]*['\"]\s*:\s*['\"][^'\"]*[\u4e00-\u9fff]")
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PKG_DIR = os.path.dirname(SCRIPT_DIR)          # 多语言支持方案/
-TASKS_MD = os.path.join(PKG_DIR, "03-任务清单.md")
-RESIDUAL_MD = os.path.join(PKG_DIR, "05-残留中文报告.md")
+TASKS_MD = os.path.join(PKG_DIR, "03-task-list.md")
+RESIDUAL_MD = os.path.join(PKG_DIR, "05-residual-chinese-report.md")
 WHITELIST_JSON = os.path.join(SCRIPT_DIR, "whitelist.json")
 
 # 生成物与「按语言拆分的正文常量」：它们本身就是**某一种语言**的文案表
@@ -119,7 +119,7 @@ PHASE2_FILES = {
     "lib/pages/settings/settings_page.dart",
 }
 # 阶段 1 清单里这 8 个文件的中文是「给界面看的文案」（抛出的错误消息，或
-# 「未知语言」「年度大会员」「无偏移」这类显示文本）：按 02-实施方案.md §1.8 要改成
+# 「未知语言」「年度大会员」「无偏移」这类显示文本）：按 02-implementation-plan.md §1.8 要改成
 # 「码 + 参数」、文案由 UI 层翻译，而它们的显示点都在阶段 3–5 的 UI 文件里。
 # 用户已拍板：留到阶段 6，与 ftp_client / bili_http 等同类的服务层文案一起做。
 PHASE6_FILES = {
@@ -539,7 +539,7 @@ def phase_of(rel, tables):
 
     含表的页面文件（如 pages/player/views/audio_player_panels.dart 里的
     AudioSleepPreset）仍归其页面阶段，任务行上加「含表」标注；表本身按
-    04-数据基线.md 的枚举清单在阶段 1 处理。
+    04-data-baseline.md 的枚举清单在阶段 1 处理。
     """
     if rel in PHASE0_FILES:
         return 0

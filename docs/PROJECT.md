@@ -476,7 +476,7 @@ utils（纯工具）    → 只依赖 models
 
 - **投屏**：`CastService` 通过 SSDP 发现 DLNA 渲染器并推送播放地址；`LanMediaServer` 提供局域网媒体服务（本地文件 → HTTP，支持 Range/CORS）。
 - **更新**：`UpdateService.checkForUpdate` 取本地版本与 GitHub Releases 最新版本比较（带网络重试与响应体积上限），`UpdateSettings` 记录自动检查开关与忽略版本。
-- **隐私**：`PrivacyPolicySettings` 首次启动门禁（倒计时 + 勾选同意）；长文正文按语言拆在 `lib/l10n/legal_zh.dart` / `legal_en.dart`，入口是 `lib/l10n/legal.dart` 的 `legalTextsFor`（界面文案一律走 ARB，见 `杂项文件/多语言支持方案/`）。
+- **隐私**：`PrivacyPolicySettings` 首次启动门禁（倒计时 + 勾选同意）；长文正文按语言拆在 `lib/l10n/legal_zh.dart` / `legal_en.dart`，入口是 `lib/l10n/legal.dart` 的 `legalTextsFor`（界面文案一律走 ARB，见 `docs/archive/i18n-migration-plan/`）。
 - **设备能力**：`DeviceCapabilities`（原生）探测屏幕 HDR、关键编解码器与系统解码器清单，配合设备信息页与解码器详情页；`decode_settings` 持久化解码方式与预设。
 
 ### 5.11 多语言（l10n）
@@ -492,7 +492,7 @@ utils（纯工具）    → 只依赖 models
 - **不翻译的东西**：日志（含崩溃日志文件内容，原生侧同理）、第三方接口内容（番剧名 / 简介 / 弹幕 / 服务端 message）、内容匹配关键词（集数正则、字幕语言判定、章节关键词）、落盘文件名与截图文件名（`小喵Player-yyyy-…`）、系统相册名。
 - **改文案的固定流程**：改 `app_zh.arb` / `app_en.arb` → `flutter gen-l10n` → `flutter analyze` → 全量 `flutter test`；`l10n_untranslated.json` 必须为空（英文不许缺键）。
 - **Android 原生侧**：只有用户可见的文案进 `android/app/src/main/res/values/strings.xml`（中文默认）与 `values-en/strings.xml`；应用名固定 zh=`小喵Player` / en=`Meow Player`，`AndroidManifest.xml` 用 `@string/app_name`；通知渠道 ID `moumou_background_playback` **不许改**（改了会变成新渠道）。
-- 迁移方案、逐文件清单与残留扫描工具（本地保留、不入库）：`杂项文件/多语言支持方案/`；残留门禁 `python tools/i18n_scan.py residual [--include-android] [--fullwidth]`。
+- 迁移方案、逐文件清单与残留扫描工具（本地保留、不入库）：`docs/archive/i18n-migration-plan/`；残留门禁 `python tools/i18n_scan.py residual [--include-android] [--fullwidth]`。
 
 ---
 

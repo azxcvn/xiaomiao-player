@@ -1,7 +1,7 @@
 /// 多语言测试夹具（阶段 0 建，各阶段复用）。
 ///
 /// 为什么需要：widget 测试环境的平台 locale 实测是 `en_US`
-/// （`locales = [en_US, zh_CN]`，见 `杂项文件/多语言支持方案/04-数据基线.md` §10）。
+/// （`locales = [en_US, zh_CN]`，见 `docs/archive/i18n-migration-plan/04-data-baseline.md` §10）。
 /// 接入 l10n 并支持 `en` 之后，**没钉 locale 的 widget 测试会渲染英文**，
 /// 185 个测试文件里的 535 处 `find.text('中文')` 断言会整片失败。
 /// 夹具的作用就是把测试 locale 钉回简体中文。

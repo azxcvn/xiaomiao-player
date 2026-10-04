@@ -3,10 +3,10 @@
 > 本文件由**只读扫描**生成：没有修改任何源码、没有跑 `flutter` 命令。
 > 目的：在这批「接入官方 Flutter l10n」的改动里，挑出**除了纯粹中文文案替换之外**、
 > 可能影响原有功能行为的改动，供回归测试定向验证。
-> 基线 = `7276793^`，当前 = `629389e`（HEAD，分支 `English`，6 个提交）。（扫描时快照；**收口后 HEAD = `8227c21`**，R1/R2/R4 与长文星号已修，以 `04-数据基线.md` §1 为准。）
+> 基线 = `7276793^`，当前 = `629389e`（HEAD，分支 `English`，6 个提交）。（扫描时快照；**收口后 HEAD = `8227c21`**，R1/R2/R4 与长文星号已修，以 `04-data-baseline.md` §1 为准。）
 > 采集方式：`git diff 7276793^..HEAD`（逐目录、逐文件）+ `git log -S` 追提交来源 +
 > `read` / `grep` 逐个确认**当前 HEAD 文件里的真实行号**（不是 diff 的 `@@` 行号）。
-> 参考对照：`杂项文件/多语言支持方案/03-任务清单.md`、`05-残留中文报告.md`、`06-遗留与待办.md`、`docs/PROJECT.md`。
+> 参考对照：`docs/archive/i18n-migration-plan/03-task-list.md`、`05-residual-chinese-report.md`、`06-open-items-and-todo.md`、`docs/PROJECT.md`。
 > 口径说明：「严重度」按**行为回归风险**评，不按「英文好不好看」评；
 > 拿不准的一律标 `未确认`，不推测。
 
@@ -19,7 +19,7 @@
 | 删除文件 | `lib/utils/dolby_vision_hint.dart`（搬到 `lib/widgets/`）、`lib/services/privacy_policy_content.dart` |
 | 与 l10n **无关**的行为改动 | 至少 1 处（见 §1 表中「非图床封面 URL 不再被规整」一行，由 `7276793` 混入） |
 | 风险条数 | **29 条**（高 2 / 中 6 / 低 21） |
-| 确认的硬编码中文残留 | 2 处（`subtitle_download_page.dart:378`、`chapter_utils.dart:196`），与 `05-残留中文报告.md` 的「残留数 0」矛盾 |
+| 确认的硬编码中文残留 | 2 处（`subtitle_download_page.dart:378`、`chapter_utils.dart:196`），与 `05-residual-chinese-report.md` 的「残留数 0」矛盾 |
 
 ## 1. 回归风险清单（按严重度从高到低）
 
@@ -30,7 +30,7 @@
 | 网络弹幕「加载成功」toast 丢掉引导词前缀 | `lib/pages/player/player_page.dart:526-530`、`lib/pages/player/player_portrait_page.dart:471-475`；文案 `lib/l10n/app_zh.arb:5043/5058`、`lib/l10n/app_en.arb:1246-1247` | 回调拆成 `(anime, episode, serverName, autoMatch)` 后，toast 直接用 `playerNetworkDanmakuLoadedManual/Auto` 拼整句，而这两条 ARB 只有「番剧 · 集（来源）」，**没有**「已加载弹幕：」 | 选中/自动匹配网络弹幕成功后，用户只看到「某番剧 · 第1集（弹弹Play）」这一串裸文本，读不出这是"加载成功"的回执（改造前是「已加载弹幕：…」）；两条路径（手动选 / 切集自动匹配）各有独立 key，都要看 | 播放页 → 弹幕 → 网络弹幕 → 搜索并选一集加载，看底部 toast；再用「切集自动匹配」触发 Auto 那条；竖屏播放页各重复一次（横竖屏是两个文件） | 中 |
 | 下载任务持久化的失败原因字段改名 → 旧存档的失败原因丢失 | `lib/services/download/download_task.dart:129-146`（写 `errorCode`/`errorArgs`）、`:189-203`（`_errorFromJson`）、消费点 `lib/pages/download/download_manager_page.dart:137-141` | `toJson` 的 `error`（中文串）换成 `errorCode` + `errorArgs`，`fromJson` 只认新键（旧键被静默忽略） | 升级前已存在的失败任务，重启后 `_error = null` → 下载管理页只显示通用「下载失败」，看不到具体原因（是网络、写盘还是合并失败）；反向（旧版本读新存档）同样丢原因。`_errorFromJson` 对未知码名捕获后回落 null，不崩 | 1) 用基线版本造一条失败任务（断网下载）并杀进程；2) 覆盖安装 HEAD 版本 → 打开「下载管理」，确认那条任务的失败文案是否退化成通用句；3) 手工改 prefs 里的任务 JSON，把 `errorCode` 改成不存在的名字，确认不崩且回落通用文案 | 中 |
 | 英文界面下数字单位是直译（`1.2 hundred million` / `1.2 ten thousand`） | `lib/l10n/app_en.arb:828-829`；调用点 `lib/pages/bilibili/bili_season_page.dart:369-377` | `_formatCount` 由硬编码「亿 / 万」改为 `biliCountHundredMillion` / `biliCountTenThousand`，英文侧直译 | B 站番剧详情页的播放量/追番数在英文界面会显示 `1.2 ten thousand` 这类不自然量级（中文侧无变化） | 应用内切 English → 打开任意番剧详情页看「播放/追番」数字；切回中文确认数值一致 | 中 |
-| 硬编码中文残留「当前来源：」（与残留报告矛盾） | `lib/pages/subtitle/subtitle_download_page.dart:378` | 只把冒号后的来源名换成 `subtitleSourceKindLabel`，前缀 `'当前来源：'` 仍是字面量；ARB 里确实没有这个键 | 英文界面「我的 → 字幕下载」页的设置卡副标题会中英混排（`当前来源：Wyzie Subtitle Service`）；同时说明 `05-残留中文报告.md` 的「残留数 0」口径漏了"拼在字符串字面量里的中文" | 应用内切 English → 进「我的 → 字幕下载」，看「字幕下载设置」副标题 | 中 |
+| 硬编码中文残留「当前来源：」（与残留报告矛盾） | `lib/pages/subtitle/subtitle_download_page.dart:378` | 只把冒号后的来源名换成 `subtitleSourceKindLabel`，前缀 `'当前来源：'` 仍是字面量；ARB 里确实没有这个键 | 英文界面「我的 → 字幕下载」页的设置卡副标题会中英混排（`当前来源：Wyzie Subtitle Service`）；同时说明 `05-residual-chinese-report.md` 的「残留数 0」口径漏了"拼在字符串字面量里的中文" | 应用内切 English → 进「我的 → 字幕下载」，看「字幕下载设置」副标题 | 中 |
 | 章节无标题时的回退文案仍是中文「第 N 章」 | `lib/utils/chapter_utils.dart:196`（`chapterNumberFallbackLabel`）→ `:182-190`（`chapterTitleAt`）→ `lib/pages/player/player_page.dart:3928`、`lib/pages/player/player_portrait_page.dart:2532` | `utils/` 按分层不许 import l10n，兜底文案留在纯函数里；本次既没搬走也没码化 | 英文界面下拖动进度条：章节**只有时间没有标题**的文件（MKV 常见，见 `chapter_utils.dart:180-181` 注释）缩略图下方会显示中文「第 2 章」 | 应用内切 English → 打开一个章节 title 为空的 MKV → 拖进度条看缩略图下方的章节胶囊；`test/chapter_utils_test.dart:286-288/306-308` 仍断言中文，可作反证 | 中 |
 | 登录失败原因被合并，具体信息丢失 | `lib/l10n/error_texts.dart:129-132`；抛出点 `lib/services/bilibili/bili_account.dart:124/133/218` | 原三条不同中文现在只剩两句：`loginCookieMissing`（"Cookie 缺少 SESSDATA，无法登录"）被映射成 `biliCookieInvalid`（与 `loginCookieInvalid` 同一句「Cookie 无效或已过期」）；`loginCredentialParseFailed` 映射到 `biliLoginFailedRetry` | 导入一个格式里根本没有 SESSDATA 的 Cookie 时，提示从"缺少 SESSDATA"变成"Cookie 无效或已过期"，归因被误导（是解析问题不是过期问题） | 「我的 → 登录 → Cookie 导入」粘贴一个不含 SESSDATA 的 Cookie 串，观察提示文案；再粘贴一个含 SESSDATA 但无效的，确认两句是否已变成同一句 | 中 |
 | 英文侧两段 l10n 文案直接相邻拼接，分号后缺空格 | `lib/pages/settings/player_settings_page.dart:388-389`；文案 `lib/l10n/app_en.arb:255-256` | 原一句中文被拆成两个 key 后直接 `'${a}''${b}'` 拼接；en 第一段以 `;` 结尾、第二段以 `Falls` 开头 | 英文界面「播放设置 → 解码」底部的 Vulkan 说明会渲染成 `...(reopening the video);Falls back to OpenGL...`，排版缺陷（中文侧无影响） | 应用内切 English → 播放设置页滚到底部，检查该提示分号后是否有空格 | 低 |
@@ -65,7 +65,7 @@
 3. **「空串 = 由 UI 兜底」是隐式契约**：`SubtitleTrack.displayTitle`(`models/subtitle_track.dart:47`)、`AudioTrack.displayTitle`(`models/audio_track.dart:45`)、`BiliPlaylistItem.title`(`models/bili_playlist.dart:30`)、`SubtitleEntry` 的展示名(`models/subtitle_entry.dart:37`)、`WyzieSubtitle`(`models/wyzie_models.dart:54`) 现在都可能返回**空串**，全靠调用方记得走 `label_maps`。任何一个新调用点忘记兜底，界面就是空白（不是旧文案，也不是崩溃）。
 4. **占位符类型风格不统一**：同一批 UI 里既有 `int`/plural 形参（`playerBiliTotalEpisodes(int)`、`audioSleepMinutes(int)`、`fileSelectionSelected(int)`、`playerEpisodeCountUnit(int)`），又有「把数字转成 String 再传」的（`playerDiagnosticsDuration('$m', s)`、`biliPlaylistEpisode('${item.index}')`、`playerDelaySeconds('$sign$text')`、`networkDefaultPort('$def')`、`biliCountHundredMillion('1.2')`）。后者拿不到 intl 的千分位/复数能力，也更容易被翻译成不自然的量级（见 §1 表中「英文界面下数字单位是直译」一行）。
 5. **`serviceErrorText` 的 `_ => '$error'` 是静默降级**（`error_texts.dart:40`）：新增异常类型若忘记加分支，不会编译报错，界面会直接露出 `类名(码)`。
-6. **残留扫描口径有漏**：`05-残留中文报告.md` 声明残留 0，但至少两处中文会进界面——`subtitle_download_page.dart:378`（拼在字符串里的中文前缀）与 `chapter_utils.dart:196`（`utils/` 层产出的可展示文案）。说明"汉字区 + 全角标点"的扫描没覆盖「字符串字面量中的中文片段」和「utils 返回的可展示文案」。
+6. **残留扫描口径有漏**：`05-residual-chinese-report.md` 声明残留 0，但至少两处中文会进界面——`subtitle_download_page.dart:378`（拼在字符串里的中文前缀）与 `chapter_utils.dart:196`（`utils/` 层产出的可展示文案）。说明"汉字区 + 全角标点"的扫描没覆盖「字符串字面量中的中文片段」和「utils 返回的可展示文案」。
 7. **应用名有两份真相**：Dart 侧 `appTitle`（zh 小喵Player / en Meow Player，`app_localizations_en.dart` 附近）与 Android `@string/app_name`（跟随系统语言），两者可同时生效且**互不跟随**；另有第三份硬编码中文名留在截图路径：`formatters.dart:24`（文件名 `小喵Player-YYYYMMDD_HHMMSS`）、`player_page.dart:1417` / `player_portrait_page.dart:694` / `bili_login_page.dart:169`（`albumPath: '小喵Player'`）。英文界面下相册名与截图文件名仍是中文。
 8. **默认服务器名 `DanmakuServer.defaultName = '弹弹Play（默认）'`**（`models/danmaku_server.dart:48`）在服务层已不再用于展示（UI 一律走 l10n），但它仍在持久化/比对链路上；两份"默认服务器名"（常量 vs l10n）并存，英文界面下任何漏改的展示点都会露中文。
 9. **落盘文件名里的中文**：`'未命名'` 有三处——`models/network_connection.dart:133`（连接名兜底，UI 已强制非空 → 基本不可达，`未确认`）、`services/download/download_task.dart:605`、`utils/wyzie_filename.dart:15`（后两处会变成磁盘上的文件名，英文界面下也会出现中文文件名）。

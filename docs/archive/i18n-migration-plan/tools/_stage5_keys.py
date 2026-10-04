@@ -9,7 +9,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 ROOT = r'C:\Users\root\Desktop\moumou'
 ZH = ROOT + r'\lib\l10n\app_zh.arb'
 EN = ROOT + r'\lib\l10n\app_en.arb'
-OUT = ROOT + r'\杂项文件\多语言支持方案\tools\_stage5_keys.md'
+OUT = ROOT + r'\docs\archive\i18n-migration-plan\tools\_stage5_keys.md'
 
 zh = json.loads(open(ZH, encoding='utf-8').read())
 en = json.loads(open(EN, encoding='utf-8').read())

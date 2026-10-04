@@ -14,10 +14,10 @@ import collections
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 ROOT = r'C:\Users\root\Desktop\moumou'
-TOOLS = ROOT + r'\杂项文件\多语言支持方案\tools'
+TOOLS = ROOT + r'\docs\archive\i18n-migration-plan\tools'
 PY = r'C:\Users\root\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\python.exe'
 
-# 阶段 5 文件清单（来自 03-任务清单.md 阶段 5 小节）
+# 阶段 5 文件清单（来自 03-task-list.md 阶段 5 小节）
 STAGE5 = """lib/pages/subtitle/views/subtitle_settings_section.dart
 lib/pages/media_info/media_info_page.dart
 lib/pages/bilibili/bili_login_page.dart
@@ -56,7 +56,7 @@ lib/widgets/bili_cover_image.dart
 lib/widgets/folder_card.dart
 lib/widgets/speed_dial_fab.dart""".split('\n')
 
-# 1) 全仓 residual（子进程；报告写到 05-残留中文报告.md）
+# 1) 全仓 residual（子进程；报告写到 05-residual-chinese-report.md）
 subprocess.run([PY, TOOLS + r'\i18n_scan.py', 'residual'], cwd=ROOT,
                capture_output=True)
 
@@ -143,7 +143,7 @@ for k, v in zh.items():
     canon.setdefault(canon_arb(v), []).append(k)
 
 rows = []
-rep = open(TOOLS + r'\..\05-残留中文报告.md', encoding='utf-8').read()
+rep = open(TOOLS + r'\..\05-residual-chinese-report.md', encoding='utf-8').read()
 for line in rep.split('\n'):
     m = re.match(r'^\| `(.+?)` \| (\d+) \| (.*) \|$', line)
     if m:

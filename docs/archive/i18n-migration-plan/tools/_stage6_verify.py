@@ -14,7 +14,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 ROOT = r'C:\Users\root\Desktop\moumou'
 ZH = os.path.join(ROOT, 'lib', 'l10n', 'app_zh.arb')
 
-sys.path.insert(0, os.path.join(ROOT, '杂项文件', '多语言支持方案', 'tools'))
+sys.path.insert(0, os.path.join(ROOT, 'docs', 'archive', 'i18n-migration-plan', 'tools'))
 import _stage6_arb as s6  # noqa: E402
 import _stage6_arb2 as s62  # noqa: E402
 

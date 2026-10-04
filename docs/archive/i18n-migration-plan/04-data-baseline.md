@@ -128,7 +128,7 @@ Localizations.localeOf(context) = en_US
 ```
 
 → 测试环境**默认解析到 `en_US`**。接入 l10n 且支持 `en` 之后，任何未钉 locale 的 widget 测试都会渲染英文，535 处断言立刻失败。
-**所以阶段 0 必须先做测试夹具**（见 `02-实施方案.md` 阶段 0）。
+**所以阶段 0 必须先做测试夹具**（见 `02-implementation-plan.md` 阶段 0）。
 
 ## 11. Android 原生侧现状
 
@@ -240,7 +240,7 @@ Localizations.localeOf(context) = en_US
 | 13 | 11 | 55 | `lib/widgets/update_dialog.dart` |
 | 12 | 11 | 48 | `lib/pages/bilibili/bili_user_page.dart` |
 
-其余 119 个文件每文件 ≤11 处（其中 77 个 ≤5 处）。完整逐文件清单见 `03-任务清单.md`。
+其余 119 个文件每文件 ≤11 处（其中 77 个 ≤5 处）。完整逐文件清单见 `03-task-list.md`。
 
 ## 16. 附录 B · 31 个携带中文标签的枚举（128 项）
 
@@ -285,7 +285,7 @@ Localizations.localeOf(context) = en_US
 - **强耦合（含 `find.text('中文')`）37 个文件 / 535 处**，头部：`player_danmaku_network_panel_test`(64)、`player_danmaku_settings_panel_test`(61)、`subtitle_download_page_test`(61)、`danmaku_server_page_test`(41)、`file_operations_ui_test`(32)、`wallpaper_editor_page_test`(22)、`appearance_page_test`(19)、`player_settings_page_test`(19)、`device_info_page_test`(16)、`network_browser_page_test`(14)…
 - **访问 `.label` 等 24 个文件 / 53 处**，头部：`equalizer_preset_test`(6)、`audio_track_test`(5)、`bili_bangumi_test`(4)、`network_sort_test`(4)…
 
-完整清单（含每个文件的处数标注）见 `03-任务清单.md` 末节。
+完整清单（含每个文件的处数标注）见 `03-task-list.md` 末节。
 
 ## 18. 附录 D · 无 `BuildContext` 层文案最多的文件（前 30）
 
@@ -340,7 +340,7 @@ python tools/i18n_scan.py baseline     # 总量 + 分层 + ARB 语法
 python tools/i18n_scan.py enums        # 枚举表清单
 python tools/i18n_scan.py dupes        # 跨文件重复文案
 python tools/i18n_scan.py residual     # 残留中文（白名单外），有残留 exit 1
-python tools/i18n_scan.py tasks        # 重新生成 03-任务清单.md（保留勾选）
+python tools/i18n_scan.py tasks        # 重新生成 03-task-list.md（保留勾选）
 ```
 
 ## 20. 未验证项（执行者不要当结论用）

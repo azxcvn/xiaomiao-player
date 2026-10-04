@@ -1,6 +1,6 @@
 /// 服务层错误码表（**纯 Dart，禁止 import Flutter / l10n**）。
 ///
-/// 分层约定见 `杂项文件/多语言支持方案/02-实施方案.md` §1.8：`services` / `models` /
+/// 分层约定见 `docs/archive/i18n-migration-plan/02-implementation-plan.md` §1.8：`services` / `models` /
 /// `utils` 只产出「码 + 参数」，文案一律由 UI 层翻译——见
 /// `lib/l10n/error_texts.dart` 的各 `*ErrorText` 函数与统一入口 [serviceErrorText]。
 ///

@@ -1,7 +1,7 @@
 # 06 · 遗留与待办（执行过程中累积，收口时必须处理）
 
 > 本文件由执行 AI 维护：记录**执行过程中发现、但按用户拍板推迟**的事项。
-> 与 `03-任务清单.md`（逐文件勾选）互补：这里是"清单之外必须记住的事"。
+> 与 `03-task-list.md`（逐文件勾选）互补：这里是"清单之外必须记住的事"。
 >
 > ⚠️ **读之前先看 §0**：本文写在执行过程中，§1 的「待办」与 §2 的「中间态」
 > **绝大多数已在阶段 6–8 收口时处理完**；§0 是 2026-10-02 逐条回代码核对后的结果。
@@ -29,13 +29,13 @@
 | §2.9 码 + 参数 + UI 侧翻译 | 阶段 6 | ✅ 已完成（`utils/error_codes.dart` + `l10n/error_texts.dart`） |
 | §2.10 默认弹幕服务器显示名 | 阶段 6 | ✅ 已完成（`label_maps.danmakuServerDisplayName`） |
 | §2.11 无 UI 显示点的错误码 | 键保留备用 | ⏸ **维持现状**：界面本来就不显示这些原因，不是待办 |
-| §2.12 阶段 6 顺带的结构性改动 | 真机验证时注意 | ✅ 改动已落地；**验证已移交** `杂项文件/多语言引入后测试策划/`（355 条回归用例） |
+| §2.12 阶段 6 顺带的结构性改动 | 真机验证时注意 | ✅ 改动已落地；**验证已移交** `docs/archive/i18n-regression-test-plan/`（355 条回归用例） |
 | §2.13 长文落地 | 阶段 7 | ✅ 已完成；正文 Markdown 星号**已于 2026-10 修掉**（见 §0.1） |
 | §2.14 Android 原生侧 | 用户打包核验 | ✅ **用户 2026-10 自测通过**（应用名 / 通知渠道名与描述 / 存储卷回退名 / 崩溃提示）；渠道名的卸载重装验证**用户明确不要求** |
 
 ### 0.1 收口后新发现并已修的问题（提交 `8227c21`，2026-10-02）
 
-来源：回归扫描 `杂项文件/多语言引入后测试策划/tools/_scan_regression.md`（29 条风险中的高/中危项）。
+来源：回归扫描 `docs/archive/i18n-regression-test-plan/tools/_scan_regression.md`（29 条风险中的高/中危项）。
 
 | # | 问题 | 修法 |
 |---|---|---|
@@ -57,7 +57,7 @@
 
 ### 1.1 ARB 里「同一句中文分布在多个键」（阶段 4 结束时 17 组）
 
-`02-实施方案.md` §1.10 要求「同一句中文必须复用同一个键」。阶段 0–3 结束时
+`02-implementation-plan.md` §1.10 要求「同一句中文必须复用同一个键」。阶段 0–3 结束时
 ARB（zh 520 键）里约有 **10 组**相同中文分别定义在多个键上（例：`许可证书`×2、
 `自动`×3、`绿色`/`黄色` 等颜色名×2、`默认`×2、`删除`×2 等）。成因：阶段 0–2 与
 平行子代理各自按模块建键，未全局去重。
@@ -248,7 +248,7 @@ l10n.subtitleCustomSourceHelp('{name}')
 
 ### 2.9 阶段 6 的分层落地：码 + 参数 + UI 侧翻译（新增两个文件）
 
-按 `02-实施方案.md` §1.8 落地：
+按 `02-implementation-plan.md` §1.8 落地：
 
 - 新增 `lib/utils/error_codes.dart`（纯数据、无 Flutter / l10n 依赖）：`NetworkErrorCode` /
   `BiliApiErrorCode` / `DandanApiErrorCode` / `WyzieApiErrorCode` / `CustomSubtitleApiErrorCode` /
@@ -307,7 +307,7 @@ l10n.subtitleCustomSourceHelp('{name}')
 
 ### 2.13 阶段 7 长文（隐私政策 / 用户协议）的落地方式
 
-按 `02-实施方案.md` §1.11 执行完毕：
+按 `02-implementation-plan.md` §1.11 执行完毕：
 
 - 正文按语言拆成 `lib/l10n/legal_zh.dart`（中文源文，由 `tools/_stage7_legal.py`
   从原 `lib/services/privacy_policy_content.dart` **逐字**生成，3418 汉字，与基线一致）
@@ -328,7 +328,7 @@ l10n.subtitleCustomSourceHelp('{name}')
 
 ### 2.14 阶段 8 收尾（Android 原生 + 重复键归并 + 全角标点）
 
-**Android 原生**（`02-实施方案.md` §1.12；✅ **用户 2026-10 已自测通过**：应用名 / 通知渠道名与描述 / 存储卷回退名 / 崩溃提示，见 §0）：
+**Android 原生**（`02-implementation-plan.md` §1.12；✅ **用户 2026-10 已自测通过**：应用名 / 通知渠道名与描述 / 存储卷回退名 / 崩溃提示，见 §0）：
 
 - 新建 `android/app/src/main/res/values/strings.xml`（默认=中文）与 `values-en/strings.xml`，
   9 个键：`app_name`、`background_playback_channel_{name,description}`、
@@ -393,7 +393,7 @@ ARB **1272** 键（zh/en 对称）、`l10n_untranslated.json` = `{}`、
 | 新增测试文件 | `test/language_picker_test.dart`、`test/app_smoke_test.dart`（AI 追加，已登记进 `NEW_FILE_TASKS`）|
 | 清单口径 | `scan_files()`（`tasks` 用）阶段 4 起也认白名单：整文件豁免不再计为任务文件、行豁免不再计入「N 处」。修正前 `tasks` 会把 4 个整文件豁免（字幕语言/自动匹配/集数正则/章节关键词表）与 5 条行豁免算成待办（89 文件 → 82 文件）|
 | 阶段 4 键表 | `tools/_stage4_arb.py`（285 键的 zh/en/描述/占位符表，可重跑：先 `git checkout -- lib/l10n/app_*.arb` 再跑，最后必须 `flutter gen-l10n`）；`tools/_stage4_keys.md` 为生成的中英对照 |
-| 阶段 5 工具 | `_stage5_arb.py`（332 键表，同上可重跑）、`_stage5_groups.py`（把 `05-残留中文报告.md` 按 A–D/M 分组并给出「原文 → 建议调用」，含人工 `OVERRIDE` 表）、`_stage5_keys.md`（中英对照）、`_stage5_verify.py`（新增键是否有调用点）。注意 `_stage5_groups.py` 的匹配器有个已知坑：`\$(\w+)` 在 Python 里会把紧随其后的汉字也吃进 `\w`（`$label链接待接入`），这类行必须写进 `OVERRIDE` |
+| 阶段 5 工具 | `_stage5_arb.py`（332 键表，同上可重跑）、`_stage5_groups.py`（把 `05-residual-chinese-report.md` 按 A–D/M 分组并给出「原文 → 建议调用」，含人工 `OVERRIDE` 表）、`_stage5_keys.md`（中英对照）、`_stage5_verify.py`（新增键是否有调用点）。注意 `_stage5_groups.py` 的匹配器有个已知坑：`\$(\w+)` 在 Python 里会把紧随其后的汉字也吃进 `\w`（`$label链接待接入`），这类行必须写进 `OVERRIDE` |
 | 白名单（阶段 5 后） | 整文件 6 个；行豁免共 **10** 条：`ftp_client.dart:287`；截图相册名 3 处（`player_page.dart:1406`、`player_portrait_page.dart:688`、`bili_login_page.dart:169`）；B 站角标匹配键 6 条（`player_bili_playlist_panel.dart:208/209/210`、`bili_episode_tile.dart:81/82/83`）|
 | 白名单（阶段 6 后） | 整文件 **5** 个（`danmaku_episode.dart` 改为按行豁免）；行豁免 **17** 条 = 原 10 条（行号按阶段 6 改动更新：`ftp_client.dart:311`、相册名 `player_page.dart:1417` / `player_portrait_page.dart:694` / `bili_login_page.dart:169`、角标键 `player_bili_playlist_panel.dart:209/210/211` + `bili_episode_tile.dart:81/82/83`）+ 新增 7 条数据/文件名（`formatters.dart:24`、`danmaku_local_file.dart:16`、`network_connection.dart:133`、`danmaku_server.dart:48`、`wyzie_filename.dart:15`、`download_task.dart:605`、`update_service.dart:166`）|
 | 阶段 6 键表 | `tools/_stage6_arb.py`（139 键）+ `tools/_stage6_arb2.py`（4 键：弹幕回执 2 + 拾遗 2），两者都**只新增**、可反复运行；`tools/_stage6_verify.py` 直接 import 键表核对「键是否都有调用点」。跑完键表**必须** `flutter gen-l10n` |
