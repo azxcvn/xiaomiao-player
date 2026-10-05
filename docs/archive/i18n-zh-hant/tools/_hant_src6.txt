@@ -1,0 +1,172 @@
+biliAccount	哔哩哔哩账号
+mediaScanGroupRules	扫描规则
+mediaScanNoMedia	扫描包含 .nomedia 的文件夹
+mediaScanNoMediaDesc	扫描系统忽略的目录
+mediaScanHiddenFolders	扫描以 . 开头的隐藏文件夹
+mediaScanHiddenFoldersDesc	扫描隐藏文件
+mediaScanGroupFilterMode	文件夹过滤模式
+mediaScanAll	全部扫描
+mediaScanAllDesc	扫描所有未跳过的文件夹
+mediaScanBlacklist	黑名单模式
+mediaScanBlacklistDesc	排除指定文件夹
+mediaScanWhitelist	白名单模式
+mediaScanWhitelistDesc	仅扫描指定文件夹
+mediaScanBlacklistList	黑名单文件夹列表
+mediaScanWhitelistList	白名单文件夹列表
+mediaScanAddFolder	添加文件夹
+mediaScanBlacklistEmpty	暂无黑名单文件夹（未排除任何目录）
+mediaScanWhitelistEmpty	暂无白名单文件夹（未添加时默认显示全部）
+mediaScanNoMediaDialogTitle	开启提示
+mediaScanNoMediaDialogBody	此功能将扫描系统默认忽略的 .nomedia 文件夹。\n\n开启后，某些应用程序的缓存视频、临时文件或表情包也可能被展示在媒体列表中。是否继续？
+mediaScanAddBlacklistFolder	添加黑名单文件夹
+mediaScanAddWhitelistFolder	添加白名单文件夹
+mediaScanPickBlacklistHint	选择要排除的媒体文件夹（点击直接添加）：
+mediaScanPickWhitelistHint	选择要仅保留扫描的媒体文件夹（点击直接添加）：
+mediaScanNoMoreFolders	未发现更多媒体文件夹
+mediaScanFolderItemSubtitle	{path}\n{count, plural, other{{count} 个视频}}
+mediaScanBrowseOther	浏览设备其他目录...
+mediaScanPickFolder	选择文件夹
+mediaScanGoUp	上一级
+mediaScanNoSubfolders	当前目录下无子文件夹
+mediaScanPickCurrentFolder	选择当前文件夹 ({name})
+biliIndexTitle	索引
+biliRecommend	推荐
+biliBangumi	哔哩番剧
+biliParseLink	解析链接
+biliParse	解析
+biliNothingHere	暂无内容
+biliTimeline	追番时间表
+biliToday	今天
+biliWeekdayMon	周一
+biliWeekdayTue	周二
+biliWeekdayWed	周三
+biliWeekdayThu	周四
+biliWeekdayFri	周五
+biliWeekdaySat	周六
+biliWeekdaySun	周日
+biliFollowed	已追番
+biliLinkUnrecognized	无法识别该链接（支持 ss/ep/BV/av 号与 b23.tv 短链）
+biliParseBangumiLink	解析番剧链接
+biliPasteAnimeLinkHint	粘贴番剧/视频链接或 b23.tv 短链
+biliSearchAnime	搜索番剧
+biliSearchAnimeHint	输入关键词搜索番剧
+biliNoAnimeFound	没有找到相关番剧
+biliSeasonDetail	番剧详情
+biliNoEpisodeSelection	暂无选集
+biliViewAll	查看全部
+biliSelectEpisode	选集
+biliRating	评分 {score}
+biliCountHundredMillion	{value}亿
+biliCountTenThousand	{value}万
+biliIntro	简介
+biliMultiSeason	多季
+biliEpisodeNo	第 {number} 话
+biliVideoFallbackTitle	B 站视频
+biliPlayFailed	播放失败：{error}
+biliLevel	等级
+biliAssets	资产
+biliCoins	硬币
+biliCoinsDesc	用于投币等操作
+biliSignOut	退出登录
+biliMaxLevel	已满级
+biliExpValue	经验值 {current} / {next}
+biliSignOutConfirm	确定退出哔哩哔哩账号吗？
+biliSignOutAction	退出
+biliLoginQrLoading	正在获取二维码...
+biliLoginScanHint	请使用哔哩哔哩客户端扫码
+biliLoginQrFailed	获取二维码失败，请重试
+biliLoginQrRefreshing	二维码已失效，正在刷新...
+biliLoginScannedConfirm	已扫码，请在手机上确认
+biliLoginCredentialFailed	登录凭证获取失败，请重试
+biliLoginSuccess	登录成功：{nickname}
+biliLoginFailedRetry	登录失败，请重试
+biliQrSavedToGallery	二维码已保存到相册
+biliClientNotFound	未检测到哔哩哔哩客户端
+biliPasteCookieFirst	请先粘贴 Cookie
+biliCookieInvalid	登录失败：Cookie 无效或已过期
+biliCookieMissingSessdata	Cookie 缺少 SESSDATA，无法登录
+biliLoginCredentialParseFailed	登录凭证解析失败（缺少 SESSDATA）
+biliLoginTitle	哔哩哔哩登录
+biliLoginQrTab	扫码登录
+biliLoginCookieTab	Cookie 登录
+biliLoginRemaining	剩余有效时间：{seconds} 秒
+biliQrRefresh	刷新二维码
+biliSaveToGallery	保存到相册
+biliOpenApp	打开哔哩哔哩
+biliOpenAppDesc	「打开哔哩哔哩」会在已安装的哔哩哔哩客户端中自动唤起扫码确认。
+biliCookieLoginDesc	从浏览器复制 Cookie 粘贴登录（扫码异常时的备用方式）
+biliLoggingIn	登录中...
+biliCookiePrivacy	Cookie 仅本地加密保存，不会上传或记录日志。
+biliDanmakuTasksAdded	{count, plural, other{已添加 {count} 个弹幕下载任务}}
+biliVideoTasksAdded	{count, plural, other{已添加 {count} 个视频下载任务}}
+biliPasteVideoLinkHint	粘贴 B 站视频/番剧链接（BV / av / ss / ep / b23.tv）
+biliPasteThenParse	粘贴链接后点「解析」
+biliEpisodesSelected	{count, plural, other{已选 {count} 集}}
+biliEpisodesSelectedOfTotal	已选 {selected} / 共 {total, plural, other{{total} 集}}
+biliDownloadDanmaku	下载弹幕（{count}）
+biliDownloadVideo	下载视频（{count}）
+biliSyncDanmaku	同步下载弹幕
+mediaInfoItem	媒体信息
+mediaInfoCopied	媒体信息已复制
+mediaInfoTitleWithName	媒体信息 - {title}
+mediaInfoGeneralHeader	【通用信息】
+mediaInfoVideoStreams	视频流
+mediaInfoAudioStreams	音频流
+mediaInfoSubtitleStreams	字幕流
+mediaInfoFetchFailed	媒体信息获取失败
+mediaInfoGeneral	通用信息
+mediaInfoFormat	格式
+mediaInfoFormatVersion	格式版本
+mediaInfoFileSize	文件大小
+mediaInfoOverallBitrate	总比特率
+mediaInfoEncodedDate	编码日期
+mediaInfoWritingApp	编码应用
+mediaInfoWritingLibrary	编码库
+mediaInfoVideoStreamNo	视频流 #{index}
+mediaInfoAudioStreamNo	音频流 #{index}
+mediaInfoSubtitleStreamNo	字幕流 #{index}
+mediaInfoNoInfo	未获取到媒体信息
+mediaInfoCodec	编码
+mediaInfoProfile	配置
+mediaInfoCodecId	编码ID
+mediaInfoWidth	宽
+mediaInfoHeight	高
+mediaInfoAspectRatio	宽高比
+mediaInfoFrameRateMode	帧率模式
+mediaInfoBitrate	比特率
+mediaInfoBitDepth	位深度
+mediaInfoColorSpace	色彩空间
+mediaInfoChromaSubsampling	色度子采样
+mediaInfoHdrFormat	HDR格式
+mediaInfoChannels	声道
+mediaInfoStreamSize	流大小
+mediaInfoStream	流
+biliCoverUnavailable	哔哩封面不可用（缓存未命中且下载失败）
+biliWbiKeyMissingPlay	未获取到 WBI 密钥，无法解析播放地址
+biliWbiKeyMissingSearch	未获取到 WBI 密钥，无法搜索
+biliRiskControlTriggered	触发风控验证（v_voucher），请稍后重试或切换网络
+biliVideoNotFound	视频不存在或无权访问
+biliVideoNoAccess	无权访问，可能需要登录或大会员
+biliVideoVipRequired	需要大会员权限
+biliVideoRiskControlFailed	风控验证失败，请稍后重试
+biliVideoExclusive	专属视频，需开通相应权限
+biliDownloadLinkUnrecognized	无法识别 B 站链接（支持 BV / av / ss / ep / 合集链接 / b23.tv 短链）
+biliDownloadNoVideoParts	未解析到视频分 P
+biliDownloadBangumiNoEpisodes	该番剧没有可下载的集数
+biliDownloadCollectionNoVideos	该合集没有可下载的视频
+biliDownloadCollectionEmpty	该合集暂无内容
+biliDownloadNoDanmaku	该集没有弹幕
+biliDownloadNoVideoStream	未获取到视频流
+biliDownloadMergeFailed	音视频合并失败
+biliDownloadNetworkFailed	网络请求失败
+biliDownloadWriteFailed	写入文件失败（磁盘空间或权限）
+biliDownloadWriteFailedDetail	写入文件失败（磁盘空间或权限）：{error}
+biliVipNormal	普通会员
+biliVipAnnual	年度大会员
+biliVipMember	大会员
+biliPlaylistEpisode	第 {index} 集
+mediaInfoStreamsGroupTitle	【{title}】
+mediaInfoSampleRates	采样率
+biliVideoDownloadTitle	视频下载
+biliDanmakuDownloadTitle	弹幕下载
+biliSubtitleDownloadTitle	字幕下载

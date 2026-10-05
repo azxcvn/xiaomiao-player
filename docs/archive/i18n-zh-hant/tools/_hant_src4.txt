@@ -1,0 +1,148 @@
+playerDoubleTapPause	双击暂停/播放
+playerDoubleTapSeek	双击左退右进
+playerDoubleTapMixed	混合模式
+playerOrientationPortrait	锁定竖屏
+playerOrientationLandscape	锁定横屏
+playerVideoFitFill	拉伸
+playerVideoFitCover	裁剪
+playerVideoFitFitWidth	等宽
+playerVideoFitFitHeight	等高
+playerVideoFitNone	原始
+playerVideoFitScaleDown	限制
+playerActionSubtitle	字幕
+playerActionAudio	音频
+playerActionAspect	比例
+playerActionDecode	解码
+playerActionChapter	章节
+playerActionCast	投屏
+playerActionPip	画中画
+playerActionListen	听视频
+playerActionLoop	循环播放
+playerActionIntroOutro	片头片尾
+playerActionDiagnostics	播放诊断
+playerActionEqualizer	音频均衡器
+playerAutoLoadedSubtitle	已自动加载字幕：{fileName}
+playerAutoLoadedDanmaku	已自动加载弹幕：{fileName}
+playerDanmakuLoaded	已加载弹幕：{message}
+playerQualityUnavailableSwitched	该清晰度不可用，已切换到 {name}
+playerQualitySwitchFailed	切换画质失败：{error}
+playerScreenshotFailed	截图失败：{error}
+playerScreenshotNoImage	截图失败：未获取到图像
+playerSavedToGallery	已保存到相册
+playerScreenshotSaveFailed	截图保存失败：{error}
+playerDanmakuSettings	弹幕设置
+playerSkippedIntro	已跳过片头
+playerSkippedOutro	已跳过片尾
+playerNoNetworkCannotSwitch	网络连接不存在，无法切换
+playerSwitchFailed	切换失败：{error}
+playerResolveUrlFailed	解析播放地址失败
+playerSwitchEpisodeFailed	切集失败：{error}
+playerPlaybackSpeed	播放倍速
+playerSuperResolution	超分辨率
+playerAspectRatio	画面比例
+playerCastUnsupportedSource	暂不支持投屏该来源
+playerFeatureNotPlaced	未放置的功能
+playerFeatureComingSoon	功能即将上线
+playerEditControlBar	编辑控制栏
+playerActionsEnabledHint	已启用（长按拖拽排序）
+playerNoEnabledActions	暂无已启用动作，从下方添加
+playerAddable	可添加
+playerMaxActions	{max, plural, other{最多允许放 {max} 个}}
+playerResetControlBar	重置控制栏
+playerDanmakuNetwork	网络弹幕
+playerDanmakuLoadFailed	弹幕加载失败
+playerDanmakuMatching	正在匹配弹幕，请稍候…
+playerDanmakuNoMatch	未找到匹配的弹幕
+playerDanmakuPickMatch	选择匹配结果
+playerPipUnsupported	当前设备不支持画中画
+playerPipFailed	进入画中画失败
+playerPlaylist	播放列表
+playerLock	锁定
+playerUnlock	解锁
+playerScreenshot	截图
+playerRestoreView	还原画面
+playerAudioTrack	音轨
+playerNoAudioTrackHint	当前视频没有音轨，可在下方导入外部音轨
+playerExternalAudioTrack	外部音轨
+playerImportExternalAudioTrack	导入外部音轨
+playerTempEffectHint	临时生效，退出播放后不保留
+playerAudioChannel	音频声道
+playerAudioProcessing	音频处理
+playerVolumeNormalize	音量标准化
+playerDynamicRangeCompress	动态范围压缩
+playerPickAudioFile	选择音频文件
+playerExternalAudioImported	已导入外部音轨
+playerImportFailedCheckFormat	导入失败，请检查文件格式
+playerRemoveAudioTrack	移除已导入的音轨
+playerPlaylistWithCount	播放列表（{count}）
+playerEqualizerEnable	启用均衡器
+playerEqualizerDesc	调节频段增益、低音增强和虚拟环绕
+playerPreset	预设
+playerEqualizerBands	频段调节
+playerEqualizerBass	低音增强
+playerEqualizerSurround	虚拟环绕
+playerBiliNoEpisodes	没有获取到剧集列表
+playerBiliTotalEpisodes	{total, plural, other{共 {total} 集}}
+playerBiliCurrentOfTotal	第 {current} 集 / 共 {total, plural, other{{total} 集}}
+playerBiliFreeLimited	限免
+playerBiliPreview	预告
+playerNextEpisode	下一集
+playerCastSelectScreen	选择屏幕
+playerSeekBackSeconds	快退 {seconds} 秒
+playerSeekForwardSeconds	快进 {seconds} 秒
+playerChapterPanelTitle	章节跳段
+playerNoChapters	当前视频无章节信息
+playerChapterCount	{count, plural, other{共 {count} 章}}
+playerChapterNumber	第 {number} 章
+playerChapterSkipAuto	自动跳过
+playerChapterSkipAutoDesc	进入对应片段时自动跳到片段结束；关闭则仅弹出跳过胶囊
+playerChapterSkipCustomKeywords	自定义关键词
+playerChapterSkipKeywordsHint	按章节标题匹配，支持逗号 / 分号 / 换行分隔
+playerIntroKeywords	片头关键词
+playerIntroKeywordsHint	如 ap、op、开场
+playerOutroKeywords	片尾关键词
+playerOutroKeywordsHint	如 ed、ending、结尾
+playerChapterSkipKeywordOwnerHint	关键词归属由你填入的位置决定：填进「片头关键词」即判为片头、填进「片尾关键词」即判为片尾；同一标题命中多类时按固定优先级（前情提要 > 正片前段 > 制作人员 > 下集预告 > 片尾 > 片头）取一类。
+playerDanmakuClose	关闭弹幕
+playerDanmakuOpen	打开弹幕
+playerEpisodeInvalidInput	请输入集数（数字）
+playerEpisodeNotFound	没有第 {number} 集
+playerEpisodeTotalFromServer	{total, plural, other{共 {total} 集 · 来自 {server}}}
+playerJumpToEpisode	跳至第
+playerEpisodeNumber	集数
+playerDanmakuNetworkSearchHint	输入番剧名称
+playerDanmakuStopSearch	停止搜索
+playerDanmakuResultCountUnit	{count, plural, other{{count} 部}}
+playerDanmakuSearchingWithCount	正在搜索 · 已获得 {count, plural, other{{count} 部}}
+playerDanmakuSearchStoppedCount	已停止搜索 · 共 {count, plural, other{{count} 部}}
+playerDanmakuPartialServerFailed	部分服务器搜索失败：{errors}
+playerDanmakuSearching	搜索中…
+playerDanmakuNetworkInputHint	输入关键词搜索网络弹幕
+playerEpisodeCountUnit	{count, plural, other{{count} 集}}
+playerDanmakuLocal	本地弹幕
+playerDanmakuNetworkComingSoon	「网络弹幕」功能即将上线
+playerDanmakuAutoMatch	自动匹配
+playerDanmakuAutoMatchComingSoon	「自动匹配」功能即将上线
+playerPickDanmakuFile	选择弹幕文件
+playerLocalDanmakuLoaded	已加载本地弹幕：{name}
+playerDanmakuLoadFailedCheckFormat	弹幕加载失败，请检查文件格式
+playerDanmakuStyle	弹幕样式
+playerDanmakuFontSize	弹幕字号
+playerDanmakuSpeed	弹幕速度
+playerDanmakuSpeedDesc	数值越小弹幕越快
+playerStrokeWidth	描边粗细
+playerOpacity	不透明度
+playerDanmakuConfig	弹幕配置
+playerDanmakuDisplayArea	显示区域
+playerDanmakuLineHeight	弹幕行高
+playerDanmakuTop	顶部弹幕
+playerDanmakuBottom	底部弹幕
+playerDanmakuScroll	滚动弹幕
+playerDanmakuMassive	海量弹幕
+playerDanmakuMassiveDesc	轨道占满时叠加绘制，弹幕过多不再丢弃
+playerDanmakuDedupe	弹幕去重
+playerDanmakuDedupeDesc	相同时间下相同弹幕合并为一条
+playerDanmakuMerge	弹幕合并
+playerDanmakuMergeDesc	不同时间内相同弹幕合并且计数
+playerDanmakuOffset	弹幕偏移
+playerDanmakuTimelineOffset	时间轴偏移

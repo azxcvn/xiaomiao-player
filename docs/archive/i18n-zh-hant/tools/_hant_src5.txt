@@ -1,0 +1,147 @@
+playerDanmakuAdvanceOneSecond	提前 1 秒
+playerDanmakuDelayOneSecond	延后 1 秒
+playerDanmakuResetOffset	重置偏移
+playerDanmakuFont	弹幕字体
+playerDanmakuPaletteMaxHint	{max, plural, other{最多选 {max} 种颜色}}
+playerDanmakuPaletteTitle	弹幕颜色（可多选，随机使用）
+playerDanmakuColorExists	该颜色已在调色板中
+playerDanmakuPaletteFull	{max, plural, other{已选满 {max} 种}}
+playerDanmakuAddToPalette	添加到调色板
+playerDanmakuPaletteSelected	已选 {selected}/{max, plural, other{{max} 种}}
+playerDanmakuBlockWords	屏蔽词
+playerDanmakuBlockWordsHint	输入要屏蔽的关键词
+playerFontsImported	已导入 {count} 个字体文件，共 {total, plural, other{{total} 种字体}}
+playerPickFontDir	选择字体目录
+playerFontDirImportHint	点击导入包含 .ttf/.otf 字体的目录
+playerFontsLoaded	已加载 {count, plural, other{{count} 种字体}}
+playerPickFont	选择字体
+playerRestartRequired	需重启应用
+playerDecodeRestartBody	解码配置已修改，重启应用后生效。\n\n是否立即重启？
+playerRestartLater	稍后重启
+playerRestartNow	立即重启
+playerDecodePreset	解码预设
+playerDecodePresetDesc	切换后需重启应用生效，可选立即重启
+playerDecodeHwPlusDesc	「硬解+」直通不可用时由内核依次回退硬解 / 软解
+playerDiagnosticsContainer	容器
+playerDiagnosticsAudioCodec	音频编码
+playerDiagnosticsVideoOutput	视频输出
+playerDiagnosticsSyncMode	同步方式
+playerDiagnosticsPixelFormat	像素格式
+playerDiagnosticsContainerFps	容器帧率
+playerDiagnosticsActualFps	实际帧率
+playerDiagnosticsVideoBitrate	视频码率
+playerDiagnosticsAudioParams	音频参数
+playerDiagnosticsAudioBitrate	音频码率
+playerDiagnosticsAvSync	音画同步
+playerDiagnosticsCacheGroup	缓存与丢帧
+playerDiagnosticsBufferDuration	缓冲时长
+playerDiagnosticsPlayableDuration	可播时长
+playerDiagnosticsCacheUsage	缓存占用
+playerDiagnosticsDownlinkRate	下行速率
+playerDiagnosticsDroppedFrames	丢帧
+playerDiagnosticsDecodeDropped	解码丢帧
+playerDiagnosticsDelayedFrames	延迟帧
+playerDiagnosticsAutoRefreshHint	每秒自动刷新 · 数据来自 mpv 运行时属性
+playerDiagnosticsReadFailed	无法读取播放器属性（播放器可能未就绪或已卡住）
+playerDiagnosticsFailedValue	读取失败：{keys}（显示的是上一次成功值）
+playerDiagnosticsFailedValueMore	读取失败：{keys} 等 {count} 项（显示的是上一次成功值）
+playerIntroRange	片头范围
+playerOutroRange	片尾范围
+playerRangeHint	拖动或输入设置时间，可按需调整上方范围
+playerSetToCurrentTime	设为当前时间
+playerSetToRemainingTime	设为当前剩余时间
+playerEnableIntroOutroSkip	启用跳过片头片尾
+playerIntroOutroSkipDesc	通过手动设置秒数来跳过片头片尾
+playerNoOtherVideos	当前文件夹没有其他视频
+playerNoQuality	暂无可用画质
+playerQualitySwitchHint	切换画质会重开播放并保持进度
+playerResumeIndicator	已恢复上次播放进度
+playerRestartFromBeginning	重头开始
+playerSpeedPlaying	正在 {speed} 倍速播放
+playerSpeedSwipeHint	左右滑动可临时调节长按倍数
+playerSpeedAlreadyInPresets	该倍速已在预设中
+playerSpeedPresetLimit	{max, plural, other{自定义预设已达上限（{max} 个）}}
+playerMyPresets	我的预设
+playerPreciseSpeed	精确调速
+playerApplyTemporarily	临时应用
+playerAddToPresets	添加到预设
+playerSpeedReset	归位
+playerResetPresets	重置预设
+playerMode	模式
+playerSuperResolutionQuality	超分质量
+playerRememberSuperResolution	记忆超分模式
+playerRememberSuperResolutionDesc	开启后自动应用上次的超分模式与质量
+playerSubtitleTracks	字幕轨道
+playerNoSubtitleHint	当前视频没有字幕，可在下方导入外挂字幕
+playerSubtitleOff	关闭字幕
+playerExternalSubtitle	外挂字幕
+playerImportExternalSubtitle	导入外部字幕
+playerSubtitleSettings	字幕设置
+playerSubtitleDelay	字幕延迟
+playerSubtitleStyle	字幕样式
+playerSubtitleMisc	字幕杂项
+playerSubtitleFont	字幕字体
+playerPickSubtitleFile	选择字幕文件
+playerExternalSubtitleImported	已导入外挂字幕
+playerRemoveSubtitle	移除已导入的字幕
+playerQuickAdjust	快捷调整
+playerResetToZeroSeconds	重置为 0 秒
+playerTextColor	文字颜色
+playerStrokeColor	描边颜色
+playerBackgroundColor	背景颜色
+playerBackgroundBoxSize	背景框大小
+playerTextEffects	文字效果
+playerBold	粗体
+playerItalic	斜体
+playerLetterSpacing	字间距
+playerPreferChineseSubtitle	优先选中文字幕轨
+playerPreferChineseSubtitleDesc	默认启用中文轨（含「特效/双语」优先）；手动选过的不改
+playerSubtitleTrackAutoDesc	交给内核默认挑选（通常是文件里的第一条）
+playerForceOverrideStyle	强制覆盖内嵌样式
+playerForceOverrideStyleDesc	使用上方设置渲染字幕样式
+playerStyleFromSubtitleDesc	字幕使用自带的样式与字体
+playerResetAllStyles	重置所有样式
+playerAssLimitTitle	ASS 内嵌字幕的限制
+playerAssLimitBoldItalicBlur	粗体 / 斜体 / 模糊
+playerAssLimitNoEffect	开启覆盖也不生效（mpv 渲染限制）
+playerAssLimitStyleItems	颜色 / 描边 / 背景 / 大小 / 位置 / 字间距
+playerAssLimitTakesEffect	开启覆盖后生效
+playerAssLimitTextFormats	SRT / VTT 等文本字幕
+playerAssLimitAllEffective	所有样式都直接生效
+playerSubtitleScalePosition	字幕缩放与位置
+playerScaleRatio	缩放比例
+playerVerticalPosition	垂直位置
+playerVerticalPositionValue	{value}（100=窗口底部）
+playerResetScalePosition	重置缩放与位置
+playerFontsRefreshed	已刷新，共 {count, plural, other{{count} 种字体}}
+playerFontDirCleared	已清除字体目录
+playerFontChangeHint	字体更改需退出播放器并重新进入后生效
+playerFontDir	字体目录
+playerFontDirPickHint	点击选择包含 .ttf/.otf 字体的目录
+playerFontDirClear	清除目录
+playerCurrentFont	当前字体
+playerDefaultFont	默认字体
+playerPickFontDirFirst	请先选择字体目录
+playerFollowSystemFonts	跟随系统字库
+playerFontChangeHintFull	字体更改需退出播放器并重新进入后生效；内嵌 ASS 字幕需开启「强制覆盖内嵌样式」后字体设置才会生效。
+playerEqualizerPresetFlat	平直
+playerEqualizerPresetDialogue	对白增强
+playerEqualizerPresetCinema	电影
+playerEqualizerPresetBass	低音震撼
+playerEqualizerPresetTreble	高音清晰
+playerEqualizerPresetNight	柔和夜间
+playerAudioFallbackNoTrack	当前音轨无法播放，且没有其它可切换的音轨
+playerAudioFallbackSwitched	当前音轨无法播放，已自动切换到「{name}」
+playerPlaybackFailed	播放失败：{error}
+playerAudioEffectsUnsupported	当前播放内核不支持所选音效，已自动跳过
+playerDiagnosticsDuration	{minutes} 分 {seconds} 秒
+playerDiagnosticsAvsyncAudioAhead	{value} 音频超前
+playerDiagnosticsAvsyncVideoAhead	{value} 视频超前
+playerDiagnosticsWarnDroppedFrames	已丢帧 {dropped} 帧：渲染跟不上，可尝试降超分档位或改硬解
+playerDiagnosticsWarnSoftwareDecode	当前为软解（CPU 解码）：高码率/高分辨率可能掉帧发热
+playerDiagnosticsWarnAvsync	音画不同步：{value}
+playerNetworkDanmakuLoadedManual	{anime} · {episode}（{server}）
+playerNetworkDanmakuLoadedAuto	{anime} {episode}（{server}）
+playerDanmakuLocateNoEpisode	未能从文件名识别集数，可用上方输入框直接跳转
+playerDanmakuLocateEpisodeMissing	未找到第 {number} 集，可用上方输入框直接跳转
+playerDelaySeconds	{value} 秒

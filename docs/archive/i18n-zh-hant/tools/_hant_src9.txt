@@ -1,0 +1,130 @@
+appTitle	小喵Player
+viewModeTree	树状模式
+viewModeList	列表模式
+superResolutionQualityFast	流畅
+superResolutionQualityFastDesc	低 GPU 占用，速度优先
+superResolutionQualityBalanced	均衡
+superResolutionQualityBalancedDesc	速度与画质平衡，推荐
+superResolutionQualityHigh	高清
+superResolutionQualityHighDesc	高 GPU 占用，画质最佳
+superResolutionModeOffDesc	不启用超分辨率，输出原始画面
+superResolutionModeA	模式A
+superResolutionModeADesc	优化 1080p 动画\n高模糊度、重采样伪影
+superResolutionModeB	模式B
+superResolutionModeBDesc	优化 720p 动画\n低模糊度、下采样振铃
+superResolutionModeC	模式C
+superResolutionModeCDesc	优化 480p 动画\n最高 PSNR、低感知质量
+superResolutionModeAPlus	模式A+
+superResolutionModeAPlusDesc	A+A 双段放大\n最高感知质量，更强的线条重建（较慢）
+superResolutionModeBPlus	模式B+
+superResolutionModeBPlusDesc	B+B 双段放大\n高感知质量，更好的 720p 效果（较慢）
+superResolutionModeCPlus	模式C+
+superResolutionModeCPlusDesc	C+A 双段放大\n略高感知质量，改进的 480p 效果（较慢）
+chapterSkipIntro	跳过片头
+chapterSkipRecap	跳过前情提要
+chapterSkipOutro	跳过片尾
+chapterSkipCredits	跳过制作人员
+chapterSkipColdOpen	跳过正片前段
+chapterSkipPreview	跳过下集预告
+playlistSortNameAsc	名称升序
+playlistSortNameDesc	名称降序
+playlistSortDateAsc	日期升序
+playlistSortDateDesc	日期降序
+loopModeLoopAll	列表循环
+loopModeRepeatOne	单集循环
+wallpaperScaleFit	适应
+wallpaperScaleFill	填充
+navHome	首页
+navMine	我的
+languageNameZh	简体中文
+languageNameEn	English
+languageNameZhHant	繁體中文
+languagePickerTitle	选择语言 / Choose Language
+mainVideoOpenFailed	无法打开该视频
+homeSearchVideos	搜索视频
+homeSearchFoldersAndVideos	搜索文件夹与视频
+homeSortAndFields	排序与字段
+homeSortAndView	排序与视图
+homeNoVideosInFolder	该文件夹没有视频
+homeNoMatchingVideos	没有匹配的视频
+homeNoMatchingContent	没有匹配的内容
+homeNoMatchingFolders	没有匹配的文件夹
+homeRecentPlayed	最近播放
+homeOpenLink	打开链接
+homeFileGone	文件不存在或已被移动：{title}
+homePermissionHintInSettings	请在系统设置中手动开启存储权限
+homePermissionDeniedDetail	存储权限已被拒绝，需要到系统设置里手动开启
+homePermissionNeeded	需要授予存储权限才能扫描视频
+homeOpenSettings	去系统设置开启
+homeGrantPermission	授予权限
+homeNoVideosFound	没有找到视频
+homeRescan	重新扫描
+homeRecheckPermission	我已开启，重新检查
+openLinkClipboardEmpty	剪贴板为空
+openLinkInvalid	链接无效，支持 http/https/rtmp/rtsp 等流媒体协议
+openLinkHint	输入视频直链，将在线播放
+castSearchStartFailed	投屏搜索启动失败：{error}
+castConnected	已投屏到 {device}
+castFailed	投屏失败：{error}
+castSearching	正在搜索投屏设备…
+castNoDevicesFound	未发现可投屏设备，请确认手机与电视连接同一 WiFi 后重试。
+colorEditorCustom	自定义调色
+colorEditorCollapseCustom	收起自定义调色
+optionsSheetFolderSort	文件夹排序方式
+optionsSheetFolderSortDir	文件夹排序方向
+optionsSheetFolderFields	文件夹显示字段
+optionsSheetVideoSort	视频排序方式
+optionsSheetVideoSortDir	视频排序方向
+optionsSheetVideoFields	视频显示字段
+optionsSheetViewMode	显示模式
+updatePrimarySource	主下载站
+updateBackupSource	备用下载站
+updateLinkPending	{label}链接待接入
+updateOpenLinkFailed	无法打开{label}链接
+updateNewVersion	发现新版本 {version}
+updateIgnore	忽略
+updateLater	稍后提醒
+updateNow	立即更新
+updateChooseMethod	选择下载方式
+updatePending	待接入
+videoCardWatched	已看完
+videoCardUnwatched	未观看
+videoCardDetectingSubtitle	字幕检测中…
+videoCardHasSubtitle	含字幕
+videoCardSubtitleCodec	字幕 · {codec}
+videoCardNoSubtitle	无字幕
+errorNetworkRequestFailed	网络请求失败: {error}
+errorHttpRequestFailed	请求失败（HTTP {status}）
+errorHttpSearchFailed	搜索失败（HTTP {status}）
+errorHttpDownloadFailed	下载失败（HTTP {status}）
+errorResponseNotJson	响应不是 JSON 对象
+errorResponseParseFailed	响应解析失败：{error}
+errorResponseDecodeFailed	响应解码失败：{error}
+errorDownloadFailed	下载失败: {error}
+errorDownloadTooLarge	下载失败：文件过大（{received} 字节）
+errorResponseTooLarge	响应异常（已读 {received} 字节，超过 {max} 上限）
+errorResponseTooLargeAborted	响应过大（{received} 字节），已放弃解析
+errorServerReturned	服务器返回错误
+errorServerReturnedCode	服务器返回错误（code={code}）
+errorUnknown	未知错误
+errorNetworkConnectionMissing	网络连接不存在
+wyzieSearchNoSubtitles	搜索失败（HTTP 400）
+wyzieNoMatch	未找到匹配的影视，请换个关键词
+customSubtitleUrlInvalid	自定义字幕地址无效（需要 http/https 地址）
+customSubtitleResponseUnparsable	无法解析该地址的响应：{message}
+customSubtitleResponseNotJson	响应不是合法 JSON
+customSubtitleResponseNoList	响应里找不到字幕列表
+dandanServerUrlInvalid	服务器地址无效（需以 http/https 开头）: {url}
+updateNoNotes	暂无更新说明
+buildInfoNoRevision	本次构建未注入提交哈希（需用 tools/ 里的构建脚本编译）
+buildInfoCopied	已复制 {revision}
+buildInfoCopiedDirty	已复制 {revision}（工作区有未提交改动）
+castDeviceOffline	设备已离线
+castNoLanIpv4	未找到局域网 IPv4 地址
+castFileMissing	文件不存在
+dolbyVisionHintTitle	杜比视界视频
+dolbyVisionHintBody	该视频为杜比视界（Dolby Vision）编码。\n若画面发绿/发紫，请在「播放设置 → 解码」启用 GPU-next 渲染并切换软解；\n若仍无法解决，则该设备可能不支持杜比视界播放。
+legalAgreeCheckbox	我已阅读并同意以上隐私政策
+legalDisagreeExit	不同意并退出
+legalAgreeWithCountdown	同意并继续 ({seconds} 秒)
+legalAgreeContinue	同意并继续

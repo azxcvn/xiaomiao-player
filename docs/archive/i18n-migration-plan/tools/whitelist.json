@@ -26,8 +26,16 @@
       "reason": "隐私政策/用户协议英文正文（阶段 7 新建）：英文是译文本身（对应语言文件），不是待翻译文案；扫描脚本 GENERATED_SKIP 亦跳过"
     },
     {
+      "path": "lib/l10n/legal_zh_hant.dart",
+      "reason": "隐私政策/用户协议繁体正文（繁体轮阶段 3 新建，按语言拆 Dart 文件、不进 ARB）：繁体汉字是译文本身，不是待翻译的硬编码文案；扫描脚本 GENERATED_SKIP 亦跳过"
+    },
+    {
       "path": "android/app/src/main/res/values/strings.xml",
       "reason": "Android 默认（中文）资源本身（阶段 8 新建）：里面的中文就是该语言的资源值，对应 Dart 侧 app_zh.arb，不是待翻译的硬编码文案；英文侧在 values-en/strings.xml"
+    },
+    {
+      "path": "android/app/src/main/res/values-b+zh+Hant/strings.xml",
+      "reason": "Android 繁体（zh_Hant）资源本身（繁体轮阶段 5 新建，目录用 BCP-47 脚本限定符 b+zh+Hant）：里面的繁体就是该语言的资源值，对应 Dart 侧 app_zh_Hant.arb，不是待翻译的硬编码文案"
     }
   ],
   "lines": [

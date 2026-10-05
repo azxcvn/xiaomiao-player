@@ -1,0 +1,147 @@
+settingsErrorLogDeleted	已删除
+settingsErrorLogDeleteFailed	删除失败
+settingsErrorLogClearAll	清空全部日志
+settingsErrorLogClearAllConfirm	将删除全部 {count} 个日志文件，此操作不可恢复。
+settingsErrorLogClearedAll	已清空全部日志
+settingsErrorLogClearFailed	清空失败
+settingsFontTitle	App字体设置
+settingsFontEnable	启用自定义字体
+settingsFontEnabledDesc	已开启：使用下方导入的字体
+settingsFontDisabledDesc	已关闭：跟随系统字体
+settingsFontPreviewText	生如夏花之绚烂，死如秋叶之静美。\n我把你的名字写在树叶上，风把它吹走了；\n我把你的名字写在沙滩上，浪把它冲走了；
+settingsFontPreviewHint	部分字体可能不生效
+settingsFontGroupFont	字体
+settingsFontSizeLabel	字体字号
+settingsFontWeightLabel	字体字重
+settingsFontWeightThin	极细
+settingsFontWeightExtraLight	很细
+settingsFontWeightLight	细
+settingsFontWeightRegular	常规
+settingsFontWeightMedium	中等
+settingsFontWeightSemiBold	较粗
+settingsFontWeightBold	粗
+settingsFontWeightExtraBold	很粗
+settingsFontWeightBlack	极粗
+settingsFontImport	导入字体
+settingsFontImporting	正在导入...
+settingsFontCurrent	当前字体：{name}
+settingsFontPickHint	点击选择 .ttf/.otf 字体文件
+settingsFontReselect	重新选择
+settingsFontReset	重置字号与字重
+settingsFontParseFailed	字体解析失败，请更换字体文件
+settingsFontApplied	已应用字体：{name}
+settingsAboutGroupInfo	信息
+settingsAboutGroupTools	工具
+settingsAboutGroupUpdate	更新
+settingsAboutLicenses	许可证书
+settingsAboutLicensesDesc	查看本应用使用的全部开源许可
+settingsAboutUserAgreement	用户协议
+settingsAboutUserAgreementDesc	预览用户服务协议与隐私政策
+settingsAboutCacheManagement	缓存管理
+settingsAboutCacheManagementDesc	查看与清除各类缓存
+settingsAboutErrorLogDesc	查看 / 导出 / 复制崩溃日志
+settingsAboutCheckUpdate	手动检查更新
+settingsAboutCheckUpdateDesc	检查是否有新版本
+settingsAboutAutoCheckUpdate	自动检查更新
+settingsAboutAutoCheckUpdateDesc	启动后自动检查新版本
+settingsAboutFeedbackSubject	播放器使用反馈
+settingsAboutNoEmailApp	未找到可用的邮件应用
+settingsAboutGithubPending	GitHub 主页地址待接入
+settingsAboutCannotOpenLink	无法打开链接
+settingsAboutUpToDate	已是最新版本
+settingsAboutCheckUpdateFailed	检查更新失败，请稍后重试
+settingsAboutSendFeedback	发送使用反馈
+settingsAboutAppNameLoading	读取中
+settingsLicenseOpenSource	开源许可
+settingsLicenseEmpty	暂无许可信息
+settingsLicenseVersionLoading	版本读取中
+settingsLicenseCount	{count} 项许可
+settingsLicenseParagraphCount	{count, plural, =1{1 个许可段落} other{{count} 个许可段落}}
+settingsLicenseCopy	复制许可文本
+settingsLicenseCopied	许可文本已复制
+settingsLicenseLoadFailed	许可信息加载失败
+settingsAppearanceMode	外观模式
+settingsAppearanceThemeColor	主题色
+settingsAppearancePaletteVariant	调色板风格
+settingsAppearanceCustomFontDesc	自定义全局字体
+settingsAppearanceGroupWallpaper	壁纸
+settingsAppearanceDynamicColor	动态色
+settingsAppearanceSdkTooLow	安卓版本过低，不支持该功能
+settingsAppearanceReadWallpaperFailed	无法读取壁纸颜色
+settingsAppearanceCustomColorTitle	自定义主题色
+settingsAppearanceNoImagePicker	这台设备没有可用的系统图片选择器
+settingsAppearanceWallpaperTitle	自定义壁纸
+settingsAppearanceWallpaperActiveDesc	壁纸显示在页面内容与顶部栏之后
+settingsAppearanceWallpaperPickDesc	选一张图片，铺在页面内容与顶部栏之后
+settingsAppearanceReplaceWallpaper	替换壁纸
+settingsAppearanceChooseWallpaper	选择壁纸
+settingsAppearanceAdjustWallpaper	调整
+settingsDecoderBasicInfo	基本信息
+settingsDecoderMimeType	MIME 类型
+settingsDecoderCanonicalName	规范名
+settingsDecoderType	类型
+settingsDecoderVideoCodec	视频解码器
+settingsDecoderAudioCodec	音频解码器
+settingsDecoderAcceleration	加速方式
+settingsDecoderHardwareAcceleration	硬件加速
+settingsDecoderSoftware	软件
+settingsDecoderAlias	别名
+settingsDecoderYes	是
+settingsDecoderBitrateRange	码率范围
+settingsDecoderResolutionCapability	分辨率与能力
+settingsDecoderMaxResolution	最大分辨率
+settingsDecoderMinResolution	最小分辨率
+settingsDecoderAlignment	对齐
+settingsDecoderMaxInstances	最大实例数
+settingsDecoderAudioCapability	音频能力
+settingsDecoderMaxChannels	最大声道数
+settingsDecoderHardwareFeatures	硬件特性
+settingsDecoderColorFormats	色彩格式
+settingsDecoderProfiles	支持的 Profile / Level
+settingsCacheGroupTitle	缓存
+settingsCacheReading	读取中…
+settingsCacheClearCategoryTitle	清除{label}
+settingsCacheClearCategoryBody	将删除「{label}」缓存（{size}），确定？
+settingsCacheCategoryCleared	已清除{label}
+settingsCacheClearFailed	清除失败
+settingsCacheClearAllTitle	清除所有缓存
+settingsCacheClearAllBody	将删除全部缓存（当前共 {size}）：\n{items}\n\n此操作不可恢复。
+settingsCacheConfirmAgainTitle	再次确认
+settingsCacheConfirmAgainBody	确定要清除所有缓存吗？
+settingsCacheAllCleared	已清除全部缓存
+settingsCacheClearAllButton	一键清除所有缓存（{size}）
+settingsCacheFooterNote	列表封面缩略图会在下次扫描时重新生成；进度条缩略图为纯内存缓存，随播放页退出自动清空，不占用存储。
+settingsDeviceUnsupported	不支持
+settingsDeviceUnknown	未知设备
+settingsDeviceHdrCapability	屏幕 HDR 能力
+settingsDeviceHdrUnsupported	当前屏幕不支持 HDR（或系统未报告 HDR 能力）
+settingsDeviceKeyVideoEncoders	关键视频编码器
+settingsDeviceDecoderList	解码器清单
+settingsDeviceDecoderSummary	硬解 {hw} · 软解 {sw} · 视频 {video} · 音频 {audio}
+settingsDeviceSearchHint	搜索解码器（名称 / MIME / 格式 / Profile）
+settingsDeviceNoMatchingDecoder	无匹配的解码器
+settingsDeviceChannels	{count} 声道
+settingsDeviceCapabilityError	无法读取设备能力（可能为不支持的原生通道）
+settingsHistoryClearAllTitle	清除历史记录
+settingsHistoryClearAllBodyWithProgress	确定要清除全部播放历史吗？\n\n同时会清除全部播放进度（含「已看完」标记），此操作不可恢复。
+settingsHistoryClearAllBody	确定要清除全部播放历史吗？此操作不可恢复。
+settingsHistoryClearAllTooltip	清除全部历史
+settingsHistoryEnabled	播放历史记录
+settingsHistoryEnabledDesc	关闭后不再记录新的播放
+settingsHistoryClearProgressOnDelete	删除历史时清除进度
+settingsHistoryClearProgressOnDeleteDesc	关闭时两套数据互相独立
+settingsHistoryClearProgressOnDesc	开启后，删除历史记录会同时清除该视频的播放进度
+settingsHistoryClearProgressBlocked	需先开启上方的「播放历史记录」；关闭时不记录历史，但播放进度会一直保留
+settingsHistoryEmpty	暂无播放历史
+settingsHistoryEmptyDisabled	暂无播放历史（记录已关闭）
+settingsHistoryDeleteEntryWithProgress	删除该条记录（同时清除播放进度）
+settingsHistoryDeleteEntry	删除该条记录
+settingsWallpaperSaveFailed	无法保存壁纸，请重新选择图片
+settingsWallpaperAdjustTitle	调整壁纸
+settingsWallpaperSave	保存壁纸
+settingsWallpaperDragHint	拖动以调整位置，双指捏合以缩放。
+settingsWallpaperScale	缩放
+settingsWallpaperOffsetX	水平位置
+settingsWallpaperOpacity	透明度
+settingsWallpaperImageUnavailable	图片已不可用，请重新选择
+settingsFontPreviewSample	0123456789，。！？；：“”（）【】…·

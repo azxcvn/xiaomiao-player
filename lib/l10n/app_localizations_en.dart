@@ -625,7 +625,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageNameEn => 'English';
 
   @override
-  String get languagePickerTitle => '选择语言 / Choose Language';
+  String get languageNameZhHant => '繁體中文';
+
+  @override
+  String get languagePickerTitle => 'Choose Language';
 
   @override
   String get mainVideoOpenFailed => 'Cannot open this video';

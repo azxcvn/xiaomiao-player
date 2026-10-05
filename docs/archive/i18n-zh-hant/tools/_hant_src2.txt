@@ -1,0 +1,147 @@
+settingsThemeModeSystem	跟随系统
+settingsThemeModeLight	浅色
+settingsThemeModeDark	深色
+settingsThemeModeAmoled	AMOLED 纯黑
+settingsThemeColorSkyBlue	天蓝色
+settingsThemeColorBlue	蓝色
+settingsThemeColorLightBlue	浅蓝色
+settingsThemeColorIndigo	靛蓝色
+settingsThemeColorTeal	蓝绿色
+settingsThemeColorMint	薄荷绿
+settingsThemeColorLightGreen	浅绿色
+settingsThemeColorLime	酸橙色
+settingsThemeColorAmber	琥珀色
+settingsThemeColorOrange	橙色
+settingsThemeColorDeepOrange	橙红色
+settingsThemeColorRed	红色
+settingsThemeColorPink	粉红色
+settingsThemeColorHotPink	亮粉色
+settingsThemeColorViolet	紫罗兰
+settingsThemeColorPurple	紫色
+settingsThemeColorDeepPurple	深紫色
+settingsThemeColorBlueGrey	蓝灰色
+settingsThemeColorBrown	棕色
+settingsThemeColorGrey	灰色
+settingsPaletteTonalSpot	标准型
+settingsPaletteFidelity	保真型
+settingsPaletteMonochrome	单色型
+settingsPaletteNeutral	中性型
+settingsPaletteVibrant	鲜艳型
+settingsPaletteExpressive	鲜明型
+settingsPaletteContent	柔和型
+settingsPaletteRainbow	彩虹型
+settingsPaletteFruitSalad	果味型
+settingsPaletteCandyPop	糖果型
+settingsPaletteChroma	饱和型
+settingsPaletteHighContrast	对比型
+settingsPaletteJolly	欢快型
+settingsPaletteMaterial	经典型
+settingsPaletteMaterial3Legacy	旧版型
+settingsPaletteOneHue	单色相
+settingsPaletteSoft	淡雅型
+settingsPaletteUltraContrast	超对比
+settingsPaletteVivid	生动型
+settingsPaletteVividBackground	亮背景
+settingsPaletteVividSurfaces	亮表面
+settingsGroupAppearance	外观
+settingsAppearanceAndFont	外观与字体
+settingsAppearanceAndFontDesc	调整应用外观与字体
+settingsGroupPlayback	播放
+settingsPlayerSettings	播放设置
+settingsPlayerSettingsDesc	调整播放相关设置
+settingsPlaybackHistory	历史记录
+settingsPlaybackHistoryDesc	查看与管理播放历史
+settingsGroupMediaLibrary	媒体库
+settingsMediaScan	媒体扫描与过滤
+settingsMediaScanDesc	扫描规则与文件夹过滤
+settingsDanmakuServer	弹幕服务器
+settingsDanmakuServerDesc	网络弹幕服务器与切集自动匹配
+settingsDanmakuDownloadDesc	B 站弹幕下载
+settingsVideoDownloadDesc	B 站视频下载
+settingsSubtitleDownloadDesc	影视字幕下载
+settingsDownloadManagerDesc	查看下载任务进度
+settingsGroupOther	其他
+settingsDeviceInfo	设备信息
+settingsDeviceInfoDesc	硬件与编解码能力检测
+settingsAbout	关于
+settingsAboutDesc	版本信息与工具
+settingsLoginRequired	需要登录哔哩哔哩账号
+settingsLanguage	语言设置
+settingsPlayerGroupGesture	手势
+settingsPlayerVolumeSensitivity	音量灵敏度
+settingsPlayerBrightnessSensitivity	亮度灵敏度
+settingsPlayerGroupOrientation	视频方向
+settingsPlayerOrientationFollowVideo	跟随视频方向
+settingsPlayerOrientationAlwaysPortrait	始终竖屏
+settingsPlayerOrientationAlwaysLandscape	始终横屏
+settingsPlayerUiFollowGravity	界面跟随重力旋转
+settingsPlayerGroupTopInfo	顶部信息
+settingsPlayerShowTimeDesc	显示当前时间
+settingsPlayerBattery	电量
+settingsPlayerShowBatteryDesc	显示当前电量
+settingsPlayerNetSpeed	网速
+settingsPlayerShowNetSpeedDesc	显示实时网速
+settingsPlayerDataType	数据类型
+settingsPlayerShowDataTypeDesc	显示 WiFi / 移动数据
+settingsPlayerGroupBehavior	播放行为
+settingsPlayerPersistentProgressBar	常驻进度线
+settingsPlayerPersistentProgressBarDesc	隐藏控制层后底部显示细线
+settingsPlayerChapterProgressBar	显示章节进度条
+settingsPlayerChapterProgressBarDesc	进度条标记章节并显示章节名
+settingsPlayerThumbnailPreview	进度条缩略图
+settingsPlayerThumbnailPreviewDesc	拖动进度条时预览画面
+settingsPlayerRememberSpeed	记住上次倍速
+settingsPlayerRememberSpeedDesc	自动恢复上次倍速
+settingsPlayerSaveVolumeToSystem	保存音量到系统
+settingsPlayerSaveVolumeToSystemDesc	退出时把音量写回系统
+settingsPlayerPinchToZoom	双指缩小视频
+settingsPlayerPinchToZoomDesc	允许双指去缩小画面
+settingsPlayerButtonBackground	按钮背景
+settingsPlayerButtonBackgroundDesc	为控制按钮加半透明背景
+settingsPlayerAutoNext	自动连播
+settingsPlayerAutoNextDesc	播完自动放下一集
+settingsPlayerAutoExit	播放完毕自动退出
+settingsPlayerAutoExitDesc	最后一个播完自动退出
+settingsPlayerSpeedIndicator	倍速播放指示器
+settingsPlayerSpeedIndicatorDesc	长按时顶部显示倍速提示
+settingsPlayerUiAnimations	启用播放界面动画
+settingsPlayerUiAnimationsDesc	控制层与面板的进出场动画
+settingsPlayerLockExemptDoubleTap	锁定状态豁免双击
+settingsPlayerLockExemptDoubleTapDesc	启用锁定状态下双击屏幕播放/暂停的功能
+settingsPlayerVolumeBoost	音量增强
+settingsPlayerVolumeBoostDesc	系统音量满后继续放大
+settingsPlayerWatchThreshold	已观看进度阈值
+settingsPlayerEnableGpuNext	启用 GPU-next
+settingsPlayerGpuNextDesc	使用 libplacebo 新渲染器
+settingsPlayerEnableVulkan	启用 Vulkan
+settingsPlayerVulkanDesc	优先使用 Vulkan 渲染
+settingsPlayerVulkanNeedsGpuNext	需先启用上方的「GPU-next」：Vulkan 只对 GPU-next 渲染器生效
+settingsPlayerRestartHint	切换后需重启播放器（重开视频）生效；
+settingsPlayerNoBlackScreenHint	设备或驱动不支持时会自动回落 OpenGL，不会黑屏
+settingsPlayerLockExemptDialogTitle	启用锁定状态豁免双击
+settingsPlayerLockExemptDialogBody	开启后，控制层锁定期间双击屏幕即可暂停/播放。\n\n只豁免这一个手势：左右滑动快进快退、上下滑动音量与亮度、长按倍速在锁定状态下依然不会生效；单击呼出解锁按钮也不受影响。\n\n锁定本是防误触用的，若视频会在口袋/包里误暂停，请保持关闭。
+settingsPlayerGravityDialogTitle	开启界面跟随重力旋转
+settingsPlayerGravityDialogBody	生效前提（两个都要满足）：\n① 手机系统设置里已开启「自动旋转」；\n② 本页「视频方向」设为「自动」。\n\n两个前提满足后，再开启本开关，播放界面的横竖屏才会跟随手机方向（竖起来进竖屏播放页，横过来回横屏播放页）。前提不满足时仍按「视频方向」的设置播放，本开关不生效。\n\n「锁定竖屏 / 锁定横屏」是明确指定的方向，不受本开关影响。
+settingsPlayerGpuNextWarning	启用后超分辨率功能将无法使用；\n可尝试配合软解播放杜比视界视频。\n\n是否继续？
+settingsPlayerVulkanWarning	视频输出将优先使用 Vulkan 渲染，新建的上下文不再限定 OpenGL ES。\n\n若设备或驱动不支持，会自动回落 OpenGL，不会黑屏。\n\n注意：普通内核下 MediaCodec 直通只对 OpenGL 生效，开 Vulkan 后「硬解+」会直接走硬解拷贝（不再尝试直通）。\n\n切换后需重启播放器（重开视频）生效。
+settingsPlayerLongPressSpeed	长按倍速
+settingsPlayerLongPressSpeedDesc	长按临时倍速，可左右滑动调速
+settingsPlayerSeekRange	1 – {max} 秒
+settingsPlayerSeekSeconds	快进/快退时长
+settingsPlayerTapValueHint	点击数值可自定义秒数
+settingsPlayerWatchThresholdTitle	「已观看」进度阈值
+settingsPlayerWatchThresholdDesc	进度达到该比例即视为已看完
+settingsPlayerBoostCap	增强上限
+settingsPlayerBoostCapDesc	最高增强至 {percent}%音量
+settingsErrorLogTitle	错误日志
+settingsErrorLogRefreshRealtime	刷新（实时查看）
+settingsErrorLogSavePath	日志保存路径：\n{path}
+settingsErrorLogGroupCount	崩溃日志（{count}）
+settingsErrorLogEmpty	暂无错误日志
+settingsErrorLogEmptyDesc	应用崩溃时日志会自动记录到这里
+settingsErrorLogCopy	一键复制
+settingsErrorLogExport	导出
+settingsErrorLogCopied	日志内容已复制到剪贴板
+settingsErrorLogExportFailed	导出失败
+settingsErrorLogExportedTo	已导出到\n{path}
+settingsErrorLogDeleteTitle	删除日志

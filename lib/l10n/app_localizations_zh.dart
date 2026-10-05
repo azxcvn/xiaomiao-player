@@ -613,7 +613,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get languageNameEn => 'English';
 
   @override
-  String get languagePickerTitle => '选择语言 / Choose Language';
+  String get languageNameZhHant => '繁體中文';
+
+  @override
+  String get languagePickerTitle => '选择语言';
 
   @override
   String get mainVideoOpenFailed => '无法打开该视频';
@@ -4454,6 +4457,4466 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get commonQuality => '清晰度';
+
+  @override
+  String playerDelaySeconds(String value) {
+    return '$value 秒';
+  }
+}
+
+/// The translations for Chinese, using the Han script (`zh_Hant`).
+class AppLocalizationsZhHant extends AppLocalizationsZh {
+  AppLocalizationsZhHant() : super('zh_Hant');
+
+  @override
+  String get appTitle => '小喵Player';
+
+  @override
+  String get commonCancel => '取消';
+
+  @override
+  String get settingsThemeModeSystem => '跟隨系統';
+
+  @override
+  String get settingsThemeModeLight => '淺色';
+
+  @override
+  String get settingsThemeModeDark => '深色';
+
+  @override
+  String get settingsThemeModeAmoled => 'AMOLED 純黑';
+
+  @override
+  String get settingsThemeColorSkyBlue => '天藍色';
+
+  @override
+  String get settingsThemeColorBlue => '藍色';
+
+  @override
+  String get settingsThemeColorLightBlue => '淺藍色';
+
+  @override
+  String get settingsThemeColorIndigo => '靛藍色';
+
+  @override
+  String get settingsThemeColorTeal => '藍綠色';
+
+  @override
+  String get settingsThemeColorMint => '薄荷綠';
+
+  @override
+  String get settingsThemeColorLightGreen => '淺綠色';
+
+  @override
+  String get settingsThemeColorLime => '萊姆綠';
+
+  @override
+  String get settingsThemeColorAmber => '琥珀色';
+
+  @override
+  String get settingsThemeColorOrange => '橙色';
+
+  @override
+  String get settingsThemeColorDeepOrange => '橙紅色';
+
+  @override
+  String get settingsThemeColorRed => '紅色';
+
+  @override
+  String get settingsThemeColorPink => '粉紅色';
+
+  @override
+  String get settingsThemeColorHotPink => '亮粉色';
+
+  @override
+  String get settingsThemeColorViolet => '紫羅蘭';
+
+  @override
+  String get settingsThemeColorPurple => '紫色';
+
+  @override
+  String get settingsThemeColorDeepPurple => '深紫色';
+
+  @override
+  String get settingsThemeColorBlueGrey => '藍灰色';
+
+  @override
+  String get settingsThemeColorBrown => '棕色';
+
+  @override
+  String get settingsThemeColorGrey => '灰色';
+
+  @override
+  String get settingsPaletteTonalSpot => '標準型';
+
+  @override
+  String get settingsPaletteFidelity => '保真型';
+
+  @override
+  String get settingsPaletteMonochrome => '單色型';
+
+  @override
+  String get settingsPaletteNeutral => '中性型';
+
+  @override
+  String get settingsPaletteVibrant => '鮮豔型';
+
+  @override
+  String get settingsPaletteExpressive => '鮮明型';
+
+  @override
+  String get settingsPaletteContent => '柔和型';
+
+  @override
+  String get settingsPaletteRainbow => '彩虹型';
+
+  @override
+  String get settingsPaletteFruitSalad => '果味型';
+
+  @override
+  String get settingsPaletteCandyPop => '糖果型';
+
+  @override
+  String get settingsPaletteChroma => '飽和型';
+
+  @override
+  String get settingsPaletteHighContrast => '對比型';
+
+  @override
+  String get settingsPaletteJolly => '歡快型';
+
+  @override
+  String get settingsPaletteMaterial => '經典型';
+
+  @override
+  String get settingsPaletteMaterial3Legacy => '舊版型';
+
+  @override
+  String get settingsPaletteOneHue => '單色相';
+
+  @override
+  String get settingsPaletteSoft => '淡雅型';
+
+  @override
+  String get settingsPaletteUltraContrast => '超對比';
+
+  @override
+  String get settingsPaletteVivid => '生動型';
+
+  @override
+  String get settingsPaletteVividBackground => '亮背景';
+
+  @override
+  String get settingsPaletteVividSurfaces => '亮表面';
+
+  @override
+  String get playerDoubleTapPause => '雙擊暫停/播放';
+
+  @override
+  String get playerDoubleTapSeek => '雙擊左退右進';
+
+  @override
+  String get playerDoubleTapMixed => '混合模式';
+
+  @override
+  String get playerOrientationPortrait => '鎖定直向';
+
+  @override
+  String get playerOrientationLandscape => '鎖定橫向';
+
+  @override
+  String get playerVideoFitFill => '拉伸';
+
+  @override
+  String get playerVideoFitCover => '裁切';
+
+  @override
+  String get playerVideoFitFitWidth => '等寬';
+
+  @override
+  String get playerVideoFitFitHeight => '等高';
+
+  @override
+  String get playerVideoFitNone => '原始';
+
+  @override
+  String get playerVideoFitScaleDown => '限制';
+
+  @override
+  String get playerActionSubtitle => '字幕';
+
+  @override
+  String get playerActionAudio => '音訊';
+
+  @override
+  String get playerActionAspect => '比例';
+
+  @override
+  String get playerActionDecode => '解碼';
+
+  @override
+  String get playerActionChapter => '章節';
+
+  @override
+  String get playerActionCast => '投放';
+
+  @override
+  String get playerActionPip => '子母畫面';
+
+  @override
+  String get playerActionListen => '聽影片';
+
+  @override
+  String get playerActionLoop => '循環播放';
+
+  @override
+  String get playerActionIntroOutro => '片頭片尾';
+
+  @override
+  String get playerActionDiagnostics => '播放診斷';
+
+  @override
+  String get playerActionEqualizer => '音訊等化器';
+
+  @override
+  String get commonName => '名稱';
+
+  @override
+  String get commonDate => '日期';
+
+  @override
+  String get commonSize => '大小';
+
+  @override
+  String get commonCount => '數量';
+
+  @override
+  String get commonDuration => '時長';
+
+  @override
+  String get commonAscending => '遞增';
+
+  @override
+  String get commonDescending => '遞減';
+
+  @override
+  String get commonPath => '路徑';
+
+  @override
+  String get commonResolution => '解析度';
+
+  @override
+  String get commonProgress => '進度';
+
+  @override
+  String get commonSubtitleIndicator => '字幕指示器';
+
+  @override
+  String get commonFrameRate => '影格率';
+
+  @override
+  String get commonFullName => '完整名稱';
+
+  @override
+  String get viewModeTree => '樹狀模式';
+
+  @override
+  String get viewModeList => '清單模式';
+
+  @override
+  String get superResolutionQualityFast => '流暢';
+
+  @override
+  String get superResolutionQualityFastDesc => '低 GPU 佔用，速度優先';
+
+  @override
+  String get superResolutionQualityBalanced => '均衡';
+
+  @override
+  String get superResolutionQualityBalancedDesc => '速度與畫質平衡，推薦';
+
+  @override
+  String get superResolutionQualityHigh => '高畫質';
+
+  @override
+  String get superResolutionQualityHighDesc => '高 GPU 佔用，畫質最佳';
+
+  @override
+  String get superResolutionModeOffDesc => '不啟用超解析度，輸出原始畫面';
+
+  @override
+  String get superResolutionModeA => '模式A';
+
+  @override
+  String get superResolutionModeADesc => '最佳化 1080p 動畫\n高模糊度、重取樣偽影';
+
+  @override
+  String get superResolutionModeB => '模式B';
+
+  @override
+  String get superResolutionModeBDesc => '最佳化 720p 動畫\n低模糊度、下取樣振鈴';
+
+  @override
+  String get superResolutionModeC => '模式C';
+
+  @override
+  String get superResolutionModeCDesc => '最佳化 480p 動畫\n最高 PSNR、低感知品質';
+
+  @override
+  String get superResolutionModeAPlus => '模式A+';
+
+  @override
+  String get superResolutionModeAPlusDesc => 'A+A 雙段放大\n最高感知品質，更強的線條重建（較慢）';
+
+  @override
+  String get superResolutionModeBPlus => '模式B+';
+
+  @override
+  String get superResolutionModeBPlusDesc => 'B+B 雙段放大\n高感知品質，更好的 720p 效果（較慢）';
+
+  @override
+  String get superResolutionModeCPlus => '模式C+';
+
+  @override
+  String get superResolutionModeCPlusDesc => 'C+A 雙段放大\n略高感知品質，改進的 480p 效果（較慢）';
+
+  @override
+  String get decodeModeAutoSafeDesc => '自動選擇安全硬解';
+
+  @override
+  String get decodeModeHwCopy => '硬解';
+
+  @override
+  String get decodeModeHwCopyDesc => '強制硬解，相容字幕與超分';
+
+  @override
+  String get decodeModeHwPlus => '硬解+';
+
+  @override
+  String get decodeModeHwPlusDesc => '直通優先，失敗自動回退';
+
+  @override
+  String get decodeModeSw => '軟解';
+
+  @override
+  String get decodeModeSwDesc => '純 CPU 解碼';
+
+  @override
+  String get decodePresetFast => '快速';
+
+  @override
+  String get decodePresetFastDesc => '效能優先';
+
+  @override
+  String get decodePresetStandardDesc => '標準設定';
+
+  @override
+  String get decodePresetHighQuality => '高品質';
+
+  @override
+  String get decodePresetHighQualityDesc => '畫質優先';
+
+  @override
+  String get decodePresetGpuHq => 'GPU 高品質';
+
+  @override
+  String get decodePresetGpuHqDesc => '高畫質渲染';
+
+  @override
+  String get decodePresetLowLatency => '低延遲';
+
+  @override
+  String get decodePresetLowLatencyDesc => '減少緩衝';
+
+  @override
+  String get decodePresetSwFast => '軟解快速';
+
+  @override
+  String get decodePresetSwFastDesc => '軟解加速';
+
+  @override
+  String get chapterSkipIntro => '跳過片頭';
+
+  @override
+  String get chapterSkipRecap => '跳過前情提要';
+
+  @override
+  String get chapterSkipOutro => '跳過片尾';
+
+  @override
+  String get chapterSkipCredits => '跳過製作人員';
+
+  @override
+  String get chapterSkipColdOpen => '跳過正片前段';
+
+  @override
+  String get chapterSkipPreview => '跳過下集預告';
+
+  @override
+  String get playlistSortNameAsc => '名稱遞增';
+
+  @override
+  String get playlistSortNameDesc => '名稱遞減';
+
+  @override
+  String get playlistSortDateAsc => '日期遞增';
+
+  @override
+  String get playlistSortDateDesc => '日期遞減';
+
+  @override
+  String get subtitleAlignLeft => '靠左對齊';
+
+  @override
+  String get subtitleAlignRight => '靠右對齊';
+
+  @override
+  String get subtitleBorderOutline => '外框';
+
+  @override
+  String get subtitleBorderBox => '背景框';
+
+  @override
+  String get subtitlePresetWhite => '白色';
+
+  @override
+  String get subtitlePresetBlack => '黑色';
+
+  @override
+  String get subtitlePresetTranslucentBlack => '半透明黑';
+
+  @override
+  String get subtitlePresetOpaqueBlack => '純黑';
+
+  @override
+  String get subtitlePresetTranslucentWhite => '半透明白';
+
+  @override
+  String get subtitlePresetTranslucentBlue => '半透明藍';
+
+  @override
+  String get commonExternalTag => '外掛';
+
+  @override
+  String get commonAuto => '自動';
+
+  @override
+  String get audioChannelAutoSafe => '安全自動';
+
+  @override
+  String get audioChannelMono => '單聲道';
+
+  @override
+  String get audioChannelStereo => '立體聲';
+
+  @override
+  String get audioChannelReverseStereo => '反向立體聲';
+
+  @override
+  String audioTrackFallbackName(String id) {
+    return '音軌 $id';
+  }
+
+  @override
+  String subtitleTrackFallbackName(String id) {
+    return '軌道 $id';
+  }
+
+  @override
+  String get networkTierApi => '一般 API';
+
+  @override
+  String get networkTierText => '文字回應';
+
+  @override
+  String get networkTierDownload => '檔案下載';
+
+  @override
+  String get networkTierStream => '媒體流';
+
+  @override
+  String get commonOff => '關閉';
+
+  @override
+  String get danmakuColorModeSource => '跟隨彈幕顏色';
+
+  @override
+  String get danmakuColorModeRandom => '隨機漸變色';
+
+  @override
+  String get danmakuColorModeFixed => '指定顏色';
+
+  @override
+  String get danmakuFontModeFollowSystem => '跟隨系統字型';
+
+  @override
+  String get danmakuFontModeFollowApp => '跟隨App字型';
+
+  @override
+  String get danmakuFontModeCustom => '自訂字型';
+
+  @override
+  String get loopModeLoopAll => '清單循環';
+
+  @override
+  String get loopModeRepeatOne => '單集循環';
+
+  @override
+  String get wallpaperScaleFit => '符合';
+
+  @override
+  String get wallpaperScaleFill => '填滿';
+
+  @override
+  String get subtitleSourceWyzie => 'Wyzie 字幕服務';
+
+  @override
+  String get subtitleSourceCustom => '自訂字幕位址';
+
+  @override
+  String get navHome => '首頁';
+
+  @override
+  String get navMine => '我的';
+
+  @override
+  String get commonLogin => '登入';
+
+  @override
+  String get commonConfirm => '確定';
+
+  @override
+  String get commonDanmaku => '彈幕';
+
+  @override
+  String get commonDownload => '下載';
+
+  @override
+  String get biliAccount => '嗶哩嗶哩帳號';
+
+  @override
+  String get settingsGroupAppearance => '外觀';
+
+  @override
+  String get settingsAppearanceAndFont => '外觀與字型';
+
+  @override
+  String get settingsAppearanceAndFontDesc => '調整應用程式外觀與字型';
+
+  @override
+  String get settingsGroupPlayback => '播放';
+
+  @override
+  String get settingsPlayerSettings => '播放設定';
+
+  @override
+  String get settingsPlayerSettingsDesc => '調整播放相關設定';
+
+  @override
+  String get settingsPlaybackHistory => '歷史紀錄';
+
+  @override
+  String get settingsPlaybackHistoryDesc => '檢視與管理播放歷史';
+
+  @override
+  String get settingsGroupMediaLibrary => '媒體庫';
+
+  @override
+  String get settingsMediaScan => '媒體掃描與過濾';
+
+  @override
+  String get settingsMediaScanDesc => '掃描規則與資料夾過濾';
+
+  @override
+  String get settingsDanmakuServer => '彈幕伺服器';
+
+  @override
+  String get settingsDanmakuServerDesc => '網路彈幕伺服器與切集自動匹配';
+
+  @override
+  String get settingsDanmakuDownloadDesc => 'B 站彈幕下載';
+
+  @override
+  String get settingsVideoDownloadDesc => 'B 站影片下載';
+
+  @override
+  String get settingsSubtitleDownloadDesc => '影視字幕下載';
+
+  @override
+  String get settingsDownloadManagerDesc => '檢視下載任務進度';
+
+  @override
+  String get settingsGroupOther => '其他';
+
+  @override
+  String get settingsDeviceInfo => '裝置資訊';
+
+  @override
+  String get settingsDeviceInfoDesc => '硬體與編解碼能力檢測';
+
+  @override
+  String get settingsAbout => '關於';
+
+  @override
+  String get settingsAboutDesc => '版本資訊與工具';
+
+  @override
+  String get settingsLoginRequired => '需要登入嗶哩嗶哩帳號';
+
+  @override
+  String get settingsLanguage => '語言設定';
+
+  @override
+  String get languageNameZh => '简体中文';
+
+  @override
+  String get languageNameEn => 'English';
+
+  @override
+  String get languageNameZhHant => '繁體中文';
+
+  @override
+  String get languagePickerTitle => '選擇語言';
+
+  @override
+  String get mainVideoOpenFailed => '無法開啟該影片';
+
+  @override
+  String get commonTime => '時間';
+
+  @override
+  String get settingsPlayerGroupGesture => '手勢';
+
+  @override
+  String get settingsPlayerVolumeSensitivity => '音量靈敏度';
+
+  @override
+  String get settingsPlayerBrightnessSensitivity => '亮度靈敏度';
+
+  @override
+  String get settingsPlayerGroupOrientation => '影片方向';
+
+  @override
+  String get settingsPlayerOrientationFollowVideo => '跟隨影片方向';
+
+  @override
+  String get settingsPlayerOrientationAlwaysPortrait => '固定直向';
+
+  @override
+  String get settingsPlayerOrientationAlwaysLandscape => '固定橫向';
+
+  @override
+  String get settingsPlayerUiFollowGravity => '介面跟隨重力旋轉';
+
+  @override
+  String get settingsPlayerGroupTopInfo => '頂部資訊';
+
+  @override
+  String get settingsPlayerShowTimeDesc => '顯示當前時間';
+
+  @override
+  String get settingsPlayerBattery => '電量';
+
+  @override
+  String get settingsPlayerShowBatteryDesc => '顯示當前電量';
+
+  @override
+  String get settingsPlayerNetSpeed => '網速';
+
+  @override
+  String get settingsPlayerShowNetSpeedDesc => '顯示即時網速';
+
+  @override
+  String get settingsPlayerDataType => '資料類型';
+
+  @override
+  String get settingsPlayerShowDataTypeDesc => '顯示 WiFi / 行動數據';
+
+  @override
+  String get settingsPlayerGroupBehavior => '播放行為';
+
+  @override
+  String get settingsPlayerPersistentProgressBar => '常駐進度線';
+
+  @override
+  String get settingsPlayerPersistentProgressBarDesc => '隱藏控制層後底部顯示細線';
+
+  @override
+  String get settingsPlayerChapterProgressBar => '顯示章節進度條';
+
+  @override
+  String get settingsPlayerChapterProgressBarDesc => '進度條標記章節並顯示章節名';
+
+  @override
+  String get settingsPlayerThumbnailPreview => '進度條縮圖';
+
+  @override
+  String get settingsPlayerThumbnailPreviewDesc => '拖曳進度條時預覽畫面';
+
+  @override
+  String get settingsPlayerRememberSpeed => '記住上次播放速度';
+
+  @override
+  String get settingsPlayerRememberSpeedDesc => '自動恢復上次播放速度';
+
+  @override
+  String get settingsPlayerSaveVolumeToSystem => '儲存音量到系統';
+
+  @override
+  String get settingsPlayerSaveVolumeToSystemDesc => '結束時將音量寫回系統';
+
+  @override
+  String get settingsPlayerPinchToZoom => '雙指縮小影片';
+
+  @override
+  String get settingsPlayerPinchToZoomDesc => '允許雙指縮小畫面';
+
+  @override
+  String get settingsPlayerButtonBackground => '按鈕背景';
+
+  @override
+  String get settingsPlayerButtonBackgroundDesc => '為控制按鈕加上半透明背景';
+
+  @override
+  String get settingsPlayerAutoNext => '自動接續播放';
+
+  @override
+  String get settingsPlayerAutoNextDesc => '播完自動播放下一集';
+
+  @override
+  String get settingsPlayerAutoExit => '播放完畢自動退出';
+
+  @override
+  String get settingsPlayerAutoExitDesc => '最後一個播完自動退出';
+
+  @override
+  String get settingsPlayerSpeedIndicator => '播放速度指示器';
+
+  @override
+  String get settingsPlayerSpeedIndicatorDesc => '長按時頂部顯示播放速度提示';
+
+  @override
+  String get settingsPlayerUiAnimations => '啟用播放介面動畫';
+
+  @override
+  String get settingsPlayerUiAnimationsDesc => '控制層與面板的進出場動畫';
+
+  @override
+  String get settingsPlayerLockExemptDoubleTap => '鎖定狀態豁免雙擊';
+
+  @override
+  String get settingsPlayerLockExemptDoubleTapDesc => '啟用鎖定狀態下雙擊螢幕播放/暫停的功能';
+
+  @override
+  String get settingsPlayerVolumeBoost => '音量增強';
+
+  @override
+  String get settingsPlayerVolumeBoostDesc => '系統音量滿後繼續放大';
+
+  @override
+  String get settingsPlayerWatchThreshold => '已觀看進度閾值';
+
+  @override
+  String get settingsPlayerEnableGpuNext => '啟用 GPU-next';
+
+  @override
+  String get settingsPlayerGpuNextDesc => '使用 libplacebo 新渲染器';
+
+  @override
+  String get settingsPlayerEnableVulkan => '啟用 Vulkan';
+
+  @override
+  String get settingsPlayerVulkanDesc => '優先使用 Vulkan 渲染';
+
+  @override
+  String get settingsPlayerVulkanNeedsGpuNext =>
+      '需先啟用上方的「GPU-next」：Vulkan 只對 GPU-next 渲染器生效';
+
+  @override
+  String get settingsPlayerRestartHint => '切換後需重新啟動播放器（重開影片）生效；';
+
+  @override
+  String get settingsPlayerNoBlackScreenHint => '裝置或驅動不支援時會自動回落 OpenGL，不會黑屏';
+
+  @override
+  String get commonEnable => '確定啟用';
+
+  @override
+  String get commonTurnOn => '確定開啟';
+
+  @override
+  String get settingsPlayerLockExemptDialogTitle => '啟用鎖定狀態豁免雙擊';
+
+  @override
+  String get settingsPlayerLockExemptDialogBody =>
+      '開啟後，控制層鎖定期間雙擊螢幕即可暫停/播放。\n\n只豁免這一個手勢：左右滑動快轉倒轉、上下滑動音量與亮度、長按播放速度在鎖定狀態下依然不會生效；單擊呼出解鎖按鈕也不受影響。\n\n鎖定本是防誤觸用的，若影片會在口袋/包裡誤暫停，請保持關閉。';
+
+  @override
+  String get settingsPlayerGravityDialogTitle => '開啟介面跟隨重力旋轉';
+
+  @override
+  String get settingsPlayerGravityDialogBody =>
+      '生效前提（兩個都要滿足）：\n① 手機系統設定裡已開啟「自動旋轉」；\n② 本頁「影片方向」設為「自動」。\n\n兩個前提滿足後，再開啟本開關，播放介面的橫直向才會跟隨手機方向（豎起來進直向播放頁，橫過來回橫向播放頁）。前提不滿足時仍按「影片方向」的設定播放，本開關不生效。\n\n「鎖定直向 / 鎖定橫向」是明確指定的方向，不受本開關影響。';
+
+  @override
+  String get settingsPlayerGpuNextWarning =>
+      '啟用後超解析度功能將無法使用；\n可嘗試配合軟解播放杜比視界影片。\n\n是否繼續？';
+
+  @override
+  String get settingsPlayerVulkanWarning =>
+      '影片輸出將優先使用 Vulkan 渲染，新建的上下文不再限定 OpenGL ES。\n\n若裝置或驅動不支援，會自動回落 OpenGL，不會黑屏。\n\n注意：一般核心下 MediaCodec 直通只對 OpenGL 生效，開 Vulkan 後「硬解+」會直接走硬解複製（不再嘗試直通）。\n\n切換後需重新啟動播放器（重開影片）生效。';
+
+  @override
+  String get commonSeconds => '秒';
+
+  @override
+  String commonSecondsValue(int value) {
+    return '$value 秒';
+  }
+
+  @override
+  String get settingsPlayerLongPressSpeed => '長按播放速度';
+
+  @override
+  String get settingsPlayerLongPressSpeedDesc => '長按臨時播放速度，可左右滑動調整速度';
+
+  @override
+  String settingsPlayerSeekRange(int max) {
+    return '1 – $max 秒';
+  }
+
+  @override
+  String get settingsPlayerSeekSeconds => '快轉/倒轉時長';
+
+  @override
+  String get settingsPlayerTapValueHint => '點選數值可自訂秒數';
+
+  @override
+  String get settingsPlayerWatchThresholdTitle => '「已觀看」進度閾值';
+
+  @override
+  String get settingsPlayerWatchThresholdDesc => '進度達到該比例即視為已看完';
+
+  @override
+  String get settingsPlayerBoostCap => '增強上限';
+
+  @override
+  String settingsPlayerBoostCapDesc(int percent) {
+    return '最高增強至 $percent%音量';
+  }
+
+  @override
+  String get commonDelete => '刪除';
+
+  @override
+  String get commonEdit => '編輯';
+
+  @override
+  String get commonAdd => '新增';
+
+  @override
+  String get commonSave => '儲存';
+
+  @override
+  String get commonMoreActions => '更多操作';
+
+  @override
+  String get commonDontAskAgain => '不再提示';
+
+  @override
+  String get commonTurnOnShort => '開啟';
+
+  @override
+  String get danmakuServerAdd => '新增伺服器';
+
+  @override
+  String get danmakuServerIntro => '啟用的伺服器將同時用於彈幕搜尋與自動匹配，搜尋結果按各伺服器回傳順序即時呈現';
+
+  @override
+  String get danmakuServerGroupServers => '伺服器';
+
+  @override
+  String get danmakuServerDelete => '刪除伺服器';
+
+  @override
+  String get danmakuServerDedupe => '搜尋結果自動去重';
+
+  @override
+  String get danmakuServerDedupeOnDesc => '重複番劇合併為一條，保留集數最全的';
+
+  @override
+  String get danmakuServerDedupeOffDesc => '每台伺服器的結果各自顯示，可自行挑選來源';
+
+  @override
+  String get danmakuServerDedupeDialogTitle => '開啟搜尋結果自動去重？';
+
+  @override
+  String get danmakuServerDedupeDialogBody =>
+      '各伺服器回傳的結果仍然立刻顯示，不會等全部回傳。\n同一部番劇只保留一條；如果後續伺服器回傳的集數更全，會自動替換成更全的那條。\n因此某台伺服器的結果可能不單獨出現——那不代表它沒搜到，而是被去重合併了。';
+
+  @override
+  String get danmakuServerAutoMatch => '切集自動匹配彈幕';
+
+  @override
+  String get danmakuServerAutoMatchDesc => '切集時自動匹配並載入對應集彈幕';
+
+  @override
+  String get danmakuServerBuiltIn => '內建伺服器，不可編輯、刪除';
+
+  @override
+  String get danmakuServerEdit => '編輯伺服器';
+
+  @override
+  String get danmakuServerNameLabel => '伺服器名稱';
+
+  @override
+  String get danmakuServerNameHint => '例：我的伺服器';
+
+  @override
+  String get danmakuServerUrlLabel => '伺服器位址';
+
+  @override
+  String get danmakuServerNoBrowser => '未找到可用的瀏覽器';
+
+  @override
+  String get danmakuServerHelpLink => '如何取得伺服器位址';
+
+  @override
+  String get mediaScanGroupRules => '掃描規則';
+
+  @override
+  String get mediaScanNoMedia => '掃描包含 .nomedia 的資料夾';
+
+  @override
+  String get mediaScanNoMediaDesc => '掃描系統忽略的目錄';
+
+  @override
+  String get mediaScanHiddenFolders => '掃描以 . 開頭的隱藏資料夾';
+
+  @override
+  String get mediaScanHiddenFoldersDesc => '掃描隱藏檔案';
+
+  @override
+  String get mediaScanGroupFilterMode => '資料夾過濾模式';
+
+  @override
+  String get mediaScanAll => '全部掃描';
+
+  @override
+  String get mediaScanAllDesc => '掃描所有未跳過的資料夾';
+
+  @override
+  String get mediaScanBlacklist => '黑名單模式';
+
+  @override
+  String get mediaScanBlacklistDesc => '排除指定資料夾';
+
+  @override
+  String get mediaScanWhitelist => '白名單模式';
+
+  @override
+  String get mediaScanWhitelistDesc => '僅掃描指定資料夾';
+
+  @override
+  String get mediaScanBlacklistList => '黑名單資料夾清單';
+
+  @override
+  String get mediaScanWhitelistList => '白名單資料夾清單';
+
+  @override
+  String get mediaScanAddFolder => '新增資料夾';
+
+  @override
+  String get mediaScanBlacklistEmpty => '暫無黑名單資料夾（未排除任何目錄）';
+
+  @override
+  String get mediaScanWhitelistEmpty => '暫無白名單資料夾（未新增時預設顯示全部）';
+
+  @override
+  String get mediaScanNoMediaDialogTitle => '開啟提示';
+
+  @override
+  String get mediaScanNoMediaDialogBody =>
+      '此功能將掃描系統預設忽略的 .nomedia 資料夾。\n\n開啟後，某些應用程式的快取影片、暫存檔案或表情包也可能被顯示在媒體清單中。是否繼續？';
+
+  @override
+  String get mediaScanAddBlacklistFolder => '新增黑名單資料夾';
+
+  @override
+  String get mediaScanAddWhitelistFolder => '新增白名單資料夾';
+
+  @override
+  String get mediaScanPickBlacklistHint => '選擇要排除的媒體資料夾（點選直接新增）：';
+
+  @override
+  String get mediaScanPickWhitelistHint => '選擇要僅保留掃描的媒體資料夾（點選直接新增）：';
+
+  @override
+  String get mediaScanNoMoreFolders => '未發現更多媒體資料夾';
+
+  @override
+  String mediaScanFolderItemSubtitle(String path, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 個影片',
+    );
+    return '$path\n$_temp0';
+  }
+
+  @override
+  String get mediaScanBrowseOther => '瀏覽裝置其他目錄...';
+
+  @override
+  String get mediaScanPickFolder => '選擇資料夾';
+
+  @override
+  String get mediaScanGoUp => '上一層';
+
+  @override
+  String get mediaScanNoSubfolders => '當前目錄下無子資料夾';
+
+  @override
+  String mediaScanPickCurrentFolder(String name) {
+    return '選擇當前資料夾 ($name)';
+  }
+
+  @override
+  String get settingsErrorLogTitle => '錯誤日誌';
+
+  @override
+  String get settingsErrorLogRefreshRealtime => '重新整理（即時檢視）';
+
+  @override
+  String settingsErrorLogSavePath(String path) {
+    return '日誌儲存路徑：\n$path';
+  }
+
+  @override
+  String settingsErrorLogGroupCount(int count) {
+    return '當機日誌（$count）';
+  }
+
+  @override
+  String get settingsErrorLogEmpty => '暫無錯誤日誌';
+
+  @override
+  String get settingsErrorLogEmptyDesc => '應用程式當機時日誌會自動記錄到這裡';
+
+  @override
+  String get settingsErrorLogCopy => '一鍵複製';
+
+  @override
+  String get settingsErrorLogExport => '匯出';
+
+  @override
+  String get settingsErrorLogCopied => '日誌內容已複製到剪貼簿';
+
+  @override
+  String get settingsErrorLogExportFailed => '匯出失敗';
+
+  @override
+  String settingsErrorLogExportedTo(String path) {
+    return '已匯出到\n$path';
+  }
+
+  @override
+  String get settingsErrorLogDeleteTitle => '刪除日誌';
+
+  @override
+  String get settingsErrorLogDeleted => '已刪除';
+
+  @override
+  String get settingsErrorLogDeleteFailed => '刪除失敗';
+
+  @override
+  String get settingsErrorLogClearAll => '清空全部日誌';
+
+  @override
+  String settingsErrorLogClearAllConfirm(int count) {
+    return '將刪除全部 $count 個日誌檔案，此操作無法復原。';
+  }
+
+  @override
+  String get settingsErrorLogClearedAll => '已清空全部日誌';
+
+  @override
+  String get settingsErrorLogClearFailed => '清空失敗';
+
+  @override
+  String get settingsFontTitle => 'App字型設定';
+
+  @override
+  String get settingsFontEnable => '啟用自訂字型';
+
+  @override
+  String get settingsFontEnabledDesc => '已開啟：使用下方匯入的字型';
+
+  @override
+  String get settingsFontDisabledDesc => '已關閉：跟隨系統字型';
+
+  @override
+  String get settingsFontPreviewText =>
+      '生如夏花之絢爛，死如秋葉之靜美。\n我把你的名字寫在樹葉上，風把它吹走了；\n我把你的名字寫在沙灘上，浪把它沖走了；';
+
+  @override
+  String get settingsFontPreviewHint => '部分字型可能不生效';
+
+  @override
+  String get settingsFontGroupFont => '字型';
+
+  @override
+  String get settingsFontSizeLabel => '字型字級';
+
+  @override
+  String get settingsFontWeightLabel => '字型字重';
+
+  @override
+  String get settingsFontWeightThin => '極細';
+
+  @override
+  String get settingsFontWeightExtraLight => '很細';
+
+  @override
+  String get settingsFontWeightLight => '細';
+
+  @override
+  String get settingsFontWeightRegular => '標準';
+
+  @override
+  String get settingsFontWeightMedium => '中等';
+
+  @override
+  String get settingsFontWeightSemiBold => '較粗';
+
+  @override
+  String get settingsFontWeightBold => '粗';
+
+  @override
+  String get settingsFontWeightExtraBold => '很粗';
+
+  @override
+  String get settingsFontWeightBlack => '極粗';
+
+  @override
+  String get settingsFontImport => '匯入字型';
+
+  @override
+  String get settingsFontImporting => '正在匯入...';
+
+  @override
+  String settingsFontCurrent(String name) {
+    return '當前字型：$name';
+  }
+
+  @override
+  String get settingsFontPickHint => '點選選擇 .ttf/.otf 字型檔案';
+
+  @override
+  String get settingsFontReselect => '重新選擇';
+
+  @override
+  String get settingsFontReset => '重設字級與字重';
+
+  @override
+  String get settingsFontParseFailed => '字型解析失敗，請更換字型檔案';
+
+  @override
+  String settingsFontApplied(String name) {
+    return '已套用字型：$name';
+  }
+
+  @override
+  String get settingsAboutGroupInfo => '資訊';
+
+  @override
+  String get settingsAboutGroupTools => '工具';
+
+  @override
+  String get settingsAboutGroupUpdate => '更新';
+
+  @override
+  String get settingsAboutLicenses => '授權條款';
+
+  @override
+  String get settingsAboutLicensesDesc => '檢視本應用程式使用的全部開源授權';
+
+  @override
+  String get settingsAboutUserAgreement => '使用者條款';
+
+  @override
+  String get settingsAboutUserAgreementDesc => '預覽使用者服務條款與隱私權政策';
+
+  @override
+  String get settingsAboutCacheManagement => '快取管理';
+
+  @override
+  String get settingsAboutCacheManagementDesc => '檢視與清除各類快取';
+
+  @override
+  String get settingsAboutErrorLogDesc => '檢視 / 匯出 / 複製當機日誌';
+
+  @override
+  String get settingsAboutCheckUpdate => '手動檢查更新';
+
+  @override
+  String get settingsAboutCheckUpdateDesc => '檢查是否有新版本';
+
+  @override
+  String get settingsAboutAutoCheckUpdate => '自動檢查更新';
+
+  @override
+  String get settingsAboutAutoCheckUpdateDesc => '啟動後自動檢查新版本';
+
+  @override
+  String get settingsAboutFeedbackSubject => '播放器使用回饋';
+
+  @override
+  String get settingsAboutNoEmailApp => '未找到可用的郵件應用程式';
+
+  @override
+  String get settingsAboutGithubPending => 'GitHub 首頁網址待接入';
+
+  @override
+  String get settingsAboutCannotOpenLink => '無法開啟連結';
+
+  @override
+  String get settingsAboutUpToDate => '已是最新版本';
+
+  @override
+  String get settingsAboutCheckUpdateFailed => '檢查更新失敗，請稍後重試';
+
+  @override
+  String get settingsAboutSendFeedback => '傳送使用回饋';
+
+  @override
+  String get settingsAboutAppNameLoading => '讀取中';
+
+  @override
+  String get settingsLicenseOpenSource => '開源授權';
+
+  @override
+  String get settingsLicenseEmpty => '暫無授權資訊';
+
+  @override
+  String get settingsLicenseVersionLoading => '版本讀取中';
+
+  @override
+  String settingsLicenseCount(int count) {
+    return '$count 項授權';
+  }
+
+  @override
+  String settingsLicenseParagraphCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 個授權段落',
+      one: '1 個授權段落',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsLicenseCopy => '複製授權條款本文';
+
+  @override
+  String get settingsLicenseCopied => '授權條款本文已複製';
+
+  @override
+  String get settingsLicenseLoadFailed => '授權資訊載入失敗';
+
+  @override
+  String get settingsAppearanceMode => '外觀模式';
+
+  @override
+  String get settingsAppearanceThemeColor => '主題色';
+
+  @override
+  String get settingsAppearancePaletteVariant => '調色盤風格';
+
+  @override
+  String get settingsAppearanceCustomFontDesc => '自訂全域字型';
+
+  @override
+  String get settingsAppearanceGroupWallpaper => '桌布';
+
+  @override
+  String get settingsAppearanceDynamicColor => '動態色';
+
+  @override
+  String get settingsAppearanceSdkTooLow => 'Android 版本過低，不支援該功能';
+
+  @override
+  String get settingsAppearanceReadWallpaperFailed => '無法讀取桌布顏色';
+
+  @override
+  String get settingsAppearanceCustomColorTitle => '自訂主題色';
+
+  @override
+  String get settingsAppearanceNoImagePicker => '這台裝置沒有可用的系統圖片選擇器';
+
+  @override
+  String get settingsAppearanceWallpaperTitle => '自訂桌布';
+
+  @override
+  String get settingsAppearanceWallpaperActiveDesc => '桌布顯示在頁面內容與頂端列之後';
+
+  @override
+  String get settingsAppearanceWallpaperPickDesc => '選一張圖片，鋪在頁面內容與頂端列之後';
+
+  @override
+  String get settingsAppearanceReplaceWallpaper => '更換桌布';
+
+  @override
+  String get settingsAppearanceChooseWallpaper => '選擇桌布';
+
+  @override
+  String get settingsAppearanceAdjustWallpaper => '調整';
+
+  @override
+  String get settingsDecoderBasicInfo => '基本資訊';
+
+  @override
+  String get settingsDecoderMimeType => 'MIME 類型';
+
+  @override
+  String get settingsDecoderCanonicalName => '標準名稱';
+
+  @override
+  String get settingsDecoderType => '類型';
+
+  @override
+  String get settingsDecoderVideoCodec => '影片解碼器';
+
+  @override
+  String get settingsDecoderAudioCodec => '音訊解碼器';
+
+  @override
+  String get settingsDecoderAcceleration => '加速方式';
+
+  @override
+  String get settingsDecoderHardwareAcceleration => '硬體加速';
+
+  @override
+  String get settingsDecoderSoftware => '軟體';
+
+  @override
+  String get settingsDecoderAlias => '別名';
+
+  @override
+  String get settingsDecoderYes => '是';
+
+  @override
+  String get settingsDecoderBitrateRange => '位元率範圍';
+
+  @override
+  String get settingsDecoderResolutionCapability => '解析度與能力';
+
+  @override
+  String get settingsDecoderMaxResolution => '最大解析度';
+
+  @override
+  String get settingsDecoderMinResolution => '最小解析度';
+
+  @override
+  String get settingsDecoderAlignment => '對齊';
+
+  @override
+  String get settingsDecoderMaxInstances => '最大執行個體數';
+
+  @override
+  String get settingsDecoderAudioCapability => '音訊能力';
+
+  @override
+  String get settingsDecoderMaxChannels => '最大聲道數';
+
+  @override
+  String get settingsDecoderHardwareFeatures => '硬體特性';
+
+  @override
+  String get settingsDecoderColorFormats => '色彩格式';
+
+  @override
+  String get settingsDecoderProfiles => '支援的 Profile / Level';
+
+  @override
+  String get settingsCacheGroupTitle => '快取';
+
+  @override
+  String get settingsCacheReading => '讀取中…';
+
+  @override
+  String settingsCacheClearCategoryTitle(String label) {
+    return '清除$label';
+  }
+
+  @override
+  String settingsCacheClearCategoryBody(String label, String size) {
+    return '將刪除「$label」快取（$size），確定？';
+  }
+
+  @override
+  String settingsCacheCategoryCleared(String label) {
+    return '已清除$label';
+  }
+
+  @override
+  String get settingsCacheClearFailed => '清除失敗';
+
+  @override
+  String get settingsCacheClearAllTitle => '清除所有快取';
+
+  @override
+  String settingsCacheClearAllBody(String size, String items) {
+    return '將刪除全部快取（當前共 $size）：\n$items\n\n此操作無法復原。';
+  }
+
+  @override
+  String get settingsCacheConfirmAgainTitle => '再次確認';
+
+  @override
+  String get settingsCacheConfirmAgainBody => '確定要清除所有快取嗎？';
+
+  @override
+  String get settingsCacheAllCleared => '已清除全部快取';
+
+  @override
+  String settingsCacheClearAllButton(String size) {
+    return '一鍵清除所有快取（$size）';
+  }
+
+  @override
+  String get settingsCacheFooterNote =>
+      '清單封面縮圖會在下次掃描時重新產生；進度條縮圖為純記憶體快取，隨播放頁退出自動清空，不佔用儲存空間。';
+
+  @override
+  String get commonRetry => '重試';
+
+  @override
+  String get commonVideo => '影片';
+
+  @override
+  String get commonAll => '全部';
+
+  @override
+  String get settingsDeviceUnsupported => '不支援';
+
+  @override
+  String get settingsDeviceUnknown => '未知裝置';
+
+  @override
+  String get settingsDeviceHdrCapability => '螢幕 HDR 能力';
+
+  @override
+  String get settingsDeviceHdrUnsupported => '當前螢幕不支援 HDR（或系統未回報 HDR 能力）';
+
+  @override
+  String get settingsDeviceKeyVideoEncoders => '關鍵影片編碼器';
+
+  @override
+  String get settingsDeviceDecoderList => '解碼器清單';
+
+  @override
+  String settingsDeviceDecoderSummary(int hw, int sw, int video, int audio) {
+    return '硬解 $hw · 軟解 $sw · 影片 $video · 音訊 $audio';
+  }
+
+  @override
+  String get settingsDeviceSearchHint => '搜尋解碼器（名稱 / MIME / 格式 / Profile）';
+
+  @override
+  String get settingsDeviceNoMatchingDecoder => '無匹配的解碼器';
+
+  @override
+  String settingsDeviceChannels(int count) {
+    return '$count 聲道';
+  }
+
+  @override
+  String get settingsDeviceCapabilityError => '無法讀取裝置能力（可能為不支援的原生通道）';
+
+  @override
+  String get commonClear => '清除';
+
+  @override
+  String get commonReset => '重設';
+
+  @override
+  String get commonCenter => '置中';
+
+  @override
+  String get settingsHistoryClearAllTitle => '清除歷史紀錄';
+
+  @override
+  String get settingsHistoryClearAllBodyWithProgress =>
+      '確定要清除全部播放歷史嗎？\n\n同時會清除全部播放進度（含「已看完」標記），此操作無法復原。';
+
+  @override
+  String get settingsHistoryClearAllBody => '確定要清除全部播放歷史嗎？此操作無法復原。';
+
+  @override
+  String get settingsHistoryClearAllTooltip => '清除全部歷史';
+
+  @override
+  String get settingsHistoryEnabled => '播放歷史紀錄';
+
+  @override
+  String get settingsHistoryEnabledDesc => '關閉後不再記錄新的播放';
+
+  @override
+  String get settingsHistoryClearProgressOnDelete => '刪除歷史時清除進度';
+
+  @override
+  String get settingsHistoryClearProgressOnDeleteDesc => '關閉時兩套資料互相獨立';
+
+  @override
+  String get settingsHistoryClearProgressOnDesc => '開啟後，刪除歷史紀錄會同時清除該影片的播放進度';
+
+  @override
+  String get settingsHistoryClearProgressBlocked =>
+      '需先開啟上方的「播放歷史紀錄」；關閉時不記錄歷史，但播放進度會一直保留';
+
+  @override
+  String get settingsHistoryEmpty => '暫無播放歷史';
+
+  @override
+  String get settingsHistoryEmptyDisabled => '暫無播放歷史（記錄已關閉）';
+
+  @override
+  String get settingsHistoryDeleteEntryWithProgress => '刪除該筆記錄（同時清除播放進度）';
+
+  @override
+  String get settingsHistoryDeleteEntry => '刪除該筆記錄';
+
+  @override
+  String get settingsWallpaperSaveFailed => '無法儲存桌布，請重新選擇圖片';
+
+  @override
+  String get settingsWallpaperAdjustTitle => '調整桌布';
+
+  @override
+  String get settingsWallpaperSave => '儲存桌布';
+
+  @override
+  String get settingsWallpaperDragHint => '拖曳以調整位置，雙指捏合以縮放。';
+
+  @override
+  String get settingsWallpaperScale => '縮放';
+
+  @override
+  String get settingsWallpaperOffsetX => '水平位置';
+
+  @override
+  String get settingsWallpaperOpacity => '透明度';
+
+  @override
+  String get settingsWallpaperImageUnavailable => '圖片已無法使用，請重新選擇';
+
+  @override
+  String get commonBack => '返回';
+
+  @override
+  String get commonMore => '更多';
+
+  @override
+  String get commonPlay => '播放';
+
+  @override
+  String get commonPause => '暫停';
+
+  @override
+  String get commonPlaying => '播放中';
+
+  @override
+  String get commonSearch => '搜尋';
+
+  @override
+  String get commonClearAll => '清空';
+
+  @override
+  String get commonNone => '無';
+
+  @override
+  String get commonNotSet => '未設定';
+
+  @override
+  String get commonCustom => '自訂';
+
+  @override
+  String get commonJump => '跳轉';
+
+  @override
+  String get commonSortBy => '排序方式';
+
+  @override
+  String get commonGoUp => '上層';
+
+  @override
+  String get commonRefresh => '重新整理';
+
+  @override
+  String get commonOneKeyReset => '一鍵重設';
+
+  @override
+  String get commonRestoreDefaults => '還原預設設定';
+
+  @override
+  String get commonLoadingDots => '正在載入...';
+
+  @override
+  String get commonTitle => '標題';
+
+  @override
+  String get commonBlur => '模糊';
+
+  @override
+  String get commonEpisodeUnit => '集';
+
+  @override
+  String playerAutoLoadedSubtitle(String fileName) {
+    return '已自動載入字幕：$fileName';
+  }
+
+  @override
+  String playerAutoLoadedDanmaku(String fileName) {
+    return '已自動載入彈幕：$fileName';
+  }
+
+  @override
+  String playerDanmakuLoaded(String message) {
+    return '已載入彈幕：$message';
+  }
+
+  @override
+  String playerQualityUnavailableSwitched(String name) {
+    return '該畫質不可用，已切換到 $name';
+  }
+
+  @override
+  String playerQualitySwitchFailed(String error) {
+    return '切換畫質失敗：$error';
+  }
+
+  @override
+  String playerScreenshotFailed(String error) {
+    return '截圖失敗：$error';
+  }
+
+  @override
+  String get playerScreenshotNoImage => '截圖失敗：未取得影像';
+
+  @override
+  String get playerSavedToGallery => '已儲存到相簿';
+
+  @override
+  String playerScreenshotSaveFailed(String error) {
+    return '截圖儲存失敗：$error';
+  }
+
+  @override
+  String get playerDanmakuSettings => '彈幕設定';
+
+  @override
+  String get playerSkippedIntro => '已跳過片頭';
+
+  @override
+  String get playerSkippedOutro => '已跳過片尾';
+
+  @override
+  String get playerNoNetworkCannotSwitch => '網路連線不存在，無法切換';
+
+  @override
+  String playerSwitchFailed(String error) {
+    return '切換失敗：$error';
+  }
+
+  @override
+  String get playerResolveUrlFailed => '解析播放位址失敗';
+
+  @override
+  String playerSwitchEpisodeFailed(String error) {
+    return '切集失敗：$error';
+  }
+
+  @override
+  String get playerPlaybackSpeed => '播放速度';
+
+  @override
+  String get playerSuperResolution => '超解析度';
+
+  @override
+  String get playerAspectRatio => '畫面比例';
+
+  @override
+  String get playerCastUnsupportedSource => '暫不支援投放該來源';
+
+  @override
+  String get playerFeatureNotPlaced => '未放置的功能';
+
+  @override
+  String get playerFeatureComingSoon => '功能即將上線';
+
+  @override
+  String get playerEditControlBar => '編輯控制列';
+
+  @override
+  String get playerActionsEnabledHint => '已啟用（長按拖曳排序）';
+
+  @override
+  String get playerNoEnabledActions => '暫無已啟用動作，從下方新增';
+
+  @override
+  String get playerAddable => '可新增';
+
+  @override
+  String playerMaxActions(int max) {
+    String _temp0 = intl.Intl.pluralLogic(
+      max,
+      locale: localeName,
+      other: '最多允許放 $max 個',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerResetControlBar => '重設控制列';
+
+  @override
+  String get playerDanmakuNetwork => '網路彈幕';
+
+  @override
+  String get playerDanmakuLoadFailed => '彈幕載入失敗';
+
+  @override
+  String get playerDanmakuMatching => '正在匹配彈幕，請稍候…';
+
+  @override
+  String get playerDanmakuNoMatch => '未找到匹配的彈幕';
+
+  @override
+  String get playerDanmakuPickMatch => '選擇匹配結果';
+
+  @override
+  String get playerPipUnsupported => '當前裝置不支援子母畫面';
+
+  @override
+  String get playerPipFailed => '進入子母畫面失敗';
+
+  @override
+  String get playerPlaylist => '播放清單';
+
+  @override
+  String get playerLock => '鎖定';
+
+  @override
+  String get playerUnlock => '解鎖';
+
+  @override
+  String get playerScreenshot => '截圖';
+
+  @override
+  String get playerRestoreView => '還原畫面';
+
+  @override
+  String get playerAudioTrack => '音軌';
+
+  @override
+  String get playerNoAudioTrackHint => '當前影片沒有音軌，可在下方匯入外部音軌';
+
+  @override
+  String get playerExternalAudioTrack => '外部音軌';
+
+  @override
+  String get playerImportExternalAudioTrack => '匯入外部音軌';
+
+  @override
+  String get playerTempEffectHint => '臨時生效，退出播放後不保留';
+
+  @override
+  String get playerAudioChannel => '音訊聲道';
+
+  @override
+  String get playerAudioProcessing => '音訊處理';
+
+  @override
+  String get playerVolumeNormalize => '音量標準化';
+
+  @override
+  String get playerDynamicRangeCompress => '動態範圍壓縮';
+
+  @override
+  String get playerPickAudioFile => '選擇音訊檔案';
+
+  @override
+  String get playerExternalAudioImported => '已匯入外部音軌';
+
+  @override
+  String get playerImportFailedCheckFormat => '匯入失敗，請檢查檔案格式';
+
+  @override
+  String get playerRemoveAudioTrack => '移除已匯入的音軌';
+
+  @override
+  String get audioPlaybackSpeed => '播放速度';
+
+  @override
+  String get audioRepeatOff => '循環關閉';
+
+  @override
+  String get audioRepeatSingle => '單曲循環';
+
+  @override
+  String get audioSleepTimer => '定時關閉';
+
+  @override
+  String get audioSleepEndOfTrack => '播完當前';
+
+  @override
+  String get audioSleepEndOfTrackHint => '將在當前曲目播放結束後停止';
+
+  @override
+  String audioSleepRemaining(String time) {
+    return '剩餘 $time';
+  }
+
+  @override
+  String get audioSleepCustomTitle => '自訂定時關閉';
+
+  @override
+  String audioSleepMinutes(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes 分鐘',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get audioShuffle => '隨機播放';
+
+  @override
+  String playerPlaylistWithCount(int count) {
+    return '播放清單（$count）';
+  }
+
+  @override
+  String get playerEqualizerEnable => '啟用等化器';
+
+  @override
+  String get playerEqualizerDesc => '調節頻段增益、低音增強和虛擬環繞';
+
+  @override
+  String get playerPreset => '預設';
+
+  @override
+  String get playerEqualizerBands => '頻段調節';
+
+  @override
+  String get playerEqualizerBass => '低音增強';
+
+  @override
+  String get playerEqualizerSurround => '虛擬環繞';
+
+  @override
+  String get playerBiliNoEpisodes => '沒有取得劇集清單';
+
+  @override
+  String playerBiliTotalEpisodes(int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '共 $total 集',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playerBiliCurrentOfTotal(int current, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 集',
+    );
+    return '第 $current 集 / 共 $_temp0';
+  }
+
+  @override
+  String get playerBiliFreeLimited => '限免';
+
+  @override
+  String get playerBiliPreview => '預告';
+
+  @override
+  String get playerNextEpisode => '下一集';
+
+  @override
+  String get playerCastSelectScreen => '選擇螢幕';
+
+  @override
+  String playerSeekBackSeconds(int seconds) {
+    return '倒轉 $seconds 秒';
+  }
+
+  @override
+  String playerSeekForwardSeconds(int seconds) {
+    return '快轉 $seconds 秒';
+  }
+
+  @override
+  String get playerChapterPanelTitle => '章節跳段';
+
+  @override
+  String get playerNoChapters => '當前影片無章節資訊';
+
+  @override
+  String playerChapterCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '共 $count 章',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playerChapterNumber(int number) {
+    return '第 $number 章';
+  }
+
+  @override
+  String get playerChapterSkipAuto => '自動跳過';
+
+  @override
+  String get playerChapterSkipAutoDesc => '進入對應片段時自動跳到片段結束；關閉則僅彈出跳過膠囊';
+
+  @override
+  String get playerChapterSkipCustomKeywords => '自訂關鍵字';
+
+  @override
+  String get playerChapterSkipKeywordsHint => '按章節標題匹配，支援逗號 / 分號 / 換行分隔';
+
+  @override
+  String get playerIntroKeywords => '片頭關鍵字';
+
+  @override
+  String get playerIntroKeywordsHint => '如 ap、op、開場';
+
+  @override
+  String get playerOutroKeywords => '片尾關鍵字';
+
+  @override
+  String get playerOutroKeywordsHint => '如 ed、ending、結尾';
+
+  @override
+  String get playerChapterSkipKeywordOwnerHint =>
+      '關鍵字歸屬由你填入的位置決定：填進「片頭關鍵字」即判為片頭、填進「片尾關鍵字」即判為片尾；同一標題命中多類時按固定優先順序（前情提要 > 正片前段 > 製作人員 > 下集預告 > 片尾 > 片頭）取一類。';
+
+  @override
+  String get playerDanmakuClose => '關閉彈幕';
+
+  @override
+  String get playerDanmakuOpen => '開啟彈幕';
+
+  @override
+  String get playerEpisodeInvalidInput => '請輸入集數（數字）';
+
+  @override
+  String playerEpisodeNotFound(int number) {
+    return '沒有第 $number 集';
+  }
+
+  @override
+  String playerEpisodeTotalFromServer(int total, String server) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '共 $total 集 · 來自 $server',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerJumpToEpisode => '跳至第';
+
+  @override
+  String get playerEpisodeNumber => '集數';
+
+  @override
+  String get playerDanmakuNetworkSearchHint => '輸入番劇名稱';
+
+  @override
+  String get playerDanmakuStopSearch => '停止搜尋';
+
+  @override
+  String playerDanmakuResultCountUnit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 部',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playerDanmakuSearchingWithCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 部',
+    );
+    return '正在搜尋 · 已取得 $_temp0';
+  }
+
+  @override
+  String playerDanmakuSearchStoppedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 部',
+    );
+    return '已停止搜尋 · 共 $_temp0';
+  }
+
+  @override
+  String playerDanmakuPartialServerFailed(String errors) {
+    return '部分伺服器搜尋失敗：$errors';
+  }
+
+  @override
+  String get playerDanmakuSearching => '搜尋中…';
+
+  @override
+  String get playerDanmakuNetworkInputHint => '輸入關鍵字搜尋網路彈幕';
+
+  @override
+  String playerEpisodeCountUnit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 集',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerDanmakuLocal => '本機彈幕';
+
+  @override
+  String get playerDanmakuNetworkComingSoon => '「網路彈幕」功能即將上線';
+
+  @override
+  String get playerDanmakuAutoMatch => '自動匹配';
+
+  @override
+  String get playerDanmakuAutoMatchComingSoon => '「自動匹配」功能即將上線';
+
+  @override
+  String get playerPickDanmakuFile => '選擇彈幕檔案';
+
+  @override
+  String playerLocalDanmakuLoaded(String name) {
+    return '已載入本機彈幕：$name';
+  }
+
+  @override
+  String get playerDanmakuLoadFailedCheckFormat => '彈幕載入失敗，請檢查檔案格式';
+
+  @override
+  String get playerDanmakuStyle => '彈幕樣式';
+
+  @override
+  String get playerDanmakuFontSize => '彈幕字級';
+
+  @override
+  String get playerDanmakuSpeed => '彈幕速度';
+
+  @override
+  String get playerDanmakuSpeedDesc => '數值越小彈幕越快';
+
+  @override
+  String get playerStrokeWidth => '外框粗細';
+
+  @override
+  String get playerOpacity => '不透明度';
+
+  @override
+  String get playerDanmakuConfig => '彈幕設定';
+
+  @override
+  String get playerDanmakuDisplayArea => '顯示區域';
+
+  @override
+  String get playerDanmakuLineHeight => '彈幕行高';
+
+  @override
+  String get playerDanmakuTop => '頂部彈幕';
+
+  @override
+  String get playerDanmakuBottom => '底部彈幕';
+
+  @override
+  String get playerDanmakuScroll => '滾動彈幕';
+
+  @override
+  String get playerDanmakuMassive => '海量彈幕';
+
+  @override
+  String get playerDanmakuMassiveDesc => '軌道佔滿時疊加繪製，彈幕過多不再丟棄';
+
+  @override
+  String get playerDanmakuDedupe => '彈幕去重';
+
+  @override
+  String get playerDanmakuDedupeDesc => '相同時間下相同彈幕合併為一條';
+
+  @override
+  String get playerDanmakuMerge => '彈幕合併';
+
+  @override
+  String get playerDanmakuMergeDesc => '不同時間內相同彈幕合併且計數';
+
+  @override
+  String get playerDanmakuOffset => '彈幕偏移';
+
+  @override
+  String get playerDanmakuTimelineOffset => '時間軸偏移';
+
+  @override
+  String get playerDanmakuAdvanceOneSecond => '提前 1 秒';
+
+  @override
+  String get playerDanmakuDelayOneSecond => '延後 1 秒';
+
+  @override
+  String get playerDanmakuResetOffset => '重設偏移';
+
+  @override
+  String get playerDanmakuFont => '彈幕字型';
+
+  @override
+  String get danmakuColorModeSourceDesc => '保留彈幕自帶顏色（含會員漸變彩色）';
+
+  @override
+  String get danmakuColorModeRandomDesc => '忽略檔案顏色，按色輪逐條隨機著色';
+
+  @override
+  String get danmakuColorModeFixedDesc => '彈幕從下面已選顏色裡隨機取色';
+
+  @override
+  String playerDanmakuPaletteMaxHint(int max) {
+    String _temp0 = intl.Intl.pluralLogic(
+      max,
+      locale: localeName,
+      other: '最多選 $max 種顏色',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerDanmakuPaletteTitle => '彈幕顏色（可多選，隨機使用）';
+
+  @override
+  String get playerDanmakuColorExists => '該顏色已在調色盤中';
+
+  @override
+  String playerDanmakuPaletteFull(int max) {
+    String _temp0 = intl.Intl.pluralLogic(
+      max,
+      locale: localeName,
+      other: '已選滿 $max 種',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerDanmakuAddToPalette => '新增到調色盤';
+
+  @override
+  String playerDanmakuPaletteSelected(int selected, int max) {
+    String _temp0 = intl.Intl.pluralLogic(
+      max,
+      locale: localeName,
+      other: '$max 種',
+    );
+    return '已選 $selected/$_temp0';
+  }
+
+  @override
+  String get playerDanmakuBlockWords => '遮蔽詞';
+
+  @override
+  String get playerDanmakuBlockWordsHint => '輸入要遮蔽的關鍵字';
+
+  @override
+  String playerFontsImported(int count, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 種字型',
+    );
+    return '已匯入 $count 個字型檔案，共 $_temp0';
+  }
+
+  @override
+  String get playerPickFontDir => '選擇字型目錄';
+
+  @override
+  String get playerFontDirImportHint => '點選匯入包含 .ttf/.otf 字型的目錄';
+
+  @override
+  String playerFontsLoaded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 種字型',
+    );
+    return '已載入 $_temp0';
+  }
+
+  @override
+  String get playerPickFont => '選擇字型';
+
+  @override
+  String get playerRestartRequired => '需重新啟動應用程式';
+
+  @override
+  String get playerDecodeRestartBody => '解碼設定已修改，重新啟動應用程式後生效。\n\n是否立即重新啟動？';
+
+  @override
+  String get playerRestartLater => '稍後重新啟動';
+
+  @override
+  String get playerRestartNow => '立即重新啟動';
+
+  @override
+  String get playerDecodePreset => '解碼預設';
+
+  @override
+  String get playerDecodePresetDesc => '切換後需重新啟動應用程式生效，可選立即重新啟動';
+
+  @override
+  String get playerDecodeHwPlusDesc => '「硬解+」直通不可用時由核心依次回退硬解 / 軟解';
+
+  @override
+  String get playerDiagnosticsContainer => '容器';
+
+  @override
+  String get playerDiagnosticsAudioCodec => '音訊編碼';
+
+  @override
+  String get playerDiagnosticsVideoOutput => '影片輸出';
+
+  @override
+  String get playerDiagnosticsSyncMode => '同步方式';
+
+  @override
+  String get playerDiagnosticsPixelFormat => '像素格式';
+
+  @override
+  String get playerDiagnosticsContainerFps => '容器影格率';
+
+  @override
+  String get playerDiagnosticsActualFps => '實際影格率';
+
+  @override
+  String get playerDiagnosticsVideoBitrate => '影片位元率';
+
+  @override
+  String get playerDiagnosticsAudioParams => '音訊參數';
+
+  @override
+  String get playerDiagnosticsAudioBitrate => '音訊位元率';
+
+  @override
+  String get playerDiagnosticsAvSync => '音畫同步';
+
+  @override
+  String get playerDiagnosticsCacheGroup => '快取與丟幀';
+
+  @override
+  String get playerDiagnosticsBufferDuration => '緩衝時長';
+
+  @override
+  String get playerDiagnosticsPlayableDuration => '可播時長';
+
+  @override
+  String get playerDiagnosticsCacheUsage => '快取佔用';
+
+  @override
+  String get playerDiagnosticsDownlinkRate => '下行速率';
+
+  @override
+  String get playerDiagnosticsDroppedFrames => '丟幀';
+
+  @override
+  String get playerDiagnosticsDecodeDropped => '解碼丟幀';
+
+  @override
+  String get playerDiagnosticsDelayedFrames => '延遲幀';
+
+  @override
+  String get playerDiagnosticsAutoRefreshHint => '每秒自動重新整理 · 資料來自 mpv 執行時屬性';
+
+  @override
+  String get playerDiagnosticsReadFailed => '無法讀取播放器屬性（播放器可能未就緒或已卡住）';
+
+  @override
+  String playerDiagnosticsFailedValue(String keys) {
+    return '讀取失敗：$keys（顯示的是上一次成功值）';
+  }
+
+  @override
+  String playerDiagnosticsFailedValueMore(String keys, int count) {
+    return '讀取失敗：$keys 等 $count 項（顯示的是上一次成功值）';
+  }
+
+  @override
+  String get playerIntroRange => '片頭範圍';
+
+  @override
+  String get playerOutroRange => '片尾範圍';
+
+  @override
+  String get playerRangeHint => '拖曳或輸入設定時間，可按需調整上方範圍';
+
+  @override
+  String get playerSetToCurrentTime => '設為當前時間';
+
+  @override
+  String get playerSetToRemainingTime => '設為當前剩餘時間';
+
+  @override
+  String get playerEnableIntroOutroSkip => '啟用跳過片頭片尾';
+
+  @override
+  String get playerIntroOutroSkipDesc => '透過手動設定秒數來跳過片頭片尾';
+
+  @override
+  String get playerNoOtherVideos => '當前資料夾沒有其他影片';
+
+  @override
+  String get playerNoQuality => '暫無可用畫質';
+
+  @override
+  String get playerQualitySwitchHint => '切換畫質會重開播放並保持進度';
+
+  @override
+  String get playerResumeIndicator => '已恢復上次播放進度';
+
+  @override
+  String get playerRestartFromBeginning => '從頭開始';
+
+  @override
+  String playerSpeedPlaying(String speed) {
+    return '正在 $speed 倍速播放';
+  }
+
+  @override
+  String get playerSpeedSwipeHint => '左右滑動可臨時調節長按倍數';
+
+  @override
+  String get playerSpeedAlreadyInPresets => '該播放速度已在預設中';
+
+  @override
+  String playerSpeedPresetLimit(int max) {
+    String _temp0 = intl.Intl.pluralLogic(
+      max,
+      locale: localeName,
+      other: '自訂預設已達上限（$max 個）',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playerMyPresets => '我的預設';
+
+  @override
+  String get playerPreciseSpeed => '精確調速';
+
+  @override
+  String get playerApplyTemporarily => '臨時套用';
+
+  @override
+  String get playerAddToPresets => '新增到預設';
+
+  @override
+  String get playerSpeedReset => '歸位';
+
+  @override
+  String get playerResetPresets => '重設預設';
+
+  @override
+  String get playerMode => '模式';
+
+  @override
+  String get playerSuperResolutionQuality => '超分品質';
+
+  @override
+  String get playerRememberSuperResolution => '記憶超分模式';
+
+  @override
+  String get playerRememberSuperResolutionDesc => '開啟後自動套用上次的超分模式與品質';
+
+  @override
+  String get playerSubtitleTracks => '字幕軌道';
+
+  @override
+  String get playerNoSubtitleHint => '當前影片沒有字幕，可在下方匯入外掛字幕';
+
+  @override
+  String get playerSubtitleOff => '關閉字幕';
+
+  @override
+  String get playerExternalSubtitle => '外掛字幕';
+
+  @override
+  String get playerImportExternalSubtitle => '匯入外部字幕';
+
+  @override
+  String get playerSubtitleSettings => '字幕設定';
+
+  @override
+  String get playerSubtitleDelay => '字幕延遲';
+
+  @override
+  String get playerSubtitleStyle => '字幕樣式';
+
+  @override
+  String get playerSubtitleMisc => '字幕雜項';
+
+  @override
+  String get playerSubtitleFont => '字幕字型';
+
+  @override
+  String get playerPickSubtitleFile => '選擇字幕檔案';
+
+  @override
+  String get playerExternalSubtitleImported => '已匯入外掛字幕';
+
+  @override
+  String get playerRemoveSubtitle => '移除已匯入的字幕';
+
+  @override
+  String get playerQuickAdjust => '快捷調整';
+
+  @override
+  String get playerResetToZeroSeconds => '重設為 0 秒';
+
+  @override
+  String get playerTextColor => '文字顏色';
+
+  @override
+  String get playerStrokeColor => '外框顏色';
+
+  @override
+  String get playerBackgroundColor => '背景顏色';
+
+  @override
+  String get playerBackgroundBoxSize => '背景框大小';
+
+  @override
+  String get playerTextEffects => '文字效果';
+
+  @override
+  String get playerBold => '粗體';
+
+  @override
+  String get playerItalic => '斜體';
+
+  @override
+  String get playerLetterSpacing => '字間距';
+
+  @override
+  String get playerPreferChineseSubtitle => '優先選中文字幕軌';
+
+  @override
+  String get playerPreferChineseSubtitleDesc => '預設啟用中文軌（含「特效/雙語」優先）；手動選過的不改';
+
+  @override
+  String get playerSubtitleTrackAutoDesc => '交給核心預設挑選（通常是檔案裡的第一條）';
+
+  @override
+  String get playerForceOverrideStyle => '強制覆蓋內嵌樣式';
+
+  @override
+  String get playerForceOverrideStyleDesc => '使用上方設定渲染字幕樣式';
+
+  @override
+  String get playerStyleFromSubtitleDesc => '字幕使用自帶的樣式與字型';
+
+  @override
+  String get playerResetAllStyles => '重設所有樣式';
+
+  @override
+  String get playerAssLimitTitle => 'ASS 內嵌字幕的限制';
+
+  @override
+  String get playerAssLimitBoldItalicBlur => '粗體 / 斜體 / 模糊';
+
+  @override
+  String get playerAssLimitNoEffect => '開啟覆蓋也不生效（mpv 渲染限制）';
+
+  @override
+  String get playerAssLimitStyleItems => '顏色 / 外框 / 背景 / 大小 / 位置 / 字間距';
+
+  @override
+  String get playerAssLimitTakesEffect => '開啟覆蓋後生效';
+
+  @override
+  String get playerAssLimitTextFormats => 'SRT / VTT 等文字字幕';
+
+  @override
+  String get playerAssLimitAllEffective => '所有樣式都直接生效';
+
+  @override
+  String get playerSubtitleScalePosition => '字幕縮放與位置';
+
+  @override
+  String get playerScaleRatio => '縮放比例';
+
+  @override
+  String get playerVerticalPosition => '垂直位置';
+
+  @override
+  String playerVerticalPositionValue(int value) {
+    return '$value（100=視窗底部）';
+  }
+
+  @override
+  String get playerResetScalePosition => '重設縮放與位置';
+
+  @override
+  String playerFontsRefreshed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 種字型',
+    );
+    return '已重新整理，共 $_temp0';
+  }
+
+  @override
+  String get playerFontDirCleared => '已清除字型目錄';
+
+  @override
+  String get playerFontChangeHint => '字型變更需退出播放器並重新進入後生效';
+
+  @override
+  String get playerFontDir => '字型目錄';
+
+  @override
+  String get playerFontDirPickHint => '點選選擇包含 .ttf/.otf 字型的目錄';
+
+  @override
+  String get playerFontDirClear => '清除目錄';
+
+  @override
+  String get playerCurrentFont => '當前字型';
+
+  @override
+  String get playerDefaultFont => '預設字型';
+
+  @override
+  String get playerPickFontDirFirst => '請先選擇字型目錄';
+
+  @override
+  String get playerFollowSystemFonts => '跟隨系統字型';
+
+  @override
+  String get playerFontChangeHintFull =>
+      '字型變更需退出播放器並重新進入後生效；內嵌 ASS 字幕需開啟「強制覆蓋內嵌樣式」後字型設定才會生效。';
+
+  @override
+  String get commonCopy => '複製';
+
+  @override
+  String get commonPaste => '貼上';
+
+  @override
+  String get commonUnknown => '未知';
+
+  @override
+  String get commonSaved => '已儲存';
+
+  @override
+  String get commonExpand => '展開';
+
+  @override
+  String get commonCollapse => '收合';
+
+  @override
+  String get commonSelectAll => '全選';
+
+  @override
+  String get commonDeselectAll => '取消全選';
+
+  @override
+  String get commonTest => '測試';
+
+  @override
+  String get commonTestConnection => '測試連線';
+
+  @override
+  String get commonTesting => '測試中…';
+
+  @override
+  String get commonSaving => '儲存中…';
+
+  @override
+  String get commonMove => '移動';
+
+  @override
+  String get commonRename => '重新命名';
+
+  @override
+  String get commonResume => '繼續';
+
+  @override
+  String get commonOrderAsc => '正序';
+
+  @override
+  String get commonOrderDesc => '倒序';
+
+  @override
+  String get commonSaveFailed => '儲存失敗';
+
+  @override
+  String commonSaveFailedWith(String error) {
+    return '儲存失敗：$error';
+  }
+
+  @override
+  String get commonConnectOk => '連線成功';
+
+  @override
+  String commonConnectFailed(String error) {
+    return '連線失敗：$error';
+  }
+
+  @override
+  String get commonCancelSearch => '取消搜尋';
+
+  @override
+  String get commonClearSearch => '清除搜尋';
+
+  @override
+  String get biliIndexTitle => '索引';
+
+  @override
+  String get biliRecommend => '推薦';
+
+  @override
+  String get biliBangumi => '嗶哩番劇';
+
+  @override
+  String get biliParseLink => '解析連結';
+
+  @override
+  String get biliParse => '解析';
+
+  @override
+  String get biliNothingHere => '暫無內容';
+
+  @override
+  String get biliTimeline => '追番時間表';
+
+  @override
+  String get biliToday => '今天';
+
+  @override
+  String get biliWeekdayMon => '週一';
+
+  @override
+  String get biliWeekdayTue => '週二';
+
+  @override
+  String get biliWeekdayWed => '週三';
+
+  @override
+  String get biliWeekdayThu => '週四';
+
+  @override
+  String get biliWeekdayFri => '週五';
+
+  @override
+  String get biliWeekdaySat => '週六';
+
+  @override
+  String get biliWeekdaySun => '週日';
+
+  @override
+  String get biliFollowed => '已追番';
+
+  @override
+  String get biliLinkUnrecognized => '無法識別該連結（支援 ss/ep/BV/av 號與 b23.tv 短鏈）';
+
+  @override
+  String get biliParseBangumiLink => '解析番劇連結';
+
+  @override
+  String get biliPasteAnimeLinkHint => '貼上番劇/影片連結或 b23.tv 短鏈';
+
+  @override
+  String get biliSearchAnime => '搜尋番劇';
+
+  @override
+  String get biliSearchAnimeHint => '輸入關鍵字搜尋番劇';
+
+  @override
+  String get biliNoAnimeFound => '沒有找到相關番劇';
+
+  @override
+  String get biliSeasonDetail => '番劇詳情';
+
+  @override
+  String get biliNoEpisodeSelection => '暫無選集';
+
+  @override
+  String get biliViewAll => '檢視全部';
+
+  @override
+  String get biliSelectEpisode => '選集';
+
+  @override
+  String biliRating(String score) {
+    return '評分 $score';
+  }
+
+  @override
+  String biliCountHundredMillion(String value) {
+    return '$value億';
+  }
+
+  @override
+  String biliCountTenThousand(String value) {
+    return '$value萬';
+  }
+
+  @override
+  String get biliIntro => '簡介';
+
+  @override
+  String get biliMultiSeason => '多季';
+
+  @override
+  String biliEpisodeNo(int number) {
+    return '第 $number 話';
+  }
+
+  @override
+  String get biliVideoFallbackTitle => 'B 站影片';
+
+  @override
+  String biliPlayFailed(String error) {
+    return '播放失敗：$error';
+  }
+
+  @override
+  String get biliLevel => '等級';
+
+  @override
+  String get biliAssets => '資產';
+
+  @override
+  String get biliCoins => '硬幣';
+
+  @override
+  String get biliCoinsDesc => '用於投幣等操作';
+
+  @override
+  String get biliSignOut => '登出';
+
+  @override
+  String get biliMaxLevel => '已滿級';
+
+  @override
+  String biliExpValue(int current, int next) {
+    return '經驗值 $current / $next';
+  }
+
+  @override
+  String get biliSignOutConfirm => '確定登出嗶哩嗶哩帳號嗎？';
+
+  @override
+  String get biliSignOutAction => '登出';
+
+  @override
+  String get biliLoginQrLoading => '正在取得二維碼...';
+
+  @override
+  String get biliLoginScanHint => '請使用嗶哩嗶哩用戶端掃碼';
+
+  @override
+  String get biliLoginQrFailed => '取得二維碼失敗，請重試';
+
+  @override
+  String get biliLoginQrRefreshing => '二維碼已失效，正在重新整理...';
+
+  @override
+  String get biliLoginScannedConfirm => '已掃碼，請在手機上確認';
+
+  @override
+  String get biliLoginCredentialFailed => '登入憑證取得失敗，請重試';
+
+  @override
+  String biliLoginSuccess(String nickname) {
+    return '登入成功：$nickname';
+  }
+
+  @override
+  String get biliLoginFailedRetry => '登入失敗，請重試';
+
+  @override
+  String get biliQrSavedToGallery => '二維碼已儲存到相簿';
+
+  @override
+  String get biliClientNotFound => '未偵測到嗶哩嗶哩用戶端';
+
+  @override
+  String get biliPasteCookieFirst => '請先貼上 Cookie';
+
+  @override
+  String get biliCookieInvalid => '登入失敗：Cookie 無效或已過期';
+
+  @override
+  String get biliCookieMissingSessdata => 'Cookie 缺少 SESSDATA，無法登入';
+
+  @override
+  String get biliLoginCredentialParseFailed => '登入憑證解析失敗（缺少 SESSDATA）';
+
+  @override
+  String get biliLoginTitle => '嗶哩嗶哩登入';
+
+  @override
+  String get biliLoginQrTab => '掃碼登入';
+
+  @override
+  String get biliLoginCookieTab => 'Cookie 登入';
+
+  @override
+  String biliLoginRemaining(int seconds) {
+    return '剩餘有效時間：$seconds 秒';
+  }
+
+  @override
+  String get biliQrRefresh => '重新整理二維碼';
+
+  @override
+  String get biliSaveToGallery => '儲存到相簿';
+
+  @override
+  String get biliOpenApp => '開啟嗶哩嗶哩';
+
+  @override
+  String get biliOpenAppDesc => '「開啟嗶哩嗶哩」會在已安裝的嗶哩嗶哩用戶端中自動喚起掃碼確認。';
+
+  @override
+  String get biliCookieLoginDesc => '從瀏覽器複製 Cookie 貼上登入（掃碼異常時的備用方式）';
+
+  @override
+  String get biliLoggingIn => '登入中...';
+
+  @override
+  String get biliCookiePrivacy => 'Cookie 僅在本機加密儲存，不會上傳或記錄日誌。';
+
+  @override
+  String get downloadSetDirFirst => '請先設定下載目錄';
+
+  @override
+  String get downloadDirGone => '下載目錄不存在，請重新選擇';
+
+  @override
+  String biliDanmakuTasksAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已新增 $count 個彈幕下載任務',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String biliVideoTasksAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已新增 $count 個影片下載任務',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get biliPasteVideoLinkHint =>
+      '貼上 B 站影片/番劇連結（BV / av / ss / ep / b23.tv）';
+
+  @override
+  String get biliPasteThenParse => '貼上連結後點「解析」';
+
+  @override
+  String get downloadNoDir => '未設定下載目錄';
+
+  @override
+  String get downloadSetDir => '設定目錄';
+
+  @override
+  String biliEpisodesSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已選 $count 集',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String biliEpisodesSelectedOfTotal(int selected, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 集',
+    );
+    return '已選 $selected / 共 $_temp0';
+  }
+
+  @override
+  String biliDownloadDanmaku(int count) {
+    return '下載彈幕（$count）';
+  }
+
+  @override
+  String biliDownloadVideo(int count) {
+    return '下載影片（$count）';
+  }
+
+  @override
+  String get biliSyncDanmaku => '同步下載彈幕';
+
+  @override
+  String get subtitleSourceSection => '字幕來源';
+
+  @override
+  String get subtitleWyzieDesc => '經 sub.wyzie.io 搜尋，需要 API 金鑰';
+
+  @override
+  String get subtitleCustomDesc => '自填介面網址，片名會傳送到該網址';
+
+  @override
+  String get subtitleCustomParams => '自訂參數';
+
+  @override
+  String get subtitleWyzieParams => 'Wyzie 參數';
+
+  @override
+  String get subtitleWyzieApiKey => 'WYZIE API 金鑰';
+
+  @override
+  String get subtitleWyzieSources => 'Wyzie 來源';
+
+  @override
+  String get subtitleLanguage => '字幕語言';
+
+  @override
+  String get subtitlePreferredFormat => '偏好格式';
+
+  @override
+  String get subtitlePreferredEncoding => '偏好編碼';
+
+  @override
+  String get subtitleApiEndpoint => '介面網址';
+
+  @override
+  String get subtitleCustomTestHint => '用一個片名試搜一次，看能否解析出字幕';
+
+  @override
+  String get subtitleTesting => '正在測試…';
+
+  @override
+  String get subtitleTestNoResult => '連線成功，但沒解析出字幕';
+
+  @override
+  String subtitleTestOk(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '連線成功，解析出 $count 條字幕',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subtitleTestFailed(String error) {
+    return '測試失敗：$error';
+  }
+
+  @override
+  String get subtitleAllSources => '全部來源';
+
+  @override
+  String get subtitleAllLanguages => '全部語言';
+
+  @override
+  String get subtitleAllFormats => '全部格式';
+
+  @override
+  String get subtitleAllEncodings => '全部編碼';
+
+  @override
+  String get subtitlePasteKeyHint => '貼上金鑰（wyzie-…）';
+
+  @override
+  String get subtitleHowToGetKey => '如何取得金鑰';
+
+  @override
+  String subtitleKeyType(String type) {
+    return '金鑰類型：$type';
+  }
+
+  @override
+  String get subtitleKeyInvalid => '金鑰無效';
+
+  @override
+  String get subtitleFreeSource => '免費來源';
+
+  @override
+  String get subtitlePaidSource => '付費來源';
+
+  @override
+  String subtitleCustomSourceHelp(String placeholder) {
+    return '網址裡可用 $placeholder 作為片名佔位（不寫佔位符則把片名拼到末尾）。\n搜尋時片名會傳送到你填寫的網址，請自行確認該服務的條款與可用性；本應用程式不內建、也不代理任何第三方字幕服務。';
+  }
+
+  @override
+  String subtitlePlaceholderHelp(String placeholder) {
+    return '用 $placeholder 佔位片名；沒有佔位符時片名會拼到末尾。';
+  }
+
+  @override
+  String get subtitleHowToCustomEndpoint => '如何自訂介面網址';
+
+  @override
+  String get subtitleTestNameHint => '填一個片名（如 你的名字）';
+
+  @override
+  String get subtitleTestNameDesc => '用這個片名請求一次，看能否解析出字幕。';
+
+  @override
+  String get subtitleSetWyzieKeyFirst => '請先設定 WYZIE API 金鑰';
+
+  @override
+  String get subtitleSetCustomUrlFirst => '請先設定自訂字幕位址';
+
+  @override
+  String subtitleDownloadedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已下載 $count 個字幕',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String subtitleDownloadResult(int ok, int fail) {
+    return '下載完成：成功 $ok，失敗 $fail';
+  }
+
+  @override
+  String get subtitleSearchHint => '輸入影視名稱或 IMDB / TMDB ID';
+
+  @override
+  String get subtitleBackToSettings => '返回設定';
+
+  @override
+  String get subtitleNoResultHint => '未找到字幕，請換個關鍵字或調整字幕設定';
+
+  @override
+  String get subtitleDownloadSettings => '字幕下載設定';
+
+  @override
+  String get subtitleCurrentSource => '當前來源';
+
+  @override
+  String get subtitleSearchHintShort => '輸入關鍵字後點「確定」搜尋字幕';
+
+  @override
+  String subtitleResultHeader(String query, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 條',
+    );
+    return '$query · $_temp0';
+  }
+
+  @override
+  String get subtitleSearchAgain => '重新搜尋';
+
+  @override
+  String subtitleSelectedOfTotal(int selected, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 條',
+    );
+    return '已選 $selected / $_temp0';
+  }
+
+  @override
+  String get subtitleUnknownSource => '未知來源';
+
+  @override
+  String get subtitleDownloadingNow => '下載中…';
+
+  @override
+  String subtitleDownloadButton(int count) {
+    return '下載字幕（$count）';
+  }
+
+  @override
+  String get mediaInfoItem => '媒體資訊';
+
+  @override
+  String get mediaInfoCopied => '媒體資訊已複製';
+
+  @override
+  String mediaInfoTitleWithName(String title) {
+    return '媒體資訊 - $title';
+  }
+
+  @override
+  String get mediaInfoGeneralHeader => '【一般資訊】';
+
+  @override
+  String get mediaInfoVideoStreams => '影片流';
+
+  @override
+  String get mediaInfoAudioStreams => '音訊流';
+
+  @override
+  String get mediaInfoSubtitleStreams => '字幕流';
+
+  @override
+  String get mediaInfoFetchFailed => '媒體資訊取得失敗';
+
+  @override
+  String get mediaInfoGeneral => '一般資訊';
+
+  @override
+  String get mediaInfoFormat => '格式';
+
+  @override
+  String get mediaInfoFormatVersion => '格式版本';
+
+  @override
+  String get mediaInfoFileSize => '檔案大小';
+
+  @override
+  String get mediaInfoOverallBitrate => '總位元率';
+
+  @override
+  String get mediaInfoEncodedDate => '編碼日期';
+
+  @override
+  String get mediaInfoWritingApp => '編碼應用程式';
+
+  @override
+  String get mediaInfoWritingLibrary => '編碼函式庫';
+
+  @override
+  String mediaInfoVideoStreamNo(int index) {
+    return '影片流 #$index';
+  }
+
+  @override
+  String mediaInfoAudioStreamNo(int index) {
+    return '音訊流 #$index';
+  }
+
+  @override
+  String mediaInfoSubtitleStreamNo(int index) {
+    return '字幕流 #$index';
+  }
+
+  @override
+  String get mediaInfoNoInfo => '未取得媒體資訊';
+
+  @override
+  String get mediaInfoCodec => '編碼';
+
+  @override
+  String get mediaInfoProfile => 'Profile';
+
+  @override
+  String get mediaInfoCodecId => '編碼ID';
+
+  @override
+  String get mediaInfoWidth => '寬';
+
+  @override
+  String get mediaInfoHeight => '高';
+
+  @override
+  String get mediaInfoAspectRatio => '寬高比';
+
+  @override
+  String get mediaInfoFrameRateMode => '影格率模式';
+
+  @override
+  String get mediaInfoBitrate => '位元率';
+
+  @override
+  String get mediaInfoBitDepth => '位元深度';
+
+  @override
+  String get mediaInfoColorSpace => '色彩空間';
+
+  @override
+  String get mediaInfoChromaSubsampling => '色度子取樣';
+
+  @override
+  String get mediaInfoHdrFormat => 'HDR格式';
+
+  @override
+  String get mediaInfoChannels => '聲道';
+
+  @override
+  String get mediaInfoStreamSize => '流大小';
+
+  @override
+  String get mediaInfoStream => '流';
+
+  @override
+  String get networkStorageTitle => '網路儲存';
+
+  @override
+  String get networkHostInputRequired => '請先填寫主機位址';
+
+  @override
+  String get networkPortInvalid => '連接埠需為 1-65535';
+
+  @override
+  String networkDefaultPortWithSynology(String port) {
+    return '預設 $port（群暉 5005/5006）';
+  }
+
+  @override
+  String networkDefaultPort(String port) {
+    return '預設 $port';
+  }
+
+  @override
+  String get networkEditAccount => '編輯帳戶';
+
+  @override
+  String get networkAddAccount => '新增帳戶';
+
+  @override
+  String get networkDisplayName => '顯示名稱';
+
+  @override
+  String get networkDisplayNameHint => '例如：家庭 NAS';
+
+  @override
+  String get networkNameRequired => '請輸入名稱';
+
+  @override
+  String get networkProtocolLabel => '協定';
+
+  @override
+  String get networkHostLabel => '主機位址';
+
+  @override
+  String get networkHostHint => 'IP 或網域名稱';
+
+  @override
+  String get networkHostRequiredInput => '請輸入主機位址';
+
+  @override
+  String get networkPortLabel => '連接埠';
+
+  @override
+  String get networkPathDefaultHint => '預設為 /';
+
+  @override
+  String get networkAnonymous => '匿名登入';
+
+  @override
+  String get networkAnonymousDesc => 'FTP / SMB 匿名存取時開啟';
+
+  @override
+  String get networkUseHttps => '使用 HTTPS';
+
+  @override
+  String get networkUseHttpsDesc => '啟用後使用加密連線（預設連接埠 443）';
+
+  @override
+  String get networkUsername => '帳號';
+
+  @override
+  String get networkPassword => '密碼';
+
+  @override
+  String get networkHidePassword => '隱藏密碼';
+
+  @override
+  String get networkShowPassword => '顯示密碼';
+
+  @override
+  String networkSortByBoth(String field, String order) {
+    return '按$field$order';
+  }
+
+  @override
+  String get networkSearchCurrentDir => '搜尋本目錄';
+
+  @override
+  String get networkRefreshCurrentDir => '重新整理本目錄';
+
+  @override
+  String get networkBackToRoot => '回到共享根目錄';
+
+  @override
+  String get networkShowHiddenFiles => '顯示隱藏檔案';
+
+  @override
+  String get networkNoMatchingFiles => '沒有匹配的檔案';
+
+  @override
+  String get networkDirEmpty => '該目錄為空';
+
+  @override
+  String get networkOnlyHiddenFiles => '本目錄只有隱藏檔案';
+
+  @override
+  String get networkBackUp => '返回上一層';
+
+  @override
+  String get networkModifiedTime => '修改時間';
+
+  @override
+  String get networkServerNotProvided => '伺服器未提供';
+
+  @override
+  String get networkLocation => '位置';
+
+  @override
+  String get networkConnectionLabel => '連線';
+
+  @override
+  String get networkDeleteAccount => '刪除帳戶';
+
+  @override
+  String get networkNoAccounts => '還沒有網路儲存帳戶';
+
+  @override
+  String get networkNoAccountsHint => '點選右下角 + 新增 WebDAV / SMB / FTP 帳戶';
+
+  @override
+  String get homeSearchVideos => '搜尋影片';
+
+  @override
+  String get homeSearchFoldersAndVideos => '搜尋資料夾與影片';
+
+  @override
+  String get homeSortAndFields => '排序與欄位';
+
+  @override
+  String get homeSortAndView => '排序與檢視';
+
+  @override
+  String get homeNoVideosInFolder => '該資料夾沒有影片';
+
+  @override
+  String get homeNoMatchingVideos => '沒有匹配的影片';
+
+  @override
+  String get homeNoMatchingContent => '沒有匹配的內容';
+
+  @override
+  String get homeNoMatchingFolders => '沒有匹配的資料夾';
+
+  @override
+  String get homeRecentPlayed => '最近播放';
+
+  @override
+  String get homeOpenLink => '開啟連結';
+
+  @override
+  String homeFileGone(String title) {
+    return '檔案不存在或已被移動：$title';
+  }
+
+  @override
+  String get homePermissionHintInSettings => '請在系統設定中手動開啟儲存權限';
+
+  @override
+  String get homePermissionDeniedDetail => '儲存權限已被拒絕，需要到系統設定裡手動開啟';
+
+  @override
+  String get homePermissionNeeded => '需要授予儲存權限才能掃描影片';
+
+  @override
+  String get homeOpenSettings => '前往系統設定開啟';
+
+  @override
+  String get homeGrantPermission => '授予權限';
+
+  @override
+  String get homeNoVideosFound => '沒有找到影片';
+
+  @override
+  String get homeRescan => '重新掃描';
+
+  @override
+  String get homeRecheckPermission => '我已開啟，重新檢查';
+
+  @override
+  String get openLinkClipboardEmpty => '剪貼簿為空';
+
+  @override
+  String get openLinkInvalid => '連結無效，支援 http/https/rtmp/rtsp 等串流媒體協定';
+
+  @override
+  String get openLinkHint => '輸入影片直連網址，將線上播放';
+
+  @override
+  String get downloadClearFinished => '清除已完成';
+
+  @override
+  String get downloadClearFinishedDesc => '只清除已完成和失敗的下載記錄，不會刪除已下載的檔案。';
+
+  @override
+  String get downloadNoTasks => '暫無下載任務';
+
+  @override
+  String get downloadFailed => '下載失敗';
+
+  @override
+  String get downloadStatusCompleted => '完成';
+
+  @override
+  String get downloadStatusFailed => '失敗';
+
+  @override
+  String get downloadStatusMerging => '合併';
+
+  @override
+  String get downloadStatusDownloading => '下載中';
+
+  @override
+  String get downloadStatusPending => '等待';
+
+  @override
+  String get downloadMergingCannotPause => '合併中，無法暫停';
+
+  @override
+  String castSearchStartFailed(String error) {
+    return '投放搜尋啟動失敗：$error';
+  }
+
+  @override
+  String castConnected(String device) {
+    return '已投放至 $device';
+  }
+
+  @override
+  String castFailed(String error) {
+    return '投放失敗：$error';
+  }
+
+  @override
+  String get castSearching => '正在搜尋投放裝置…';
+
+  @override
+  String get castNoDevicesFound => '未發現可投放裝置，請確認手機與電視連線同一個 WiFi 後重試。';
+
+  @override
+  String get colorEditorCustom => '自訂調色';
+
+  @override
+  String get colorEditorCollapseCustom => '收合自訂調色';
+
+  @override
+  String get directoryPickerUnreadable => '目錄不可讀或不存在';
+
+  @override
+  String get directoryPickerTitle => '選擇下載目錄';
+
+  @override
+  String get directoryPickerUp => '上層目錄';
+
+  @override
+  String get directoryPickerSelectThis => '選擇此目錄';
+
+  @override
+  String get directoryPickerEmpty => '該目錄下沒有子目錄';
+
+  @override
+  String get fileOpPin => '固定';
+
+  @override
+  String get fileOpUnpin => '取消固定';
+
+  @override
+  String get fileOpMultiSelect => '多選';
+
+  @override
+  String get fileOpNewName => '新名稱';
+
+  @override
+  String get fileOpNameHint => '副檔名之前的名稱';
+
+  @override
+  String fileOpLockedExt(String ext) {
+    return '副檔名固定為 $ext，不可修改';
+  }
+
+  @override
+  String get fileOpDeleteFolderVideosOnly => '僅刪除該資料夾內的影片檔案，其他檔案不會被刪除。';
+
+  @override
+  String fileOpDeleteSelectedVideos(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '確定刪除選中的 $count 個影片嗎？',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String fileOpDeleteSelectedMixed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '將刪除選中的 $count 項：資料夾只刪除裡面的影片檔案，其他檔案不會被刪除。',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fileOpDeleteAllFiles => '刪除所有檔案';
+
+  @override
+  String get fileOpPreparing => '準備中…';
+
+  @override
+  String fileOpProgressItem(int current, int total) {
+    return '第 $current/$total 項';
+  }
+
+  @override
+  String fileOpProgressItems(int done, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 項',
+    );
+    return '$done / $_temp0';
+  }
+
+  @override
+  String get fileOpProcessing => '處理中…';
+
+  @override
+  String fileOpBytesProgress(String done, String total, String percent) {
+    return '$done / $total（$percent%）';
+  }
+
+  @override
+  String get fileSelectionExit => '結束多選';
+
+  @override
+  String fileSelectionSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已選 $count 項',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fileSelectionOps => '檔案操作';
+
+  @override
+  String get folderTransferMoving => '正在移動…';
+
+  @override
+  String get folderTransferCopying => '正在複製…';
+
+  @override
+  String get folderActionCancelled => '已取消';
+
+  @override
+  String folderMovedTo(String title, String dest) {
+    return '已移動「$title」到 $dest';
+  }
+
+  @override
+  String folderCopiedTo(String title, String dest) {
+    return '已複製「$title」到 $dest';
+  }
+
+  @override
+  String folderActionMovedProgressFailed(int done, int total, String failures) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 項',
+    );
+    return '已移動 $done/$_temp0，失敗：$failures';
+  }
+
+  @override
+  String folderActionCopiedProgressFailed(
+    int done,
+    int total,
+    String failures,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 項',
+    );
+    return '已複製 $done/$_temp0，失敗：$failures';
+  }
+
+  @override
+  String folderActionDeletedProgressFailed(
+    int done,
+    int total,
+    String failures,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 項',
+    );
+    return '已刪除 $done/$_temp0，失敗：$failures';
+  }
+
+  @override
+  String folderActionMovedProgressFailedMore(
+    int done,
+    int total,
+    String failures,
+    int count,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 項',
+    );
+    return '已移動 $done/$_temp0，失敗：$failures 等 $count 項';
+  }
+
+  @override
+  String folderActionCopiedProgressFailedMore(
+    int done,
+    int total,
+    String failures,
+    int count,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 項',
+    );
+    return '已複製 $done/$_temp0，失敗：$failures 等 $count 項';
+  }
+
+  @override
+  String folderActionDeletedProgressFailedMore(
+    int done,
+    int total,
+    String failures,
+    int count,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total 項',
+    );
+    return '已刪除 $done/$_temp0，失敗：$failures 等 $count 項';
+  }
+
+  @override
+  String folderActionCancelledThenMoved(int done) {
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done 項',
+    );
+    return '已取消（已移動 $_temp0）';
+  }
+
+  @override
+  String folderActionCancelledThenCopied(int done) {
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done 項',
+    );
+    return '已取消（已複製 $_temp0）';
+  }
+
+  @override
+  String folderActionMovedCount(int done, String dest) {
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done 項',
+    );
+    return '已移動 $_temp0到 $dest';
+  }
+
+  @override
+  String folderActionCopiedCount(int done, String dest) {
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done 項',
+    );
+    return '已複製 $_temp0到 $dest';
+  }
+
+  @override
+  String get folderNameUnchanged => '名稱沒有變化';
+
+  @override
+  String folderRenamedTo(String newName) {
+    return '已重新命名為 $newName';
+  }
+
+  @override
+  String folderDeletedOne(String title) {
+    return '已刪除「$title」';
+  }
+
+  @override
+  String folderDeletedCount(int done) {
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done 項',
+    );
+    return '已刪除 $_temp0';
+  }
+
+  @override
+  String folderVideoCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 個影片',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get optionsSheetFolderSort => '資料夾排序方式';
+
+  @override
+  String get optionsSheetFolderSortDir => '資料夾排序方向';
+
+  @override
+  String get optionsSheetFolderFields => '資料夾顯示欄位';
+
+  @override
+  String get optionsSheetVideoSort => '影片排序方式';
+
+  @override
+  String get optionsSheetVideoSortDir => '影片排序方向';
+
+  @override
+  String get optionsSheetVideoFields => '影片顯示欄位';
+
+  @override
+  String get optionsSheetViewMode => '顯示模式';
+
+  @override
+  String get updatePrimarySource => '主下載站';
+
+  @override
+  String get updateBackupSource => '備用下載站';
+
+  @override
+  String updateLinkPending(String label) {
+    return '$label連結待接入';
+  }
+
+  @override
+  String updateOpenLinkFailed(String label) {
+    return '無法開啟$label連結';
+  }
+
+  @override
+  String updateNewVersion(String version) {
+    return '發現新版本 $version';
+  }
+
+  @override
+  String get updateIgnore => '忽略';
+
+  @override
+  String get updateLater => '稍後提醒';
+
+  @override
+  String get updateNow => '立即更新';
+
+  @override
+  String get updateChooseMethod => '選擇下載方式';
+
+  @override
+  String get updatePending => '待接入';
+
+  @override
+  String get videoCardWatched => '已看完';
+
+  @override
+  String get videoCardUnwatched => '未觀看';
+
+  @override
+  String get videoCardDetectingSubtitle => '字幕偵測中…';
+
+  @override
+  String get videoCardHasSubtitle => '含字幕';
+
+  @override
+  String videoCardSubtitleCodec(String codec) {
+    return '字幕 · $codec';
+  }
+
+  @override
+  String get videoCardNoSubtitle => '無字幕';
+
+  @override
+  String get biliCoverUnavailable => '嗶哩封面不可用（快取未命中且下載失敗）';
+
+  @override
+  String errorNetworkRequestFailed(String error) {
+    return '網路請求失敗: $error';
+  }
+
+  @override
+  String errorHttpRequestFailed(String status) {
+    return '請求失敗（HTTP $status）';
+  }
+
+  @override
+  String errorHttpSearchFailed(String status) {
+    return '搜尋失敗（HTTP $status）';
+  }
+
+  @override
+  String errorHttpDownloadFailed(String status) {
+    return '下載失敗（HTTP $status）';
+  }
+
+  @override
+  String get errorResponseNotJson => '回應不是 JSON 物件';
+
+  @override
+  String errorResponseParseFailed(String error) {
+    return '回應解析失敗：$error';
+  }
+
+  @override
+  String errorResponseDecodeFailed(String error) {
+    return '回應解碼失敗：$error';
+  }
+
+  @override
+  String errorDownloadFailed(String error) {
+    return '下載失敗: $error';
+  }
+
+  @override
+  String errorDownloadTooLarge(String received) {
+    return '下載失敗：檔案過大（$received 位元組）';
+  }
+
+  @override
+  String errorResponseTooLarge(String received, String max) {
+    return '回應異常（已讀 $received 位元組，超過 $max 上限）';
+  }
+
+  @override
+  String errorResponseTooLargeAborted(String received) {
+    return '回應過大（$received 位元組），已放棄解析';
+  }
+
+  @override
+  String get errorServerReturned => '伺服器回傳錯誤';
+
+  @override
+  String errorServerReturnedCode(String code) {
+    return '伺服器回傳錯誤（code=$code）';
+  }
+
+  @override
+  String get errorUnknown => '未知錯誤';
+
+  @override
+  String get errorNetworkConnectionMissing => '網路連線不存在';
+
+  @override
+  String get biliWbiKeyMissingPlay => '未取得 WBI 金鑰，無法解析播放位址';
+
+  @override
+  String get biliWbiKeyMissingSearch => '未取得 WBI 金鑰，無法搜尋';
+
+  @override
+  String get biliRiskControlTriggered => '觸發風控驗證（v_voucher），請稍後重試或切換網路';
+
+  @override
+  String get biliVideoNotFound => '影片不存在或無權存取';
+
+  @override
+  String get biliVideoNoAccess => '無權存取，可能需要登入或大會員';
+
+  @override
+  String get biliVideoVipRequired => '需要大會員權限';
+
+  @override
+  String get biliVideoRiskControlFailed => '風控驗證失敗，請稍後重試';
+
+  @override
+  String get biliVideoExclusive => '專屬影片，需開通相應權限';
+
+  @override
+  String get biliDownloadLinkUnrecognized =>
+      '無法識別 B 站連結（支援 BV / av / ss / ep / 合集連結 / b23.tv 短鏈）';
+
+  @override
+  String get biliDownloadNoVideoParts => '未解析到影片分 P';
+
+  @override
+  String get biliDownloadBangumiNoEpisodes => '該番劇沒有可下載的集數';
+
+  @override
+  String get biliDownloadCollectionNoVideos => '該合集沒有可下載的影片';
+
+  @override
+  String get biliDownloadCollectionEmpty => '該合集暫無內容';
+
+  @override
+  String get biliDownloadNoDanmaku => '該集沒有彈幕';
+
+  @override
+  String get biliDownloadNoVideoStream => '未取得影片流';
+
+  @override
+  String get biliDownloadMergeFailed => '影音合併失敗';
+
+  @override
+  String get biliDownloadNetworkFailed => '網路請求失敗';
+
+  @override
+  String get biliDownloadWriteFailed => '寫入檔案失敗（磁碟空間或權限）';
+
+  @override
+  String biliDownloadWriteFailedDetail(String error) {
+    return '寫入檔案失敗（磁碟空間或權限）：$error';
+  }
+
+  @override
+  String get wyzieSearchNoSubtitles => '搜尋失敗（HTTP 400）';
+
+  @override
+  String get wyzieNoMatch => '未找到匹配的影視，請換個關鍵字';
+
+  @override
+  String get customSubtitleUrlInvalid => '自訂字幕位址無效（需要 http/https 位址）';
+
+  @override
+  String customSubtitleResponseUnparsable(String message) {
+    return '無法解析該位址的回應：$message';
+  }
+
+  @override
+  String get customSubtitleResponseNotJson => '回應不是合法 JSON';
+
+  @override
+  String get customSubtitleResponseNoList => '回應裡找不到字幕清單';
+
+  @override
+  String dandanServerUrlInvalid(String url) {
+    return '伺服器位址無效（需以 http/https 開頭）: $url';
+  }
+
+  @override
+  String get networkConnectTimeout => '連線逾時：伺服器無回應，請檢查位址與連接埠';
+
+  @override
+  String ftpRefusedConnection(String code) {
+    return 'FTP 伺服器拒絕連線（代碼 $code）';
+  }
+
+  @override
+  String get ftpResumeUnsupported => 'FTP 伺服器不支援續傳（REST）';
+
+  @override
+  String ftpTransferRejected(String code) {
+    return 'FTP 伺服器拒絕檔案傳輸（代碼 $code）';
+  }
+
+  @override
+  String ftpRootUnavailable(String code) {
+    return 'FTP 根目錄不可用（代碼 $code）';
+  }
+
+  @override
+  String get ftpLoginFailed => 'FTP 登入失敗，請檢查帳號密碼';
+
+  @override
+  String get ftpBinaryModeRejected => 'FTP 伺服器拒絕二進位模式';
+
+  @override
+  String ftpListFailed(String code) {
+    return 'FTP 目錄列表失敗（代碼 $code）';
+  }
+
+  @override
+  String get ftpConnectionClosed => 'FTP 連線被伺服器關閉';
+
+  @override
+  String get ftpUnexpectedResponse => 'FTP 伺服器回傳異常回應';
+
+  @override
+  String get ftpConnectionInterrupted => 'FTP 連線中斷';
+
+  @override
+  String get ftpPassiveUnsupported => 'FTP 伺服器不支援被動模式';
+
+  @override
+  String get ftpPassiveParseFailed => 'FTP 被動模式回應無法解析';
+
+  @override
+  String get webdavNotAFile => '檔案不存在或不是檔案';
+
+  @override
+  String get webdavTargetIsDirectory => '目標是一個目錄';
+
+  @override
+  String get webdavRangeIgnored => '伺服器忽略了分段請求，無法精確跳轉';
+
+  @override
+  String webdavRangeFailed(String status) {
+    return '分段請求失敗（HTTP $status）';
+  }
+
+  @override
+  String get webdavRangeStartMismatch => '伺服器回傳的分段起點與請求不一致';
+
+  @override
+  String webdavDownloadFailedAuth(String status) {
+    return '下載失敗（HTTP $status，驗證失敗）';
+  }
+
+  @override
+  String webdavDirectoryTooLarge(String mb) {
+    return '目錄過大：回應超過 ${mb}MB';
+  }
+
+  @override
+  String webdavRequestFailed(String status) {
+    return 'WebDAV 請求失敗（HTTP $status）';
+  }
+
+  @override
+  String webdavRequestFailedAuth(String status) {
+    return 'WebDAV 請求失敗（HTTP $status，驗證失敗）';
+  }
+
+  @override
+  String get smbNotConnected => 'SMB 尚未連線';
+
+  @override
+  String get smbAuthFailed => '使用者名稱或密碼錯誤';
+
+  @override
+  String get smbAccessDenied => '拒絕存取（權限不足）';
+
+  @override
+  String get smbPathNotFound => '路徑不存在';
+
+  @override
+  String get smbRequestFailed => 'SMB 請求失敗';
+
+  @override
+  String get netPathScheme => '網路路徑不能包含 URI scheme';
+
+  @override
+  String get netPathTooLong => '網路路徑過長';
+
+  @override
+  String get netPathTooManySegments => '網路路徑段數過多';
+
+  @override
+  String get netPathSegmentEmpty => '路徑段不能為空';
+
+  @override
+  String get netPathSegmentTooLong => '路徑段過長';
+
+  @override
+  String get netPathDotSegment => '網路路徑不能包含 . 或 ..';
+
+  @override
+  String get netPathSegmentSeparator => '路徑段不能包含分隔符';
+
+  @override
+  String get netPathSegmentControlChar => '路徑段不能包含控制字元';
+
+  @override
+  String get fileOpSourceMissing => '來源檔案不存在或已被移動';
+
+  @override
+  String fileOpWriteFailed(String name, String error) {
+    return '寫入失敗：$name（$error）';
+  }
+
+  @override
+  String get fileOpCopiedButDeleteFailed => '已複製到目標位置，但刪除原始檔案失敗，請手動清理';
+
+  @override
+  String fileOpRenameTempFailed(String error) {
+    return '重新命名暫存檔案失敗：$error';
+  }
+
+  @override
+  String get fileOpTargetExists => '同目錄下已存在同名檔案或資料夾';
+
+  @override
+  String fileOpRenameFailed(String error) {
+    return '重新命名失敗：$error';
+  }
+
+  @override
+  String get fileOpFileMissing => '檔案不存在或已被刪除';
+
+  @override
+  String fileOpDeleteFailed(String error) {
+    return '刪除失敗：$error';
+  }
+
+  @override
+  String get fileOpFolderMissing => '資料夾不存在或已被刪除';
+
+  @override
+  String get fileOpNoVideosInFolder => '該資料夾內沒有可刪除的影片檔案';
+
+  @override
+  String get fileOpSelectTargetFolder => '請選擇目標資料夾';
+
+  @override
+  String get fileOpTargetUnreadable => '目標資料夾不存在或不可讀';
+
+  @override
+  String get fileOpAlreadyInFolder => '該資料夾已經在這個目錄裡了';
+
+  @override
+  String get fileOpAlreadyInFolderVideo => '該影片已經在這個目錄裡了';
+
+  @override
+  String get fileOpIntoItself => '不能把資料夾複製或移動到它自己的子目錄裡';
+
+  @override
+  String get fileOpNameEmpty => '名稱不能為空';
+
+  @override
+  String get fileOpNameInvalid => '名稱不合法';
+
+  @override
+  String get fileOpNameHasSeparator => '名稱不能包含路徑分隔符';
+
+  @override
+  String get fileOpNameIllegalChars => '名稱不能包含 \\ / : * ? \" < > | 等字元';
+
+  @override
+  String get fileOpNameEmptyBeforeExt => '請輸入副檔名之前的名稱';
+
+  @override
+  String get commonGotIt => '知道了';
+
+  @override
+  String get commonErrorsSeparator => '；';
+
+  @override
+  String get playerEqualizerPresetFlat => '平直';
+
+  @override
+  String get playerEqualizerPresetDialogue => '對白增強';
+
+  @override
+  String get playerEqualizerPresetCinema => '電影';
+
+  @override
+  String get playerEqualizerPresetBass => '低音震撼';
+
+  @override
+  String get playerEqualizerPresetTreble => '高音清晰';
+
+  @override
+  String get playerEqualizerPresetNight => '柔和夜間';
+
+  @override
+  String get biliVipNormal => '普通會員';
+
+  @override
+  String get biliVipAnnual => '年度大會員';
+
+  @override
+  String get biliVipMember => '大會員';
+
+  @override
+  String biliPlaylistEpisode(String index) {
+    return '第 $index 集';
+  }
+
+  @override
+  String get subtitleUnknownName => '未知字幕';
+
+  @override
+  String get subtitleUnknownLanguage => '未知語言';
+
+  @override
+  String get danmakuServerDefaultName => '彈彈Play（預設）';
+
+  @override
+  String get danmakuServerAutoMatchBlocked => '請先停用彈彈Play 伺服器';
+
+  @override
+  String danmakuServerAutoMatchBlockedDetail(String name) {
+    return '已啟用「$name」伺服器時不可開啟「切集自動匹配彈幕」，如需使用請先停用該伺服器';
+  }
+
+  @override
+  String get danmakuSearchNoResult => '未找到相關番劇，請嘗試其他關鍵字';
+
+  @override
+  String danmakuSearchFailed(String errors) {
+    return '搜尋失敗：$errors';
+  }
+
+  @override
+  String get danmakuOffsetNone => '無偏移';
+
+  @override
+  String danmakuOffsetDelay(String time) {
+    return '延後 $time';
+  }
+
+  @override
+  String danmakuOffsetAdvance(String time) {
+    return '提前 $time';
+  }
+
+  @override
+  String get playerAudioFallbackNoTrack => '當前音軌無法播放，且沒有其他可切換的音軌';
+
+  @override
+  String playerAudioFallbackSwitched(String name) {
+    return '當前音軌無法播放，已自動切換到「$name」';
+  }
+
+  @override
+  String playerPlaybackFailed(String error) {
+    return '播放失敗：$error';
+  }
+
+  @override
+  String get playerAudioEffectsUnsupported => '當前播放核心不支援所選音效，已自動跳過';
+
+  @override
+  String playerDiagnosticsDuration(String minutes, String seconds) {
+    return '$minutes 分 $seconds 秒';
+  }
+
+  @override
+  String playerDiagnosticsAvsyncAudioAhead(String value) {
+    return '$value 音訊超前';
+  }
+
+  @override
+  String playerDiagnosticsAvsyncVideoAhead(String value) {
+    return '$value 影片超前';
+  }
+
+  @override
+  String playerDiagnosticsWarnDroppedFrames(int dropped) {
+    return '已丟幀 $dropped 幀：渲染跟不上，可嘗試降超分檔位或改硬解';
+  }
+
+  @override
+  String get playerDiagnosticsWarnSoftwareDecode =>
+      '當前為軟解（CPU 解碼）：高位元率/高解析度可能掉幀發熱';
+
+  @override
+  String playerDiagnosticsWarnAvsync(String value) {
+    return '音畫不同步：$value';
+  }
+
+  @override
+  String get cacheCategoryListThumbs => '影片清單封面縮圖';
+
+  @override
+  String get cacheCategoryNetworkDanmaku => '網路彈幕快取';
+
+  @override
+  String get cacheCategoryBiliCovers => '嗶哩封面快取';
+
+  @override
+  String get cacheCategoryOther => '其他快取';
+
+  @override
+  String get updateNoNotes => '暫無更新說明';
+
+  @override
+  String get buildInfoNoRevision => '本次建置未注入提交雜湊（需用 tools/ 裡的建置指令碼編譯）';
+
+  @override
+  String buildInfoCopied(String revision) {
+    return '已複製 $revision';
+  }
+
+  @override
+  String buildInfoCopiedDirty(String revision) {
+    return '已複製 $revision（工作區有未提交變更）';
+  }
+
+  @override
+  String get castDeviceOffline => '裝置已離線';
+
+  @override
+  String get castNoLanIpv4 => '未找到區域網路 IPv4 位址';
+
+  @override
+  String get castFileMissing => '檔案不存在';
+
+  @override
+  String get dolbyVisionHintTitle => '杜比視界影片';
+
+  @override
+  String get dolbyVisionHintBody =>
+      '該影片為杜比視界（Dolby Vision）編碼。\n若畫面發綠/發紫，請在「播放設定 → 解碼」啟用 GPU-next 渲染並切換軟解；\n若仍無法解決，則該裝置可能不支援杜比視界播放。';
+
+  @override
+  String playerNetworkDanmakuLoadedManual(
+    String anime,
+    String episode,
+    String server,
+  ) {
+    return '$anime · $episode（$server）';
+  }
+
+  @override
+  String playerNetworkDanmakuLoadedAuto(
+    String anime,
+    String episode,
+    String server,
+  ) {
+    return '$anime $episode（$server）';
+  }
+
+  @override
+  String get playerDanmakuLocateNoEpisode => '未能從檔名識別集數，可用上方輸入框直接跳轉';
+
+  @override
+  String playerDanmakuLocateEpisodeMissing(String number) {
+    return '未找到第 $number 集，可用上方輸入框直接跳轉';
+  }
+
+  @override
+  String get legalAgreeCheckbox => '我已閱讀並同意以上隱私權政策';
+
+  @override
+  String get legalDisagreeExit => '不同意並退出';
+
+  @override
+  String legalAgreeWithCountdown(String seconds) {
+    return '同意並繼續 ($seconds 秒)';
+  }
+
+  @override
+  String get legalAgreeContinue => '同意並繼續';
+
+  @override
+  String get commonListSeparator => '、';
+
+  @override
+  String commonLabelWithColon(String label) {
+    return '$label：';
+  }
+
+  @override
+  String mediaInfoStreamsGroupTitle(String title) {
+    return '【$title】';
+  }
+
+  @override
+  String get settingsFontPreviewSample => '0123456789，。！？；：“”（）【】…·';
+
+  @override
+  String folderActionDestWithTarget(String dest, String target) {
+    return '$dest：$target';
+  }
+
+  @override
+  String fileOpItemIssue(String name, String reason) {
+    return '「$name」$reason';
+  }
+
+  @override
+  String fileOpItemFailed(String name, String reason) {
+    return '$name：$reason';
+  }
+
+  @override
+  String get commonColorCyan => '青色';
+
+  @override
+  String get commonColorGreen => '綠色';
+
+  @override
+  String get commonColorYellow => '黃色';
+
+  @override
+  String get commonDefault => '預設';
+
+  @override
+  String commonDeleteConfirm(String name) {
+    return '確定刪除「$name」嗎？';
+  }
+
+  @override
+  String commonDeleteConfirmIrreversible(String name) {
+    return '確定刪除「$name」嗎？此操作無法復原。';
+  }
+
+  @override
+  String get mediaInfoSampleRates => '取樣率';
+
+  @override
+  String get commonLanguage => '語言';
+
+  @override
+  String get downloadManagerTitle => '下載管理';
+
+  @override
+  String get biliVideoDownloadTitle => '影片下載';
+
+  @override
+  String get biliDanmakuDownloadTitle => '彈幕下載';
+
+  @override
+  String get biliSubtitleDownloadTitle => '字幕下載';
+
+  @override
+  String get commonQuality => '畫質';
 
   @override
   String playerDelaySeconds(String value) {

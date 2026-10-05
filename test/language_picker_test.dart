@@ -51,13 +51,14 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('弹窗：双语标题 + 两项自称 + 默认选中简体中文', (tester) async {
+  testWidgets('弹窗：标题随语言 + 三项自称 + 默认选中简体中文', (tester) async {
     await pumpHost(tester);
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    expect(find.text('选择语言 / Choose Language'), findsOneWidget);
+    expect(find.text('选择语言'), findsOneWidget);
     expect(find.text('简体中文'), findsOneWidget);
+    expect(find.text('繁體中文'), findsOneWidget);
     expect(find.text('English'), findsOneWidget);
     // 默认选中简体中文：勾选图标落在「简体中文」那一行
     final zhRow = find.ancestor(
@@ -69,6 +70,37 @@ void main() {
       findsOneWidget,
     );
     expect(settings.rawValue, 'zh');
+  });
+
+  testWidgets('选繁體中文 + 确定：写入 app_locale=zh_Hant 并持久化', (tester) async {
+    await pumpHost(tester);
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('繁體中文'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('确定'));
+    await tester.pumpAndSettle();
+
+    expect(settings.rawValue, 'zh_Hant');
+    // 这一条守住「不许把 locale getter 写成 Locale('zh_Hant')」：
+    // 那种写法与生成物 supportedLocales 里的项不相等，界面会静默回落简体
+    expect(settings.locale, kTestLocaleZhHant);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('app_locale'), 'zh_Hant');
+  });
+
+  testWidgets('设置页副标题：设置为繁体后显示「繁體中文」', (tester) async {
+    // 先把设置设成繁体再 pump（AppLocaleSettings 是 ChangeNotifier，
+    // 测试宿主没有监听它，pump 之后再改不会重建界面）
+    await settings.setLocale(AppLocaleSettings.zhHantCode);
+    await pumpHost(
+      tester,
+      child: SettingsPage(controller: ThemeController()),
+    );
+
+    expect(find.text('繁體中文'), findsOneWidget);
+    expect(settings.rawValue, 'zh_Hant');
   });
 
   testWidgets('选 English + 确定：写入 app_locale=en 并持久化', (tester) async {
@@ -127,7 +159,7 @@ void main() {
 
     await tester.tap(find.text('语言设置'));
     await tester.pumpAndSettle();
-    expect(find.text('选择语言 / Choose Language'), findsOneWidget);
+    expect(find.text('选择语言'), findsOneWidget);
 
     await tester.tap(find.text('English'));
     await tester.pumpAndSettle();

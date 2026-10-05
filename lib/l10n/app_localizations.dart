@@ -96,6 +96,7 @@ abstract class AppLocalizations {
   static const List<Locale> supportedLocales = <Locale>[
     Locale('zh'),
     Locale('en'),
+    Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
   ];
 
   /// 应用名（任务切换器 / 窗口标题）；英文侧固定 Meow Player
@@ -1286,22 +1287,28 @@ abstract class AppLocalizations {
   /// **'语言设置'**
   String get settingsLanguage;
 
-  /// 语言自称，**中英两版内容相同**（不翻译；弹窗与设置页共用）
+  /// 语言自称，**三版内容相同**（不翻译；弹窗与设置页共用）
   ///
   /// In zh, this message translates to:
   /// **'简体中文'**
   String get languageNameZh;
 
-  /// 语言自称，**中英两版内容相同**（不翻译；弹窗与设置页共用）
+  /// 语言自称，**三版内容相同**（不翻译；弹窗与设置页共用）
   ///
   /// In zh, this message translates to:
   /// **'English'**
   String get languageNameEn;
 
-  /// 首启语言弹窗标题：**中英两版内容相同**（刻意双语，让任何用户都看得懂）
+  /// 语言自称，**三版内容相同**（不翻译；弹窗与设置页共用）
   ///
   /// In zh, this message translates to:
-  /// **'选择语言 / Choose Language'**
+  /// **'繁體中文'**
+  String get languageNameZhHant;
+
+  /// 首启语言弹窗标题：**随界面语言，不做中英共存**（zh=选择语言 / zh_Hant=選擇語言 / en=Choose Language）
+  ///
+  /// In zh, this message translates to:
+  /// **'选择语言'**
   String get languagePickerTitle;
 
   /// 外部打开视频失败提示
@@ -7812,6 +7819,18 @@ class _AppLocalizationsDelegate
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when language+script codes are specified.
+  switch (locale.languageCode) {
+    case 'zh':
+      {
+        switch (locale.scriptCode) {
+          case 'Hant':
+            return AppLocalizationsZhHant();
+        }
+        break;
+      }
+  }
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
     case 'en':

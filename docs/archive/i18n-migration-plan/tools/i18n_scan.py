@@ -44,7 +44,7 @@ RESIDUAL_MD = os.path.join(PKG_DIR, "05-residual-chinese-report.md")
 WHITELIST_JSON = os.path.join(SCRIPT_DIR, "whitelist.json")
 
 # 生成物与「按语言拆分的正文常量」：它们本身就是**某一种语言**的文案表
-# （gen_l10n 生成的 AppLocalizations、legal_zh/legal_en.dart 长文正文），
+# （gen_l10n 生成的 AppLocalizations、legal_zh / legal_zh_hant / legal_en.dart 长文正文），
 # 不是「待翻译的硬编码文案」。所有扫描（baseline / residual / dupes / tasks）
 # 一律跳过，否则会被统计成待办任务、也会被算成残留中文。
 # 残留门禁侧另有 whitelist.json 的整文件豁免（两道保险，理由写在那边）。
@@ -53,6 +53,7 @@ GENERATED_SKIP = {
     "lib/l10n/app_localizations_zh.dart",
     "lib/l10n/app_localizations_en.dart",
     "lib/l10n/legal_zh.dart",
+    "lib/l10n/legal_zh_hant.dart",
     "lib/l10n/legal_en.dart",
 }
 

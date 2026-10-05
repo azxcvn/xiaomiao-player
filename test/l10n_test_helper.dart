@@ -23,6 +23,15 @@ import 'package:moumou/services/app_locale_settings.dart';
 /// 测试钉死的语言：简体中文（与 App 默认语言一致）
 const Locale kTestLocaleZh = Locale(AppLocaleSettings.zhCode);
 
+/// 测试用的**繁体** locale（繁体轮阶段 6 新增）。
+///
+/// ⚠️ 必须与生成物 `supportedLocales` 里的写法**逐字一致**：
+/// `Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant')`。
+/// 写成 `Locale('zh_Hant')`（languageCode 变成 `zh_Hant`、scriptCode 为空）
+/// 既不等于这一项、也不等于 `Locale('zh')`，解析时**静默回落简体**。
+const Locale kTestLocaleZhHant =
+    Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant');
+
 /// `MaterialApp.localizationsDelegates` 的测试直用值
 const List<LocalizationsDelegate<dynamic>> kTestLocalizationDelegates =
     AppLocalizations.localizationsDelegates;

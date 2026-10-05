@@ -175,12 +175,7 @@ class SettingsPage extends StatelessWidget {
                   icon: Icons.translate_outlined,
                   title: l10n.settingsLanguage,
                   // 副标题显示**当前语言**：语言名用自称，不翻译
-                  subtitle: Text(
-                    AppLocaleSettings.instance.rawValue ==
-                            AppLocaleSettings.enCode
-                        ? l10n.languageNameEn
-                        : l10n.languageNameZh,
-                  ),
+                  subtitle: Text(_languageNameOf(l10n)),
                   onTap: () => showLanguagePickerDialog(context),
                 ),
               ),
@@ -333,3 +328,11 @@ class SettingsPage extends StatelessWidget {
     );
   }
 }
+
+/// 当前语言的**自称**（不翻译）：简体中文 / 繁體中文 / English
+String _languageNameOf(AppLocalizations l10n) =>
+    switch (AppLocaleSettings.instance.rawValue) {
+      AppLocaleSettings.enCode => l10n.languageNameEn,
+      AppLocaleSettings.zhHantCode => l10n.languageNameZhHant,
+      _ => l10n.languageNameZh,
+    };

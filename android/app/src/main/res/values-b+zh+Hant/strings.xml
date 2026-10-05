@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 繁體中文資源（繁體輪階段 5）：與 values/strings.xml 的鍵一一對應，缺鍵時回落中文。
+     目錄用 **BCP-47 腳本限定符** `b+zh+Hant`：凡是語言為 zh 且腳本為 Hant 的裝置
+     （台/港/澳）都命中，對應 Dart 側的 locale `zh_Hant`（見 l10n.yaml 與
+     lib/services/app_locale_settings.dart）。
+
+     ⚠️ 應用名與簡體/英文之外的兩條同形資源（app_name、SD 卡）**原樣照抄**，
+        不許自創（01-執行協議 紅線 15）。
+     ⚠️ 只有**使用者可見**的文案進這裡；日誌內容與日誌訊息按紅線 13 永遠保持中文，
+        見 kotlin/com/azxcvn/moumou/CrashHandler.kt 與 VideoFsWalker.kt。
+     ⚠️ 本檔案已登記進 docs/archive/i18n-migration-plan/tools/whitelist.json（files），
+        否則殘留中文門禁會紅。 -->
+<resources>
+    <string name="app_name">小喵Player</string>
+
+    <!-- 聽影片背景播放（BackgroundPlaybackService）：
+         渠道 ID 固定 moumou_background_playback（改了會變成新渠道），渠道名/描述可翻譯 -->
+    <string name="background_playback_channel_name">聽影片背景播放</string>
+    <string name="background_playback_channel_description">在背景繼續播放影片音訊</string>
+    <string name="background_playback_title">聽影片</string>
+    <string name="background_playback_text">正在背景播放</string>
+
+    <!-- 儲存卷顯示名：系統描述（volume.getDescription）取不到時的回退名 -->
+    <string name="storage_internal">內部儲存</string>
+    <string name="storage_sd_card">SD 卡</string>
+
+    <!-- 讀取日誌失敗（%1$s = 例外訊息），由主介面回給 Dart 側顯示 -->
+    <string name="log_read_failed">讀取日誌失敗：%1$s</string>
+
+    <!-- 當機提示彈窗（當機路徑**唯一**一條走資源的文案；日誌檔案內容仍是中文） -->
+    <string name="crash_dialog_message">應用程式發生錯誤已停止運作\n日誌已儲存，可在「關於 → 錯誤日誌」檢視</string>
+</resources>

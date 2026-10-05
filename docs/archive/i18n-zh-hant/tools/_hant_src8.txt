@@ -1,0 +1,164 @@
+networkTierApi	常规 API
+networkTierText	文本响应
+networkTierDownload	文件下载
+networkTierStream	媒体流
+downloadSetDirFirst	请先设置下载目录
+downloadDirGone	下载目录不存在，请重新选择
+downloadNoDir	未设置下载目录
+downloadSetDir	设置目录
+networkStorageTitle	网络存储
+networkHostInputRequired	请先填写主机地址
+networkPortInvalid	端口需为 1-65535
+networkDefaultPortWithSynology	默认 {port}（群晖 5005/5006）
+networkDefaultPort	默认 {port}
+networkEditAccount	编辑账户
+networkAddAccount	添加账户
+networkDisplayName	显示名称
+networkDisplayNameHint	例如：家庭 NAS
+networkNameRequired	请输入名称
+networkProtocolLabel	协议
+networkHostLabel	主机地址
+networkHostHint	IP 或域名
+networkHostRequiredInput	请输入主机地址
+networkPortLabel	端口
+networkPathDefaultHint	默认为 /
+networkAnonymous	匿名登录
+networkAnonymousDesc	FTP / SMB 匿名访问时开启
+networkUseHttps	使用 HTTPS
+networkUseHttpsDesc	启用后使用加密连接（默认端口 443）
+networkUsername	账号
+networkPassword	密码
+networkHidePassword	隐藏密码
+networkShowPassword	显示密码
+networkSortByBoth	按{field}{order}
+networkSearchCurrentDir	搜索本目录
+networkRefreshCurrentDir	刷新本目录
+networkBackToRoot	回到共享根目录
+networkShowHiddenFiles	显示隐藏文件
+networkNoMatchingFiles	没有匹配的文件
+networkDirEmpty	该目录为空
+networkOnlyHiddenFiles	本目录只有隐藏文件
+networkBackUp	返回上一级
+networkModifiedTime	修改时间
+networkServerNotProvided	服务器未提供
+networkLocation	位置
+networkConnectionLabel	连接
+networkDeleteAccount	删除账户
+networkNoAccounts	还没有网络存储账户
+networkNoAccountsHint	点击右下角 + 添加 WebDAV / SMB / FTP 账户
+downloadClearFinished	清除已完成
+downloadClearFinishedDesc	只清除已完成和失败的下载记录，不会删除已下载的文件。
+downloadNoTasks	暂无下载任务
+downloadFailed	下载失败
+downloadStatusCompleted	完成
+downloadStatusFailed	失败
+downloadStatusMerging	合并
+downloadStatusDownloading	下载中
+downloadStatusPending	等待
+downloadMergingCannotPause	合并中，无法暂停
+directoryPickerUnreadable	目录不可读或不存在
+directoryPickerTitle	选择下载目录
+directoryPickerUp	上级目录
+directoryPickerSelectThis	选择此目录
+directoryPickerEmpty	该目录下没有子目录
+fileOpPin	固定
+fileOpUnpin	取消固定
+fileOpMultiSelect	多选
+fileOpNewName	新名称
+fileOpNameHint	扩展名之前的名称
+fileOpLockedExt	扩展名固定为 {ext}，不可修改
+fileOpDeleteFolderVideosOnly	仅删除该文件夹内的视频文件，其它文件不会被删除。
+fileOpDeleteSelectedVideos	{count, plural, other{确定删除选中的 {count} 个视频吗？}}
+fileOpDeleteSelectedMixed	{count, plural, other{将删除选中的 {count} 项：文件夹只删除里面的视频文件，其它文件不会被删除。}}
+fileOpDeleteAllFiles	删除所有文件
+fileOpPreparing	准备中…
+fileOpProgressItem	第 {current}/{total} 项
+fileOpProgressItems	{done} / {total, plural, other{{total} 项}}
+fileOpProcessing	处理中…
+fileOpBytesProgress	{done} / {total}（{percent}%）
+fileSelectionExit	退出多选
+fileSelectionSelected	{count, plural, other{已选 {count} 项}}
+fileSelectionOps	文件操作
+folderTransferMoving	正在移动…
+folderTransferCopying	正在复制…
+folderActionCancelled	已取消
+folderMovedTo	已移动「{title}」到 {dest}
+folderCopiedTo	已复制「{title}」到 {dest}
+folderActionMovedProgressFailed	已移动 {done}/{total, plural, other{{total} 项}}，失败：{failures}
+folderActionCopiedProgressFailed	已复制 {done}/{total, plural, other{{total} 项}}，失败：{failures}
+folderActionDeletedProgressFailed	已删除 {done}/{total, plural, other{{total} 项}}，失败：{failures}
+folderActionMovedProgressFailedMore	已移动 {done}/{total, plural, other{{total} 项}}，失败：{failures} 等 {count} 项
+folderActionCopiedProgressFailedMore	已复制 {done}/{total, plural, other{{total} 项}}，失败：{failures} 等 {count} 项
+folderActionDeletedProgressFailedMore	已删除 {done}/{total, plural, other{{total} 项}}，失败：{failures} 等 {count} 项
+folderActionCancelledThenMoved	已取消（已移动 {done, plural, other{{done} 项}}）
+folderActionCancelledThenCopied	已取消（已复制 {done, plural, other{{done} 项}}）
+folderActionMovedCount	已移动 {done, plural, other{{done} 项}}到 {dest}
+folderActionCopiedCount	已复制 {done, plural, other{{done} 项}}到 {dest}
+folderNameUnchanged	名称没有变化
+folderRenamedTo	已重命名为 {newName}
+folderDeletedOne	已删除「{title}」
+folderDeletedCount	已删除 {done, plural, other{{done} 项}}
+folderVideoCount	{count, plural, other{{count} 个视频}}
+networkConnectTimeout	连接超时：服务器无响应，请检查地址与端口
+ftpRefusedConnection	FTP 服务器拒绝连接（代码 {code}）
+ftpResumeUnsupported	FTP 服务器不支持断点续传（REST）
+ftpTransferRejected	FTP 服务器拒绝文件传输（代码 {code}）
+ftpRootUnavailable	FTP 根目录不可用（代码 {code}）
+ftpLoginFailed	FTP 登录失败，请检查账号密码
+ftpBinaryModeRejected	FTP 服务器拒绝二进制模式
+ftpListFailed	FTP 目录列表失败（代码 {code}）
+ftpConnectionClosed	FTP 连接被服务器关闭
+ftpUnexpectedResponse	FTP 服务器返回异常响应
+ftpConnectionInterrupted	FTP 连接中断
+ftpPassiveUnsupported	FTP 服务器不支持被动模式
+ftpPassiveParseFailed	FTP 被动模式响应无法解析
+webdavNotAFile	文件不存在或不是文件
+webdavTargetIsDirectory	目标是一个目录
+webdavRangeIgnored	服务器忽略了分段请求，无法精确跳转
+webdavRangeFailed	分段请求失败（HTTP {status}）
+webdavRangeStartMismatch	服务器返回的分段起点与请求不一致
+webdavDownloadFailedAuth	下载失败（HTTP {status}，认证失败）
+webdavDirectoryTooLarge	目录过大：响应超过 {mb}MB
+webdavRequestFailed	WebDAV 请求失败（HTTP {status}）
+webdavRequestFailedAuth	WebDAV 请求失败（HTTP {status}，认证失败）
+smbNotConnected	SMB 尚未连接
+smbAuthFailed	用户名或密码错误
+smbAccessDenied	拒绝访问（权限不足）
+smbPathNotFound	路径不存在
+smbRequestFailed	SMB 请求失败
+netPathScheme	网络路径不能包含 URI scheme
+netPathTooLong	网络路径过长
+netPathTooManySegments	网络路径段数过多
+netPathSegmentEmpty	路径段不能为空
+netPathSegmentTooLong	路径段过长
+netPathDotSegment	网络路径不能包含 . 或 ..
+netPathSegmentSeparator	路径段不能包含分隔符
+netPathSegmentControlChar	路径段不能包含控制字符
+fileOpSourceMissing	源文件不存在或已被移动
+fileOpWriteFailed	写入失败：{name}（{error}）
+fileOpCopiedButDeleteFailed	已复制到目标位置，但删除原文件失败，请手动清理
+fileOpRenameTempFailed	重命名临时文件失败：{error}
+fileOpTargetExists	同目录下已存在同名文件或文件夹
+fileOpRenameFailed	重命名失败：{error}
+fileOpFileMissing	文件不存在或已被删除
+fileOpDeleteFailed	删除失败：{error}
+fileOpFolderMissing	文件夹不存在或已被删除
+fileOpNoVideosInFolder	该文件夹内没有可删除的视频文件
+fileOpSelectTargetFolder	请选择目标文件夹
+fileOpTargetUnreadable	目标文件夹不存在或不可读
+fileOpAlreadyInFolder	该文件夹已经在这个目录里了
+fileOpAlreadyInFolderVideo	该视频已经在这个目录里了
+fileOpIntoItself	不能把文件夹复制或移动到它自己的子目录里
+fileOpNameEmpty	名称不能为空
+fileOpNameInvalid	名称不合法
+fileOpNameHasSeparator	名称不能包含路径分隔符
+fileOpNameIllegalChars	名称不能包含 \ / : * ? " < > | 等字符
+fileOpNameEmptyBeforeExt	请输入扩展名之前的名称
+cacheCategoryListThumbs	视频列表封面缩略图
+cacheCategoryNetworkDanmaku	网络弹幕缓存
+cacheCategoryBiliCovers	哔哩封面缓存
+cacheCategoryOther	其他缓存
+folderActionDestWithTarget	{dest}：{target}
+fileOpItemIssue	「{name}」{reason}
+fileOpItemFailed	{name}：{reason}
+downloadManagerTitle	下载管理

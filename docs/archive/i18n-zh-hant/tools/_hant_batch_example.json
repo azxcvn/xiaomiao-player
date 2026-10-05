@@ -1,0 +1,8 @@
+{
+  "appTitle": "小喵Player",
+  "commonCancel": "取消",
+  "commonConfirm": "確定",
+  "audioTrackFallbackName": "音軌 {id}",
+  "settingsLicenseParagraphCount": "{count, plural, =1{1 段授權條款} other{{count} 段授權條款}}",
+  "languageNameZhHant": "繁體中文"
+}

@@ -1,0 +1,130 @@
+decodeModeAutoSafeDesc	自动选择安全硬解
+decodeModeHwCopy	硬解
+decodeModeHwCopyDesc	强制硬解，兼容字幕与超分
+decodeModeHwPlus	硬解+
+decodeModeHwPlusDesc	直通优先，失败自动回退
+decodeModeSw	软解
+decodeModeSwDesc	纯 CPU 解码
+decodePresetFast	快速
+decodePresetFastDesc	性能优先
+decodePresetStandardDesc	标准配置
+decodePresetHighQuality	高质量
+decodePresetHighQualityDesc	画质优先
+decodePresetGpuHq	GPU 高质量
+decodePresetGpuHqDesc	高画质渲染
+decodePresetLowLatency	低延迟
+decodePresetLowLatencyDesc	减少缓冲
+decodePresetSwFast	软解快速
+decodePresetSwFastDesc	软解加速
+subtitleAlignLeft	左对齐
+subtitleAlignRight	右对齐
+subtitleBorderOutline	描边
+subtitleBorderBox	背景框
+subtitlePresetWhite	白色
+subtitlePresetBlack	黑色
+subtitlePresetTranslucentBlack	半透明黑
+subtitlePresetOpaqueBlack	纯黑
+subtitlePresetTranslucentWhite	半透明白
+subtitlePresetTranslucentBlue	半透明蓝
+audioChannelAutoSafe	安全自动
+audioChannelMono	单声道
+audioChannelStereo	立体声
+audioChannelReverseStereo	反向立体声
+audioTrackFallbackName	音轨 {id}
+subtitleTrackFallbackName	轨道 {id}
+danmakuColorModeSource	跟随弹幕颜色
+danmakuColorModeRandom	随机渐变色
+danmakuColorModeFixed	指定颜色
+danmakuFontModeFollowSystem	跟随系统字体
+danmakuFontModeFollowApp	跟随App字体
+danmakuFontModeCustom	自定义字体
+subtitleSourceWyzie	Wyzie 字幕服务
+subtitleSourceCustom	自定义字幕地址
+danmakuServerAdd	添加服务器
+danmakuServerIntro	启用的服务器将同时用于弹幕搜索与自动匹配，搜索结果按各服务器返回顺序实时呈现
+danmakuServerGroupServers	服务器
+danmakuServerDelete	删除服务器
+danmakuServerDedupe	搜索结果自动去重
+danmakuServerDedupeOnDesc	重复番剧合并为一条，保留集数最全的
+danmakuServerDedupeOffDesc	每台服务器的结果各自展示，可自行挑选来源
+danmakuServerDedupeDialogTitle	开启搜索结果自动去重？
+danmakuServerDedupeDialogBody	各服务器返回的结果仍然立刻显示，不会等全部返回。\n同一部番剧只保留一条；如果后续服务器返回的集数更全，会自动替换成更全的那条。\n因此某台服务器的结果可能不单独出现——那不代表它没搜到，而是被去重合并了。
+danmakuServerAutoMatch	切集自动匹配弹幕
+danmakuServerAutoMatchDesc	切集时自动匹配并加载对应集弹幕
+danmakuServerBuiltIn	内置服务器，不可编辑、删除
+danmakuServerEdit	编辑服务器
+danmakuServerNameLabel	服务器名称
+danmakuServerNameHint	例：我的服务器
+danmakuServerUrlLabel	服务器地址
+danmakuServerNoBrowser	未找到可用的浏览器
+danmakuServerHelpLink	如何获取服务器地址
+audioPlaybackSpeed	播放速度
+audioRepeatOff	循环关闭
+audioRepeatSingle	单曲循环
+audioSleepTimer	定时关闭
+audioSleepEndOfTrack	播完当前
+audioSleepEndOfTrackHint	将在当前曲目播放结束后停止
+audioSleepRemaining	剩余 {time}
+audioSleepCustomTitle	自定义定时关闭
+audioSleepMinutes	{minutes, plural, other{{minutes} 分钟}}
+audioShuffle	随机播放
+danmakuColorModeSourceDesc	保留弹幕自带颜色（含会员渐变彩色）
+danmakuColorModeRandomDesc	忽略文件颜色，按色轮逐条随机着色
+danmakuColorModeFixedDesc	弹幕从下面已选颜色里随机取色
+subtitleSourceSection	字幕来源
+subtitleWyzieDesc	经 sub.wyzie.io 搜索，需要 API 密钥
+subtitleCustomDesc	自填接口地址，片名会发送到该地址
+subtitleCustomParams	自定义参数
+subtitleWyzieParams	Wyzie 参数
+subtitleWyzieApiKey	WYZIE API 密钥
+subtitleWyzieSources	Wyzie 来源
+subtitleLanguage	字幕语言
+subtitlePreferredFormat	首选格式
+subtitlePreferredEncoding	首选编码
+subtitleApiEndpoint	接口地址
+subtitleCustomTestHint	用一个片名试搜一次，看能否解析出字幕
+subtitleTesting	正在测试…
+subtitleTestNoResult	连接成功，但没解析出字幕
+subtitleTestOk	{count, plural, other{连接成功，解析出 {count} 条字幕}}
+subtitleTestFailed	测试失败：{error}
+subtitleAllSources	全部来源
+subtitleAllLanguages	全部语言
+subtitleAllFormats	全部格式
+subtitleAllEncodings	全部编码
+subtitlePasteKeyHint	粘贴密钥（wyzie-…）
+subtitleHowToGetKey	如何获取密钥
+subtitleKeyType	密钥类型：{type}
+subtitleKeyInvalid	密钥无效
+subtitleFreeSource	免费来源
+subtitlePaidSource	付费来源
+subtitleCustomSourceHelp	地址里可用 {placeholder} 作为片名占位（不写占位符则把片名拼到末尾）。\n搜索时片名会发送到你填写的地址，请自行确认该服务的条款与可用性；本应用不内置、也不代理任何第三方字幕服务。
+subtitlePlaceholderHelp	用 {placeholder} 占位片名；没有占位符时片名会拼到末尾。
+subtitleHowToCustomEndpoint	如何自定义接口地址
+subtitleTestNameHint	填一个片名（如 你的名字）
+subtitleTestNameDesc	用这个片名请求一次，看能否解析出字幕。
+subtitleSetWyzieKeyFirst	请先设置 WYZIE API 密钥
+subtitleSetCustomUrlFirst	请先设置自定义字幕地址
+subtitleDownloadedCount	{count, plural, other{已下载 {count} 个字幕}}
+subtitleDownloadResult	下载完成：成功 {ok}，失败 {fail}
+subtitleSearchHint	输入影视名称或 IMDB / TMDB ID
+subtitleBackToSettings	返回设置
+subtitleNoResultHint	未找到字幕，请换个关键词或调整字幕设置
+subtitleDownloadSettings	字幕下载设置
+subtitleCurrentSource	当前来源
+subtitleSearchHintShort	输入关键词后点「确定」搜索字幕
+subtitleResultHeader	{query} · {count, plural, other{{count} 条}}
+subtitleSearchAgain	重新搜索
+subtitleSelectedOfTotal	已选 {selected} / {total, plural, other{{total} 条}}
+subtitleUnknownSource	未知来源
+subtitleDownloadingNow	下载中…
+subtitleDownloadButton	下载字幕（{count}）
+subtitleUnknownName	未知字幕
+subtitleUnknownLanguage	未知语言
+danmakuServerDefaultName	弹弹Play（默认）
+danmakuServerAutoMatchBlocked	请先停用弹弹Play 服务器
+danmakuServerAutoMatchBlockedDetail	已启用「{name}」服务器时不可开启「切集自动匹配弹幕」，如需使用请先停用该服务器
+danmakuSearchNoResult	未找到相关番剧，请尝试其他关键词
+danmakuSearchFailed	搜索失败：{errors}
+danmakuOffsetNone	无偏移
+danmakuOffsetDelay	延后 {time}
+danmakuOffsetAdvance	提前 {time}
