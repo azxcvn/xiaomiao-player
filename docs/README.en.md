@@ -74,6 +74,9 @@ Copy / move · Rename · Delete · Pin / unpin · Multi-select batch operations 
 ### System & settings
 System player registration · Device info · Decoder details · Cache management · Crash logs · App updates · Privacy gate · Privacy policy and agreement · Licenses
 
+### Languages
+简体中文 / 繁體中文 / English UI · Language picker on first launch · Switch any time in Settings, effective immediately · Privacy policy and user agreement in all three languages
+
 ---
 
 ## Tech stack

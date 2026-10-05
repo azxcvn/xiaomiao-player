@@ -25,6 +25,7 @@
 | **投屏** | DLNA/UPnP SSDP 发现渲染器 + 局域网媒体服务器推流 |
 | **文件管理** | 文件夹与视频长按动作菜单（复制 / 移动 / 重命名 / 删除）+ 文件夹固定 + 页面级多选批量操作 |
 | **外观** | 23 种主题色 + 21 种调色板风格（flex_seed_scheme）+ 动态色（Android 12+ 壁纸取色）+ 自定义选色；App 全局字体与弹幕字体 |
+| **多语言** | 简体中文 / 繁體中文（`zh_Hant`）/ English 三种界面语言，默认简体中文；首启语言选择窗 + 「我的 → 语言设置」可改、立即生效；隐私政策与用户协议长文按语言分文件（详见 §5.11） |
 | **其它** | 系统播放器注册（外部「打开方式」/ 浏览器直链，content:// 三级解析）、播放历史、打开链接直连播放、设备硬件与编解码能力检测、播放诊断页、隐私政策门禁、应用更新检查、崩溃日志 |
 
 ---
@@ -38,7 +39,7 @@
 | 状态管理 | `ChangeNotifier` + `ListenableBuilder`（`Listenable.merge`）；持久化用 `shared_preferences`，密钥类用 `flutter_secure_storage` |
 | 弹幕渲染 | `canvas_danmaku` |
 | 主题 | `flex_seed_scheme`（Material 3 色板派生） |
-| 多语言 | 官方 `gen_l10n`（配置在仓库根 `l10n.yaml`，模板 `lib/l10n/app_zh.arb`）：`简体中文` / `English` 两种语言，默认简体中文，生成物入库；详见 §5.11 |
+| 多语言 | 官方 `gen_l10n`（配置在仓库根 `l10n.yaml`，模板 `lib/l10n/app_zh.arb`）：`简体中文` / `繁體中文`（`zh_Hant`）/ `English` 三种语言，默认简体中文，生成物入库；详见 §5.11 |
 | 网络 | `http`（纯 Dart）+ `smb_connect`（本地 fork） |
 | 原生 | Kotlin（`android/app/src/main/kotlin/com/azxcvn/moumou/`）：MethodChannel `moumou/video_info` + 前台服务 + 崩溃处理 |
 | 依赖清单 | 见 `pubspec.yaml` |
@@ -53,13 +54,15 @@ lib/
 ├── main.dart                  # 入口：主题装配 + AppFrame + 路由观察者 + 崩溃日志钩子
 ├── l10n/                      # 多语言（官方 gen_l10n；配置在仓库根 l10n.yaml）
 │   ├── app_zh.arb             # 中文模板：键 / 描述 / 占位符的唯一权威（源语言）
-│   ├── app_en.arb             # 英文（缺键由 untranslated-messages-file 兜住）
-│   ├── app_localizations.dart # gen_l10n 生成物（另有 _zh / _en，入库，避免忘了生成导致 analyze 报错）
+│   ├── app_en.arb             # 英文（不写 @ 元数据；缺键由 untranslated-messages-file 兜住）
+│   ├── app_zh_Hant.arb        # 繁體中文（同上；同语言子类，缺键会静默继承简体，靠 §5.11 的门禁兜住）
+│   ├── app_localizations.dart # gen_l10n 生成物（另有 _zh / _en，以及 zh 文件里的 AppLocalizationsZhHant 子类；入库，避免忘了生成导致 analyze 报错）
 │   ├── label_maps.dart        # 表（枚举 / 映射表）→ 文案 的 UI 侧映射
 │   ├── error_texts.dart       # 服务层「码 + 参数」→ 文案 + 统一入口 serviceErrorText
-│   ├── legal.dart             # 长文正文按语言取（legalTextsFor，未知语言回落中文）
+│   ├── legal.dart             # 长文正文按语言取（legalTextsFor，未知语言回落中文；繁体靠 script 判定）
 │   ├── legal_zh.dart          # 隐私政策 / 用户服务协议中文正文（源文，不进 ARB）
-│   └── legal_en.dart          # 同上英文（改中文条款必须同步改这里）
+│   ├── legal_zh_hant.dart     # 同上繁體（改中文条款必须同步改这里与 legal_en.dart）
+│   └── legal_en.dart          # 同上英文
 ├── models/                    # 纯数据模型（无逻辑、无依赖）
 │   ├── tree_node.dart         # 目录树节点（folder/video）
 │   ├── video_file.dart        # 视频文件信息 + 来源枚举（本地 / 网络连接）
@@ -134,8 +137,8 @@ lib/
 │   ├── danmaku_search_history.dart  # 网络弹幕搜索历史（去重/上限淘汰/一键清除）
 │   ├── danmaku_auto_match_cache_store.dart # 弹幕自动匹配缓存存储
 │   ├── danmaku_network_service.dart # 弹幕网络服务（搜索合并/文件匹配/下载落盘 + 文件前 16MB MD5）
-│   ├── app_locale_settings.dart # 语言偏好（键 app_locale，只允许 'zh' / 'en'，默认 zh）
-│   ├── privacy_policy_settings.dart # 隐私政策同意状态（长文正文见 lib/l10n/legal_zh.dart / legal_en.dart）
+│   ├── app_locale_settings.dart # 语言偏好（键 app_locale，只允许 'zh' / 'zh_Hant' / 'en'，默认 zh；繁体走 Locale.fromSubtags）
+│   ├── privacy_policy_settings.dart # 隐私政策同意状态（长文正文见 lib/l10n/legal_zh.dart / legal_zh_hant.dart / legal_en.dart）
 │   ├── network/                    # 网络存储（WebDAV / SMB / FTP）抽象层
 │   │   ├── network_client.dart     # NetworkClient 抽象接口（connect/listFiles/getFileSize/openStream/disconnect）
 │   │   ├── network_client_factory.dart # 按协议创建客户端
@@ -201,7 +204,7 @@ lib/
 │   ├── storage_root_selector.dart # 存储卷跳转胶囊行（内部存储 / SD 卡 / U 盘）
 │   ├── cast_device_dialog.dart # 投屏设备选择弹窗
 │   ├── dolby_vision_hint.dart # 杜比视界偏色检测 + 引导弹窗（UI 层：文案走 l10n）
-│   ├── language_picker_dialog.dart # 首启语言选择弹窗（隐私同意后弹一次，默认简体中文）
+│   ├── language_picker_dialog.dart # 首启语言选择弹窗（隐私同意后弹一次；三项 简体中文 / 繁體中文 / English，默认简体中文，标题随界面语言）
 │   ├── privacy_policy_dialog.dart # 首次启动隐私门禁弹窗（长文正文按语言取 lib/l10n/legal.dart）
 │   ├── update_dialog.dart       # 更新弹窗
 │   ├── file_operations_ui.dart  # 文件管理 UI（动作菜单/重命名/删除确认/传输进度）
@@ -476,23 +479,27 @@ utils（纯工具）    → 只依赖 models
 
 - **投屏**：`CastService` 通过 SSDP 发现 DLNA 渲染器并推送播放地址；`LanMediaServer` 提供局域网媒体服务（本地文件 → HTTP，支持 Range/CORS）。
 - **更新**：`UpdateService.checkForUpdate` 取本地版本与 GitHub Releases 最新版本比较（带网络重试与响应体积上限），`UpdateSettings` 记录自动检查开关与忽略版本。
-- **隐私**：`PrivacyPolicySettings` 首次启动门禁（倒计时 + 勾选同意）；长文正文按语言拆在 `lib/l10n/legal_zh.dart` / `legal_en.dart`，入口是 `lib/l10n/legal.dart` 的 `legalTextsFor`（界面文案一律走 ARB，见 `docs/archive/i18n-migration-plan/`）。
+- **隐私**：`PrivacyPolicySettings` 首次启动门禁（倒计时 + 勾选同意）；长文正文按语言拆在 `lib/l10n/legal_zh.dart` / `legal_zh_hant.dart` / `legal_en.dart`，入口是 `lib/l10n/legal.dart` 的 `legalTextsFor`（界面文案一律走 ARB，见 `docs/archive/i18n-migration-plan/`）。
 - **设备能力**：`DeviceCapabilities`（原生）探测屏幕 HDR、关键编解码器与系统解码器清单，配合设备信息页与解码器详情页；`decode_settings` 持久化解码方式与预设。
 
 ### 5.11 多语言（l10n）
 
-- **方案**：官方 `gen_l10n` + ARB，配置在仓库根 `l10n.yaml`。模板是 `lib/l10n/app_zh.arb`（**中文是源语言**，键名 / 描述 / 占位符元数据的唯一权威），英文在 `app_en.arb`；`lib/l10n/app_localizations*.dart` 生成物**入库**（否则忘了生成就会 analyze 报 `undefined_getter`）。
-- **语言范围**：只有 `简体中文` / `English`，默认简体中文，**没有「跟随系统」**；`app_locale` 只允许 `'zh'` / `'en'`，缺省 / 空值 / 非法值一律回落 `'zh'`（`services/app_locale_settings.dart`）；设备语言不在支持列表时回落中文（`preferred-supported-locales: [zh]`）。
-- **入口**：首启同意隐私政策后弹一次语言选择窗（`widgets/language_picker_dialog.dart`，只对新装首启弹、升级老用户不弹，可关闭=保持中文）；之后在「我的 → 语言 → 语言设置」改，改完立即生效、无需重启。
+- **方案**：官方 `gen_l10n` + ARB，配置在仓库根 `l10n.yaml`。模板是 `lib/l10n/app_zh.arb`（**中文是源语言**，键名 / 描述 / 占位符元数据的唯一权威）；`app_en.arb` 与 `app_zh_Hant.arb` **都不写 `@` 元数据**（元数据只在模板里）；`lib/l10n/app_localizations*.dart` 生成物**入库**（否则忘了生成就会 analyze 报 `undefined_getter`）。
+- **语言范围**：`简体中文`（默认） / `繁體中文`（`zh_Hant`） / `English` 三种，**没有「跟随系统」**；`app_locale` 只允许 `'zh'` / `'zh_Hant'` / `'en'`，缺省 / 空值 / 非法值一律回落 `'zh'`（`services/app_locale_settings.dart`）；设备语言不在支持列表时回落中文（`preferred-supported-locales: [zh]`）。
+- **繁体的 locale 写法（本轮踩过的坑）**：繁体和简体**语言码都是 `zh`**，只能靠 script 区分，所以 `AppLocaleSettings.locale` 必须返回 `Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant')`。写成 `Locale('zh_Hant')` 会把整段塞进 languageCode（`scriptCode` 为 `null`），既不匹配 `supportedLocales` 里的繁体项、也不匹配 `Locale('zh')`，`WidgetsApp` 解析后**静默回落到首项（简体）**——界面看着像"繁体没生效"，却不报任何错。生成物里 `lookupAppLocalizations` 是**嵌套 switch**（`case 'zh':` → 内层 `switch (locale.scriptCode)` → `case 'Hant'`），`isSupported` 判的是不含 script 的 `['en', 'zh']`。
+- **入口**：首启同意隐私政策后弹一次语言选择窗（`widgets/language_picker_dialog.dart`，三项 **简体中文 / 繁體中文 / English**，语言名一律用**自称、不翻译**；只对新装首启弹、升级老用户不弹，可关闭=保持当前语言）；之后在「我的 → 语言 → 语言设置」改，改完立即生效、无需重启；设置页副标题显示当前语言的**自称**（`pages/settings/settings_page.dart` 的 `_languageNameOf`）。弹窗**标题随界面语言**（`选择语言` / `選擇語言` / `Choose Language`），**不做中英共存**。
 - **分层红线**（详见 §4）：`models/`、`utils/`、`services/` **禁止 import l10n**，只产出「码 + 参数」或纯数据；文案一律在 UI 侧取：
   - 表（枚举 / 映射表）的标签：`lib/l10n/label_maps.dart`，`switch` 表达式按枚举穷尽，漏分支由 analyze 兜住；
   - 服务层错误：`lib/utils/error_codes.dart`（纯数据错误码表）+ `lib/l10n/error_texts.dart`（码 → 文案，统一入口 `serviceErrorText`）；
   - 无 context 层的整句（如播放诊断建议）：把拼句搬到 UI 侧映射函数里，服务 / 工具层只给数值与码。
-- **长文**（隐私政策 / 用户服务协议）：**不进 ARB**——按语言拆 `lib/l10n/legal_zh.dart` / `legal_en.dart`，入口 `lib/l10n/legal.dart` 的 `legalTextsFor(Locale)`；**改中文条款必须同步改英文**，`test/legal_texts_test.dart` 断言两版四段都非空、英文无残留汉字。
+- **长文**（隐私政策 / 用户服务协议）：**不进 ARB**——按语言拆 `lib/l10n/legal_zh.dart` / `legal_zh_hant.dart` / `legal_en.dart`，入口 `lib/l10n/legal.dart` 的 `legalTextsFor(Locale)`：繁体用 `_isHant()` 判定（同时兼容 `Locale.fromSubtags(zh, Hant)` 与写错的 `Locale('zh_Hant')`，避免长文静默退回简体）；**改中文条款必须同步改另外两份**，`test/legal_texts_test.dart` 断言三种语言四段都非空、繁体无简体专用词（`隐私`/`存储`/`视频` 等）。
 - **不翻译的东西**：日志（含崩溃日志文件内容，原生侧同理）、第三方接口内容（番剧名 / 简介 / 弹幕 / 服务端 message）、内容匹配关键词（集数正则、字幕语言判定、章节关键词）、落盘文件名与截图文件名（`小喵Player-yyyy-…`）、系统相册名。
-- **改文案的固定流程**：改 `app_zh.arb` / `app_en.arb` → `flutter gen-l10n` → `flutter analyze` → 全量 `flutter test`；`l10n_untranslated.json` 必须为空（英文不许缺键）。
-- **Android 原生侧**：只有用户可见的文案进 `android/app/src/main/res/values/strings.xml`（中文默认）与 `values-en/strings.xml`；应用名固定 zh=`小喵Player` / en=`Meow Player`，`AndroidManifest.xml` 用 `@string/app_name`；通知渠道 ID `moumou_background_playback` **不许改**（改了会变成新渠道）。
-- 迁移方案、逐文件清单与残留扫描工具（本地保留、不入库）：`docs/archive/i18n-migration-plan/`；残留门禁 `python tools/i18n_scan.py residual [--include-android] [--fullwidth]`。
+- **改文案的固定流程**：改 `app_zh.arb` → 同步 `app_en.arb` 与 `app_zh_Hant.arb`（**键集合、占位符、ICU 结构必须逐字一致**）→ `flutter gen-l10n` → `flutter analyze` → 全量 `flutter test`；`l10n_untranslated.json` 必须为空（英、繁都不许缺键）。
+- **ARB 硬门禁（繁体专用工具）**：`python docs/archive/i18n-zh-hant/tools/arb_hant.py check` —— 校验 `@@locale`、键集合、占位符、ICU 结构、空值、非法元数据（硬错误必须为 0），并输出「疑似未转换 / 命中简体特征字」提示到 `tools/_hant_check_report.md`；`apply` 可在占位符不一致时整体拒绝写盘。
+- **永久防线**：`test/zh_hant_locale_test.dart` 断言 **ARB 三边对称**（键集合 + 逐键占位符 + 繁体文件不写元数据 + `@@locale`）+ locale 取值与回落；以后给模板加键忘了同步繁体，这里立刻红（比 `l10n_untranslated.json` 更早发现）。
+- **Android 原生侧**：只有用户可见的文案进资源 —— `values/strings.xml`（中文默认）、`values-en/strings.xml`、**`values-b+zh+Hant/strings.xml`**（繁体；`b+zh+Hant` 是 BCP-47 脚本限定符，覆盖台/港/澳所有繁体脚本设备）；**三份资源的键集合必须一致**。应用名固定 zh / zh_Hant=`小喵Player`、en=`Meow Player`，`AndroidManifest.xml` 用 `@string/app_name`；通知渠道 ID `moumou_background_playback` **不许改**（改了会变成新渠道）。
+- **新增一门语言的落地步骤**：① 先定术语表（源语言 → 目标语言，含"保持不译"清单）；② 复制模板 ARB 为 `app_<locale>.arb`（**不写元数据**）逐键翻译；③ 长文加 `legal_<locale>.dart` 并在 `legal.dart` 里分发；④ `AppLocaleSettings` 加取值 + `Locale` 构造 + 语言自称键；⑤ 语言窗与设置页副标题各加一项；⑥ `flutter gen-l10n`；⑦ Android 侧若有独立文案，加对应 `values-*/strings.xml`；⑧ 把新增长文文件与资源登记进 `docs/archive/i18n-migration-plan/tools/whitelist.json` 与 `i18n_scan.py` 的 `GENERATED_SKIP`（否则残留门禁会红）；⑨ 补测试（locale 取值与回落、长文、ARB 对称）。
+- 迁移与执行的归档：第一轮英文 `docs/archive/i18n-migration-plan/`、回归测试包 `docs/archive/i18n-regression-test-plan/`、繁体轮 `docs/archive/i18n-zh-hant/`（7 阶段文档 + 工具 + 收口报告）。残留门禁：`python docs/archive/i18n-migration-plan/tools/i18n_scan.py residual [--include-android] [--fullwidth]`。
 
 ---
 
@@ -509,4 +516,4 @@ utils（纯工具）    → 只依赖 models
 
 原生与 Dart 的通道方法名、参数键保持一一对应，新增能力时两端同步。
 
-原生侧文案：**用户可见**的进 `res/values/strings.xml`（中文默认）与 `res/values-en/strings.xml`；日志与**崩溃日志文件内容**保持中文（与 Dart 侧同一口径，见 §5.11）。
+原生侧文案：**用户可见**的进 `res/values/strings.xml`（中文默认）、`res/values-en/strings.xml` 与 `res/values-b+zh+Hant/strings.xml`（繁體，三份键集合须一致）；日志与**崩溃日志文件内容**保持中文（与 Dart 侧同一口径，见 §5.11）。
