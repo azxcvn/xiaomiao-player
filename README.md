@@ -15,6 +15,11 @@
   <img src="https://img.shields.io/badge/Flutter-3.44%2B-02569B.svg" alt="Flutter">
 </p>
 
+<!-- 语言入口：一进仓库就能看到另外两个语言的 README -->
+<p align="center">
+  <b>简体中文</b> · <a href="docs/README.en.md">English</a> · <a href="docs/README.zh-Hant.md">繁體中文</a>
+</p>
+
 ---
 
 ## 应用截图
