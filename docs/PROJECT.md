@@ -39,7 +39,6 @@
 | 状态管理 | `ChangeNotifier` + `ListenableBuilder`（`Listenable.merge`）；持久化用 `shared_preferences`，密钥类用 `flutter_secure_storage` |
 | 弹幕渲染 | `canvas_danmaku` |
 | 主题 | `flex_seed_scheme`（Material 3 色板派生） |
-| 多语言 | 官方 `gen_l10n`（配置在仓库根 `l10n.yaml`，模板 `lib/l10n/app_zh.arb`）：`简体中文` / `繁體中文`（`zh_Hant`）/ `English` 三种语言，默认简体中文，生成物入库；详见 §5.11 |
 | 网络 | `http`（纯 Dart）+ `smb_connect`（本地 fork） |
 | 原生 | Kotlin（`android/app/src/main/kotlin/com/azxcvn/moumou/`）：MethodChannel `moumou/video_info` + 前台服务 + 崩溃处理 |
 | 依赖清单 | 见 `pubspec.yaml` |
@@ -55,7 +54,7 @@ lib/
 ├── l10n/                      # 多语言（官方 gen_l10n；配置在仓库根 l10n.yaml）
 │   ├── app_zh.arb             # 中文模板：键 / 描述 / 占位符的唯一权威（源语言）
 │   ├── app_en.arb             # 英文（不写 @ 元数据；缺键由 untranslated-messages-file 兜住）
-│   ├── app_zh_Hant.arb        # 繁體中文（同上；同语言子类，缺键会静默继承简体，靠 §5.11 的门禁兜住）
+│   ├── app_zh_Hant.arb        # 繁體中文（不写 @ 元数据）
 │   ├── app_localizations.dart # gen_l10n 生成物（另有 _zh / _en，以及 zh 文件里的 AppLocalizationsZhHant 子类；入库，避免忘了生成导致 analyze 报错）
 │   ├── label_maps.dart        # 表（枚举 / 映射表）→ 文案 的 UI 侧映射
 │   ├── error_texts.dart       # 服务层「码 + 参数」→ 文案 + 统一入口 serviceErrorText
@@ -386,120 +385,97 @@ models（模型）     → 无依赖（纯数据）
 utils（纯工具）    → 只依赖 models
 ```
 
-约定：
-
-- `widgets/` 里的公共组件**禁止 import `pages/`**；页面专属小组件放 `pages/<页面>/views/`；
-- `services/` 不含 UI（不 import Flutter widget 层）；
-- **文案一律走 l10n**：`models/`、`utils/`（以及 `services/`）**禁止 import l10n**，只产出「码 + 参数」或纯数据；翻译在 UI 侧做（`lib/l10n/error_texts.dart`、`lib/l10n/label_maps.dart`）。日志（含崩溃日志文件内容）**永远保持中文**，不翻译；
-- 单文件超过 ~400 行应当考虑拆分；播放页主体与其 `views/` 面板组件为共享会话状态而保留较大体量。
-
 ---
 
 ## 5. 模块说明
 
 ### 5.1 媒体库与首页
 
-- **扫描**：`VideoScanner` 走原生 `getVideos`（MediaStore 全表查询 + 逐条校验 + `.nomedia` 祖先链判断），可配置包含隐藏目录 / `.nomedia` 目录；结果缓存于内存，文件操作后重扫。MediaStore 覆盖不到的位置（`.nomedia` / 隐藏目录 / 外置卷 / 模拟器共享目录）由原生 **`FsVideoWalker`** 整盘补扫补齐：**1.5s 预算的广度优先递归 + 跳过名单（缩略图 / 缓存 / 临时 / 回收站 / obb）+ 黑白名单下推剪枝 + `filesDir` 持久化索引续扫**。补扫**只枚举、不开容器**（时长不在这一步取，见下一条），非主卷最深 **20** 层（原为 4 层——深度判定卡的是目录，`CARD/番名/字幕组/ep01.mkv` 这种深一层结构的视频会被整棵跳过、永远不出现）。索引**只留 MediaStore 看不到的条目**：本轮 MediaStore 返回过的路径下推给补扫（`FsScanRequest.mediaStorePaths`），补扫不再把这些文件重复记一份（同一文件两份记录是双份内存 + 双份落盘，而取用时还要被「MediaStore 优先」丢掉）——对「大容量外置卡 + 普通库」的用户，索引因此几乎为空。
-- **时长与补扫的分工**（issue #4 后的定稿）：补扫**不抽时长**，一轮里只做目录列举 + `length()` + `lastModified()`。原因是抽取（贵）与枚举（便宜）原本共用一个 1.5s 预算，抽取把预算吃光后**每轮只能多枚举一个目录**，用户看到的就是「只有已经读到的文件夹，没读到的绝对不显示」。时长改由两处供给：① MediaStore 一次查询白送的 `duration`（零成本，覆盖绝大多数视频）；② 卡片对「时长未知」的可见项按需调一次原生——MediaInfoLib 自己解析容器、**不经过系统的 `media.extractor`**（外置卡上逐个文件调系统抽取器正是「反复读同一批文件」的来源），与帧率/字幕**共用同一份磁盘缓存**（缓存带版本号，老缓存自动重解析），它拿不到才退回 `MediaMetadataRetriever`。索引里已有的时长仍按「大小 + 修改时间没变」跨轮沿用，不白丢。
-- **单文件超时 + 失败 TTL**（issue #4）：解析整段包 **1.5s 超时**（原先只在**文件之间**检查预算，一个病态文件能顶穿整轮、把后面的文件一起拖住；参考项目 mpvRx 的批量解析同样缺这条），超时按「拿不到」处理，不阻塞后续文件。「拿不到时长」记的是**失败时刻 + 24 小时 TTL**：TTL 内不重复开容器，过期自动再试——原先记 `-1` 并永久沿用，于是「卡一时忙 / 读失败 / native 库缺失」这类**瞬时**失败被钉成永久结论，表现为「这部片子永远显示未观看」。Dart 侧进程内的负结果记忆（`VideoInfoService`）同一套语义。
-- **按目录更新**（issue #4 用户诉求）：树状目录页与文件夹列表页的**下拉刷新**只把当前目录**整棵子树**从原生补扫索引里摘掉、下一轮优先重扫，**不整盘重扫**（`VideoScanner.refreshPath`；与首页下拉 / 一键清缓存的全量 `forceFsRescan` 区分开）。空目录也能拉——`.nomedia` / 隐藏目录正是「看着是空的、盘里其实有视频」。
-- **列表封面抓帧按卷串行**（issue #4）：一屏十几张卡片原先各起一个线程并发随机读同一个存储，主存储扛得住，**外置卡 / U 盘直接被打成 I/O 风暴**。现在封面抓帧与卡片时长兜底共用一套队列——外置卷 1 路、主存储 2 路（按 `Environment.isExternalStorageEmulated` 判断所在卷），线程降到 `THREAD_PRIORITY_BACKGROUND`，不与前台 UI 抢 CPU 与 I/O；封面本身仍有磁盘缓存（384×216 JPEG），只有首轮会真正抓帧，代价是首屏封面一张张出。
-- **扫描是「快结果先上屏 + 后台增量并入」两段**（对齐 mpvRx 的 `getAllVideoFoldersFast` / `getIndexedNoMediaFolders` + `scanNoMediaFoldersIncrementally`）：`getVideos` 同步只做「MediaStore 全表 + 索引里已知的补扫条目」（`FsVideoWalker.readCached`，**不递归**），返回后台线程再跑一轮预算内的 BFS（`walkInBackground`），边扫边通过 `onFsVideoBatch` 推增量批次、整轮结束用 `onFsScanDone` 推**完整快照**（权威值，顺带清掉这一轮消失的条目）。Dart 侧 `VideoScanner` 按**扫描代次 `scanId`** 只收最新代的推送，把「MediaStore 那份」与「补扫那份」（原生响应里带 `fs` 标记 + 推送，对齐 mpvRx 的 `mediaStoreFolders` / `indexedFolders` 两列表）分开维护、合并成 `cachedVideos`，并 `fsRevision`（`ValueNotifier`）通知页面；首页 / 树状文件夹页 / 文件夹列表页监听它**防抖 250ms 用缓存增量重建**，不重新查原生、不闪不转圈。索引（`fs_video_index_<key>.tsv`）记下「走过哪些目录（含时间）」与「在那里找到过哪些视频」，15 分钟重扫间隔、最旧优先；一轮没扫完就把待扫队列存下来，下次进 App 接着扫而不是从零重来；扫描条件（开关 / 名单）进 key，条件变了索引整体作废；**非主卷恒扫**（开关无关，这些卷 MediaStore 未必索引），**主卷只在两个开关之一打开时才进**，两种情形按 key 分开存索引，开关关掉不会端出旧的隐藏视频。**刷新语义**：`forceFsRescan`（下拉刷新 / 一键清缓存）＝**忽略 15 分钟重扫间隔重新走一遍，但不清索引**，所以刷新期间 `.nomedia` / 隐藏文件夹 / 外置卡那几项**原地保留**（清了就会出现「先少两个文件夹、扫完再回来」的视觉跳跃；对齐 mpvRx「先发布旧快照、扫完再 Replace」）；文件操作改动走**按路径失效**（`invalidatePaths` → `FsVideoIndex.removeSubtree` + 这一轮优先重扫那几个目录），只更新真正改了的地方。**行为变化如实说明**：补扫被预算截断时，深层目录里的条目要等后续几轮才出现（广度优先，视频通常在浅层）；索引条目按「每进程一次存活校验」清掉外部删除的条目（可能过一阵子才消失）；**目录指纹**（索引里每个目录多记一个「目录自身 mtime」）让「刚扫完又被新增 / 删除 / 改名」的目录在**下一轮就重列**，不必等 15 分钟——探针单轮最多 200ms / 8000 个目录，15 分钟时间戳重扫仍然保留（它兜的是「原地改写文件」这种目录 mtime 不变的变化）；**取消点**——用户离开媒体库页面（Dart 侧 `VideoScanner.cancelFsScan`）或来了新一轮扫描请求时，当前这一轮在下一个目录边界收尾：已扫到的照常落盘与推送，没扫到的留到下次接着扫，所以被停掉的那轮可能只走了一部分。
-- **两种视图**：列表模式（`buildFolderList`：含直接视频的文件夹）与树状模式（`buildTree`：完整目录树），共用 `FolderCard` / `VideoCard`；建树与聚合在后台 isolate（`compute`）执行。
-- **首页**：`HomePage` 负责权限门禁（「允许管理所有文件」）、视图分发、搜索、多选与速拨入口。
-- **存储卷跳转**：自建目录选择器（媒体扫描黑白名单 / 下载目录 / 字幕与音频导入）顶部列出已挂载存储卷胶囊（`StorageRootSelector` + `StorageRoot`），点击即跳到该卷根。**外置卷只能由原生 `getStorageRoots` 枚举得到**——`/storage` 目录本身在 Android 11+ 上即使持有「所有文件访问」也列不出来（授权只到各卷根，不含 `/storage` 这个挂载点容器），此前选择器起点写死 `/storage/emulated/0` 导致 SD 卡/TF 卡完全无法进入。
-- **播放历史**：`PlaybackHistoryService` 记录可重放来源（本地路径 / 在线直链），去重置顶、上限淘汰，首页速拨「最近播放」直启。
-- **进度**：`PlaybackProgressService` 单例，`path → 毫秒` 映射，串行写盘 + 节流；播放页恢复进度走 `openAndRestore`（暂停加载 → 静音激活时间线 → seek → 位置确认）。卡片进度条与「未观看 / 观看中 / 已看完」按 `时长` 换算，而**扫描器对部分条目给不出时长**（补扫一律不抽时长，见上——`.nomedia` / 隐藏目录 / 外置卷那些条目只有路径与大小）——`VideoCard` 对这些条目按需再调一次 `getVideoDuration`（同样是 MediaInfoLib 优先、系统抽取器兜底，带 1.5s 超时）补上，否则它们永远显示「未观看」；查过仍拿不到的（损坏 / 非常规容器）Dart 侧记**带 24 小时 TTL 的负结果记忆**（只活在进程内，`clearCache` 可清），TTL 内不再重复问原生——不然卡片滚走再滚回来就再问一遍，又是一次没意义的系统抽取；带 TTL 是为了不把「卡一时忙」这类瞬时失败钉成永久结论（原生侧那份磁盘缓存同一套语义）。
+- **扫描**：`VideoScanner` 查原生 MediaStore；MediaStore 覆盖不到的位置（`.nomedia`、隐藏目录、外置卷）由原生 `FsVideoWalker` 整盘补扫（广度优先 + 跳过名单 + 黑白名单剪枝 + `filesDir` 持久化索引续扫）。先返回索引快照，补扫边扫边推增量、结束时推完整快照；索引记录已扫目录与命中的视频，15 分钟重扫间隔。
+- **时长**：优先取 MediaStore 顺带返回的 `duration`；未知的由卡片按需取（原生 MediaInfoLib 优先、系统抽取器兜底）。
+- **视图**：列表模式（含视频的文件夹）与树状模式（完整目录树），共用 `FolderCard` / `VideoCard`；建树与聚合在后台 isolate。
+- **首页**：`HomePage` 负责「允许管理所有文件」权限门禁、视图分发、搜索、多选与速拨入口；`StorageRootSelector` + 原生 `getStorageRoots` 提供存储卷跳转。
+- **状态**：`PlaybackHistoryService`（可重放来源，去重置顶 + 上限淘汰）、`PlaybackProgressService`（`path → 毫秒`，串行写盘 + 节流），卡片进度条与「未观看 / 观看中 / 已看完」按时长换算。
 
 ### 5.2 播放器
 
-- **页面**：`PlayerPage`（横屏沉浸式）与 `PlayerPortraitPage`（竖屏）共享同一个 media_kit `Player` 与 `VideoController`，切换零中断；横竖屏共享的会话状态（音量 / 音量增强 / 亮度 / 倍速 / 滑动 seek / 缩放）收敛在 `PlayerSessionState`，横屏创建并注入竖屏。
-- **控制层**：顶栏（5 槽位可配置 + 更多）、状态栏（时间/电量/网速/数据类型）、中央簇、底栏（进度条 + 下一集 + 时间 + 弹幕按钮）、右侧竖排（截图 / 锁定）；二级界面横屏用 `showPlayerPanel`（右侧滑入）、竖屏用 `showPlayerBottomPanel`（底部弹出），面板内容组件共用。
-- **手势**：`PlayerGestureLayer` 裸识别器方案，支持双击（播放暂停 / 快进快退 / 无）、水平滑动 seek（带预览浮层）、垂直滑动音量与亮度、长按倍速、双指缩放（带「还原画面」胶囊）。
-- **进度条**：`PlayerSeekBar` 自绘（章节圆点 + 跳过色段 + 触摸行对齐常量）；拖动实时预览缩略图，松手落在所见帧的精确时刻。
-- **缩略图**：`FastThumbnails` 通过 FFI 直连自建 libmpv.so 的 `mk_thumbnail_*`（长驻 worker isolate + 单飞顶旧调度，秒桶内存 LRU），`RawThumbImage` 把 RGBA 帧直渲为 `ui.Image`。
-- **超分**：`SuperResolutionService` 管理 Anime4K 着色器链（安装期做精度注入与采样合并优化后再拷贝），7 档模式 × 3 质量档。
-- **章节与跳过**：`ChapterTracker` 读 mpv `chapter-list` 并跟踪当前位置与片段窗口；`ChapterSkipSettings`（六类片段）与 `IntroOutroSettings`（片头片尾秒数）分别驱动自动跳过。
-- **诊断**：`player_diagnostics` 纯函数 + 诊断面板按秒采样 mpv 属性（缓存/丢帧/渲染延迟/硬解/音画同步）。
-- **解码**：`DecodeSettings` 持久化档位（**默认「硬解+」**）与解码预设；解码链由 `utils/decode_policy.dart` 在**开播前**按「用户档位 + 渲染后端」定一次并随 `applyPlaybackTuning` 写入 mpv（OpenGL → `mediacodec,mediacodec-copy,no` 直通优先；Vulkan → `mediacodec-copy,no`，普通内核不支持 MediaCodec→Vulkan 帧映射）。**不做「读 `hwdec-current` 改档位」那套**：`hwdec-current` 是每部视频当下生效的方法名，mpv 自己会按链降级，拿它当设备结论会永久改写用户档位（对齐参照项目 MPVRX：档位只是标签，谁都不回写设置）；实际生效方法名在播放诊断面板如实显示。
+- **页面**：`PlayerPage`（横屏沉浸式）与 `PlayerPortraitPage`（竖屏）共享同一个 media_kit `Player` 与 `VideoController`，切换零中断；会话状态收敛在 `PlayerSessionState`。
+- **控制层**：顶栏 / 状态栏 / 中央簇 / 底栏 / 右侧竖排；二级界面横屏右滑面板、竖屏底部面板，面板内容组件共用。
+- **手势**：`PlayerGestureLayer` 支持双击、水平滑动 seek、垂直滑动音量与亮度、长按倍速、双指缩放。
+- **进度条与缩略图**：`PlayerSeekBar` 自绘（章节圆点 + 跳过色段）；拖动实时预览缩略图，`FastThumbnails` 经 FFI 调用自建 libmpv 的 `mk_thumbnail_*`。
+- **超分**：`SuperResolutionService` 管理 Anime4K 着色器链，7 档模式 × 3 质量档。
+- **章节与跳过**：`ChapterTracker` 读 mpv `chapter-list` 并跟踪当前位置；`ChapterSkipSettings`（六类片段）与 `IntroOutroSettings`（片头片尾秒数）驱动自动跳过。
+- **解码**：`DecodeSettings` 持久化档位（默认「硬解+」）与预设，解码链在开播前由 `utils/decode_policy.dart` 定一次并写入 mpv。
+- **诊断**：`player_diagnostics` 纯函数 + 诊断面板按秒采样 mpv 属性（缓存 / 丢帧 / 渲染延迟 / 硬解 / 音画同步）。
 
 ### 5.3 字幕
 
-- **来源**：内嵌轨道（mpv `track-list`）、外挂导入（Android ≤11 用系统选择器；>11 用自建选择器，带排序与文件夹记忆）、同名字幕自动加载（简/繁后缀优先，只由 App 负责挂载；本地与**网络存储远端**走同一套匹配规则）。
-- **控制器**：`SubtitleService` 单选模型，同步 `track-list` / `sid`，支持增删轨道、按字段写入样式、等待式轨道刷新、切轨后按用户意图钉回、记忆路径失效清理。
-- **中文优先**：默认开启「优先选中文字幕轨」（`SubtitleSettings.preferChineseSubtitle`）——mpv 打开文件默认挑**第一条**字幕轨，多字幕片子常落在英文/非特效轨。仅当**该视频从没被手动选过字幕、也没有外挂字幕**时，把默认轨换成中文优先的那条：判定在 `utils/subtitle_language.dart`（`lang` 认 `zh/chi/zho/cn/chs/cht/sc/tc` 等，标题认「中文/中字/简体/繁体/简英…」；中文轨之间「特效/双语」优先）。用户的选择与「关闭字幕」永不被改；当前已是中文轨时不换；没有中文轨时保持内核原选择（**不做英文优先**）。
-- **样式**：`SubtitleSettings` 管理延迟 / 大小 / 位置 / 颜色 / 描边 / 背景框 / 内嵌样式覆盖 / 自定义字体；字段到 mpv 属性的映射集中在 `subtitle_style_properties.dart`。
-- **字体**：自定义字体走 libass 原生渲染；字体目录在播放器构造期注入（运行期不改 `sub-fonts-dir`）。
-- **影视字幕下载**：字幕下载页支持**两种来源（单选互斥，`SubtitleSourceSettings`）**——`Wyzie` 走 `WyzieApi`（需 API 密钥，来源/语言/格式/编码偏好见 `WyzieSettings`）；`自定义字幕地址` 走 `CustomSubtitleApi`：用户自填地址模板（`{name}` 占位，无占位符则片名拼到末尾），响应由 `custom_subtitle_parser` **自动嗅探**常见列表键（顶层数组 / `data`·`subtitles`·`subs`·`results`·`list`·`items`）与字段名（名称 `name`·`title`·`filename`…、地址 `url`·`link`·`download_url`…、语言 `language`·`lang`·`languages`…、格式 `ext`·`format`…，缺格式从地址后缀推断），嗅不出来明确报错（不当成「没有字幕」）。两链路结果统一为 `SubtitleEntry`，按关键词搜索、勾选批量下载。**仓库不内置任何第三方字幕地址/密钥**，片名会发送到用户所选服务（隐私政策已披露）。
+- **来源**：内嵌轨道（mpv `track-list`）、外挂导入（Android ≤11 系统选择器 / >11 自建选择器）、同名字幕自动加载（简繁后缀优先；本地与网络远端同一套匹配规则）。
+- **控制器**：`SubtitleService` 单选模型，同步 `track-list` / `sid`，支持增删轨道、写入样式、切轨钉回与失效清理。
+- **中文优先**：默认开启；仅当该视频没有手动选过字幕、也没有外挂字幕时，把默认轨换成中文优先的那条（判定在 `utils/subtitle_language.dart`）。用户选择与「关闭字幕」永不被改。
+- **样式与字体**：`SubtitleSettings` 管理延迟 / 大小 / 位置 / 颜色 / 描边 / 背景框 / 内嵌样式覆盖 / 自定义字体；自定义字体走 libass，字体目录在播放器构造期注入。
+- **影视字幕下载**：两种来源（单选互斥）——`Wyzie`（需 API 密钥）与「自定义字幕地址」（`{name}` 占位，响应由 `custom_subtitle_parser` 嗅探常见列表键与字段名）；结果统一为 `SubtitleEntry`，按关键词搜索、勾选批量下载。仓库不内置任何第三方字幕地址或密钥。
 
 ### 5.4 弹幕
 
 - **来源**：本地同名文件（9 种命名规则）、手动导入、网络弹幕（弹弹Play：搜索 / 库匹配 / 自动匹配）、B 站原声弹幕（`seg.so` protobuf）。
-- **流水线**：`danmaku_pipeline` 纯函数对**全量原始条目**执行「屏蔽词 → 合并 → 去重」（跨时间窗算法，走后台 isolate）；结果交给 `DanmakuScheduler`（秒桶 + 前向补发 + seek 跳变检测 + 代数失效）按 1s tick 发射。
-- **渲染**：`player_danmaku_layer` 封装 `canvas_danmaku`，横竖屏共享同一控制器；只有可见层接收弹幕。
-- **设置**：`DanmakuSettings` 覆盖样式（字号/字重/速度/描边/不透明度）、配置（显示区域/行高/顶底滚动显隐/海量/去重/屏蔽词）、偏移（时间轴 ±180s）、字体（跟随系统/跟随 App/自定义）。
-- **颜色三态**（互斥单选）：跟随弹幕颜色（默认，保留会员渐变彩色）/ 随机渐变色（HSV 色轮黄金角）/ 指定颜色。指定颜色是**调色板多选**（最多 8 种）：选 1 种 = 统一色，≥2 种则每条弹幕从已选色**随机抽**一个且**相邻两条不重色**（`utils/danmaku_palette_color.dart`）。**全部取消 → 模式自动回落「跟随弹幕颜色」**；反过来从空调色板切回「指定颜色」会**自动补一个默认色**（否则面板卡在 source，表现为「点了指定颜色没反应」）。自定义颜色走「调滑杆 → 看预览 → 点『添加到调色板』确认」三步，滑杆只改草稿不直接入列。老用户的单色配置（历史键 `danmaku_color_value`）自动迁移成长度 1 的调色板。
+- **流水线**：`danmaku_pipeline` 纯函数对全量条目做「屏蔽词 → 合并 → 去重」，结果交给 `DanmakuScheduler` 按 1s tick 发射。
+- **渲染**：`player_danmaku_layer` 封装 `canvas_danmaku`，横竖屏共享同一控制器。
+- **设置**：`DanmakuSettings` 覆盖样式（字号 / 字重 / 速度 / 描边 / 不透明度）、配置（显示区域 / 行高 / 顶底滚动显隐 / 海量 / 去重 / 屏蔽词）、时间轴偏移与字体三态。
+- **颜色三态**：跟随弹幕颜色（默认）/ 随机渐变色 / 指定颜色（调色板多选，最多 8 种，相邻两条不重色）。
 
 ### 5.5 音频与听视频
 
-- **控制器**：`AudioService` 管理音轨列表与单选、外部音轨导入/移除（临时）、音频声道、音频处理（音量标准化 / 动态范围压缩）与 `af` 滤镜链；声道与音频处理的**唯一真值在 `AudioSettings`（跨会话持久化）**，控制器只订阅并下发 mpv。
-- **均衡器**：`EqualizerSettings` 全局持久化 5 频段 + 低音增强 + 虚拟环绕 + 预设，由 `AudioService` 订阅后重应用滤镜链。
-- **音轨回退**：换轨后在短窗口内消费 mpv 日志，命中音频失败特征时复核 `audio-params` 并自动回退到可用音轨。
-- **听视频**：`AudioPlayerPage` 复用共享 Player 只播音频，提供封面模糊背景、1:1 圆角封面、胶囊式倍速/列表、定时关闭、后台播放（前台服务）与时间刻随机播放。
+- **控制器**：`AudioService` 管理音轨单选、外部音轨导入与移除、音频声道、音频处理与 `af` 滤镜链；真值在 `AudioSettings`（跨会话持久化），控制器只订阅并下发 mpv。
+- **均衡器**：`EqualizerSettings` 持久化 5 频段 + 低音增强 + 虚拟环绕 + 预设。
+- **音轨回退**：换轨后按 mpv 日志特征复核 `audio-params`，不可播放时自动回退到可用音轨。
+- **听视频**：`AudioPlayerPage` 复用共享 Player 只播音频，提供封面模糊背景、1:1 圆角封面、胶囊式倍速与列表、定时关闭、后台播放与时间刻随机播放。
 
 ### 5.6 网络存储
 
 - **抽象层**：`NetworkClient` 接口 + `network_client_factory` 按协议构造；`NetworkRepository` 提供浏览目录与解析播放流的高层 API。
-- **协议实现**：WebDAV（纯 Dart `http`，PROPFIND 列表 + Range 流式读取）、SMB（`smb_connect` + `smb_pipeline` 并发预读）、FTP（被动模式双连接、`MLSD`→`LIST` 回退、REST 偏移续传）。
-- **播放**：`NetworkStreamingProxy` 把远端文件转成 `127.0.0.1` 的无凭据回环 URL 供 mpv 拉流，处理 Range/HEAD 并提供滑动窗口网速统计。
-- **远端同名字幕**：`network_subtitle_match`（纯函数）按本地同规则在远端目录里挑最佳同名字幕，`network_subtitle_stream` 用一次性连接列目录、把命中的字幕文件注册成同形状回环 URL 交给 mpv `sub-add`；远端记忆存「连接 id + 远端路径」（会话 URL 里的 token 跨会话必变，不入库），全链路失败静默、不影响播放（对齐 mpvRx `SubtitleOps`）。
-- **浏览**：`NetworkBrowserPage` 复用 `FolderCard` / `VideoCard`，但**只展示远端列目录真的给得出的信息**——文件夹与视频都显示**日期**，视频另加**完整名称**；不显示大小（部分服务器给 0/-1），列目录时也拿不到时长/帧率/分辨率/字幕/进度。唯一例外是**时长**：播过一次的视频由播放页回报真实时长并按稳定键（连接 id + 远端路径）记住，没播过的不显示。排序自带一套 `NetworkSort`（**只有名称 / 日期**，各升降序，日期缺失恒排末尾），不复用本地那套「名称/日期/大小/数量 + 字段开关」——那些在远端排不动。另支持搜索（本目录）、下拉刷新、回到共享根、默认隐藏 `.`/`@eaDir` 等隐藏项（可开）；目录列表走 `NetworkDirectoryCache`（TTL + LRU），返回上级与重进已看过的目录即时打开。
-- **凭据**：账户清单存 SharedPreferences，密码只进加密存储（含老明文迁移）；WebDAV 的默认端口按 scheme 区分（HTTP 80 / HTTPS 443），切换 HTTPS 或协议时端口自动跟随、手改过的端口保留。
+- **协议**：WebDAV（纯 Dart `http`，PROPFIND 列表 + Range 流式读取）、SMB（`smb_connect` + `smb_pipeline` 并发预读）、FTP（被动模式、`MLSD`→`LIST` 回退、REST 偏移续传）。
+- **播放**：`NetworkStreamingProxy` 把远端文件转成 `127.0.0.1` 的无凭据回环 URL 供 mpv 拉流（Range / HEAD + 滑动窗口网速统计）；`network_subtitle_match` 在远端目录按同规则挑同名字幕。
+- **浏览**：`NetworkBrowserPage` 复用 `FolderCard` / `VideoCard`，只展示远端列目录真给得出的字段（文件夹与视频显示日期，视频另加完整名称；时长由播过的视频回报）；`NetworkSort` 提供名称 / 日期排序；目录列表走 `NetworkDirectoryCache`。
+- **凭据**：账户清单存 SharedPreferences，密码只进加密存储（含老明文迁移）。
 
 ### 5.7 哔哩哔哩
 
 - **协议层**：`bili_http` 统一注入 Cookie / UA / Referer / 反爬指纹并语义化错误；`bili_api` 集中端点；WBI 签名与 TV appSign 为纯函数。
-- **登录**：`BiliAuthService` 走 TV 扫码（生成 / 轮询 / Cookie 导入），凭证进加密存储；`BiliAccount` 维护登录态、用户信息与 buvid。
-- **内容**：番剧索引 / 搜索 / 季详情 / 选集 / 时间表（`bili_bangumi_service`）。
-- **播放**：`bili_video_service` 解析 PGC/UGC playurl（DASH 选流 + 清晰度 + WBI），`BiliMedia` 作为在线播放值对象；`BiliStreamProxy` 本地代理绕开 libmpv 的 mbedTLS 并统计网速；原声弹幕经 `bili_danmaku_service` 解码。
+- **登录**：`BiliAuthService` 走 TV 扫码（生成 / 轮询 / Cookie 导入），凭证进加密存储。
+- **内容**：番剧索引 / 搜索 / 季详情 / 选集 / 追番时间表（`bili_bangumi_service`）。
+- **播放**：`bili_video_service` 解析 PGC / UGC playurl（DASH 选流 + 清晰度 + WBI）；`BiliStreamProxy` 本地代理并统计网速；原声弹幕经 `bili_danmaku_service` 解码。
 - **下载**：`bili_download_service` 把链接解析为可下载条目（番剧多集 / UGC BV·av·合集），交给下载域执行。
 
 ### 5.8 下载
 
-- **任务**：`DownloadTask` 状态机（pending / downloading / paused / merging / completed / failed）+ Range 流式续传 + 进度与速度节流；合并先写中间文件、成功后再改名，落盘后触发媒体库扫描。
-- **队列**：`DownloadManager` 调度并发槽、跨重启持久化任务列表、删除/清除时按语义清理临时文件。
+- **任务**：`DownloadTask` 状态机（pending / downloading / paused / merging / completed / failed）+ Range 流式续传 + 进度与速度节流；合并先写中间文件、成功后改名，落盘后触发媒体库扫描。
+- **队列**：`DownloadManager` 调度并发槽、跨重启持久化任务列表，删除时清理临时文件。
 
 ### 5.9 文件管理
 
-- **服务**：`FileOperationsService` 提供复制 / 移动 / 重命名 / 删除（`dart:io` 真实路径），同卷 `rename` 秒移、跨卷退化为「复制 + 删源」，带进度回调与协作式取消。
-- **固定文件夹**：`PinnedFoldersSettings` 维护固定集合，排序时稳定前置（`folder_pin` 纯函数）。
-- **多选**：`FileSelectionController` 为页面级状态（非单例），配合多选工具栏执行批量操作。
+- **服务**：`FileOperationsService` 提供复制 / 移动 / 重命名 / 删除（同卷 `rename` 秒移、跨卷退化为复制 + 删源），带进度回调与取消。
+- **固定文件夹**：`PinnedFoldersSettings` 维护固定集合，排序时稳定前置。
+- **多选**：`FileSelectionController` 为页面级状态，配合多选工具栏执行批量操作。
 
 ### 5.10 投屏 / 更新 / 隐私 / 设备能力
 
-- **投屏**：`CastService` 通过 SSDP 发现 DLNA 渲染器并推送播放地址；`LanMediaServer` 提供局域网媒体服务（本地文件 → HTTP，支持 Range/CORS）。
-- **更新**：`UpdateService.checkForUpdate` 取本地版本与 GitHub Releases 最新版本比较（带网络重试与响应体积上限），`UpdateSettings` 记录自动检查开关与忽略版本。
-- **隐私**：`PrivacyPolicySettings` 首次启动门禁（倒计时 + 勾选同意）；长文正文按语言拆在 `lib/l10n/legal_zh.dart` / `legal_zh_hant.dart` / `legal_en.dart`，入口是 `lib/l10n/legal.dart` 的 `legalTextsFor`（界面文案一律走 ARB，见 `docs/archive/i18n-migration-plan/`）。
-- **设备能力**：`DeviceCapabilities`（原生）探测屏幕 HDR、关键编解码器与系统解码器清单，配合设备信息页与解码器详情页；`decode_settings` 持久化解码方式与预设。
+- **投屏**：`CastService` 通过 SSDP 发现 DLNA 渲染器并推送播放地址；`LanMediaServer` 提供局域网媒体服务（Range / CORS）。
+- **更新**：`UpdateService.checkForUpdate` 比对本地版本与 GitHub Releases 最新版本；`UpdateSettings` 记录自动检查开关与忽略版本。
+- **隐私**：`PrivacyPolicySettings` 首次启动门禁（倒计时 + 勾选同意）；长文正文按语言分文件，入口是 `lib/l10n/legal.dart` 的 `legalTextsFor`。
+- **设备能力**：原生 `DeviceCapabilities` 探测屏幕 HDR、关键编解码器与系统解码器清单。
 
 ### 5.11 多语言（l10n）
 
-- **方案**：官方 `gen_l10n` + ARB，配置在仓库根 `l10n.yaml`。模板是 `lib/l10n/app_zh.arb`（**中文是源语言**，键名 / 描述 / 占位符元数据的唯一权威）；`app_en.arb` 与 `app_zh_Hant.arb` **都不写 `@` 元数据**（元数据只在模板里）；`lib/l10n/app_localizations*.dart` 生成物**入库**（否则忘了生成就会 analyze 报 `undefined_getter`）。
-- **语言范围**：`简体中文`（默认） / `繁體中文`（`zh_Hant`） / `English` 三种，**没有「跟随系统」**；`app_locale` 只允许 `'zh'` / `'zh_Hant'` / `'en'`，缺省 / 空值 / 非法值一律回落 `'zh'`（`services/app_locale_settings.dart`）；设备语言不在支持列表时回落中文（`preferred-supported-locales: [zh]`）。
-- **繁体的 locale 写法（本轮踩过的坑）**：繁体和简体**语言码都是 `zh`**，只能靠 script 区分，所以 `AppLocaleSettings.locale` 必须返回 `Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant')`。写成 `Locale('zh_Hant')` 会把整段塞进 languageCode（`scriptCode` 为 `null`），既不匹配 `supportedLocales` 里的繁体项、也不匹配 `Locale('zh')`，`WidgetsApp` 解析后**静默回落到首项（简体）**——界面看着像"繁体没生效"，却不报任何错。生成物里 `lookupAppLocalizations` 是**嵌套 switch**（`case 'zh':` → 内层 `switch (locale.scriptCode)` → `case 'Hant'`），`isSupported` 判的是不含 script 的 `['en', 'zh']`。
-- **入口**：首启同意隐私政策后弹一次语言选择窗（`widgets/language_picker_dialog.dart`，三项 **简体中文 / 繁體中文 / English**，语言名一律用**自称、不翻译**；只对新装首启弹、升级老用户不弹，可关闭=保持当前语言）；之后在「我的 → 语言 → 语言设置」改，改完立即生效、无需重启；设置页副标题显示当前语言的**自称**（`pages/settings/settings_page.dart` 的 `_languageNameOf`）。弹窗**标题随界面语言**（`选择语言` / `選擇語言` / `Choose Language`），**不做中英共存**。
-- **分层红线**（详见 §4）：`models/`、`utils/`、`services/` **禁止 import l10n**，只产出「码 + 参数」或纯数据；文案一律在 UI 侧取：
-  - 表（枚举 / 映射表）的标签：`lib/l10n/label_maps.dart`，`switch` 表达式按枚举穷尽，漏分支由 analyze 兜住；
-  - 服务层错误：`lib/utils/error_codes.dart`（纯数据错误码表）+ `lib/l10n/error_texts.dart`（码 → 文案，统一入口 `serviceErrorText`）；
-  - 无 context 层的整句（如播放诊断建议）：把拼句搬到 UI 侧映射函数里，服务 / 工具层只给数值与码。
-- **长文**（隐私政策 / 用户服务协议）：**不进 ARB**——按语言拆 `lib/l10n/legal_zh.dart` / `legal_zh_hant.dart` / `legal_en.dart`，入口 `lib/l10n/legal.dart` 的 `legalTextsFor(Locale)`：繁体用 `_isHant()` 判定（同时兼容 `Locale.fromSubtags(zh, Hant)` 与写错的 `Locale('zh_Hant')`，避免长文静默退回简体）；**改中文条款必须同步改另外两份**，`test/legal_texts_test.dart` 断言三种语言四段都非空、繁体无简体专用词（`隐私`/`存储`/`视频` 等）。
-- **不翻译的东西**：日志（含崩溃日志文件内容，原生侧同理）、第三方接口内容（番剧名 / 简介 / 弹幕 / 服务端 message）、内容匹配关键词（集数正则、字幕语言判定、章节关键词）、落盘文件名与截图文件名（`小喵Player-yyyy-…`）、系统相册名。
-- **改文案的固定流程**：改 `app_zh.arb` → 同步 `app_en.arb` 与 `app_zh_Hant.arb`（**键集合、占位符、ICU 结构必须逐字一致**）→ `flutter gen-l10n` → `flutter analyze` → 全量 `flutter test`；`l10n_untranslated.json` 必须为空（英、繁都不许缺键）。
-- **ARB 硬门禁（繁体专用工具）**：`python docs/archive/i18n-zh-hant/tools/arb_hant.py check` —— 校验 `@@locale`、键集合、占位符、ICU 结构、空值、非法元数据（硬错误必须为 0），并输出「疑似未转换 / 命中简体特征字」提示到 `tools/_hant_check_report.md`；`apply` 可在占位符不一致时整体拒绝写盘。
-- **永久防线**：`test/zh_hant_locale_test.dart` 断言 **ARB 三边对称**（键集合 + 逐键占位符 + 繁体文件不写元数据 + `@@locale`）+ locale 取值与回落；以后给模板加键忘了同步繁体，这里立刻红（比 `l10n_untranslated.json` 更早发现）。
-- **Android 原生侧**：只有用户可见的文案进资源 —— `values/strings.xml`（中文默认）、`values-en/strings.xml`、**`values-b+zh+Hant/strings.xml`**（繁体；`b+zh+Hant` 是 BCP-47 脚本限定符，覆盖台/港/澳所有繁体脚本设备）；**三份资源的键集合必须一致**。应用名固定 zh / zh_Hant=`小喵Player`、en=`Meow Player`，`AndroidManifest.xml` 用 `@string/app_name`；通知渠道 ID `moumou_background_playback` **不许改**（改了会变成新渠道）。
-- **新增一门语言的落地步骤**：① 先定术语表（源语言 → 目标语言，含"保持不译"清单）；② 复制模板 ARB 为 `app_<locale>.arb`（**不写元数据**）逐键翻译；③ 长文加 `legal_<locale>.dart` 并在 `legal.dart` 里分发；④ `AppLocaleSettings` 加取值 + `Locale` 构造 + 语言自称键；⑤ 语言窗与设置页副标题各加一项；⑥ `flutter gen-l10n`；⑦ Android 侧若有独立文案，加对应 `values-*/strings.xml`；⑧ 把新增长文文件与资源登记进 `docs/archive/i18n-migration-plan/tools/whitelist.json` 与 `i18n_scan.py` 的 `GENERATED_SKIP`（否则残留门禁会红）；⑨ 补测试（locale 取值与回落、长文、ARB 对称）。
-- 迁移与执行的归档：第一轮英文 `docs/archive/i18n-migration-plan/`、回归测试包 `docs/archive/i18n-regression-test-plan/`、繁体轮 `docs/archive/i18n-zh-hant/`（7 阶段文档 + 工具 + 收口报告）。残留门禁：`python docs/archive/i18n-migration-plan/tools/i18n_scan.py residual [--include-android] [--fullwidth]`。
+- **方案**：官方 `gen_l10n` + ARB，模板 `lib/l10n/app_zh.arb`，配置在仓库根 `l10n.yaml`。
+- **语言**：`简体中文`（默认） / `繁體中文`（`zh_Hant`） / `English` 三种，没有「跟随系统」，非法值回落 `'zh'`。
+- **繁体取值**：与简体同语言码 `zh`，靠 script 区分（`Locale.fromSubtags`）。
+- **入口**：语言选择窗（首启弹一次）与「我的 → 语言 → 语言设置」，语言名用自称、不翻译。
+- **文案取值**：`models/`、`utils/`、`services/` 不依赖 l10n；表标签在 `label_maps.dart`，服务层错误在 `error_texts.dart`。
+- **长文**：隐私政策与用户协议不进 ARB，按语言拆 `legal_zh.dart` / `legal_zh_hant.dart` / `legal_en.dart`。
+- **不翻译**：日志、第三方接口内容、匹配关键词、落盘与截图文件名、系统相册名。
+- **Android 资源**：`values/`（中文默认）、`values-en/`、`values-b+zh+Hant/`；通知渠道 ID 不可改。
+- 迁移方案与逐文件清单归档在 `docs/archive/`。
 
 ---
 
@@ -507,13 +483,9 @@ utils（纯工具）    → 只依赖 models
 
 | 文件 | 职责 |
 |---|---|
-| `MainActivity.kt` | MethodChannel `moumou/video_info` 的宿主：媒体库查询、视频信息与缩略图、媒体信息、杜比视界检测、设备能力、系统音量/亮度、画中画、外部 `content://` 三级解析、B 站双流合并（`mergeM4s`）、整应用重启、壁纸取色、目录列举、存储卷枚举（`getStorageRoots`）；列表封面抓帧与时长兜底走**按卷串行 + 后台优先级**的队列（外置卷 1 路 / 主存储 2 路，见 §5.1） |
-| `MediaInfoHelper.kt` | MediaInfoLib 封装：快速元数据（帧率 / 内嵌字幕 / **时长**）、完整媒体信息、杜比视界检测（统一走 `withMediaInfo` 托管文件描述符） |
+| `MainActivity.kt` | MethodChannel `moumou/video_info` 的宿主：媒体库查询、视频信息与缩略图、媒体信息、杜比视界检测、设备能力、系统音量/亮度、画中画、`content://` 解析、B 站双流合并、整应用重启、壁纸取色、目录列举、存储卷枚举 |
+| `MediaInfoHelper.kt` | MediaInfoLib 封装：快速元数据（帧率 / 内嵌字幕 / 时长）、完整媒体信息、杜比视界检测 |
 | `DeviceCapabilities.kt` | 屏幕 HDR 能力、关键编码器、系统解码器清单 |
-| `VideoFsWalker.kt` | 媒体库整盘文件系统补扫：**快结果只读索引、递归挪后台**（预算内 BFS + 跳过名单 + 黑白名单剪枝 + `filesDir` 持久化索引续扫），边扫边推 `onFsVideoBatch` 增量、结束推 `onFsScanDone` 完整快照；刷新只忽略重扫间隔、文件操作按路径失效（都**不清索引**，刷新期间列表不会跳）；外置卷时长**跨轮复用**（文件没变不重抽）、抽不到的记失败不再重试（issue #4） |
+| `VideoFsWalker.kt` | 媒体库整盘补扫（预算内 BFS + 跳过名单 + 黑白名单剪枝 + `filesDir` 持久化索引续扫），边扫边推增量、结束推完整快照 |
 | `BackgroundPlaybackService.kt` | 听视频后台播放的前台服务 |
 | `CrashHandler.kt` | 未捕获异常写入 `files/crash_logs/` |
-
-原生与 Dart 的通道方法名、参数键保持一一对应，新增能力时两端同步。
-
-原生侧文案：**用户可见**的进 `res/values/strings.xml`（中文默认）、`res/values-en/strings.xml` 与 `res/values-b+zh+Hant/strings.xml`（繁體，三份键集合须一致）；日志与**崩溃日志文件内容**保持中文（与 Dart 侧同一口径，见 §5.11）。
