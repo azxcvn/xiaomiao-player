@@ -22,7 +22,7 @@
 | `lib/l10n/legal_zh_hant.dart` | 隐私政策 + 用户服务协议繁体正文（171 行，与简体版逐段/逐行结构对应） |
 | Android 繁体资源 | `values-b+zh+Hant/strings.xml`（9 条，BCP-47 脚本限定符） |
 | 测试 | 新增 `test/zh_hant_locale_test.dart`（9 条）＋ 改 3 个测试文件（夹具 + 断言） |
-| 执行包（本目录，不进 Git） | 7 份阶段文档 + README（含 11 条拍板结论）+ 4 个工具 + 3 份证据报告 |
+| 执行包（`docs/archive/i18n-zh-hant`） | 7 份阶段文档 + README（含 11 条拍板结论）+ 4 个工具 + 3 份证据报告 |
 
 ---
 
@@ -43,7 +43,7 @@
 
 ## 3. 缺陷清单
 
-**无**。（缺陷记录模板见 `09-阶段7-真机走查与收口.md` §4，本轮未用到。）
+**无**。（缺陷记录模板见 `09-stage7-device-walkthrough.md` §4，本轮未用到。）
 
 ---
 
@@ -99,7 +99,7 @@
 
 | # | 事件 | 处理 |
 |---|---|---|
-| 1 | 方案预测 `lookupAppLocalizations` 会出现 `case 'zh_Hant'`，实测是**嵌套 switch**（`case 'zh':` → 内层 `switch (locale.scriptCode)` → `case 'Hant'`），且 `isSupported` 判的是不含 script 的 `['en','zh']` | 属**预期形状写错、结论不变**；已回填 `02-技术方案.md` §2 与阶段 4 文档，并做成脚本断言 |
+| 1 | 方案预测 `lookupAppLocalizations` 会出现 `case 'zh_Hant'`，实测是**嵌套 switch**（`case 'zh':` → 内层 `switch (locale.scriptCode)` → `case 'Hant'`），且 `isSupported` 判的是不含 script 的 `['en','zh']` | 属**预期形状写错、结论不变**；已回填 `02-technical-solution.md` §2 与阶段 4 文档，并做成脚本断言 |
 | 2 | 方案写「Android 资源默认不动，9 条里没有必须区分简繁的内容」 | **实测推翻**：9 条里 7 条含简体专用字形且用户可见。停下来问用户 → 拍板方案 A（建 `values-b+zh+Hant/`） |
 | 3 | 文档写 `Locale('zh_Hant')` 的 `scriptCode` 是「空串」 | 阶段 6 写测试时实测是 **`null`**；已改正，结论不变（`legal.dart` 的 `?? ''` 已兼容） |
 | 4 | 用整文件重写落盘的 4 个文件变成 **LF**，与仓库 CRLF 约定不符（git 警告 2 处） | 新增 `tools/_eol_fix.py` 做字节级归一；结论：**定向替换不破坏 CRLF，整文件重写才会** |
@@ -137,5 +137,5 @@
 
 ## 9. 归档
 
-收口报告与整个执行包**现在都在** `杂项文件\繁体中文接入方案\`（该目录被 `.gitignore` 忽略，不进 Git）。
-**归档时机**：等用户下命令后整包移到 `docs/archive/i18n-zh-hant/` —— 未收到命令前不移动。
+收口报告与整个执行包**现在都在** `docs\archive\i18n-zh-hant\`（**已入库**，随仓库提交）。
+**归档**：2026-10-05 已按用户命令整包移入 `docs/archive/i18n-zh-hant/`（入库）。

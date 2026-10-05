@@ -8,8 +8,8 @@
 
 用法（工作目录 = 工程根 C:\\Users\\root\\Desktop\\moumou）：
 
-    py "杂项文件\\繁体中文接入方案\\tools\\_eol_fix.py"           # 归一
-    py "杂项文件\\繁体中文接入方案\\tools\\_eol_fix.py" --check    # 只检查，不改
+    py "docs\\archive\\i18n-zh-hant\\tools\\_eol_fix.py"           # 归一
+    py "docs\\archive\\i18n-zh-hant\\tools\\_eol_fix.py" --check    # 只检查，不改
 
 按**字节**处理，不碰内容编码（不会破坏 UTF-8）。
 """
@@ -18,7 +18,12 @@ import io
 import os
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# 归档位置：<repo>/docs/archive/i18n-zh-hant/tools → 上溯 5 层回到仓库根
+ROOT = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    )
+)
 
 FILES = [
     "lib/l10n/legal.dart",

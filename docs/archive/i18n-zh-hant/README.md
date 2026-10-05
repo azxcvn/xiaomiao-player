@@ -2,7 +2,7 @@
 
 > **这是写给 AI 执行者的分阶段执行包。** 目标工程：`C:\Users\root\Desktop\moumou`（小喵 Player，Flutter / Android）。
 > 目标：在已有的 `zh`（简体，默认）+ `en`（英文）之上，加**第三门语言：繁體中文（通用繁體，`zh_Hant`）**。
-> 本目录在 `.gitignore` 的 `/杂项文件/` 内，**不进版本控制**；执行者可以直接在本目录里记录进度与证据。
+> 本目录**已入库**（`docs/archive/i18n-zh-hant/`）：原先在 `.gitignore` 的 `/杂项文件/` 下，2026-10-05 按用户命令改成英文文件名并整包归档。
 
 ---
 
@@ -26,15 +26,15 @@
 | # | 问题 | 结论 |
 |---|---|---|
 | 1 | 繁體范围 | **只做通用繁體 `zh_Hant` 一套**（用词以台湾习惯为主，港台都看得懂）；不做 `zh_Hant_TW` / `zh_Hant_HK` 两套 |
-| 2 | 译文来源 | **AI 按术语表重译**（见 `03-阶段1-定调与术语表.md`）；不用 OpenCC 机转、不请人工/法务审校 |
+| 2 | 译文来源 | **AI 按术语表重译**（见 `03-stage1-terminology.md`）；不用 OpenCC 机转、不请人工/法务审校 |
 | 3 | 语言入口 | **只加手动第三项**（简体中文 / 繁體中文 / English）；**不提供「跟随系统」**，与现有设计一致 |
-| 4 | 真机走查 | **抽查关键页 + 语言专项用例**（见 `09-阶段7-真机走查与收口.md`），**不重跑**第一轮 355 条全量 |
+| 4 | 真机走查 | **抽查关键页 + 语言专项用例**（见 `09-stage7-device-walkthrough.md`），**不重跑**第一轮 355 条全量 |
 | 5 | 繁体应用名 | 与简体相同（`小喵Player`）→ **Android 资源默认不动**（见阶段 5） |
 | 6 | 生成物 | 照旧**入库**（`lib/l10n/app_localizations*.dart`） |
 | 7 | 日志 | **永远保持中文**（崩溃日志、Log.w 等，任何语言都不翻） |
-| 8 | 截图文件名/相册名 | 不随语言变化（红线，见 `01-执行协议.md`） |
+| 8 | 截图文件名/相册名 | 不随语言变化（红线，见 `01-execution-protocol.md`） |
 | 9 | 长文繁体标题 | **`使用者隱私權政策` / `使用者服務條款與隱私權政策`**（用户授权 AI 直接定稿，执行时照抄，不再确认） |
-| 10 | 收口报告位置 | 写在 `杂项文件\繁体中文接入方案\收口报告.md`；**等用户下命令**后才归档到 `docs/archive/` |
+| 10 | 收口报告位置 | 写在 `docs\archive\i18n-zh-hant\11-final-report.md`；**等用户下命令**后才归档到 `docs/archive/` |
 | 11 | 语言窗标题 | **随界面语言，不做中英共存**（2026-10-05 用户改定，覆盖第一轮的"刻意双语"设计）：`zh`=选择语言 / `zh_Hant`=選擇語言 / `en`=Choose Language |
 
 ---
@@ -44,19 +44,19 @@
 | 文件 | 给谁看 | 内容 |
 |---|---|---|
 | `README.md` | 先读这份 | 前置状态、已拍板结论、阶段索引、启动提示词、现状快照 |
-| `01-执行协议.md` | **AI 执行者必读** | 红线、工作循环、门禁 G1–G6、必须停下来提问的情况、阶段报告模板 |
-| `02-技术方案.md` | AI 执行者 | locale 设计、gen_l10n 机制（带 Flutter SDK 源码依据）、关键坑、文件清单 |
-| `03-阶段1-定调与术语表.md` | AI 执行者 | 阶段 1：**术语表全文** + 保持不译清单 |
-| `04-阶段2-ARB译文.md` | AI 执行者 | 阶段 2：`app_zh_Hant.arb` 1278 键的产出流程与门禁 |
-| `05-阶段3-长文正文.md` | AI 执行者 | 阶段 3：`legal_zh_hant.dart` 长文 + 分发 |
-| `06-阶段4-代码接入与生成物.md` | AI 执行者 | 阶段 4：3 个 lib 文件 + 重新生成 l10n + `analyze` |
-| `07-阶段5-门禁登记与Android资源.md` | AI 执行者 | 阶段 5：白名单/GENERATED_SKIP 登记 + Android 资源（默认不动） |
-| `08-阶段6-测试补齐与全量测试.md` | AI 执行者 | 阶段 6：测试夹具与用例补齐 + 全量 `flutter test` |
-| `09-阶段7-真机走查与收口.md` | 用户 + AI | 阶段 7：真机用例清单（用户执行、AI 记录）+ 收口 |
-| `10-数据基线.md` | AI 执行者 + 用户 | 全部实测数字、复现命令、未验证项 |
+| `01-execution-protocol.md` | **AI 执行者必读** | 红线、工作循环、门禁 G1–G6、必须停下来提问的情况、阶段报告模板 |
+| `02-technical-solution.md` | AI 执行者 | locale 设计、gen_l10n 机制（带 Flutter SDK 源码依据）、关键坑、文件清单 |
+| `03-stage1-terminology.md` | AI 执行者 | 阶段 1：**术语表全文** + 保持不译清单 |
+| `04-stage2-arb-translation.md` | AI 执行者 | 阶段 2：`app_zh_Hant.arb` 1278 键的产出流程与门禁 |
+| `05-stage3-legal-texts.md` | AI 执行者 | 阶段 3：`legal_zh_hant.dart` 长文 + 分发 |
+| `06-stage4-code-integration.md` | AI 执行者 | 阶段 4：3 个 lib 文件 + 重新生成 l10n + `analyze` |
+| `07-stage5-gates-and-android.md` | AI 执行者 | 阶段 5：白名单/GENERATED_SKIP 登记 + Android 资源（默认不动） |
+| `08-stage6-tests.md` | AI 执行者 | 阶段 6：测试夹具与用例补齐 + 全量 `flutter test` |
+| `09-stage7-device-walkthrough.md` | 用户 + AI | 阶段 7：真机用例清单（用户执行、AI 记录）+ 收口 |
+| `10-data-baseline.md` | AI 执行者 + 用户 | 全部实测数字、复现命令、未验证项 |
 | `tools/arb_hant.py` | 工具 | `seed` / `apply` / `check` / `status`（阶段 2 的硬门禁） |
 | `tools/_hant_batch_example.json` | 工具示例 | 批量译文的输入格式 |
-| `收口报告.md` | **阶段 7 产出**（待生成） | 用例统计、缺陷清单、最终门禁复跑结果、改动文件全清单、没做与没验到的、提交建议 |
+| `11-final-report.md` | **阶段 7 产出**（待生成） | 用例统计、缺陷清单、最终门禁复跑结果、改动文件全清单、没做与没验到的、提交建议 |
 
 ---
 
@@ -88,12 +88,12 @@
 
 1. 先按序读这些文件：
    AGENTS.md
-   杂项文件\繁体中文接入方案\README.md
-   杂项文件\繁体中文接入方案\01-执行协议.md
-   杂项文件\繁体中文接入方案\02-技术方案.md
-   杂项文件\繁体中文接入方案\10-数据基线.md
+   docs\archive\i18n-zh-hant\README.md
+   docs\archive\i18n-zh-hant\01-execution-protocol.md
+   docs\archive\i18n-zh-hant\02-technical-solution.md
+   docs\archive\i18n-zh-hant\10-data-baseline.md
    然后只读你要执行的那个阶段的 md。
-2. 01-执行协议.md 的红线是硬约束：禁止 flutter build/run、禁止启模拟器、禁止 adb install、
+2. 01-execution-protocol.md 的红线是硬约束：禁止 flutter build/run、禁止启模拟器、禁止 adb install、
    禁止 dart format、禁止 git commit/push、禁止改 pubspec.yaml 的 version、禁止改业务逻辑、
    禁止翻译「不可翻译清单」、禁止用 PowerShell 文本命令改 UTF-8 源码。
 3. 从「阶段 1」开始。每个阶段的门禁必须真的跑过、真的通过（不许假装跑过）。
@@ -113,7 +113,7 @@
 
 ---
 
-## 6. 现状快照（本方案调研时实测，复现方式见 `10-数据基线.md`）
+## 6. 现状快照（本方案调研时实测，复现方式见 `10-data-baseline.md`）
 
 | 项 | 值 |
 |---|---|
@@ -132,8 +132,8 @@
 
 ## 7. 提醒
 
-1. **本目录不进 Git**（`.gitignore` 的 `/杂项文件/`）。**收口报告也写在本目录**（`收口报告.md`）；等用户下命令后再整包归档到 `docs/archive/`。
+1. **本目录已入库**（`docs/archive/i18n-zh-hant/`，2026-10-05 归档，随仓库提交）。
 2. 本机 `python` **不在 PATH**，用 `py`；flutter 用 `D:\allexe\flutter\bin\flutter.bat`。
-3. 方案里所有数字都是实测（口径见 `10-数据基线.md`），可复现；**复现结果与文档不符 → 停下来报告**，别自己改口径。
+3. 方案里所有数字都是实测（口径见 `10-data-baseline.md`），可复现；**复现结果与文档不符 → 停下来报告**，别自己改口径。
 4. `flutter gen-l10n` 属于代码生成，不是 `flutter build`，允许执行；`flutter build` / `run` 一律禁止。
 5. 提交与推送**必须等用户发话**；改动只停在本地。

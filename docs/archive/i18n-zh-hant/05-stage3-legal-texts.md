@@ -136,4 +136,4 @@ py -c "import io,re;t=io.open('lib/l10n/legal_zh_hant.dart',encoding='utf-8').re
 
 | 日期 | 结果 |
 |---|---|
-| 2026-10-05 | **阶段 3 完成**。① 新建 `lib/l10n/legal_zh_hant.dart`：两篇正文（隱私權政策 9 小节 + 服務條款 7 小节 + 隱私權政策 6 小节）逐段转译，标题按定稿写；`━━` 分隔线、邮箱、段落排版原样保留。② 改 `lib/l10n/legal.dart`：加 `legalZhHant` 分发与 `_isHant()`（兼容 `Locale.fromSubtags(zh,Hant)` 与写错的 `Locale('zh_Hant')`，避免长文静默退回简体）。③ 新增自检工具 `tools/_stage3_legal_check.py`，输出 `_evidence/阶段3/正文结构对比.md`。④ 结构门禁 PASS（小节 22/22、部分 2/2、段落 56/56、正文行 142/142、无 `**`、无未转义 `$`）。⑤ `flutter analyze` 无问题。未改任何条款内容，未跑保留字门禁（阶段 5）。 |
+| 2026-10-05 | **阶段 3 完成**。① 新建 `lib/l10n/legal_zh_hant.dart`：两篇正文（隱私權政策 9 小节 + 服務條款 7 小节 + 隱私權政策 6 小节）逐段转译，标题按定稿写；`━━` 分隔线、邮箱、段落排版原样保留。② 改 `lib/l10n/legal.dart`：加 `legalZhHant` 分发与 `_isHant()`（兼容 `Locale.fromSubtags(zh,Hant)` 与写错的 `Locale('zh_Hant')`，避免长文静默退回简体）。③ 新增自检工具 `tools/_stage3_legal_check.py`，输出 `_evidence/stage3/legal-texts-structure.md`。④ 结构门禁 PASS（小节 22/22、部分 2/2、段落 56/56、正文行 142/142、无 `**`、无未转义 `$`）。⑤ `flutter analyze` 无问题。未改任何条款内容，未跑保留字门禁（阶段 5）。 |

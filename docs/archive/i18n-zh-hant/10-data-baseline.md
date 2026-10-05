@@ -61,7 +61,7 @@
 
 | # | 项 | 现状 | 何时确认 |
 |---|---|---|---|
-| 1 | `zh_Hant` 生成物形态：`class AppLocalizationsZhHant extends AppLocalizationsZh` 生成在 **`app_localizations_zh.dart`** 内、**不新增文件** | 依据 Flutter SDK 源码推导（见 `02-技术方案.md` §2 第 5 条），**未在本仓库实跑** | 阶段 4 重新生成后逐条核对 |
+| 1 | `zh_Hant` 生成物形态：`class AppLocalizationsZhHant extends AppLocalizationsZh` 生成在 **`app_localizations_zh.dart`** 内、**不新增文件** | 依据 Flutter SDK 源码推导（见 `02-technical-solution.md` §2 第 5 条），**未在本仓库实跑** | 阶段 4 重新生成后逐条核对 |
 | 2 | `supportedLocales` 的实际排列顺序（`preferred-supported-locales: [zh]` 生效后） | 未实测；文档只断言"首项仍是 zh" | 阶段 4 |
 | 3 | `app_localizations_zh.dart` 最终行数（估计约 9000） | 估计 | 阶段 4 |
 | 4 | 系统字体对繁体字形的覆盖（是否出现豆腐块） | 未实测（UI 无自带字体，理论上系统字体覆盖） | 阶段 7 H-UI-011 |
@@ -96,7 +96,7 @@ py -c "import io,re;t=io.open('docs/archive/i18n-regression-test-plan/03-test-ca
 D:\allexe\flutter\bin\flutter.bat analyze
 D:\allexe\flutter\bin\flutter.bat test
 py "docs\archive\i18n-migration-plan\tools\i18n_scan.py" residual --include-android
-py "杂项文件\繁体中文接入方案\tools\arb_hant.py" check
+py "docs\archive\i18n-zh-hant\tools\arb_hant.py" check
 ```
 
 > 控制台中文会乱码（Windows 终端 + GBK），**这是正常的**：脚本的中文明细都写进 UTF-8 报告文件，用 read 工具看。

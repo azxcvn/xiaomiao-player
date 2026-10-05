@@ -11,7 +11,7 @@
 | 目标 | 产出繁体 ARB，且与模板**键集合、占位符、ICU 结构完全同构** |
 | 产出 | ① `lib/l10n/app_zh_Hant.arb`（新增，1278 键，无 `@` 元数据）② `app_zh.arb` / `app_en.arb` 各加一个键 `languageNameZhHant` |
 | 前置 | 阶段 1 术语表已定稿 |
-| 门禁 | **G3**：`py "杂项文件\繁体中文接入方案\tools\arb_hant.py" check` → `CHECK PASS` / `hard errors : 0` |
+| 门禁 | **G3**：`py "docs\archive\i18n-zh-hant\tools\arb_hant.py" check` → `CHECK PASS` / `hard errors : 0` |
 | 预计耗时 | 1 天 |
 
 **本阶段不碰任何 Dart 代码、不跑 `gen-l10n`**（生成物留到阶段 4）。
@@ -44,7 +44,7 @@
 ### 步骤 2：生成骨架
 
 ```powershell
-py "杂项文件\繁体中文接入方案\tools\arb_hant.py" seed
+py "docs\archive\i18n-zh-hant\tools\arb_hant.py" seed
 ```
 
 预期输出：`SEED ok` / `keys : 1278` / `metadata : dropped (template only)`。
@@ -55,8 +55,8 @@ py "杂项文件\繁体中文接入方案\tools\arb_hant.py" seed
 **每批 ≤ 150 键**，把译文写成 JSON（`{键: 译文}`）放到 `tools\_hant_batchN.json`，然后：
 
 ```powershell
-py "杂项文件\繁体中文接入方案\tools\arb_hant.py" apply --batch "杂项文件\繁体中文接入方案\tools\_hant_batch1.json"
-py "杂项文件\繁体中文接入方案\tools\arb_hant.py" status
+py "docs\archive\i18n-zh-hant\tools\arb_hant.py" apply --batch "docs\archive\i18n-zh-hant\tools\_hant_batch1.json"
+py "docs\archive\i18n-zh-hant\tools\arb_hant.py" status
 ```
 
 `apply` 会在**任何一个键**的占位符/ICU 结构不对时**整体拒绝、不写盘**（exit 1），错误逐条打印。
@@ -81,7 +81,7 @@ py "杂项文件\繁体中文接入方案\tools\arb_hant.py" status
 ### 步骤 4：门禁与逐条复核
 
 ```powershell
-py "杂项文件\繁体中文接入方案\tools\arb_hant.py" check
+py "docs\archive\i18n-zh-hant\tools\arb_hant.py" check
 ```
 
 `check` 会：
@@ -101,7 +101,7 @@ py "杂项文件\繁体中文接入方案\tools\arb_hant.py" check
 2. **不许给 `app_zh_Hant.arb` 加 `@` 元数据**：元数据只在模板（`app_en.arb` 也没有）。加了 = 硬错误。
 3. **不许改键名、不许删键、不许加模板里没有的键**。
 4. **JSON 转义**：文案里如果有 `"`，写成 `\"`；`\n` 是换行。写批次 JSON 时不要手拼字符串，用编辑工具写文件。
-5. **ASCII / 数字 / 单位 / emoji / 产品名原样保留**（见 `03-阶段1-定调与术语表.md` §4）。
+5. **ASCII / 数字 / 单位 / emoji / 产品名原样保留**（见 `03-stage1-terminology.md` §4）。
 6. **别顺手改 `app_zh.arb` 里除 `languageNameZhHant` 之外的东西**。
 7. **`l10n_untranslated.json` 在本阶段不会更新**（它由 `gen-l10n` 产出，阶段 4 才跑）——所以本阶段的门禁只有 G3。
 

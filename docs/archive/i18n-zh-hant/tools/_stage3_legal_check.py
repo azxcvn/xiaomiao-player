@@ -3,9 +3,9 @@
 
 用法（工作目录 = 工程根 C:\\Users\\root\\Desktop\\moumou）：
 
-    py "杂项文件\\繁体中文接入方案\\tools\\_stage3_legal_check.py"
+    py "docs\\archive\\i18n-zh-hant\\tools\\_stage3_legal_check.py"
 
-产出：`_evidence/阶段3/正文结构对比.md`（UTF-8）+ 控制台 ASCII 摘要。
+产出：`_evidence/stage3/legal-texts-structure.md`（UTF-8）+ 控制台 ASCII 摘要。
 门禁口径：字段名/顺序一致、段落块数一致、逐行"行类型"序列一致、正文无 Markdown 星号、无未转义 `$`。
 只读源码，不写源码。
 """
@@ -17,8 +17,9 @@ import sys
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PACK_DIR = os.path.dirname(SCRIPT_DIR)
-ROOT = os.path.dirname(os.path.dirname(PACK_DIR))
-OUT = os.path.join(PACK_DIR, "_evidence", "阶段3", "正文结构对比.md")
+# 归档位置：docs/archive/i18n-zh-hant/tools → PACK_DIR=…/i18n-zh-hant，上溯 3 层回到仓库根
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(PACK_DIR)))
+OUT = os.path.join(PACK_DIR, "_evidence", "stage3", "legal-texts-structure.md")
 
 FILES = [
     ("zh", os.path.join(ROOT, "lib", "l10n", "legal_zh.dart")),
@@ -137,7 +138,7 @@ def main():
     lines.append("")
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    with io.open(OUT, "w", encoding="utf-8", newline="\n") as f:
+    with io.open(OUT, "w", encoding="utf-8", newline="\r\n") as f:
         f.write("\n".join(lines) + "\n")
 
     print("LEGAL " + ("FAIL" if errors else "PASS"))

@@ -3,12 +3,12 @@
 
 工作目录 = 工程根（C:\\Users\\root\\Desktop\\moumou）：
 
-    py "杂项文件\\繁体中文接入方案\\tools\\arb_hant.py" seed
-    py "杂项文件\\繁体中文接入方案\\tools\\arb_hant.py" apply "杂项文件\\繁体中文接入方案\\tools\\_hant_batch1.json"
-    py "杂项文件\\繁体中文接入方案\\tools\\arb_hant.py" check
-    py "杂项文件\\繁体中文接入方案\\tools\\arb_hant.py" status
+    py "docs\\archive\\i18n-zh-hant\\tools\\arb_hant.py" seed
+    py "docs\\archive\\i18n-zh-hant\\tools\\arb_hant.py" apply "docs\\archive\\i18n-zh-hant\\tools\\_hant_batch1.json"
+    py "docs\\archive\\i18n-zh-hant\\tools\\arb_hant.py" check
+    py "docs\\archive\\i18n-zh-hant\\tools\\arb_hant.py" status
 
-设计约定（见 ../04-阶段2-ARB译文.md）：
+设计约定（见 ../04-stage2-arb-translation.md）：
 - 源语言模板是 lib/l10n/app_zh.arb；繁体目标是 lib/l10n/app_zh_Hant.arb。
 - 繁体文件**不写 @ 元数据**（元数据只在模板里，与 app_en.arb 现状一致）。
 - 硬门禁（exit 1）：@@locale 不对、键集合不一致、占位符集合不一致、ICU 类型不一致、空值、非法元数据。
@@ -52,7 +52,8 @@ def dump_json(path, data):
     if parent and not os.path.isdir(parent):
         os.makedirs(parent)
     text = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
-    with io.open(path, "w", encoding="utf-8", newline="\n") as f:
+    # 仓库工作区是 CRLF（core.autocrlf=true）：写盘统一 CRLF，避免每次跑都产生行尾 diff
+    with io.open(path, "w", encoding="utf-8", newline="\r\n") as f:
         f.write(text)
 
 
@@ -263,7 +264,7 @@ def cmd_check(args):
     if not hard and not untranslated and not suspicious:
         lines.append("全部通过：键集合、占位符、ICU、空值、locale 均一致，且未发现简体残留。")
         lines.append("")
-    with io.open(report_path, "w", encoding="utf-8", newline="\n") as f:
+    with io.open(report_path, "w", encoding="utf-8", newline="\r\n") as f:
         f.write("\n".join(lines))
 
     print("CHECK " + ("FAIL" if hard else "PASS"))

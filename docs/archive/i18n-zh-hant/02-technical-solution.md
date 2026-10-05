@@ -89,7 +89,7 @@ AppLocaleSettings.instance.locale          （阶段 4 起可能返回 zh_Hant�
 5. **占位符与 ICU 结构必须与模板逐字一致**：`{count, plural, =1{…} other{…}}` 的内层 `{count}` 不能漏，占位符名字不能改。硬错误由 `arb_hant.py apply/check` 拦。
 6. **生成物 diff 会非常大**：`app_localizations_zh.dart` 现在 4463 行，加完子类约 9000 行。这是**预期**的，不要为了"diff 好看"去手改生成物。
 7. **不要手改 `lib/l10n/app_localizations*.dart`**：一律由 `flutter gen-l10n` 产出（`flutter gen-l10n` 是代码生成，**不是** `flutter build`，允许跑）。
-8. **术语一致性 > 文采**：同一个词在全 App 必须同一种译法，以 `03-阶段1-定调与术语表.md` 为准；术语表里没有的新词，翻完后**回填术语表**。
+8. **术语一致性 > 文采**：同一个词在全 App 必须同一种译法，以 `03-stage1-terminology.md` 为准；术语表里没有的新词，翻完后**回填术语表**。
 9. **别顺手改别的**：本轮只碰下面第 4 节列的文件。看到别处有错别字、有坏味道，记下来报告，不要动。
 
 ---

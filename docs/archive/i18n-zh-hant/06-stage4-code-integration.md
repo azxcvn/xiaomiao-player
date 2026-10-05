@@ -133,7 +133,7 @@ D:\allexe\flutter\bin\flutter.bat gen-l10n
 - 如果报找不到 package config，先跑一次 `D:\allexe\flutter\bin\flutter.bat pub get`（也只允许这一条）。
 - 生成物**入库**，与第一轮一致。
 
-**预期生成结果**（与 `02-技术方案.md` §2 的源码依据对应；**2026-10-05 已按实测修正**）：
+**预期生成结果**（与 `02-technical-solution.md` §2 的源码依据对应；**2026-10-05 已按实测修正**）：
 
 | 文件 | 预期变化（实测） |
 |---|---|
@@ -143,7 +143,7 @@ D:\allexe\flutter\bin\flutter.bat gen-l10n
 | `lib/l10n/app_localizations_zh_Hant.dart` | **不应存在**（同语言子类不单独成文件） |
 | `l10n_untranslated.json` | 重写为实际缺键清单（阶段 2 做全了就是 `{}`）；实测 `{}` |
 
-**核对方式**：跑 `py "杂项文件\繁体中文接入方案\tools\_stage4_check.py"`，上面每条都做成断言，输出 `STAGE4 PASS` 才算过。
+**核对方式**：跑 `py "docs\archive\i18n-zh-hant\tools\_stage4_check.py"`，上面每条都做成断言，输出 `STAGE4 PASS` 才算过。
 
 **任一条与预期不符 → 停下来报告**（不要自己"适应"结果，因为后面阶段的门禁判断都建立在这张表上）。
 
@@ -175,7 +175,7 @@ D:\allexe\flutter\bin\flutter.bat analyze
 6. **行尾（EOL）**：仓库工作区是 **CRLF**（`core.autocrlf=true`，无 `.gitattributes`）。
    用"整文件重写"的方式落盘（`write` 工具 / 脚本生成）会写出 **LF**，`git` 会警告
    `LF will be replaced by CRLF ...`，并与仓库其它文件不一致。
-   **改完跑一次** `py "杂项文件\繁体中文接入方案\tools\_eol_fix.py"`（`--check` 只检查）。
+   **改完跑一次** `py "docs\archive\i18n-zh-hant\tools\_eol_fix.py"`（`--check` 只检查）。
    > 用编辑工具做**定向替换**不会破坏 CRLF（阶段 4 实测：`edit` 改过的文件仍是 CRLF）。
 
 ---
@@ -196,6 +196,6 @@ D:\allexe\flutter\bin\flutter.bat analyze
 | 日期 | 结果 |
 |---|---|
 | 2026-10-05 | **阶段 4 完成**。① `app_locale_settings.dart`：加 `zhHantCode`；`locale` getter 改 `Locale.fromSubtags(languageCode: zhCode, scriptCode: 'Hant')`（并在注释里写明写错会静默回落简体）；`_normalize` 改三值 if 链；类注释与 `setLocale` 注释同步为三值。② `language_picker_dialog.dart`：选项三项、头注释与标题注释同步。③ `settings_page.dart`：副标题二选一 → `Text(_languageNameOf(l10n))`，文件末尾新增 `_languageNameOf`（`switch` 表达式，默认分支回落简体）。④ `flutter gen-l10n` 重新生成：`app_localizations.dart` 7848 行、`app_localizations_zh.dart` 8925 行（含 `AppLocalizationsZhHant` 子类）、`app_localizations_en.dart` 4689 行、无 `app_localizations_zh_Hant.dart`、`l10n_untranslated.json` = `{}`。⑤ 新增核对工具 `tools/_stage4_check.py`（7 条断言）→ STAGE4 PASS。⑥ `flutter analyze` → No issues found! |
-| 2026-10-05 | **预期的偏差（已修正文档）**：原方案预测 `lookupAppLocalizations` 会增加 `case 'zh_Hant'`，实测是**嵌套 switch**（`case 'zh':` → 内层 `switch (locale.scriptCode)` → `case 'Hant'`），且 `isSupported` 判的是不含 script 的 `['en','zh']`。**这不影响结论**（zh_Hant 能正确解析），但把这条实测形状回填进 `02-技术方案.md` §2 与本文 §5，并写进核对脚本的断言。 |
+| 2026-10-05 | **预期的偏差（已修正文档）**：原方案预测 `lookupAppLocalizations` 会增加 `case 'zh_Hant'`，实测是**嵌套 switch**（`case 'zh':` → 内层 `switch (locale.scriptCode)` → `case 'Hant'`），且 `isSupported` 判的是不含 script 的 `['en','zh']`。**这不影响结论**（zh_Hant 能正确解析），但把这条实测形状回填进 `02-technical-solution.md` §2 与本文 §5，并写进核对脚本的断言。 |
 | 2026-10-05 | **G2 全量测试**（仓库规则要求改 Dart 就跑）：`flutter test` → **All tests passed!（+1834 ~13）**，与基线完全一致，未新增失败。 |
 | 2026-10-05 | **EOL 修正**：`write` 全量重写的 4 个文件（`legal.dart`、`app_locale_settings.dart`、`legal_zh_hant.dart`、`app_zh_Hant.arb`）落盘为 LF，与仓库 CRLF 约定不符（`git` 警告 2 处）。新增 `tools/_eol_fix.py` 做字节级归一，4 个文件已修为 CRLF，警告消失；`--check` 复查 PASS。归一后重跑 G3/G4/长文核对/`analyze` 全部仍 PASS。 |

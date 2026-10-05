@@ -24,7 +24,7 @@
 ## 2. 工作循环
 
 ```
-读本阶段 md（+ 需要时读 02-技术方案.md 对应小节）
+读本阶段 md（+ 需要时读 02-technical-solution.md 对应小节）
   → 改一小批（一个文件 / 一批 <= 100 个 ARB 键）
   → 跑该批次的自检门禁（G1–G6 里相关的）
   → 通过 → 进入下一小批
@@ -42,10 +42,10 @@
 |---|---|---|---|
 | **G1** | 静态分析 | `D:\allexe\flutter\bin\flutter.bat analyze` | 输出 `No issues found!` |
 | **G2** | 全量测试 | `D:\allexe\flutter\bin\flutter.bat test` | `All tests passed!`，且通过数 ≥ 1834 |
-| **G3** | ARB 硬门禁 | `py "杂项文件\繁体中文接入方案\tools\arb_hant.py" check` | `CHECK PASS`、`hard errors : 0`、exit 0 |
+| **G3** | ARB 硬门禁 | `py "docs\archive\i18n-zh-hant\tools\arb_hant.py" check` | `CHECK PASS`、`hard errors : 0`、exit 0 |
 | **G4** | 未翻译清单 | 读 `l10n_untranslated.json` | 内容为 `{}` |
 | **G5** | 残留中文门禁 | `py "docs\archive\i18n-migration-plan\tools\i18n_scan.py" residual --include-android` | `residual: 0  expired whitelist: 0` |
-| **G6** | 真机走查 | 见 `09-阶段7-真机走查与收口.md` | 用例全部有结论（用户执行） |
+| **G6** | 真机走查 | 见 `09-stage7-device-walkthrough.md` | 用例全部有结论（用户执行） |
 
 阶段与门禁的对应：
 
@@ -67,7 +67,7 @@
 
 1. 术语表里查不到、且按台湾习惯译会**改变功能含义或牵扯产品名/法律条款**的词。
    （纯用词偏好**不用问**：按术语表与台湾常用译法定稿，写进阶段报告即可。）
-2. 发现 `02-技术方案.md` 描述的机制与 `flutter gen-l10n` 实际行为不一致。
+2. 发现 `02-technical-solution.md` 描述的机制与 `flutter gen-l10n` 实际行为不一致。
 3. ARB 里出现"看起来该翻但按清单不该翻"的键（可能清单过期）。
 4. 门禁连续 3 次修不过。
 5. 需要改业务逻辑、需要动 `version`、需要改 Android 原生代码、需要新增依赖。
@@ -107,7 +107,7 @@
 
 - 各阶段 md 里有 `- [ ]` 勾选清单：做完一项就改成 `- [x]`，并在文件末尾"执行记录"里写日期与结果。
 - **不要在两处重复维护同一状态**：阶段 md 是唯一进度源，README 不改进度。
-- 报告与证据（截图、日志）放在 `杂项文件\繁体中文接入方案\_evidence\阶段N\` 下（目录自己建）。
+- 报告与证据（截图、日志）放在 `docs\archive\i18n-zh-hant\_evidence\stageN\` 下（目录自己建）。
 
 ---
 

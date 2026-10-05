@@ -119,7 +119,7 @@ Set<String> _placeholders(String s) => {
 ```powershell
 D:\allexe\flutter\bin\flutter.bat analyze
 D:\allexe\flutter\bin\flutter.bat test
-py "杂项文件\繁体中文接入方案\tools\arb_hant.py" check
+py "docs\archive\i18n-zh-hant\tools\arb_hant.py" check
 py -c "import io;print(io.open('l10n_untranslated.json',encoding='utf-8').read().strip())"
 py "docs\archive\i18n-migration-plan\tools\i18n_scan.py" residual --include-android
 ```
@@ -167,6 +167,6 @@ py "docs\archive\i18n-migration-plan\tools\i18n_scan.py" residual --include-andr
 | 日期 | 新增/修改测试 | 通过数 | 结果 |
 |---|---|---|---|
 | 2026-10-05 | 夹具 `l10n_test_helper.dart`（+`kTestLocaleZhHant`）；改 `language_picker_test.dart`、`legal_texts_test.dart`；新增 `zh_hant_locale_test.dart` | **1849 passed / 13 skipped** | **阶段 6 完成**，G1–G5 全绿 |
-| 2026-10-05 | 修正 1 处文档事实错误 | — | 写测试时实测发现：`Locale('zh_Hant')` 的 `scriptCode` 是 **`null`**（不是空串），`languageCode` 才是 `'zh_Hant'`。已在 `02-技术方案.md` §1.1 改正（结论不变：`legal.dart` 的 `_isHant` 用 `?? ''` 已兼容 null）。 |
+| 2026-10-05 | 修正 1 处文档事实错误 | — | 写测试时实测发现：`Locale('zh_Hant')` 的 `scriptCode` 是 **`null`**（不是空串），`languageCode` 才是 `'zh_Hant'`。已在 `02-technical-solution.md` §1.1 改正（结论不变：`legal.dart` 的 `_isHant` 用 `?? ''` 已兼容 null）。 |
 | 2026-10-05 | 一次误报 | — | 第一次跑测试时把 `test/l10n_test_helper.dart`（库文件，无 `main()`）也当测试目标传了，多出的 1 个失败是**调用方式错误**，不是测试红；单独跑三个测试文件 26/26 通过。 |
 | 2026-10-05 | **产品改动（用户看图后改定）**：语言窗标题去掉中英共存 —— `app_zh.arb` 改 `选择语言`、`app_en.arb` 改 `Choose Language`、`app_zh_Hant.arb` 改 `選擇語言`（模板元数据描述同步改）；`language_picker_dialog.dart` 注释同步；`gen-l10n` 重新生成；测试同步（`language_picker_test` 两处断言 + 用例名、`zh_hant_locale_test` 一处断言，并**新增 1 条三语言标题断言**）。空跑 G1 `No issues found!`、G2 **1849 → 1850 passed / 13 skipped**。 |

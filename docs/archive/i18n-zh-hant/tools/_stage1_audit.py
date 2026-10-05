@@ -3,9 +3,9 @@
 
 用法（工作目录 = 工程根 C:\\Users\\root\\Desktop\\moumou）：
 
-    py "杂项文件\\繁体中文接入方案\\tools\\_stage1_audit.py"
+    py "docs\\archive\\i18n-zh-hant\\tools\\_stage1_audit.py"
 
-产出：`_evidence/阶段1/术语覆盖审计.md`（UTF-8，用 read 工具看；控制台中文会乱码，所以不打印中文）。
+产出：`_evidence/stage1/terminology-coverage-audit.md`（UTF-8，用 read 工具看；控制台中文会乱码，所以不打印中文）。
 只读源码与术语表，不写任何源码。
 """
 
@@ -17,15 +17,16 @@ from collections import Counter
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PACK_DIR = os.path.dirname(SCRIPT_DIR)
-ROOT = os.path.dirname(os.path.dirname(PACK_DIR))
+# 归档位置：docs/archive/i18n-zh-hant/tools → PACK_DIR=…/i18n-zh-hant，上溯 3 层回到仓库根
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(PACK_DIR)))
 
 ARB = os.path.join(ROOT, "lib", "l10n", "app_zh.arb")
-TERM_DOC = os.path.join(PACK_DIR, "03-阶段1-定调与术语表.md")
-OUT_PATH = os.path.join(PACK_DIR, "_evidence", "阶段1", "术语覆盖审计.md")
+TERM_DOC = os.path.join(PACK_DIR, "03-stage1-terminology.md")
+OUT_PATH = os.path.join(PACK_DIR, "_evidence", "stage1", "terminology-coverage-audit.md")
 
 HAN = r"\u4e00-\u9fff"
 
-# 多形字：一字多繁，翻译时必须按词判（与 03-阶段1 §5 对应）
+# 多形字：一字多繁，翻译时必须按词判（与 03-stage1-terminology.md §5 对应）
 MULTI_FORM = "发干只台里后面复系制布冲尽松卷于与"
 
 # 简体特征字：只在简体里出现的字（与 tools/arb_hant.py 的提示口径一致）
@@ -173,7 +174,7 @@ def main():
     lines.append("")
 
     os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
-    with io.open(OUT_PATH, "w", encoding="utf-8", newline="\n") as f:
+    with io.open(OUT_PATH, "w", encoding="utf-8", newline="\r\n") as f:
         f.write("\n".join(lines) + "\n")
 
     print("AUDIT ok")

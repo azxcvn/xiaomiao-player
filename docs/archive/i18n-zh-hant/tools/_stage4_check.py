@@ -3,9 +3,9 @@
 
 用法（工作目录 = 工程根 C:\\Users\\root\\Desktop\\moumou）：
 
-    py "杂项文件\\繁体中文接入方案\\tools\\_stage4_check.py"
+    py "docs\\archive\\i18n-zh-hant\\tools\\_stage4_check.py"
 
-预期（见 `06-阶段4-代码接入与生成物.md` §5，**2026-10-05 按实测形状修正**）：
+预期（见 `06-stage4-code-integration.md` §5，**2026-10-05 按实测形状修正**）：
 1. `app_localizations.dart` 的 `supportedLocales` 里出现
    `Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant')`，且首项仍是 `Locale('zh')`；
 2. 同文件的 `lookupAppLocalizations` 生成**嵌套 switch**：先 `switch (locale.languageCode)`
@@ -26,7 +26,12 @@ import os
 import re
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# 归档位置：<repo>/docs/archive/i18n-zh-hant/tools → 上溯 5 层回到仓库根
+ROOT = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    )
+)
 L10N = os.path.join(ROOT, "lib", "l10n")
 
 
