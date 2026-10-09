@@ -23,16 +23,15 @@
 
 ## Screenshots
 
-<table align="center">
-  <tr>
-    <td align="center"><img src="Pictures/home.jpg" width="300" alt="Home"><br><sub>Home (list / tree view)</sub></td>
-    <td align="center"><img src="Pictures/setting.jpg" width="300" alt="Settings"><br><sub>Mine / Settings</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="Pictures/player.jpg" width="640" alt="Player"><br><sub>Player (immersive landscape)</sub></td>
-    <td align="center"><img src="Pictures/more.jpg" width="640" alt="More panel"><br><sub>Player "More" panel</sub></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="Pictures/screenshot-1.jpg" width="300" alt="">
+  <img src="Pictures/screenshot-2.jpg" width="640" alt="">
+</p>
+
+<p align="center">
+  <img src="Pictures/screenshot-3.jpg" width="300" alt="">
+  <img src="Pictures/screenshot-4.jpg" width="300" alt="">
+</p>
 
 ---
 

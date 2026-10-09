@@ -23,16 +23,15 @@
 
 ## 應用程式截圖
 
-<table align="center">
-  <tr>
-    <td align="center"><img src="Pictures/home.jpg" width="300" alt="首頁"><br><sub>首頁（清單 / 樹狀檢視）</sub></td>
-    <td align="center"><img src="Pictures/setting.jpg" width="300" alt="設定"><br><sub>我的 / 設定</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="Pictures/player.jpg" width="640" alt="播放頁"><br><sub>播放頁（橫向沉浸式）</sub></td>
-    <td align="center"><img src="Pictures/more.jpg" width="640" alt="更多面板"><br><sub>播放頁「更多」面板</sub></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="Pictures/screenshot-1.jpg" width="300" alt="">
+  <img src="Pictures/screenshot-2.jpg" width="640" alt="">
+</p>
+
+<p align="center">
+  <img src="Pictures/screenshot-3.jpg" width="300" alt="">
+  <img src="Pictures/screenshot-4.jpg" width="300" alt="">
+</p>
 
 ---
 

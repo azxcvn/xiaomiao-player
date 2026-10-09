@@ -24,16 +24,15 @@
 
 ## 应用截图
 
-<table align="center">
-  <tr>
-    <td align="center"><img src="docs/Pictures/home.jpg" width="300" alt="首页"><br><sub>首页（列表 / 树状视图）</sub></td>
-    <td align="center"><img src="docs/Pictures/setting.jpg" width="300" alt="设置"><br><sub>我的 / 设置</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/Pictures/player.jpg" width="640" alt="播放页"><br><sub>播放页（横屏沉浸式）</sub></td>
-    <td align="center"><img src="docs/Pictures/more.jpg" width="640" alt="更多面板"><br><sub>播放页「更多」面板</sub></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="docs/Pictures/screenshot-1.jpg" width="300" alt="">
+  <img src="docs/Pictures/screenshot-2.jpg" width="640" alt="">
+</p>
+
+<p align="center">
+  <img src="docs/Pictures/screenshot-3.jpg" width="300" alt="">
+  <img src="docs/Pictures/screenshot-4.jpg" width="300" alt="">
+</p>
 
 ---
 
