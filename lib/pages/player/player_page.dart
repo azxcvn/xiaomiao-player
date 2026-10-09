@@ -22,11 +22,14 @@ import 'package:moumou/pages/player/player_portrait_page.dart';
 import 'package:moumou/pages/player/player_session_state.dart';
 import 'package:moumou/pages/player/views/audio_panel.dart';
 import 'package:moumou/pages/player/views/equalizer_panel.dart';
+import 'package:moumou/pages/player/views/player_action_grid.dart';
 import 'package:moumou/pages/player/views/player_bili_playlist_panel.dart';
 import 'package:moumou/pages/player/views/player_bottom_bar.dart';
+import 'package:moumou/pages/player/views/player_button_size_panel.dart';
 import 'package:moumou/pages/player/views/player_chapter_bar.dart';
 import 'package:moumou/pages/player/views/player_chapter_panel.dart';
 import 'package:moumou/pages/player/views/player_center_cluster.dart';
+import 'package:moumou/pages/player/views/player_customize_panel.dart';
 import 'package:moumou/pages/player/views/player_danmaku_layer.dart';
 import 'package:moumou/pages/player/views/player_danmaku_episodes_panel.dart';
 import 'package:moumou/pages/player/views/player_danmaku_network_panel.dart';
@@ -101,7 +104,7 @@ import 'package:saver_gallery/saver_gallery.dart';
 ///
 /// - 中央三键簇：快退 / 播放暂停 / 快进；
 /// - 双击手势可自定义（暂停 / 左退右进 / 混合）；
-/// - 右上角固定「更多」按钮 → 右侧面板（动作列表 + 编辑控制栏）；
+/// - 右上角固定「更多」按钮 → 右侧面板（动作网格 + 自定义 / 按钮大小）；
 /// - 倍速等二级设置统一走右侧滑入面板（[showPlayerPanel]）。
 ///
 /// [playlist] 为兄弟视频列表（用于「下一集」，null 时按钮置灰）。
@@ -2161,7 +2164,7 @@ class _PlayerPageState extends State<PlayerPage>
     _session.setRate(v, remember: remember);
   }
 
-  // ── 右侧面板（更多 / 倍速 / 编辑控制栏）────────────────
+  // ── 右侧面板（更多 / 自定义 / 按钮大小 / 倍速）────────────────
 
   /// 倍速面板页（底栏倍速按钮弹出）
   PlayerPanelPage _speedPanelPage() => PlayerPanelPage(
@@ -2199,15 +2202,16 @@ class _PlayerPageState extends State<PlayerPage>
     await showCastDeviceDialog(context, path: _path);
   }
 
-  /// 「更多」面板主页：未放入槽位的动作 +「编辑控制栏」入口。
+  /// 「更多」面板主页：未放入槽位的动作网格（图标上 / 名称下，3 列）
+  /// + 末尾「自定义」与「按钮大小」入口。
   ///
-  /// 工作.md 第 14 点：未放置到顶部 5 槽位的动作自动出现在「更多」里
-  /// （「编辑控制栏」入口上方），同时也在「编辑控制栏 → 可添加」里。
-  /// 用 ListenableBuilder 监听设置：在编辑控制栏内增删槽位后返回本页自动刷新。
+  /// 未放置到顶部 5 槽位的动作自动出现在「更多」里，点击行为不变（直接执行）；
+  /// 增删/排序在「自定义」页里做。用 ListenableBuilder 监听设置：在「自定义」
+  /// 页内增删槽位后返回本页自动刷新。
   Widget _buildMorePanel() {
     // 用 Builder 取面板树内的 context：PlayerPanelNavigator.of 要求调用方
     // 位于 _PanelNavigatorScope 之下（在弹窗路由内），不能直接用 State 的 context
-    // （历史 bug：of() 断言 scope == null，编辑控制栏点击无反应）。
+    // （历史 bug：of() 断言 scope == null，入口点击无反应）。
     return Builder(
       builder: (panelContext) => ListenableBuilder(
         listenable: _settings,
@@ -2216,187 +2220,84 @@ class _PlayerPageState extends State<PlayerPage>
           final notPlaced = PlayerTopAction.values
               .where((a) => !_settings.topActions.contains(a))
               .toList();
-          return ListView(
+          // 整页一个滚动视图（标题 + 网格一起滚）：网格自身不再限高，
+          // 避免出现「只有网格那一小块能滑」的局促滚动区
+          return SingleChildScrollView(
             key: const PageStorageKey('more_panel'),
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            children: [
-              // B 站在线播放专属：清晰度入口（本地文件播放不出现）
-              if (_biliMedia != null) ...[
-                _PanelActionTile(
-                  icon: Icons.hd_outlined,
-                  label: l10n.commonQuality,
-                  subtitle: _currentQualityDescription(_biliMedia!),
-                  onTap: () => PlayerPanelNavigator.of(panelContext)
-                      .push(_qualityPanelPage()),
-                ),
-                const Divider(height: 1, color: Colors.white12),
-              ],
-              if (notPlaced.isNotEmpty) ...[
-                _PanelSectionLabel(l10n.playerFeatureNotPlaced),
-                // 面板类动作面板内 push（返回按钮可回「更多」）；
-                // 动作类（画中画/听视频）由 [_handlePanelAction] 关闭面板后执行
-                for (final a in notPlaced)
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // B 站在线播放专属：清晰度入口（本地文件播放不出现），
+                // 保持列表行样式（带当前清晰度副标题）
+                if (_biliMedia != null)
                   _PanelActionTile(
-                    icon: a.icon,
-                    label: playerTopActionLabel(l10n, a),
-                    subtitle: a.implemented ? null : l10n.playerFeatureComingSoon,
-                    onTap: () => _handlePanelAction(panelContext, a),
+                    icon: Icons.hd_outlined,
+                    label: l10n.commonQuality,
+                    subtitle: _currentQualityDescription(_biliMedia!),
+                    onTap: () => PlayerPanelNavigator.of(panelContext)
+                        .push(_qualityPanelPage()),
                   ),
-                const Divider(height: 1, color: Colors.white12),
-              ],
-              _PanelActionTile(
-                icon: Icons.tune,
-                label: l10n.playerEditControlBar,
-                onTap: () => PlayerPanelNavigator.of(panelContext).push(
-                  PlayerPanelPage(
-                    title: l10n.playerEditControlBar,
-                    body: _buildEditPanel(),
-                  ),
+                if (notPlaced.isNotEmpty)
+                  PlayerPanelSectionLabel(l10n.playerFeatureNotPlaced),
+                PlayerActionGrid(
+                  tiles: (tileWidth, tileHeight) => [
+                    // 面板类动作面板内 push（返回按钮可回「更多」）；
+                    // 动作类（画中画/听视频）由 [_handlePanelAction] 关闭面板后执行
+                    for (final a in notPlaced)
+                      PlayerActionGridTile(
+                        icon: a.icon,
+                        label: playerTopActionLabel(l10n, a),
+                        tooltip: a.implemented
+                            ? null
+                            : l10n.playerFeatureComingSoon,
+                        width: tileWidth,
+                        height: tileHeight,
+                        onTap: () => _handlePanelAction(panelContext, a),
+                      ),
+                    // 控制栏按钮大小：排在「自定义」之前（「自定义」始终最后一格）
+                    PlayerActionGridTile(
+                      icon: Icons.photo_size_select_large,
+                      label: l10n.playerButtonSize,
+                      width: tileWidth,
+                      height: tileHeight,
+                      onTap: () => PlayerPanelNavigator.of(panelContext).push(
+                        PlayerPanelPage(
+                          title: l10n.playerButtonSize,
+                          body: const PlayerButtonSizePanel(),
+                        ),
+                      ),
+                    ),
+                    // 自定义控制栏：始终排在网格最后一格
+                    PlayerActionGridTile(
+                      icon: Icons.tune,
+                      label: l10n.playerCustomizeControlBar,
+                      width: tileWidth,
+                      height: tileHeight,
+                      onTap: () => PlayerPanelNavigator.of(panelContext).push(
+                        PlayerPanelPage(
+                          title: l10n.playerCustomizeControlBar,
+                          body: _buildEditPanel(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),
     );
   }
 
-  /// 「编辑控制栏」页：已启用槽位（拖拽排序 + 文本「删除」）+ 可添加（文本「添加」）
+  /// 「自定义」页（内容与竖屏共用 [PlayerCustomizePanel]）：
+  /// 上方 5 格预览条（长按拖动排序 + 点方块移除）+ 下方可添加网格
+  /// （点方块添加，带飞行动画）+ 底部重置控制栏。
   ///
-  /// 已启用/可添加两区覆盖全部 [PlayerTopAction.values]（9 个动作：字幕/弹幕/
-  /// 音频/比例/画中画/听视频/均衡器/解码/片头片尾），增删/排序沿用
-  /// [_settings]（addTopAction/removeTopAction/reorderTopAction）。
-  Widget _buildEditPanel() {
-    final scheme = Theme.of(context).colorScheme;
-    return ListenableBuilder(
-      listenable: _settings,
-      builder: (context, _) {
-        final l10n = AppLocalizations.of(context);
-        final enabled = _settings.topActions;
-        final disabled = PlayerTopAction.values
-            .where((a) => !enabled.contains(a))
-            .toList();
-        final full = enabled.length >= PlayerControlsSettings.maxTopActions;
-        return ListView(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          children: [
-            _PanelSectionLabel(l10n.playerActionsEnabledHint),
-            if (enabled.isNotEmpty)
-              ReorderableListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: enabled.length,
-                onReorderItem: (o, n) => _settings.reorderTopAction(o, n),
-                // 拖拽高亮修复（工作.md 第 14 点）：默认 proxy 是 M3
-                // Material(elevation 0→6)，深色主题下拖拽项泛白刺眼；
-                // 换成半透明黑底 + 圆角 + 边框（PiliPlus reorder_mixin
-                // 思路的自定义版）。buildDefaultDragHandles 保持默认
-                // （Android 即整项长按 ReorderableDelayedDragStartListener），
-                // 拖拽视觉由 proxyDecorator 覆盖。
-                proxyDecorator: (child, index, animation) => AnimatedBuilder(
-                  animation: animation,
-                  builder: (context, _) => Material(
-                    color: Colors.black.withValues(alpha: 0.85),
-                    elevation: 4,
-                    shadowColor: Colors.black,
-                    borderRadius: BorderRadius.circular(12),
-                    clipBehavior: Clip.antiAlias,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.white24),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: child,
-                    ),
-                  ),
-                ),
-                itemBuilder: (context, index) {
-                  final a = enabled[index];
-                  return ListTile(
-                    key: ValueKey(a.id),
-                    leading: Icon(a.icon, color: Colors.white),
-                    title: Text(
-                      playerTopActionLabel(l10n, a),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                      ),
-                    ),
-                    titleAlignment: ListTileTitleAlignment.center,
-                    trailing: TextButton(
-                      style: TextButton.styleFrom(
-                        foregroundColor: scheme.error,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                      ),
-                      onPressed: () => _settings.removeTopAction(a),
-                      child: Text(l10n.commonDelete),
-                    ),
-                  );
-                },
-              ),
-            // 槽位全空时的空态提示
-            if (enabled.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                child: Text(
-                  l10n.playerNoEnabledActions,
-                  style: const TextStyle(color: Colors.white38, fontSize: 13),
-                ),
-              ),
-            const Divider(height: 1, color: Colors.white12),
-            if (disabled.isNotEmpty) ...[
-              _PanelSectionLabel(l10n.playerAddable),
-              for (final a in disabled)
-                ListTile(
-                  leading: Icon(a.icon, color: Colors.white),
-                  title: Text(
-                    playerTopActionLabel(l10n, a),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                    ),
-                  ),
-                  titleAlignment: ListTileTitleAlignment.center,
-                  trailing: TextButton(
-                    style: TextButton.styleFrom(
-                      foregroundColor: scheme.primary,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                    ),
-                    onPressed: () {
-                      if (full) {
-                        _toast(
-                          l10n.playerMaxActions(
-                            PlayerControlsSettings.maxTopActions,
-                          ),
-                        );
-                      } else {
-                        _settings.addTopAction(a);
-                      }
-                    },
-                    child: Text(l10n.commonAdd),
-                  ),
-                ),
-              const Divider(height: 1, color: Colors.white12),
-            ],
-            _PanelActionTile(
-              icon: Icons.restart_alt,
-              label: l10n.playerResetControlBar,
-              onTap: _settings.resetTopActions,
-            ),
-          ],
-        );
-      },
-    );
-  }
+  /// 数据仍是 [PlayerControlsSettings.topActions]（有序列表，上限 5），
+  /// 预览条顺序 = 播放页顶栏从左到右的顺序；返回/「更多」是固定按钮、
+  /// 不参与自定义，故不在预览条中。
+  Widget _buildEditPanel() => const PlayerCustomizePanel();
 
   /// 点击顶栏槽位执行动作（比例 → 弹画面比例面板；画中画 → [_enterPip]；
   /// 循环播放 → [_openLoopPanel]；听视频 → [_openAudioPlayer]；
@@ -4181,25 +4082,6 @@ class _PanelActionTile extends StatelessWidget {  final IconData icon;
   }
 }
 
-/// 「编辑控制栏」页内的小节标题（已启用 / 可添加）
-class _PanelSectionLabel extends StatelessWidget {
-  final String text;
-
-  const _PanelSectionLabel(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white54,
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
-}
+/// 「自定义」页内的小节标题已迁到
+/// `views/player_action_grid.dart` 的 [PlayerPanelSectionLabel]（横竖屏共用）。
 

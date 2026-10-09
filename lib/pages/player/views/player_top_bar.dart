@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/l10n/label_maps.dart';
@@ -8,11 +10,13 @@ import 'package:moumou/services/player_controls_settings.dart';
 
 /// 顶栏：返回 + 标题 + 自定义槽位（最多 5 个，空槽隐藏）+ 固定「更多」按钮。
 ///
-/// 槽位内容由用户在「更多 → 编辑控制栏」中自由放置/排序；
+/// 槽位内容由用户在「更多 → 自定义」中自由放置/排序；
 /// 「更多」按钮不可删除、不占槽位，是唯一的编辑入口。
 ///
 /// 控制按钮背景：设置「播放器设置 → 按钮背景」开启后，返回/槽位/更多
-/// 图标显示半透明圆角背景（与底栏倍速图标一致）；默认关闭 = 纯图标。
+/// 图标显示半透明圆底（与底栏倍速图标一致）；默认关闭 = 纯图标。
+/// **背景开关只画不画底衬，不改按钮尺寸与间距**；尺寸由「播放器设置 →
+/// 控制栏按钮大小」控制（横屏生效，竖屏参数固定）。
 ///
 /// ⚠️ 顶部渐变压暗由页面层统一提供（「信息行 + 本顶栏」整体一个连续
 /// 渐变，见 PlayerStatusBar 文件头注释）：本组件不再自带渐变，避免与
@@ -103,9 +107,12 @@ class PlayerTopBar extends StatelessWidget {
   }
 }
 
-/// 顶栏图标按钮：[showBackground] 为 true 时套半透明圆角背景
-/// （样式与底栏倍速图标胶囊一致），false 时纯图标；
-/// 带按压缩放反馈（[PlayerPressable]，黑底上水波纹过淡的替代方案）。
+/// 顶栏图标按钮：[showBackground] 只决定**底衬画不画**（半透明圆形），
+/// 不改图标尺寸、不改触摸盒、不改按钮间距（历史问题：开启背景会把
+/// 22 号图标 + 48dp 触摸盒换成 16 号图标 + 28dp 圆，按钮看着又小又挤）。
+///
+/// 尺寸由「播放器设置 → 控制栏按钮大小」（[PlayerControlsSettings.buttonScale]）
+/// 统一控制，随设置实时重建。
 class _TopIconButton extends StatelessWidget {
   final IconData icon;
   final String tooltip;
@@ -119,35 +126,52 @@ class _TopIconButton extends StatelessWidget {
     required this.onPressed,
   });
 
+  /// 图标基准边长（= 「控制栏按钮大小」1.0 时的原尺寸）
+  static const double _baseIconSize = 22;
+
+  /// 图标外内边距基准（22 + 13×2 = 48dp 触摸目标，与原 IconButton 一致）
+  static const double _basePadding = 13;
+
+  /// 底衬直径比图标直径大的量（半透明圆比图标大一圈）
+  static const double _bgPadding = 6;
+
+  /// 触摸目标下限：缩放只影响视觉，不能让命中区小于 44dp
+  static const double _minHitSize = 44;
+
   @override
   Widget build(BuildContext context) {
-    // 无背景：48dp 触摸目标（与原 IconButton 一致），纯图标
-    if (!showBackground) {
-      return PlayerPressable(
-        onTap: onPressed,
-        child: Tooltip(
-          message: tooltip,
-          child: Padding(
-            padding: const EdgeInsets.all(13),
-            child: Icon(icon, color: Colors.white, size: 22),
+    final scale = PlayerControlsSettings.instance.buttonScale;
+    final iconSize = _baseIconSize * scale;
+    final pad = _basePadding * scale;
+    final hit = math.max(iconSize + pad, _minHitSize);
+    return Tooltip(
+      message: tooltip,
+      child: SizedBox(
+        width: hit,
+        height: hit,
+        child: PlayerPressable(
+          onTap: onPressed,
+          child: Center(
+            child: showBackground
+                ? Container(
+                    width: iconSize + _bgPadding * 2,
+                    height: iconSize + _bgPadding * 2,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    // Center：不让圆底的 tight 约束把 Icon 的渲染盒撑到
+                    // 圆底大小（否则图标盒尺寸随背景开关变，间距跟着变）
+                    child: Center(
+                      child: Icon(
+                        icon,
+                        color: Colors.white,
+                        size: iconSize,
+                      ),
+                    ),
+                  )
+                : Icon(icon, color: Colors.white, size: iconSize),
           ),
-        ),
-      );
-    }
-    // 有背景：小圆形背景（28×28）+ 小图标，紧凑不占空间
-    return PlayerPressable(
-      onTap: onPressed,
-      child: Tooltip(
-        message: tooltip,
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.15),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: Colors.white, size: 16),
         ),
       ),
     );

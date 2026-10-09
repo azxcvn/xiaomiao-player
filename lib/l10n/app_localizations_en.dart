@@ -1768,7 +1768,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerFeatureComingSoon => 'Coming soon';
 
   @override
-  String get playerEditControlBar => 'Edit control bar';
+  String get playerCustomizeControlBar => 'Customize';
+
+  @override
+  String get playerButtonSize => 'Button size';
+
+  @override
+  String get playerButtonSizeHint =>
+      'Affects the size and spacing of landscape control bar buttons only';
+
+  @override
+  String get playerAddableHint => 'Tap a tile to add or remove it';
 
   @override
   String get playerActionsEnabledHint =>

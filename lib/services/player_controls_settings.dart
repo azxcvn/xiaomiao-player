@@ -33,6 +33,7 @@ class PlayerControlsSettings extends ChangeNotifier {
   static const _keySeek = 'player_controls_seek';
   static const _keyCustomSpeedPresets = 'player_controls_custom_speed_presets';
   static const _keyButtonBackground = 'player_controls_button_background';
+  static const _keyButtonScale = 'player_controls_button_scale';
   static const _keyVideoFit = 'player_controls_video_fit';
   // 手势 / 音量亮度 / 长按倍速
   static const _keyLongPressSpeed = 'player_controls_long_press_speed';
@@ -81,6 +82,14 @@ class PlayerControlsSettings extends ChangeNotifier {
 
   /// 自定义倍速预设数量上限
   static const int maxCustomSpeedPresets = 8;
+
+  /// 控制栏按钮大小倍率（横屏顶栏/底栏图标按钮共用，默认 1.0 = 原尺寸）。
+  /// **只作用于横屏播放页**：竖屏顶栏/底栏按钮本就紧凑（工作.md v3 溢出修复），
+  /// 参数固定不缩放。
+  static const double minButtonScale = 0.8;
+  static const double maxButtonScale = 1.4;
+  static const double buttonScaleStep = 0.1;
+  static const double defaultButtonScale = 1.0;
 
   /// 倍速有效范围
   static const double minSpeed = 0.25;
@@ -132,6 +141,9 @@ class PlayerControlsSettings extends ChangeNotifier {
   /// 播放控制按钮背景（默认关闭）：开启后底栏倍速图标与顶栏控制图标
   /// 显示半透明圆角背景
   bool _showButtonBackground = false;
+
+  /// 控制栏按钮大小倍率（横屏生效，默认 1.0）
+  double _buttonScale = defaultButtonScale;
 
   /// 画面比例（默认自动 contain）
   PlayerVideoFit _videoFit = PlayerVideoFit.contain;
@@ -218,6 +230,7 @@ class PlayerControlsSettings extends ChangeNotifier {
   int get seekSeconds => _seekSeconds;
   List<double> get customSpeedPresets => List.unmodifiable(_customSpeedPresets);
   bool get showButtonBackground => _showButtonBackground;
+  double get buttonScale => _buttonScale;
   PlayerVideoFit get videoFit => _videoFit;
   double get longPressSpeed => _longPressSpeed;
   bool get showSpeedIndicator => _showSpeedIndicator;
@@ -262,6 +275,9 @@ class PlayerControlsSettings extends ChangeNotifier {
     _lastSpeed = prefs.getDouble(_keyLastSpeed) ?? 1.0;
     _showButtonBackground =
         prefs.getBool(_keyButtonBackground) ?? false;
+    _buttonScale = _roundButtonScale(
+      prefs.getDouble(_keyButtonScale) ?? defaultButtonScale,
+    ).clamp(minButtonScale, maxButtonScale);
     final fit = prefs.getInt(_keyVideoFit);
     if (fit != null && fit >= 0 && fit < PlayerVideoFit.values.length) {
       _videoFit = PlayerVideoFit.values[fit];
@@ -377,6 +393,24 @@ class PlayerControlsSettings extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyButtonBackground, v);
+  }
+
+  /// 控制栏按钮大小倍率（0.8 – 1.4，步进 0.1，默认 1.0，横屏生效）。
+  /// 任意输入就近对齐到 0.1 档位并钳制范围（与 load 迁移同一对齐逻辑）。
+  Future<void> setButtonScale(double v) async {
+    await ensureLoaded();
+    final clamped = _roundButtonScale(v)
+        .clamp(minButtonScale, maxButtonScale);
+    if ((_buttonScale - clamped).abs() < 0.001) return;
+    _buttonScale = clamped;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_keyButtonScale, clamped);
+  }
+
+  /// 按 0.1 步进取整到最近档位（与 load 迁移同一对齐逻辑）
+  static double _roundButtonScale(double v) {
+    return (v / buttonScaleStep).round() * buttonScaleStep;
   }
 
   /// 画面比例（拉伸/自动/裁剪/等宽/等高/原始/限制/4:3/16:9）
@@ -754,6 +788,7 @@ class PlayerControlsSettings extends ChangeNotifier {
     _seekSeconds = 10;
     _customSpeedPresets = const [];
     _showButtonBackground = false;
+    _buttonScale = defaultButtonScale;
     _videoFit = PlayerVideoFit.contain;
     _longPressSpeed = 2.0;
     _showSpeedIndicator = true;

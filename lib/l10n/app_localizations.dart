@@ -3309,11 +3309,29 @@ abstract class AppLocalizations {
   /// **'功能即将上线'**
   String get playerFeatureComingSoon;
 
-  /// 播放器：编辑控制栏入口 / 页标题
+  /// 播放器：自定义控制栏入口 / 页标题
   ///
   /// In zh, this message translates to:
-  /// **'编辑控制栏'**
-  String get playerEditControlBar;
+  /// **'自定义'**
+  String get playerCustomizeControlBar;
+
+  /// 播放器：控制栏按钮大小（面板标题 / 滑杆标题）
+  ///
+  /// In zh, this message translates to:
+  /// **'按钮大小'**
+  String get playerButtonSize;
+
+  /// 播放器：控制栏按钮大小说明
+  ///
+  /// In zh, this message translates to:
+  /// **'只影响横屏控制栏（顶栏 / 底栏）按钮的尺寸与间距'**
+  String get playerButtonSizeHint;
+
+  /// 播放器「自定义」：可添加区操作提示
+  ///
+  /// In zh, this message translates to:
+  /// **'点击整个方块即可添加/移除'**
+  String get playerAddableHint;
 
   /// 播放器「编辑控制栏」：已启用区标题
   ///

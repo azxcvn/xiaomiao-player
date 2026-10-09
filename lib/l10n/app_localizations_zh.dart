@@ -1698,7 +1698,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerFeatureComingSoon => '功能即将上线';
 
   @override
-  String get playerEditControlBar => '编辑控制栏';
+  String get playerCustomizeControlBar => '自定义';
+
+  @override
+  String get playerButtonSize => '按钮大小';
+
+  @override
+  String get playerButtonSizeHint => '只影响横屏控制栏（顶栏 / 底栏）按钮的尺寸与间距';
+
+  @override
+  String get playerAddableHint => '点击整个方块即可添加/移除';
 
   @override
   String get playerActionsEnabledHint => '已启用（长按拖拽排序）';
@@ -6158,7 +6167,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get playerFeatureComingSoon => '功能即將上線';
 
   @override
-  String get playerEditControlBar => '編輯控制列';
+  String get playerCustomizeControlBar => '自訂';
+
+  @override
+  String get playerButtonSize => '按鈕大小';
+
+  @override
+  String get playerButtonSizeHint => '只影響橫屏控制列（頂列 / 底列）按鈕的尺寸與間距';
+
+  @override
+  String get playerAddableHint => '點擊整個方塊即可新增/移除';
 
   @override
   String get playerActionsEnabledHint => '已啟用（長按拖曳排序）';

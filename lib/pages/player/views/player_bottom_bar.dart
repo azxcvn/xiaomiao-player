@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/chapter_info.dart';
@@ -6,6 +8,7 @@ import 'package:moumou/pages/player/views/player_chapter_bar.dart';
 import 'package:moumou/pages/player/views/player_danmaku_buttons.dart';
 import 'package:moumou/pages/player/views/player_pressable.dart';
 import 'package:moumou/pages/player/views/player_seek_bar.dart';
+import 'package:moumou/services/player_controls_settings.dart';
 
 /// 底栏：全宽进度条 + 下一集 + 时间 + 弹幕开关/设置 + 右下角按钮组
 /// （超分辨率/列表/倍速/选择屏幕）。
@@ -98,6 +101,8 @@ class PlayerBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    // 控制栏按钮大小（横屏生效）：底栏图标/弹幕按钮/「下一集」随设置缩放
+    final buttonScale = PlayerControlsSettings.instance.buttonScale;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -151,16 +156,17 @@ class PlayerBottomBar extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(kPlayerLeftInset, 0, 20, 8),
               child: Row(
                 children: [
-                  // 下一集（无兄弟视频时置灰）；48dp 触摸目标与原 IconButton 一致
+                  // 下一集（无兄弟视频时置灰）；48dp 触摸目标与原 IconButton 一致，
+                  // 尺寸随「控制栏按钮大小」缩放
                   PlayerPressable(
                     onTap: hasNext ? onNext : null,
                     child: Tooltip(
                       message: l10n.playerNextEpisode,
                       child: Padding(
-                        padding: const EdgeInsets.all(8),
+                        padding: EdgeInsets.all(8 * buttonScale),
                         child: Icon(
                           Icons.skip_next_rounded,
-                          size: 32,
+                          size: 32 * buttonScale,
                           color: hasNext ? Colors.white : Colors.white38,
                         ),
                       ),
@@ -212,11 +218,11 @@ class PlayerBottomBar extends StatelessWidget {
                               danmakuOn: danmakuOn,
                               onToggle: onDanmakuToggle,
                               onSettings: onDanmakuSettingsTap,
-                              iconSize: 22,
-                              gap: 8,
-                              buttonPadding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 6,
+                              iconSize: 22 * buttonScale,
+                              gap: 8 * buttonScale,
+                              buttonPadding: EdgeInsets.symmetric(
+                                horizontal: 8 * buttonScale,
+                                vertical: 6 * buttonScale,
                               ),
                             ),
                           ),
@@ -291,8 +297,11 @@ class _BottomPill extends StatelessWidget {
   }
 }
 
-/// 底栏倍速/选择屏幕图标按钮：默认纯图标无背景；[showBackground] 为 true 时
-/// 套半透明圆角背景（与顶栏控制图标一致）。
+/// 底栏倍速/列表/选择屏幕图标按钮：[showBackground] 只决定**底衬画不画**
+/// （半透明圆形），不改图标尺寸、不改触摸盒、不改按钮间距。
+///
+/// 尺寸由「播放器设置 → 控制栏按钮大小」（[PlayerControlsSettings.buttonScale]）
+/// 统一控制：图标基准 22、外内边距基准 8（原尺寸 22 + 8×2 = 38dp 触摸盒）。
 class _BottomIconButton extends StatelessWidget {
   final IconData icon;
   final bool showBackground;
@@ -306,28 +315,45 @@ class _BottomIconButton extends StatelessWidget {
     this.tooltip,
   });
 
+  /// 图标基准边长（= 「控制栏按钮大小」1.0 时的原尺寸）
+  static const double _baseIconSize = 22;
+
+  /// 图标外内边距基准
+  static const double _basePadding = 8;
+
+  /// 触摸目标下限：缩放只影响视觉，不让命中区缩到 44dp 以下
+  static const double _minHitSize = 44;
+
   @override
   Widget build(BuildContext context) {
-    final iconWidget = Icon(icon, size: 16, color: Colors.white);
-    final Widget inner;
-    if (!showBackground) {
-      inner = Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: Icon(icon, size: 22, color: Colors.white),
-      );
-    } else {
-      // 有背景时与顶栏控制图标同款：小圆形背景（28×28）+ 小图标
-      inner = Container(
-        width: 28,
-        height: 28,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
-          shape: BoxShape.circle,
-        ),
-        child: Center(child: iconWidget),
-      );
-    }
-    final child = tooltip == null ? inner : Tooltip(message: tooltip!, child: inner);
+    final scale = PlayerControlsSettings.instance.buttonScale;
+    final iconSize = _baseIconSize * scale;
+    final pad = _basePadding * scale;
+    final hit = math.max(iconSize + pad, _minHitSize);
+    // 有底衬：圆底比图标大一圈（图标本体尺寸不变，按钮视觉大小不随开关变）
+    final inner = SizedBox(
+      width: hit,
+      height: hit,
+      child: Center(
+        child: showBackground
+            ? Container(
+                width: iconSize + 14,
+                height: iconSize + 14,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                // Center：不让圆底的 tight 约束把 Icon 渲染盒撑大
+                child: Center(
+                  child: Icon(icon, size: iconSize, color: Colors.white),
+                ),
+              )
+            : Icon(icon, size: iconSize, color: Colors.white),
+      ),
+    );
+    final child = tooltip == null
+        ? inner
+        : Tooltip(message: tooltip!, child: inner);
     return PlayerPressable(onTap: onTap, child: child);
   }
 }

@@ -18,6 +18,7 @@ import 'package:moumou/pages/player/player_session_state.dart';
 import 'package:moumou/pages/player/views/audio_panel.dart';
 import 'package:moumou/pages/player/views/equalizer_panel.dart';
 import 'package:moumou/pages/player/views/player_center_cluster.dart';
+import 'package:moumou/pages/player/views/player_action_grid.dart';
 import 'package:moumou/pages/player/views/player_bili_playlist_panel.dart';
 import 'package:moumou/pages/player/views/player_chapter_bar.dart';
 import 'package:moumou/pages/player/views/player_chapter_panel.dart';
@@ -93,7 +94,7 @@ import 'package:saver_gallery/saver_gallery.dart';
 /// - 底部：进度条（复用 [PlayerSeekBar]）+ 下一集 + 时间（点击切换
 ///   「已播/总时长」⇄「已播/剩余时长」）+ 右侧按钮簇
 ///   （从右到左：选择屏幕 → 倍速 → 列表 → 超分辨率）；
-/// - 二级界面（倍速 / 超分 / 画面比例 / 更多 / 编辑控制栏 / 播放列表）
+/// - 二级界面（倍速 / 超分 / 画面比例 / 更多 / 自定义 / 播放列表）
 ///   一律从底部弹出（[showPlayerBottomPanel]）；
 /// - 全套手势（音量/亮度/水平 seek/长按倍速），与横屏同一裸识别器方案。
 ///
@@ -1297,7 +1298,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   // 用户选的档位。现在链在 open 前按「档位 + 渲染后端」一次定好，见
   // `utils/decode_policy.dart`（对齐参照项目 MPVRX）。
 
-  // ── 底部面板（倍速 / 超分 / 画面比例 / 更多 / 编辑控制栏）────
+  // ── 底部面板（倍速 / 超分 / 画面比例 / 更多 / 自定义）────
 
   PlayerPanelPage _speedPanelPage() => PlayerPanelPage(
         title: AppLocalizations.of(context).playerPlaybackSpeed,
@@ -1386,7 +1387,11 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     await showCastDeviceDialog(context, path: _path);
   }
 
-  /// 「更多」面板主页：未放入槽位的动作 +「编辑控制栏」入口（与横屏一致）。
+  /// 「更多」面板主页：未放入槽位的动作网格（图标上 / 名称下，3 列）+ 末尾
+  /// 「自定义」入口（与横屏一致）。点击未放置动作的行为不变（直接执行）。
+  ///
+  /// 竖屏不提供「按钮大小」入口：竖屏顶栏/底栏按钮参数固定不缩放
+  /// （工作.md v3 溢出修复），调大只会把底栏那一行挤爆。
   Widget _buildMorePanel() {
     return Builder(
       builder: (panelContext) => ListenableBuilder(
@@ -1396,33 +1401,45 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
           final notPlaced = PlayerTopAction.values
               .where((a) => !_settings.topActions.contains(a))
               .toList();
-          return ListView(
-            key: const PageStorageKey('more_panel'),
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            children: [
-              if (notPlaced.isNotEmpty) ...[
-                PortraitPanelSectionLabel(l10n.playerFeatureNotPlaced),
-                for (final a in notPlaced)
-                  PortraitPanelActionTile(
-                    icon: a.icon,
-                    label: playerTopActionLabel(l10n, a),
-                    subtitle:
-                        !a.implemented ? l10n.playerFeatureComingSoon : null,
-                    onTap: () => _handlePanelAction(panelContext, a),
-                  ),
-                const Divider(height: 1, color: Colors.white12),
-              ],
-              PortraitPanelActionTile(
-                icon: Icons.tune,
-                label: l10n.playerEditControlBar,
-                onTap: () => PlayerBottomPanelNavigator.of(panelContext).push(
-                  PlayerPanelPage(
-                    title: l10n.playerEditControlBar,
-                    body: const PortraitEditControlPanel(),
-                  ),
+          // 整页一个滚动视图（标题 + 网格一起滚）：网格自身不再限高，
+          // 避免出现「只有网格那一小块能滑」的局促滚动区
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (notPlaced.isNotEmpty)
+                  PlayerPanelSectionLabel(l10n.playerFeatureNotPlaced),
+                PlayerActionGrid(
+                  tiles: (tileWidth, tileHeight) => [
+                    for (final a in notPlaced)
+                      PlayerActionGridTile(
+                        icon: a.icon,
+                        label: playerTopActionLabel(l10n, a),
+                        tooltip: !a.implemented
+                            ? l10n.playerFeatureComingSoon
+                            : null,
+                        width: tileWidth,
+                        height: tileHeight,
+                        onTap: () => _handlePanelAction(panelContext, a),
+                      ),
+                    // 自定义控制栏：排在网格最后一格
+                    PlayerActionGridTile(
+                      icon: Icons.tune,
+                      label: l10n.playerCustomizeControlBar,
+                      width: tileWidth,
+                      height: tileHeight,
+                      onTap: () =>
+                          PlayerBottomPanelNavigator.of(panelContext).push(
+                        PlayerPanelPage(
+                          title: l10n.playerCustomizeControlBar,
+                          body: const PortraitEditControlPanel(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),

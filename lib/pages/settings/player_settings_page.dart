@@ -26,7 +26,7 @@ import 'package:moumou/widgets/settings_ui.dart';
 /// 循环播放模式（关闭/列表循环/单集循环）已移至播放界面内调整
 /// （顶栏/更多面板的「循环播放」槽位动作），本页不再提供。
 /// 超分辨率（模式/质量/记忆）在播放界面右下角入口直接调整，本页不提供；
-/// 控制栏（启用动作）的编辑只在播放器内进行（「更多 → 编辑控制栏」），本页不提供。
+/// 控制栏（启用动作）的编辑只在播放器内进行（「更多 → 自定义」），本页不提供。
 class PlayerSettingsPage extends StatelessWidget {
   const PlayerSettingsPage({super.key});
 

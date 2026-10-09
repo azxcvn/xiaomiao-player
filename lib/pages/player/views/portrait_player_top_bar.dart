@@ -137,9 +137,11 @@ class PortraitPlayerTopBar extends StatelessWidget {
   }
 }
 
-/// 顶栏图标按钮：[showBackground] 为 true 时套半透明圆角背景
-/// （与横屏顶栏 _TopIconButton 同款样式），false 时纯图标；
-/// 带按压缩放反馈（[PlayerPressable]）。
+/// 顶栏图标按钮：[showBackground] 只决定**底衬画不画**（半透明圆），
+/// 不改图标尺寸、不改触摸盒、不改按钮间距（与横屏 [_TopIconButton] 同一约定）。
+///
+/// 尺寸恒定（竖屏不跟「控制栏按钮大小」走：竖屏顶栏按槽位均分宽度、底栏
+/// 本来就紧，工作.md v3 溢出修复 —— 缩放只对横屏生效）。
 class _PortraitTopIconButton extends StatelessWidget {
   final IconData icon;
   final String tooltip;
@@ -153,35 +155,44 @@ class _PortraitTopIconButton extends StatelessWidget {
     required this.onPressed,
   });
 
+  /// 图标边长（无底衬 / 有底衬都一样）
+  static const double _iconSize = 22;
+
+  /// 图标外内边距（22 + 13×2 = 48dp 触摸目标，与原 IconButton 一致）
+  static const double _padding = 13;
+
+  /// 底衬直径比图标直径大的量
+  static const double _bgPadding = 6;
+
   @override
   Widget build(BuildContext context) {
-    // 无背景：48dp 触摸目标（与原 IconButton 一致），纯图标
-    if (!showBackground) {
-      return PlayerPressable(
-        onTap: onPressed,
-        child: Tooltip(
-          message: tooltip,
-          child: Padding(
-            padding: const EdgeInsets.all(13),
-            child: Icon(icon, color: Colors.white, size: 22),
-          ),
-        ),
-      );
-    }
-    // 有背景：小圆形背景（28×28）+ 小图标，紧凑不占空间
     return PlayerPressable(
       onTap: onPressed,
       child: Tooltip(
         message: tooltip,
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.15),
-            shape: BoxShape.circle,
+        child: SizedBox(
+          width: _iconSize + _padding * 2,
+          height: _iconSize + _padding * 2,
+          child: Center(
+            child: showBackground
+                ? Container(
+                    width: _iconSize + _bgPadding * 2,
+                    height: _iconSize + _bgPadding * 2,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    // Center：不让圆底的 tight 约束把 Icon 渲染盒撑到圆底大小
+                    child: Center(
+                      child: Icon(
+                        icon,
+                        color: Colors.white,
+                        size: _iconSize,
+                      ),
+                    ),
+                  )
+                : Icon(icon, color: Colors.white, size: _iconSize),
           ),
-          child: Icon(icon, color: Colors.white, size: 16),
         ),
       ),
     );

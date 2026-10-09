@@ -54,14 +54,58 @@ class PlayerPanelNavigator {
   }
 }
 
+/// 面板「让位」状态：true 时整个面板（含自身半透明背景）压到很淡，
+/// 让用户看清被面板遮住的播放界面（「按钮大小」拖动滑杆时用）。
+///
+/// 面板内容用 [PlayerPanelDim.set] 切换；[of] 读当前状态（面板之外返回
+/// false，测试里单独摆组件时面板内容不会因此报错）。
+class PlayerPanelDim extends InheritedWidget {
+  final bool dimmed;
+
+  /// 由面板外壳持有：内容通过它改状态
+  final ValueNotifier<bool>? notifier;
+
+  const PlayerPanelDim({
+    super.key,
+    required this.dimmed,
+    this.notifier,
+    required super.child,
+  });
+
+  static bool of(BuildContext context) =>
+      context
+          .dependOnInheritedWidgetOfExactType<PlayerPanelDim>()
+          ?.dimmed ??
+      false;
+
+  /// 切换「让位」状态（面板不在场时静默忽略）
+  static void set(BuildContext context, bool value) {
+    context
+        .dependOnInheritedWidgetOfExactType<PlayerPanelDim>()
+        ?.notifier
+        ?.value = value;
+  }
+
+  @override
+  bool updateShouldNotify(PlayerPanelDim oldWidget) =>
+      oldWidget.dimmed != dimmed;
+}
+
 class _PanelNavigatorScope extends InheritedWidget {
   final PlayerPanelNavigator navigator;
 
-  const _PanelNavigatorScope({required this.navigator, required super.child});
+  /// 面板「让位」状态：true 时整个面板（含自身背景）压到很淡
+  final ValueNotifier<bool> dimmed;
+
+  const _PanelNavigatorScope({
+    required this.navigator,
+    required this.dimmed,
+    required super.child,
+  });
 
   @override
   bool updateShouldNotify(_PanelNavigatorScope oldWidget) =>
-      navigator != oldWidget.navigator;
+      navigator != oldWidget.navigator || dimmed != oldWidget.dimmed;
 }
 
 /// 从屏幕右缘滑入的半透明设置面板（YouTube 风格）。
@@ -93,6 +137,9 @@ class _PlayerPanelState extends State<PlayerPanel> {
   late final PlayerPanelNavigator _navigator =
       PlayerPanelNavigator(_pages, () => setState(() {}));
 
+  /// 「让位」状态：面板内容可置 true 让整个面板（含背景）压淡
+  final ValueNotifier<bool> _dimmed = ValueNotifier<bool>(false);
+
   @override
   void didUpdateWidget(covariant PlayerPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -104,104 +151,169 @@ class _PlayerPanelState extends State<PlayerPanel> {
   }
 
   @override
+  void dispose() {
+    _dimmed.dispose();
+    super.dispose();
+  }
+
+  /// 面板底色（未让位）与让位后的底色：让位时**完全透明**（0%），
+  /// 只留清晰的内容部件（如拖动中的滑杆）
+  static const Color _panelColor = Color(0xE61C1C1E);
+  static const Color _panelColorDimmed = Color(0x001C1C1E);
+
+  @override
   Widget build(BuildContext context) {
     // 横屏下不超过 340dp；小屏按 72% 宽收缩
     final width = (MediaQuery.sizeOf(context).width * 0.72).clamp(0.0, 340.0);
     final page = _pages.last;
-    return Align(
-      alignment: Alignment.centerRight,
-      child: SizedBox(
-        width: width,
-        height: double.infinity,
-        // 必须用 Material 外壳：面板内容含 ListTile/SwitchListTile/TextField，
-        // 它们要求 Material 祖先（提供墨迹/水波纹），普通 Container 会抛
-        // "No Material widget found"（历史崩溃：更多面板红底黄字）。
-        child: Material(
-          color: const Color(0xE61C1C1E),
-          borderRadius: const BorderRadius.horizontal(
-            left: Radius.circular(20),
+    // 「让位」：面板底色变淡 + 标题行/内容各自淡出，但内容里显式保留的部件
+    // （如拖动中的滑杆）始终满不透明度 —— 全局 AnimatedOpacity 会把滑杆
+    // 一起淡掉，做不到「只留滑杆清晰」，所以底色与内容分开处理。
+    return ValueListenableBuilder<bool>(
+      valueListenable: _dimmed,
+      builder: (context, dimmed, _) => Align(
+        alignment: Alignment.centerRight,
+        child: TweenAnimationBuilder<Color?>(
+          tween: ColorTween(
+            begin: _panelColor,
+            end: dimmed ? _panelColorDimmed : _panelColor,
           ),
-          clipBehavior: Clip.antiAlias,
-          child: _PanelNavigatorScope(
-            navigator: _navigator,
-            child: Column(
-              children: [
-                _buildHeader(page),
-                Expanded(
-                  child: AnimatedSwitcher(
-                    // 进场 200ms；退场仅 80ms（reverseDuration），
-                    // 避免切换瞬间看到旧页面被点击时的水波纹残留；
-                    // 工作.md 第 7 点：关闭播放界面动画后直接切换
-                    duration: widget.animate
-                        ? const Duration(milliseconds: 200)
-                        : Duration.zero,
-                    reverseDuration: widget.animate
-                        ? const Duration(milliseconds: 80)
-                        : Duration.zero,
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    // 内容顶部对齐（默认 Stack 居中会让内容较短的面板
-                    // 垂直居中，如画面比例面板）
-                    layoutBuilder: (currentChild, previousChildren) {
-                      return Stack(
-                        alignment: Alignment.topCenter,
-                        children: [
-                          ...previousChildren,
-                          ?currentChild,
-                        ],
-                      );
-                    },
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0.08, 0),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: KeyedSubtree(
-                      key: ValueKey(page.title),
-                      child: page.body,
-                    ),
-                  ),
-                ),
-              ],
+          duration: Duration(milliseconds: widget.animate ? 160 : 0),
+          // ⚠️ Material 必须在 Align/SizedBox **之内**：否则它的底色按整屏
+          // 布局，让位时整个屏幕都被刷上暗色（历史 bug）
+          builder: (context, color, child) => SizedBox(
+            width: width,
+            height: double.infinity,
+            child: Material(
+              color: color ?? _panelColor,
+              borderRadius: const BorderRadius.horizontal(
+                left: Radius.circular(20),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: child,
             ),
           ),
+          child: _PanelNavigatorScope(
+              navigator: _navigator,
+              dimmed: _dimmed,
+              child: PlayerPanelDim(
+                dimmed: dimmed,
+                notifier: _dimmed,
+                child: Column(
+                  children: [
+                    _buildHeader(page, dimmed),
+                    Expanded(
+                      // 内容不再统一淡出：让位时由页面自己按 PlayerPanelDim
+                      // 决定哪些部件淡（正文/说明）、哪些保持清晰（滑杆）
+                      child: AnimatedSwitcher(
+                          // 进场 200ms；退场仅 80ms（reverseDuration），
+                          // 避免切换瞬间看到旧页面被点击时的水波纹残留；
+                          // 工作.md 第 7 点：关闭播放界面动画后直接切换
+                          duration: widget.animate
+                              ? const Duration(milliseconds: 200)
+                              : Duration.zero,
+                          reverseDuration: widget.animate
+                              ? const Duration(milliseconds: 80)
+                              : Duration.zero,
+                          switchInCurve: Curves.easeOutCubic,
+                          switchOutCurve: Curves.easeInCubic,
+                          // 内容顶部对齐（默认 Stack 居中会让内容较短的面板
+                          // 垂直居中，如画面比例面板）
+                          layoutBuilder: (currentChild, previousChildren) {
+                            return Stack(
+                              alignment: Alignment.topCenter,
+                              children: [
+                                ...previousChildren,
+                                ?currentChild,
+                              ],
+                            );
+                          },
+                          transitionBuilder: (child, animation) {
+                            return FadeTransition(
+                              opacity: animation,
+                              child: SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: const Offset(0.08, 0),
+                                  end: Offset.zero,
+                                ).animate(animation),
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: KeyedSubtree(
+                            key: ValueKey(page.title),
+                            child: page.body,
+                          ),
+                        ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ),
       ),
     );
   }
 
-  Widget _buildHeader(PlayerPanelPage page) {
+  /// 标题行：面板淡出时用 [PlayerPanelDim] 之外的独立 [AnimatedOpacity]，
+  /// 让标题跟着一起淡（但拖动中的滑杆不会被裹进来）
+  Widget _buildHeader(PlayerPanelPage page, bool dimmed) {
     final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
-      child: Row(
-        children: [
-          if (_navigator.canPop)
+    return AnimatedOpacity(
+      opacity: dimmed ? 0.5 : 1,
+      duration: Duration(milliseconds: widget.animate ? 160 : 0),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+        child: Row(
+          children: [
+            if (_navigator.canPop)
+              IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                tooltip: l10n.commonBack,
+                onPressed: _navigator.pop,
+              ),
+            Expanded(
+              child: panelHeaderTitle(
+                text: page.title,
+                marquee: page.marqueeTitle,
+              ),
+            ),
             IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              tooltip: l10n.commonBack,
-              onPressed: _navigator.pop,
+              icon: const Icon(Icons.close, color: Colors.white),
+              tooltip: l10n.commonOff,
+              onPressed: widget.onClose,
             ),
-          Expanded(
-            child: panelHeaderTitle(
-              text: page.title,
-              marquee: page.marqueeTitle,
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
-            tooltip: l10n.commonOff,
-            onPressed: widget.onClose,
-          ),
-        ],
+          ],
+        ),
       ),
+    );
+  }
+}
+
+/// 面板内各页面在「让位」时的淡出透明度（页面自己套 [AnimatedOpacity]，
+/// 需要保持清晰的部件跳过不淡）
+const double kPlayerPanelDimOpacity = 0.12;
+
+/// 面板内容部分的「让位」透明度包装：让位时淡到 [kPlayerPanelDimOpacity]。
+/// 要保留清晰的部件（如拖动中的滑杆）不要包进来。
+class PlayerPanelDimFade extends StatelessWidget {
+  final bool dimmed;
+  final bool animate;
+  final Widget child;
+
+  const PlayerPanelDimFade({
+    super.key,
+    required this.dimmed,
+    this.animate = true,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedOpacity(
+      opacity: dimmed ? kPlayerPanelDimOpacity : 1,
+      duration: Duration(milliseconds: animate ? 160 : 0),
+      child: child,
     );
   }
 }
