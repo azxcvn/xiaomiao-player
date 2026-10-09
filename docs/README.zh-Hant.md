@@ -24,13 +24,17 @@
 ## 應用程式截圖
 
 <p align="center">
-  <img src="Pictures/screenshot-1.jpg" width="300" alt="">
-  <img src="Pictures/screenshot-2.jpg" width="640" alt="">
+  <img src="Pictures/screenshot-1.jpg" width="200" alt="">
+  <img src="Pictures/screenshot-2.jpg" width="200" alt="">
+  <img src="Pictures/screenshot-3.jpg" width="200" alt="">
+  <img src="Pictures/screenshot-4.jpg" width="200" alt="">
 </p>
 
 <p align="center">
-  <img src="Pictures/screenshot-3.jpg" width="300" alt="">
-  <img src="Pictures/screenshot-4.jpg" width="300" alt="">
+  <img src="Pictures/screenshot-5.jpg" width="200" alt="">
+  <img src="Pictures/screenshot-6.jpg" width="200" alt="">
+  <img src="Pictures/screenshot-7.jpg" width="200" alt="">
+  <img src="Pictures/screenshot-8.jpg" width="200" alt="">
 </p>
 
 ---
