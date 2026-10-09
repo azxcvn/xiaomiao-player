@@ -43,44 +43,32 @@ class _PlayerButtonSizePanelState extends State<PlayerButtonSizePanel> {
       listenable: settings,
       builder: (context, _) {
         final scale = settings.buttonScale;
+        final spacing = settings.buttonSpacingScale;
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
           children: [
             _fade(
               dimmed,
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l10n.playerButtonSize,
-                      style: const TextStyle(color: Colors.white, fontSize: 15),
-                    ),
-                  ),
-                  Text(
-                    '${(scale * 100).round()}%',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+              _sliderHeader(l10n.playerButtonSize, scale),
             ),
             // 滑杆：拖动期间**不淡出**（唯一保留的操作，百分比由滑杆气泡显示）
             // 面板底色已变淡提供对比，滑杆保持满不透明度
-            Slider(
+            _slider(
               value: scale,
               min: PlayerControlsSettings.minButtonScale,
               max: PlayerControlsSettings.maxButtonScale,
-              divisions: ((PlayerControlsSettings.maxButtonScale -
-                          PlayerControlsSettings.minButtonScale) /
-                      PlayerControlsSettings.buttonScaleStep)
-                  .round(),
-              label: '${(scale * 100).round()}%',
-              onChangeStart: (_) => _setDragging(true),
               onChanged: settings.setButtonScale,
-              onChangeEnd: (_) => _setDragging(false),
+            ),
+            const SizedBox(height: 4),
+            _fade(
+              dimmed,
+              _sliderHeader(l10n.playerButtonSpacing, spacing),
+            ),
+            _slider(
+              value: spacing,
+              min: PlayerControlsSettings.minButtonSpacingScale,
+              max: PlayerControlsSettings.maxButtonSpacingScale,
+              onChanged: settings.setButtonSpacingScale,
             ),
             _fade(
               dimmed,
@@ -98,9 +86,13 @@ class _PlayerButtonSizePanelState extends State<PlayerButtonSizePanel> {
                   PortraitPanelActionTile(
                     icon: Icons.restart_alt,
                     label: l10n.commonReset,
-                    onTap: () => settings.setButtonScale(
-                      PlayerControlsSettings.defaultButtonScale,
-                    ),
+                    onTap: () => settings
+                        .setButtonScale(PlayerControlsSettings.defaultButtonScale)
+                        .then(
+                          (_) => settings.setButtonSpacingScale(
+                            PlayerControlsSettings.defaultButtonSpacingScale,
+                          ),
+                        ),
                   ),
                 ],
               ),
@@ -108,6 +100,47 @@ class _PlayerButtonSizePanelState extends State<PlayerButtonSizePanel> {
           ],
         );
       },
+    );
+  }
+
+  /// 滑杆上方：名称 + 当前百分比
+  Widget _sliderHeader(String label, double value) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(color: Colors.white, fontSize: 15),
+          ),
+        ),
+        Text(
+          '${(value * 100).round()}%',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 滑杆（拖动时触发面板让位；百分比由滑杆气泡显示）
+  Widget _slider({
+    required double value,
+    required double min,
+    required double max,
+    required ValueChanged<double> onChanged,
+  }) {
+    return Slider(
+      value: value,
+      min: min,
+      max: max,
+      divisions: ((max - min) / PlayerControlsSettings.buttonScaleStep).round(),
+      label: '${(value * 100).round()}%',
+      onChangeStart: (_) => _setDragging(true),
+      onChanged: onChanged,
+      onChangeEnd: (_) => _setDragging(false),
     );
   }
 

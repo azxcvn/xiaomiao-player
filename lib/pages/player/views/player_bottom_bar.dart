@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/chapter_info.dart';
@@ -101,8 +99,11 @@ class PlayerBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    // 控制栏按钮大小（横屏生效）：底栏图标/弹幕按钮/「下一集」随设置缩放
-    final buttonScale = PlayerControlsSettings.instance.buttonScale;
+    // 控制栏按钮大小/间距（横屏生效）：底栏图标/弹幕/「下一集」随设置缩放
+    final settings = PlayerControlsSettings.instance;
+    final buttonScale = settings.buttonScale;
+    final spacing = settings.buttonSpacingScale;
+    final gap = 8.0 * buttonScale * spacing;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -219,9 +220,11 @@ class PlayerBottomBar extends StatelessWidget {
                               onToggle: onDanmakuToggle,
                               onSettings: onDanmakuSettingsTap,
                               iconSize: 22 * buttonScale,
-                              gap: 8 * buttonScale,
+                              gap: gap,
                               buttonPadding: EdgeInsets.symmetric(
-                                horizontal: 8 * buttonScale,
+                                // 间距倍率只作用于水平方向：竖向也放大会把
+                                // 整行撑高，底栏不需要
+                                horizontal: 8 * buttonScale * spacing,
                                 vertical: 6 * buttonScale,
                               ),
                             ),
@@ -236,20 +239,20 @@ class PlayerBottomBar extends StatelessWidget {
                     label: superResolutionLabel,
                     onTap: onSuperResolutionTap,
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: gap),
                   _BottomIconButton(
                     icon: Icons.playlist_play,
                     showBackground: showListButtonBackground,
                     tooltip: l10n.playerPlaylist,
                     onTap: onPlaylistTap,
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: gap),
                   _BottomIconButton(
                     icon: Icons.speed_rounded,
                     showBackground: showSpeedButtonBackground,
                     onTap: onSpeedTap,
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: gap),
                   _BottomIconButton(
                     icon: Icons.screen_rotation,
                     showBackground: showScreenSwitchBackground,
@@ -318,7 +321,7 @@ class _BottomIconButton extends StatelessWidget {
   /// 图标基准边长（= 「控制栏按钮大小」1.0 时的原尺寸）
   static const double _baseIconSize = 22;
 
-  /// 图标外内边距基准
+  /// 图标外内边距基准（另乘「按钮间距」倍率：只放大盒子，不动图标）
   static const double _basePadding = 8;
 
   /// 触摸目标下限：缩放只影响视觉，不让命中区缩到 44dp 以下
@@ -326,10 +329,16 @@ class _BottomIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scale = PlayerControlsSettings.instance.buttonScale;
+    final settings = PlayerControlsSettings.instance;
+    final scale = settings.buttonScale;
     final iconSize = _baseIconSize * scale;
-    final pad = _basePadding * scale;
-    final hit = math.max(iconSize + pad, _minHitSize);
+    final hit = playerButtonHitSize(
+      iconSize: iconSize,
+      basePadding: _basePadding,
+      scale: scale,
+      spacingScale: settings.buttonSpacingScale,
+      minHitSize: _minHitSize,
+    );
     // 有底衬：圆底比图标大一圈（图标本体尺寸不变，按钮视觉大小不随开关变）
     final inner = SizedBox(
       width: hit,

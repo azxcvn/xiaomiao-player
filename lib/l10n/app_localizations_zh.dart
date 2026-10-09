@@ -1704,6 +1704,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerButtonSize => '按钮大小';
 
   @override
+  String get playerButtonSpacing => '按钮间距';
+
+  @override
   String get playerButtonSizeHint => '只影响横屏控制栏（顶栏 / 底栏）按钮的尺寸与间距';
 
   @override
@@ -6171,6 +6174,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get playerButtonSize => '按鈕大小';
+
+  @override
+  String get playerButtonSpacing => '按鈕間距';
 
   @override
   String get playerButtonSizeHint => '只影響橫屏控制列（頂列 / 底列）按鈕的尺寸與間距';

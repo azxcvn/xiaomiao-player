@@ -294,9 +294,12 @@ class _PortraitBottomPill extends StatelessWidget {
   }
 }
 
-/// 底栏倍速/列表/选择屏幕图标按钮：默认纯图标无背景；[showBackground]
-/// 为 true 时套半透明圆角背景（样式对齐横屏底栏倍速按钮）；
-/// [tooltip] 非空时包裹 Tooltip。
+/// 底栏列表/倍速/选择屏幕图标按钮：[showBackground] 只决定**底衬画不画**
+/// （半透明圆），不改图标尺寸、不改按钮盒、不改按钮间距
+/// （历史问题：开背景会走「26dp 圆 + 15 号图标」分支，图标从 20 缩到 15）。
+///
+/// 竖屏不跟「控制栏按钮大小 / 按钮间距」走：这两行本来就紧
+/// （v3 溢出修复），参数固定。
 class _PortraitBottomIconButton extends StatelessWidget {
   final IconData icon;
   final bool showBackground;
@@ -310,28 +313,39 @@ class _PortraitBottomIconButton extends StatelessWidget {
     this.tooltip,
   });
 
+  /// 图标边长（有/无底衬都一样）
+  static const double _iconSize = 20;
+
+  /// 图标外内边距（20 + 6×2 = 32dp 盒、20 + 5×2 = 30dp 高，v3 紧凑尺寸）
+  static const EdgeInsets _padding =
+      EdgeInsets.symmetric(horizontal: 6, vertical: 5);
+
+  /// 底衬直径比图标直径大的量
+  static const double _bgPadding = 6;
+
   @override
   Widget build(BuildContext context) {
-    final iconWidget = Icon(icon, size: 15, color: Colors.white);
-    final Widget inner;
-    if (!showBackground) {
-      // 紧凑尺寸（v3 溢出修复：竖屏窄屏按钮行超宽）
-      inner = Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-        child: Icon(icon, size: 20, color: Colors.white),
-      );
-    } else {
-      // 有背景时与顶栏控制图标同款：小圆形背景（28×28）+ 小图标
-      inner = Container(
-        width: 26,
-        height: 26,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
-          shape: BoxShape.circle,
-        ),
-        child: Center(child: iconWidget),
-      );
-    }
+    final hitSize = _iconSize + _padding.horizontal;
+    final inner = SizedBox(
+      width: hitSize,
+      height: _iconSize + _padding.vertical,
+      child: Center(
+        child: showBackground
+            ? Container(
+                width: _iconSize + _bgPadding * 2,
+                height: _iconSize + _bgPadding * 2,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                // Center：不让圆底的 tight 约束把 Icon 渲染盒撑到圆底大小
+                child: Center(
+                  child: Icon(icon, size: _iconSize, color: Colors.white),
+                ),
+              )
+            : Icon(icon, size: _iconSize, color: Colors.white),
+      ),
+    );
     final child = tooltip == null
         ? inner
         : Tooltip(message: tooltip!, child: inner);

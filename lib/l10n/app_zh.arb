@@ -1445,6 +1445,10 @@
   "@playerButtonSize": {
     "description": "播放器：控制栏按钮大小（面板标题 / 滑杆标题）"
   },
+  "playerButtonSpacing": "按钮间距",
+  "@playerButtonSpacing": {
+    "description": "播放器：控制栏按钮间距（滑杆标题）"
+  },
   "playerButtonSizeHint": "只影响横屏控制栏（顶栏 / 底栏）按钮的尺寸与间距",
   "@playerButtonSizeHint": {
     "description": "播放器：控制栏按钮大小说明"

@@ -1,7 +1,10 @@
 /// 播放页左侧人体工学对齐常量（工作.md 第 19 点）。
-///
 /// 顶栏返回箭头、底栏进度条开端、「下一集」按钮左缘、时间文本左缘
 /// 统一对齐到同一 x（横屏/竖屏播放页共用，portrait 底栏同步引用）。
+library;
+
+import 'dart:math' as math;
+
 const double kPlayerLeftInset = 20;
 
 /// 底栏**轨道级**对齐 x（B4/P1-6：横竖屏两页共用同一基准）。
@@ -26,3 +29,23 @@ const double kPlayerNextRowLeftPadding = 22;
 /// 各写各的数字会出现「控制层已收起、解锁按钮还挂在屏幕上」的错位
 /// （与 kPlayerTrackLeftInset 同一类漂移问题）。
 const Duration kPlayerAutoHideDelay = Duration(seconds: 3);
+
+/// 横屏控制栏图标按钮的触摸盒边长（「按钮大小 / 按钮间距」两个倍率共同决定）。
+///
+/// 公式：`max(图标 + 内边距×大小倍率×2, 44) + 内边距×大小倍率×(间距倍率-1)`
+///
+/// - 内边距**按左右两侧**算（原实现是 `Padding(all: p)`，22 + 13×2 = 48dp）；
+/// - 下限 44 只兜「图标 + 两侧内边距」这部分，**不能把间距倍率也吃进去**：
+///   早先写成 `max(图标 + 内边距×大小×间距, 44)`，默认倍率下间距那部分被
+///   44 的兜底吞掉，调大「按钮间距」毫无效果；
+/// - 间距倍率小于 1 时允许盒子收到 44 以下（图标本体仍按「按钮大小」缩放）。
+double playerButtonHitSize({
+  required double iconSize,
+  required double basePadding,
+  required double scale,
+  required double spacingScale,
+  double minHitSize = 44,
+}) {
+  final pad = basePadding * scale;
+  return math.max(iconSize + pad * 2, minHitSize) + pad * (spacingScale - 1);
+}

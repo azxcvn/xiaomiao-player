@@ -537,6 +537,7 @@
   "playerFeatureComingSoon": "功能即將上線",
   "playerCustomizeControlBar": "自訂",
   "playerButtonSize": "按鈕大小",
+  "playerButtonSpacing": "按鈕間距",
   "playerButtonSizeHint": "只影響橫屏控制列（頂列 / 底列）按鈕的尺寸與間距",
   "playerAddableHint": "點擊整個方塊即可新增/移除",
   "playerActionsEnabledHint": "已啟用（長按拖曳排序）",

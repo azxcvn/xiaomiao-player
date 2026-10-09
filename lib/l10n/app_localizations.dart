@@ -3321,6 +3321,12 @@ abstract class AppLocalizations {
   /// **'按钮大小'**
   String get playerButtonSize;
 
+  /// 播放器：控制栏按钮间距（滑杆标题）
+  ///
+  /// In zh, this message translates to:
+  /// **'按钮间距'**
+  String get playerButtonSpacing;
+
   /// 播放器：控制栏按钮大小说明
   ///
   /// In zh, this message translates to:

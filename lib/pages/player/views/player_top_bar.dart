@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/l10n/label_maps.dart';
@@ -129,7 +127,8 @@ class _TopIconButton extends StatelessWidget {
   /// 图标基准边长（= 「控制栏按钮大小」1.0 时的原尺寸）
   static const double _baseIconSize = 22;
 
-  /// 图标外内边距基准（22 + 13×2 = 48dp 触摸目标，与原 IconButton 一致）
+  /// 图标外内边距基准（22 + 13×2 = 48dp 触摸目标，与原 IconButton 一致）。
+  /// 另乘「按钮间距」倍率：间距倍率只放大盒子（呼吸感），不动图标本体。
   static const double _basePadding = 13;
 
   /// 底衬直径比图标直径大的量（半透明圆比图标大一圈）
@@ -140,10 +139,16 @@ class _TopIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scale = PlayerControlsSettings.instance.buttonScale;
+    final settings = PlayerControlsSettings.instance;
+    final scale = settings.buttonScale;
     final iconSize = _baseIconSize * scale;
-    final pad = _basePadding * scale;
-    final hit = math.max(iconSize + pad, _minHitSize);
+    final hit = playerButtonHitSize(
+      iconSize: iconSize,
+      basePadding: _basePadding,
+      scale: scale,
+      spacingScale: settings.buttonSpacingScale,
+      minHitSize: _minHitSize,
+    );
     return Tooltip(
       message: tooltip,
       child: SizedBox(

@@ -537,6 +537,7 @@
   "playerFeatureComingSoon": "Coming soon",
   "playerCustomizeControlBar": "Customize",
   "playerButtonSize": "Button size",
+  "playerButtonSpacing": "Button spacing",
   "playerButtonSizeHint": "Affects the size and spacing of landscape control bar buttons only",
   "playerAddableHint": "Tap a tile to add or remove it",
   "playerActionsEnabledHint": "Enabled (long-press to drag and reorder)",

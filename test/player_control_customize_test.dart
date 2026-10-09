@@ -7,6 +7,7 @@ import 'package:moumou/pages/player/views/player_bottom_bar.dart';
 import 'package:moumou/pages/player/views/player_button_size_panel.dart';
 import 'package:moumou/pages/player/views/player_top_bar.dart';
 import 'package:moumou/pages/player/views/portrait_edit_panel.dart';
+import 'package:moumou/pages/player/views/portrait_player_bottom_bar.dart';
 import 'package:moumou/pages/player/views/portrait_player_top_bar.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/widgets/player_panel.dart';
@@ -65,6 +66,33 @@ void main() {
         onPlaylistTap: () {},
         chapters: const <ChapterInfo>[],
         skipSegments: const <SkipSegment>[],
+        danmakuOn: true,
+        onDanmakuToggle: () {},
+        onDanmakuSettingsTap: () {},
+      );
+
+  Widget portraitBottomBar({
+    bool speedBg = false,
+    bool listBg = false,
+    bool screenBg = false,
+  }) =>
+      PortraitPlayerBottomBar(
+        valueMs: 1000,
+        maxMs: 10000,
+        onSeekChanged: (_) {},
+        onSeekEnd: (_) {},
+        hasNext: true,
+        onNext: () {},
+        timeText: '00:01 / 00:10',
+        onTimeTap: () {},
+        onSpeedTap: () {},
+        showSpeedButtonBackground: speedBg,
+        superResolutionLabel: '超分辨率',
+        onSuperResolutionTap: () {},
+        onScreenSwitchTap: () {},
+        showScreenSwitchBackground: screenBg,
+        onPlaylistTap: () {},
+        showListButtonBackground: listBg,
         danmakuOn: true,
         onDanmakuToggle: () {},
         onDanmakuSettingsTap: () {},
@@ -147,6 +175,52 @@ void main() {
       tester.widget<Icon>(find.byIcon(Icons.speed_rounded)).size!,
       closeTo(baseBottom * 1.4, 0.01),
     );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('按钮间距倍率真的改变横屏顶栏间距（不被 44dp 兜底吃掉）', (tester) async {
+    final s = PlayerControlsSettings.instance;
+    await s.addTopAction(PlayerTopAction.subtitle);
+    await s.addTopAction(PlayerTopAction.danmaku);
+    await tester.pumpWidget(wrap(topBar()));
+    double gap() =>
+        tester.getRect(find.byIcon(Icons.comment_outlined)).left -
+        tester.getRect(find.byIcon(Icons.subtitles_outlined)).right;
+
+    final baseGap = gap();
+    // 默认倍率：48dp 盒 + 22 号图标 → 图标之间 26dp
+    expect(baseGap, closeTo(26, 0.5));
+
+    await s.setButtonSpacingScale(1.4);
+    await tester.pumpWidget(wrap(topBar()));
+    // +13 × 0.4 = 5.2dp（公式：max(图标+两侧内边距,44) + 内边距×(间距倍率-1)）
+    expect(gap(), closeTo(baseGap + 5.2, 0.5));
+
+    await s.setButtonSpacingScale(0.8);
+    await tester.pumpWidget(wrap(topBar()));
+    expect(gap(), lessThan(baseGap));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('竖屏底栏：按钮背景开关不改图标尺寸与按钮盒', (tester) async {
+    double speedIcon(WidgetTester t) =>
+        t.widget<Icon>(find.byIcon(Icons.speed_rounded)).size!;
+    double span(WidgetTester t) =>
+        t.getRect(find.byIcon(Icons.screen_rotation)).right -
+        t.getRect(find.byIcon(Icons.playlist_play)).left;
+
+    await tester.pumpWidget(wrap(portraitBottomBar()));
+    final baseIcon = speedIcon(tester);
+    final baseSpan = span(tester);
+    expect(baseIcon, 20);
+
+    await tester.pumpWidget(
+      wrap(portraitBottomBar(speedBg: true, listBg: true, screenBg: true)),
+    );
+    // 图标不变（历史问题：开背景走「26dp 圆 + 15 号图标」，20 缩到 15）
+    expect(speedIcon(tester), baseIcon);
+    // 按钮盒与间距不变 → 三个按钮的整体跨度不变
+    expect(span(tester), closeTo(baseSpan, 0.01));
     expect(tester.takeException(), isNull);
   });
 
@@ -431,11 +505,13 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.byType(PlayerButtonSizePanel), findsOneWidget);
-    // 图例已删：面板里不再有示意按钮图标
+    // 图例已删：面板里不再有示意按钮图标；两个滑杆 = 按钮大小 + 按钮间距
     expect(find.byIcon(Icons.photo_size_select_large), findsNothing);
+    expect(find.byType(Slider), findsNWidgets(2));
 
-    final gesture =
-        await tester.startGesture(tester.getCenter(find.byType(Slider)));
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byType(Slider).first),
+    );
     await tester.pump();
     await gesture.moveBy(const Offset(40, 0));
     await tester.pump();

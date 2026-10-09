@@ -1774,6 +1774,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerButtonSize => 'Button size';
 
   @override
+  String get playerButtonSpacing => 'Button spacing';
+
+  @override
   String get playerButtonSizeHint =>
       'Affects the size and spacing of landscape control bar buttons only';
 
