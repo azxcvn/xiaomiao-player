@@ -24,13 +24,16 @@
 ## Screenshots
 
 <p align="center">
-  <img src="Pictures/screenshot-1.jpg" width="32%" alt="">
-  <img src="Pictures/screenshot-2.jpg" width="32%" alt="">
-  <img src="Pictures/screenshot-3.jpg" width="32%" alt="">
+  <img src="Pictures/screenshot-2.jpg" width="80%" alt="">
 </p>
 
 <p align="center">
-  <img src="Pictures/screenshot-4.jpg" width="66%" alt="">
+  <img src="Pictures/screenshot-1.jpg" width="44%" alt="">
+  <img src="Pictures/screenshot-3.jpg" width="44%" alt="">
+</p>
+
+<p align="center">
+  <img src="Pictures/screenshot-4.jpg" width="44%" alt="">
 </p>
 
 ---

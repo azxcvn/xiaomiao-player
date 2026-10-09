@@ -25,13 +25,16 @@
 ## 应用截图
 
 <p align="center">
-  <img src="docs/Pictures/screenshot-1.jpg" width="32%" alt="">
-  <img src="docs/Pictures/screenshot-2.jpg" width="32%" alt="">
-  <img src="docs/Pictures/screenshot-3.jpg" width="32%" alt="">
+  <img src="docs/Pictures/screenshot-2.jpg" width="80%" alt="">
 </p>
 
 <p align="center">
-  <img src="docs/Pictures/screenshot-4.jpg" width="66%" alt="">
+  <img src="docs/Pictures/screenshot-1.jpg" width="44%" alt="">
+  <img src="docs/Pictures/screenshot-3.jpg" width="44%" alt="">
+</p>
+
+<p align="center">
+  <img src="docs/Pictures/screenshot-4.jpg" width="44%" alt="">
 </p>
 
 ---
