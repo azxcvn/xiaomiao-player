@@ -1,6 +1,10 @@
 # 小喵 Player
 
 <p align="center">
+  <img src="docs/Pictures/icon.png" width="140" alt="小喵 Player 图标">
+</p>
+
+<p align="center">
   <b>小喵 Player</b> —— 面向 Android 的本地视频播放器，以本地媒体库播放为核心，<br>
   辅以在线播放、哔哩哔哩生态、网络存储、弹幕字幕、下载投屏等能力。
 </p>

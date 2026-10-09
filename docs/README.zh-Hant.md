@@ -5,6 +5,10 @@
 </p>
 
 <p align="center">
+  <img src="Pictures/icon.png" width="140" alt="小喵 Player 圖示">
+</p>
+
+<p align="center">
   <b>小喵 Player</b> —— 面向 Android 的本機影片播放器，以本機媒體庫播放為核心，<br>
   輔以線上播放、嗶哩嗶哩生態、網路儲存、彈幕字幕、下載投放等能力。
 </p>

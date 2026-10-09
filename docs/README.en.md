@@ -5,6 +5,10 @@
 </p>
 
 <p align="center">
+  <img src="Pictures/icon.png" width="140" alt="Meow Player icon">
+</p>
+
+<p align="center">
   <b>Meow Player</b> — a local video player for Android, built around local media library playback,<br>
   with online playback, the Bilibili ecosystem, network storage, danmaku &amp; subtitles, downloads and casting alongside it.
 </p>
