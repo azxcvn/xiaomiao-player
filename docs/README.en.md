@@ -5,10 +5,6 @@
 </p>
 
 <p align="center">
-  <img src="Pictures/icon.png" width="140" alt="Meow Player icon">
-</p>
-
-<p align="center">
   <b>Meow Player</b> — a local video player for Android, built around local media library playback,<br>
   with online playback, the Bilibili ecosystem, network storage, danmaku &amp; subtitles, downloads and casting alongside it.
 </p>
@@ -24,16 +20,8 @@
 ## Screenshots
 
 <p align="center">
-  <img src="Pictures/screenshot-2.jpg" width="80%" alt="">
-</p>
-
-<p align="center">
-  <img src="Pictures/screenshot-1.jpg" width="44%" alt="">
-  <img src="Pictures/screenshot-3.jpg" width="44%" alt="">
-</p>
-
-<p align="center">
-  <img src="Pictures/screenshot-4.jpg" width="44%" alt="">
+  <img src="Pictures/screenshot-1.jpg" width="36%" alt="">
+  <img src="Pictures/screenshot-2.jpg" width="44%" alt="">
 </p>
 
 ---
