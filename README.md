@@ -20,14 +20,14 @@
 
 ## 应用截图
 
-<table align="center" style="border-collapse:collapse;border:none;background:transparent">
+<table align="center">
   <tr>
-    <td align="center" valign="middle" style="border:none;padding:4px"><img src="docs/Pictures/screenshot-1.jpg" width="250" alt=""></td>
-    <td align="center" valign="middle" style="border:none;padding:4px"><img src="docs/Pictures/screenshot-2.jpg" width="250" alt=""></td>
+    <td align="center" valign="middle"><img src="docs/Pictures/screenshot-1.jpg" width="240" alt=""></td>
+    <td align="center" valign="middle"><img src="docs/Pictures/screenshot-2.jpg" width="240" alt=""></td>
   </tr>
   <tr>
-    <td align="center" valign="middle" style="border:none;padding:4px"><img src="docs/Pictures/screenshot-3.jpg" width="250" alt=""></td>
-    <td align="center" valign="middle" style="border:none;padding:4px"><img src="docs/Pictures/screenshot-4.jpg" width="250" alt=""></td>
+    <td align="center" valign="middle"><img src="docs/Pictures/screenshot-3.jpg" width="480" alt=""></td>
+    <td align="center" valign="middle"><img src="docs/Pictures/screenshot-4.jpg" width="480" alt=""></td>
   </tr>
 </table>
 
