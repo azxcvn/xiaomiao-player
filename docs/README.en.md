@@ -19,16 +19,15 @@
 
 ## Screenshots
 
-<table align="center">
-  <tr>
-    <td align="center" valign="middle"><img src="Pictures/screenshot-1.jpg" width="240" alt=""></td>
-    <td align="center" valign="middle"><img src="Pictures/screenshot-2.jpg" width="240" alt=""></td>
-  </tr>
-  <tr>
-    <td align="center" valign="middle"><img src="Pictures/screenshot-3.jpg" width="480" alt=""></td>
-    <td align="center" valign="middle"><img src="Pictures/screenshot-4.jpg" width="480" alt=""></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="Pictures/screenshot-1.jpg" width="230" alt="">
+  <img src="Pictures/screenshot-2.jpg" width="230" alt="">
+</p>
+
+<p align="center">
+  <img src="Pictures/screenshot-3.jpg" width="500" alt="">
+  <img src="Pictures/screenshot-4.jpg" width="500" alt="">
+</p>
 
 ---
 
