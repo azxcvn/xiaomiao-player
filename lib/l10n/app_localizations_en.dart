@@ -1371,6 +1371,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAppearanceAdjustWallpaper => 'Adjust';
 
   @override
+  String get settingsAppearanceCardOpacity => 'Card background opacity';
+
+  @override
+  String settingsAppearanceCardOpacityDesc(int percent) {
+    return 'Adjust the opacity of grouped card backgrounds ($percent%)';
+  }
+
+  @override
+  String get settingsAppearanceCardOpacityInactive =>
+      'Available after choosing a custom wallpaper';
+
+  @override
   String get settingsDecoderBasicInfo => 'Basic information';
 
   @override

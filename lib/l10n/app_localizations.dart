@@ -2613,6 +2613,24 @@ abstract class AppLocalizations {
   /// **'调整'**
   String get settingsAppearanceAdjustWallpaper;
 
+  /// 外观设置子页：自定义壁纸下的卡片背景不透明度滑杆标题
+  ///
+  /// In zh, this message translates to:
+  /// **'卡片背景透明度'**
+  String get settingsAppearanceCardOpacity;
+
+  /// 外观设置子页：卡片背景不透明度说明，percent 为当前百分比
+  ///
+  /// In zh, this message translates to:
+  /// **'调节分组卡片背景的不透明度（{percent}%）'**
+  String settingsAppearanceCardOpacityDesc(int percent);
+
+  /// 外观设置子页：未设置壁纸时卡片背景不透明度不可调
+  ///
+  /// In zh, this message translates to:
+  /// **'选择自定义壁纸后生效'**
+  String get settingsAppearanceCardOpacityInactive;
+
   /// 解码器详情页：基本信息分组标题
   ///
   /// In zh, this message translates to:

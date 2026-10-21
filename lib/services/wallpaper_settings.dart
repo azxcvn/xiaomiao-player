@@ -20,7 +20,8 @@ enum WallpaperScaleMode {
 }
 
 /// 自定义壁纸设置：用户选一张图 → 铺在内容与顶部栏之后，可调
-/// 缩放 / 水平位置 / 垂直位置 / 模糊 / 透明度。
+/// 缩放 / 水平位置 / 垂直位置 / 模糊 / 透明度，以及**卡片背景不透明度**
+/// （外观页「卡片背景透明度」，只影响壁纸生效时的列表卡片）。
 ///
 /// 与参考实现 mpvRx（`AppWallpaper.kt` + `AppearancePreferences.kt`）的差异，
 /// 都是刻意为之：
@@ -45,6 +46,7 @@ class WallpaperSettings extends ChangeNotifier {
   static const _keyScaleMode = 'wallpaper_scale_mode';
   static const _keyBlur = 'wallpaper_blur';
   static const _keyOpacity = 'wallpaper_opacity';
+  static const _keyCardOpacity = 'wallpaper_card_opacity';
 
   // ── 参数范围（setter / load / UI 滑杆共用同一份真源）──────────────
   static const double minScale = 1.0;
@@ -62,6 +64,17 @@ class WallpaperSettings extends ChangeNotifier {
   static const double minOpacity = 0.0;
   static const double maxOpacity = 1.0;
   static const double defaultOpacity = 1.0;
+
+  /// 卡片背景不透明度范围 / 默认值（0 = 全透明，1 = 完全不透明）。
+  ///
+  /// 默认 0.35 与旧版写死的 `kWallpaperCardOpacity` 一致：老用户升级后观感不变。
+  /// 取值按 **5% 步进**（外观页滑杆 20 档），持久化/读盘也统一对齐。
+  static const double minCardOpacity = 0.0;
+  static const double maxCardOpacity = 1.0;
+  static const double defaultCardOpacity = 0.35;
+
+  /// 卡片背景透明度的档数（20 档 = 5% 步进）
+  static const int cardOpacityDivisions = 20;
 
   // ── 渲染几何（渲染层与调整页共用，避免两处各写一份而漂移）────────
   /// 位移行程：offset = ±1 时平移「容器尺寸 × 该系数」（比例，不是像素）
@@ -96,6 +109,7 @@ class WallpaperSettings extends ChangeNotifier {
   WallpaperScaleMode _scaleMode = WallpaperScaleMode.fit;
   double _blur = defaultBlur;
   double _opacity = defaultOpacity;
+  double _cardOpacity = defaultCardOpacity;
 
   /// 壁纸图片的绝对路径；无壁纸时为 null
   String? get path => _file;
@@ -106,6 +120,10 @@ class WallpaperSettings extends ChangeNotifier {
   WallpaperScaleMode get scaleMode => _scaleMode;
   double get blur => _blur;
   double get opacity => _opacity;
+
+  /// 卡片背景不透明度（0–1）：壁纸生效时列表卡片（文件夹/视频/设置卡）的底色
+  /// 不透明度，由外观页「卡片背景透明度」滑杆控制；无壁纸时不生效。
+  double get cardOpacity => _cardOpacity;
 
   /// 壁纸是否生效——**唯一判据**（AppFrame 据此决定画不画、主题据此决定透不透明）。
   ///
@@ -128,6 +146,9 @@ class WallpaperSettings extends ChangeNotifier {
       _scaleMode = WallpaperScaleMode.parse(prefs.getString(_keyScaleMode));
       _blur = _clampBlur(prefs.getDouble(_keyBlur) ?? defaultBlur);
       _opacity = _clampOpacity(prefs.getDouble(_keyOpacity) ?? defaultOpacity);
+      _cardOpacity = _clampCardOpacity(
+        prefs.getDouble(_keyCardOpacity) ?? defaultCardOpacity,
+      );
 
       // 图没了（用户删文件 / 换机 / 清理工具）：静默退回「无壁纸」，
       // 免得永远挂着一个不存在的路径（对齐 AppFontSettings 对丢失字体的处理）
@@ -182,7 +203,7 @@ class WallpaperSettings extends ChangeNotifier {
     return true;
   }
 
-  /// 清除壁纸：删文件 + **7 项一起回默认**（不用 remove 单键——全删更干净，
+  /// 清除壁纸：删文件 + **8 项一起回默认**（不用 remove 单键——全删更干净，
   /// 下次 load 自然拿到默认值）。
   Future<void> clear() async {
     await ensureLoaded();
@@ -194,6 +215,7 @@ class WallpaperSettings extends ChangeNotifier {
     _scaleMode = WallpaperScaleMode.fit;
     _blur = defaultBlur;
     _opacity = defaultOpacity;
+    _cardOpacity = defaultCardOpacity;
     notifyListeners();
 
     final prefs = await SharedPreferences.getInstance();
@@ -205,6 +227,7 @@ class WallpaperSettings extends ChangeNotifier {
       _keyScaleMode,
       _keyBlur,
       _keyOpacity,
+      _keyCardOpacity,
     ]) {
       await prefs.remove(key);
     }
@@ -231,6 +254,21 @@ class WallpaperSettings extends ChangeNotifier {
     await prefs.setString(_keyScaleMode, _scaleMode.name);
     await prefs.setDouble(_keyBlur, _blur);
     await prefs.setDouble(_keyOpacity, _opacity);
+    await prefs.setDouble(_keyCardOpacity, _cardOpacity);
+  }
+
+  /// 设置卡片背景不透明度（外观页滑杆实时调用；按 5% 步进对齐到 0–1）。
+  ///
+  /// 与字体缩放同一节奏：拖动即更新内存 + 通知重绘，并落盘（设置页滑杆
+  /// 本身就是低频操作，不做防抖）。
+  Future<void> setCardOpacity(double value) async {
+    await ensureLoaded();
+    final next = _clampCardOpacity(value);
+    if (next == _cardOpacity) return;
+    _cardOpacity = next;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_keyCardOpacity, next);
   }
 
   /// 把图片拷进应用目录，返回新路径；失败返回 null。
@@ -280,6 +318,13 @@ class WallpaperSettings extends ChangeNotifier {
   static double _clampBlur(double v) => v.clamp(minBlur, maxBlur).toDouble();
   static double _clampOpacity(double v) =>
       v.clamp(minOpacity, maxOpacity).toDouble();
+  static double _clampCardOpacity(double v) {
+    // 按 5% 步进对齐（0.35*20=7 是整数，默认值不会被改掉）
+    final steps = (v * cardOpacityDivisions).round();
+    return (steps / cardOpacityDivisions)
+        .clamp(minCardOpacity, maxCardOpacity)
+        .toDouble();
+  }
 
   /// 测试用：复位全部状态与加载标记（单例在测试间共享，避免状态泄漏）。
   @visibleForTesting
@@ -292,6 +337,7 @@ class WallpaperSettings extends ChangeNotifier {
     _scaleMode = WallpaperScaleMode.fit;
     _blur = defaultBlur;
     _opacity = defaultOpacity;
+    _cardOpacity = defaultCardOpacity;
     debugDirOverride = null;
     notifyListeners();
   }

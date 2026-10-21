@@ -6,7 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 自定义壁纸设置测试：默认值、持久化、范围钳制、生效判定、
-/// 图片文件丢失兜底、清除（7 项全复位）、拷贝失败不改设置。
+/// 图片文件丢失兜底、清除（8 项全复位）、拷贝失败不改设置。
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -50,6 +50,35 @@ void main() {
     expect(s.scaleMode, WallpaperScaleMode.fit);
     expect(s.blur, WallpaperSettings.defaultBlur);
     expect(s.opacity, WallpaperSettings.defaultOpacity);
+    expect(s.cardOpacity, WallpaperSettings.defaultCardOpacity);
+  });
+
+  test('卡片背景透明度：设置、持久化、钳制、清除回默认', () async {
+    await applyDefaults(sourcePath: sourceImage.path);
+    await s.setCardOpacity(0.6);
+    expect(s.cardOpacity, 0.6);
+
+    // 5% 步进对齐：33% → 35%，57% → 55%
+    await s.setCardOpacity(0.33);
+    expect(s.cardOpacity, closeTo(0.35, 1e-9));
+    await s.setCardOpacity(0.57);
+    expect(s.cardOpacity, closeTo(0.55, 1e-9));
+
+    // 模拟重启：读盘拿到用户值（最后设置的是 57% → 对齐到 55%）
+    WallpaperSettings.instance.resetForTest();
+    WallpaperSettings.debugDirOverride = tempDir.path;
+    await s.ensureLoaded();
+    expect(s.cardOpacity, closeTo(0.55, 1e-9));
+
+    // 越界钳制到 0–1
+    await s.setCardOpacity(9);
+    expect(s.cardOpacity, WallpaperSettings.maxCardOpacity);
+    await s.setCardOpacity(-1);
+    expect(s.cardOpacity, WallpaperSettings.minCardOpacity);
+
+    // 清除壁纸：回到默认
+    await s.clear();
+    expect(s.cardOpacity, WallpaperSettings.defaultCardOpacity);
   });
 
   test('保存：图片被拷进应用目录（带时间戳的新文件），参数一并持久化', () async {
@@ -177,7 +206,7 @@ void main() {
     expect(s.active, isFalse, reason: '不能挂着不存在的图（否则透明底色会露出黑洞）');
   });
 
-  test('清除：删文件 + 7 项一起回默认', () async {
+  test('清除：删文件 + 8 项一起回默认', () async {
     await s.apply(
       sourcePath: sourceImage.path,
       scale: 2,
@@ -187,6 +216,7 @@ void main() {
       blur: 15,
       opacity: 0.5,
     );
+    await s.setCardOpacity(0.8);
     final saved = s.path!;
 
     await s.clear();
@@ -199,6 +229,7 @@ void main() {
     expect(s.scaleMode, WallpaperScaleMode.fit);
     expect(s.blur, WallpaperSettings.defaultBlur);
     expect(s.opacity, WallpaperSettings.defaultOpacity);
+    expect(s.cardOpacity, WallpaperSettings.defaultCardOpacity);
     expect(File(saved).existsSync(), isFalse, reason: '清除要顺手删掉文件');
 
     // 清除后重启仍是「无壁纸」（键被移除，不留残值）
@@ -207,6 +238,7 @@ void main() {
     await s.ensureLoaded();
     expect(s.active, isFalse);
     expect(s.scale, WallpaperSettings.defaultScale);
+    expect(s.cardOpacity, WallpaperSettings.defaultCardOpacity);
   });
 
   test('变更会通知监听者（AppFrame / 外观页刷新依据）', () async {
@@ -237,6 +269,7 @@ void main() {
       'wallpaper_scale_mode': 'not-a-mode',
       'wallpaper_blur': 999.0,
       'wallpaper_opacity': 5.0,
+      'wallpaper_card_opacity': 5.0,
     });
     WallpaperSettings.instance.resetForTest();
     WallpaperSettings.debugDirOverride = tempDir.path;
@@ -249,5 +282,6 @@ void main() {
     expect(s.scaleMode, WallpaperScaleMode.fit);
     expect(s.blur, WallpaperSettings.maxBlur);
     expect(s.opacity, WallpaperSettings.maxOpacity);
+    expect(s.cardOpacity, WallpaperSettings.maxCardOpacity);
   });
 }

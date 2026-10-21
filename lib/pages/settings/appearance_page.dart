@@ -792,6 +792,40 @@ class _WallpaperCard extends StatelessWidget {
                     ],
                   ],
                 ),
+                const SizedBox(height: 6),
+                const Divider(height: 1),
+                const SizedBox(height: 10),
+                Text(
+                  l10n.settingsAppearanceCardOpacity,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  hasWallpaper
+                      ? l10n.settingsAppearanceCardOpacityDesc(
+                          (settings.cardOpacity * 100).round(),
+                        )
+                      : l10n.settingsAppearanceCardOpacityInactive,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                SliderTheme(
+                  data: kazumiSliderTheme(scheme),
+                  child: Slider(
+                    value: settings.cardOpacity,
+                    min: WallpaperSettings.minCardOpacity,
+                    max: WallpaperSettings.maxCardOpacity,
+                    divisions: WallpaperSettings.cardOpacityDivisions,
+                    onChanged: hasWallpaper
+                        ? (v) => settings.setCardOpacity(v)
+                        : null,
+                  ),
+                ),
               ],
             ),
           ),

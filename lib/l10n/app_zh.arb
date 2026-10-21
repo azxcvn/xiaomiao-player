@@ -962,6 +962,23 @@
   "@settingsAppearanceAdjustWallpaper": {
     "description": "外观设置子页：进入壁纸编辑页的按钮"
   },
+  "settingsAppearanceCardOpacity": "卡片背景透明度",
+  "@settingsAppearanceCardOpacity": {
+    "description": "外观设置子页：自定义壁纸下的卡片背景不透明度滑杆标题"
+  },
+  "settingsAppearanceCardOpacityDesc": "调节分组卡片背景的不透明度（{percent}%）",
+  "@settingsAppearanceCardOpacityDesc": {
+    "description": "外观设置子页：卡片背景不透明度说明，percent 为当前百分比",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsAppearanceCardOpacityInactive": "选择自定义壁纸后生效",
+  "@settingsAppearanceCardOpacityInactive": {
+    "description": "外观设置子页：未设置壁纸时卡片背景不透明度不可调"
+  },
   "settingsDecoderBasicInfo": "基本信息",
   "@settingsDecoderBasicInfo": {
     "description": "解码器详情页：基本信息分组标题"

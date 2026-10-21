@@ -1315,6 +1315,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsAppearanceAdjustWallpaper => '调整';
 
   @override
+  String get settingsAppearanceCardOpacity => '卡片背景透明度';
+
+  @override
+  String settingsAppearanceCardOpacityDesc(int percent) {
+    return '调节分组卡片背景的不透明度（$percent%）';
+  }
+
+  @override
+  String get settingsAppearanceCardOpacityInactive => '选择自定义壁纸后生效';
+
+  @override
   String get settingsDecoderBasicInfo => '基本信息';
 
   @override
@@ -5791,6 +5802,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsAppearanceAdjustWallpaper => '調整';
+
+  @override
+  String get settingsAppearanceCardOpacity => '卡片背景透明度';
+
+  @override
+  String settingsAppearanceCardOpacityDesc(int percent) {
+    return '調整分組卡片背景的不透明度（$percent%）';
+  }
+
+  @override
+  String get settingsAppearanceCardOpacityInactive => '選擇自訂桌布後生效';
 
   @override
   String get settingsDecoderBasicInfo => '基本資訊';
