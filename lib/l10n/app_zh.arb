@@ -1514,6 +1514,10 @@
   "@playerPlaylist": {
     "description": "播放器：播放列表（面板标题 / 底栏按钮）"
   },
+  "playerPlaylistFollowMain": "跟随主界面",
+  "@playerPlaylistFollowMain": {
+    "description": "播放列表：排序跟随主界面（视频页）的排序"
+  },
   "playerLock": "锁定",
   "@playerLock": {
     "description": "播放器：锁定控制层（按钮语义）"

@@ -45,6 +45,45 @@ enum VideoField {
 /// 视频列表排序维度（名称见 [videoSortFieldLabel]）
 enum VideoSortField { name, date, size, duration }
 
+/// 视频排序选择（字段 + 方向）。
+///
+/// 主界面（首页/目录页）与播放列表的「自定义排序」共用同一套字段与方向，
+/// 播放列表「跟随主界面」时直接沿用入口给的顺序，见 `PlayerPage.mainSort`。
+typedef VideoSortChoice = ({VideoSortField field, SortOrder order});
+
+/// 单字段升序比较（降序由调用方取反）。
+///
+/// 排序规则的唯一真值：主界面排序（[ViewSettings.sortVideos] / 树状排序）与
+/// 播放列表自定义排序（[sortVideosBy]）都走这里，保证两处顺序一致。
+int compareVideosByField(VideoFile a, VideoFile b, VideoSortField field) {
+  return switch (field) {
+    // 名称用自然序（数字感知）：「2.mp4」<「12.mp4」<「112.mp4」
+    VideoSortField.name => naturalCompare(a.name, b.name),
+    VideoSortField.date =>
+      (a.dateModified?.millisecondsSinceEpoch ?? 0).compareTo(
+        b.dateModified?.millisecondsSinceEpoch ?? 0,
+      ),
+    VideoSortField.size => a.size.compareTo(b.size),
+    VideoSortField.duration => a.durationMs.compareTo(b.durationMs),
+  };
+}
+
+/// 按字段 + 方向排序（纯函数，返回新列表；不改动入参）。
+///
+/// 播放列表面板的「自定义排序」用它重排实际播放列表，规则与主界面完全一致。
+List<VideoFile> sortVideosBy(
+  List<VideoFile> videos,
+  VideoSortField field,
+  SortOrder order,
+) {
+  final list = [...videos];
+  list.sort((a, b) {
+    final cmp = compareVideosByField(a, b, field);
+    return order == SortOrder.asc ? cmp : -cmp;
+  });
+  return list;
+}
+
 /// 视图设置控制器：管理排序偏好，并持久化
 class ViewSettings extends ChangeNotifier {
   static const _keySortField = 'view_sort_field';
@@ -304,15 +343,6 @@ class ViewSettings extends ChangeNotifier {
   }
 
   int _compareVideoFile(VideoFile a, VideoFile b) {
-    return switch (_videoSortField) {
-      // 名称用自然序（数字感知）：「2.mp4」<「12.mp4」<「112.mp4」
-      VideoSortField.name => naturalCompare(a.name, b.name),
-      VideoSortField.date =>
-        (a.dateModified?.millisecondsSinceEpoch ?? 0).compareTo(
-          b.dateModified?.millisecondsSinceEpoch ?? 0,
-        ),
-      VideoSortField.size => a.size.compareTo(b.size),
-      VideoSortField.duration => a.durationMs.compareTo(b.durationMs),
-    };
+    return compareVideosByField(a, b, _videoSortField);
   }
 }

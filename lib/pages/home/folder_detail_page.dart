@@ -162,6 +162,11 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
         path: video.path,
         title: video.name,
         playlist: playlist,
+        // 播放列表「跟随主界面」用它显示当前排序；顺序直接用上面的 playlist
+        mainSort: (
+          field: widget.viewSettings.videoSortField,
+          order: widget.viewSettings.videoSortOrder,
+        ),
       )),
     );
     // 从播放页返回后主动刷新，进度条立即更新

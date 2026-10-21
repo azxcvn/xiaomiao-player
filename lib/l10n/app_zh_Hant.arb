@@ -553,6 +553,7 @@
   "playerPipUnsupported": "當前裝置不支援子母畫面",
   "playerPipFailed": "進入子母畫面失敗",
   "playerPlaylist": "播放清單",
+  "playerPlaylistFollowMain": "跟隨主介面",
   "playerLock": "鎖定",
   "playerUnlock": "解鎖",
   "playerScreenshot": "截圖",

@@ -1759,6 +1759,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerPlaylist => '播放列表';
 
   @override
+  String get playerPlaylistFollowMain => '跟随主界面';
+
+  @override
   String get playerLock => '锁定';
 
   @override
@@ -6229,6 +6232,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get playerPlaylist => '播放清單';
+
+  @override
+  String get playerPlaylistFollowMain => '跟隨主介面';
 
   @override
   String get playerLock => '鎖定';

@@ -80,6 +80,7 @@ import 'package:moumou/services/subtitle_service.dart';
 import 'package:moumou/services/subtitle_settings.dart';
 import 'package:moumou/services/super_resolution_service.dart';
 import 'package:moumou/services/video_scanner.dart';
+import 'package:moumou/services/view_settings.dart';
 import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/utils/cast_source.dart';
 import 'package:moumou/utils/formatters.dart';
@@ -92,6 +93,7 @@ import 'package:moumou/utils/playback_completion.dart';
 import 'package:moumou/utils/playback_history.dart';
 import 'package:moumou/utils/playback_restore.dart';
 import 'package:moumou/utils/player_diagnostics.dart';
+import 'package:moumou/utils/player_exit.dart';
 import 'package:moumou/utils/player_gestures.dart';
 import 'package:moumou/utils/player_orientation.dart';
 import 'package:moumou/widgets/app_frame.dart';
@@ -137,6 +139,13 @@ class PlayerPage extends StatefulWidget {
   /// 非空时「下一集」/播放列表面板走 B 站剧集列表，与本地 [playlist] 互斥。
   final BiliPlaylist? biliPlaylist;
 
+  /// 主界面（视频页）当前的视频排序字段/方向：播放列表「跟随主界面」状态下
+  /// 两枚排序胶囊显示它，顺序直接用入口传进来的 [playlist]。
+  ///
+  /// 首页/目录页按自己的 ViewSettings 传入；历史记录、外部打开等没有主界面
+  /// 排序的入口用默认值（名称升序，与媒体库补全列表的顺序一致）。
+  final VideoSortChoice mainSort;
+
   const PlayerPage({
     super.key,
     required this.path,
@@ -146,6 +155,7 @@ class PlayerPage extends StatefulWidget {
     this.onDurationKnown,
     this.biliMedia,
     this.biliPlaylist,
+    this.mainSort = const (field: VideoSortField.name, order: SortOrder.asc),
   });
 
   @override
@@ -342,6 +352,41 @@ class _PlayerPageState extends State<PlayerPage>
 
   List<VideoFile> get _playlist => _playlistNotifier.value;
 
+  /// 入口给的播放列表**原始集合**（顺序 = 主界面顺序）：
+  /// - 跟随主界面（[_playlistSort] 为 null）→ [_playlist] 直接用它；
+  /// - 自定义排序 → 按 [_playlistSort] 的字段+方向重排它。
+  /// 异步补全（本地/网络）完成时也写这里，排序选择不会被覆盖。
+  List<VideoFile> _entryPlaylist = const <VideoFile>[];
+
+  /// 播放列表排序选择（null = 跟随主界面）：**只在本次播放内有效**，
+  /// 由播放列表面板写入，竖屏页读同一份（排序不改文件夹页的全局设置）。
+  final ValueNotifier<VideoSortChoice?> _playlistSort =
+      ValueNotifier<VideoSortChoice?>(null);
+
+  /// 设置播放列表原始集合，并按当前排序选择重新派生 [_playlist]。
+  void _setEntryPlaylist(List<VideoFile> videos) {
+    _entryPlaylist = videos;
+    _applyPlaylistOrder();
+  }
+
+  /// 按当前排序选择重新派生 [_playlist]（跟随主界面 = 入口原始顺序）。
+  void _applyPlaylistOrder() {
+    final choice = _playlistSort.value;
+    _playlistNotifier.value = choice == null
+        ? _entryPlaylist
+        : sortVideosBy(_entryPlaylist, choice.field, choice.order);
+  }
+
+  /// 播放列表面板切换排序：重排**实际播放列表**，让「下一集 / 自动连播 /
+  /// 列表循环」按面板显示的顺序走；选择只在本次播放内有效。
+  ///
+  /// 结果写进共享的 [_playlistNotifier]，竖屏页读同一份、立刻同步。
+  void _applyPlaylistSort(VideoSortChoice? choice) {
+    if (_disposed || !mounted) return;
+    _playlistSort.value = choice;
+    _applyPlaylistOrder();
+  }
+
   /// 当前媒体在 [_playlist] 里的身份（列表定位 / 同目录过滤 / 高亮都用它）：
   /// 网络存储播放用**远端路径**（媒体路径是回环 URL，token 每次都换，
   /// 不能当身份），本地播放与媒体路径一致。见 [playlistKeyOf]。
@@ -452,7 +497,7 @@ class _PlayerPageState extends State<PlayerPage>
     // 兄弟视频列表：入口给的就用（首页/文件夹页传的是当前排序的可见列表），
     // 没给（最近播放/历史记录/外部打开）就按当前视频所在文件夹从媒体库补全。
     // 补全不阻塞 open，完成后底栏「下一集」与播放列表面板自动跟上。
-    _playlistNotifier.value = widget.playlist ?? const <VideoFile>[];
+    _setEntryPlaylist(widget.playlist ?? const <VideoFile>[]);
     if (_playlistNotifier.value.isEmpty) unawaited(_loadFolderPlaylist());
     // 开启 libass：走 mpv 原生字幕渲染（sub-visibility=yes），而非 Flutter
     // SubtitleView。这也是内嵌字幕原生样式 / 各种 sub-* 样式属性生效的前提。
@@ -2879,6 +2924,10 @@ class _PlayerPageState extends State<PlayerPage>
           // 网络存储列表切集同样由本页执行（回环流的注册与释放都在本页，
           // 竖屏页只负责同步自身 UI）
           onNetworkVideoSelected: _switchToNetworkVideo,
+          // 播放列表面板换排序同样由本页重排（共享同一份播放列表与排序状态）
+          playlistSortListenable: _playlistSort,
+          mainSort: widget.mainSort,
+          onPlaylistSortChanged: _applyPlaylistSort,
           initialResumeVisible: resumeVisible,
           onResumeDismissed: () {
             if (!mounted) return;
@@ -2940,11 +2989,12 @@ class _PlayerPageState extends State<PlayerPage>
 
   /// 竖屏页 EOF「自动退出」/ 竖屏返回：先完成退出准备（保存进度/恢复设备/
   /// **把方向交还系统**与恢复系统 UI），此时竖屏页仍盖住横屏页、用户看不到
-  /// 底下画面；再连续关掉竖屏页 + 横屏页（两个 pop 均无动画，直接回到列表）。
+  /// 底下画面；再关掉播放页**及其上方所有路由**（竖屏页、打开着的面板/弹窗；
+  /// 均为无动画 pop，直接回到列表）。
   ///
   /// ⚠️ v5 重写（用户反馈 v4 仍有「当前帧竖屏界面」闪现、黑屏淡出也嫌生硬）：
   /// 先把退出准备做完（这期间竖屏页全程在栈顶遮住横屏页），随后 `_exiting`
-  /// 置黑化遮罩盖住下层横屏页，再 pop 竖屏页 + pop 横屏页——主播放路由与
+  /// 置黑化遮罩盖住下层横屏页，再关掉播放页及上方所有路由——主播放路由与
   /// 竖屏页路由的出场均为瞬时（无退出动画，见 playerPageRoute），任何时刻
   /// 看不到「两层页面同框 / 半屏过渡」。
   void _exitWithPortrait() {
@@ -2955,15 +3005,18 @@ class _PlayerPageState extends State<PlayerPage>
 
   Future<void> _finishExitWithPortrait() async {
     if (!mounted) return;
-    // 0. 下层黑化（此刻被竖屏页完全盖住，用户无感）：pop 后下层只能渲染纯黑
+    // 0. 先关掉压在竖屏页上的面板/弹窗（同 [_exitPlayer]）：竖屏页本身不是
+    //    弹层，会留到最后和横屏页一起关
+    final hadOverlay = popOverlaysAbove(context);
+    // 1. 下层黑化（此刻被竖屏页完全盖住，用户无感）：pop 后下层只能渲染纯黑
     setState(() => _exitBlackout = true);
-    // 1. 同一帧冻结出帧：pause 后 mpv 零新帧，末帧随瞬时 pop 消失
+    // 2. 同一帧冻结出帧：pause 后 mpv 零新帧，末帧随瞬时 pop 消失
     try {
       await _player.pause();
     } on AssertionError {
       // 播放器已销毁：静默
     }
-    // 2. 方向与 IO 并行、不阻塞 pop
+    // 3. 方向与 IO 并行、不阻塞 pop
     // 方向交还系统（App 默认策略）：退出播放后要跟随系统自动旋转/用户旋转
     // 锁定，不能把播放期的竖屏/横屏钉死在 Activity 上（否则退出后系统自动
     // 旋转失效，只能重启 App——用户反馈的根因）
@@ -2971,10 +3024,12 @@ class _PlayerPageState extends State<PlayerPage>
     unawaited(_saveProgress(forcePersist: true));
     unawaited(_restoreDeviceState());
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    // 3. 关两层：下层已是纯黑，两层 pop 任意时序都不会出现「两个竖屏界面」
+    await _waitOverlayExit(hadOverlay);
+    // 4. 关播放页：连同压在它上面的所有路由（竖屏页、面板/弹窗）一起关
+    //    （固定 pop 次数会被打开着的面板吃掉，播放页留在栈里且 _exiting
+    //    已置位 → 返回全部失效，见 popRouteAndAbove）
     if (!mounted) return;
-    Navigator.of(context).pop(); // 关竖屏页（瞬时，底下纯黑遮罩）
-    if (mounted) Navigator.of(context).pop(); // 关横屏页（黑化后安全）
+    popRouteAndAbove(context);
   }
 
   /// 听视频（工作.md 第 10 点）：右上角槽位/「更多 → 听视频」进入。
@@ -3077,7 +3132,7 @@ class _PlayerPageState extends State<PlayerPage>
       return;
     }
     if (_disposed || !mounted || videos.isEmpty) return;
-    _playlistNotifier.value = videos;
+    _setEntryPlaylist(videos);
   }
 
   /// 网络存储：按「连接 id + 当前视频远端路径」列同目录视频补全列表。
@@ -3095,14 +3150,17 @@ class _PlayerPageState extends State<PlayerPage>
       remotePath: remotePath,
     );
     if (_disposed || !mounted || videos.isEmpty) return;
-    _playlistNotifier.value = videos;
+    _setEntryPlaylist(videos);
   }
 
   /// 底栏「列表」按钮：右侧滑入播放列表面板（工作.md 第 7 点）。
   ///
   /// 内容 = 当前视频所在文件夹的视频（从 [_playlist] 按同目录过滤），
-  /// 面板内自带 4 排序胶囊 + 当前项高亮；点击列表项 → [_switchToVideo] 统一切集
-  /// （自动获得进度记忆 + 新集进度恢复），面板自身随后关闭。
+  /// 面板顶部可切换排序（字段 × 方向，或「跟随主界面」）；点击列表项 →
+  /// [_switchToVideo] 统一切集（自动获得进度记忆 + 新集进度恢复），面板随后关闭。
+  ///
+  /// 面板里换排序会回调 [_applyPlaylistSort] 重排实际播放列表：面板显示的顺序
+  /// 与「下一集 / 自动连播 / 列表循环」走的顺序必须一致。
   Future<void> _openPlaylistPanel() async {
     final l10n = AppLocalizations.of(context);
     _hideTimer?.cancel();
@@ -3128,16 +3186,18 @@ class _PlayerPageState extends State<PlayerPage>
       _resetHideTimer();
       return;
     }
-    final folder = folderOfPath(_playlistKey);
-    final videos = filterVideosInFolder(_playlist, folder);
     await showPlayerPanel(
       context,
       pages: [
         PlayerPanelPage(
           title: l10n.playerPlaylist,
           body: PlayerPlaylistPanel(
-            videos: videos,
+            playlistListenable: _playlistNotifier,
+            folder: folderOfPath(_playlistKey),
             currentPath: _playlistKey,
+            mainSort: widget.mainSort,
+            initialChoice: _playlistSort.value,
+            onChoiceChanged: _applyPlaylistSort,
             onSelect: (video) {
               if (video.path == _playlistKey) return; // 选当前项：不动作
               _switchToVideo(video);
@@ -3249,10 +3309,12 @@ class _PlayerPageState extends State<PlayerPage>
   /// 恢复系统 UI，再 pop 回列表。
   ///
   /// ⚠️ v5 重写（用户反馈 v4：退出仍有错向界面闪现，黑屏淡出也嫌生硬）：
-  /// - **不加 300ms 延时、不盖黑屏**：立即发起方向恢复（与保存/恢复并行），
+  /// - **不加固定延时、不盖黑屏**：立即发起方向恢复（与保存/恢复并行），
   ///   随后恢复系统 UI 并立即 pop。pop 的 200ms 淡出与系统旋转自然重叠——
   ///   横屏页在淡出过程中转回手机方向，列表页淡入，视觉平滑；
-  /// - 竖屏页路径走 [_exitWithPortrait]（先准备再连 pop 两层）。
+  ///   （唯一会等的是：退出时压着面板，等面板自己的退场动画走完，见
+  ///   [_waitOverlayExit]）
+  /// - 竖屏页路径走 [_exitWithPortrait]（先准备再关掉播放页与上方所有路由）。
   ///
   /// ⚠️ 方向必须是 [PlayerOrientation.restoreAppDefault]（交还系统），不能钉成
   /// 竖屏：钉死后 Activity 的 requestedOrientation 一直是竖屏，用户开着系统
@@ -3261,6 +3323,9 @@ class _PlayerPageState extends State<PlayerPage>
   Future<void> _exitPlayer() async {
     if (_exiting) return;
     _exiting = true;
+    // 0. 先关掉压在本页上的面板/弹窗：它们自带退场动画，若和播放页一起关，
+    //    会飘在返回后的列表页上方；等动画走完再关播放页（无面板时不等）
+    final hadOverlay = popOverlaysAbove(context);
     // 1. 立即恢复方向（不阻塞，让旋转与保存/恢复并行）
     unawaited(PlayerOrientation.restoreAppDefault());
     // 2. 同一帧冻结出帧：pause 后 mpv 零新帧（flutter#188300 不复发），
@@ -3274,8 +3339,20 @@ class _PlayerPageState extends State<PlayerPage>
     unawaited(_saveProgress(forcePersist: true));
     unawaited(_restoreDeviceState());
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    if (mounted) Navigator.of(context).pop();
+    await _waitOverlayExit(hadOverlay);
+    // 关播放页：连带压在它上面的面板/弹窗一起关。自动退出时若有面板开着，
+    // 直接 pop 一次只会弹掉面板、播放页留下且 _exiting 已置位（返回失效）
+    if (mounted) popRouteAndAbove(context);
     // 播放器销毁交给 State.dispose() 幂等兜底（_disposePlayer 保留）
+  }
+
+  /// 退出前等面板的退场动画走完（面板 220~260ms）。
+  ///
+  /// 播放页退出是瞬时的：不等的话面板会带着退场动画飘到返回后的列表页上方。
+  /// 没关掉面板（或设置里关了播放界面动画）时不等，退出保持瞬时。
+  Future<void> _waitOverlayExit(bool hadOverlay) async {
+    if (!hadOverlay || !_settings.playerAnimations) return;
+    await Future<void>.delayed(const Duration(milliseconds: 300));
   }
 
   /// 退出前销毁播放器：停声、停出帧、释放视频纹理（SurfaceProducer）。
@@ -3343,6 +3420,7 @@ class _PlayerPageState extends State<PlayerPage>
     _durationNotifier.dispose();
     _dragPositionNotifier.dispose();
     _playlistNotifier.dispose();
+    _playlistSort.dispose();
     _chapterTracker.dispose();
     _subtitleController.dispose();
     // 断开页面回调，避免控制器（可能被竖屏页/听视频页短暂共享）持有页面引用

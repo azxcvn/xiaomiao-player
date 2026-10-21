@@ -3417,6 +3417,12 @@ abstract class AppLocalizations {
   /// **'播放列表'**
   String get playerPlaylist;
 
+  /// 播放列表：排序跟随主界面（视频页）的排序
+  ///
+  /// In zh, this message translates to:
+  /// **'跟随主界面'**
+  String get playerPlaylistFollowMain;
+
   /// 播放器：锁定控制层（按钮语义）
   ///
   /// In zh, this message translates to:

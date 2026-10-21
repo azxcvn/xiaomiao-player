@@ -275,6 +275,11 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
         path: video.path,
         title: video.name,
         playlist: playlist,
+        // 播放列表「跟随主界面」用它显示当前排序；顺序直接用上面的 playlist
+        mainSort: (
+          field: widget.viewSettings.videoSortField,
+          order: widget.viewSettings.videoSortOrder,
+        ),
       )),
     );
     // 返回后刷新，进度条立即更新

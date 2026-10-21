@@ -553,6 +553,7 @@
   "playerPipUnsupported": "Picture-in-picture is not supported on this device",
   "playerPipFailed": "Failed to enter picture-in-picture",
   "playerPlaylist": "Playlist",
+  "playerPlaylistFollowMain": "Follow main",
   "playerLock": "Lock",
   "playerUnlock": "Unlock",
   "playerScreenshot": "Screenshot",

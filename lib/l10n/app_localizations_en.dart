@@ -1833,6 +1833,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerPlaylist => 'Playlist';
 
   @override
+  String get playerPlaylistFollowMain => 'Follow main';
+
+  @override
   String get playerLock => 'Lock';
 
   @override

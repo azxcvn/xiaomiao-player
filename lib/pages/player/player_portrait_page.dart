@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show ValueListenable;
+import 'package:flutter/foundation.dart' show ValueChanged, ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
@@ -61,6 +61,7 @@ import 'package:moumou/services/playback_progress_service.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/services/subtitle_service.dart';
 import 'package:moumou/services/super_resolution_service.dart';
+import 'package:moumou/services/view_settings.dart';
 import 'package:moumou/utils/app_dialog.dart';
 import 'package:moumou/utils/cast_source.dart';
 import 'package:moumou/utils/formatters.dart';
@@ -145,6 +146,17 @@ class PlayerPortraitPage extends StatefulWidget {
   /// 本页切集后通知横屏页同步最新 path/title
   final void Function(String path, String title)? onVideoChanged;
 
+  /// 播放列表排序状态（横屏页持有：null = 跟随主界面）：竖屏面板打开时读它
+  /// 决定初始高亮，与横屏面板共用同一份。
+  final ValueListenable<VideoSortChoice?> playlistSortListenable;
+
+  /// 主界面（视频页）当前的排序字段/方向（「跟随主界面」时面板显示它）
+  final VideoSortChoice mainSort;
+
+  /// 播放列表面板换排序回调（横屏页实现：按新顺序重排共享的播放列表，
+  /// 「下一集 / 自动连播 / 列表循环」据此走；本页只回报，不自己改顺序）
+  final ValueChanged<VideoSortChoice?>? onPlaylistSortChanged;
+
   /// 本页 EOF「自动退出」时回调（横屏页先关本页再退出播放器回到列表）
   final VoidCallback? onExitPlayer;
 
@@ -214,6 +226,9 @@ class PlayerPortraitPage extends StatefulWidget {
     this.onBiliEpisodeSelected,
     this.onNetworkVideoSelected,
     this.onVideoChanged,
+    required this.playlistSortListenable,
+    required this.mainSort,
+    this.onPlaylistSortChanged,
     this.onExitPlayer,
     this.initialResumeVisible = false,
     this.onResumeDismissed,
@@ -1184,15 +1199,20 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       return;
     }
     final folder = folderOfPath(_playlistKey);
-    final videos = filterVideosInFolder(_playlist, folder);
     await showPlayerBottomPanel(
       context,
       pages: [
         PlayerPanelPage(
           title: l10n.playerPlaylist,
           body: PlayerPlaylistPanel(
-            videos: videos,
+            playlistListenable: widget.playlistListenable,
+            folder: folder,
             currentPath: _playlistKey,
+            mainSort: widget.mainSort,
+            initialChoice: widget.playlistSortListenable.value,
+            // 排序由横屏页统一重排共享播放列表（本页只回报）
+            onChoiceChanged: (choice) =>
+                widget.onPlaylistSortChanged?.call(choice),
             onSelect: (video) {
               if (video.path == _playlistKey) return; // 选当前项：不动作
               _switchToVideo(video);

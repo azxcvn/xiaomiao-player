@@ -3,7 +3,8 @@ import 'package:moumou/utils/natural_compare.dart';
 
 /// 播放列表排序模式（名称 × 升/降序，日期 × 升/降序，共 4 种）。
 ///
-/// 播放列表面板的 4 个排序胶囊直接映射本枚举；
+/// 媒体库/网络目录补全播放列表时按名称升序排列用（[sortVideosForPlaylist]）；
+/// 播放列表面板的排序已改为「排序字段 + 方向」，见 `VideoSortChoice`。
 /// 胶囊文案在 `lib/l10n/label_maps.dart` 的 [playlistSortModeLabel]。
 enum PlaylistSortMode {
   nameAsc,
@@ -67,3 +68,4 @@ String folderOfPath(String path) {
 List<VideoFile> filterVideosInFolder(List<VideoFile> videos, String folder) {
   return videos.where((v) => folderOfPath(v.path) == folder).toList();
 }
+

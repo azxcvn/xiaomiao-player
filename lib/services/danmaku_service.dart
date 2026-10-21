@@ -703,7 +703,7 @@ class DanmakuController extends ChangeNotifier {
       if (hash == null) return const [];
       final file = File(path);
       final size = await file.length();
-      return _network.matchVideo(
+      return await _network.matchVideo(
         fileName: p.basename(path),
         fileHash: hash,
         fileSize: size,
