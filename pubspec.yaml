@@ -72,9 +72,10 @@ dependencies:
   # 投屏（DLNA/UPnP）：SSDP 发现渲染器 + SetAVTransportURI/Play 推流，
   # Kazumi 同款纯 Dart 库（无原生依赖）。
   dlna_dart: ^0.1.1
-  # 应用内检查更新：GitHub Release 正文为 Markdown，用 flutter_markdown 渲染
-  # 更新说明（工作.md：更新功能）。
-  flutter_markdown: ^0.7.3
+  # 应用内检查更新：GitHub Release 正文为 Markdown，用 flutter_markdown_plus
+  # 渲染更新说明（工作.md：更新功能）。原 flutter_markdown 已被官方停维护，
+  # plus 是接手的社区分支，API 一致。
+  flutter_markdown_plus: ^1.0.12
   # 自定义主题色：色相环 + 饱和度/明度选择器（纯 Dart，无原生依赖）
   # 用 plus fork：比原版多了 hexInputBar 手输框 + RGB/HSV/HSL 标签切换
   flutter_color_picker_plus: ^2.2.1

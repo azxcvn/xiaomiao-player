@@ -43,7 +43,7 @@ LicenseRegistry / showLicensePage）会自动汇总并展示已随包分发的�
 | [flutter_secure_storage](https://pub.dev/packages/flutter_secure_storage) | 9.2.4 | BSD-3-Clause |
 | [smb_connect](https://pub.dev/packages/smb_connect)（本地 fork：去掉全局串行锁以支持请求并发在途，见 third_party/smb_connect/FORK.md） | 0.0.9-mk.1 | Apache-2.0 |
 | [dlna_dart](https://pub.dev/packages/dlna_dart) | 0.1.1 | BSD-3-Clause |
-| [flutter_markdown](https://pub.dev/packages/flutter_markdown) | 0.7.7+1 | BSD-3-Clause |
+| [flutter_markdown_plus](https://pub.dev/packages/flutter_markdown_plus)（原 flutter_markdown 的社区维护分支） | 1.0.12 | BSD-3-Clause |
 | [flutter_color_picker_plus](https://pub.dev/packages/flutter_color_picker_plus) | 2.2.1 | MIT |
 | [permission_handler_platform_interface](https://pub.dev/packages/permission_handler_platform_interface)（dev） | 4.4.0 | MIT |
 | [flutter_lints](https://pub.dev/packages/flutter_lints)（dev） | 6.0.0 | BSD-3-Clause |

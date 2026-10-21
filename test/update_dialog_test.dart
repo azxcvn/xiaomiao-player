@@ -115,7 +115,7 @@ void main() {
     expect(find.text('备用下载站链接待接入'), findsOneWidget);
   });
 
-  // P3：不传 onTapLink 时 flutter_markdown 只把链接渲染成高亮文本，点了没反应
+  // P3：不传 onTapLink 时 flutter_markdown_plus 只把链接渲染成高亮文本，点了没反应
   testWidgets('Markdown 正文里的链接可点：回调拿到解析后的 URI', (tester) async {
     final opened = <Uri>[];
     await tester.pumpWidget(

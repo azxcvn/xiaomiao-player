@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/update_info.dart';
 import 'package:moumou/services/update/update_settings.dart';
@@ -180,7 +180,7 @@ class UpdateDialog extends StatelessWidget {
                 child: MarkdownBody(
                   data: info.body.isEmpty ? l10n.updateNoNotes : info.body,
                   styleSheet: markdownStyle,
-                  // ⚠️ 不传 onTapLink 时 flutter_markdown 只把链接渲染成高亮文本，
+                  // ⚠️ 不传 onTapLink 时 flutter_markdown_plus 只把链接渲染成高亮文本，
                   // 点上去毫无反应（P3）：更新说明里带 release / 下载页链接是常态。
                   onTapLink: (text, href, title) {
                     if (href == null || href.isEmpty) return;
