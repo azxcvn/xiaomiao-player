@@ -3657,6 +3657,12 @@ abstract class AppLocalizations {
   /// **'预告'**
   String get playerBiliPreview;
 
+  /// 播放器 B 站剧集面板：排序胶囊（回到番剧原本的集数顺序）
+  ///
+  /// In zh, this message translates to:
+  /// **'番剧顺序'**
+  String get playerBiliSeasonOrder;
+
   /// 播放器底栏：下一集按钮
   ///
   /// In zh, this message translates to:

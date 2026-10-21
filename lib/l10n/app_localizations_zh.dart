@@ -1904,6 +1904,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerBiliPreview => '预告';
 
   @override
+  String get playerBiliSeasonOrder => '番剧顺序';
+
+  @override
   String get playerNextEpisode => '下一集';
 
   @override
@@ -6377,6 +6380,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get playerBiliPreview => '預告';
+
+  @override
+  String get playerBiliSeasonOrder => '番劇順序';
 
   @override
   String get playerNextEpisode => '下一集';

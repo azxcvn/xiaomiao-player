@@ -593,6 +593,7 @@
   "playerBiliCurrentOfTotal": "第 {current} 集 / 共 {total, plural, other{{total} 集}}",
   "playerBiliFreeLimited": "限免",
   "playerBiliPreview": "預告",
+  "playerBiliSeasonOrder": "番劇順序",
   "playerNextEpisode": "下一集",
   "playerCastSelectScreen": "選擇螢幕",
   "playerSeekBackSeconds": "倒轉 {seconds} 秒",

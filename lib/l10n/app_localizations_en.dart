@@ -1986,6 +1986,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerBiliPreview => 'Preview';
 
   @override
+  String get playerBiliSeasonOrder => 'Season order';
+
+  @override
   String get playerNextEpisode => 'Next episode';
 
   @override

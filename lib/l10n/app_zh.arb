@@ -1702,6 +1702,10 @@
   "@playerBiliPreview": {
     "description": "播放器 B 站剧集面板：预告标记"
   },
+  "playerBiliSeasonOrder": "番剧顺序",
+  "@playerBiliSeasonOrder": {
+    "description": "播放器 B 站剧集面板：排序胶囊（回到番剧原本的集数顺序）"
+  },
   "playerNextEpisode": "下一集",
   "@playerNextEpisode": {
     "description": "播放器底栏：下一集按钮"

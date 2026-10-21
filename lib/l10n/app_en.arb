@@ -593,6 +593,7 @@
   "playerBiliCurrentOfTotal": "{total, plural, =1{Episode {current} of 1} other{Episode {current} of {total}}}",
   "playerBiliFreeLimited": "Free for a limited time",
   "playerBiliPreview": "Preview",
+  "playerBiliSeasonOrder": "Season order",
   "playerNextEpisode": "Next episode",
   "playerCastSelectScreen": "Choose a screen",
   "playerSeekBackSeconds": "Rewind {seconds}s",

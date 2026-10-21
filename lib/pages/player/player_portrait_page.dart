@@ -137,6 +137,13 @@ class PlayerPortraitPage extends StatefulWidget {
     BiliPlaylistItem item,
   )? onBiliEpisodeSelected;
 
+  /// 番剧播放列表排序状态（横屏页持有：本次播放内有效）。
+  /// 本页面板打开时读它决定初始选中，「下一集 / 列表循环」也按同一份顺序走。
+  final ValueListenable<BiliPlaylistSort> biliSortListenable;
+
+  /// 番剧播放列表换排序回调（横屏页据此更新实际播放顺序）
+  final ValueChanged<BiliPlaylistSort>? onBiliSortChanged;
+
   /// 网络存储列表切集回调（横屏页实现：注册目标文件的回环流 + 开新流 + 释放
   /// 旧流——回环流的生命周期归横屏页）。返回新媒体的 (path, title)，
   /// 本页据此同步自身状态；失败返回 null。
@@ -227,6 +234,8 @@ class PlayerPortraitPage extends StatefulWidget {
     this.biliPlaylist,
     this.initialBiliEpId,
     this.onBiliEpisodeSelected,
+    required this.biliSortListenable,
+    this.onBiliSortChanged,
     this.onNetworkVideoSelected,
     this.onVideoChanged,
     required this.playlistSortListenable,
@@ -298,11 +307,13 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       Listenable.merge([_progressListenable, _chapterTracker]);
 
   /// 底栏监听合并：章节 + 弹幕开关状态（弹幕开关图标随 danmakuOn 刷新）+
-  /// 兄弟视频列表（横屏页媒体库补全完成后「下一集」按钮自动刷新）
+  /// 兄弟视频列表（横屏页媒体库补全完成后「下一集」按钮自动刷新）+
+  /// 番剧排序（换排序后「下一集」是否有下一集要立刻刷新）
   late final Listenable _bottomBarListenable = Listenable.merge([
     _chapterListenable,
     _danmakuController,
     widget.playlistListenable,
+    widget.biliSortListenable,
   ]);
 
   /// 章节状态跟踪器（工作.md 章节功能）：优先共享横屏页实例
@@ -419,16 +430,50 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   final List<StreamSubscription<dynamic>> _subs = [];
 
   /// 是否存在「下一集」：
-  /// - B 站番剧（[widget.biliPlaylist] 非空）→ 按当前 epId 定位剧集列表；
+  /// - B 站番剧（[widget.biliPlaylist] 非空）→ 按（排序后的）剧集列表当前集定位；
   /// - 本地/网络文件 → 按 [_playlist] 当前项定位（网络项按远端路径，
   ///   媒体路径是每次注册都换 token 的回环 URL，不能当身份）。
   bool get _hasNext {
-    final bili = widget.biliPlaylist;
-    if (bili != null) return bili.hasNextAt(bili.indexOfEpId(_biliEpId));
+    if (widget.biliPlaylist != null) {
+      final items = _biliItems;
+      final idx = _biliIndex;
+      return idx >= 0 && idx < items.length - 1;
+    }
     final list = _playlist;
     if (list.isEmpty) return false;
     final idx = list.indexWhere((v) => v.path == _playlistKey);
     return idx >= 0 && idx < list.length - 1;
+  }
+
+  /// 当前排序下的剧集顺序（横屏页持有排序状态，本页读同一份）。
+  ///
+  /// 结果缓存：位置流每次刷新都会问 [_hasNext]，整季（上千集）不能每次重排；
+  /// 只有排序模式变化才重建。
+  List<BiliPlaylistItem>? _biliItemsCache;
+  BiliPlaylistSort? _biliItemsCacheSort;
+
+  List<BiliPlaylistItem> get _biliItems {
+    final bili = widget.biliPlaylist;
+    if (bili == null) return const <BiliPlaylistItem>[];
+    final sort = widget.biliSortListenable.value;
+    if (_biliItemsCache != null && _biliItemsCacheSort == sort) {
+      return _biliItemsCache!;
+    }
+    final items = sortBiliPlaylistItems(bili.items, sort);
+    _biliItemsCache = items;
+    _biliItemsCacheSort = sort;
+    return items;
+  }
+
+  /// 当前 B 站剧集在 [_biliItems] 中的下标（-1 = 未定位）
+  int get _biliIndex {
+    final epId = _biliEpId;
+    if (epId == null) return -1;
+    final items = _biliItems;
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].epId == epId) return i;
+    }
+    return -1;
   }
 
   /// 是否有可循环的播放列表（EOF「列表循环」判定用，两种来源合并）
@@ -927,11 +972,11 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   // ── 下一集 / 播放列表切集 ───────────────────────────────
 
   Future<void> _playNext() async {
-    final bili = widget.biliPlaylist;
-    if (bili != null) {
-      final next = bili.itemAt(bili.indexOfEpId(_biliEpId) + 1);
-      if (next == null) return;
-      await _switchToBiliEpisode(next);
+    if (widget.biliPlaylist != null) {
+      final items = _biliItems;
+      final idx = _biliIndex;
+      if (idx < 0 || idx >= items.length - 1) return;
+      await _switchToBiliEpisode(items[idx + 1]);
       return;
     }
     final list = _playlist;
@@ -1156,11 +1201,10 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
 
   /// 列表循环：回到播放列表第一集（B 站番剧回到第一集）。
   Future<void> _playFirst() async {
-    final bili = widget.biliPlaylist;
-    if (bili != null) {
-      final first = bili.itemAt(0);
-      if (first == null) return;
-      await _switchToBiliEpisode(first);
+    if (widget.biliPlaylist != null) {
+      final items = _biliItems;
+      if (items.isEmpty) return;
+      await _switchToBiliEpisode(items.first);
       return;
     }
     final list = _playlist;
@@ -1190,7 +1234,10 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
             title: l10n.playerPlaylist,
             body: PlayerBiliPlaylistPanel(
               playlist: bili,
-              currentIndex: bili.indexOfEpId(_biliEpId),
+              currentEpId: _biliEpId,
+              sort: widget.biliSortListenable.value,
+              // 排序由横屏页持有（下一集/自动连播按同一份顺序走）
+              onSortChanged: (sort) => widget.onBiliSortChanged?.call(sort),
               onSelect: (item) {
                 if (item.epId == _biliEpId) return; // 选当前集：不动作
                 _switchToBiliEpisode(item);

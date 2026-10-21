@@ -37,6 +37,44 @@ class BiliPlaylistItem {
   String get badge => episode.badge;
 }
 
+/// 番剧播放列表的排序方式（播放列表面板顶部三枚胶囊，本次播放内有效）。
+///
+/// 「名称」= 集号（[BiliPlaylistItem.index]，列表左侧显示的那个）：
+/// 升序就是集号从小到大，降序就是从大到小。
+enum BiliPlaylistSort {
+  /// 番剧原本的集数顺序（不重排）
+  season,
+
+  /// 名称（集号）升序
+  nameAsc,
+
+  /// 名称（集号）降序
+  nameDesc,
+}
+
+/// 按 [sort] 返回剧集列表的新顺序（纯函数，不改动入参）。
+///
+/// - [BiliPlaylistSort.season]：原样返回（番剧顺序）；
+/// - 名称升/降序：按 [BiliPlaylistItem.index]（集号）比较。
+///
+/// 下一集 / 自动连播 / 列表循环都读同一份顺序，保证与面板显示一致。
+List<BiliPlaylistItem> sortBiliPlaylistItems(
+  List<BiliPlaylistItem> items,
+  BiliPlaylistSort sort,
+) {
+  if (sort == BiliPlaylistSort.season) return [...items];
+  final list = [...items];
+  switch (sort) {
+    case BiliPlaylistSort.nameAsc:
+      list.sort((a, b) => a.index.compareTo(b.index));
+    case BiliPlaylistSort.nameDesc:
+      list.sort((a, b) => b.index.compareTo(a.index));
+    case BiliPlaylistSort.season:
+      break; // 上面已提前返回
+  }
+  return list;
+}
+
 /// 番剧播放列表（整季）。
 class BiliPlaylist {
   /// 季 id（0 = 未知）

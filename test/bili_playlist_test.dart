@@ -155,4 +155,41 @@ void main() {
       expect(item.episode.epId, 5);
     });
   });
+
+  group('sortBiliPlaylistItems（面板排序 → 实际播放顺序）', () {
+    /// 手工构造乱序的剧集（index = 集号），验证排序而不是依赖构造顺序
+    BiliPlaylistItem item(int epId, int index) => BiliPlaylistItem(
+          episode: ep(epId),
+          index: index,
+        );
+
+    List<int> indices(List<BiliPlaylistItem> items) =>
+        items.map((e) => e.index).toList();
+
+    test('番剧顺序：原样返回（新列表）', () {
+      final items = [item(1, 3), item(2, 1), item(3, 2)];
+      expect(
+        indices(sortBiliPlaylistItems(items, BiliPlaylistSort.season)),
+        [3, 1, 2],
+      );
+      // 纯函数：入参不被改动
+      expect(indices(items), [3, 1, 2]);
+    });
+
+    test('名称（集号）升序：按 index 从小到大', () {
+      final items = [item(1, 3), item(2, 1), item(3, 2)];
+      expect(
+        indices(sortBiliPlaylistItems(items, BiliPlaylistSort.nameAsc)),
+        [1, 2, 3],
+      );
+    });
+
+    test('名称（集号）降序：按 index 从大到小', () {
+      final items = [item(1, 3), item(2, 1), item(3, 2)];
+      expect(
+        indices(sortBiliPlaylistItems(items, BiliPlaylistSort.nameDesc)),
+        [3, 2, 1],
+      );
+    });
+  });
 }
