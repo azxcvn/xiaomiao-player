@@ -225,6 +225,9 @@ class _NetworkBrowserPageState extends State<NetworkBrowserPage> {
           // 带上网络来源：字幕侧据此扫描远端同目录的同名字幕
           // （本地 `File` 链路对 loopback URL 不成立）
           networkSource: video,
+          // 播放列表「跟随主界面」+ 同目录兄弟列表补全都按网络页当前排序
+          // （名称/日期），保证网络页顺序 = 播放列表 = 下一集顺序
+          networkSort: _netSettings.sort,
           // 退出时把真实时长回写到列表（远端不做探测，靠「播过一次就记住」）；
           // 远端路径由播放页带上——播放页内切集后回报的是新一集的时长，
           // 不能记到打开时那一条上

@@ -97,6 +97,25 @@ void main() {
     expect(_followChip(tester).selected, isTrue);
     expect(find.text('大小'), findsOneWidget);
   });
+
+  testWidgets('网络播放只给名称/日期两个排序字段', (tester) async {
+    await _pumpPanel(
+      tester,
+      entry: entry,
+      mainSort: (field: VideoSortField.date, order: SortOrder.desc),
+      sortFields: const [VideoSortField.name, VideoSortField.date],
+    );
+
+    // 跟随状态：胶囊显示网络页的「日期」
+    expect(find.text('日期'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('playlist-sort-field')));
+    await tester.pumpAndSettle();
+    // 菜单只有名称/日期，没有大小/时长
+    expect(find.text('名称'), findsOneWidget);
+    expect(find.text('大小'), findsNothing);
+    expect(find.text('时长'), findsNothing);
+  });
 }
 
 /// 模拟播放页：持有播放列表与排序选择，排序变化时按同一规则重排。
@@ -104,13 +123,14 @@ Future<_HostState> _pumpPanel(
   WidgetTester tester, {
   required List<VideoFile> entry,
   required VideoSortChoice mainSort,
+  List<VideoSortField> sortFields = VideoSortField.values,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
       locale: kTestLocaleZh,
       localizationsDelegates: kTestLocalizationDelegates,
       supportedLocales: kTestSupportedLocales,
-      home: _Host(entry: entry, mainSort: mainSort),
+      home: _Host(entry: entry, mainSort: mainSort, sortFields: sortFields),
     ),
   );
   await tester.pumpAndSettle();
@@ -120,8 +140,13 @@ Future<_HostState> _pumpPanel(
 class _Host extends StatefulWidget {
   final List<VideoFile> entry;
   final VideoSortChoice mainSort;
+  final List<VideoSortField> sortFields;
 
-  const _Host({required this.entry, required this.mainSort});
+  const _Host({
+    required this.entry,
+    required this.mainSort,
+    required this.sortFields,
+  });
 
   @override
   State<_Host> createState() => _HostState();
@@ -158,6 +183,7 @@ class _HostState extends State<_Host> {
         folder: '/videos',
         currentPath: '2.mp4',
         mainSort: widget.mainSort,
+        sortFields: widget.sortFields,
         initialChoice: _choice,
         onChoiceChanged: _onChoiceChanged,
         onSelect: (_) {},

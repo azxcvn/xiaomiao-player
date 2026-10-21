@@ -88,6 +88,7 @@ import 'package:moumou/utils/intro_outro_skip.dart';
 import 'package:moumou/utils/mpv_tuning.dart';
 import 'package:moumou/utils/network_mime_types.dart';
 import 'package:moumou/utils/network_playlist.dart';
+import 'package:moumou/utils/network_sort.dart';
 import 'package:moumou/utils/pip_aspect.dart';
 import 'package:moumou/utils/playback_completion.dart';
 import 'package:moumou/utils/playback_history.dart';
@@ -146,6 +147,13 @@ class PlayerPage extends StatefulWidget {
   /// 排序的入口用默认值（名称升序，与媒体库补全列表的顺序一致）。
   final VideoSortChoice mainSort;
 
+  /// 网络存储播放时网络浏览页的排序（null = 非网络播放或入口没传）。
+  ///
+  /// 网络浏览页与播放列表用同一份网络排序设置：播放页据此补全同目录兄弟列表，
+  /// 保证「网络页看到的顺序 = 播放列表顺序 = 下一集顺序」。网络排序只有
+  /// 名称/日期，见 [NetworkSortField]。
+  final NetworkSort? networkSort;
+
   const PlayerPage({
     super.key,
     required this.path,
@@ -156,6 +164,7 @@ class PlayerPage extends StatefulWidget {
     this.biliMedia,
     this.biliPlaylist,
     this.mainSort = const (field: VideoSortField.name, order: SortOrder.asc),
+    this.networkSort,
   });
 
   @override
@@ -363,6 +372,27 @@ class _PlayerPageState extends State<PlayerPage>
   final ValueNotifier<VideoSortChoice?> _playlistSort =
       ValueNotifier<VideoSortChoice?>(null);
 
+  /// 「跟随主界面」时面板两枚胶囊显示的字段/方向。
+  ///
+  /// 网络存储播放跟**网络浏览页**的排序（名称/日期）；本地播放跟视频页
+  /// （入口传进来的 [PlayerPage.mainSort]）。
+  VideoSortChoice get _mainSort {
+    final net = widget.networkSort;
+    if (net == null) return widget.mainSort;
+    return (
+      field: net.field == NetworkSortField.date
+          ? VideoSortField.date
+          : VideoSortField.name,
+      order: net.order == NetworkSortOrder.desc ? SortOrder.desc : SortOrder.asc,
+    );
+  }
+
+  /// 「排序方式」菜单可选字段：本地 4 个；网络只有名称/日期（与网络浏览页
+  /// 的排序字段一致——远端大小/时长不可靠）。
+  List<VideoSortField> get _playlistSortFields => widget.networkSort == null
+      ? VideoSortField.values
+      : const [VideoSortField.name, VideoSortField.date];
+
   /// 设置播放列表原始集合，并按当前排序选择重新派生 [_playlist]。
   void _setEntryPlaylist(List<VideoFile> videos) {
     _entryPlaylist = videos;
@@ -372,10 +402,25 @@ class _PlayerPageState extends State<PlayerPage>
   /// 按当前排序选择重新派生 [_playlist]（跟随主界面 = 入口原始顺序）。
   void _applyPlaylistOrder() {
     final choice = _playlistSort.value;
-    _playlistNotifier.value = choice == null
-        ? _entryPlaylist
-        : sortVideosBy(_entryPlaylist, choice.field, choice.order);
+    if (choice == null) {
+      _playlistNotifier.value = _entryPlaylist;
+      return;
+    }
+    _playlistNotifier.value = widget.networkSort == null
+        ? sortVideosBy(_entryPlaylist, choice.field, choice.order)
+        // 网络播放按网络页规则排（缺修改时间恒排末尾），与浏览页一致
+        : sortNetworkPlaylistVideos(_entryPlaylist, _networkSortOf(choice));
   }
+
+  /// 面板的字段/方向 → 网络排序（网络播放的菜单只给名称/日期）
+  NetworkSort _networkSortOf(VideoSortChoice choice) => NetworkSort(
+        field: choice.field == VideoSortField.date
+            ? NetworkSortField.date
+            : NetworkSortField.name,
+        order: choice.order == SortOrder.desc
+            ? NetworkSortOrder.desc
+            : NetworkSortOrder.asc,
+      );
 
   /// 播放列表面板切换排序：重排**实际播放列表**，让「下一集 / 自动连播 /
   /// 列表循环」按面板显示的顺序走；选择只在本次播放内有效。
@@ -2926,7 +2971,8 @@ class _PlayerPageState extends State<PlayerPage>
           onNetworkVideoSelected: _switchToNetworkVideo,
           // 播放列表面板换排序同样由本页重排（共享同一份播放列表与排序状态）
           playlistSortListenable: _playlistSort,
-          mainSort: widget.mainSort,
+          mainSort: _mainSort,
+          sortFields: _playlistSortFields,
           onPlaylistSortChanged: _applyPlaylistSort,
           initialResumeVisible: resumeVisible,
           onResumeDismissed: () {
@@ -3150,7 +3196,11 @@ class _PlayerPageState extends State<PlayerPage>
       remotePath: remotePath,
     );
     if (_disposed || !mounted || videos.isEmpty) return;
-    _setEntryPlaylist(videos);
+    // 补全结果按网络浏览页的排序重排（入口没传就按默认名称升序）：
+    // 播放列表「跟随主界面」的顺序必须与网络页看到的一致
+    _setEntryPlaylist(
+      sortNetworkPlaylistVideos(videos, widget.networkSort ?? const NetworkSort()),
+    );
   }
 
   /// 底栏「列表」按钮：右侧滑入播放列表面板（工作.md 第 7 点）。
@@ -3195,7 +3245,8 @@ class _PlayerPageState extends State<PlayerPage>
             playlistListenable: _playlistNotifier,
             folder: folderOfPath(_playlistKey),
             currentPath: _playlistKey,
-            mainSort: widget.mainSort,
+            mainSort: _mainSort,
+            sortFields: _playlistSortFields,
             initialChoice: _playlistSort.value,
             onChoiceChanged: _applyPlaylistSort,
             onSelect: (video) {

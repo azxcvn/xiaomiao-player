@@ -436,7 +436,7 @@ utils（纯工具）    → 只依赖 models
 - **抽象层**：`NetworkClient` 接口 + `network_client_factory` 按协议构造；`NetworkRepository` 提供浏览目录与解析播放流的高层 API。
 - **协议**：WebDAV（纯 Dart `http`，PROPFIND 列表 + Range 流式读取）、SMB（`smb_connect` + `smb_pipeline` 并发预读）、FTP（被动模式、`MLSD`→`LIST` 回退、REST 偏移续传）。
 - **播放**：`NetworkStreamingProxy` 把远端文件转成 `127.0.0.1` 的无凭据回环 URL 供 mpv 拉流（Range / HEAD + 滑动窗口网速统计）；`network_subtitle_match` 在远端目录按同规则挑同名字幕。
-- **浏览**：`NetworkBrowserPage` 复用 `FolderCard` / `VideoCard`，只展示远端列目录真给得出的字段（文件夹与视频显示日期，视频另加完整名称；时长由播过的视频回报）；`NetworkSort` 提供名称 / 日期排序；目录列表走 `NetworkDirectoryCache`。
+- **浏览**：`NetworkBrowserPage` 复用 `FolderCard` / `VideoCard`，只展示远端列目录真给得出的字段（文件夹与视频显示日期，视频另加完整名称；时长由播过的视频回报）；`NetworkSort` 提供名称 / 日期排序（播放页补全的同目录播放列表沿用同一套排序，含「缺修改时间恒排末尾」）；目录列表走 `NetworkDirectoryCache`。
 - **凭据**：账户清单存 SharedPreferences，密码只进加密存储（含老明文迁移）。
 
 ### 5.7 哔哩哔哩

@@ -153,6 +153,9 @@ class PlayerPortraitPage extends StatefulWidget {
   /// 主界面（视频页）当前的排序字段/方向（「跟随主界面」时面板显示它）
   final VideoSortChoice mainSort;
 
+  /// 「排序方式」菜单可选字段（本地 4 个；网络播放只有名称/日期）
+  final List<VideoSortField> sortFields;
+
   /// 播放列表面板换排序回调（横屏页实现：按新顺序重排共享的播放列表，
   /// 「下一集 / 自动连播 / 列表循环」据此走；本页只回报，不自己改顺序）
   final ValueChanged<VideoSortChoice?>? onPlaylistSortChanged;
@@ -228,6 +231,7 @@ class PlayerPortraitPage extends StatefulWidget {
     this.onVideoChanged,
     required this.playlistSortListenable,
     required this.mainSort,
+    required this.sortFields,
     this.onPlaylistSortChanged,
     this.onExitPlayer,
     this.initialResumeVisible = false,
@@ -1209,6 +1213,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
             folder: folder,
             currentPath: _playlistKey,
             mainSort: widget.mainSort,
+            sortFields: widget.sortFields,
             initialChoice: widget.playlistSortListenable.value,
             // 排序由横屏页统一重排共享播放列表（本页只回报）
             onChoiceChanged: (choice) =>

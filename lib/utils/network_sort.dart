@@ -6,6 +6,7 @@
 library;
 
 import 'package:moumou/models/network_file.dart';
+import 'package:moumou/models/video_file.dart';
 import 'package:moumou/utils/natural_compare.dart';
 
 enum NetworkSortField {
@@ -62,6 +63,44 @@ int _compareDate(NetworkFile a, NetworkFile b, NetworkSort sort) {
   final aKnown = aTime > 0;
   final bKnown = bTime > 0;
   if (aKnown != bKnown) return aKnown ? -1 : 1; // 未知时间恒在末尾
+  if (!aKnown) return 0;
+  final cmp = aTime.compareTo(bTime);
+  return sort.isAscending ? cmp : -cmp;
+}
+
+/// 播放页补全的远端兄弟列表（已转成 [VideoFile]）排序，规则与
+/// [sortNetworkEntries] **完全一致**：名称自然序 / 日期缺时间恒排末尾 /
+/// 同值按名称兜底。
+///
+/// 网络浏览页与播放页用的是同一份网络排序设置，靠这个函数保证
+/// 「网络页看到的顺序 = 播放列表顺序 = 下一集顺序」。
+List<VideoFile> sortNetworkPlaylistVideos(
+  List<VideoFile> videos,
+  NetworkSort sort,
+) {
+  final list = [...videos];
+  list.sort((a, b) {
+    final cmp = switch (sort.field) {
+      NetworkSortField.name => _withOrder(
+          naturalCompare(a.name, b.name),
+          sort,
+        ),
+      NetworkSortField.date => _compareVideoDate(a, b, sort),
+    };
+    if (cmp != 0) return cmp;
+    // 同值用名称兜底，保证顺序稳定可预期
+    return naturalCompare(a.name, b.name);
+  });
+  return list;
+}
+
+/// 日期比较：无修改时间（null / 0）的条目恒在末尾，降序也不跑到最前。
+int _compareVideoDate(VideoFile a, VideoFile b, NetworkSort sort) {
+  final aTime = a.dateModifiedMs ?? 0;
+  final bTime = b.dateModifiedMs ?? 0;
+  final aKnown = aTime > 0;
+  final bKnown = bTime > 0;
+  if (aKnown != bKnown) return aKnown ? -1 : 1;
   if (!aKnown) return 0;
   final cmp = aTime.compareTo(bTime);
   return sort.isAscending ? cmp : -cmp;

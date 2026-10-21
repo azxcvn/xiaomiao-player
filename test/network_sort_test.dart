@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/models/network_file.dart';
+import 'package:moumou/models/video_file.dart';
 import 'package:moumou/utils/network_sort.dart';
 
 /// 网络目录排序：**只有名称与日期**（远端列目录可靠给出的字段）。
@@ -109,5 +110,65 @@ void main() {
     );
     expect(s2.field, NetworkSortField.date);
     expect(s2.isAscending, isFalse);
+  });
+
+  group('sortNetworkPlaylistVideos（播放页补全列表，与网络页同一套规则）', () {
+    VideoFile v(String name, {int mtime = 0}) => VideoFile(
+          path: '/$name',
+          name: name,
+          dateModified:
+              mtime > 0 ? DateTime.fromMillisecondsSinceEpoch(mtime) : null,
+        );
+
+    List<String> vnames(List<VideoFile> list) =>
+        list.map((e) => e.name).toList();
+
+    test('名称自然序升降序', () {
+      final list = [v('EP10.mkv'), v('EP2.mkv'), v('EP1.mkv')];
+      expect(
+        vnames(sortNetworkPlaylistVideos(list, const NetworkSort())),
+        ['EP1.mkv', 'EP2.mkv', 'EP10.mkv'],
+      );
+      expect(
+        vnames(sortNetworkPlaylistVideos(
+          list,
+          const NetworkSort(order: NetworkSortOrder.desc),
+        )),
+        ['EP10.mkv', 'EP2.mkv', 'EP1.mkv'],
+      );
+    });
+
+    test('日期排序：缺修改时间的条目恒排末尾（升/降序都一样）', () {
+      final list = [v('无时间'), v('旧', mtime: ms(1)), v('新', mtime: ms(5))];
+      expect(
+        vnames(sortNetworkPlaylistVideos(
+          list,
+          const NetworkSort(field: NetworkSortField.date),
+        )),
+        ['旧', '新', '无时间'],
+      );
+      expect(
+        vnames(sortNetworkPlaylistVideos(
+          list,
+          const NetworkSort(
+            field: NetworkSortField.date,
+            order: NetworkSortOrder.desc,
+          ),
+        )),
+        ['新', '旧', '无时间'],
+      );
+    });
+
+    test('时间相同按名称兜底，纯函数不改动入参', () {
+      final list = [v('b', mtime: ms(1)), v('a', mtime: ms(1))];
+      expect(
+        vnames(sortNetworkPlaylistVideos(
+          list,
+          const NetworkSort(field: NetworkSortField.date),
+        )),
+        ['a', 'b'],
+      );
+      expect(vnames(list), ['b', 'a']);
+    });
   });
 }

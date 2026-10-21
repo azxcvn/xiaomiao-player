@@ -11,9 +11,10 @@ import 'package:moumou/widgets/settings_ui.dart';
 /// 播放列表面板内容（横屏经 [showPlayerPanel] 右侧滑入、竖屏经
 /// [showPlayerBottomPanel] 底部弹出）。
 ///
-/// - 顶部排序区三枚胶囊：左「排序方式」（名称/日期/大小/时长，点开小菜单）、
-///   中「排序方向」（升序/降序，点开小菜单）、右固定「跟随主界面」
-///   （选中时顺序 = 视频页主界面的顺序，字段/方向两枚胶囊显示主界面的值）；
+/// - 顶部排序区三枚胶囊：左「排序方式」（本地 名称/日期/大小/时长；网络播放
+///   只有 名称/日期，见 [sortFields]，点开小菜单）、中「排序方向」（升序/降序，
+///   点开小菜单）、右固定「跟随主界面」（选中时顺序 = 主界面顺序，字段/方向
+///   两枚胶囊显示主界面的值）；
 /// - 排序只改**实际播放列表**：回调 [onChoiceChanged]，由播放页重排
 ///   「下一集 / 自动连播 / 列表循环」用的那份列表；面板本身只读
 ///   [playlistListenable]（播放页维护的唯一顺序），不自己存一份顺序，
@@ -38,6 +39,12 @@ class PlayerPlaylistPanel extends StatefulWidget {
   /// 主界面（视频页）当前的排序字段/方向：「跟随主界面」时两枚胶囊显示它
   final VideoSortChoice mainSort;
 
+  /// 「排序方式」菜单可选的字段（按顺序展示）。
+  ///
+  /// 本地播放给全部 4 个；网络存储播放只给名称/日期（与网络浏览页的排序
+  /// 字段一致——远端的大小/时长不可靠，给了也排不动）。
+  final List<VideoSortField> sortFields;
+
   /// 打开面板时的排序状态（null = 跟随主界面）
   final VideoSortChoice? initialChoice;
 
@@ -54,6 +61,7 @@ class PlayerPlaylistPanel extends StatefulWidget {
     required this.folder,
     required this.currentPath,
     required this.mainSort,
+    required this.sortFields,
     required this.initialChoice,
     required this.onChoiceChanged,
     required this.onSelect,
@@ -104,7 +112,7 @@ class _PlayerPlaylistPanelState extends State<PlayerPlaylistPanel> {
     final l10n = AppLocalizations.of(context);
     final picked = await _showMenu<VideoSortField>(
       anchorContext,
-      values: VideoSortField.values,
+      values: widget.sortFields,
       labelOf: (f) => videoSortFieldLabel(l10n, f),
       selected: _field,
     );
