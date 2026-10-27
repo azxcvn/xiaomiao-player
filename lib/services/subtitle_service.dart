@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart' hide SubtitleTrack;
 import 'package:moumou/models/network_file.dart';
@@ -11,10 +13,12 @@ import 'package:moumou/services/subtitle_settings.dart';
 import 'package:moumou/utils/async_coalesced_reload.dart';
 import 'package:moumou/utils/network_subtitle_match.dart';
 import 'package:moumou/utils/subtitle_auto_match.dart';
+import 'package:moumou/utils/subtitle_encoding.dart';
 import 'package:moumou/utils/subtitle_language.dart';
 import 'package:moumou/utils/subtitle_memory.dart';
 import 'package:moumou/utils/subtitle_style_properties.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 /// 字幕控制器：绑定单个播放器（横竖屏共享同一实例），
 /// 维护「轨道列表 / 当前字幕轨道 / 外挂字幕路径」状态并直接驱动 mpv。
@@ -77,6 +81,16 @@ class SubtitleController extends ChangeNotifier {
 
   /// 当前视频已导入的外挂字幕绝对路径（按视频独立隔离）
   final List<String> _externalPaths = [];
+
+  /// 外挂字幕 → 交给 mpv 的路径（UTF-8 副本；null = 不需要转，用原文件）。
+  /// 同一份字幕在一次播放会话里只读一次盘（见 [_subtitlePathForMpv]）。
+  final Map<String, String?> _subtitleMpvPaths = {};
+
+  /// UTF-8 副本路径 → 原始字幕路径。
+  ///
+  /// mpv 回报的 `external-filename` 是**副本**路径，而轨道记忆、去重、删除
+  /// 都必须按用户原来的路径处理，读到轨道时在这里还原。
+  final Map<String, String> _convertedSubtitleSources = {};
 
   /// 选中外挂字幕的源路径（按路径恢复勾选，见 [_resolveSelectionBySource]）
   String? _primarySourcePath;
@@ -154,11 +168,16 @@ class SubtitleController extends ChangeNotifier {
       final codec = await native.getProperty('track-list/$i/codec');
       final external = await native.getProperty('track-list/$i/external');
       final selected = await native.getProperty('track-list/$i/selected');
-      final sourcePath =
+      final rawSourcePath =
           await native.getProperty('track-list/$i/external-filename');
       if (selected == 'yes') {
         selectedSubId = id;
       }
+      // mpv 回报的是交给它的 UTF-8 副本路径：还原成用户原来的字幕路径，
+      // 否则轨道记忆 / 去重 / 删除都会对着副本操作（见 [_subtitlePathForMpv]）
+      final sourcePath = rawSourcePath.isEmpty
+          ? null
+          : (_convertedSubtitleSources[rawSourcePath] ?? rawSourcePath);
       result.add(
         SubtitleTrack(
           id: id,
@@ -166,7 +185,7 @@ class SubtitleController extends ChangeNotifier {
           language: lang.isEmpty ? null : lang,
           codec: codec.isEmpty ? null : codec,
           external: external == 'yes',
-          sourcePath: sourcePath.isEmpty ? null : sourcePath,
+          sourcePath: sourcePath,
         ),
       );
     }
@@ -383,13 +402,65 @@ class SubtitleController extends ChangeNotifier {
     }
   }
 
+  /// 外挂字幕交给 mpv 的路径：非 UTF-8 的文本字幕（GBK / GB18030 老中文字幕）
+  /// 先转成 UTF-8 副本，其余原样返回（规则见 `utils/subtitle_encoding.dart`）。
+  ///
+  /// 为什么在 App 侧转而不是设 mpv `sub-codepage`：转码结果是确定的，不依赖
+  /// mpv 内核的 iconv 是否带 GB18030；而且不会影响本来正常的 UTF-8 / UTF-16
+  /// 字幕（判不通就原样交给 mpv）。
+  ///
+  /// 结果按会话缓存：同一份字幕只在第一次挂载时读盘。
+  Future<String> _subtitlePathForMpv(String path) async {
+    if (_subtitleMpvPaths.containsKey(path)) {
+      return _subtitleMpvPaths[path] ?? path;
+    }
+    String? converted;
+    try {
+      converted = await _transcodeSubtitleToUtf8(path);
+    } catch (e) {
+      // 读盘失败 / 目录不可写：按原文件加载，不影响原本能看的字幕
+      debugPrint('SubtitleService: 字幕编码转换失败，按原文件加载: $e');
+    }
+    _subtitleMpvPaths[path] = converted;
+    if (converted != null) _convertedSubtitleSources[converted] = path;
+    return converted ?? path;
+  }
+
+  /// 把文本字幕转成 UTF-8 副本；不需要 / 转不了返回 null。
+  ///
+  /// 副本落在应用支持目录 `subtitle_utf8/`，文件名带源文件**修改时间**：
+  /// 源文件改了就自然换一份新的，没改则重复打开直接复用。
+  Future<String?> _transcodeSubtitleToUtf8(String path) async {
+    final fileName = p.basename(path);
+    if (!isTextSubtitleFile(fileName)) return null;
+    final source = File(path);
+    if (!await source.exists()) return null;
+    final text = transcodeSubtitleToUtf8(fileName, await source.readAsBytes());
+    if (text == null) return null;
+
+    final support = await getApplicationSupportDirectory();
+    final dir = Directory(p.join(support.path, 'subtitle_utf8'));
+    await dir.create(recursive: true);
+    final modified = (await source.stat()).modified.millisecondsSinceEpoch;
+    final digest = md5.convert(utf8.encode(path)).toString();
+    // 扩展名必须保留：mpv 按扩展名挑字幕解码器
+    final target = File(
+      p.join(dir.path, '${digest}_$modified${p.extension(path)}'),
+    );
+    if (!await target.exists()) {
+      await target.writeAsBytes(utf8.encode(text), flush: true);
+    }
+    return target.path;
+  }
+
   /// 导入外挂字幕：原生侧先把 content:// 拷贝为真实路径（若需要），
   /// 再 `sub-add <path> select` 并刷新轨道列表；成功后记忆路径（绑定当前视频）。
   Future<bool> addExternalSubtitle(String subtitlePath) async {
     final native = _native;
     if (native == null || subtitlePath.isEmpty) return false;
     try {
-      await native.command(['sub-add', subtitlePath, 'select']);
+      final mpvPath = await _subtitlePathForMpv(subtitlePath);
+      await native.command(['sub-add', mpvPath, 'select']);
     } catch (_) {
       return false;
     }
@@ -493,7 +564,8 @@ class SubtitleController extends ChangeNotifier {
     for (final path in _externalPaths) {
       if (path == autoLoadedPath) continue;
       try {
-        await native.command(['sub-add', path, 'auto']);
+        final mpvPath = await _subtitlePathForMpv(path);
+        await native.command(['sub-add', mpvPath, 'auto']);
       } catch (_) {}
     }
     await reload();
@@ -598,7 +670,8 @@ class SubtitleController extends ChangeNotifier {
     if (bestPath == null) return null;
 
     try {
-      await native.command(['sub-add', bestPath, 'select']);
+      final mpvPath = await _subtitlePathForMpv(bestPath);
+      await native.command(['sub-add', mpvPath, 'select']);
     } catch (_) {
       return null;
     }
