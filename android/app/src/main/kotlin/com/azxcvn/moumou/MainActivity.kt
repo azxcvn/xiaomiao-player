@@ -166,6 +166,22 @@ class MainActivity : FlutterActivity() {
                             }
                         }
                     }
+                    // 本地封面兜底：系统抽取器不认的容器（AVI / WMV 等）由 Dart 侧用
+                    // 自建内核的 FFmpeg 抓帧，把 RGBA 交到这里编码落盘（见 saveVideoCover）
+                    "saveVideoCover" -> {
+                        val path = call.argument<String>("path")
+                        val rgba = call.argument<ByteArray>("rgba")
+                        val width = call.argument<Int>("width") ?: 0
+                        val height = call.argument<Int>("height") ?: 0
+                        if (path == null || rgba == null) {
+                            result.error("INVALID_ARG", "path/rgba is null", null)
+                        } else {
+                            submitThumbTask(path) {
+                                val saved = saveVideoCover(path, rgba, width, height)
+                                runOnUiThread { result.success(saved) }
+                            }
+                        }
+                    }
                     // 卡片时长兜底：整盘补扫只做枚举、**不抽时长**（抽取会把枚举
                     // 饿死，见 FsVideoWalker），所以 .nomedia / 隐藏文件夹 / 外置卷
                     // 那些条目时长恒为 0，列表里会永远显示「未观看」且没有进度条
@@ -2271,6 +2287,52 @@ class MainActivity : FlutterActivity() {
             if (cover !== bitmap) runCatching { bitmap?.recycle() }
             runCatching { cover?.recycle() }
             retriever.release()
+        }
+    }
+
+    /**
+     * 用外部抓到的 RGBA 帧写本地视频封面。
+     *
+     * 为什么需要：系统 `MediaMetadataRetriever` 没有 AVI（RIFF）/ ASF（WMV）这类容器
+     * 的抽取器（AOSP 不提供，要自己往 `system/lib64/extractors/` 塞插件），
+     * [getVideoInfo] 对这些文件必然拿不到帧；而自建 libmpv 里的 FFmpeg 认得它们
+     * （进度条预览、听视频封面都是那条链抓的）。Dart 侧因此在 [getVideoInfo]
+     * 返回无封面时自己抓一帧，把像素交给这里编码落盘。
+     *
+     * 复用 [cropCover] 与 [thumbFileFor] 的同一套命名：写完 [getVideoInfo] 的磁盘
+     * 缓存立刻命中，同一个文件只抓这一次（除非文件被改动、修改时间变了）。
+     */
+    private fun saveVideoCover(
+        path: String,
+        rgba: ByteArray,
+        width: Int,
+        height: Int,
+    ): String? {
+        if (width <= 0 || height <= 0) return null
+        if (rgba.size < width * height * 4) return null
+        val cacheFile = thumbFileFor("$path|${File(path).lastModified()}")
+        if (cacheFile.exists()) return cacheFile.absolutePath
+
+        var bitmap: Bitmap? = null
+        var cover: Bitmap? = null
+        return try {
+            val source = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            bitmap = source
+            // ARGB_8888 在小端机器上的内存布局就是 R,G,B,A —— 与 FFmpeg 的
+            // RGBA8888 一致，直接灌像素，不必逐像素转换
+            source.copyPixelsFromBuffer(java.nio.ByteBuffer.wrap(rgba))
+            val cv = cropCover(source)
+            cover = cv
+            FileOutputStream(cacheFile).use { out ->
+                cv.compress(Bitmap.CompressFormat.JPEG, 70, out)
+            }
+            cacheFile.absolutePath
+        } catch (e: Throwable) {
+            Log.w("MainActivity", "saveVideoCover failed: ${e.message}")
+            null
+        } finally {
+            if (cover !== bitmap) runCatching { bitmap?.recycle() }
+            runCatching { cover?.recycle() }
         }
     }
 

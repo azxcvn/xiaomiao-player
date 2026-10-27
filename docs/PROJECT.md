@@ -101,6 +101,7 @@ lib/
 │   ├── common_list_controller.dart # 通用分页列表控制器（三态 + 刷新失败保留旧数据 + 加载更多）
 │   ├── video_scanner.dart     # 扫描 + 建树 + 建文件夹列表
 │   ├── video_info_service.dart# 列表封面缩略图（磁盘缓存）+ 基本元数据 + 完整媒体信息
+│   ├── video_cover_fallback.dart # 封面兜底：系统抽取器不认的容器（AVI/WMV 等）退 libmpv 抓帧
 │   ├── playback_progress_service.dart  # 播放进度（ChangeNotifier + 持久化 + 串行写盘）
 │   ├── playback_history_service.dart # 播放历史（记录/去重置顶/上限淘汰/删除/清空/开关）
 │   ├── playback_tuning.dart   # 每次 open 前的 mpv 缓存/网络调参（本地/在线两档）

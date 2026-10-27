@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:moumou/services/bili_image_cache_service.dart';
 import 'package:moumou/services/danmaku_network_service.dart';
 import 'package:moumou/services/device_services.dart';
+import 'package:moumou/services/video_cover_fallback.dart';
 import 'package:moumou/services/video_info_service.dart';
 import 'package:moumou/services/video_scanner.dart';
 
@@ -78,6 +79,7 @@ class CacheManagerService {
       await _channel.invokeMethod<void>('clearCache', {'category': category.key});
       if (category.key == listThumbs.key) {
         VideoInfoService.clearCache();
+        VideoCoverFallback.clearCache();
       }
       return true;
     } catch (_) {
@@ -93,6 +95,7 @@ class CacheManagerService {
       await _channel.invokeMethod<void>('clearAllCaches');
       DeviceServices.clearFrameCache();
       VideoInfoService.clearCache();
+      VideoCoverFallback.clearCache();
       // 媒体库的整盘补扫索引也在 filesDir 里，一并让它下次扫描重建
       VideoScanner.markFsIndexDirty();
       return true;

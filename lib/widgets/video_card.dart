@@ -5,6 +5,7 @@ import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/video_file.dart';
 import 'package:moumou/services/playback_progress_service.dart';
 import 'package:moumou/services/player_controls_settings.dart';
+import 'package:moumou/services/video_cover_fallback.dart';
 import 'package:moumou/services/video_info_service.dart';
 import 'package:moumou/services/view_settings.dart';
 import 'package:moumou/utils/formatters.dart';
@@ -112,9 +113,18 @@ class _VideoCardState extends State<VideoCard> {
     if (widget.video.source == VideoSource.network) return;
     final info = await VideoInfoService.get(widget.video.path);
     if (!mounted) return;
-    setState(() {
-      _thumbPath = info.thumbPath;
-    });
+    if (info.thumbPath != null) {
+      setState(() => _thumbPath = info.thumbPath);
+      return;
+    }
+    // 系统抽取器不认的容器（AVI / WMV 等）原生必然没有封面：退到自建内核
+    // 抓一帧补上（见 VideoCoverFallback），还是拿不到才显示占位图
+    final cover = await VideoCoverFallback.resolve(
+      widget.video.path,
+      durationMs: _durationMs,
+    );
+    if (!mounted) return;
+    setState(() => _thumbPath = cover);
   }
 
   Future<void> _loadMeta() async {
