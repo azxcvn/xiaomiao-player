@@ -194,34 +194,67 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  /// 检查「允许管理所有文件」权限（低版本 Android 回退到存储权限）
+  /// 检查存储权限。
+  ///
+  /// Android 11（API 30）起用「所有文件访问」（`MANAGE_EXTERNAL_STORAGE`）；
+  /// **Android 10 及以下根本没有这个权限**，插件会返回 `restricted`
+  /// （「系统不支持」，不是用户拒绝）。这时必须退到传统存储权限，否则首页
+  /// 永远停在「需要授予存储权限」——华为 M6（鸿蒙、Android 10 底）反馈的就是这条。
   Future<bool> _hasStoragePermission() async {
     try {
-      return await Permission.manageExternalStorage.status.isGranted;
+      final manage = await Permission.manageExternalStorage.status;
+      if (manage.isGranted) return true;
+      // 真正被拒（系统支持这个权限、用户没给）：不再退传统权限，去设置页
+      if (!manage.isRestricted) return false;
     } catch (_) {
+      // 插件在个别 ROM 上直接抛异常：同样退到传统存储权限
+    }
+    return _legacyStorageStatusIsGranted();
+  }
+
+  Future<bool> _legacyStorageStatusIsGranted() async {
+    try {
       return await Permission.storage.status.isGranted;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// 传统存储权限（Android 10 及以下的 READ/WRITE_EXTERNAL_STORAGE）。
+  /// 返回 null 表示插件调用失败。
+  Future<PermissionStatus?> _requestLegacyStorage() async {
+    try {
+      return await Permission.storage.request();
+    } catch (_) {
+      return null;
     }
   }
 
   /// 点击「授予权限」：跳转系统授权界面（允许此 App 管理所有文件），
-  /// 授权后自动扫描视频；未授权则停留在提示界面可再次点击
+  /// 授权后自动扫描视频；未授权则停留在提示界面可再次点击。
+  ///
+  /// 系统不支持「所有文件访问」时（Android 10 及以下）改请传统存储权限，
+  /// 否则 `request()` 什么都不弹，用户点了会以为没反应。
   Future<void> _grantPermission() async {
-    bool granted;
-    bool blocked = false;
+    var granted = false;
+    var blocked = false;
     try {
       final status = await Permission.manageExternalStorage.request();
-      granted = status.isGranted;
-      // 「永久拒绝」时 request 会直接返回 denied 而**不再弹系统弹窗**：
-      // 此时唯一出路是去系统设置页（P1-35，否则本地播放器等于不可用）
-      blocked = !granted && status.isPermanentlyDenied;
-    } catch (_) {
-      try {
-        final status = await Permission.storage.request();
-        granted = status.isGranted;
-        blocked = !granted && status.isPermanentlyDenied;
-      } catch (_) {
-        granted = false;
+      if (status.isGranted) {
+        granted = true;
+      } else if (status.isRestricted) {
+        final legacy = await _requestLegacyStorage();
+        granted = legacy?.isGranted ?? false;
+        blocked = !granted && (legacy?.isPermanentlyDenied ?? false);
+      } else {
+        // 「永久拒绝」时 request 会直接返回 denied 而**不再弹系统弹窗**：
+        // 此时唯一出路是去系统设置页（P1-35，否则本地播放器等于不可用）
+        blocked = status.isPermanentlyDenied;
       }
+    } catch (_) {
+      final legacy = await _requestLegacyStorage();
+      granted = legacy?.isGranted ?? false;
+      blocked = !granted && (legacy?.isPermanentlyDenied ?? false);
     }
     if (granted) {
       if (mounted) setState(() => _permissionBlocked = false);

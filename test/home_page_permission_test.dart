@@ -22,8 +22,11 @@ class MockPermissionHandlerPlatform extends PermissionHandlerPlatform {
   Future<Map<Permission, PermissionStatus>> requestPermissions(
     List<Permission> permissions,
   ) async {
-    // 请求即视为授权
-    return {for (final p in permissions) p: PermissionStatus.granted};
+    // 请求结果按已配置的状态返回（模拟用户在系统弹窗里授权/拒绝）；
+    // 没配置的视为授权，保持老用例语义
+    return {
+      for (final p in permissions) p: statuses[p] ?? PermissionStatus.granted,
+    };
   }
 
   @override
@@ -121,6 +124,56 @@ void main() {
     await _waitScan(tester);
 
     // 授权后重新加载 → 空视频库 → 显示无视频
+    expect(find.text('没有找到视频'), findsOneWidget);
+    expect(find.text('授予权限'), findsNothing);
+  });
+
+  testWidgets('Android 10（系统无「所有文件访问」）：退到传统存储权限，已授予则直接扫描', (
+    WidgetTester tester,
+  ) async {
+    final mock = PermissionHandlerPlatform.instance
+        as MockPermissionHandlerPlatform;
+    // Android 10 及以下：插件对「所有文件访问」返回 restricted（系统不支持）
+    mock.statuses[Permission.manageExternalStorage] = PermissionStatus.restricted;
+    mock.statuses[Permission.storage] = PermissionStatus.granted;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
+        home: HomePage(viewSettings: ViewSettings()),
+      ),
+    );
+    await _waitScan(tester);
+
+    expect(find.text('授予权限'), findsNothing);
+    expect(find.text('没有找到视频'), findsOneWidget);
+  });
+
+  testWidgets('Android 10：传统存储权限未授予时显示入口，点击后走存储授权', (WidgetTester tester) async {
+    final mock = PermissionHandlerPlatform.instance
+        as MockPermissionHandlerPlatform;
+    mock.statuses[Permission.manageExternalStorage] = PermissionStatus.restricted;
+    mock.statuses[Permission.storage] = PermissionStatus.denied;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: kTestLocaleZh,
+        localizationsDelegates: kTestLocalizationDelegates,
+        supportedLocales: kTestSupportedLocales,
+        home: HomePage(viewSettings: ViewSettings()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('授予权限'), findsOneWidget);
+
+    // 用户在系统存储权限弹窗里授权后返回
+    mock.statuses[Permission.storage] = PermissionStatus.granted;
+
+    await tester.tap(find.text('授予权限'));
+    await _waitScan(tester);
+
     expect(find.text('没有找到视频'), findsOneWidget);
     expect(find.text('授予权限'), findsNothing);
   });
