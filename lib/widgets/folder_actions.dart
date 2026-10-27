@@ -12,12 +12,15 @@ import 'package:moumou/widgets/file_operations_ui.dart';
 /// 文件管理动作编排：把「长按菜单 → 弹窗 → 服务 → 刷新」串成一个入口。
 ///
 /// 首页列表视图、树状视图一级界面、树状目录页、列表模式文件夹详情页
-/// **共用本函数**，保证菜单项（固定/复制/移动/重命名/删除/多选）在各页面行为一致。
+/// **共用本函数**，保证菜单项（固定/媒体信息/复制/移动/重命名/删除/多选）
+/// 在各页面行为一致。
 ///
 /// [onMutated] 由调用方提供**本地刷新**逻辑（重扫目录树、重建当前页数据）；
 /// 返回 true 表示「当前页展示的对象已被重命名或删除，调用方需要自行退出该页」。
 ///
 /// [onMultiSelect] 在用户选了「多选」时回调（调用方据此进入多选态并选中长按项）。
+///
+/// [onShowInfo] 提供时视频菜单多一项「媒体信息」；文件夹不显示该项。
 Future<bool> showFileManagementFlow(
   BuildContext context, {
   required String title,
@@ -25,16 +28,22 @@ Future<bool> showFileManagementFlow(
   required String sourcePath,
   required Future<void> Function() onMutated,
   VoidCallback? onMultiSelect,
+  VoidCallback? onShowInfo,
 }) async {
   final pinned = PinnedFoldersSettings.instance;
   final action = await showFileActionMenu(
     context,
     isDirectory: isDirectory,
     isPinned: isDirectory && pinned.isPinned(sourcePath),
+    showInfo: onShowInfo != null,
   );
   if (action == null || !context.mounted) return false;
 
   switch (action) {
+    // 媒体信息只读：不碰磁盘、不需要刷新
+    case FileAction.info:
+      onShowInfo?.call();
+      return false;
     // 固定只影响展示顺序（列表稳定前置），不动磁盘、不需要刷新目录
     case FileAction.pin:
       await pinned.toggle(sourcePath);
@@ -100,8 +109,9 @@ Future<bool> showBatchFileManagementFlow(
     case FileAction.delete:
       return _batchDelete(context, items, onMutated);
     case FileAction.rename:
+    case FileAction.info:
     case FileAction.multiSelect:
-      // 多选菜单不会给出这两项（见 showFileActionMenu），兜底忽略
+      // 多选菜单不会给出这三项（见 showFileActionMenu），兜底忽略
       return false;
   }
 }

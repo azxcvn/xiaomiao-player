@@ -9,8 +9,9 @@ import 'package:moumou/widgets/video_card.dart';
 /// 文件夹点击进入目录浏览页逐级下钻，视频点击直接播放。
 /// 首页树状模式的专属视图；空态由调用方处理。
 ///
-/// 文件夹与视频长按由调用方弹出文件管理菜单（文件夹多一项「固定」）；
-/// 固定的文件夹按 [pinnedPaths] 显示图钉并稳定前置在列表最前。
+/// 文件夹与视频长按由调用方弹出文件管理菜单（文件夹多一项「固定」，
+/// 视频多一项「媒体信息」）；固定的文件夹按 [pinnedPaths] 显示图钉并稳定前置
+/// 在列表最前。
 ///
 /// 多选态由 [selectionMode] + [selectedPaths] 驱动渲染；
 /// 「点卡片是选中还是进入/播放」由调用方在 onTap 回调里裁决。
@@ -21,7 +22,6 @@ class TreeListView extends StatelessWidget {
   final Set<String> pinnedPaths;
   final void Function(TreeNode) onFolderTap;
   final void Function(VideoFile) onVideoTap;
-  final void Function(VideoFile)? onVideoInfoTap;
   final void Function(TreeNode)? onFolderLongPress;
   final void Function(VideoFile)? onVideoLongPress;
   final bool selectionMode;
@@ -35,7 +35,6 @@ class TreeListView extends StatelessWidget {
     required this.onFolderTap,
     required this.onVideoTap,
     this.pinnedPaths = const {},
-    this.onVideoInfoTap,
     this.onFolderLongPress,
     this.onVideoLongPress,
     this.selectionMode = false,
@@ -68,9 +67,6 @@ class TreeListView extends StatelessWidget {
           video: node.video!,
           fields: videoFields,
           onTap: () => onVideoTap(node.video!),
-          onInfoTap: onVideoInfoTap == null
-              ? null
-              : () => onVideoInfoTap!(node.video!),
           onLongPress: onVideoLongPress == null
               ? null
               : () => onVideoLongPress!(node.video!),

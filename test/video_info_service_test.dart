@@ -211,4 +211,78 @@ void main() {
       expect(callCount, 2, reason: 'TTL 过期必须允许重试');
     });
   });
+
+  group('基本元数据退路（快速解析超时 / 零结果时走完整解析）', () {
+    var fullParseCalls = 0;
+    Object? mediaInfoResult;
+
+    setUp(() {
+      fullParseCalls = 0;
+      mediaInfoResult = {
+        'videoStreams': [
+          {'frameRate': '29.97 (30000/1001) FPS'},
+          {'frameRate': '29.97 FPS'},
+        ],
+        'textStreams': [
+          {'codecId': 'S_TEXT/ASS', 'format': 'ASS'},
+          {'codecId': 'S_TEXT/UTF8', 'format': 'SubRip'},
+        ],
+      };
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+        callCount++;
+        // 快速解析这条链路一律回空（模拟 1.5s 超时 / 原生缓存零结果）
+        if (call.method == 'getVideoBasicMetadata') return <String, dynamic>{};
+        if (call.method == 'getMediaInfo') {
+          fullParseCalls++;
+          return mediaInfoResult;
+        }
+        return null;
+      });
+    });
+
+    test('快速解析回空时，用完整解析补出帧率与字幕类型', () async {
+      final meta = await VideoInfoService.getBasicMetadata('/video/big.mkv');
+
+      expect(meta.frameRate, closeTo(29.97, 0.001));
+      expect(meta.hasEmbeddedSubtitles, isTrue);
+      expect(meta.subtitleCodec, 'ASS SRT');
+      expect(fullParseCalls, 1);
+    });
+
+    test('退路结果进内存缓存：同一路径不再重复完整解析', () async {
+      await VideoInfoService.getBasicMetadata('/video/big.mkv');
+      final again = await VideoInfoService.getBasicMetadata('/video/big.mkv');
+
+      expect(again.subtitleCodec, 'ASS SRT');
+      expect(fullParseCalls, 1, reason: '第二次应直接命中内存缓存');
+    });
+
+    test('完整解析也拿不到：只退一次，不会反复重扫同一个文件', () async {
+      mediaInfoResult = null;
+
+      final first = await VideoInfoService.getBasicMetadata('/video/bad.mkv');
+      expect(first.hasAnyInfo, isFalse);
+      expect(fullParseCalls, 1);
+
+      await VideoInfoService.getBasicMetadata('/video/bad.mkv');
+      expect(fullParseCalls, 1, reason: '同一路径每进程只尝试一次完整解析');
+    });
+
+    test('字幕类型归一化：PGS / DVD / VTT / TX3G / SRT', () async {
+      mediaInfoResult = {
+        'videoStreams': [],
+        'textStreams': [
+          {'codecId': 'S_HDMV/PGS', 'format': 'PGS'},
+          {'codecId': 'S_VOBSUB', 'format': 'VobSub'},
+          {'codecId': 'S_TEXT/WEBVTT', 'format': 'WebVTT'},
+          {'codecId': 'S_TEXT/TX3G', 'format': 'Timed Text'},
+          {'codecId': 'S_TEXT/UTF8', 'format': 'UTF-8'},
+        ],
+      };
+
+      final meta = await VideoInfoService.getBasicMetadata('/video/subs.mkv');
+      expect(meta.subtitleCodec, 'PGS DVD VTT TX3G SRT');
+    });
+  });
 }

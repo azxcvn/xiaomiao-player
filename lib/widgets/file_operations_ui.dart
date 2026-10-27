@@ -9,28 +9,33 @@ import 'package:moumou/utils/error_codes.dart';
 import 'package:moumou/utils/file_ops.dart';
 import 'package:moumou/utils/formatters.dart';
 
-/// 文件管理统一 UI：长按动作菜单（固定/复制/移动/重命名/删除）+ 重命名弹窗 +
+/// 文件管理统一 UI：长按动作菜单（固定/媒体信息/复制/移动/重命名/删除）+ 重命名弹窗 +
 /// 删除确认弹窗（默认只删视频，「删除所有文件」为可选勾选）+ 传输进度弹窗。
 ///
 /// 工作.md 定稿：**固定（置顶）与四个文件动作放在同一个长按菜单里**——
 /// 文件夹长按出五项（固定/取消固定 + 复制/移动/重命名/删除），
-/// 视频长按出四项（视频没有「固定」概念）；菜单最底部再用分隔线隔出一项
-/// 「多选」（进入多选态，见 `file_selection_ui.dart` / `folder_actions.dart`）。
+/// 视频长按出五项（复制/移动/重命名/媒体信息/删除）；菜单最底部再用分隔线
+/// 隔出一项「多选」（进入多选态，见 `file_selection_ui.dart` / `folder_actions.dart`）。
+///
+/// 视频的**媒体信息入口在长按菜单里**（卡片右侧不再有「i」图标），按行给标题
+/// 留出横向空间。
 ///
 /// 删除文件夹的默认语义是**只删文件夹内的视频文件**，弹窗只给一句话说明 +
 /// 一个默认不勾的「删除所有文件」；勾上才递归删除整个文件夹。
 
 /// 统一的文件管理动作
-enum FileAction { pin, copy, move, rename, delete, multiSelect }
+enum FileAction { info, pin, copy, move, rename, delete, multiSelect }
 
 /// 弹出长按动作菜单；返回用户选择（点空白关闭返回 null）。
 ///
 /// 文件夹入口与视频入口**共用本函数**：菜单项顺序一致，仅文件夹多一项
-/// [FileAction.pin]（文案随 [isPinned] 在「固定」/「取消固定」间切换）。
+/// [FileAction.pin]（文案随 [isPinned] 在「固定」/「取消固定」间切换）；
+/// 视频在 [showInfo] 为 true 时多一项 [FileAction.info]（媒体信息），
+/// 排在「重命名」之后、「删除」之前。
 ///
 /// **多选态共用同一个菜单**（用户定稿：菜单只有一个真源）：
 /// [selectionCount] > 0 时表示「对已选中的 N 项操作」，
-/// 此时**撤掉「重命名」**（一次只能改一个名字）并撤掉「多选」本身；
+/// 此时**撤掉「重命名」**（一次只能改一个名字）、撤掉「媒体信息」并撤掉「多选」本身；
 /// [isDirectory] 由调用方传「选中项是否全是文件夹」——决定要不要出「固定」。
 ///
 /// 不显示标题行（长按的卡片就在用户眼前，标题属冗余，且会挤掉菜单高度）；
@@ -41,6 +46,7 @@ Future<FileAction?> showFileActionMenu(
   required bool isDirectory,
   bool isPinned = false,
   int selectionCount = 0,
+  bool showInfo = false,
 }) {
   final scheme = Theme.of(context).colorScheme;
   final l10n = AppLocalizations.of(context);
@@ -67,6 +73,11 @@ Future<FileAction?> showFileActionMenu(
             if (!multi)
               _tile(context, scheme, Icons.drive_file_rename_outline,
                   l10n.commonRename, FileAction.rename),
+            // 媒体信息是「只看不改」的入口，排在重命名之后、删除（红色）之前
+            // （视频专属，多选时无意义）
+            if (showInfo && !isDirectory && !multi)
+              _tile(context, scheme, Icons.info_outline, l10n.mediaInfoItem,
+                  FileAction.info),
             _tile(context, scheme, Icons.delete_outline, l10n.commonDelete,
                 FileAction.delete, destructive: true),
             // 「多选」是模式切换而不是对本条目的操作，用分隔线单列在最底部

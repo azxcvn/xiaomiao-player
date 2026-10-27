@@ -3,11 +3,14 @@ import 'package:moumou/l10n/app_localizations.dart';
 
 /// 多选相关的公共 UI：**顶部上下文工具栏** + 卡片左侧的勾选圆点。
 
-/// 多选态的顶部工具栏：`[×] 已选 N 项 [全选] [⋮]`。
+/// 多选态的顶部工具栏：`[×] 已选 N 项 [全选] [反选] [⋮]`。
 ///
 /// **为什么是顶部而不是底部操作条**：主 tab 页底部有悬浮胶囊导航
 /// （`MainScaffold` 用 `Stack` 叠加在内容之上，胶囊顶缘距内容底 72），
 /// 底部再放一条操作栏会直接压住导航；顶部工具栏不与任何悬浮元素冲突。
+///
+/// [onToggleAll] 与 [onInvert] 的作用范围都是**当前可见列表**（搜索过滤后），
+/// 由调用方传同一个范围给 `FileSelectionController` 的 `setAll` / `invert`。
 ///
 /// [onOpenMenu] 弹出的是**和长按完全同一个**文件管理菜单
 /// （`showFileActionMenu`，多选态下撤掉重命名），保持「菜单只有一个真源」。
@@ -16,6 +19,7 @@ PreferredSizeWidget buildFileSelectionAppBar({
   required bool allSelected,
   required VoidCallback onExit,
   required VoidCallback onToggleAll,
+  required VoidCallback onInvert,
   required VoidCallback onOpenMenu,
   required AppLocalizations l10n,
 }) {
@@ -31,6 +35,12 @@ PreferredSizeWidget buildFileSelectionAppBar({
         icon: Icon(allSelected ? Icons.deselect : Icons.select_all),
         tooltip: allSelected ? l10n.commonDeselectAll : l10n.commonSelectAll,
         onPressed: onToggleAll,
+      ),
+      IconButton(
+        // 双箭头：与「全选」区分开，语义是「已选/未选互换」
+        icon: const Icon(Icons.swap_horiz),
+        tooltip: l10n.fileSelectionInvert,
+        onPressed: onInvert,
       ),
       IconButton(
         icon: const Icon(Icons.more_vert),

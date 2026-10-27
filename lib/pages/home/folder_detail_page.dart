@@ -203,6 +203,7 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
       sourcePath: video.path,
       onMutated: _afterMutation,
       onMultiSelect: () => _selection.begin(video.path),
+      onShowInfo: () => _openMediaInfo(video),
     );
   }
 
@@ -271,7 +272,7 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
     );
   }
 
-  /// 多选态顶部工具栏；全选范围 = 当前可见列表
+  /// 多选态顶部工具栏；全选 / 反选范围 = 当前可见列表
   PreferredSizeWidget _buildSelectionAppBar() {
     final l10n = AppLocalizations.of(context);
     final visible = _visibleVideos().map((v) => v.path).toList();
@@ -281,6 +282,7 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
       allSelected: allSelected,
       onExit: _selection.exit,
       onToggleAll: () => _selection.setAll(visible, selected: !allSelected),
+      onInvert: () => _selection.invert(visible),
       onOpenMenu: () => _openSelectionMenu(),
       l10n: l10n,
     );
@@ -339,7 +341,6 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
                 video: video,
                 fields: widget.viewSettings.videoFields,
                 onTap: () => _onVideoTap(video),
-                onInfoTap: () => _openMediaInfo(video),
                 onLongPress: () => _onVideoLongPress(video),
                 selectionMode: _selection.selecting,
                 selected: selectedPaths.contains(video.path),

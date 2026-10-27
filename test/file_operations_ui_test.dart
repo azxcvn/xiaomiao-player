@@ -18,6 +18,8 @@ void main() {
     required int count,
     required bool allSelected,
     VoidCallback? onExit,
+    VoidCallback? onToggleAll,
+    VoidCallback? onInvert,
     VoidCallback? onOpenMenu,
   }) async {
     await tester.pumpWidget(
@@ -32,7 +34,8 @@ void main() {
               count: count,
               allSelected: allSelected,
               onExit: onExit ?? () {},
-              onToggleAll: () {},
+              onToggleAll: onToggleAll ?? () {},
+              onInvert: onInvert ?? () {},
               onOpenMenu: onOpenMenu ?? () {},
             ),
             body: const SizedBox.shrink(),
@@ -100,6 +103,21 @@ void main() {
       await tester.pump();
       expect(exited, 1);
     });
+
+    testWidgets('工具栏带「反选」按钮（与全选分开），点击回调', (tester) async {
+      var inverted = 0;
+      await pumpBar(
+        tester,
+        count: 2,
+        allSelected: false,
+        onInvert: () => inverted++,
+      );
+
+      expect(find.byIcon(Icons.swap_horiz), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.swap_horiz));
+      await tester.pump();
+      expect(inverted, 1);
+    });
   });
 
   // ───────────────────────── 长按菜单裁剪 ─────────────────────────
@@ -108,6 +126,7 @@ void main() {
     WidgetTester tester, {
     required bool isDirectory,
     int selectionCount = 0,
+    bool showInfo = false,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -121,6 +140,7 @@ void main() {
                 context,
                 isDirectory: isDirectory,
                 selectionCount: selectionCount,
+                showInfo: showInfo,
               ),
               child: const Text('open'),
             ),
@@ -170,6 +190,42 @@ void main() {
       expect(find.text('重命名'), findsNothing);
       expect(find.text('多选'), findsNothing);
       expect(find.text('删除'), findsOneWidget);
+    });
+
+    testWidgets('「媒体信息」排在「重命名」下面、「删除」上面', (tester) async {
+      await pumpMenu(tester, isDirectory: false, showInfo: true);
+
+      expect(find.text('媒体信息'), findsOneWidget);
+      final infoY = tester.getCenter(find.text('媒体信息')).dy;
+      // 在重命名之后
+      expect(
+        tester.getCenter(find.text('重命名')).dy,
+        lessThan(infoY),
+        reason: '「重命名」应在「媒体信息」上面',
+      );
+      // 在删除（红色）之前
+      expect(
+        tester.getCenter(find.text('删除')).dy,
+        greaterThan(infoY),
+        reason: '「删除」应在「媒体信息」下面',
+      );
+    });
+
+    testWidgets('文件夹菜单没有「媒体信息」', (tester) async {
+      await pumpMenu(tester, isDirectory: true, showInfo: true);
+
+      expect(find.text('媒体信息'), findsNothing);
+    });
+
+    testWidgets('多选菜单没有「媒体信息」', (tester) async {
+      await pumpMenu(
+        tester,
+        isDirectory: false,
+        selectionCount: 2,
+        showInfo: true,
+      );
+
+      expect(find.text('媒体信息'), findsNothing);
     });
   });
 

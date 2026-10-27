@@ -66,6 +66,23 @@ class FileSelectionController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 反选（范围 = 当前可见列表，过滤后）：可见列表里已选的取消、没选的选中。
+  ///
+  /// **不在可见范围内的选中项保持不动**——搜索过滤时用户先选了 A，再过滤出
+  /// B/C 点反选，不应该把 A 一起丢掉（那属于「看不见的被静默改了」）。
+  /// 顺序：先保留范围外的原有选中项，再按可见列表顺序追加新选中的项。
+  void invert(Iterable<String> visiblePaths) {
+    final visible = visiblePaths.toList();
+    final visibleSet = visible.toSet();
+    final kept = _paths.where((p) => !visibleSet.contains(p)).toList();
+    final added = visible.where((p) => !_paths.contains(p)).toList();
+    _paths
+      ..clear()
+      ..addAll(kept)
+      ..addAll(added);
+    notifyListeners();
+  }
+
   /// 剔除已不存在的选中项（重扫刷新后调用，避免批量操作打到死路径）
   void retainExisting(Iterable<String> alive) {
     final keep = alive.toSet();

@@ -255,6 +255,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonFrameRate => '帧率';
 
   @override
+  String get commonResolutionFrameRate => '分辨率/帧率';
+
+  @override
   String get commonFullName => '完整名称';
 
   @override
@@ -3611,6 +3614,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fileSelectionOps => '文件操作';
 
   @override
+  String get fileSelectionInvert => '反选';
+
+  @override
   String get folderTransferMoving => '正在移动…';
 
   @override
@@ -3847,20 +3853,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get videoCardUnwatched => '未观看';
-
-  @override
-  String get videoCardDetectingSubtitle => '字幕检测中…';
-
-  @override
-  String get videoCardHasSubtitle => '含字幕';
-
-  @override
-  String videoCardSubtitleCodec(String codec) {
-    return '字幕 · $codec';
-  }
-
-  @override
-  String get videoCardNoSubtitle => '无字幕';
 
   @override
   String get biliCoverUnavailable => '哔哩封面不可用（缓存未命中且下载失败）';
@@ -4742,6 +4734,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get commonFrameRate => '影格率';
+
+  @override
+  String get commonResolutionFrameRate => '解析度/影格率';
 
   @override
   String get commonFullName => '完整名稱';
@@ -8100,6 +8095,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get fileSelectionOps => '檔案操作';
 
   @override
+  String get fileSelectionInvert => '反選';
+
+  @override
   String get folderTransferMoving => '正在移動…';
 
   @override
@@ -8336,20 +8334,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get videoCardUnwatched => '未觀看';
-
-  @override
-  String get videoCardDetectingSubtitle => '字幕偵測中…';
-
-  @override
-  String get videoCardHasSubtitle => '含字幕';
-
-  @override
-  String videoCardSubtitleCodec(String codec) {
-    return '字幕 · $codec';
-  }
-
-  @override
-  String get videoCardNoSubtitle => '無字幕';
 
   @override
   String get biliCoverUnavailable => '嗶哩封面不可用（快取未命中且下載失敗）';

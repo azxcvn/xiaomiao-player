@@ -87,6 +87,38 @@ void main() {
     expect(controller.containsAll(['/a', '/b']), isFalse);
   });
 
+  test('invert：可见范围内已选取消、未选选中', () {
+    controller.begin('/a');
+    controller.toggle('/b');
+    expect(controller.paths, ['/a', '/b']);
+
+    controller.invert(['/a', '/b', '/c']);
+    expect(controller.paths, ['/c']);
+
+    // 再反选回来（顺序按可见列表）
+    controller.invert(['/a', '/b', '/c']);
+    expect(controller.paths, ['/a', '/b']);
+    expect(controller.selecting, isTrue);
+  });
+
+  test('invert：不在可见范围内的选中项保持不动（搜索过滤时不误伤）', () {
+    controller.begin('/hidden');
+    controller.toggle('/a');
+
+    // 当前可见只有 /a /b：/hidden 看不见，不能被反选丢掉
+    controller.invert(['/a', '/b']);
+    expect(controller.paths, ['/hidden', '/b']);
+  });
+
+  test('invert：从 0 项反选等于全选可见项', () {
+    controller.begin('/a');
+    controller.toggle('/a');
+    expect(controller.isEmpty, isTrue);
+
+    controller.invert(['/a', '/b']);
+    expect(controller.paths, ['/a', '/b']);
+  });
+
   test('retainExisting：剔除已消失的选中项，无变化时不通知', () {
     var notified = 0;
     controller.addListener(() => notified++);

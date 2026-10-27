@@ -374,7 +374,8 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  /// 多选态顶部工具栏（`[×] 已选 N 项 [全选] [⋮]`）；全选范围 = 当前可见列表
+  /// 多选态顶部工具栏（`[×] 已选 N 项 [全选] [反选] [⋮]`）；
+  /// 全选 / 反选范围 = 当前可见列表
   PreferredSizeWidget _buildSelectionAppBar() {
     final l10n = AppLocalizations.of(context);
     final visible = _visibleNodes().map((n) => n.path).toList();
@@ -384,6 +385,7 @@ class _HomePageState extends State<HomePage>
       allSelected: allSelected,
       onExit: _selection.exit,
       onToggleAll: () => _selection.setAll(visible, selected: !allSelected),
+      onInvert: () => _selection.invert(visible),
       onOpenMenu: () => _openSelectionMenu(),
       l10n: l10n,
     );
@@ -564,7 +566,6 @@ class _HomePageState extends State<HomePage>
               pinnedPaths: pinnedPaths,
               onFolderTap: _onFolderTap,
               onVideoTap: _onVideoTap,
-              onVideoInfoTap: _openMediaInfo,
               onFolderLongPress: _onFolderLongPress,
               onVideoLongPress: _onVideoLongPress,
               selectionMode: _selection.selecting,
@@ -634,7 +635,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  /// 长按视频：与文件夹同一套菜单（视频没有「固定」项）
+  /// 长按视频：与文件夹同一套菜单（视频没有「固定」项，多一项「媒体信息」）
   Future<void> _onVideoLongPress(VideoFile video) async {
     if (_selection.selecting) {
       await _openSelectionMenu(ensurePath: video.path);
@@ -647,6 +648,7 @@ class _HomePageState extends State<HomePage>
       sourcePath: video.path,
       onMutated: _refreshAfterMutation,
       onMultiSelect: () => _selection.begin(video.path),
+      onShowInfo: () => _openMediaInfo(video),
     );
   }
 
@@ -730,7 +732,7 @@ class _HomePageState extends State<HomePage>
     if (mounted) setState(() {});
   }
 
-  /// 打开媒体信息页（点击视频卡片最右侧的「i」）
+  /// 打开媒体信息页（视频长按菜单里的「媒体信息」）
   void _openMediaInfo(VideoFile video) {
     Navigator.of(context).push(
       MaterialPageRoute(

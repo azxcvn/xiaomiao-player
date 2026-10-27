@@ -255,6 +255,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonFrameRate => 'Frame rate';
 
   @override
+  String get commonResolutionFrameRate => 'Resolution/Framerate';
+
+  @override
   String get commonFullName => 'Full name';
 
   @override
@@ -3781,6 +3784,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fileSelectionOps => 'File actions';
 
   @override
+  String get fileSelectionInvert => 'Invert selection';
+
+  @override
   String get folderTransferMoving => 'Moving…';
 
   @override
@@ -4029,20 +4035,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoCardUnwatched => 'Unwatched';
-
-  @override
-  String get videoCardDetectingSubtitle => 'Checking subtitles…';
-
-  @override
-  String get videoCardHasSubtitle => 'Has subtitles';
-
-  @override
-  String videoCardSubtitleCodec(String codec) {
-    return 'Subtitle · $codec';
-  }
-
-  @override
-  String get videoCardNoSubtitle => 'No subtitles';
 
   @override
   String get biliCoverUnavailable =>

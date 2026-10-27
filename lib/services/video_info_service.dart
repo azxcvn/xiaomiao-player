@@ -36,6 +36,9 @@ class VideoInfoService {
   /// 基本元数据内存缓存（帧率 / 字幕）
   static final Map<String, VideoBasicMetadata> _metaCache = {};
 
+  /// 已经退到「完整解析」试过的路径（每进程每路径只退一次，见 [_fetchBasicMetadata]）
+  static final Set<String> _fullParseTried = {};
+
   /// 时长兜底内存缓存（`getVideoDuration`，见 [getDuration]）
   static final Map<String, int> _durationCache = {};
 
@@ -93,11 +96,13 @@ class VideoInfoService {
       _metaCache.remove(path);
       _durationCache.remove(path);
       _durationMisses.remove(path);
+      _fullParseTried.remove(path);
     } else {
       _cache.clear();
       _metaCache.clear();
       _durationCache.clear();
       _durationMisses.clear();
+      _fullParseTried.clear();
     }
   }
 
@@ -163,29 +168,125 @@ class VideoInfoService {
   }
 
   /// 获取视频基本媒体元数据（帧率 / 内嵌字幕，MediaInfoLib 快速解析 + 磁盘缓存）。
-  /// 失败返回空元数据，调用方自行降级（不显示字段）。
+  ///
+  /// 快速解析拿不到任何信息时**自动退到完整媒体信息**（见 [_fetchBasicMetadata]），
+  /// 所以调用方只要字段开着，大文件 / 慢存储也能拿到帧率与字幕类型。
   static Future<VideoBasicMetadata> getBasicMetadata(String path) async {
     final cached = _metaCache[path];
     if (cached != null) return cached;
     return _metaFlight.run(path, () => _fetchBasicMetadata(path));
   }
 
+  /// 快速解析 + 完整解析退路。
+  ///
+  /// 原生 `getVideoBasicMetadata` 每个文件只等 1.5 秒（列表扫描不能被病态文件
+  /// 拖住），大文件在慢存储上首次解析经常赶不上，回空结果；此外原生磁盘缓存
+  /// 里也可能留着一次失败写下的零结果。只要这里拿到的是空的，就再走一次
+  /// **不设单文件超时**的完整解析（媒体信息页同一条链路）把帧率与字幕类型
+  /// 补上——宁可慢一点，也不能让列表字段永远缺两项。
   static Future<VideoBasicMetadata> _fetchBasicMetadata(String path) async {
+    final fast = await _fetchFastBasicMetadata(path);
+    // 卡片的字幕字段按**类型**显示：有字幕轨但类型拿不到时同样要退一次
+    final needsFullParse = !fast.hasAnyInfo ||
+        (fast.hasEmbeddedSubtitles && fast.subtitleCodec.trim().isEmpty);
+    if (!needsFullParse) {
+      _metaCache[path] = fast;
+      return fast;
+    }
+    // 每个路径每次进程只退一次：完整解析较重，失败也不反复重扫同一个文件
+    if (!_fullParseTried.add(path)) return fast;
+    final full = await _fetchFullParseBasicMetadata(path);
+    final meta = VideoBasicMetadata(
+      frameRate: fast.frameRate > 0 ? fast.frameRate : full.frameRate,
+      hasEmbeddedSubtitles:
+          fast.hasEmbeddedSubtitles || full.hasEmbeddedSubtitles,
+      subtitleCodec: fast.subtitleCodec.isNotEmpty
+          ? fast.subtitleCodec
+          : full.subtitleCodec,
+    );
+    if (meta.hasAnyInfo) _metaCache[path] = meta;
+    return meta;
+  }
+
+  /// 原生快速解析（1.5s 单文件超时）；失败 / 超时返回空元数据。
+  static Future<VideoBasicMetadata> _fetchFastBasicMetadata(String path) async {
     try {
       final result = await _channel
           .invokeMapMethod<String, dynamic>('getVideoBasicMetadata', {
         'path': path,
       });
-      final meta = VideoBasicMetadata(
+      return VideoBasicMetadata(
         frameRate: (result?['frameRate'] as num?)?.toDouble() ?? 0,
         hasEmbeddedSubtitles: result?['hasSubtitles'] as bool? ?? false,
         subtitleCodec: result?['subtitleCodec'] as String? ?? '',
       );
-      _metaCache[path] = meta;
-      return meta;
     } catch (_) {
       return const VideoBasicMetadata();
     }
+  }
+
+  /// 退路：从完整媒体信息（`getMediaInfo`，不设单文件超时）里取帧率与字幕类型。
+  static Future<VideoBasicMetadata> _fetchFullParseBasicMetadata(
+    String path,
+  ) async {
+    final info = await getMediaInfo(path);
+    if (info == null) return const VideoBasicMetadata();
+    final texts = info['textStreams'];
+    return VideoBasicMetadata(
+      frameRate: _firstFrameRate(info['videoStreams']),
+      hasEmbeddedSubtitles: texts is List && texts.isNotEmpty,
+      subtitleCodec: _subtitleTypes(texts).join(' '),
+    );
+  }
+
+  /// `FrameRate/String` 里取数字部分（`23.976 (24000/1001) FPS` → `23.976`）
+  static double _firstFrameRate(Object? videoStreams) {
+    if (videoStreams is! List) return 0;
+    for (final stream in videoStreams) {
+      if (stream is! Map) continue;
+      final match = RegExp(r'\d+(?:\.\d+)?')
+          .firstMatch('${stream['frameRate'] ?? ''}');
+      final value = double.tryParse(match?.group(0) ?? '');
+      if (value != null && value > 0) return value;
+    }
+    return 0;
+  }
+
+  /// 字幕流 → 归一化类型列表（与原生 `extractBasicMetadata` 的映射保持一致）
+  static List<String> _subtitleTypes(Object? textStreams) {
+    if (textStreams is! List) return const [];
+    final types = <String>{};
+    for (final stream in textStreams) {
+      if (stream is! Map) continue;
+      final type = _normalizeSubtitleType(
+        '${stream['codecId'] ?? ''}',
+        '${stream['format'] ?? ''}',
+      );
+      if (type.isNotEmpty) types.add(type);
+    }
+    return types.toList();
+  }
+
+  static String _normalizeSubtitleType(String codecId, String format) {
+    final raw = '$codecId $format'.toUpperCase();
+    if (raw.contains('PGS') || raw.contains('HDMV')) return 'PGS';
+    if (raw.contains('ASS')) return 'ASS';
+    if (raw.contains('SSA')) return 'SSA';
+    if (raw.contains('VOBSUB') || raw.contains('VOB SUB')) return 'DVD';
+    if (raw.contains('WEBVTT') || raw.contains('VTT')) return 'VTT';
+    if (raw.contains('MOV_TEXT') ||
+        raw.contains('MOV TEXT') ||
+        raw.contains('TX3G')) {
+      return 'TX3G';
+    }
+    if (raw.contains('SUBRIP') ||
+        raw.contains('SUB RIP') ||
+        raw.contains('SRT') ||
+        raw.contains('UTF8')) {
+      return 'SRT';
+    }
+    // 没命中已知类型就用 MediaInfo 的 Format 原文（大写），总比不显示强
+    return format.trim().toUpperCase();
   }
 
   /// 获取视频完整媒体信息（MediaInfoLib，用于媒体信息页）

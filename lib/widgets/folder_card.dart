@@ -9,12 +9,12 @@ import 'package:moumou/widgets/wallpaper_surface.dart';
 
 /// 文件夹卡片：列表模式与树状模式共用（字段驱动渲染）
 ///
-/// 尾部为静态 chevron_right，点击进入下一层（列表=文件夹详情页；树状=目录浏览页）。
+/// 点击整张卡片进入下一层（列表=文件夹详情页；树状=目录浏览页），右侧不再放
+/// 装饰性箭头（整卡可点已表达「可进入」，箭头只占横向空间）。
 /// **固定的文件夹**在名称左侧显示一枚图钉（纯指示，固定/取消固定走长按菜单，
 /// 见 `folder_actions`）；长按卡片由调用方弹出文件管理菜单。
 ///
-/// 多选态（[selectionMode]）下：左侧插入勾选圆点、尾部 chevron 隐藏
-/// （此态点击是「选中」而不是「进入」），选中项换底色 + 主题色描边。
+/// 多选态（[selectionMode]）下：左侧插入勾选圆点、选中项换底色 + 主题色描边。
 class FolderCard extends StatelessWidget {
   final TreeNode node;
   final Set<FolderField> fields;
@@ -107,9 +107,6 @@ class FolderCard extends StatelessWidget {
                   ],
                 ),
               ),
-              // 多选态点击是「选中」而不是「进入下一层」，箭头会造成误导 → 隐藏
-              if (!selectionMode)
-                Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
             ],
           ),
         ),

@@ -591,6 +591,12 @@ abstract class AppLocalizations {
   /// **'帧率'**
   String get commonFrameRate;
 
+  /// 视频字段：分辨率与帧率合并成的一个开关（卡片上是 1080p@23.98）
+  ///
+  /// In zh, this message translates to:
+  /// **'分辨率/帧率'**
+  String get commonResolutionFrameRate;
+
   /// No description provided for @commonFullName.
   ///
   /// In zh, this message translates to:
@@ -6543,6 +6549,12 @@ abstract class AppLocalizations {
   /// **'文件操作'**
   String get fileSelectionOps;
 
+  /// 多选工具栏：反选（当前可见列表里已选的取消、没选的选中）
+  ///
+  /// In zh, this message translates to:
+  /// **'反选'**
+  String get fileSelectionInvert;
+
   /// 文件操作进度：正在移动
   ///
   /// In zh, this message translates to:
@@ -6795,30 +6807,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'未观看'**
   String get videoCardUnwatched;
-
-  /// 视频卡片：字幕检测中
-  ///
-  /// In zh, this message translates to:
-  /// **'字幕检测中…'**
-  String get videoCardDetectingSubtitle;
-
-  /// 视频卡片：含字幕
-  ///
-  /// In zh, this message translates to:
-  /// **'含字幕'**
-  String get videoCardHasSubtitle;
-
-  /// 视频卡片：字幕格式
-  ///
-  /// In zh, this message translates to:
-  /// **'字幕 · {codec}'**
-  String videoCardSubtitleCodec(String codec);
-
-  /// 视频卡片：无字幕
-  ///
-  /// In zh, this message translates to:
-  /// **'无字幕'**
-  String get videoCardNoSubtitle;
 
   /// B 站封面图兜底提示
   ///

@@ -8,6 +8,7 @@ import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/services/video_info_service.dart';
 import 'package:moumou/services/view_settings.dart';
 import 'package:moumou/utils/formatters.dart';
+import 'package:moumou/utils/media_labels.dart';
 import 'package:moumou/utils/watch_state.dart';
 import 'package:moumou/widgets/file_selection_ui.dart';
 import 'package:moumou/widgets/wallpaper_surface.dart';
@@ -19,7 +20,11 @@ import 'package:moumou/widgets/wallpaper_surface.dart';
 ///   两者自动避让缩略图底部进度条（有进度条时上移）；
 /// - **完整名称**：名称不截断、整名换行显示（卡片高度随标题行数变化，
 ///   默认选中；关掉后回到 2 行省略号）；
-/// - 其余字段（日期 / 分辨率 / 进度 / 帧率 / 字幕指示器）以标签行展示。
+/// - 其余字段（日期 / 画质 / 进度 / 字幕类型）以**胶囊标签**展示，无图标；
+///   画质是分辨率与帧率合并的一个标签（`1080p@23.98`）。
+///
+/// 卡片右侧不再放媒体信息图标：该入口在长按菜单里（`FileAction.info`），
+/// 省下的横向空间留给标题。
 ///
 /// 进度字段自动计算观看百分比，并驱动卡片状态：
 /// 未观看 / 观看中 / 已看完（达到「已观看」阈值，卡片置灰）。
@@ -28,14 +33,11 @@ class VideoCard extends StatefulWidget {
   final Set<VideoField> fields;
   final VoidCallback onTap;
 
-  /// 点击最右侧「i」图标（打开媒体信息页）；null 时显示播放图标
-  final VoidCallback? onInfoTap;
-
-  /// 覆盖最右侧图标（优先于 onInfoTap 的「i」/播放图标）。
-  /// 历史记录页用它放垃圾桶删除按钮；不传走原有语义。
+  /// 覆盖最右侧元素（如历史记录页的垃圾桶删除按钮）；不传则卡片右侧留空。
   final Widget? trailing;
 
-  /// 长按卡片（弹出文件管理菜单：复制/移动/重命名/删除/多选）；null 时无长按行为
+  /// 长按卡片（弹出文件管理菜单：媒体信息/复制/移动/重命名/删除/多选）；
+  /// null 时无长按行为
   final VoidCallback? onLongPress;
 
   /// 是否处于多选态（左侧插入勾选圆点，点击语义由调用方改为「选中」）
@@ -49,7 +51,6 @@ class VideoCard extends StatefulWidget {
     required this.video,
     required this.fields,
     required this.onTap,
-    this.onInfoTap,
     this.trailing,
     this.onLongPress,
     this.selectionMode = false,
@@ -119,6 +120,7 @@ class _VideoCardState extends State<VideoCard> {
   Future<void> _loadMeta() async {
     // 网络来源视频无本地元数据，跳过（避免把远程相对路径当本地文件解析）。
     if (widget.video.source == VideoSource.network) return;
+    // 快速解析拿不到时会自动走完整解析退路（见 VideoInfoService.getBasicMetadata）
     final meta = await VideoInfoService.getBasicMetadata(widget.video.path);
     if (!mounted) return;
     setState(() => _meta = meta);
@@ -168,68 +170,35 @@ class _VideoCardState extends State<VideoCard> {
     final hasProgressBar = progress != null && durationMs > 0;
     final labelBottom = hasProgressBar ? 8.0 : 6.0;
 
-    // 其余字段标签（日期/分辨率/进度/帧率/字幕指示器）
-    final tags = <Widget>[];
+    // 其余字段：胶囊标签（日期 / 画质 / 进度 / 字幕类型），无图标、无「无字幕」
+    final chips = <Widget>[];
     if (fields.contains(VideoField.date)) {
-      tags.add(_tag(
-        scheme,
-        Icons.calendar_today_outlined,
-        formatDate(widget.video.dateModified),
-      ));
+      final date = formatDate(widget.video.dateModified);
+      if (date.isNotEmpty) chips.add(_chip(scheme, date));
     }
-    if (fields.contains(VideoField.resolution) &&
-        widget.video.width > 0 &&
-        widget.video.height > 0) {
-      tags.add(_tag(
-        scheme,
-        Icons.aspect_ratio,
-        '${widget.video.width}x${widget.video.height}',
-      ));
-    }
+    final quality = videoQualityLabel(
+      showResolution: fields.contains(VideoField.resolution),
+      showFrameRate: fields.contains(VideoField.frameRate),
+      width: widget.video.width,
+      height: widget.video.height,
+      frameRate: _meta?.frameRate ?? 0,
+    );
+    if (quality != null) chips.add(_chip(scheme, quality));
     if (fields.contains(VideoField.progress)) {
-      tags.add(_tag(
+      chips.add(_chip(
         scheme,
-        watched
-            ? Icons.check_circle
-            : (watching
-                ? Icons.play_circle_outline
-                : Icons.radio_button_unchecked),
         watched
             ? l10n.videoCardWatched
             : (watching ? '$progressPercent%' : l10n.videoCardUnwatched),
-        emphasize: watched,
+        tone: watched ? _ChipTone.emphasized : _ChipTone.neutral,
       ));
-    }
-    if (fields.contains(VideoField.frameRate)) {
-      final fps = _meta?.frameRate ?? 0;
-      if (fps > 0) {
-        tags.add(_tag(
-          scheme,
-          Icons.speed,
-          '${fps.toStringAsFixed(fps % 1 == 0 ? 0 : 2)} fps',
-        ));
-      }
     }
     if (fields.contains(VideoField.subtitle)) {
-      final meta = _meta;
-      final hasSub = meta?.hasEmbeddedSubtitles ?? false;
-      final codec = meta?.subtitleCodec ?? '';
-      final text = meta == null
-          ? l10n.videoCardDetectingSubtitle
-          : hasSub
-              ? (codec.isEmpty
-                  ? l10n.videoCardHasSubtitle
-                  : l10n.videoCardSubtitleCodec(codec))
-              : l10n.videoCardNoSubtitle;
-      tags.add(_tag(
-        scheme,
-        meta == null
-            ? Icons.hourglass_top
-            : (hasSub
-                ? Icons.subtitles_outlined
-                : Icons.subtitles_off_outlined),
-        text,
-      ));
+      // 每种内嵌字幕类型单独一个标签；没有字幕轨时**什么都不显示**
+      // （不再有「无字幕 / 字幕检测中…」这种占位标签）
+      for (final codec in subtitleTypeLabels(_meta?.subtitleCodec ?? '')) {
+        chips.add(_chip(scheme, codec, tone: _ChipTone.accent));
+      }
     }
 
     // 完整名称：标题不截断、整名换行（卡片高度由标题行数决定，动态变化）；
@@ -335,29 +304,17 @@ class _VideoCardState extends State<VideoCard> {
                         color: nameColor,
                       ),
                     ),
-                    if (tags.isNotEmpty) ...[
+                    if (chips.isNotEmpty) ...[
                       const SizedBox(height: 6),
-                      Wrap(spacing: 12, runSpacing: 4, children: tags),
+                      // 自然宽度 + 固定间距：字段少时也保持同一左边缘与行高，
+                      // 换行后每一行同样从左侧起排（与参考图一致）
+                      Wrap(spacing: 6, runSpacing: 4, children: chips),
                     ],
                   ],
                 ),
               ),
-              // 最右侧：trailing 覆盖（如历史页垃圾桶）> 媒体信息「i」> 播放图标
-              if (widget.trailing != null)
-                widget.trailing!
-              else if (widget.onInfoTap != null)
-                IconButton(
-                  icon: Icon(
-                    Icons.info_outline,
-                    size: 20,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                  tooltip: l10n.mediaInfoItem,
-                  visualDensity: VisualDensity.compact,
-                  onPressed: widget.onInfoTap,
-                )
-              else
-                Icon(Icons.play_circle_outline, color: scheme.onSurfaceVariant),
+              // 卡片右侧默认不放任何图标（媒体信息入口在长按菜单里）
+              if (widget.trailing != null) widget.trailing!,
             ],
           ),
         ),
@@ -402,23 +359,53 @@ class _VideoCardState extends State<VideoCard> {
     );
   }
 
-  Widget _tag(
+  /// 字段胶囊：中性（日期/画质）、强调（已看完）、字幕类型（次级色）三档。
+  ///
+  /// 宽度随内容自适应，行高与内边距恒定——不管用户勾了几个字段，标签的
+  /// 高度、圆角、字号、间距都一致，换行后每行从同一左边缘起排。
+  ///
+  /// 中性底色用 `surfaceContainerHigh`（卡片本身是 `surfaceContainerLow`，
+  /// 已看完的卡片换成 `surfaceContainerHighest`）：三种卡片底色下都能与
+  /// 胶囊区分开，不会出现「标签和卡片同色、只剩文字」。
+  Widget _chip(
     ColorScheme scheme,
-    IconData icon,
     String text, {
-    bool emphasize = false,
+    _ChipTone tone = _ChipTone.neutral,
   }) {
-    final color = emphasize ? scheme.primary : scheme.onSurfaceVariant;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 13, color: color),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: TextStyle(fontSize: 12, color: color),
+    final (background, foreground) = switch (tone) {
+      _ChipTone.neutral => (
+          scheme.surfaceContainerHigh,
+          scheme.onSurfaceVariant,
         ),
-      ],
+      _ChipTone.accent => (
+          scheme.secondaryContainer,
+          scheme.onSecondaryContainer,
+        ),
+      _ChipTone.emphasized => (
+          scheme.primaryContainer,
+          scheme.onPrimaryContainer,
+        ),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 11,
+          height: 1.25,
+          fontWeight: FontWeight.w500,
+          color: foreground,
+        ),
+      ),
     );
   }
 }
+
+/// 胶囊标签的视觉分档
+enum _ChipTone { neutral, accent, emphasized }

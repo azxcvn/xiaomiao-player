@@ -118,6 +118,10 @@
   "commonProgress": "进度",
   "commonSubtitleIndicator": "字幕指示器",
   "commonFrameRate": "帧率",
+  "commonResolutionFrameRate": "分辨率/帧率",
+  "@commonResolutionFrameRate": {
+    "description": "视频字段：分辨率与帧率合并成的一个开关（卡片上是 1080p@23.98）"
+  },
   "commonFullName": "完整名称",
   "viewModeTree": "树状模式",
   "@viewModeTree": {
@@ -4008,6 +4012,10 @@
   "@fileSelectionOps": {
     "description": "多选工具栏：文件操作菜单"
   },
+  "fileSelectionInvert": "反选",
+  "@fileSelectionInvert": {
+    "description": "多选工具栏：反选（当前可见列表里已选的取消、没选的选中）"
+  },
   "folderTransferMoving": "正在移动…",
   "@folderTransferMoving": {
     "description": "文件操作进度：正在移动"
@@ -4315,27 +4323,6 @@
   "videoCardUnwatched": "未观看",
   "@videoCardUnwatched": {
     "description": "视频卡片：未观看"
-  },
-  "videoCardDetectingSubtitle": "字幕检测中…",
-  "@videoCardDetectingSubtitle": {
-    "description": "视频卡片：字幕检测中"
-  },
-  "videoCardHasSubtitle": "含字幕",
-  "@videoCardHasSubtitle": {
-    "description": "视频卡片：含字幕"
-  },
-  "videoCardSubtitleCodec": "字幕 · {codec}",
-  "@videoCardSubtitleCodec": {
-    "description": "视频卡片：字幕格式",
-    "placeholders": {
-      "codec": {
-        "type": "String"
-      }
-    }
-  },
-  "videoCardNoSubtitle": "无字幕",
-  "@videoCardNoSubtitle": {
-    "description": "视频卡片：无字幕"
   },
   "biliCoverUnavailable": "哔哩封面不可用（缓存未命中且下载失败）",
   "@biliCoverUnavailable": {

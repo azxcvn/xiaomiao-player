@@ -335,6 +335,7 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
       sourcePath: video.path,
       onMutated: _reloadCurrentNode,
       onMultiSelect: () => _selection.begin(video.path),
+      onShowInfo: () => _openMediaInfo(video),
     );
   }
 
@@ -409,7 +410,7 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
     );
   }
 
-  /// 多选态顶部工具栏；全选范围 = 当前可见子级
+  /// 多选态顶部工具栏；全选 / 反选范围 = 当前可见子级
   PreferredSizeWidget _buildSelectionAppBar() {
     final l10n = AppLocalizations.of(context);
     final visible = _visibleChildren().map((c) => c.path).toList();
@@ -419,6 +420,7 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
       allSelected: allSelected,
       onExit: _selection.exit,
       onToggleAll: () => _selection.setAll(visible, selected: !allSelected),
+      onInvert: () => _selection.invert(visible),
       onOpenMenu: () => _openSelectionMenu(),
       l10n: l10n,
     );
@@ -498,7 +500,6 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
                 video: child.video!,
                 fields: widget.viewSettings.videoFields,
                 onTap: () => _onChildTap(child),
-                onInfoTap: () => _openMediaInfo(child.video!),
                 onLongPress: () => _onVideoLongPress(child.video!),
                 selectionMode: _selection.selecting,
                 selected: selectedPaths.contains(child.path),

@@ -90,9 +90,16 @@ class _SortOptionsSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 _sectionTitle(context, l10n.optionsSheetFolderFields),
+                // 顺序按「常用优先」排：数量 / 大小（默认选中）放在最前两个，
+                // 路径 / 日期跟在后面——不按枚举顺序，避免默认选中项落在中间
                 _fieldChips(
                   context,
-                  FolderField.values.map((f) {
+                  [
+                    FolderField.count,
+                    FolderField.size,
+                    FolderField.path,
+                    FolderField.date,
+                  ].map((f) {
                     final selected = viewSettings.fields.contains(f);
                     return (
                       label: folderFieldLabel(l10n, f),
@@ -147,8 +154,8 @@ class _SortOptionsSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 _sectionTitle(context, l10n.optionsSheetVideoFields),
-                // 8 字段三行胶囊（等宽均分）：
-                // 第一行 时长/大小/日期，第二行 进度/帧率/分辨率，
+                // 7 个开关，三行胶囊（等宽均分）：
+                // 第一行 时长/大小/日期，第二行 进度/分辨率·帧率，
                 // 第三行 字幕指示器/完整名称（横向两个）
                 _videoFieldChips(context, viewSettings),
               ]);
@@ -226,21 +233,45 @@ class _SortOptionsSheet extends StatelessWidget {
     );
   }
 
-  /// 视频显示字段：三行胶囊布局（8 字段 = 3 + 3 + 2），**行内等宽均分**。
+  /// 视频显示字段：三行胶囊布局（7 个开关 = 3 + 2 + 2），**行内等宽均分**。
   ///
   /// - 第一行：时长 / 大小 / 日期（3 个胶囊，各占 1/3 行宽）；
-  /// - 第二行：进度 / 帧率 / 分辨率（3 个胶囊，各占 1/3 行宽）；
+  /// - 第二行：进度 / 分辨率·帧率（2 个胶囊，各占 1/2 行宽）；
   /// - 第三行：字幕指示器 / 完整名称（2 个胶囊，各占 1/2 行宽）。
+  ///
+  /// 分辨率与帧率在卡片上是**同一个胶囊**（`1080p@23.98`），设置里也合成
+  /// 一个开关：点一次同时开/关两个字段（老用户只开了其中一个时，点一下补齐）。
   Widget _videoFieldChips(BuildContext context, ViewSettings viewSettings) {
+    final l10n = AppLocalizations.of(context);
+
     ({String label, bool selected, VoidCallback onToggle}) chip(
       VideoField f,
     ) {
       return (
-        label: videoFieldLabel(AppLocalizations.of(context), f),
+        label: videoFieldLabel(l10n, f),
         selected: viewSettings.videoFields.contains(f),
         onToggle: () => viewSettings.toggleVideoField(f),
       );
     }
+
+    // 分辨率 + 帧率 合并开关：两个字段都开才算选中，点一下同步两个字段
+    const qualityFields = [VideoField.resolution, VideoField.frameRate];
+    final qualitySelected =
+        qualityFields.every(viewSettings.videoFields.contains);
+    final qualityChip = (
+      label: l10n.commonResolutionFrameRate,
+      selected: qualitySelected,
+      onToggle: () {
+        // 手写循环（不能用 toggle 的返回值）：enable 在第一次切换后会变，
+        // 这里以点击前的状态为准，两个字段朝同一个方向走
+        final enable = !qualitySelected;
+        for (final f in qualityFields) {
+          if (viewSettings.videoFields.contains(f) != enable) {
+            viewSettings.toggleVideoField(f);
+          }
+        }
+      },
+    );
 
     // 显式指定每行字段（不依赖枚举顺序）
     final row1 = [
@@ -248,11 +279,7 @@ class _SortOptionsSheet extends StatelessWidget {
       chip(VideoField.size),
       chip(VideoField.date),
     ];
-    final row2 = [
-      chip(VideoField.progress),
-      chip(VideoField.frameRate),
-      chip(VideoField.resolution),
-    ];
+    final row2 = [chip(VideoField.progress), qualityChip];
     final row3 = [chip(VideoField.subtitle), chip(VideoField.fullName)];
 
     return Column(
