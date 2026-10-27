@@ -88,7 +88,12 @@ enum PlayerTopAction {
   // **播放诊断**/均衡器
   //（工作.md：解码与章节在「比例」之后、「画中画」之前；播放诊断在「片头片尾」
   //  之后、「音频均衡器」之前）
-  equalizer('equalizer', Icons.equalizer_outlined, true);
+  equalizer('equalizer', Icons.equalizer_outlined, true),
+  // 面板类动作：可直接放进顶栏槽位。竖屏没有「按钮大小」面板（尺寸固定），
+  // 故 buttonSize 仅横屏；画质增强横竖屏都能用。
+  buttonSize('button_size', Icons.photo_size_select_large, true,
+      landscapeOnly: true),
+  postProcess('post_process', Icons.auto_awesome, true);
 
   /// 持久化标识（稳定，勿改）
   final String id;
@@ -97,7 +102,15 @@ enum PlayerTopAction {
   /// 是否已实现具体功能（false = 占位入口，待接入）
   final bool implemented;
 
-  const PlayerTopAction(this.id, this.icon, this.implemented);
+  /// 仅横屏可用：竖屏的自定义列表/顶栏槽位会过滤掉
+  final bool landscapeOnly;
+
+  const PlayerTopAction(
+    this.id,
+    this.icon,
+    this.implemented, {
+    this.landscapeOnly = false,
+  });
 
   /// 按持久化 id 反查动作（找不到返回 null）
   static PlayerTopAction? byId(String? id) {

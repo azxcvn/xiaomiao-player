@@ -24,7 +24,10 @@ import 'package:moumou/pages/player/views/portrait_player_top_bar.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 
 class PlayerCustomizePanel extends StatefulWidget {
-  const PlayerCustomizePanel({super.key});
+  const PlayerCustomizePanel({super.key, this.portrait = false});
+
+  /// 竖屏模式：过滤掉仅横屏可用的动作（如「按钮大小」，竖屏按钮尺寸固定）
+  final bool portrait;
 
   @override
   State<PlayerCustomizePanel> createState() => _PlayerCustomizePanelState();
@@ -48,9 +51,13 @@ class _PlayerCustomizePanelState extends State<PlayerCustomizePanel> {
       builder: (context, _) {
         final l10n = AppLocalizations.of(context);
         final settings = PlayerControlsSettings.instance;
-        final enabled = settings.topActions;
+        final all = settings.topActions;
+        // 竖屏不展示「按钮大小」这类仅横屏动作
+        final enabled = widget.portrait
+            ? all.where((a) => !a.landscapeOnly).toList()
+            : all.toList();
         final disabled = PlayerTopAction.values
-            .where((a) => !enabled.contains(a))
+            .where((a) => !all.contains(a) && !(widget.portrait && a.landscapeOnly))
             .toList();
         final full = enabled.length >= PortraitPlayerTopBar.maxPortraitSlots;
         return PlayerActionFlyAnimation(
@@ -67,7 +74,14 @@ class _PlayerCustomizePanelState extends State<PlayerCustomizePanel> {
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: PlayerActionPreviewRow(
                     slots: enabled,
-                    onReorder: (o, n) => settings.reorderTopAction(o, n),
+                    onReorder: (o, n) {
+                      // 竖屏展示列表是过滤后的子集，映射回完整列表的下标
+                      final from = all.indexOf(enabled[o]);
+                      final to = n < enabled.length
+                          ? all.indexOf(enabled[n])
+                          : all.length - 1;
+                      settings.reorderTopAction(from, to);
+                    },
                     onRemove: (a) {
                       // 先取源槽位位置（此刻列表还没变），再改数据
                       _fly.flyBack(a, atIndex: enabled.indexOf(a));

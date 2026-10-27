@@ -1442,25 +1442,25 @@
   "@playerSuperResolution": {
     "description": "播放器：超分辨率（面板标题 / 底栏按钮 / 记忆项）"
   },
-  "playerPostProcess": "后处理",
+  "playerPostProcess": "画质增强",
   "@playerPostProcess": {
-    "description": "播放器：后处理（更多面板入口 / 面板标题）"
+    "description": "播放器：画质增强（更多面板入口 / 面板标题）"
   },
   "playerPostProcessEnable": "启用后处理",
   "@playerPostProcessEnable": {
     "description": "后处理：总开关"
   },
-  "playerPostProcessHint": "基础调节即时生效；风格化效果改参数后会短暂重载着色器",
-  "@playerPostProcessHint": {
-    "description": "后处理：总开关下方说明"
-  },
   "playerPostProcessBasic": "基础调节",
   "@playerPostProcessBasic": {
     "description": "后处理：基础调节分组"
   },
-  "playerPostProcessEffects": "效果",
+  "playerPostProcessEffects": "画面效果",
   "@playerPostProcessEffects": {
-    "description": "后处理：效果分组"
+    "description": "后处理：画面效果分组"
+  },
+  "playerPostProcessResetAll": "全部重置",
+  "@playerPostProcessResetAll": {
+    "description": "后处理：全局重置"
   },
   "playerPostProcessBrightness": "亮度",
   "@playerPostProcessBrightness": {
@@ -1610,6 +1610,30 @@
   "@playerPostProcessGpuNextHint": {
     "description": "后处理：锐化在 GPU-next 渲染器下的限制提示"
   },
+  "playerPresetEffects": "预设效果",
+  "@playerPresetEffects": {
+    "description": "后处理：预设入口与预设视图标题"
+  },
+  "playerPresetCustom": "自定义",
+  "@playerPresetCustom": {
+    "description": "后处理：未套用任何预设"
+  },
+  "playerPresetModified": "已微调",
+  "@playerPresetModified": {
+    "description": "后处理：套用预设后又手工改过"
+  },
+  "playerPresetGroupClean": "净化",
+  "playerPresetGroupFilm": "胶片电影",
+  "playerPresetGroupTv": "老电视",
+  "playerPresetGroupLowBitrate": "低码率",
+  "playerPresetGroupStreaming": "流媒体",
+  "playerPresetGroupStyle": "风格化",
+  "playerPresetLight": "轻度",
+  "playerPresetStandard": "中度",
+  "playerPresetStrong": "重度",
+  "playerPresetCinematic": "电影感",
+  "playerPresetSoft": "柔和",
+  "playerPresetRetro": "复古",
   "playerAspectRatio": "画面比例",
   "@playerAspectRatio": {
     "description": "播放器面板：画面比例"

@@ -1473,9 +1473,9 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   }
 
   /// 「更多」面板主页：未放入槽位的动作网格（图标上 / 名称下，3 列）+ 末尾
-  /// 「后处理」「自定义」入口（与横屏一致）。点击未放置动作的行为不变（直接执行）。
+  /// 「自定义」入口（与横屏一致）。点击未放置动作的行为不变（直接执行）。
   ///
-  /// 竖屏不提供「按钮大小」入口：竖屏顶栏/底栏按钮参数固定不缩放
+  /// 竖屏不提供「按钮大小」动作：竖屏顶栏/底栏按钮参数固定不缩放
   /// （工作.md v3 溢出修复），调大只会把底栏那一行挤爆。
   Widget _buildMorePanel() {
     return Builder(
@@ -1484,7 +1484,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         builder: (context, _) {
           final l10n = AppLocalizations.of(context);
           final notPlaced = PlayerTopAction.values
-              .where((a) => !_settings.topActions.contains(a))
+              .where((a) =>
+                  !_settings.topActions.contains(a) && !a.landscapeOnly)
               .toList();
           // 整页一个滚动视图（标题 + 网格一起滚）：网格自身不再限高，
           // 避免出现「只有网格那一小块能滑」的局促滚动区
@@ -1507,17 +1508,6 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
                         height: tileHeight,
                         onTap: () => _handlePanelAction(panelContext, a),
                       ),
-                    // 后处理：排在「自定义」之前（自定义始终最后一格）
-                    PlayerActionGridTile(
-                      icon: Icons.auto_awesome,
-                      label: l10n.playerPostProcess,
-                      width: tileWidth,
-                      height: tileHeight,
-                      onTap: () =>
-                          PlayerBottomPanelNavigator.of(panelContext).push(
-                        _postProcessPanelPage(),
-                      ),
-                    ),
                     // 自定义控制栏：排在网格最后一格
                     PlayerActionGridTile(
                       icon: Icons.tune,
@@ -1566,6 +1556,11 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         return _equalizerPanelPage();
       case PlayerTopAction.diagnostics:
         return _diagnosticsPanelPage();
+      case PlayerTopAction.buttonSize:
+        // 竖屏不支持按钮大小（按钮尺寸固定），列表已过滤，进不来
+        return null;
+      case PlayerTopAction.postProcess:
+        return _postProcessPanelPage();
       default:
         return null;
     }
@@ -1743,6 +1738,9 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         _openCast();
       case PlayerTopAction.diagnostics:
         break; // 已在上方 _panelPageFor 分支处理
+      case PlayerTopAction.buttonSize:
+      case PlayerTopAction.postProcess:
+        break; // 已在上方 _panelPageFor 分支处理
     }
   }
 
@@ -1777,6 +1775,9 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         Navigator.of(panelContext).pop();
         _openCast();
       case PlayerTopAction.diagnostics:
+        break; // 已在上方 _panelPageFor 分支处理
+      case PlayerTopAction.buttonSize:
+      case PlayerTopAction.postProcess:
         break; // 已在上方 _panelPageFor 分支处理
     }
   }

@@ -15,6 +15,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:moumou/models/post_process_preset.dart';
 import 'package:moumou/services/decode_settings.dart';
 import 'package:moumou/services/player_shader_pipeline.dart';
 import 'package:moumou/utils/post_process_shaders.dart';
@@ -239,6 +240,12 @@ class PostProcessService extends ChangeNotifier {
   Timer? _persistTimer;
   Timer? _shaderTimer;
 
+  /// 当前套用的预设（null = 自定义）
+  PostProcessPreset? _appliedPreset;
+
+  /// 套用预设时的参数快照，用来判断用户之后有没有手工改过
+  String? _presetSignature;
+
   bool get enabled => _enabled;
   double get brightness => _brightness;
   double get contrast => _contrast;
@@ -298,6 +305,13 @@ class PostProcessService extends ChangeNotifier {
   bool get filmGrainEnabled => _filmGrainEnabled;
   double get filmGrainIntensity => _filmGrainIntensity;
   double get filmGrainSize => _filmGrainSize;
+
+  /// 当前套用的预设（null = 自定义）
+  PostProcessPreset? get appliedPreset => _appliedPreset;
+
+  /// 套用预设后又手工改过参数
+  bool get presetModified =>
+      _appliedPreset != null && _presetSignature != _stateSignature();
 
   /// GPU-next 渲染器下 mpv 不支持内置 `sharpen`，面板据此提示用户
   bool get sharpenAvailable => !DecodeSettings.instance.gpuNext;
@@ -758,13 +772,50 @@ class PostProcessService extends ChangeNotifier {
 
   /// 恢复默认（总开关保留）
   void resetSettings() {
+    _resetFieldsToDefaults();
+    _appliedPreset = null;
+    _presetSignature = null;
+    notifyListeners();
+    _persist();
+    unawaited(_applyAll());
+  }
+
+  /// 只重置基础调节（亮度/对比/伽马/饱和度/色相）
+  void resetBasicAdjustments() {
+    _resetBasicFields();
+    notifyListeners();
+    _persist();
+    unawaited(_applyProperties());
+  }
+
+  /// 只重置画面效果（所有效果开关与参数）
+  void resetEffects() {
+    _resetEffectFields();
+    notifyListeners();
+    _persist();
+    unawaited(_applyAll());
+  }
+
+  /// 参数全部回默认（不动总开关、不动预设标记）
+  void _resetFieldsToDefaults() {
+    _resetBasicFields();
+    _resetEffectFields();
+  }
+
+  void _resetBasicFields() {
     _brightness = 0;
     _contrast = 0;
     _gamma = 0;
     _saturation = 0;
     _hue = 0;
+  }
+
+  void _resetEffectFields() {
     _sharpenEnabled = false;
     _sharpenAmount = defaultSharpenAmount;
+    _denoiseEnabled = false;
+    _denoiseStrength = defaultDenoiseStrength;
+    _denoiseRadius = defaultDenoiseRadius;
     _debandEnabled = false;
     _debandThreshold = defaultDebandThreshold;
     _debandRange = defaultDebandRange;
@@ -801,10 +852,212 @@ class PostProcessService extends ChangeNotifier {
     _filmGrainEnabled = false;
     _filmGrainIntensity = defaultFilmGrainIntensity;
     _filmGrainSize = defaultFilmGrainSize;
+  }
+
+  // ── 预设 ─────────────────────────────────────────────────
+
+  /// 套用预设：先把参数复位，再按预设写入，最后只应用一次。
+  ///
+  /// 等价于用户在面板里手动把开关和滑杆拨到这一组值；之后继续改参数
+  /// 就变成“已微调”（[presetModified]）。
+  void applyPreset(PostProcessPreset preset) {
+    _resetFieldsToDefaults();
+    final f = preset.scale;
+    switch (preset.group) {
+      case PostProcessPresetGroup.clean:
+        _applyCleanPreset(f);
+      case PostProcessPresetGroup.film:
+        _applyFilmPreset(f);
+      case PostProcessPresetGroup.tv:
+        _applyTvPreset(f);
+      case PostProcessPresetGroup.lowBitrate:
+        _applyLowBitratePreset(f);
+      case PostProcessPresetGroup.streaming:
+        _applyStreamingPreset(f);
+      case PostProcessPresetGroup.style:
+        switch (preset) {
+          case PostProcessPreset.cinematic:
+            _applyCinematicPreset();
+          case PostProcessPreset.soft:
+            _applySoftPreset();
+          case PostProcessPreset.retro:
+            _applyRetroPreset();
+          default:
+            break;
+        }
+    }
+    _enabled = true;
+    _appliedPreset = preset;
+    _presetSignature = _stateSignature();
     notifyListeners();
     _persist();
     unawaited(_applyAll());
   }
+
+  /// 净化：通用的“降噪 + 去色带 + 轻锐化”，不调色、不加对比
+  void _applyCleanPreset(double f) {
+    _denoiseEnabled = true;
+    _denoiseStrength = 0.12 * f;
+    _denoiseRadius = 1.0;
+    _debandEnabled = true;
+    _debandThreshold = 24.0 + 12.0 * (f - 1.0);
+    _debandRange = 12.0 + 5.0 * (f - 1.0);
+    _debandGrain = 12.0 + 10.0 * (f - 1.0);
+    _debandIterations = 1;
+    _sharpenEnabled = true;
+    _sharpenAmount = 0.2 * f;
+  }
+
+  /// 胶片电影：黑位、褪色偏色、高光，外加很轻的锐化与颗粒
+  void _applyFilmPreset(double f) {
+    _levelsEnabled = true;
+    _inBlack = 0.03 + 0.04 * f;
+    _inWhite = 1.0 - 0.02 * f;
+    _levelsGamma = 1.0 + 0.06 * f;
+    _whiteBalanceEnabled = true;
+    _temperature = 10.0 * f;
+    _filmicEnabled = true;
+    _exposure = 1.0 + 0.04 * f;
+    _filmicToe = 1.0 + 0.2 * f;
+    _filmicShoulder = 1.0 + 0.35 * f;
+    _filmicAmount = 0.6 * f;
+    _sharpenEnabled = true;
+    _sharpenAmount = 0.18 * f;
+    _filmGrainEnabled = true;
+    _filmGrainIntensity = 0.015 * f;
+    _filmGrainSize = 1.0;
+    _contrast = 4.0 * f;
+  }
+
+  /// 老电视/录像带：噪点、偏色、色带，轻锐化
+  void _applyTvPreset(double f) {
+    _denoiseEnabled = true;
+    _denoiseStrength = 0.12 + 0.1 * f;
+    _denoiseRadius = 1.0;
+    _whiteBalanceEnabled = true;
+    _temperature = -6.0 * f;
+    _debandEnabled = true;
+    _debandThreshold = 32.0 + 12.0 * f;
+    _debandRange = 10;
+    _debandGrain = 20;
+    _debandIterations = 1;
+    _sharpenEnabled = true;
+    _sharpenAmount = 0.15 * f;
+    _contrast = 3.0 * f;
+  }
+
+  /// 低码率（VCD/DVD）：色带、块噪、糊
+  void _applyLowBitratePreset(double f) {
+    _debandEnabled = true;
+    _debandThreshold = 40.0 + 16.0 * f;
+    _debandRange = 16;
+    _debandGrain = 24;
+    _debandIterations = 1;
+    _denoiseEnabled = true;
+    _denoiseStrength = 0.12 + 0.08 * f;
+    _denoiseRadius = 1.0;
+    _sharpenEnabled = true;
+    _sharpenAmount = 0.12 * f;
+  }
+
+  /// 现代流媒体：色带、暗场块，只做极轻的锐化
+  void _applyStreamingPreset(double f) {
+    _debandEnabled = true;
+    _debandThreshold = 28.0 + 12.0 * f;
+    _debandRange = 14;
+    _debandGrain = 16;
+    _debandIterations = 1;
+    _sharpenEnabled = true;
+    _sharpenAmount = 0.08 * f;
+    _contrast = 2.0 * f;
+  }
+
+  /// 电影感：暗角 + 泛光 + 颗粒 + 一点对比与饱和
+  void _applyCinematicPreset() {
+    _vignetteEnabled = true;
+    _vignettePower = 0.4;
+    _vignetteRadius = 0.15;
+    _vignetteSoftness = 0.6;
+    _bloomEnabled = true;
+    _bloomAmount = 0.25;
+    _bloomSpread = 0.4;
+    _filmGrainEnabled = true;
+    _filmGrainIntensity = 0.02;
+    _filmGrainSize = 1.0;
+    _contrast = 6;
+    _saturation = 3;
+  }
+
+  /// 柔和：负锐化，治现代数码过锐
+  void _applySoftPreset() {
+    _sharpenEnabled = true;
+    _sharpenAmount = -0.35;
+    _saturation = -3;
+  }
+
+  /// 复古：暖白平衡 + 暗角 + 大颗粒
+  void _applyRetroPreset() {
+    _filmGrainEnabled = true;
+    _filmGrainIntensity = 0.05;
+    _filmGrainSize = 2.0;
+    _whiteBalanceEnabled = true;
+    _temperature = 18;
+    _tint = 4;
+    _vignetteEnabled = true;
+    _vignettePower = 0.45;
+    _contrast = 4;
+  }
+
+  /// 全部参数拼成一个签名，用于判断预设之后有没有被手工改过
+  String _stateSignature() => <Object>[
+        _enabled,
+        _brightness,
+        _contrast,
+        _gamma,
+        _saturation,
+        _hue,
+        _sharpenEnabled,
+        _sharpenAmount,
+        _denoiseEnabled,
+        _denoiseStrength,
+        _denoiseRadius,
+        _debandEnabled,
+        _debandThreshold,
+        _debandRange,
+        _debandGrain,
+        _debandIterations,
+        _vignetteEnabled,
+        _vignettePower,
+        _vignetteAspect,
+        _vignetteRadius,
+        _vignetteSoftness,
+        _scanlinesEnabled,
+        _scanlinesDensity,
+        _scanlinesIntensity,
+        _naturalEnabled,
+        _naturalLuma,
+        _naturalChroma,
+        _bloomEnabled,
+        _bloomAmount,
+        _bloomSpread,
+        _cartoonEnabled,
+        _cartoonStrength,
+        _whiteBalanceEnabled,
+        _temperature,
+        _tint,
+        _levelsEnabled,
+        _inBlack,
+        _inWhite,
+        _levelsGamma,
+        _filmicEnabled,
+        _exposure,
+        _filmicToe,
+        _filmicShoulder,
+        _filmicAmount,
+        _filmGrainEnabled,
+        _filmGrainIntensity,
+        _filmGrainSize,
+      ].join('|');
 
   // ── 应用 ─────────────────────────────────────────────────
 
@@ -1093,6 +1346,8 @@ class PostProcessService extends ChangeNotifier {
     _filmGrainEnabled = false;
     _filmGrainIntensity = defaultFilmGrainIntensity;
     _filmGrainSize = defaultFilmGrainSize;
+    _appliedPreset = null;
+    _presetSignature = null;
     notifyListeners();
   }
 }

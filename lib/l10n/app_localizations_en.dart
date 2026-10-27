@@ -1770,20 +1770,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerSuperResolution => 'Super resolution';
 
   @override
-  String get playerPostProcess => 'Post-processing';
+  String get playerPostProcess => 'Picture enhancement';
 
   @override
   String get playerPostProcessEnable => 'Enable post-processing';
 
   @override
-  String get playerPostProcessHint =>
-      'Basic adjustments apply instantly; style effects briefly reload shaders when adjusted';
-
-  @override
   String get playerPostProcessBasic => 'Basic adjustments';
 
   @override
-  String get playerPostProcessEffects => 'Effects';
+  String get playerPostProcessEffects => 'Picture effects';
+
+  @override
+  String get playerPostProcessResetAll => 'Reset all';
 
   @override
   String get playerPostProcessBrightness => 'Brightness';
@@ -1896,6 +1895,51 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get playerPostProcessGpuNextHint =>
       'Built-in sharpening is unavailable with the GPU-next renderer; switch back to the default renderer';
+
+  @override
+  String get playerPresetEffects => 'Presets';
+
+  @override
+  String get playerPresetCustom => 'Custom';
+
+  @override
+  String get playerPresetModified => 'Edited';
+
+  @override
+  String get playerPresetGroupClean => 'Clean';
+
+  @override
+  String get playerPresetGroupFilm => 'Film';
+
+  @override
+  String get playerPresetGroupTv => 'Old TV';
+
+  @override
+  String get playerPresetGroupLowBitrate => 'Low bitrate';
+
+  @override
+  String get playerPresetGroupStreaming => 'Streaming';
+
+  @override
+  String get playerPresetGroupStyle => 'Style';
+
+  @override
+  String get playerPresetLight => 'Light';
+
+  @override
+  String get playerPresetStandard => 'Medium';
+
+  @override
+  String get playerPresetStrong => 'Strong';
+
+  @override
+  String get playerPresetCinematic => 'Cinematic';
+
+  @override
+  String get playerPresetSoft => 'Soft';
+
+  @override
+  String get playerPresetRetro => 'Retro';
 
   @override
   String get playerAspectRatio => 'Aspect ratio';

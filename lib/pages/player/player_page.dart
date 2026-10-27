@@ -2314,6 +2314,12 @@ class _PlayerPageState extends State<PlayerPage>
         body: const PlayerPostProcessPanel(),
       );
 
+  /// 控制栏按钮大小面板页（顶栏槽位 / 「更多」共用）。
+  PlayerPanelPage _buttonSizePanelPage() => PlayerPanelPage(
+        title: AppLocalizations.of(context).playerButtonSize,
+        body: const PlayerButtonSizePanel(),
+      );
+
   /// 打开媒体前的着色器准备：超分 + 后处理。
   ///
   /// 两条链由 [PlayerShaderPipeline] 拼成一条写给 mpv（顺序：超分 → 后处理），
@@ -2346,7 +2352,7 @@ class _PlayerPageState extends State<PlayerPage>
   }
 
   /// 「更多」面板主页：未放入槽位的动作网格（图标上 / 名称下，3 列）
-  /// + 末尾的「按钮大小」「后处理」「自定义」入口（自定义固定最后一格）。
+  /// + 末尾的「自定义」入口（固定最后一格）。
   ///
   /// 未放置到顶部 5 槽位的动作自动出现在「更多」里，点击行为不变（直接执行）；
   /// 增删/排序在「自定义」页里做。用 ListenableBuilder 监听设置：在「自定义」
@@ -2397,30 +2403,6 @@ class _PlayerPageState extends State<PlayerPage>
                         height: tileHeight,
                         onTap: () => _handlePanelAction(panelContext, a),
                       ),
-                    // 控制栏按钮大小：排在「自定义」之前（「自定义」始终最后一格）
-                    PlayerActionGridTile(
-                      icon: Icons.photo_size_select_large,
-                      label: l10n.playerButtonSize,
-                      width: tileWidth,
-                      height: tileHeight,
-                      onTap: () => PlayerPanelNavigator.of(panelContext).push(
-                        PlayerPanelPage(
-                          title: l10n.playerButtonSize,
-                          body: const PlayerButtonSizePanel(),
-                        ),
-                      ),
-                    ),
-                    // 后处理：排在「按钮大小」与「自定义」之间
-                    // （「自定义」始终最后一格）
-                    PlayerActionGridTile(
-                      icon: Icons.auto_awesome,
-                      label: l10n.playerPostProcess,
-                      width: tileWidth,
-                      height: tileHeight,
-                      onTap: () => PlayerPanelNavigator.of(panelContext).push(
-                        _postProcessPanelPage(),
-                      ),
-                    ),
                     // 自定义控制栏：始终排在网格最后一格
                     PlayerActionGridTile(
                       icon: Icons.tune,
@@ -2486,6 +2468,10 @@ class _PlayerPageState extends State<PlayerPage>
         _openCast();
       case PlayerTopAction.diagnostics:
         _openDiagnosticsPanel();
+      case PlayerTopAction.buttonSize:
+        _openButtonSizePanel();
+      case PlayerTopAction.postProcess:
+        _openPostProcessPanel();
     }
   }
 
@@ -2514,6 +2500,10 @@ class _PlayerPageState extends State<PlayerPage>
         return _equalizerPanelPage();
       case PlayerTopAction.diagnostics:
         return _diagnosticsPanelPage();
+      case PlayerTopAction.buttonSize:
+        return _buttonSizePanelPage();
+      case PlayerTopAction.postProcess:
+        return _postProcessPanelPage();
       default:
         return null;
     }
@@ -2551,6 +2541,9 @@ class _PlayerPageState extends State<PlayerPage>
         Navigator.of(panelContext).pop();
         _openCast();
       case PlayerTopAction.diagnostics:
+        break; // 已在上方 _panelPageFor 分支处理
+      case PlayerTopAction.buttonSize:
+      case PlayerTopAction.postProcess:
         break; // 已在上方 _panelPageFor 分支处理
     }
   }
@@ -2960,6 +2953,18 @@ class _PlayerPageState extends State<PlayerPage>
   Future<void> _openFitPanel() async {
     _hideTimer?.cancel();
     await showPlayerPanel(context, pages: [_fitPanelPage()]);
+    _resetHideTimer();
+  }
+
+  Future<void> _openButtonSizePanel() async {
+    _hideTimer?.cancel();
+    await showPlayerPanel(context, pages: [_buttonSizePanelPage()]);
+    _resetHideTimer();
+  }
+
+  Future<void> _openPostProcessPanel() async {
+    _hideTimer?.cancel();
+    await showPlayerPanel(context, pages: [_postProcessPanelPage()]);
     _resetHideTimer();
   }
 

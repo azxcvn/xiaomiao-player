@@ -11,7 +11,8 @@ class PortraitEditControlPanel extends StatelessWidget {
   const PortraitEditControlPanel({super.key});
 
   @override
-  Widget build(BuildContext context) => const PlayerCustomizePanel();
+  Widget build(BuildContext context) =>
+      const PlayerCustomizePanel(portrait: true);
 }
 
 /// 面板中的动作行：图标 + 名称 +（副标题）+ 箭头

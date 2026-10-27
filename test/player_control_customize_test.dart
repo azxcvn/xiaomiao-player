@@ -5,6 +5,7 @@ import 'package:moumou/models/player_action.dart';
 import 'package:moumou/pages/player/views/player_action_grid.dart';
 import 'package:moumou/pages/player/views/player_bottom_bar.dart';
 import 'package:moumou/pages/player/views/player_button_size_panel.dart';
+import 'package:moumou/pages/player/views/player_customize_panel.dart';
 import 'package:moumou/pages/player/views/player_top_bar.dart';
 import 'package:moumou/pages/player/views/portrait_edit_panel.dart';
 import 'package:moumou/pages/player/views/portrait_player_bottom_bar.dart';
@@ -552,5 +553,19 @@ void main() {
     await gesture.up();
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('按钮大小/画质增强可加入控制栏；竖屏过滤按钮大小', (tester) async {
+    // 横屏：两个面板类动作都在「可添加」里
+    await tester.pumpWidget(wrap(const PlayerCustomizePanel()));
+    await tester.pumpAndSettle();
+    expect(find.text('按钮大小'), findsOneWidget);
+    expect(find.text('画质增强'), findsOneWidget);
+
+    // 竖屏：按钮尺寸固定，不出现「按钮大小」；画质增强横竖屏都能用
+    await tester.pumpWidget(wrap(const PortraitEditControlPanel()));
+    await tester.pumpAndSettle();
+    expect(find.text('按钮大小'), findsNothing);
+    expect(find.text('画质增强'), findsOneWidget);
   });
 }

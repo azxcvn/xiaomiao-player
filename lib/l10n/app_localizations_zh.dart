@@ -1700,19 +1700,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerSuperResolution => '超分辨率';
 
   @override
-  String get playerPostProcess => '后处理';
+  String get playerPostProcess => '画质增强';
 
   @override
   String get playerPostProcessEnable => '启用后处理';
 
   @override
-  String get playerPostProcessHint => '基础调节即时生效；风格化效果改参数后会短暂重载着色器';
-
-  @override
   String get playerPostProcessBasic => '基础调节';
 
   @override
-  String get playerPostProcessEffects => '效果';
+  String get playerPostProcessEffects => '画面效果';
+
+  @override
+  String get playerPostProcessResetAll => '全部重置';
 
   @override
   String get playerPostProcessBrightness => '亮度';
@@ -1824,6 +1824,51 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playerPostProcessGpuNextHint => 'GPU-next 渲染下内置锐化不生效，切回默认渲染器即可';
+
+  @override
+  String get playerPresetEffects => '预设效果';
+
+  @override
+  String get playerPresetCustom => '自定义';
+
+  @override
+  String get playerPresetModified => '已微调';
+
+  @override
+  String get playerPresetGroupClean => '净化';
+
+  @override
+  String get playerPresetGroupFilm => '胶片电影';
+
+  @override
+  String get playerPresetGroupTv => '老电视';
+
+  @override
+  String get playerPresetGroupLowBitrate => '低码率';
+
+  @override
+  String get playerPresetGroupStreaming => '流媒体';
+
+  @override
+  String get playerPresetGroupStyle => '风格化';
+
+  @override
+  String get playerPresetLight => '轻度';
+
+  @override
+  String get playerPresetStandard => '中度';
+
+  @override
+  String get playerPresetStrong => '重度';
+
+  @override
+  String get playerPresetCinematic => '电影感';
+
+  @override
+  String get playerPresetSoft => '柔和';
+
+  @override
+  String get playerPresetRetro => '复古';
 
   @override
   String get playerAspectRatio => '画面比例';
@@ -6307,19 +6352,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get playerSuperResolution => '超解析度';
 
   @override
-  String get playerPostProcess => '後處理';
+  String get playerPostProcess => '畫質增強';
 
   @override
   String get playerPostProcessEnable => '啟用後處理';
 
   @override
-  String get playerPostProcessHint => '基礎調節即時生效；風格化效果調參數後會短暫重新載入著色器';
-
-  @override
   String get playerPostProcessBasic => '基礎調節';
 
   @override
-  String get playerPostProcessEffects => '效果';
+  String get playerPostProcessEffects => '畫面效果';
+
+  @override
+  String get playerPostProcessResetAll => '全部重設';
 
   @override
   String get playerPostProcessBrightness => '亮度';
@@ -6431,6 +6476,51 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get playerPostProcessGpuNextHint => 'GPU-next 渲染下內建銳化不生效，切回預設渲染器即可';
+
+  @override
+  String get playerPresetEffects => '預設效果';
+
+  @override
+  String get playerPresetCustom => '自訂';
+
+  @override
+  String get playerPresetModified => '已微調';
+
+  @override
+  String get playerPresetGroupClean => '淨化';
+
+  @override
+  String get playerPresetGroupFilm => '膠片電影';
+
+  @override
+  String get playerPresetGroupTv => '老電視';
+
+  @override
+  String get playerPresetGroupLowBitrate => '低碼率';
+
+  @override
+  String get playerPresetGroupStreaming => '串流';
+
+  @override
+  String get playerPresetGroupStyle => '風格化';
+
+  @override
+  String get playerPresetLight => '輕度';
+
+  @override
+  String get playerPresetStandard => '中度';
+
+  @override
+  String get playerPresetStrong => '重度';
+
+  @override
+  String get playerPresetCinematic => '電影感';
+
+  @override
+  String get playerPresetSoft => '柔和';
+
+  @override
+  String get playerPresetRetro => '復古';
 
   @override
   String get playerAspectRatio => '畫面比例';

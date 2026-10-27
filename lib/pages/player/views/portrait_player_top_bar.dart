@@ -88,7 +88,10 @@ class PortraitPlayerTopBar extends StatelessWidget {
               listenable: PlayerControlsSettings.instance,
               builder: (context, _) {
                 final l10n = AppLocalizations.of(context);
-                final actions = PlayerControlsSettings.instance.topActions;
+                // 竖屏不显示仅横屏动作（如「按钮大小」）
+                final actions = PlayerControlsSettings.instance.topActions
+                    .where((a) => !a.landscapeOnly)
+                    .toList();
                 if (actions.isEmpty) {
                   // 无槽位：更多按钮固定右侧（不参与均分）
                   return Row(

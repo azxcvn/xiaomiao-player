@@ -1,18 +1,21 @@
 /// 后处理面板（横屏播放页「更多 → 后处理」进入）。
 ///
 /// 结构（自上而下）：
+/// - **预设效果**：顶部一行入口，进去选「胶片电影 / 老电视 / 低码率 / 流媒体 /
+///   风格化」，点选后把参数写进下面这些开关和滑杆，然后回到本面板；
 /// - **总开关**：关掉 = 所有效果不应用（mpv 属性复位、着色器链清空）；
 /// - **基础调节**：亮度 / 对比 / 伽马 / 饱和度 / 色相（mpv 内置属性，拖动即时生效）；
-/// - **效果**：锐化、去色带（mpv 内置属性）+ 暗角、扫描线、自然色彩（运行时生成
-///   的 mpv 用户着色器，改参数后 220ms 防抖重建）；
-/// - **恢复默认**：参数回到默认值（总开关保留）。
+/// - **效果**：锐化/柔化、降噪、去色带（前两个是属性/着色器）+ 白平衡、色阶、
+///   胶片曲线、暗角、扫描线、自然色彩、泛光、卡通、胶片颗粒（运行时生成的
+///   mpv 用户着色器，改参数后 220ms 防抖重建）；
+/// - **恢复默认**：参数回到默认值（总开关保留，预设标记清空）。
 ///
 /// 面板直接驱动 [PostProcessService] 单例，播放器由播放页在打开媒体时绑定。
 library;
 
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
-import 'package:moumou/pages/player/views/portrait_edit_panel.dart';
+import 'package:moumou/models/post_process_preset.dart';
 import 'package:moumou/services/post_process_service.dart';
 
 class PlayerPostProcessPanel extends StatefulWidget {
@@ -24,6 +27,9 @@ class PlayerPostProcessPanel extends StatefulWidget {
 
 class _PlayerPostProcessPanelState extends State<PlayerPostProcessPanel> {
   final PostProcessService _service = PostProcessService.instance;
+
+  /// 面板内切换：预设选择视图 ↔ 参数视图（不新开面板页，横竖屏都适用）
+  bool _showPresets = false;
 
   @override
   void initState() {
@@ -46,10 +52,41 @@ class _PlayerPostProcessPanelState extends State<PlayerPostProcessPanel> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    // 参数视图 ↔ 预设视图之间做淡入 + 轻微右滑，避免“闪切”
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 220),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0.05, 0),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        ),
+      ),
+      child: _showPresets
+          ? KeyedSubtree(
+              key: const ValueKey('presets'),
+              child: _buildPresetView(l10n),
+            )
+          : KeyedSubtree(
+              key: const ValueKey('params'),
+              child: _buildParamsView(l10n),
+            ),
+    );
+  }
+
+  Widget _buildParamsView(AppLocalizations l10n) {
     final on = _service.enabled;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       children: [
+        // ── 预设效果入口 ──
+        _presetEntry(l10n),
+        const SizedBox(height: 8),
         // ── 总开关 ──
         Row(
           children: [
@@ -66,14 +103,10 @@ class _PlayerPostProcessPanelState extends State<PlayerPostProcessPanel> {
             ),
           ],
         ),
-        Text(
-          l10n.playerPostProcessHint,
-          style: const TextStyle(color: Colors.white54, fontSize: 12),
-        ),
         const SizedBox(height: 12),
 
         // ── 基础调节 ──
-        _sectionLabel(l10n.playerPostProcessBasic),
+        _sectionHeader(l10n.playerPostProcessBasic),
         _sliderRow(
           label: l10n.playerPostProcessBrightness,
           value: _service.brightness,
@@ -119,10 +152,10 @@ class _PlayerPostProcessPanelState extends State<PlayerPostProcessPanel> {
           enabled: on,
           onChanged: _service.setHue,
         ),
+        _sectionReset(l10n, _service.resetBasicAdjustments),
 
-        // ── 效果 ──
-        const SizedBox(height: 4),
-        _sectionLabel(l10n.playerPostProcessEffects),
+        // ── 画面效果 ──
+        _sectionHeader(l10n.playerPostProcessEffects),
 
         _effectHeader(
           label: l10n.playerPostProcessSharpen,
@@ -485,27 +518,268 @@ class _PlayerPostProcessPanelState extends State<PlayerPostProcessPanel> {
             onChanged: _service.setFilmGrainSize,
           ),
         ],
+        _sectionReset(l10n, _service.resetEffects),
 
         const SizedBox(height: 8),
         const Divider(height: 1, color: Colors.white12),
-        PortraitPanelActionTile(
-          icon: Icons.restart_alt,
-          label: l10n.commonReset,
-          onTap: _service.resetSettings,
+        // 全局重置：红字，和板块级“重置”区分开
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: _service.resetSettings,
+            icon: const Icon(Icons.restart_alt, size: 18),
+            label: Text(l10n.playerPostProcessResetAll),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.redAccent,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+            ),
+          ),
         ),
       ],
     );
   }
 
-  Widget _sectionLabel(String text) {
+  // ── 预设 ─────────────────────────────────────────────────
+
+  /// 分组 → 预设列表（前四组各三档，风格组是三个独立风格）
+  static const Map<PostProcessPresetGroup, List<PostProcessPreset>>
+      _presetGroups = {
+    PostProcessPresetGroup.clean: [
+      PostProcessPreset.cleanLight,
+      PostProcessPreset.cleanStandard,
+      PostProcessPreset.cleanStrong,
+    ],
+    PostProcessPresetGroup.film: [
+      PostProcessPreset.filmLight,
+      PostProcessPreset.filmStandard,
+      PostProcessPreset.filmStrong,
+    ],
+    PostProcessPresetGroup.tv: [
+      PostProcessPreset.tvLight,
+      PostProcessPreset.tvStandard,
+      PostProcessPreset.tvStrong,
+    ],
+    PostProcessPresetGroup.lowBitrate: [
+      PostProcessPreset.lowBitrateLight,
+      PostProcessPreset.lowBitrateStandard,
+      PostProcessPreset.lowBitrateStrong,
+    ],
+    PostProcessPresetGroup.streaming: [
+      PostProcessPreset.streamingLight,
+      PostProcessPreset.streamingStandard,
+      PostProcessPreset.streamingStrong,
+    ],
+    PostProcessPresetGroup.style: [
+      PostProcessPreset.cinematic,
+      PostProcessPreset.soft,
+      PostProcessPreset.retro,
+    ],
+  };
+
+  /// 顶部入口：当前预设状态 + 进入预设视图
+  Widget _presetEntry(AppLocalizations l10n) {
+    final applied = _service.appliedPreset;
+    final String state;
+    if (applied == null) {
+      state = l10n.playerPresetCustom;
+    } else {
+      final label = applied.isStyle
+          ? _presetLabel(l10n, applied)
+          : '${_groupLabel(l10n, applied.group)} · ${_presetLabel(l10n, applied)}';
+      state = _service.presetModified
+          ? '$label · ${l10n.playerPresetModified}'
+          : label;
+    }
+    return InkWell(
+      onTap: () => setState(() => _showPresets = true),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.movie_filter_outlined,
+              size: 18,
+              color: Colors.white70,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              l10n.playerPresetEffects,
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+            ),
+            const Spacer(),
+            Text(
+              state,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontSize: 12,
+              ),
+            ),
+            const Icon(Icons.chevron_right, size: 18, color: Colors.white38),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 预设选择视图（面板内切换，不新开页面）
+  Widget _buildPresetView(AppLocalizations l10n) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+      children: [
+        InkWell(
+          onTap: () => setState(() => _showPresets = false),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.arrow_back_ios_new,
+                  size: 14,
+                  color: Colors.white70,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  l10n.playerPresetEffects,
+                  style: const TextStyle(color: Colors.white, fontSize: 15),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        for (final entry in _presetGroups.entries) ...[
+          _groupHeader(_groupLabel(l10n, entry.key)),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final preset in entry.value)
+                _presetChip(
+                  _presetLabel(l10n, preset),
+                  selected: _service.appliedPreset == preset,
+                  // 应用后留在预设视图：方便连续切换档位对比效果，
+                  // 用户自己点顶部返回行回到参数界面
+                  onTap: () => _service.applyPreset(preset),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+        ],
+      ],
+    );
+  }
+
+  Widget _presetChip(
+    String label, {
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: selected ? scheme.primary : Colors.white.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? scheme.onPrimary : Colors.white70,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _groupLabel(AppLocalizations l10n, PostProcessPresetGroup group) {
+    switch (group) {
+      case PostProcessPresetGroup.clean:
+        return l10n.playerPresetGroupClean;
+      case PostProcessPresetGroup.film:
+        return l10n.playerPresetGroupFilm;
+      case PostProcessPresetGroup.tv:
+        return l10n.playerPresetGroupTv;
+      case PostProcessPresetGroup.lowBitrate:
+        return l10n.playerPresetGroupLowBitrate;
+      case PostProcessPresetGroup.streaming:
+        return l10n.playerPresetGroupStreaming;
+      case PostProcessPresetGroup.style:
+        return l10n.playerPresetGroupStyle;
+    }
+  }
+
+  String _presetLabel(AppLocalizations l10n, PostProcessPreset preset) {
+    switch (preset) {
+      case PostProcessPreset.cinematic:
+        return l10n.playerPresetCinematic;
+      case PostProcessPreset.soft:
+        return l10n.playerPresetSoft;
+      case PostProcessPreset.retro:
+        return l10n.playerPresetRetro;
+      default:
+        return switch (preset.strength) {
+          PostProcessPresetStrength.light => l10n.playerPresetLight,
+          PostProcessPresetStrength.strong => l10n.playerPresetStrong,
+          _ => l10n.playerPresetStandard,
+        };
+    }
+  }
+
+  /// 主板块标题（比下方调节项大一号）
+  Widget _sectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      padding: const EdgeInsets.only(top: 12, bottom: 6),
       child: Text(
-        text,
+        title,
         style: const TextStyle(
-          color: Colors.white54,
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  /// 板块底部的重置按钮（右下角，比标题行里的小按钮大一圈）
+  Widget _sectionReset(AppLocalizations l10n, VoidCallback onReset) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: TextButton.icon(
+        onPressed: onReset,
+        icon: const Icon(Icons.restart_alt, size: 20),
+        label: Text(
+          l10n.commonReset,
+          style: const TextStyle(fontSize: 14),
+        ),
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.white70,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          minimumSize: const Size(88, 40),
+        ),
+      ),
+    );
+  }
+
+  /// 预设分组标题（比胶囊文字大一号）
+  Widget _groupHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 6),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: Colors.white70,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

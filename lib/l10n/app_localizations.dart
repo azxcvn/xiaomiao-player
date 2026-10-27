@@ -3309,10 +3309,10 @@ abstract class AppLocalizations {
   /// **'超分辨率'**
   String get playerSuperResolution;
 
-  /// 播放器：后处理（更多面板入口 / 面板标题）
+  /// 播放器：画质增强（更多面板入口 / 面板标题）
   ///
   /// In zh, this message translates to:
-  /// **'后处理'**
+  /// **'画质增强'**
   String get playerPostProcess;
 
   /// 后处理：总开关
@@ -3321,23 +3321,23 @@ abstract class AppLocalizations {
   /// **'启用后处理'**
   String get playerPostProcessEnable;
 
-  /// 后处理：总开关下方说明
-  ///
-  /// In zh, this message translates to:
-  /// **'基础调节即时生效；风格化效果改参数后会短暂重载着色器'**
-  String get playerPostProcessHint;
-
   /// 后处理：基础调节分组
   ///
   /// In zh, this message translates to:
   /// **'基础调节'**
   String get playerPostProcessBasic;
 
-  /// 后处理：效果分组
+  /// 后处理：画面效果分组
   ///
   /// In zh, this message translates to:
-  /// **'效果'**
+  /// **'画面效果'**
   String get playerPostProcessEffects;
+
+  /// 后处理：全局重置
+  ///
+  /// In zh, this message translates to:
+  /// **'全部重置'**
+  String get playerPostProcessResetAll;
 
   /// 后处理：亮度
   ///
@@ -3560,6 +3560,96 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'GPU-next 渲染下内置锐化不生效，切回默认渲染器即可'**
   String get playerPostProcessGpuNextHint;
+
+  /// 后处理：预设入口与预设视图标题
+  ///
+  /// In zh, this message translates to:
+  /// **'预设效果'**
+  String get playerPresetEffects;
+
+  /// 后处理：未套用任何预设
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义'**
+  String get playerPresetCustom;
+
+  /// 后处理：套用预设后又手工改过
+  ///
+  /// In zh, this message translates to:
+  /// **'已微调'**
+  String get playerPresetModified;
+
+  /// No description provided for @playerPresetGroupClean.
+  ///
+  /// In zh, this message translates to:
+  /// **'净化'**
+  String get playerPresetGroupClean;
+
+  /// No description provided for @playerPresetGroupFilm.
+  ///
+  /// In zh, this message translates to:
+  /// **'胶片电影'**
+  String get playerPresetGroupFilm;
+
+  /// No description provided for @playerPresetGroupTv.
+  ///
+  /// In zh, this message translates to:
+  /// **'老电视'**
+  String get playerPresetGroupTv;
+
+  /// No description provided for @playerPresetGroupLowBitrate.
+  ///
+  /// In zh, this message translates to:
+  /// **'低码率'**
+  String get playerPresetGroupLowBitrate;
+
+  /// No description provided for @playerPresetGroupStreaming.
+  ///
+  /// In zh, this message translates to:
+  /// **'流媒体'**
+  String get playerPresetGroupStreaming;
+
+  /// No description provided for @playerPresetGroupStyle.
+  ///
+  /// In zh, this message translates to:
+  /// **'风格化'**
+  String get playerPresetGroupStyle;
+
+  /// No description provided for @playerPresetLight.
+  ///
+  /// In zh, this message translates to:
+  /// **'轻度'**
+  String get playerPresetLight;
+
+  /// No description provided for @playerPresetStandard.
+  ///
+  /// In zh, this message translates to:
+  /// **'中度'**
+  String get playerPresetStandard;
+
+  /// No description provided for @playerPresetStrong.
+  ///
+  /// In zh, this message translates to:
+  /// **'重度'**
+  String get playerPresetStrong;
+
+  /// No description provided for @playerPresetCinematic.
+  ///
+  /// In zh, this message translates to:
+  /// **'电影感'**
+  String get playerPresetCinematic;
+
+  /// No description provided for @playerPresetSoft.
+  ///
+  /// In zh, this message translates to:
+  /// **'柔和'**
+  String get playerPresetSoft;
+
+  /// No description provided for @playerPresetRetro.
+  ///
+  /// In zh, this message translates to:
+  /// **'复古'**
+  String get playerPresetRetro;
 
   /// 播放器面板：画面比例
   ///
