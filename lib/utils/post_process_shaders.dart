@@ -143,6 +143,60 @@ vec4 hook() {
 ''';
 }
 
+/// 降噪：双边滤波（Anime4K v3.2 `Denoise_Bilateral_Mean.glsl`，MIT）。
+///
+/// 源文件原样移植：只把 `INTENSITY_SIGMA` / `SPATIAL_SIGMA` 两个 #define
+/// 换成参数，其它（高斯权重、内核大小推导、双重循环）保持原样。
+/// 内核大小由 `SPATIAL_SIGMA` 推导并封顶 5×5（上限 1.0），最多 25 次抽样。
+String denoiseShader({required double strength, required double radius}) {
+  final s = glslFloat(strength);
+  final r = glslFloat(radius);
+  return '''
+//!HOOK MAIN
+//!BIND HOOKED
+//!DESC Post-process: denoise (Anime4K v3.2 Bilateral Mean)
+
+// MIT License
+// Copyright (c) 2019-2021 bloc97
+// 本文件移植自 Anime4K v3.2 glsl/Denoise/Anime4K_Denoise_Bilateral_Mean.glsl，
+// 仅将两个 #define 参数化，算法保持不变。
+
+#define INTENSITY_SIGMA $s
+#define SPATIAL_SIGMA $r
+#define INTENSITY_POWER_CURVE 1.0
+
+#define KERNELSIZE (max(int(ceil(SPATIAL_SIGMA * 2.0)), 1) * 2 + 1)
+#define KERNELHALFSIZE (int(KERNELSIZE/2))
+#define KERNELLEN (KERNELSIZE * KERNELSIZE)
+#define GETOFFSET(i) vec2((i % KERNELSIZE) - KERNELHALFSIZE, (i / KERNELSIZE) - KERNELHALFSIZE)
+
+vec4 gaussian_vec(vec4 x, vec4 s, vec4 m) {
+    vec4 scaled = (x - m) / s;
+    return exp(-0.5 * scaled * scaled);
+}
+float gaussian(float x, float s, float m) {
+    float scaled = (x - m) / s;
+    return exp(-0.5 * scaled * scaled);
+}
+
+vec4 hook() {
+    vec4 sum = vec4(0.0);
+    vec4 n = vec4(0.0);
+    vec4 vc = HOOKED_tex(HOOKED_pos);
+    vec4 is = pow(vc + 0.0001, vec4(INTENSITY_POWER_CURVE)) * INTENSITY_SIGMA;
+    float ss = SPATIAL_SIGMA;
+    for (int i = 0; i < KERNELLEN; i++) {
+        vec2 ipos = GETOFFSET(i);
+        vec4 v = HOOKED_texOff(ipos);
+        vec4 d = gaussian_vec(v, is, vc) * gaussian(length(ipos), ss, 0.0);
+        sum += d * v;
+        n += d;
+    }
+    return sum / n;
+}
+''';
+}
+
 /// 泛光：高光外溢（PPSSPP `bloom.fsh`，18 抽样，低端 GPU 也能跑）。
 ///
 /// [amount] 为混合强度（0 = 关），[spread] 为抽样权重（越大光晕越亮）。
@@ -217,6 +271,145 @@ vec4 hook() {
     frct *= frct;
     q = floor(q) + 0.05 * dt + frct * frct;
     return vec4(0.25 * lc * (1.1 - d * sqrt(d)) * q, 1.0);
+}
+''';
+}
+
+/// 白平衡：色温 / 色调（Planckian 近似曲线，自写）。
+///
+/// [temperature] 与 [tint] 都是 -100~100，0 为原样；
+/// 色温正 = 暖（往 3000K 偏），负 = 冷（往 10000K 偏）；
+/// 色调正 = 品红，负 = 绿。增益按 Rec.709 亮度归一化，避免整体变亮/变暗。
+String whiteBalanceShader({
+  required double temperature,
+  required double tint,
+}) {
+  final t = glslFloat(temperature);
+  final ti = glslFloat(tint);
+  return '''
+//!HOOK MAIN
+//!BIND HOOKED
+//!DESC Post-process: white balance
+
+vec3 kelvinRGB(float temp) {
+    float t = temp / 100.0;
+    float r, g, b;
+    if (t <= 66.0) {
+        r = 255.0;
+        g = 99.4708025861 * log(t) - 161.1195681661;
+        b = (t <= 19.0) ? 0.0 : 138.5177312231 * log(t - 10.0) - 305.0447927307;
+    } else {
+        r = 329.698727446 * pow(t - 60.0, -0.1332047592);
+        g = 288.1221695283 * pow(t - 60.0, -0.0755148492);
+        b = 255.0;
+    }
+    return clamp(vec3(r, g, b) / 255.0, 0.0, 1.0);
+}
+
+vec4 hook() {
+    float temp = $t;
+    float tint = $ti;
+    float target = 6500.0 - temp * 35.0;
+    vec3 wb = kelvinRGB(target) / max(kelvinRGB(6500.0), vec3(0.001));
+    wb.g *= 1.0 - tint * 0.0015;
+    wb.r *= 1.0 + tint * 0.0005;
+    wb.b *= 1.0 + tint * 0.0005;
+    wb /= max(dot(wb, vec3(0.2126, 0.7152, 0.0722)), 0.001);
+    vec3 rgb = HOOKED_tex(HOOKED_pos).rgb;
+    return vec4(clamp(rgb * wb, 0.0, 1.0), 1.0);
+}
+''';
+}
+
+/// 色阶（Levels）：黑位 / 白位 / 伽马（自写）。
+///
+/// 把 [inBlack]~[inWhite] 重新映射到 0~1，再做伽马，专门治“黑位发灰”。
+String levelsShader({
+  required double inBlack,
+  required double inWhite,
+  required double gamma,
+}) {
+  final ib = glslFloat(inBlack);
+  final iw = glslFloat(inWhite);
+  final g = glslFloat(gamma);
+  return '''
+//!HOOK MAIN
+//!BIND HOOKED
+//!DESC Post-process: levels
+
+vec4 hook() {
+    vec3 rgb = HOOKED_tex(HOOKED_pos).rgb;
+    rgb = clamp((rgb - $ib) / max($iw - $ib, 0.0001), 0.0, 1.0);
+    rgb = pow(rgb, vec3(1.0 / $g));
+    return vec4(rgb, 1.0);
+}
+''';
+}
+
+/// 胶片曲线：曝光 + 暗部抬升 + 高光压缩（自写）。
+///
+/// [toe] > 1 提亮暗部，[shoulder] > 1 压缩高光，[amount] 与原始画面混合。
+String filmicCurveShader({
+  required double exposure,
+  required double toe,
+  required double shoulder,
+  required double amount,
+}) {
+  final e = glslFloat(exposure);
+  final t = glslFloat(toe);
+  final s = glslFloat(shoulder);
+  final a = glslFloat(amount);
+  return '''
+//!HOOK MAIN
+//!BIND HOOKED
+//!DESC Post-process: filmic curve
+
+float toeMap(float x) {
+    const float knee = 0.4;
+    return (x < knee) ? knee * pow(max(x, 0.0) / knee, 1.0 / $t) : x;
+}
+
+float shoulderMap(float x) {
+    const float knee = 0.6;
+    if (x <= knee) return x;
+    float pos = (x - knee) / (1.0 - knee);
+    return knee + (1.0 - knee) * (1.0 - pow(1.0 - pos, $s));
+}
+
+vec4 hook() {
+    vec3 c = HOOKED_tex(HOOKED_pos).rgb;
+    vec3 m = max(c * $e, vec3(0.0));
+    m = clamp(vec3(toeMap(m.r), toeMap(m.g), toeMap(m.b)), 0.0, 1.0);
+    m = clamp(vec3(shoulderMap(m.r), shoulderMap(m.g), shoulderMap(m.b)), 0.0, 1.0);
+    return vec4(mix(c, m, $a), 1.0);
+}
+''';
+}
+
+/// 胶片颗粒：中间调加权的静态颗粒（自写）。
+///
+/// [intensity] 0~0.2，[size] 1~4 像素。
+String filmGrainShader({required double intensity, required double size}) {
+  final i = glslFloat(intensity);
+  final s = glslFloat(size);
+  return '''
+//!HOOK MAIN
+//!BIND HOOKED
+//!DESC Post-process: film grain
+
+float grainHash(vec2 p) {
+    vec3 s = fract(vec3(p.x, p.y, p.x) * 0.1031);
+    s += dot(s, s.yzx + 33.33);
+    return fract((s.x + s.y) * s.z);
+}
+
+vec4 hook() {
+    vec3 rgb = HOOKED_tex(HOOKED_pos).rgb;
+    vec2 cell = floor(HOOKED_pos * HOOKED_size / max($s, 1.0));
+    float mono = grainHash(cell) - 0.5;
+    float luma = dot(rgb, vec3(0.2126, 0.7152, 0.0722));
+    float response = 1.0 - abs(luma * 2.0 - 1.0);
+    return vec4(clamp(rgb + mono * $i * response, 0.0, 1.0), 1.0);
 }
 ''';
 }

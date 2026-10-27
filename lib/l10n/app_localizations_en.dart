@@ -1804,6 +1804,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerPostProcessSharpen => 'Sharpen';
 
   @override
+  String get playerPostProcessDenoise => 'Denoise';
+
+  @override
   String get playerPostProcessDeband => 'Deband';
 
   @override
@@ -1844,6 +1847,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playerPostProcessCartoon => 'Cartoon';
+
+  @override
+  String get playerPostProcessWhiteBalance => 'White balance';
+
+  @override
+  String get playerPostProcessTemperature => 'Temperature';
+
+  @override
+  String get playerPostProcessTint => 'Tint';
+
+  @override
+  String get playerPostProcessLevels => 'Levels';
+
+  @override
+  String get playerPostProcessInBlack => 'Input black';
+
+  @override
+  String get playerPostProcessInWhite => 'Input white';
+
+  @override
+  String get playerPostProcessFilmic => 'Filmic curve';
+
+  @override
+  String get playerPostProcessExposure => 'Exposure';
+
+  @override
+  String get playerPostProcessToe => 'Toe';
+
+  @override
+  String get playerPostProcessShoulder => 'Shoulder';
+
+  @override
+  String get playerPostProcessFilmGrain => 'Film grain';
+
+  @override
+  String get playerPostProcessSize => 'Size';
 
   @override
   String get playerPostProcessSpread => 'Spread';

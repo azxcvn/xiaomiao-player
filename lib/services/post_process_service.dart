@@ -36,6 +36,9 @@ class PostProcessService extends ChangeNotifier {
   static const _kHue = 'post_process_hue';
   static const _kSharpenEnabled = 'post_process_sharpen_enabled';
   static const _kSharpenAmount = 'post_process_sharpen_amount';
+  static const _kDenoiseEnabled = 'post_process_denoise_enabled';
+  static const _kDenoiseStrength = 'post_process_denoise_strength';
+  static const _kDenoiseRadius = 'post_process_denoise_radius';
   static const _kDebandEnabled = 'post_process_deband_enabled';
   static const _kDebandThreshold = 'post_process_deband_threshold';
   static const _kDebandRange = 'post_process_deband_range';
@@ -57,12 +60,31 @@ class PostProcessService extends ChangeNotifier {
   static const _kBloomSpread = 'post_process_bloom_spread';
   static const _kCartoonEnabled = 'post_process_cartoon_enabled';
   static const _kCartoonStrength = 'post_process_cartoon_strength';
+  static const _kWhiteBalanceEnabled = 'post_process_wb_enabled';
+  static const _kTemperature = 'post_process_wb_temperature';
+  static const _kTint = 'post_process_wb_tint';
+  static const _kLevelsEnabled = 'post_process_levels_enabled';
+  static const _kInBlack = 'post_process_levels_in_black';
+  static const _kInWhite = 'post_process_levels_in_white';
+  static const _kLevelsGamma = 'post_process_levels_gamma';
+  static const _kFilmicEnabled = 'post_process_filmic_enabled';
+  static const _kExposure = 'post_process_filmic_exposure';
+  static const _kFilmicToe = 'post_process_filmic_toe';
+  static const _kFilmicShoulder = 'post_process_filmic_shoulder';
+  static const _kFilmicAmount = 'post_process_filmic_amount';
+  static const _kFilmGrainEnabled = 'post_process_film_grain_enabled';
+  static const _kFilmGrainIntensity = 'post_process_film_grain_intensity';
+  static const _kFilmGrainSize = 'post_process_film_grain_size';
 
   // ── 参数范围 / 默认值（面板滑杆与重置都用这一份）──────────
   static const double basicMin = -100;
   static const double basicMax = 100;
-  static const double sharpenMin = 0;
+  static const double sharpenMin = -1;
   static const double sharpenMax = 1;
+  static const double denoiseStrengthMin = 0.02;
+  static const double denoiseStrengthMax = 0.5;
+  static const double denoiseRadiusMin = 0.3;
+  static const double denoiseRadiusMax = 1.0;
   static const double debandThresholdMin = 16;
   static const double debandThresholdMax = 96;
   static const double debandRangeMin = 4;
@@ -93,8 +115,32 @@ class PostProcessService extends ChangeNotifier {
   static const double bloomSpreadMax = 1.0;
   static const double cartoonStrengthMin = 0;
   static const double cartoonStrengthMax = 1.0;
+  static const double temperatureMin = -100;
+  static const double temperatureMax = 100;
+  static const double tintMin = -100;
+  static const double tintMax = 100;
+  static const double inBlackMin = 0;
+  static const double inBlackMax = 0.4;
+  static const double inWhiteMin = 0.6;
+  static const double inWhiteMax = 1.0;
+  static const double levelsGammaMin = 0.2;
+  static const double levelsGammaMax = 3.0;
+  static const double exposureMin = 0.2;
+  static const double exposureMax = 3.0;
+  static const double toeMin = 0.5;
+  static const double toeMax = 3.0;
+  static const double shoulderMin = 0.5;
+  static const double shoulderMax = 3.0;
+  static const double filmicAmountMin = 0;
+  static const double filmicAmountMax = 1.0;
+  static const double filmGrainIntensityMin = 0;
+  static const double filmGrainIntensityMax = 0.2;
+  static const double filmGrainSizeMin = 1;
+  static const double filmGrainSizeMax = 4;
 
   static const double defaultSharpenAmount = 0.35;
+  static const double defaultDenoiseStrength = 0.1;
+  static const double defaultDenoiseRadius = 1.0;
   static const double defaultDebandThreshold = 48;
   static const double defaultDebandRange = 16;
   static const double defaultDebandGrain = 32;
@@ -110,6 +156,17 @@ class PostProcessService extends ChangeNotifier {
   static const double defaultBloomAmount = 0.6;
   static const double defaultBloomSpread = 0.6;
   static const double defaultCartoonStrength = 0.5;
+  static const double defaultTemperature = 0;
+  static const double defaultTint = 0;
+  static const double defaultInBlack = 0;
+  static const double defaultInWhite = 1.0;
+  static const double defaultLevelsGamma = 1.0;
+  static const double defaultExposure = 1.0;
+  static const double defaultToe = 1.0;
+  static const double defaultShoulder = 1.0;
+  static const double defaultFilmicAmount = 0.7;
+  static const double defaultFilmGrainIntensity = 0.03;
+  static const double defaultFilmGrainSize = 1.0;
 
   // ── 状态 ─────────────────────────────────────────────────
   bool _enabled = false;
@@ -121,6 +178,10 @@ class PostProcessService extends ChangeNotifier {
 
   bool _sharpenEnabled = false;
   double _sharpenAmount = defaultSharpenAmount;
+
+  bool _denoiseEnabled = false;
+  double _denoiseStrength = defaultDenoiseStrength;
+  double _denoiseRadius = defaultDenoiseRadius;
 
   bool _debandEnabled = false;
   double _debandThreshold = defaultDebandThreshold;
@@ -149,6 +210,25 @@ class PostProcessService extends ChangeNotifier {
   bool _cartoonEnabled = false;
   double _cartoonStrength = defaultCartoonStrength;
 
+  bool _whiteBalanceEnabled = false;
+  double _temperature = defaultTemperature;
+  double _tint = defaultTint;
+
+  bool _levelsEnabled = false;
+  double _inBlack = defaultInBlack;
+  double _inWhite = defaultInWhite;
+  double _levelsGamma = defaultLevelsGamma;
+
+  bool _filmicEnabled = false;
+  double _exposure = defaultExposure;
+  double _filmicToe = defaultToe;
+  double _filmicShoulder = defaultShoulder;
+  double _filmicAmount = defaultFilmicAmount;
+
+  bool _filmGrainEnabled = false;
+  double _filmGrainIntensity = defaultFilmGrainIntensity;
+  double _filmGrainSize = defaultFilmGrainSize;
+
   Player? _player;
   Directory? _shaderDir;
 
@@ -168,6 +248,10 @@ class PostProcessService extends ChangeNotifier {
 
   bool get sharpenEnabled => _sharpenEnabled;
   double get sharpenAmount => _sharpenAmount;
+
+  bool get denoiseEnabled => _denoiseEnabled;
+  double get denoiseStrength => _denoiseStrength;
+  double get denoiseRadius => _denoiseRadius;
 
   bool get debandEnabled => _debandEnabled;
   double get debandThreshold => _debandThreshold;
@@ -196,16 +280,40 @@ class PostProcessService extends ChangeNotifier {
   bool get cartoonEnabled => _cartoonEnabled;
   double get cartoonStrength => _cartoonStrength;
 
+  bool get whiteBalanceEnabled => _whiteBalanceEnabled;
+  double get temperature => _temperature;
+  double get tint => _tint;
+
+  bool get levelsEnabled => _levelsEnabled;
+  double get inBlack => _inBlack;
+  double get inWhite => _inWhite;
+  double get levelsGamma => _levelsGamma;
+
+  bool get filmicEnabled => _filmicEnabled;
+  double get exposure => _exposure;
+  double get filmicToe => _filmicToe;
+  double get filmicShoulder => _filmicShoulder;
+  double get filmicAmount => _filmicAmount;
+
+  bool get filmGrainEnabled => _filmGrainEnabled;
+  double get filmGrainIntensity => _filmGrainIntensity;
+  double get filmGrainSize => _filmGrainSize;
+
   /// GPU-next 渲染器下 mpv 不支持内置 `sharpen`，面板据此提示用户
   bool get sharpenAvailable => !DecodeSettings.instance.gpuNext;
 
   /// 当前挂着几个风格化效果（面板用来提示性能开销）
   int get activeStyleEffectCount => [
+        _denoiseEnabled,
         _vignetteEnabled,
         _scanlinesEnabled,
         _naturalEnabled,
         _bloomEnabled,
         _cartoonEnabled,
+        _whiteBalanceEnabled,
+        _levelsEnabled,
+        _filmicEnabled,
+        _filmGrainEnabled,
       ].where((e) => e).length;
 
   Future<void> ensureLoaded() => _loadFuture ??= load();
@@ -220,6 +328,10 @@ class PostProcessService extends ChangeNotifier {
     _hue = prefs.getDouble(_kHue) ?? 0;
     _sharpenEnabled = prefs.getBool(_kSharpenEnabled) ?? false;
     _sharpenAmount = prefs.getDouble(_kSharpenAmount) ?? defaultSharpenAmount;
+    _denoiseEnabled = prefs.getBool(_kDenoiseEnabled) ?? false;
+    _denoiseStrength =
+        prefs.getDouble(_kDenoiseStrength) ?? defaultDenoiseStrength;
+    _denoiseRadius = prefs.getDouble(_kDenoiseRadius) ?? defaultDenoiseRadius;
     _debandEnabled = prefs.getBool(_kDebandEnabled) ?? false;
     _debandThreshold =
         prefs.getDouble(_kDebandThreshold) ?? defaultDebandThreshold;
@@ -247,6 +359,22 @@ class PostProcessService extends ChangeNotifier {
     _cartoonEnabled = prefs.getBool(_kCartoonEnabled) ?? false;
     _cartoonStrength =
         prefs.getDouble(_kCartoonStrength) ?? defaultCartoonStrength;
+    _whiteBalanceEnabled = prefs.getBool(_kWhiteBalanceEnabled) ?? false;
+    _temperature = prefs.getDouble(_kTemperature) ?? defaultTemperature;
+    _tint = prefs.getDouble(_kTint) ?? defaultTint;
+    _levelsEnabled = prefs.getBool(_kLevelsEnabled) ?? false;
+    _inBlack = prefs.getDouble(_kInBlack) ?? defaultInBlack;
+    _inWhite = prefs.getDouble(_kInWhite) ?? defaultInWhite;
+    _levelsGamma = prefs.getDouble(_kLevelsGamma) ?? defaultLevelsGamma;
+    _filmicEnabled = prefs.getBool(_kFilmicEnabled) ?? false;
+    _exposure = prefs.getDouble(_kExposure) ?? defaultExposure;
+    _filmicToe = prefs.getDouble(_kFilmicToe) ?? defaultToe;
+    _filmicShoulder = prefs.getDouble(_kFilmicShoulder) ?? defaultShoulder;
+    _filmicAmount = prefs.getDouble(_kFilmicAmount) ?? defaultFilmicAmount;
+    _filmGrainEnabled = prefs.getBool(_kFilmGrainEnabled) ?? false;
+    _filmGrainIntensity =
+        prefs.getDouble(_kFilmGrainIntensity) ?? defaultFilmGrainIntensity;
+    _filmGrainSize = prefs.getDouble(_kFilmGrainSize) ?? defaultFilmGrainSize;
     notifyListeners();
   }
 
@@ -300,6 +428,30 @@ class PostProcessService extends ChangeNotifier {
     notifyListeners();
     _persist();
     unawaited(_applyProperties());
+  }
+
+  void setDenoiseEnabled(bool value) {
+    if (_denoiseEnabled == value) return;
+    _denoiseEnabled = value;
+    notifyListeners();
+    _persist();
+    _scheduleShaderApply();
+  }
+
+  void setDenoiseStrength(double v) {
+    if (_denoiseStrength == v) return;
+    _denoiseStrength = v;
+    notifyListeners();
+    _persist();
+    _scheduleShaderApply();
+  }
+
+  void setDenoiseRadius(double v) {
+    if (_denoiseRadius == v) return;
+    _denoiseRadius = v;
+    notifyListeners();
+    _persist();
+    _scheduleShaderApply();
   }
 
   void setDebandEnabled(bool value) {
@@ -428,6 +580,134 @@ class PostProcessService extends ChangeNotifier {
     _scheduleShaderApply();
   }
 
+  // ── 白平衡 ────────────────────────────────────────────────
+
+  void setWhiteBalanceEnabled(bool value) {
+    if (_whiteBalanceEnabled == value) return;
+    _whiteBalanceEnabled = value;
+    notifyListeners();
+    _persist();
+    _scheduleShaderApply();
+  }
+
+  void setTemperature(double v) {
+    if (_temperature == v) return;
+    _temperature = v;
+    notifyListeners();
+    _persist();
+    _scheduleShaderApply();
+  }
+
+  void setTint(double v) {
+    if (_tint == v) return;
+    _tint = v;
+    notifyListeners();
+    _persist();
+    _scheduleShaderApply();
+  }
+
+  // ── 色阶 ──────────────────────────────────────────────────
+
+  void setLevelsEnabled(bool value) {
+    if (_levelsEnabled == value) return;
+    _levelsEnabled = value;
+    notifyListeners();
+    _persist();
+    _scheduleShaderApply();
+  }
+
+  void setInBlack(double v) {
+    if (_inBlack == v) return;
+    _inBlack = v;
+    notifyListeners();
+    _persist();
+    _scheduleShaderApply();
+  }
+
+  void setInWhite(double v) {
+    if (_inWhite == v) return;
+    _inWhite = v;
+    notifyListeners();
+    _persist();
+    _scheduleShaderApply();
+  }
+
+  void setLevelsGamma(double v) {
+    if (_levelsGamma == v) return;
+    _levelsGamma = v;
+    notifyListeners();
+    _persist();
+    _scheduleShaderApply();
+  }
+
+  // ── 胶片曲线 ──────────────────────────────────────────────
+
+  void setFilmicEnabled(bool value) {
+    if (_filmicEnabled == value) return;
+    _filmicEnabled = value;
+    notifyListeners();
+    _persist();
+    _scheduleShaderApply();
+  }
+
+  void setExposure(double v) {
+    if (_exposure == v) return;
+    _exposure = v;
+    notifyListeners();
+    _persist();
+    _scheduleShaderApply();
+  }
+
+  void setFilmicToe(double v) {
+    if (_filmicToe == v) return;
+    _filmicToe = v;
+    notifyListeners();
+    _persist();
+    _scheduleShaderApply();
+  }
+
+  void setFilmicShoulder(double v) {
+    if (_filmicShoulder == v) return;
+    _filmicShoulder = v;
+    notifyListeners();
+    _persist();
+    _scheduleShaderApply();
+  }
+
+  void setFilmicAmount(double v) {
+    if (_filmicAmount == v) return;
+    _filmicAmount = v;
+    notifyListeners();
+    _persist();
+    _scheduleShaderApply();
+  }
+
+  // ── 胶片颗粒 ──────────────────────────────────────────────
+
+  void setFilmGrainEnabled(bool value) {
+    if (_filmGrainEnabled == value) return;
+    _filmGrainEnabled = value;
+    notifyListeners();
+    _persist();
+    _scheduleShaderApply();
+  }
+
+  void setFilmGrainIntensity(double v) {
+    if (_filmGrainIntensity == v) return;
+    _filmGrainIntensity = v;
+    notifyListeners();
+    _persist();
+    _scheduleShaderApply();
+  }
+
+  void setFilmGrainSize(double v) {
+    if (_filmGrainSize == v) return;
+    _filmGrainSize = v;
+    notifyListeners();
+    _persist();
+    _scheduleShaderApply();
+  }
+
   void setScanlinesEnabled(bool value) {
     if (_scanlinesEnabled == value) return;
     _scanlinesEnabled = value;
@@ -506,6 +786,21 @@ class PostProcessService extends ChangeNotifier {
     _bloomSpread = defaultBloomSpread;
     _cartoonEnabled = false;
     _cartoonStrength = defaultCartoonStrength;
+    _whiteBalanceEnabled = false;
+    _temperature = defaultTemperature;
+    _tint = defaultTint;
+    _levelsEnabled = false;
+    _inBlack = defaultInBlack;
+    _inWhite = defaultInWhite;
+    _levelsGamma = defaultLevelsGamma;
+    _filmicEnabled = false;
+    _exposure = defaultExposure;
+    _filmicToe = defaultToe;
+    _filmicShoulder = defaultShoulder;
+    _filmicAmount = defaultFilmicAmount;
+    _filmGrainEnabled = false;
+    _filmGrainIntensity = defaultFilmGrainIntensity;
+    _filmGrainSize = defaultFilmGrainSize;
     notifyListeners();
     _persist();
     unawaited(_applyAll());
@@ -570,7 +865,34 @@ class PostProcessService extends ChangeNotifier {
     try {
       final sources = <String, String>{};
       if (_enabled) {
-        // 链顺序：调色 → 局部增强 → 几何/明暗 → 风格化（卡通放最后）
+        // 链顺序：降噪 → 色阶/白平衡/胶片曲线 → 局部增强 → 几何/明暗 → 风格化 → 颗粒
+        if (_denoiseEnabled) {
+          sources['denoise.glsl'] = denoiseShader(
+            strength: _denoiseStrength,
+            radius: _denoiseRadius,
+          );
+        }
+        if (_levelsEnabled) {
+          sources['levels.glsl'] = levelsShader(
+            inBlack: _inBlack,
+            inWhite: _inWhite,
+            gamma: _levelsGamma,
+          );
+        }
+        if (_whiteBalanceEnabled) {
+          sources['white_balance.glsl'] = whiteBalanceShader(
+            temperature: _temperature,
+            tint: _tint,
+          );
+        }
+        if (_filmicEnabled) {
+          sources['filmic_curve.glsl'] = filmicCurveShader(
+            exposure: _exposure,
+            toe: _filmicToe,
+            shoulder: _filmicShoulder,
+            amount: _filmicAmount,
+          );
+        }
         if (_naturalEnabled) {
           sources['natural_colors.glsl'] = naturalColorsShader(
             luma: _naturalLuma,
@@ -599,6 +921,12 @@ class PostProcessService extends ChangeNotifier {
         }
         if (_cartoonEnabled) {
           sources['cartoon.glsl'] = cartoonShader(edgeStrength: _cartoonStrength);
+        }
+        if (_filmGrainEnabled) {
+          sources['film_grain.glsl'] = filmGrainShader(
+            intensity: _filmGrainIntensity,
+            size: _filmGrainSize,
+          );
         }
       }
       final dir = await _ensureShaderDir();
@@ -665,6 +993,9 @@ class PostProcessService extends ChangeNotifier {
       await prefs.setDouble(_kHue, _hue);
       await prefs.setBool(_kSharpenEnabled, _sharpenEnabled);
       await prefs.setDouble(_kSharpenAmount, _sharpenAmount);
+      await prefs.setBool(_kDenoiseEnabled, _denoiseEnabled);
+      await prefs.setDouble(_kDenoiseStrength, _denoiseStrength);
+      await prefs.setDouble(_kDenoiseRadius, _denoiseRadius);
       await prefs.setBool(_kDebandEnabled, _debandEnabled);
       await prefs.setDouble(_kDebandThreshold, _debandThreshold);
       await prefs.setDouble(_kDebandRange, _debandRange);
@@ -686,6 +1017,21 @@ class PostProcessService extends ChangeNotifier {
       await prefs.setDouble(_kBloomSpread, _bloomSpread);
       await prefs.setBool(_kCartoonEnabled, _cartoonEnabled);
       await prefs.setDouble(_kCartoonStrength, _cartoonStrength);
+      await prefs.setBool(_kWhiteBalanceEnabled, _whiteBalanceEnabled);
+      await prefs.setDouble(_kTemperature, _temperature);
+      await prefs.setDouble(_kTint, _tint);
+      await prefs.setBool(_kLevelsEnabled, _levelsEnabled);
+      await prefs.setDouble(_kInBlack, _inBlack);
+      await prefs.setDouble(_kInWhite, _inWhite);
+      await prefs.setDouble(_kLevelsGamma, _levelsGamma);
+      await prefs.setBool(_kFilmicEnabled, _filmicEnabled);
+      await prefs.setDouble(_kExposure, _exposure);
+      await prefs.setDouble(_kFilmicToe, _filmicToe);
+      await prefs.setDouble(_kFilmicShoulder, _filmicShoulder);
+      await prefs.setDouble(_kFilmicAmount, _filmicAmount);
+      await prefs.setBool(_kFilmGrainEnabled, _filmGrainEnabled);
+      await prefs.setDouble(_kFilmGrainIntensity, _filmGrainIntensity);
+      await prefs.setDouble(_kFilmGrainSize, _filmGrainSize);
     } catch (e) {
       debugPrint('PostProcessService: 保存设置失败: $e');
     }
@@ -708,6 +1054,9 @@ class PostProcessService extends ChangeNotifier {
     _hue = 0;
     _sharpenEnabled = false;
     _sharpenAmount = defaultSharpenAmount;
+    _denoiseEnabled = false;
+    _denoiseStrength = defaultDenoiseStrength;
+    _denoiseRadius = defaultDenoiseRadius;
     _debandEnabled = false;
     _debandThreshold = defaultDebandThreshold;
     _debandRange = defaultDebandRange;
@@ -729,6 +1078,21 @@ class PostProcessService extends ChangeNotifier {
     _bloomSpread = defaultBloomSpread;
     _cartoonEnabled = false;
     _cartoonStrength = defaultCartoonStrength;
+    _whiteBalanceEnabled = false;
+    _temperature = defaultTemperature;
+    _tint = defaultTint;
+    _levelsEnabled = false;
+    _inBlack = defaultInBlack;
+    _inWhite = defaultInWhite;
+    _levelsGamma = defaultLevelsGamma;
+    _filmicEnabled = false;
+    _exposure = defaultExposure;
+    _filmicToe = defaultToe;
+    _filmicShoulder = defaultShoulder;
+    _filmicAmount = defaultFilmicAmount;
+    _filmGrainEnabled = false;
+    _filmGrainIntensity = defaultFilmGrainIntensity;
+    _filmGrainSize = defaultFilmGrainSize;
     notifyListeners();
   }
 }

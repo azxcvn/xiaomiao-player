@@ -1733,6 +1733,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerPostProcessSharpen => '锐化';
 
   @override
+  String get playerPostProcessDenoise => '降噪';
+
+  @override
   String get playerPostProcessDeband => '去色带';
 
   @override
@@ -1773,6 +1776,42 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playerPostProcessCartoon => '卡通';
+
+  @override
+  String get playerPostProcessWhiteBalance => '白平衡';
+
+  @override
+  String get playerPostProcessTemperature => '色温';
+
+  @override
+  String get playerPostProcessTint => '色调';
+
+  @override
+  String get playerPostProcessLevels => '色阶';
+
+  @override
+  String get playerPostProcessInBlack => '黑位';
+
+  @override
+  String get playerPostProcessInWhite => '白位';
+
+  @override
+  String get playerPostProcessFilmic => '胶片曲线';
+
+  @override
+  String get playerPostProcessExposure => '曝光';
+
+  @override
+  String get playerPostProcessToe => '暗部';
+
+  @override
+  String get playerPostProcessShoulder => '高光';
+
+  @override
+  String get playerPostProcessFilmGrain => '胶片颗粒';
+
+  @override
+  String get playerPostProcessSize => '尺寸';
 
   @override
   String get playerPostProcessSpread => '扩散';
@@ -6301,6 +6340,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get playerPostProcessSharpen => '銳化';
 
   @override
+  String get playerPostProcessDenoise => '降噪';
+
+  @override
   String get playerPostProcessDeband => '去色帶';
 
   @override
@@ -6341,6 +6383,42 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get playerPostProcessCartoon => '卡通';
+
+  @override
+  String get playerPostProcessWhiteBalance => '白平衡';
+
+  @override
+  String get playerPostProcessTemperature => '色溫';
+
+  @override
+  String get playerPostProcessTint => '色調';
+
+  @override
+  String get playerPostProcessLevels => '色階';
+
+  @override
+  String get playerPostProcessInBlack => '黑位';
+
+  @override
+  String get playerPostProcessInWhite => '白位';
+
+  @override
+  String get playerPostProcessFilmic => '膠片曲線';
+
+  @override
+  String get playerPostProcessExposure => '曝光';
+
+  @override
+  String get playerPostProcessToe => '暗部';
+
+  @override
+  String get playerPostProcessShoulder => '高光';
+
+  @override
+  String get playerPostProcessFilmGrain => '膠片顆粒';
+
+  @override
+  String get playerPostProcessSize => '尺寸';
 
   @override
   String get playerPostProcessSpread => '擴散';

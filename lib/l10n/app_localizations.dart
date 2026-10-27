@@ -3375,6 +3375,12 @@ abstract class AppLocalizations {
   /// **'锐化'**
   String get playerPostProcessSharpen;
 
+  /// 后处理：降噪效果
+  ///
+  /// In zh, this message translates to:
+  /// **'降噪'**
+  String get playerPostProcessDenoise;
+
   /// 后处理：去色带效果
   ///
   /// In zh, this message translates to:
@@ -3458,6 +3464,78 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'卡通'**
   String get playerPostProcessCartoon;
+
+  /// 后处理：白平衡效果
+  ///
+  /// In zh, this message translates to:
+  /// **'白平衡'**
+  String get playerPostProcessWhiteBalance;
+
+  /// 后处理：白平衡色温
+  ///
+  /// In zh, this message translates to:
+  /// **'色温'**
+  String get playerPostProcessTemperature;
+
+  /// 后处理：白平衡色调（绿-品红）
+  ///
+  /// In zh, this message translates to:
+  /// **'色调'**
+  String get playerPostProcessTint;
+
+  /// 后处理：色阶效果
+  ///
+  /// In zh, this message translates to:
+  /// **'色阶'**
+  String get playerPostProcessLevels;
+
+  /// 后处理：色阶输入黑位
+  ///
+  /// In zh, this message translates to:
+  /// **'黑位'**
+  String get playerPostProcessInBlack;
+
+  /// 后处理：色阶输入白位
+  ///
+  /// In zh, this message translates to:
+  /// **'白位'**
+  String get playerPostProcessInWhite;
+
+  /// 后处理：胶片曲线效果
+  ///
+  /// In zh, this message translates to:
+  /// **'胶片曲线'**
+  String get playerPostProcessFilmic;
+
+  /// 后处理：胶片曲线曝光
+  ///
+  /// In zh, this message translates to:
+  /// **'曝光'**
+  String get playerPostProcessExposure;
+
+  /// 后处理：胶片曲线暗部抬升
+  ///
+  /// In zh, this message translates to:
+  /// **'暗部'**
+  String get playerPostProcessToe;
+
+  /// 后处理：胶片曲线高光压缩
+  ///
+  /// In zh, this message translates to:
+  /// **'高光'**
+  String get playerPostProcessShoulder;
+
+  /// 后处理：胶片颗粒效果
+  ///
+  /// In zh, this message translates to:
+  /// **'胶片颗粒'**
+  String get playerPostProcessFilmGrain;
+
+  /// 后处理：胶片颗粒尺寸
+  ///
+  /// In zh, this message translates to:
+  /// **'尺寸'**
+  String get playerPostProcessSize;
 
   /// 后处理：泛光扩散
   ///

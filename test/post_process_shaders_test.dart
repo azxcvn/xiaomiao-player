@@ -136,6 +136,26 @@ void main() {
     });
   });
 
+  group('降噪', () {
+    test('双边滤波：两个 sigma 烧进源码，MIT 署名保留', () {
+      final src = denoiseShader(strength: 0.1, radius: 1.0);
+      expectUserShader(src);
+      expect(src, contains('INTENSITY_SIGMA 0.1'));
+      expect(src, contains('SPATIAL_SIGMA 1.0'));
+      expect(src, contains('KERNELLEN'));
+      expect(src, contains('bloc97'));
+      expect(src, contains('return sum / n;'));
+    });
+
+    test('半径不同 → 内核大小不同、源码不同', () {
+      final small = denoiseShader(strength: 0.1, radius: 0.3);
+      final big = denoiseShader(strength: 0.1, radius: 1.0);
+      expect(small, contains('SPATIAL_SIGMA 0.3'));
+      expect(big, contains('SPATIAL_SIGMA 1.0'));
+      expect(small, isNot(big));
+    });
+  });
+
   group('泛光', () {
     test('循环内 3 次采样 + 混合强度，alpha = 1.0', () {
       final src = bloomShader(amount: 0.7, spread: 0.5);
@@ -156,6 +176,53 @@ void main() {
       expect(src, contains('0.6'));
       expect('tap(vec2('.allMatches(src).length, 9);
       expect(src, contains('return vec4(0.25 * lc *'));
+    });
+  });
+
+  group('白平衡', () {
+    test('色温/色调烧进源码，增益按亮度归一化', () {
+      final src = whiteBalanceShader(temperature: 30, tint: -20);
+      expectUserShader(src);
+      expect(src, contains('float temp = 30.0;'));
+      expect(src, contains('float tint = -20.0;'));
+      expect(src, contains('kelvinRGB'));
+      expect(src, contains('dot(wb, vec3(0.2126, 0.7152, 0.0722))'));
+    });
+  });
+
+  group('色阶', () {
+    test('黑位/白位/伽马烧进源码', () {
+      final src = levelsShader(inBlack: 0.05, inWhite: 0.95, gamma: 1.2);
+      expectUserShader(src);
+      expect(src, contains('clamp((rgb - 0.05)'));
+      expect(src, contains('0.95 - 0.05'));
+      expect(src, contains('vec3(1.0 / 1.2)'));
+    });
+  });
+
+  group('胶片曲线', () {
+    test('曝光/暗部/高光/强度烧进源码，toe+shoulder 双段', () {
+      final src = filmicCurveShader(
+        exposure: 1.2,
+        toe: 1.5,
+        shoulder: 2.0,
+        amount: 0.8,
+      );
+      expectUserShader(src);
+      expect(src, contains('max(c * 1.2, vec3(0.0))'));
+      expect(src, contains('1.0 / 1.5'));
+      expect(src, contains('pow(1.0 - pos, 2.0)'));
+      expect(src, contains('mix(c, m, 0.8)'));
+    });
+  });
+
+  group('胶片颗粒', () {
+    test('强度/尺寸烧进源码，中间调加权', () {
+      final src = filmGrainShader(intensity: 0.05, size: 2.0);
+      expectUserShader(src);
+      expect(src, contains('mono * 0.05 * response'));
+      expect(src, contains('max(2.0, 1.0)'));
+      expect(src, contains('float response = 1.0 - abs(luma * 2.0 - 1.0);'));
     });
   });
 }

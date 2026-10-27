@@ -150,6 +150,32 @@ class _PlayerPostProcessPanelState extends State<PlayerPostProcessPanel> {
         ],
 
         _effectHeader(
+          label: l10n.playerPostProcessDenoise,
+          value: _service.denoiseEnabled,
+          enabled: on,
+          onChanged: _service.setDenoiseEnabled,
+        ),
+        if (_service.denoiseEnabled) ...[
+          _sliderRow(
+            label: l10n.playerPostProcessAmount,
+            value: _service.denoiseStrength,
+            min: PostProcessService.denoiseStrengthMin,
+            max: PostProcessService.denoiseStrengthMax,
+            enabled: on,
+            onChanged: _service.setDenoiseStrength,
+          ),
+          _sliderRow(
+            label: l10n.playerPostProcessRange,
+            value: _service.denoiseRadius,
+            min: PostProcessService.denoiseRadiusMin,
+            max: PostProcessService.denoiseRadiusMax,
+            divisions: 7,
+            enabled: on,
+            onChanged: _service.setDenoiseRadius,
+          ),
+        ],
+
+        _effectHeader(
           label: l10n.playerPostProcessDeband,
           value: _service.debandEnabled,
           enabled: on,
@@ -326,6 +352,137 @@ class _PlayerPostProcessPanelState extends State<PlayerPostProcessPanel> {
             max: PostProcessService.cartoonStrengthMax,
             enabled: on,
             onChanged: _service.setCartoonStrength,
+          ),
+        ],
+
+        // ── 白平衡 ──
+        _effectHeader(
+          label: l10n.playerPostProcessWhiteBalance,
+          value: _service.whiteBalanceEnabled,
+          enabled: on,
+          onChanged: _service.setWhiteBalanceEnabled,
+        ),
+        if (_service.whiteBalanceEnabled) ...[
+          _sliderRow(
+            label: l10n.playerPostProcessTemperature,
+            value: _service.temperature,
+            min: PostProcessService.temperatureMin,
+            max: PostProcessService.temperatureMax,
+            divisions: 200,
+            enabled: on,
+            onChanged: _service.setTemperature,
+          ),
+          _sliderRow(
+            label: l10n.playerPostProcessTint,
+            value: _service.tint,
+            min: PostProcessService.tintMin,
+            max: PostProcessService.tintMax,
+            divisions: 200,
+            enabled: on,
+            onChanged: _service.setTint,
+          ),
+        ],
+
+        // ── 色阶 ──
+        _effectHeader(
+          label: l10n.playerPostProcessLevels,
+          value: _service.levelsEnabled,
+          enabled: on,
+          onChanged: _service.setLevelsEnabled,
+        ),
+        if (_service.levelsEnabled) ...[
+          _sliderRow(
+            label: l10n.playerPostProcessInBlack,
+            value: _service.inBlack,
+            min: PostProcessService.inBlackMin,
+            max: PostProcessService.inBlackMax,
+            enabled: on,
+            onChanged: _service.setInBlack,
+          ),
+          _sliderRow(
+            label: l10n.playerPostProcessInWhite,
+            value: _service.inWhite,
+            min: PostProcessService.inWhiteMin,
+            max: PostProcessService.inWhiteMax,
+            enabled: on,
+            onChanged: _service.setInWhite,
+          ),
+          _sliderRow(
+            label: l10n.playerPostProcessGamma,
+            value: _service.levelsGamma,
+            min: PostProcessService.levelsGammaMin,
+            max: PostProcessService.levelsGammaMax,
+            enabled: on,
+            onChanged: _service.setLevelsGamma,
+          ),
+        ],
+
+        // ── 胶片曲线 ──
+        _effectHeader(
+          label: l10n.playerPostProcessFilmic,
+          value: _service.filmicEnabled,
+          enabled: on,
+          onChanged: _service.setFilmicEnabled,
+        ),
+        if (_service.filmicEnabled) ...[
+          _sliderRow(
+            label: l10n.playerPostProcessExposure,
+            value: _service.exposure,
+            min: PostProcessService.exposureMin,
+            max: PostProcessService.exposureMax,
+            enabled: on,
+            onChanged: _service.setExposure,
+          ),
+          _sliderRow(
+            label: l10n.playerPostProcessToe,
+            value: _service.filmicToe,
+            min: PostProcessService.toeMin,
+            max: PostProcessService.toeMax,
+            enabled: on,
+            onChanged: _service.setFilmicToe,
+          ),
+          _sliderRow(
+            label: l10n.playerPostProcessShoulder,
+            value: _service.filmicShoulder,
+            min: PostProcessService.shoulderMin,
+            max: PostProcessService.shoulderMax,
+            enabled: on,
+            onChanged: _service.setFilmicShoulder,
+          ),
+          _sliderRow(
+            label: l10n.playerPostProcessAmount,
+            value: _service.filmicAmount,
+            min: PostProcessService.filmicAmountMin,
+            max: PostProcessService.filmicAmountMax,
+            enabled: on,
+            onChanged: _service.setFilmicAmount,
+          ),
+        ],
+
+        // ── 胶片颗粒 ──
+        _effectHeader(
+          label: l10n.playerPostProcessFilmGrain,
+          value: _service.filmGrainEnabled,
+          enabled: on,
+          onChanged: _service.setFilmGrainEnabled,
+        ),
+        if (_service.filmGrainEnabled) ...[
+          _sliderRow(
+            label: l10n.playerPostProcessAmount,
+            value: _service.filmGrainIntensity,
+            min: PostProcessService.filmGrainIntensityMin,
+            max: PostProcessService.filmGrainIntensityMax,
+            enabled: on,
+            onChanged: _service.setFilmGrainIntensity,
+          ),
+          _sliderRow(
+            label: l10n.playerPostProcessSize,
+            value: _service.filmGrainSize,
+            min: PostProcessService.filmGrainSizeMin,
+            max: PostProcessService.filmGrainSizeMax,
+            divisions: 3,
+            enabled: on,
+            onChanged: _service.setFilmGrainSize,
           ),
         ],
 

@@ -39,6 +39,9 @@ void main() {
       'post_process_deband_enabled': true,
       'post_process_deband_threshold': 64.0,
       'post_process_deband_iterations': 3.0,
+      'post_process_denoise_enabled': true,
+      'post_process_denoise_strength': 0.3,
+      'post_process_denoise_radius': 0.5,
       'post_process_vignette_enabled': true,
       'post_process_vignette_power': 0.4,
       'post_process_vignette_radius': 0.3,
@@ -50,6 +53,16 @@ void main() {
       'post_process_bloom_amount': 0.3,
       'post_process_cartoon_enabled': true,
       'post_process_cartoon_strength': 0.7,
+      'post_process_wb_enabled': true,
+      'post_process_wb_temperature': 25.0,
+      'post_process_wb_tint': -10.0,
+      'post_process_levels_enabled': true,
+      'post_process_levels_in_black': 0.05,
+      'post_process_levels_gamma': 1.2,
+      'post_process_filmic_enabled': true,
+      'post_process_filmic_amount': 0.8,
+      'post_process_film_grain_enabled': true,
+      'post_process_film_grain_intensity': 0.05,
     });
     PostProcessService.instance.resetForTest();
 
@@ -62,6 +75,9 @@ void main() {
     expect(s.debandEnabled, isTrue);
     expect(s.debandThreshold, 64);
     expect(s.debandIterations, 3);
+    expect(s.denoiseEnabled, isTrue);
+    expect(s.denoiseStrength, 0.3);
+    expect(s.denoiseRadius, 0.5);
     expect(s.vignetteEnabled, isTrue);
     expect(s.vignettePower, 0.4);
     expect(s.vignetteRadius, 0.3);
@@ -70,7 +86,17 @@ void main() {
     expect(s.bloomAmount, 0.3);
     expect(s.cartoonEnabled, isTrue);
     expect(s.cartoonStrength, 0.7);
-    expect(s.activeStyleEffectCount, 5);
+    expect(s.whiteBalanceEnabled, isTrue);
+    expect(s.temperature, 25);
+    expect(s.tint, -10);
+    expect(s.levelsEnabled, isTrue);
+    expect(s.inBlack, 0.05);
+    expect(s.levelsGamma, 1.2);
+    expect(s.filmicEnabled, isTrue);
+    expect(s.filmicAmount, 0.8);
+    expect(s.filmGrainEnabled, isTrue);
+    expect(s.filmGrainIntensity, 0.05);
+    expect(s.activeStyleEffectCount, 10);
   });
 
   test('resetSettings：参数回默认，总开关保留', () async {

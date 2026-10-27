@@ -43,12 +43,17 @@ void main() {
     }
     for (final label in [
       '锐化',
+      '降噪',
       '去色带',
       '暗角',
       '扫描线',
       '自然色彩',
       '泛光',
       '卡通',
+      '白平衡',
+      '色阶',
+      '胶片曲线',
+      '胶片颗粒',
     ]) {
       expect(find.text(label), findsOneWidget, reason: '缺少效果：$label');
     }
@@ -57,10 +62,10 @@ void main() {
   testWidgets('总开关关闭时效果开关不可用', (tester) async {
     await pumpPanel(tester);
 
-    // 第一个 Switch 是总开关，其余是效果开关（7 个效果）；
+    // 第一个 Switch 是总开关，其余是效果开关（12 个效果）；
     // 总开关关闭时它们都是禁用态
     final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
-    expect(switches.length, 8);
+    expect(switches.length, 13);
     expect(switches.first.value, isFalse);
     for (final s in switches.skip(1)) {
       expect(s.onChanged, isNull, reason: '总开关关闭时效果开关应置灰');

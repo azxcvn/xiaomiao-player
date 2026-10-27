@@ -1486,6 +1486,10 @@
   "@playerPostProcessSharpen": {
     "description": "后处理：锐化效果"
   },
+  "playerPostProcessDenoise": "降噪",
+  "@playerPostProcessDenoise": {
+    "description": "后处理：降噪效果"
+  },
   "playerPostProcessDeband": "去色带",
   "@playerPostProcessDeband": {
     "description": "后处理：去色带效果"
@@ -1541,6 +1545,54 @@
   "playerPostProcessCartoon": "卡通",
   "@playerPostProcessCartoon": {
     "description": "后处理：卡通效果"
+  },
+  "playerPostProcessWhiteBalance": "白平衡",
+  "@playerPostProcessWhiteBalance": {
+    "description": "后处理：白平衡效果"
+  },
+  "playerPostProcessTemperature": "色温",
+  "@playerPostProcessTemperature": {
+    "description": "后处理：白平衡色温"
+  },
+  "playerPostProcessTint": "色调",
+  "@playerPostProcessTint": {
+    "description": "后处理：白平衡色调（绿-品红）"
+  },
+  "playerPostProcessLevels": "色阶",
+  "@playerPostProcessLevels": {
+    "description": "后处理：色阶效果"
+  },
+  "playerPostProcessInBlack": "黑位",
+  "@playerPostProcessInBlack": {
+    "description": "后处理：色阶输入黑位"
+  },
+  "playerPostProcessInWhite": "白位",
+  "@playerPostProcessInWhite": {
+    "description": "后处理：色阶输入白位"
+  },
+  "playerPostProcessFilmic": "胶片曲线",
+  "@playerPostProcessFilmic": {
+    "description": "后处理：胶片曲线效果"
+  },
+  "playerPostProcessExposure": "曝光",
+  "@playerPostProcessExposure": {
+    "description": "后处理：胶片曲线曝光"
+  },
+  "playerPostProcessToe": "暗部",
+  "@playerPostProcessToe": {
+    "description": "后处理：胶片曲线暗部抬升"
+  },
+  "playerPostProcessShoulder": "高光",
+  "@playerPostProcessShoulder": {
+    "description": "后处理：胶片曲线高光压缩"
+  },
+  "playerPostProcessFilmGrain": "胶片颗粒",
+  "@playerPostProcessFilmGrain": {
+    "description": "后处理：胶片颗粒效果"
+  },
+  "playerPostProcessSize": "尺寸",
+  "@playerPostProcessSize": {
+    "description": "后处理：胶片颗粒尺寸"
   },
   "playerPostProcessSpread": "扩散",
   "@playerPostProcessSpread": {
