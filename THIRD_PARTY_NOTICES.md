@@ -60,6 +60,7 @@ LicenseRegistry / showLicensePage）会自动汇总并展示已随包分发的�
 | 组件 | 说明 | 许可证 |
 | --- | --- | --- |
 | [Anime4K](https://github.com/bloc97/Anime4K) 着色器（assets/shaders/*.glsl，超分/恢复/降噪） | 每个 .glsl 文件头部均内嵌版权声明 | MIT（Copyright (c) 2019-2021 bloc97） |
+| [PPSSPP](https://github.com/hrydgard/ppsspp) 的 post-processing shader（`vignette.fsh` / `scanlines.fsh` / `natural.fsh` / `bloom.fsh` / `cartoon.fsh`，本项目的暗角 / 扫描线 / 自然色彩 / 泛光 / 卡通；移植为 mpv 用户着色器，参数在生成源码时烧成字面量） | 文件头内嵌作者声明（暗角 Henrik Rydgård；自然色彩 ShadX、PPSSPP 版由 SimoneT 修改；卡通 guest(r)，GNU-GPL；扫描线 / 泛光为 PPSSPP 自带）；采样与 alpha 按 mpv 用户着色器规范重写 | GPL-2.0-or-later（与本项目 GPL-3.0 兼容） |
 
 ### 说明 / Notes
 

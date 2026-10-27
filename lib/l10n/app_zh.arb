@@ -1442,6 +1442,122 @@
   "@playerSuperResolution": {
     "description": "播放器：超分辨率（面板标题 / 底栏按钮 / 记忆项）"
   },
+  "playerPostProcess": "后处理",
+  "@playerPostProcess": {
+    "description": "播放器：后处理（更多面板入口 / 面板标题）"
+  },
+  "playerPostProcessEnable": "启用后处理",
+  "@playerPostProcessEnable": {
+    "description": "后处理：总开关"
+  },
+  "playerPostProcessHint": "基础调节即时生效；风格化效果改参数后会短暂重载着色器",
+  "@playerPostProcessHint": {
+    "description": "后处理：总开关下方说明"
+  },
+  "playerPostProcessBasic": "基础调节",
+  "@playerPostProcessBasic": {
+    "description": "后处理：基础调节分组"
+  },
+  "playerPostProcessEffects": "效果",
+  "@playerPostProcessEffects": {
+    "description": "后处理：效果分组"
+  },
+  "playerPostProcessBrightness": "亮度",
+  "@playerPostProcessBrightness": {
+    "description": "后处理：亮度"
+  },
+  "playerPostProcessContrast": "对比度",
+  "@playerPostProcessContrast": {
+    "description": "后处理：对比度"
+  },
+  "playerPostProcessGamma": "伽马",
+  "@playerPostProcessGamma": {
+    "description": "后处理：伽马"
+  },
+  "playerPostProcessSaturation": "饱和度",
+  "@playerPostProcessSaturation": {
+    "description": "后处理：饱和度"
+  },
+  "playerPostProcessHue": "色相",
+  "@playerPostProcessHue": {
+    "description": "后处理：色相"
+  },
+  "playerPostProcessSharpen": "锐化",
+  "@playerPostProcessSharpen": {
+    "description": "后处理：锐化效果"
+  },
+  "playerPostProcessDeband": "去色带",
+  "@playerPostProcessDeband": {
+    "description": "后处理：去色带效果"
+  },
+  "playerPostProcessVignette": "暗角",
+  "@playerPostProcessVignette": {
+    "description": "后处理：暗角效果"
+  },
+  "playerPostProcessScanlines": "扫描线",
+  "@playerPostProcessScanlines": {
+    "description": "后处理：扫描线效果"
+  },
+  "playerPostProcessNatural": "自然色彩",
+  "@playerPostProcessNatural": {
+    "description": "后处理：自然色彩效果"
+  },
+  "playerPostProcessAmount": "强度",
+  "@playerPostProcessAmount": {
+    "description": "后处理：通用参数名（强度）"
+  },
+  "playerPostProcessThreshold": "阈值",
+  "@playerPostProcessThreshold": {
+    "description": "后处理：去色带阈值"
+  },
+  "playerPostProcessRange": "半径",
+  "@playerPostProcessRange": {
+    "description": "后处理：去色带半径"
+  },
+  "playerPostProcessGrain": "颗粒",
+  "@playerPostProcessGrain": {
+    "description": "后处理：去色带颗粒"
+  },
+  "playerPostProcessAspect": "宽高比",
+  "@playerPostProcessAspect": {
+    "description": "后处理：暗角宽高比"
+  },
+  "playerPostProcessDensity": "密度",
+  "@playerPostProcessDensity": {
+    "description": "后处理：扫描线密度"
+  },
+  "playerPostProcessLuma": "亮度曲线",
+  "@playerPostProcessLuma": {
+    "description": "后处理：自然色彩亮度曲线"
+  },
+  "playerPostProcessChroma": "色度",
+  "@playerPostProcessChroma": {
+    "description": "后处理：自然色彩色度"
+  },
+  "playerPostProcessBloom": "泛光",
+  "@playerPostProcessBloom": {
+    "description": "后处理：泛光效果"
+  },
+  "playerPostProcessCartoon": "卡通",
+  "@playerPostProcessCartoon": {
+    "description": "后处理：卡通效果"
+  },
+  "playerPostProcessSpread": "扩散",
+  "@playerPostProcessSpread": {
+    "description": "后处理：泛光扩散"
+  },
+  "playerPostProcessSoftness": "柔和度",
+  "@playerPostProcessSoftness": {
+    "description": "后处理：暗角过渡柔和度"
+  },
+  "playerPostProcessIterations": "迭代次数",
+  "@playerPostProcessIterations": {
+    "description": "后处理：去色带迭代次数"
+  },
+  "playerPostProcessGpuNextHint": "GPU-next 渲染下内置锐化不生效，切回默认渲染器即可",
+  "@playerPostProcessGpuNextHint": {
+    "description": "后处理：锐化在 GPU-next 渲染器下的限制提示"
+  },
   "playerAspectRatio": "画面比例",
   "@playerAspectRatio": {
     "description": "播放器面板：画面比例"

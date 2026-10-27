@@ -40,6 +40,7 @@ import 'package:moumou/pages/player/views/player_speed_indicator.dart';
 import 'package:moumou/pages/player/views/player_speed_panel.dart';
 import 'package:moumou/pages/player/views/player_status_bar.dart';
 import 'package:moumou/pages/player/views/player_super_resolution_panel.dart';
+import 'package:moumou/pages/player/views/player_post_process_panel.dart';
 import 'package:moumou/pages/player/views/player_swipe_seek_overlay.dart';
 import 'package:moumou/pages/player/views/player_thumbnail_preview.dart';
 import 'package:moumou/pages/player/views/player_right_actions.dart';
@@ -59,6 +60,7 @@ import 'package:moumou/services/intro_outro_settings.dart';
 import 'package:moumou/services/intro_outro_tracker.dart';
 import 'package:moumou/services/playback_progress_service.dart';
 import 'package:moumou/services/player_controls_settings.dart';
+import 'package:moumou/services/post_process_service.dart';
 import 'package:moumou/services/subtitle_service.dart';
 import 'package:moumou/services/super_resolution_service.dart';
 import 'package:moumou/services/view_settings.dart';
@@ -1102,6 +1104,11 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
           } catch (_) {
             // 忽略：超分失败不影响播放
           }
+          try {
+            await PostProcessService.instance.apply(_player);
+          } catch (_) {
+            // 忽略：后处理失败不影响播放
+          }
         },
       );
       if (!mounted) return;
@@ -1387,6 +1394,12 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         body: PlayerSuperResolutionPanel(player: _player),
       );
 
+  /// 后处理面板页（「更多 → 后处理」进入）：基础调节 + 风格化效果。
+  PlayerPanelPage _postProcessPanelPage() => PlayerPanelPage(
+        title: AppLocalizations.of(context).playerPostProcess,
+        body: const PlayerPostProcessPanel(),
+      );
+
   PlayerPanelPage _fitPanelPage() => PlayerPanelPage(
         title: AppLocalizations.of(context).playerAspectRatio,
         body: const PlayerFitPanel(),
@@ -1460,7 +1473,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   }
 
   /// 「更多」面板主页：未放入槽位的动作网格（图标上 / 名称下，3 列）+ 末尾
-  /// 「自定义」入口（与横屏一致）。点击未放置动作的行为不变（直接执行）。
+  /// 「后处理」「自定义」入口（与横屏一致）。点击未放置动作的行为不变（直接执行）。
   ///
   /// 竖屏不提供「按钮大小」入口：竖屏顶栏/底栏按钮参数固定不缩放
   /// （工作.md v3 溢出修复），调大只会把底栏那一行挤爆。
@@ -1494,6 +1507,17 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
                         height: tileHeight,
                         onTap: () => _handlePanelAction(panelContext, a),
                       ),
+                    // 后处理：排在「自定义」之前（自定义始终最后一格）
+                    PlayerActionGridTile(
+                      icon: Icons.auto_awesome,
+                      label: l10n.playerPostProcess,
+                      width: tileWidth,
+                      height: tileHeight,
+                      onTap: () =>
+                          PlayerBottomPanelNavigator.of(panelContext).push(
+                        _postProcessPanelPage(),
+                      ),
+                    ),
                     // 自定义控制栏：排在网格最后一格
                     PlayerActionGridTile(
                       icon: Icons.tune,

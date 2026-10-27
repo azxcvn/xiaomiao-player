@@ -1700,6 +1700,93 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerSuperResolution => '超分辨率';
 
   @override
+  String get playerPostProcess => '后处理';
+
+  @override
+  String get playerPostProcessEnable => '启用后处理';
+
+  @override
+  String get playerPostProcessHint => '基础调节即时生效；风格化效果改参数后会短暂重载着色器';
+
+  @override
+  String get playerPostProcessBasic => '基础调节';
+
+  @override
+  String get playerPostProcessEffects => '效果';
+
+  @override
+  String get playerPostProcessBrightness => '亮度';
+
+  @override
+  String get playerPostProcessContrast => '对比度';
+
+  @override
+  String get playerPostProcessGamma => '伽马';
+
+  @override
+  String get playerPostProcessSaturation => '饱和度';
+
+  @override
+  String get playerPostProcessHue => '色相';
+
+  @override
+  String get playerPostProcessSharpen => '锐化';
+
+  @override
+  String get playerPostProcessDeband => '去色带';
+
+  @override
+  String get playerPostProcessVignette => '暗角';
+
+  @override
+  String get playerPostProcessScanlines => '扫描线';
+
+  @override
+  String get playerPostProcessNatural => '自然色彩';
+
+  @override
+  String get playerPostProcessAmount => '强度';
+
+  @override
+  String get playerPostProcessThreshold => '阈值';
+
+  @override
+  String get playerPostProcessRange => '半径';
+
+  @override
+  String get playerPostProcessGrain => '颗粒';
+
+  @override
+  String get playerPostProcessAspect => '宽高比';
+
+  @override
+  String get playerPostProcessDensity => '密度';
+
+  @override
+  String get playerPostProcessLuma => '亮度曲线';
+
+  @override
+  String get playerPostProcessChroma => '色度';
+
+  @override
+  String get playerPostProcessBloom => '泛光';
+
+  @override
+  String get playerPostProcessCartoon => '卡通';
+
+  @override
+  String get playerPostProcessSpread => '扩散';
+
+  @override
+  String get playerPostProcessSoftness => '柔和度';
+
+  @override
+  String get playerPostProcessIterations => '迭代次数';
+
+  @override
+  String get playerPostProcessGpuNextHint => 'GPU-next 渲染下内置锐化不生效，切回默认渲染器即可';
+
+  @override
   String get playerAspectRatio => '画面比例';
 
   @override
@@ -6179,6 +6266,93 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get playerSuperResolution => '超解析度';
+
+  @override
+  String get playerPostProcess => '後處理';
+
+  @override
+  String get playerPostProcessEnable => '啟用後處理';
+
+  @override
+  String get playerPostProcessHint => '基礎調節即時生效；風格化效果調參數後會短暫重新載入著色器';
+
+  @override
+  String get playerPostProcessBasic => '基礎調節';
+
+  @override
+  String get playerPostProcessEffects => '效果';
+
+  @override
+  String get playerPostProcessBrightness => '亮度';
+
+  @override
+  String get playerPostProcessContrast => '對比度';
+
+  @override
+  String get playerPostProcessGamma => '伽瑪';
+
+  @override
+  String get playerPostProcessSaturation => '飽和度';
+
+  @override
+  String get playerPostProcessHue => '色相';
+
+  @override
+  String get playerPostProcessSharpen => '銳化';
+
+  @override
+  String get playerPostProcessDeband => '去色帶';
+
+  @override
+  String get playerPostProcessVignette => '暗角';
+
+  @override
+  String get playerPostProcessScanlines => '掃描線';
+
+  @override
+  String get playerPostProcessNatural => '自然色彩';
+
+  @override
+  String get playerPostProcessAmount => '強度';
+
+  @override
+  String get playerPostProcessThreshold => '閾值';
+
+  @override
+  String get playerPostProcessRange => '半徑';
+
+  @override
+  String get playerPostProcessGrain => '顆粒';
+
+  @override
+  String get playerPostProcessAspect => '寬高比';
+
+  @override
+  String get playerPostProcessDensity => '密度';
+
+  @override
+  String get playerPostProcessLuma => '亮度曲線';
+
+  @override
+  String get playerPostProcessChroma => '色度';
+
+  @override
+  String get playerPostProcessBloom => '泛光';
+
+  @override
+  String get playerPostProcessCartoon => '卡通';
+
+  @override
+  String get playerPostProcessSpread => '擴散';
+
+  @override
+  String get playerPostProcessSoftness => '柔和度';
+
+  @override
+  String get playerPostProcessIterations => '迭代次數';
+
+  @override
+  String get playerPostProcessGpuNextHint => 'GPU-next 渲染下內建銳化不生效，切回預設渲染器即可';
 
   @override
   String get playerAspectRatio => '畫面比例';

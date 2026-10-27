@@ -43,6 +43,7 @@ import 'package:moumou/pages/player/views/player_gesture_layer.dart';
 import 'package:moumou/pages/player/views/player_intro_outro_panel.dart';
 import 'package:moumou/pages/player/views/player_loop_panel.dart';
 import 'package:moumou/pages/player/views/player_playlist_panel.dart';
+import 'package:moumou/pages/player/views/player_post_process_panel.dart';
 import 'package:moumou/pages/player/views/player_quality_panel.dart';
 import 'package:moumou/pages/player/views/player_resume_indicator.dart';
 import 'package:moumou/pages/player/views/player_right_actions.dart';
@@ -76,6 +77,7 @@ import 'package:moumou/services/network/network_repository.dart';
 import 'package:moumou/services/playback_progress_service.dart';
 import 'package:moumou/services/playback_tuning.dart';
 import 'package:moumou/services/player_controls_settings.dart';
+import 'package:moumou/services/post_process_service.dart';
 import 'package:moumou/services/subtitle_service.dart';
 import 'package:moumou/services/subtitle_settings.dart';
 import 'package:moumou/services/super_resolution_service.dart';
@@ -914,14 +916,10 @@ class _PlayerPageState extends State<PlayerPage>
         _player,
         _path,
         saved: start,
-        // 倍速 + 超分在播放/seek 之前完成（避免 shader 变化重置位置）
+        // 倍速 + 超分/后处理在播放/seek 之前完成（避免 shader 变化重置位置）
         prepare: () async {
           await _player.setRate(_session.rate);
-          try {
-            await SuperResolutionService.instance.apply(_player);
-          } catch (_) {
-            // 忽略：超分失败不影响播放与进度恢复
-          }
+          await _applyShaderPipeline();
         },
       );
       if (_disposed || !mounted) return;
@@ -1015,9 +1013,7 @@ class _PlayerPageState extends State<PlayerPage>
       saved: restoreTo,
       prepare: () async {
         await _player.setRate(_session.rate);
-        try {
-          await SuperResolutionService.instance.apply(_player);
-        } catch (_) {}
+        await _applyShaderPipeline();
       },
       beforePlay: () async {
         final audioPath = _biliAudioUrl;
@@ -2216,14 +2212,10 @@ class _PlayerPageState extends State<PlayerPage>
         _player,
         path,
         saved: savedForNew,
-        // 倍速 + 超分在播放/seek 前完成（避免 shader 变化重置位置）
+        // 倍速 + 超分/后处理在播放/seek 前完成（避免 shader 变化重置位置）
         prepare: () async {
           await _player.setRate(_session.rate);
-          try {
-            await SuperResolutionService.instance.apply(_player);
-          } catch (_) {
-            // 忽略：超分失败不影响播放
-          }
+          await _applyShaderPipeline();
         },
       );
       if (_disposed || !mounted) return;
@@ -2316,6 +2308,25 @@ class _PlayerPageState extends State<PlayerPage>
         body: PlayerSuperResolutionPanel(player: _player),
       );
 
+  /// 后处理面板页（「更多 → 后处理」进入）：基础调节 + 风格化效果。
+  PlayerPanelPage _postProcessPanelPage() => PlayerPanelPage(
+        title: AppLocalizations.of(context).playerPostProcess,
+        body: const PlayerPostProcessPanel(),
+      );
+
+  /// 打开媒体前的着色器准备：超分 + 后处理。
+  ///
+  /// 两条链由 [PlayerShaderPipeline] 拼成一条写给 mpv（顺序：超分 → 后处理），
+  /// 谁也不会覆盖谁。失败一律静默：着色器不生效不该影响播放与进度恢复。
+  Future<void> _applyShaderPipeline() async {
+    try {
+      await SuperResolutionService.instance.apply(_player);
+    } catch (_) {}
+    try {
+      await PostProcessService.instance.apply(_player);
+    } catch (_) {}
+  }
+
   /// 画面比例面板页（顶栏「比例」槽位弹出，PiliPlus 同款选项）
   PlayerPanelPage _fitPanelPage() => PlayerPanelPage(
         title: AppLocalizations.of(context).playerAspectRatio,
@@ -2335,7 +2346,7 @@ class _PlayerPageState extends State<PlayerPage>
   }
 
   /// 「更多」面板主页：未放入槽位的动作网格（图标上 / 名称下，3 列）
-  /// + 末尾「自定义」与「按钮大小」入口。
+  /// + 末尾的「按钮大小」「后处理」「自定义」入口（自定义固定最后一格）。
   ///
   /// 未放置到顶部 5 槽位的动作自动出现在「更多」里，点击行为不变（直接执行）；
   /// 增删/排序在「自定义」页里做。用 ListenableBuilder 监听设置：在「自定义」
@@ -2397,6 +2408,17 @@ class _PlayerPageState extends State<PlayerPage>
                           title: l10n.playerButtonSize,
                           body: const PlayerButtonSizePanel(),
                         ),
+                      ),
+                    ),
+                    // 后处理：排在「按钮大小」与「自定义」之间
+                    // （「自定义」始终最后一格）
+                    PlayerActionGridTile(
+                      icon: Icons.auto_awesome,
+                      label: l10n.playerPostProcess,
+                      width: tileWidth,
+                      height: tileHeight,
+                      onTap: () => PlayerPanelNavigator.of(panelContext).push(
+                        _postProcessPanelPage(),
                       ),
                     ),
                     // 自定义控制栏：始终排在网格最后一格
@@ -3527,6 +3549,8 @@ class _PlayerPageState extends State<PlayerPage>
     _audioController.dispose();
     _danmakuController.dispose();
     _audioActive.dispose();
+    // 后处理服务是单例：解绑本页播放器，避免持有已销毁的实例
+    PostProcessService.instance.detach();
     _thumbHideTimer?.cancel();
     _cancelThumbPrefetch();
     // 兜底保存进度（正常退出已走 _exitPlayer 的强制落盘，这里防异常路径；

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:media_kit/media_kit.dart';
 import 'package:moumou/models/super_resolution_mode.dart';
+import 'package:moumou/services/player_shader_pipeline.dart';
 import 'package:moumou/utils/anime4k_patch.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -145,7 +146,8 @@ class SuperResolutionService extends ChangeNotifier {
 
   /// 把当前模式应用到 [player]（打开媒体后调用；切档/下一集后重放）。
   ///
-  /// 底层走 mpv 命令：`change-list glsl-shaders set|clr`（与 Kazumi / PiliPlus 一致）。
+  /// 链路统一交给 [PlayerShaderPipeline]（拼 超分 → 后处理 的完整链），
+  /// 避免与后处理互相覆盖 `glsl-shaders`。
   Future<void> apply(Player player) async {
     try {
       // ⚠️ 取原生实例也要在 try 内：`as NativePlayer` 在非原生平台会抛
@@ -155,25 +157,13 @@ class SuperResolutionService extends ChangeNotifier {
       await native.waitForPlayerInitialization;
       await native.waitForVideoControllerInitializationIfAttached;
       if (_mode == SuperResolutionMode.off) {
-        await native.command(const [
-          'change-list',
-          'glsl-shaders',
-          'clr',
-          '',
-        ]);
+        await PlayerShaderPipeline.instance.setAnime(player, const []);
         return;
       }
       final dir = await _ensureShadersCopied();
       final chain = buildAnime4KChain(_mode, _quality);
-      final paths = chain
-          .map((s) => p.join(dir.path, s))
-          .join(Platform.isWindows ? ';' : ':');
-      await native.command([
-        'change-list',
-        'glsl-shaders',
-        'set',
-        paths,
-      ]);
+      final paths = chain.map((s) => p.join(dir.path, s)).toList();
+      await PlayerShaderPipeline.instance.setAnime(player, paths);
     } catch (e) {
       // 播放器未就绪 / 渲染器不支持时静默失败，不打断播放
       debugPrint('SuperResolutionService: failed to apply shaders: $e');

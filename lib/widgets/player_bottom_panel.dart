@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/widgets/app_frame.dart';
+import 'package:moumou/widgets/settings_ui.dart';
 import 'package:moumou/widgets/player_panel.dart'
     show PlayerPanelPage, PlayerPanelDim, panelHeaderTitle;
 
@@ -210,7 +211,11 @@ class _PlayerBottomPanelState extends State<PlayerBottomPanel> {
                         },
                         child: KeyedSubtree(
                           key: ValueKey(page.title),
-                          child: page.body,
+                          // 与横屏面板一致：页面内所有滑杆统一 Kazumi 暗色主题
+                          child: SliderTheme(
+                            data: playerPanelSliderTheme(context),
+                            child: page.body,
+                          ),
                         ),
                       ),
                     ),

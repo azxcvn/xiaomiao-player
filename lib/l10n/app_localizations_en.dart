@@ -1770,6 +1770,95 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerSuperResolution => 'Super resolution';
 
   @override
+  String get playerPostProcess => 'Post-processing';
+
+  @override
+  String get playerPostProcessEnable => 'Enable post-processing';
+
+  @override
+  String get playerPostProcessHint =>
+      'Basic adjustments apply instantly; style effects briefly reload shaders when adjusted';
+
+  @override
+  String get playerPostProcessBasic => 'Basic adjustments';
+
+  @override
+  String get playerPostProcessEffects => 'Effects';
+
+  @override
+  String get playerPostProcessBrightness => 'Brightness';
+
+  @override
+  String get playerPostProcessContrast => 'Contrast';
+
+  @override
+  String get playerPostProcessGamma => 'Gamma';
+
+  @override
+  String get playerPostProcessSaturation => 'Saturation';
+
+  @override
+  String get playerPostProcessHue => 'Hue';
+
+  @override
+  String get playerPostProcessSharpen => 'Sharpen';
+
+  @override
+  String get playerPostProcessDeband => 'Deband';
+
+  @override
+  String get playerPostProcessVignette => 'Vignette';
+
+  @override
+  String get playerPostProcessScanlines => 'Scanlines';
+
+  @override
+  String get playerPostProcessNatural => 'Natural colors';
+
+  @override
+  String get playerPostProcessAmount => 'Amount';
+
+  @override
+  String get playerPostProcessThreshold => 'Threshold';
+
+  @override
+  String get playerPostProcessRange => 'Range';
+
+  @override
+  String get playerPostProcessGrain => 'Grain';
+
+  @override
+  String get playerPostProcessAspect => 'Aspect ratio';
+
+  @override
+  String get playerPostProcessDensity => 'Density';
+
+  @override
+  String get playerPostProcessLuma => 'Luma curve';
+
+  @override
+  String get playerPostProcessChroma => 'Chroma';
+
+  @override
+  String get playerPostProcessBloom => 'Bloom';
+
+  @override
+  String get playerPostProcessCartoon => 'Cartoon';
+
+  @override
+  String get playerPostProcessSpread => 'Spread';
+
+  @override
+  String get playerPostProcessSoftness => 'Softness';
+
+  @override
+  String get playerPostProcessIterations => 'Iterations';
+
+  @override
+  String get playerPostProcessGpuNextHint =>
+      'Built-in sharpening is unavailable with the GPU-next renderer; switch back to the default renderer';
+
+  @override
   String get playerAspectRatio => 'Aspect ratio';
 
   @override

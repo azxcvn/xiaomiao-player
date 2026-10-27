@@ -3,6 +3,7 @@ import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/widgets/app_frame.dart';
 import 'package:moumou/widgets/marquee_text.dart';
+import 'package:moumou/widgets/settings_ui.dart';
 
 /// 面板内导航的一层页面
 class PlayerPanelPage {
@@ -242,7 +243,13 @@ class _PlayerPanelState extends State<PlayerPanel> {
                           },
                           child: KeyedSubtree(
                             key: ValueKey(page.title),
-                            child: page.body,
+                            // 面板内所有滑杆统一用播放器暗色版 Kazumi 主题
+                            //（新式滑杆：细轨 + 竖条柄 + 末端圆点），
+                            // 面板自身没套主题时也不会退化成旧式大圆钮
+                            child: SliderTheme(
+                              data: playerPanelSliderTheme(context),
+                              child: page.body,
+                            ),
                           ),
                         ),
                     ),

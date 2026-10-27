@@ -14,7 +14,7 @@
 | 分类 | 能力 |
 |---|---|
 | **媒体库** | 扫描本地视频（MediaStore + 「允许管理所有文件」权限）；**列表模式**（含视频的文件夹 → 详情页）与**树状模式**（逐级目录导航 + 面包屑），两种模式共用同一套卡片组件 |
-| **播放器** | media_kit（自建 libmpv 内核）横屏沉浸式全屏；播放进度持久化；进度条缩略图实时预览（拖动所见即落点 + 章节名胶囊）；超分辨率（Anime4K v4，7 档模式 × 3 质量档）；片头片尾自动跳过 |
+| **播放器** | media_kit（自建 libmpv 内核）横屏沉浸式全屏；播放进度持久化；进度条缩略图实时预览（拖动所见即落点 + 章节名胶囊）；超分辨率（Anime4K v4，7 档模式 × 3 质量档）；后处理（亮度/对比/伽马/饱和度/色相、锐化、去色带、暗角、扫描线、自然色彩、泛光、卡通）；片头片尾自动跳过 |
 | **音频** | 内嵌音轨切换 + 外部音轨导入/移除；音频声道（自动/安全自动/单声道/立体声/反向立体声）；音频处理（音量标准化 / 动态范围压缩）；不可播放音轨自动回退；**均衡器**（5 频段 + 低音增强 + 虚拟环绕 + 6 预设） |
 | **字幕** | 内嵌轨道 + 外挂导入（Android ≤11 系统选择器 / >11 自建选择器带排序与文件夹记忆）+ 同名字幕自动加载；延迟/样式/杂项/字体四类设置（RGBA 调色、ASS 强制覆盖、自定义字体走 libass） |
 | **弹幕** | canvas_danmaku 渲染；本地弹幕（9 种同名规则 + 手动导入）；网络弹幕接入弹弹Play（搜索 / 自动匹配 / 服务器管理）；完整样式与配置设置（字号/字重/速度/描边/不透明度/区域/行高/三类显隐/去重/屏蔽词/时间轴偏移/自定义字体） |
@@ -112,6 +112,8 @@ lib/
 │   ├── crash_log_service.dart # 崩溃日志：列表/读取/删除/清空/导出
 │   ├── cache_manager_service.dart # 缓存管理：列表封面磁盘缓存 + 网络弹幕缓存的查询与清除
 │   ├── super_resolution_service.dart   # 超分：模式持久化、着色器安装期优化后拷贝、mpv 应用
+│   ├── player_shader_pipeline.dart     # 着色器链统一出口（超分 → 后处理，避免互相覆盖）
+│   ├── post_process_service.dart       # 后处理：基础调节（mpv 属性）+ 风格化着色器生成与持久化
 │   ├── chapter_tracker.dart   # 章节跟踪器（mpv chapter-list + 当前位置/片段/胶囊窗口 + 跳段）
 │   ├── chapter_skip_settings.dart # 章节跳段设置（六类片段自动跳过 + 自定义关键词）
 │   ├── intro_outro_settings.dart # 片头片尾全局设置（开关/秒数/范围）
@@ -261,6 +263,7 @@ lib/
 │   │       ├── player_fit_panel.dart      # 画面比例面板
 │   │       ├── player_speed_panel.dart    # 倍速面板
 │   │       ├── player_super_resolution_panel.dart  # 超分面板
+│   │       ├── player_post_process_panel.dart      # 后处理面板（基础调节 + 风格化效果）
 │   │       ├── player_decode_panel.dart          # 解码面板
 │   │       ├── player_diagnostics_panel.dart     # 播放诊断面板
 │   │       ├── player_play_pause_button.dart  # 播放/暂停图标形变动画

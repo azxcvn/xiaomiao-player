@@ -3309,6 +3309,180 @@ abstract class AppLocalizations {
   /// **'超分辨率'**
   String get playerSuperResolution;
 
+  /// 播放器：后处理（更多面板入口 / 面板标题）
+  ///
+  /// In zh, this message translates to:
+  /// **'后处理'**
+  String get playerPostProcess;
+
+  /// 后处理：总开关
+  ///
+  /// In zh, this message translates to:
+  /// **'启用后处理'**
+  String get playerPostProcessEnable;
+
+  /// 后处理：总开关下方说明
+  ///
+  /// In zh, this message translates to:
+  /// **'基础调节即时生效；风格化效果改参数后会短暂重载着色器'**
+  String get playerPostProcessHint;
+
+  /// 后处理：基础调节分组
+  ///
+  /// In zh, this message translates to:
+  /// **'基础调节'**
+  String get playerPostProcessBasic;
+
+  /// 后处理：效果分组
+  ///
+  /// In zh, this message translates to:
+  /// **'效果'**
+  String get playerPostProcessEffects;
+
+  /// 后处理：亮度
+  ///
+  /// In zh, this message translates to:
+  /// **'亮度'**
+  String get playerPostProcessBrightness;
+
+  /// 后处理：对比度
+  ///
+  /// In zh, this message translates to:
+  /// **'对比度'**
+  String get playerPostProcessContrast;
+
+  /// 后处理：伽马
+  ///
+  /// In zh, this message translates to:
+  /// **'伽马'**
+  String get playerPostProcessGamma;
+
+  /// 后处理：饱和度
+  ///
+  /// In zh, this message translates to:
+  /// **'饱和度'**
+  String get playerPostProcessSaturation;
+
+  /// 后处理：色相
+  ///
+  /// In zh, this message translates to:
+  /// **'色相'**
+  String get playerPostProcessHue;
+
+  /// 后处理：锐化效果
+  ///
+  /// In zh, this message translates to:
+  /// **'锐化'**
+  String get playerPostProcessSharpen;
+
+  /// 后处理：去色带效果
+  ///
+  /// In zh, this message translates to:
+  /// **'去色带'**
+  String get playerPostProcessDeband;
+
+  /// 后处理：暗角效果
+  ///
+  /// In zh, this message translates to:
+  /// **'暗角'**
+  String get playerPostProcessVignette;
+
+  /// 后处理：扫描线效果
+  ///
+  /// In zh, this message translates to:
+  /// **'扫描线'**
+  String get playerPostProcessScanlines;
+
+  /// 后处理：自然色彩效果
+  ///
+  /// In zh, this message translates to:
+  /// **'自然色彩'**
+  String get playerPostProcessNatural;
+
+  /// 后处理：通用参数名（强度）
+  ///
+  /// In zh, this message translates to:
+  /// **'强度'**
+  String get playerPostProcessAmount;
+
+  /// 后处理：去色带阈值
+  ///
+  /// In zh, this message translates to:
+  /// **'阈值'**
+  String get playerPostProcessThreshold;
+
+  /// 后处理：去色带半径
+  ///
+  /// In zh, this message translates to:
+  /// **'半径'**
+  String get playerPostProcessRange;
+
+  /// 后处理：去色带颗粒
+  ///
+  /// In zh, this message translates to:
+  /// **'颗粒'**
+  String get playerPostProcessGrain;
+
+  /// 后处理：暗角宽高比
+  ///
+  /// In zh, this message translates to:
+  /// **'宽高比'**
+  String get playerPostProcessAspect;
+
+  /// 后处理：扫描线密度
+  ///
+  /// In zh, this message translates to:
+  /// **'密度'**
+  String get playerPostProcessDensity;
+
+  /// 后处理：自然色彩亮度曲线
+  ///
+  /// In zh, this message translates to:
+  /// **'亮度曲线'**
+  String get playerPostProcessLuma;
+
+  /// 后处理：自然色彩色度
+  ///
+  /// In zh, this message translates to:
+  /// **'色度'**
+  String get playerPostProcessChroma;
+
+  /// 后处理：泛光效果
+  ///
+  /// In zh, this message translates to:
+  /// **'泛光'**
+  String get playerPostProcessBloom;
+
+  /// 后处理：卡通效果
+  ///
+  /// In zh, this message translates to:
+  /// **'卡通'**
+  String get playerPostProcessCartoon;
+
+  /// 后处理：泛光扩散
+  ///
+  /// In zh, this message translates to:
+  /// **'扩散'**
+  String get playerPostProcessSpread;
+
+  /// 后处理：暗角过渡柔和度
+  ///
+  /// In zh, this message translates to:
+  /// **'柔和度'**
+  String get playerPostProcessSoftness;
+
+  /// 后处理：去色带迭代次数
+  ///
+  /// In zh, this message translates to:
+  /// **'迭代次数'**
+  String get playerPostProcessIterations;
+
+  /// 后处理：锐化在 GPU-next 渲染器下的限制提示
+  ///
+  /// In zh, this message translates to:
+  /// **'GPU-next 渲染下内置锐化不生效，切回默认渲染器即可'**
+  String get playerPostProcessGpuNextHint;
+
   /// 播放器面板：画面比例
   ///
   /// In zh, this message translates to:
