@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/models/player_action.dart';
 import 'package:moumou/models/player_loop.dart';
+import 'package:moumou/models/seek_bar_style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 播放器控制设置：右上角「更多」面板的启用动作、双击手势、快进/快退时长、
@@ -71,6 +72,8 @@ class PlayerControlsSettings extends ChangeNotifier {
   // 章节功能：进度条章节标记（默认开启，工作.md 章节功能）
   static const _keyShowChapterProgress =
       'player_controls_show_chapter_progress';
+  // 进度条样式：classic / segmented / capsule（见 models/seek_bar_style.dart）
+  static const _keySeekBarStyle = 'player_controls_seek_bar_style';
 
   // 旧版按键时长 key（v1 拆分过双击/按钮两套，现已合并），仅用于数据迁移
   static const _legacyKeyButtonSeek = 'player_controls_button_seek';
@@ -232,6 +235,9 @@ class PlayerControlsSettings extends ChangeNotifier {
   /// 显示章节进度条（默认开启）：进度条上标记章节节点、显示当前章节名称
   bool _showChapterProgress = true;
 
+  /// 进度条样式（默认经典）：播放页横竖屏共用，设置页可选经典/分段块/胶囊
+  SeekBarStyle _seekBarStyle = SeekBarStyle.classic;
+
   /// 右上角槽位上已放置的动作（有序，最多 [maxTopActions] 个；空列表 = 槽位全空）
   List<PlayerTopAction> get topActions => List.unmodifiable(_topActions);
   DoubleTapMode get doubleTapMode => _doubleTapMode;
@@ -267,6 +273,7 @@ class PlayerControlsSettings extends ChangeNotifier {
   bool get showTopNetSpeed => _showTopNetSpeed;
   bool get showTopNetType => _showTopNetType;
   bool get showChapterProgress => _showChapterProgress;
+  SeekBarStyle get seekBarStyle => _seekBarStyle;
 
   /// 启动时加载（main.dart 调用）
   Future<void> load() async {
@@ -282,6 +289,7 @@ class PlayerControlsSettings extends ChangeNotifier {
     }
     _showProgressLine = prefs.getBool(_keyProgressLine) ?? false;
     _showChapterProgress = prefs.getBool(_keyShowChapterProgress) ?? true;
+    _seekBarStyle = SeekBarStyle.fromStorage(prefs.getString(_keySeekBarStyle));
     // 记忆倍速默认关闭（用户显式开启后才记住上次倍速）
     _rememberSpeed = prefs.getBool(_keyRememberSpeed) ?? false;
     _lastSpeed = prefs.getDouble(_keyLastSpeed) ?? 1.0;
@@ -398,6 +406,16 @@ class PlayerControlsSettings extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyShowChapterProgress, v);
+  }
+
+  /// 进度条样式（默认经典）：横竖屏播放页立即生效（组件每次 build 读这里）
+  Future<void> setSeekBarStyle(SeekBarStyle v) async {
+    await ensureLoaded();
+    if (_seekBarStyle == v) return;
+    _seekBarStyle = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keySeekBarStyle, v.storageKey);
   }
 
   /// 播放控制按钮背景开关（默认关闭）
@@ -842,6 +860,7 @@ class PlayerControlsSettings extends ChangeNotifier {
     _showTopNetSpeed = true;
     _showTopNetType = true;
     _showChapterProgress = true;
+    _seekBarStyle = SeekBarStyle.classic;
     notifyListeners();
   }
 }

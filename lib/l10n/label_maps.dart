@@ -21,6 +21,7 @@ import 'package:moumou/models/player_action.dart';
 import 'package:moumou/models/player_diagnostics.dart';
 import 'package:moumou/models/player_loop.dart';
 import 'package:moumou/models/playlist_sort.dart';
+import 'package:moumou/models/seek_bar_style.dart';
 import 'package:moumou/models/subtitle_dir.dart';
 import 'package:moumou/models/subtitle_entry.dart';
 import 'package:moumou/models/super_resolution_mode.dart';
@@ -112,9 +113,24 @@ String playerDoubleTapModeLabel(AppLocalizations l10n, DoubleTapMode mode) =>
       DoubleTapMode.mixed => l10n.playerDoubleTapMixed,
     };
 
+/// 进度条样式名（播放器设置 · 章节进度条）
+String seekBarStyleLabel(AppLocalizations l10n, SeekBarStyle style) =>
+    switch (style) {
+      SeekBarStyle.classic => l10n.settingsPlayerSeekBarStyleClassic,
+      SeekBarStyle.segmented => l10n.settingsPlayerSeekBarStyleSegmented,
+      SeekBarStyle.capsule => l10n.settingsPlayerSeekBarStyleCapsule,
+    };
+
+/// 进度条样式一句话说明（设置页副标题）
+String seekBarStyleDesc(AppLocalizations l10n, SeekBarStyle style) =>
+    switch (style) {
+      SeekBarStyle.classic => l10n.settingsPlayerSeekBarStyleClassicDesc,
+      SeekBarStyle.segmented => l10n.settingsPlayerSeekBarStyleSegmentedDesc,
+      SeekBarStyle.capsule => l10n.settingsPlayerSeekBarStyleCapsuleDesc,
+    };
+
 /// 视频方向模式（播放器设置 · 视频方向）
-String playerOrientationModeLabel(
-  AppLocalizations l10n,
+String playerOrientationModeLabel(  AppLocalizations l10n,
   VideoOrientationMode mode,
 ) => switch (mode) {
   VideoOrientationMode.auto => l10n.commonAuto,

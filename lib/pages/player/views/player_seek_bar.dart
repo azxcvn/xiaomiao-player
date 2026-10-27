@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:moumou/models/chapter_info.dart';
+import 'package:moumou/models/seek_bar_style.dart';
 import 'package:moumou/pages/player/player_metrics.dart';
+import 'package:moumou/pages/player/views/player_seek_bar_painter.dart';
+import 'package:moumou/services/player_controls_settings.dart';
 
 /// 全宽进度条（自定义绘制，替代 Material Slider）：
 /// 拖动实时预览目标时间，松手/点击跳转。
@@ -13,6 +16,10 @@ import 'package:moumou/pages/player/player_metrics.dart';
 /// 本实现直接绘制轨道与拇指，手势自管（点击轨道即跳转、拖动跟手），
 /// 轨道起点精确落在 [kPlayerLeftInset]、右缘留 20 与底栏对齐。
 ///
+/// 绘制具体长什么样由 [SeekBarStyle] 决定（经典 / 分段块 / 胶囊，见
+/// `player_seek_bar_painter.dart`）：**手势与命中换算与样式无关**，
+/// 换样式只换画的层，不换手感。
+///
 /// 触摸反馈（工作.md 第 1 点）：拇指被**触摸或拖动**时，在外面套一个
 /// 比拇指大一圈的同心圆（低透明度），让用户感知已命中进度条
 /// （轻微放大 + 外圈扩散效果）。
@@ -22,11 +29,11 @@ class PlayerSeekBar extends StatefulWidget {
   final ValueChanged<double> onChanged;
   final ValueChanged<double> onChangeEnd;
 
-  /// 章节列表（秒）：非空时在轨道上绘制章节节点小圆点
+  /// 章节列表（秒）：按样式画成圆点 / 块缝 / 竖刻度
   /// （工作.md 章节功能：未播放到=白色，播放过=主题色带透明度）
   final List<ChapterInfo> chapters;
 
-  /// 可跳过片段（OP/ED/预告等）：非空时在轨道上方绘制类型色时间段
+  /// 可跳过片段（OP/ED/预告等）：非空时在轨道上绘制类型色时间段
   final List<SkipSegment> skipSegments;
 
   /// 组件整体高度（含可点击热区），轨道垂直居中。
@@ -39,6 +46,10 @@ class PlayerSeekBar extends StatefulWidget {
   /// 横屏底栏传入更小的值：轨道左端与「下一集」按钮图标左缘对齐。
   final double trackLeftInset;
 
+  /// 样式覆盖：null = 跟随设置（播放器内用）；
+  /// 设置页的预览会显式传一个样式。
+  final SeekBarStyle? style;
+
   const PlayerSeekBar({
     super.key,
     required this.valueMs,
@@ -49,6 +60,7 @@ class PlayerSeekBar extends StatefulWidget {
     this.skipSegments = const [],
     this.height = barHeight,
     this.trackLeftInset = kPlayerLeftInset,
+    this.style,
   });
 
   /// 进度条默认高度（含可点击热区）
@@ -73,6 +85,7 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final style = widget.style ?? PlayerControlsSettings.instance.seekBarStyle;
     final valueMs = widget.valueMs;
     final maxMs = widget.maxMs;
     return SizedBox(
@@ -85,10 +98,6 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
                   trackLeft -
                   PlayerSeekBar.rightInset)
               .clamp(0.0, double.infinity);
-          final fraction =
-              maxMs > 0 ? (valueMs / maxMs).clamp(0.0, 1.0) : 0.0;
-          final thumbDx = trackLeft + trackWidth * fraction;
-          final centerY = widget.height / 2;
 
           void handleAt(double dx) {
             if (trackWidth <= 0 || maxMs <= 0) return;
@@ -128,170 +137,23 @@ class _PlayerSeekBarState extends State<PlayerSeekBar> {
               _setInteracting(false);
               widget.onChangeEnd(valueMs);
             },
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // 底轨（未播放部分）
-                Positioned(
-                  left: trackLeft,
-                  right: PlayerSeekBar.rightInset,
-                  top: centerY - 1.25,
-                  height: 2.5,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(1.25),
-                    ),
-                  ),
-                ),
-                // 跳过片段色段（工作.md 章节功能第 4 点）：
-                // 与轨道同高同位置，画在轨道内（覆盖底轨）；
-                // 已播放段（主题色）在其上覆盖，未播放区域显示类型色；
-                // 色相用类型专属色，透明度压低避免与主题色冲突。
-                ..._buildSkipSegments(trackLeft, trackWidth, centerY),
-                // 已播放部分（主题色）
-                Positioned(
-                  left: trackLeft,
-                  top: centerY - 1.25,
-                  width: (thumbDx - trackLeft).clamp(0.0, trackWidth),
-                  height: 2.5,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: scheme.primary,
-                      borderRadius: BorderRadius.circular(1.25),
-                    ),
-                  ),
-                ),
-                // 章节节点小圆点（工作.md 章节功能第 1 点）：
-                // 未播放到 = 白色，播放过 = 主题色带透明度（色相一致）；
-                // 黑描边保证在亮画面视频上也清晰。
-                ..._buildChapterDots(scheme, trackLeft, trackWidth, centerY),
-                // 触摸/拖动反馈外圈：比拇指大一圈、低透明度，放大 + 淡入
-                // （工作.md 第 1 点：被触摸时在小圆点外面套一个更大的圆形）
-                Positioned(
-                  left: thumbDx - 16,
-                  top: centerY - 16,
-                  child: IgnorePointer(
-                    child: AnimatedScale(
-                      scale: _interacting ? 1.0 : 0.6,
-                      duration: const Duration(milliseconds: 150),
-                      curve: Curves.easeOutCubic,
-                      child: AnimatedOpacity(
-                        opacity: _interacting ? 1 : 0,
-                        duration: const Duration(milliseconds: 150),
-                        curve: Curves.easeOutCubic,
-                        child: Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: scheme.primary.withValues(alpha: 0.28),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                // 拇指
-                Positioned(
-                  left: thumbDx - 6,
-                  top: centerY - 6,
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: scheme.primary,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.35),
-                          blurRadius: 3,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+            child: CustomPaint(
+              size: Size(constraints.maxWidth, widget.height),
+              painter: PlayerSeekBarPainter(
+                style: style,
+                valueMs: valueMs,
+                durationMs: maxMs,
+                chapters: widget.chapters,
+                skipSegments: widget.skipSegments,
+                trackLeft: trackLeft,
+                trackWidth: trackWidth,
+                scheme: scheme,
+                interacting: _interacting,
+              ),
             ),
           );
         },
       ),
     );
-  }
-
-  /// 跳过片段色段：与轨道同高（2.5）画在轨道内（无端点标记，避免
-  /// 遮盖章节圆点；色段本身的类型色已足够标识时间段）。
-  List<Widget> _buildSkipSegments(
-    double trackLeft,
-    double trackWidth,
-    double centerY,
-  ) {
-    if (widget.skipSegments.isEmpty || widget.maxMs <= 1.0) return const [];
-    final durationSeconds = widget.maxMs / 1000.0;
-    // 色带与轨道同高同位置：覆盖底轨，已播放段在上层再覆盖
-    final bandTop = centerY - 1.25;
-    return [
-      for (final seg in widget.skipSegments)
-        if (seg.startSeconds < durationSeconds)
-          Positioned(
-            left: trackLeft + trackWidth * (seg.startSeconds / durationSeconds),
-            width: (trackWidth *
-                    ((seg.endSeconds - seg.startSeconds) / durationSeconds))
-                .clamp(0.0, trackWidth),
-            top: bandTop,
-            height: 2.5,
-            child: IgnorePointer(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: seg.type.color.withValues(alpha: 0.65),
-                  borderRadius: BorderRadius.circular(1.25),
-                ),
-              ),
-            ),
-          ),
-    ];
-  }
-
-  /// 章节节点小圆点（直径 6，圆心在轨道中线）：
-  /// - 未播放到（章节起点 > 当前播放位置）：白色 0.85；
-  /// - 播放过：主题色 0.75（与进度条色相一致，透明度区分已播/未播）。
-  List<Widget> _buildChapterDots(
-    ColorScheme scheme,
-    double trackLeft,
-    double trackWidth,
-    double centerY,
-  ) {
-    if (widget.chapters.isEmpty || widget.maxMs <= 1.0) return const [];
-    final durationSeconds = widget.maxMs / 1000.0;
-    final playedSeconds = widget.valueMs / 1000.0;
-    return [
-      for (final chapter in widget.chapters)
-        if (chapter.startSeconds.isFinite &&
-            chapter.startSeconds >= 0 &&
-            chapter.startSeconds < durationSeconds)
-          Positioned(
-            left: trackLeft +
-                trackWidth * (chapter.startSeconds / durationSeconds) -
-                3,
-            top: centerY - 3,
-            child: IgnorePointer(
-              child: Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: playedSeconds >= chapter.startSeconds
-                      ? scheme.primary.withValues(alpha: 0.75)
-                      : Colors.white.withValues(alpha: 0.85),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-              ),
-            ),
-          ),
-    ];
   }
 }

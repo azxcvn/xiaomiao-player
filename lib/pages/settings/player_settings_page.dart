@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/player_action.dart';
+import 'package:moumou/models/seek_bar_style.dart';
 import 'package:moumou/services/decode_settings.dart';
 import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/utils/app_dialog.dart';
+import 'package:moumou/widgets/seek_bar_style_preview.dart';
 import 'package:moumou/widgets/settings_ui.dart';
 
 /// 播放器设置子页：双击手势、快进/快退时长（固定档位 + 点数值原地自定义）、
@@ -21,6 +23,8 @@ import 'package:moumou/widgets/settings_ui.dart';
 ///   双指缩小视频、按钮背景、自动连播、播放完毕自动退出、倍速播放指示器、
 ///   启用播放界面动画、锁定状态豁免双击、音量增强（开关 + 可折叠的上限
 ///   百分比滑杆，组内最后一项）；
+/// - **章节进度条**：进度条样式三选一（经典 / 分段块 / 胶囊）+ 实时预览
+///   （色标画法绑在样式里，见 `player_seek_bar_painter.dart`）；
 /// - **已观看进度阈值**：滑杆设置（5% – 100%，步进 5%）。
 ///
 /// 循环播放模式（关闭/列表循环/单集循环）已移至播放界面内调整
@@ -43,6 +47,14 @@ class PlayerSettingsPage extends StatelessWidget {
       VideoOrientationMode.auto => Icons.smartphone,
       VideoOrientationMode.portrait => Icons.screen_lock_portrait,
       VideoOrientationMode.landscape => Icons.screen_lock_landscape,
+    };
+  }
+
+  IconData _seekBarStyleIcon(SeekBarStyle style) {
+    return switch (style) {
+      SeekBarStyle.classic => Icons.horizontal_rule_rounded,
+      SeekBarStyle.segmented => Icons.view_week_outlined,
+      SeekBarStyle.capsule => Icons.rounded_corner,
     };
   }
 
@@ -335,6 +347,31 @@ class PlayerSettingsPage extends StatelessWidget {
                             )
                           : const SizedBox(width: double.infinity),
                     ),
+                  ],
+                ),
+              ),
+              // ── 章节进度条（样式三选一 + 实时预览）────────────
+              const SizedBox(height: 16),
+              SettingsGroupTitle(title: l10n.settingsPlayerGroupChapterBar),
+              SettingsCard(
+                child: Column(
+                  children: [
+                    // 预览条：跟随当前选择，换样式立刻变
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                      child: SeekBarStylePreview(style: settings.seekBarStyle),
+                    ),
+                    for (final style in SeekBarStyle.values) ...[
+                      if (style != SeekBarStyle.values.first)
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                      SettingsRadioTile(
+                        icon: _seekBarStyleIcon(style),
+                        title: seekBarStyleLabel(l10n, style),
+                        subtitle: Text(seekBarStyleDesc(l10n, style)),
+                        selected: settings.seekBarStyle == style,
+                        onTap: () => settings.setSeekBarStyle(style),
+                      ),
+                    ],
                   ],
                 ),
               ),

@@ -691,6 +691,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsPlayerChapterProgressBarDesc => '进度条标记章节并显示章节名';
 
   @override
+  String get settingsPlayerGroupChapterBar => '章节进度条';
+
+  @override
+  String get settingsPlayerSeekBarStyleClassic => '经典';
+
+  @override
+  String get settingsPlayerSeekBarStyleClassicDesc => '一道细线，静静向前';
+
+  @override
+  String get settingsPlayerSeekBarStyleSegmented => '分段块';
+
+  @override
+  String get settingsPlayerSeekBarStyleSegmentedDesc => '一章一格，彼此分明';
+
+  @override
+  String get settingsPlayerSeekBarStyleCapsule => '胶囊';
+
+  @override
+  String get settingsPlayerSeekBarStyleCapsuleDesc => '光随时间，缓缓盈满';
+
+  @override
   String get settingsPlayerThumbnailPreview => '进度条缩略图';
 
   @override
@@ -5341,6 +5362,27 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsPlayerChapterProgressBarDesc => '進度條標記章節並顯示章節名';
+
+  @override
+  String get settingsPlayerGroupChapterBar => '章節進度條';
+
+  @override
+  String get settingsPlayerSeekBarStyleClassic => '經典';
+
+  @override
+  String get settingsPlayerSeekBarStyleClassicDesc => '一道細線，靜靜向前';
+
+  @override
+  String get settingsPlayerSeekBarStyleSegmented => '分段塊';
+
+  @override
+  String get settingsPlayerSeekBarStyleSegmentedDesc => '一章一格，彼此分明';
+
+  @override
+  String get settingsPlayerSeekBarStyleCapsule => '膠囊';
+
+  @override
+  String get settingsPlayerSeekBarStyleCapsuleDesc => '光隨時間，緩緩盈滿';
 
   @override
   String get settingsPlayerThumbnailPreview => '進度條縮圖';

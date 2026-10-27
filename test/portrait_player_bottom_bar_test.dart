@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moumou/pages/player/player_metrics.dart';
 import 'package:moumou/pages/player/views/player_seek_bar.dart';
+import 'package:moumou/pages/player/views/player_seek_bar_painter.dart';
 import 'package:moumou/pages/player/views/portrait_player_bottom_bar.dart';
 
 import 'l10n_test_helper.dart';
@@ -72,18 +73,20 @@ void main() {
     );
     // 进度条为自定义绘制（无 Material Slider）：轨道左缘精确落在
     // kPlayerTrackLeftInset、右缘留 rightInset（横竖屏共用同一组件）。
+    // 轨道不再是一个 Container，几何在 painter 里，直接断言它的入参。
     final seekRect = tester.getRect(find.byType(PlayerSeekBar));
-    final rail = find.byWidgetPredicate(
-      (w) =>
-          w is Container &&
-          w.decoration is BoxDecoration &&
-          (w.decoration as BoxDecoration).color ==
-              Colors.white.withValues(alpha: 0.3),
+    final painter = tester
+        .widget<CustomPaint>(
+          find.byWidgetPredicate(
+            (w) => w is CustomPaint && w.painter is PlayerSeekBarPainter,
+          ),
+        )
+        .painter! as PlayerSeekBarPainter;
+    expect(painter.trackLeft, kPlayerTrackLeftInset);
+    expect(
+      seekRect.width - painter.trackLeft - painter.trackWidth,
+      PlayerSeekBar.rightInset,
     );
-    expect(rail, findsOneWidget);
-    final railRect = tester.getRect(rail);
-    expect(railRect.left - seekRect.left, kPlayerTrackLeftInset);
-    expect(seekRect.right - railRect.right, PlayerSeekBar.rightInset);
   });
 
   testWidgets('章节名左缘同样对齐轨道基准 x（B4/P1-6 三处同 x）', (tester) async {

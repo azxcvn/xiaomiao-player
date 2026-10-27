@@ -1455,6 +1455,48 @@ abstract class AppLocalizations {
   /// **'进度条标记章节并显示章节名'**
   String get settingsPlayerChapterProgressBarDesc;
 
+  /// No description provided for @settingsPlayerGroupChapterBar.
+  ///
+  /// In zh, this message translates to:
+  /// **'章节进度条'**
+  String get settingsPlayerGroupChapterBar;
+
+  /// No description provided for @settingsPlayerSeekBarStyleClassic.
+  ///
+  /// In zh, this message translates to:
+  /// **'经典'**
+  String get settingsPlayerSeekBarStyleClassic;
+
+  /// No description provided for @settingsPlayerSeekBarStyleClassicDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'一道细线，静静向前'**
+  String get settingsPlayerSeekBarStyleClassicDesc;
+
+  /// No description provided for @settingsPlayerSeekBarStyleSegmented.
+  ///
+  /// In zh, this message translates to:
+  /// **'分段块'**
+  String get settingsPlayerSeekBarStyleSegmented;
+
+  /// No description provided for @settingsPlayerSeekBarStyleSegmentedDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'一章一格，彼此分明'**
+  String get settingsPlayerSeekBarStyleSegmentedDesc;
+
+  /// No description provided for @settingsPlayerSeekBarStyleCapsule.
+  ///
+  /// In zh, this message translates to:
+  /// **'胶囊'**
+  String get settingsPlayerSeekBarStyleCapsule;
+
+  /// No description provided for @settingsPlayerSeekBarStyleCapsuleDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'光随时间，缓缓盈满'**
+  String get settingsPlayerSeekBarStyleCapsuleDesc;
+
   /// No description provided for @settingsPlayerThumbnailPreview.
   ///
   /// In zh, this message translates to:

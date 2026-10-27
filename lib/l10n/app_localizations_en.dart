@@ -705,6 +705,30 @@ class AppLocalizationsEn extends AppLocalizations {
       'Mark chapters on the progress bar and show chapter names';
 
   @override
+  String get settingsPlayerGroupChapterBar => 'Chapter progress bar';
+
+  @override
+  String get settingsPlayerSeekBarStyleClassic => 'Classic';
+
+  @override
+  String get settingsPlayerSeekBarStyleClassicDesc =>
+      'One thin line, quietly on';
+
+  @override
+  String get settingsPlayerSeekBarStyleSegmented => 'Segmented';
+
+  @override
+  String get settingsPlayerSeekBarStyleSegmentedDesc =>
+      'A page for every chapter';
+
+  @override
+  String get settingsPlayerSeekBarStyleCapsule => 'Capsule';
+
+  @override
+  String get settingsPlayerSeekBarStyleCapsuleDesc =>
+      'Light filling in, slowly';
+
+  @override
   String get settingsPlayerThumbnailPreview => 'Progress bar thumbnails';
 
   @override

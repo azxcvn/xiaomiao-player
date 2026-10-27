@@ -14,7 +14,7 @@
 | 分类 | 能力 |
 |---|---|
 | **媒体库** | 扫描本地视频（MediaStore + 「允许管理所有文件」权限）；**列表模式**（含视频的文件夹 → 详情页）与**树状模式**（逐级目录导航 + 面包屑），两种模式共用同一套卡片组件 |
-| **播放器** | media_kit（自建 libmpv 内核）横屏沉浸式全屏；播放进度持久化；进度条缩略图实时预览（拖动所见即落点 + 章节名胶囊）；超分辨率（Anime4K v4，7 档模式 × 3 质量档）；画质增强（亮度/对比/伽马/饱和度/色相、锐化/柔化、降噪、去色带、白平衡、色阶、胶片曲线、暗角、扫描线、自然色彩、泛光、卡通、胶片颗粒；预设：净化/胶片电影/老电视/低码率/流媒体/风格化）；片头片尾自动跳过 |
+| **播放器** | media_kit（自建 libmpv 内核）横屏沉浸式全屏；播放进度持久化；进度条缩略图实时预览（拖动所见即落点 + 章节名胶囊）；进度条三样式（经典/分段块/胶囊）；超分辨率（Anime4K v4，7 档模式 × 3 质量档）；画质增强（亮度/对比/伽马/饱和度/色相、锐化/柔化、降噪、去色带、白平衡、色阶、胶片曲线、暗角、扫描线、自然色彩、泛光、卡通、胶片颗粒；预设：净化/胶片电影/老电视/低码率/流媒体/风格化）；片头片尾自动跳过 |
 | **音频** | 内嵌音轨切换 + 外部音轨导入/移除；音频声道（自动/安全自动/单声道/立体声/反向立体声）；音频处理（音量标准化 / 动态范围压缩）；不可播放音轨自动回退；**均衡器**（5 频段 + 低音增强 + 虚拟环绕 + 6 预设） |
 | **字幕** | 内嵌轨道 + 外挂导入（Android ≤11 系统选择器 / >11 自建选择器带排序与文件夹记忆）+ 同名字幕自动加载；延迟/样式/杂项/字体四类设置（RGBA 调色、ASS 强制覆盖、自定义字体走 libass） |
 | **弹幕** | canvas_danmaku 渲染；本地弹幕（9 种同名规则 + 手动导入）；网络弹幕接入弹弹Play（搜索 / 自动匹配 / 服务器管理）；完整样式与配置设置（字号/字重/速度/描边/不透明度/区域/行高/三类显隐/去重/屏蔽词/时间轴偏移/自定义字体） |
@@ -70,6 +70,7 @@ lib/
 │   ├── player_loop.dart       # 循环播放模式枚举（off/列表循环/单集循环）
 │   ├── playlist_sort.dart     # 播放列表排序 + 目录过滤纯函数
 │   ├── chapter_info.dart      # 章节模型（ChapterInfo/SkipSegment/跳过类型枚举）
+│   ├── seek_bar_style.dart    # 进度条样式枚举（经典/分段块/胶囊，存档用字符串键）
 │   ├── playback_history_entry.dart # 播放历史条目模型（路径/标题/是否直链/时间/时长，toJson 容错）
 │   ├── audio_track.dart       # 音轨模型 + 声道枚举 + 格式过滤 / af 滤镜链纯函数
 │   ├── subtitle_track.dart    # 字幕轨道模型 + 展示名/格式过滤/对齐/颜色/RGBA 转换/字体过滤纯函数
@@ -197,6 +198,7 @@ lib/
 │   ├── folder_card.dart       # 文件夹卡片（列表/树状共用，含多选勾选态）
 │   ├── video_card.dart        # 视频卡片（列表/树状/详情共用，含多选勾选态）
 │   ├── settings_ui.dart       # 设置页公共组件 + 播放器暗色面板强调色派生
+│   ├── seek_bar_style_preview.dart # 设置页进度条样式预览条（复用真实 painter）
 │   ├── raw_thumb_image.dart   # RGBA 帧直渲组件（帧切换保持上一帧无缝）
 │   ├── capsule_nav_bar.dart   # 悬浮胶囊导航
 │   ├── main_scaffold.dart     # 主壳（PageView + 悬浮胶囊）
@@ -255,7 +257,8 @@ lib/
 │   │       ├── player_bottom_bar.dart     # 底栏：进度条 + 下一集 + 时间 + 弹幕按钮 + 按钮簇
 │   │       ├── player_quality_panel.dart  # 清晰度面板
 │   │       ├── player_pressable.dart      # 播放页按压反馈壳
-│   │       ├── player_seek_bar.dart       # 自绘进度条（章节圆点 + 跳过色段）
+│   │       ├── player_seek_bar.dart       # 自绘进度条（手势 + 命中换算，样式见 painter）
+│   │       ├── player_seek_bar_painter.dart # 进度条三样式绘制（经典/分段块/胶囊，色标随样式）
 │   │       ├── player_chapter_bar.dart    # 章节名行 + 跳过胶囊
 │   │       ├── player_chapter_panel.dart  # 章节列表面板
 │   │       ├── player_chapter_skip_panel.dart # 章节跳段设置面板
@@ -407,7 +410,7 @@ utils（纯工具）    → 只依赖 models
 - **页面**：`PlayerPage`（横屏沉浸式）与 `PlayerPortraitPage`（竖屏）共享同一个 media_kit `Player` 与 `VideoController`，切换零中断；会话状态收敛在 `PlayerSessionState`。
 - **控制层**：顶栏 / 状态栏 / 中央簇 / 底栏 / 右侧竖排；二级界面横屏右滑面板、竖屏底部面板，面板内容组件共用。
 - **手势**：`PlayerGestureLayer` 支持双击、水平滑动 seek、垂直滑动音量与亮度、长按倍速、双指缩放。
-- **进度条与缩略图**：`PlayerSeekBar` 自绘（章节圆点 + 跳过色段）；拖动实时预览缩略图，`FastThumbnails` 经 FFI 调用自建 libmpv 的 `mk_thumbnail_*`。
+- **进度条与缩略图**：`PlayerSeekBar` 自绘，三样式（经典 / 分段块 / 胶囊，见 `player_seek_bar_painter.dart`，色标随样式）；拖动实时预览缩略图，`FastThumbnails` 经 FFI 调用自建 libmpv 的 `mk_thumbnail_*`。
 - **超分**：`SuperResolutionService` 管理 Anime4K 着色器链，7 档模式 × 3 质量档。
 - **章节与跳过**：`ChapterTracker` 读 mpv `chapter-list` 并跟踪当前位置；`ChapterSkipSettings`（六类片段）与 `IntroOutroSettings`（片头片尾秒数）驱动自动跳过。
 - **解码**：`DecodeSettings` 持久化档位（默认「硬解+」）与预设，解码链在开播前由 `utils/decode_policy.dart` 定一次并写入 mpv。
