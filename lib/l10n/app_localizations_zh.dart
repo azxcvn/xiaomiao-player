@@ -2659,6 +2659,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerSuperResolutionQuality => '超分质量';
 
   @override
+  String get playerAnime4kLineFilters => '线条处理';
+
+  @override
+  String get playerAnime4kLineDarken => '线条加深';
+
+  @override
+  String get playerAnime4kLineDarkenDesc => '让线条更黑、更明显';
+
+  @override
+  String get playerAnime4kLineThin => '线条细化';
+
+  @override
+  String get playerAnime4kLineThinDesc => '让线条更细';
+
+  @override
+  String get playerAnime4kDeblur => '去模糊';
+
+  @override
+  String get playerAnime4kDeblurDesc => '让模糊画面更清晰';
+
+  @override
+  String get playerAnime4kDisabledAt4k => '当前为 4K/8K 视频，已禁用超分辨率';
+
+  @override
   String get playerRememberSuperResolution => '记忆超分模式';
 
   @override
@@ -7371,6 +7395,30 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get playerSuperResolutionQuality => '超分品質';
+
+  @override
+  String get playerAnime4kLineFilters => '線條處理';
+
+  @override
+  String get playerAnime4kLineDarken => '線條加深';
+
+  @override
+  String get playerAnime4kLineDarkenDesc => '讓線條更黑、更明顯';
+
+  @override
+  String get playerAnime4kLineThin => '線條細化';
+
+  @override
+  String get playerAnime4kLineThinDesc => '讓線條更細';
+
+  @override
+  String get playerAnime4kDeblur => '去模糊';
+
+  @override
+  String get playerAnime4kDeblurDesc => '讓模糊畫面更清晰';
+
+  @override
+  String get playerAnime4kDisabledAt4k => '目前為 4K/8K 影片，已停用超解析度';
 
   @override
   String get playerRememberSuperResolution => '記憶超分模式';

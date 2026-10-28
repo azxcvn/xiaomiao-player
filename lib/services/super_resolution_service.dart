@@ -11,8 +11,11 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// 超分辨率服务：管理模式与质量选择 + 记忆开关（持久化）+ 把 Anime4K
-/// 着色器从 assets 拷贝到应用目录 + 通过 mpv glsl-shaders 应用到播放器。
+/// 超分辨率服务：管理模式与质量选择 + 线条滤镜 + 记忆开关（持久化）+
+/// 把 Anime4K 着色器从 assets 拷贝到应用目录 + 通过 mpv glsl-shaders
+/// 应用到播放器。
+///
+/// 4K/8K 视频硬性禁用超分（[isAnime4kResolutionBlocked]），不再提供开关。
 ///
 /// 全局单例（同 [PlayerControlsSettings] 模式），ChangeNotifier + shared_preferences
 /// 持久化；播放页的超分面板与设置页共同监听。
@@ -34,12 +37,18 @@ class SuperResolutionService extends ChangeNotifier {
   static const _keyLastMode = 'super_resolution_last_mode';
   static const _keyLastQuality = 'super_resolution_last_quality';
   static const _keyRemember = 'super_resolution_remember';
+  static const _keyDarken = 'super_resolution_darken';
+  static const _keyThin = 'super_resolution_thin';
+  static const _keyDeblur = 'super_resolution_deblur';
 
   SuperResolutionMode _mode = SuperResolutionMode.off;
   SuperResolutionQuality _quality = SuperResolutionQuality.balanced;
   SuperResolutionMode _lastMode = SuperResolutionMode.off;
   SuperResolutionQuality _lastQuality = SuperResolutionQuality.balanced;
   bool _remember = false;
+  bool _darken = false;
+  bool _thin = false;
+  bool _deblur = false;
   Directory? _shadersDirectory;
 
   /// 读盘 Future（[ensureLoaded] 缓存；null = 尚未开始加载）
@@ -53,6 +62,15 @@ class SuperResolutionService extends ChangeNotifier {
 
   /// 是否记忆超分模式（默认关闭；开启后自动应用上次设置到所有视频）
   bool get remember => _remember;
+
+  /// 线条加深（默认关闭；全局持久化，不受「记忆超分模式」影响）
+  bool get darken => _darken;
+
+  /// 线条细化（默认关闭；全局持久化）
+  bool get thin => _thin;
+
+  /// 去模糊（默认关闭；全局持久化）
+  bool get deblur => _deblur;
 
   /// 着色器所在目录（[apply] 内部保证已就绪；拷贝失败时为 null）
   Directory? get shadersDirectory => _shadersDirectory;
@@ -72,6 +90,9 @@ class SuperResolutionService extends ChangeNotifier {
     _lastMode = SuperResolutionMode.byId(prefs.getString(_keyLastMode));
     _lastQuality = SuperResolutionQuality.fromIndex(prefs.getInt(_keyLastQuality));
     _remember = prefs.getBool(_keyRemember) ?? false;
+    _darken = prefs.getBool(_keyDarken) ?? false;
+    _thin = prefs.getBool(_keyThin) ?? false;
+    _deblur = prefs.getBool(_keyDeblur) ?? false;
     if (_remember) {
       _mode = _lastMode;
       _quality = _lastQuality;
@@ -106,6 +127,45 @@ class SuperResolutionService extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_keyLastQuality, quality.index);
+    if (player != null && _mode != SuperResolutionMode.off) {
+      await apply(player);
+    }
+  }
+
+  /// 线条加深开关（全局持久化）；[player] 非空且当前开着超分时立即重建链。
+  Future<void> setDarken(bool darken, {Player? player}) async {
+    await ensureLoaded();
+    if (_darken == darken) return;
+    _darken = darken;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyDarken, darken);
+    if (player != null && _mode != SuperResolutionMode.off) {
+      await apply(player);
+    }
+  }
+
+  /// 线条细化开关（全局持久化）
+  Future<void> setThin(bool thin, {Player? player}) async {
+    await ensureLoaded();
+    if (_thin == thin) return;
+    _thin = thin;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyThin, thin);
+    if (player != null && _mode != SuperResolutionMode.off) {
+      await apply(player);
+    }
+  }
+
+  /// 去模糊开关（全局持久化）
+  Future<void> setDeblur(bool deblur, {Player? player}) async {
+    await ensureLoaded();
+    if (_deblur == deblur) return;
+    _deblur = deblur;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyDeblur, deblur);
     if (player != null && _mode != SuperResolutionMode.off) {
       await apply(player);
     }
@@ -156,12 +216,26 @@ class SuperResolutionService extends ChangeNotifier {
       final native = player.platform as NativePlayer;
       await native.waitForPlayerInitialization;
       await native.waitForVideoControllerInitializationIfAttached;
+      // 4K/8K 硬性禁用：不加载任何超分着色器（后处理链仍由 pipeline 保留）
+      if (isAnime4kResolutionBlocked(
+        player.state.width ?? 0,
+        player.state.height ?? 0,
+      )) {
+        await PlayerShaderPipeline.instance.setAnime(player, const []);
+        return;
+      }
       if (_mode == SuperResolutionMode.off) {
         await PlayerShaderPipeline.instance.setAnime(player, const []);
         return;
       }
       final dir = await _ensureShadersCopied();
-      final chain = buildAnime4KChain(_mode, _quality);
+      final chain = buildAnime4KChain(
+        _mode,
+        _quality,
+        darken: _darken,
+        thin: _thin,
+        deblur: _deblur,
+      );
       final paths = chain.map((s) => p.join(dir.path, s)).toList();
       await PlayerShaderPipeline.instance.setAnime(player, paths);
     } catch (e) {
@@ -178,6 +252,9 @@ class SuperResolutionService extends ChangeNotifier {
     _lastMode = SuperResolutionMode.off;
     _lastQuality = SuperResolutionQuality.balanced;
     _remember = false;
+    _darken = false;
+    _thin = false;
+    _deblur = false;
     _loadFuture = null; // 让下一个用例重新走一次 load
     notifyListeners();
   }
@@ -192,8 +269,9 @@ class SuperResolutionService extends ChangeNotifier {
     final dir = _shadersDirectory ?? await _createShadersDirectory();
     _shadersDirectory = dir;
 
-    // 枚举全部 mode × quality 组合可能用到的着色器文件
+    // 枚举全部 mode × quality 组合 + 可选线条滤镜用到的着色器文件
     final needed = <String>{
+      ...kAnime4kFilterShaderNames,
       for (final m in SuperResolutionMode.values)
         for (final q in SuperResolutionQuality.values)
           ...buildAnime4KChain(m, q),

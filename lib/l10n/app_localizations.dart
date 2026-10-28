@@ -4953,6 +4953,54 @@ abstract class AppLocalizations {
   /// **'超分质量'**
   String get playerSuperResolutionQuality;
 
+  /// 播放器超分面板：线条滤镜分组
+  ///
+  /// In zh, this message translates to:
+  /// **'线条处理'**
+  String get playerAnime4kLineFilters;
+
+  /// 播放器超分面板：线条加深开关
+  ///
+  /// In zh, this message translates to:
+  /// **'线条加深'**
+  String get playerAnime4kLineDarken;
+
+  /// 播放器超分面板：线条加深说明
+  ///
+  /// In zh, this message translates to:
+  /// **'让线条更黑、更明显'**
+  String get playerAnime4kLineDarkenDesc;
+
+  /// 播放器超分面板：线条细化开关
+  ///
+  /// In zh, this message translates to:
+  /// **'线条细化'**
+  String get playerAnime4kLineThin;
+
+  /// 播放器超分面板：线条细化说明
+  ///
+  /// In zh, this message translates to:
+  /// **'让线条更细'**
+  String get playerAnime4kLineThinDesc;
+
+  /// 播放器超分面板：去模糊开关
+  ///
+  /// In zh, this message translates to:
+  /// **'去模糊'**
+  String get playerAnime4kDeblur;
+
+  /// 播放器超分面板：去模糊说明
+  ///
+  /// In zh, this message translates to:
+  /// **'让模糊画面更清晰'**
+  String get playerAnime4kDeblurDesc;
+
+  /// 播放器超分面板：4K/8K 硬性禁用提示
+  ///
+  /// In zh, this message translates to:
+  /// **'当前为 4K/8K 视频，已禁用超分辨率'**
+  String get playerAnime4kDisabledAt4k;
+
   /// 播放器超分面板：记忆超分模式开关
   ///
   /// In zh, this message translates to:

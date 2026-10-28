@@ -11,8 +11,9 @@ import 'package:moumou/widgets/player_option_chip.dart';
 /// 布局（自上而下）：
 /// - 「模式」：三行固定布局，行内三等分等宽 —
 ///   第一行 A/B/C、第二行 A+/B+/C+、第三行「关闭」独占一行（宽度与上面两行一致）；
-/// - 当前模式的说明文字；
+/// - 当前模式的说明文字（4K/8K 时追加禁用提示，非「关闭」模式不可点）；
 /// - 「超分质量」：一行三个胶囊（流畅 / 均衡 / 高清，默认均衡）；
+/// - 「线条处理」：线条加深 / 线条细化 / 去模糊三个开关（全局持久化）；
 /// - 「记忆超分模式」开关：默认关闭，开启后自动应用上次的模式与质量到所有视频。
 ///
 /// 直接驱动 [SuperResolutionService] 单例（模式/质量/记忆均持久化）。
@@ -59,6 +60,16 @@ class _PlayerSuperResolutionPanelState
     super.dispose();
   }
 
+  /// 当前视频是否 4K/8K（硬性禁用超分，不提供开关）
+  bool get _blockedByResolution {
+    final player = widget.player;
+    if (player == null) return false;
+    return isAnime4kResolutionBlocked(
+      player.state.width ?? 0,
+      player.state.height ?? 0,
+    );
+  }
+
   Widget _buildModeRow(List<SuperResolutionMode> row) {
     return Row(
       children: [
@@ -71,12 +82,17 @@ class _PlayerSuperResolutionPanelState
   }
 
   Widget _buildModeChip(SuperResolutionMode mode) {
-    return PlayerOptionChip(
+    final chip = PlayerOptionChip(
       label: superResolutionModeLabel(AppLocalizations.of(context), mode),
       selected: _service.mode == mode,
       onTap: () => _service.setMode(mode, player: widget.player),
       textAlign: TextAlign.center,
     );
+    // 4K/8K 下除「关闭」外全部置灰不可点（模式仍保留，切到普通视频会恢复应用）
+    if (_blockedByResolution && mode != SuperResolutionMode.off) {
+      return Opacity(opacity: 0.4, child: IgnorePointer(child: chip));
+    }
+    return chip;
   }
 
   Widget _buildQualityRow() {
@@ -99,6 +115,100 @@ class _PlayerSuperResolutionPanelState
       selected: _service.quality == quality,
       onTap: () => _service.setQuality(quality, player: widget.player),
       textAlign: TextAlign.center,
+    );
+  }
+
+  /// 4K/8K 禁用提示（琥珀色，区别于普通说明）
+  Widget _buildResolutionHint(AppLocalizations l10n) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline, size: 16, color: Colors.orangeAccent),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              l10n.playerAnime4kDisabledAt4k,
+              style: const TextStyle(
+                color: Colors.orangeAccent,
+                fontSize: 12,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 线条滤镜开关行（与「记忆超分模式」同一套暗底卡片样式）
+  Widget _buildFilterTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+      leading: Icon(icon, color: Colors.white70, size: 22),
+      title: Text(
+        title,
+        style: const TextStyle(color: Colors.white, fontSize: 15),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(color: Colors.white54, fontSize: 12),
+      ),
+      trailing: Switch(
+        value: value,
+        activeThumbColor: scheme.primary,
+        onChanged: onChanged,
+      ),
+    );
+  }
+
+  /// 线条处理卡片：加深 / 细化 / 去模糊
+  Widget _buildFilterCard(AppLocalizations l10n) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          _buildFilterTile(
+            icon: Icons.brightness_4_outlined,
+            title: l10n.playerAnime4kLineDarken,
+            subtitle: l10n.playerAnime4kLineDarkenDesc,
+            value: _service.darken,
+            onChanged: (v) => _service.setDarken(v, player: widget.player),
+          ),
+          const Divider(height: 1, indent: 14, endIndent: 14, color: Colors.white12),
+          _buildFilterTile(
+            icon: Icons.line_weight,
+            title: l10n.playerAnime4kLineThin,
+            subtitle: l10n.playerAnime4kLineThinDesc,
+            value: _service.thin,
+            onChanged: (v) => _service.setThin(v, player: widget.player),
+          ),
+          const Divider(height: 1, indent: 14, endIndent: 14, color: Colors.white12),
+          _buildFilterTile(
+            icon: Icons.blur_on,
+            title: l10n.playerAnime4kDeblur,
+            subtitle: l10n.playerAnime4kDeblurDesc,
+            value: _service.deblur,
+            onChanged: (v) => _service.setDeblur(v, player: widget.player),
+          ),
+        ],
+      ),
     );
   }
 
@@ -143,11 +253,20 @@ class _PlayerSuperResolutionPanelState
               ),
             ),
           ),
+          if (_blockedByResolution) ...[
+            const SizedBox(height: 8),
+            _buildResolutionHint(l10n),
+          ],
           const SizedBox(height: 16),
           // ── 超分质量（一行三个胶囊）──
           _SectionLabel(l10n.playerSuperResolutionQuality),
           const SizedBox(height: 8),
           _buildQualityRow(),
+          const SizedBox(height: 16),
+          // ── 线条处理（加深 / 细化 / 去模糊）──
+          _SectionLabel(l10n.playerAnime4kLineFilters),
+          const SizedBox(height: 8),
+          _buildFilterCard(l10n),
           const SizedBox(height: 16),
           // ── 记忆超分模式开关 ──
           Container(

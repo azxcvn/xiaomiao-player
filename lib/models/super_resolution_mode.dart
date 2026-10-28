@@ -6,7 +6,9 @@
 /// - [SuperResolutionQuality]：流畅(S)/均衡(M)/高清(L)，决定链内各着色器
 ///   使用哪个变体（S/M/L），在设置中调整，默认均衡；
 /// - [buildAnime4KChain]：由 mode × quality 生成最终着色器文件名链
-///   （纯函数，可单测）。
+///   （纯函数，可单测）；
+/// - 链路末尾可选追加 Anime4K v3.2 线条加深/细化/去模糊（对齐参考项目）；
+/// - [isAnime4kResolutionBlocked]：4K/8K 视频硬性禁用超分（纯函数，可单测）。
 library;
 
 /// 超分质量档（决定链内着色器变体 S/M/L）
@@ -77,6 +79,26 @@ enum SuperResolutionMode {
   }
 }
 
+/// 可选线条滤镜着色器文件（安装时要全部拷出，供开关随时启用）
+const List<String> kAnime4kFilterShaderNames = [
+  'Anime4K_Deblur_DoG.glsl',
+  'Anime4K_Darken_Fast.glsl',
+  'Anime4K_Darken_HQ.glsl',
+  'Anime4K_Thin_Fast.glsl',
+  'Anime4K_Thin_HQ.glsl',
+];
+
+/// 4K/8K 视频硬性禁用超分（长边 ≥ 3840，或短边 ≥ 2160）。
+///
+/// 4K 源再放大几乎没有收益，只会增加 GPU 负载与发热；本项目不提供开关。
+/// 宽高未知（≤0）时不拦截，避免播放器尚未上报参数时误杀普通视频。
+bool isAnime4kResolutionBlocked(int width, int height) {
+  if (width <= 0 || height <= 0) return false;
+  final longSide = width > height ? width : height;
+  final shortSide = width > height ? height : width;
+  return longSide >= 3840 || shortSide >= 2160;
+}
+
 /// 由 mode × quality 生成 Anime4K 着色器链（文件名列表，按 mpv 加载顺序）。
 ///
 /// 结构对齐 mpv-android-anime4k 的 [Anime4KManager.getShaderChain]：
@@ -84,11 +106,16 @@ enum SuperResolutionMode {
 /// - A/B/C 单段链：Restore → Upscale → 预降采样 → 低档 Upscale；
 /// - A+/B+/C+ 双段链：第一段放大后经预降采样，第二段用低一级变体重建再放大；
 /// - 后置着色器处理 4 倍像素量，按官方最佳实践用低一级变体抵消性能开销
-///   （高清 → M，均衡/流畅 → S）。
+///   （高清 → M，均衡/流畅 → S）；
+/// - [darken]/[thin]/[deblur] 为可选线条滤镜，追加在放大链之后（去模糊 →
+///   加深 → 细化）；流畅档用 Fast 变体，均衡/高清用 HQ。
 List<String> buildAnime4KChain(
   SuperResolutionMode mode,
-  SuperResolutionQuality quality,
-) {
+  SuperResolutionQuality quality, {
+  bool darken = false,
+  bool thin = false,
+  bool deblur = false,
+}) {
   if (mode == SuperResolutionMode.off) return const [];
 
   final q = quality.suffix;
@@ -145,6 +172,19 @@ List<String> buildAnime4KChain(
         ..add('Anime4K_Upscale_CNN_x2_$lowerQ.glsl');
     case SuperResolutionMode.off:
       break;
+  }
+
+  // 线条滤镜统一追加在放大链之后；顺序与参考项目一致：去模糊 → 加深 → 细化。
+  if (deblur) shaders.add('Anime4K_Deblur_DoG.glsl');
+  if (darken) {
+    shaders.add(quality == SuperResolutionQuality.fast
+        ? 'Anime4K_Darken_Fast.glsl'
+        : 'Anime4K_Darken_HQ.glsl');
+  }
+  if (thin) {
+    shaders.add(quality == SuperResolutionQuality.fast
+        ? 'Anime4K_Thin_Fast.glsl'
+        : 'Anime4K_Thin_HQ.glsl');
   }
   return shaders;
 }

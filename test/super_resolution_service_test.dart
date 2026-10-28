@@ -11,11 +11,46 @@ void main() {
     SuperResolutionService.instance.reset();
   });
 
-  test('默认值：关闭 / 均衡 / 不记忆', () {
+  test('默认值：关闭 / 均衡 / 不记忆 / 滤镜全关', () {
     final s = SuperResolutionService.instance;
     expect(s.mode, SuperResolutionMode.off);
     expect(s.quality, SuperResolutionQuality.balanced);
     expect(s.remember, isFalse);
+    expect(s.darken, isFalse);
+    expect(s.thin, isFalse);
+    expect(s.deblur, isFalse);
+  });
+
+  test('线条滤镜持久化：load 后恢复', () async {
+    final s = SuperResolutionService.instance;
+    await s.setDarken(true);
+    await s.setThin(true);
+    await s.setDeblur(true);
+    expect(s.darken, isTrue);
+    expect(s.thin, isTrue);
+    expect(s.deblur, isTrue);
+
+    await s.load(); // 模拟重启（记忆关闭也会恢复滤镜，属全局设置）
+    expect(s.darken, isTrue);
+    expect(s.thin, isTrue);
+    expect(s.deblur, isTrue);
+  });
+
+  test('enterPlayer 不重置线条滤镜（全局设置）', () async {
+    final s = SuperResolutionService.instance;
+    await s.setDarken(true);
+    s.enterPlayer();
+    expect(s.darken, isTrue);
+    expect(s.mode, SuperResolutionMode.off, reason: '记忆关闭时模式仍回默认');
+  });
+
+  test('reset 清空线条滤镜', () async {
+    final s = SuperResolutionService.instance;
+    await s.setDarken(true);
+    s.reset();
+    expect(s.darken, isFalse);
+    expect(s.thin, isFalse);
+    expect(s.deblur, isFalse);
   });
 
   test('切换模式/质量总是记录为上次设置', () async {

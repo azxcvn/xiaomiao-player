@@ -2783,6 +2783,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerSuperResolutionQuality => 'Super resolution quality';
 
   @override
+  String get playerAnime4kLineFilters => 'Line processing';
+
+  @override
+  String get playerAnime4kLineDarken => 'Line darken';
+
+  @override
+  String get playerAnime4kLineDarkenDesc => 'Make lines darker and clearer';
+
+  @override
+  String get playerAnime4kLineThin => 'Line thin';
+
+  @override
+  String get playerAnime4kLineThinDesc => 'Make lines thinner';
+
+  @override
+  String get playerAnime4kDeblur => 'Deblur';
+
+  @override
+  String get playerAnime4kDeblurDesc => 'Make blurry video clearer';
+
+  @override
+  String get playerAnime4kDisabledAt4k =>
+      'Super resolution is disabled for 4K/8K video';
+
+  @override
   String get playerRememberSuperResolution => 'Remember super resolution mode';
 
   @override

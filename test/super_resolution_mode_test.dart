@@ -9,7 +9,9 @@ import 'package:moumou/models/super_resolution_mode.dart';
 /// 超分辨率模型测试：
 /// - 模式枚举：7 档（关闭 + A/B/C/A+/B+/C+）、持久化 id 稳定、反查兜底；
 /// - 质量枚举：流畅/均衡/高清，index 反查回退均衡；
-/// - buildAnime4KChain：mode × quality 生成正确着色器链（纯函数）。
+/// - buildAnime4KChain：mode × quality 生成正确着色器链（纯函数）；
+/// - 线条滤镜：追加顺序、Fast/HQ 变体、文件完整性；
+/// - 4K/8K 硬性禁用：分辨率判定纯函数。
 void main() {
   // 表改造后名称由 l10n 提供（代码里不再有中文标签）
   final zh = lookupAppLocalizations(const Locale('zh'));
@@ -134,6 +136,100 @@ void main() {
           }
         }
       }
+    });
+  });
+
+  group('线条滤镜', () {
+    test('默认关闭时不追加任何滤镜', () {
+      for (final q in SuperResolutionQuality.values) {
+        final chain = buildAnime4KChain(SuperResolutionMode.a, q);
+        expect(
+          chain.any((s) => s.contains('Darken') || s.contains('Thin') ||
+              s.contains('Deblur')),
+          isFalse,
+        );
+      }
+    });
+
+    test('追加顺序：去模糊 → 加深 → 细化', () {
+      final chain = buildAnime4KChain(
+        SuperResolutionMode.a,
+        SuperResolutionQuality.balanced,
+        darken: true,
+        thin: true,
+        deblur: true,
+      );
+      final deblur = chain.indexOf('Anime4K_Deblur_DoG.glsl');
+      final darken = chain.indexOf('Anime4K_Darken_HQ.glsl');
+      final thin = chain.indexOf('Anime4K_Thin_HQ.glsl');
+      expect(deblur, greaterThan(0));
+      expect(darken, greaterThan(deblur));
+      expect(thin, greaterThan(darken));
+      expect(chain.last, 'Anime4K_Thin_HQ.glsl');
+    });
+
+    test('流畅档用 Fast 变体，均衡/高清用 HQ', () {
+      final fast = buildAnime4KChain(
+        SuperResolutionMode.a,
+        SuperResolutionQuality.fast,
+        darken: true,
+        thin: true,
+      );
+      expect(fast, contains('Anime4K_Darken_Fast.glsl'));
+      expect(fast, contains('Anime4K_Thin_Fast.glsl'));
+      expect(fast, isNot(contains('Anime4K_Darken_HQ.glsl')));
+
+      for (final q in [
+        SuperResolutionQuality.balanced,
+        SuperResolutionQuality.high,
+      ]) {
+        final chain = buildAnime4KChain(
+          SuperResolutionMode.a,
+          q,
+          darken: true,
+          thin: true,
+        );
+        expect(chain, contains('Anime4K_Darken_HQ.glsl'));
+        expect(chain, contains('Anime4K_Thin_HQ.glsl'));
+      }
+    });
+
+    test('关闭模式即使勾选滤镜也返回空链', () {
+      final chain = buildAnime4KChain(
+        SuperResolutionMode.off,
+        SuperResolutionQuality.balanced,
+        darken: true,
+        thin: true,
+        deblur: true,
+      );
+      expect(chain, isEmpty);
+    });
+
+    test('滤镜着色器都已打包进 assets/shaders', () {
+      for (final shader in kAnime4kFilterShaderNames) {
+        expect(
+          File('assets/shaders/$shader').existsSync(),
+          isTrue,
+          reason: '缺少着色器文件：$shader',
+        );
+      }
+    });
+  });
+
+  group('4K/8K 硬性禁用', () {
+    test('1080p / 1440p / 竖屏 1080x2160 不拦截', () {
+      expect(isAnime4kResolutionBlocked(1920, 1080), isFalse);
+      expect(isAnime4kResolutionBlocked(2560, 1440), isFalse);
+      expect(isAnime4kResolutionBlocked(1080, 2160), isFalse);
+      expect(isAnime4kResolutionBlocked(0, 0), isFalse);
+    });
+
+    test('4K / 8K / 4K 宽屏一律拦截', () {
+      expect(isAnime4kResolutionBlocked(3840, 2160), isTrue);
+      expect(isAnime4kResolutionBlocked(7680, 4320), isTrue);
+      expect(isAnime4kResolutionBlocked(4096, 1716), isTrue);
+      expect(isAnime4kResolutionBlocked(3840, 1600), isTrue);
+      expect(isAnime4kResolutionBlocked(2160, 2160), isTrue);
     });
   });
 }
