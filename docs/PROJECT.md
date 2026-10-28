@@ -14,7 +14,7 @@
 | 分类 | 能力 |
 |---|---|
 | **媒体库** | 扫描本地视频（MediaStore + 「允许管理所有文件」权限）；**列表模式**（含视频的文件夹 → 详情页）与**树状模式**（逐级目录导航 + 面包屑），两种模式共用同一套卡片组件 |
-| **播放器** | media_kit（自建 libmpv 内核）横屏沉浸式全屏；播放进度持久化；进度条缩略图实时预览（拖动所见即落点 + 章节名胶囊）；进度条三样式（经典/分段块/胶囊）；超分辨率（Anime4K v4，7 档模式 × 3 质量档）；画质增强（亮度/对比/伽马/饱和度/色相、锐化/柔化、降噪、去色带、白平衡、色阶、胶片曲线、暗角、扫描线、自然色彩、泛光、卡通、胶片颗粒；预设：净化/胶片电影/老电视/低码率/流媒体/风格化）；片头片尾自动跳过 |
+| **播放器** | media_kit（自建 libmpv 内核）横屏沉浸式全屏；播放进度持久化；进度条缩略图实时预览（拖动所见即落点 + 章节名胶囊）；进度条三样式（经典/分段块/胶囊）；超分辨率（Anime4K v4，7 档模式 × 3 质量档）；画质增强（亮度/对比/伽马/饱和度/色相、锐化/柔化、降噪、去色带、白平衡、色阶、胶片曲线、暗角、扫描线、自然色彩、泛光、卡通、胶片颗粒；预设：净化/胶片电影/老电视/低码率/流媒体/风格化）；片头片尾自动跳过；AB 段循环；画面翻转（水平/垂直） |
 | **音频** | 内嵌音轨切换 + 外部音轨导入/移除；音频声道（自动/安全自动/单声道/立体声/反向立体声）；音频处理（音量标准化 / 动态范围压缩）；不可播放音轨自动回退；**均衡器**（5 频段 + 低音增强 + 虚拟环绕 + 6 预设） |
 | **字幕** | 内嵌轨道 + 外挂导入（Android ≤11 系统选择器 / >11 自建选择器带排序与文件夹记忆）+ 同名字幕自动加载；延迟/样式/杂项/字体四类设置（RGBA 调色、ASS 强制覆盖、自定义字体走 libass） |
 | **弹幕** | canvas_danmaku 渲染；本地弹幕（9 种同名规则 + 手动导入）；网络弹幕接入弹弹Play（搜索 / 自动匹配 / 服务器管理）；完整样式与配置设置（字号/字重/速度/描边/不透明度/区域/行高/三类显隐/去重/屏蔽词/时间轴偏移/自定义字体） |
@@ -264,6 +264,8 @@ lib/
 │   │       ├── player_chapter_skip_panel.dart # 章节跳段设置面板
 │   │       ├── player_intro_outro_panel.dart # 片头片尾设置面板
 │   │       ├── player_loop_panel.dart     # 循环播放面板
+│   │       ├── player_ab_loop_panel.dart  # AB 段循环面板（A/B 端点 + 清除）
+│   │       ├── player_flip_panel.dart     # 画面翻转面板（水平 / 垂直）
 │   │       ├── player_right_actions.dart  # 右侧竖排：截图 + 锁定
 │   │       ├── player_fit_panel.dart      # 画面比例面板
 │   │       ├── player_speed_panel.dart    # 倍速面板
@@ -334,6 +336,7 @@ lib/
     ├── pip_aspect.dart        # 画中画宽高比纯函数
     ├── player_gestures.dart   # 双击判定 + 滑动手势数学
     ├── player_diagnostics.dart # 播放诊断纯函数
+    ├── player_controls_visibility.dart # 暂停时是否呼出控制层（EOF 引起的暂停不呼出）
     ├── retry_policy.dart      # 统一网络重试 / 超时分级 / 体积上限快速失败
     ├── async_session.dart     # 会话号令牌
     ├── async_single_flight.dart # 在飞去重
@@ -413,6 +416,8 @@ utils（纯工具）    → 只依赖 models
 - **进度条与缩略图**：`PlayerSeekBar` 自绘，三样式（经典 / 分段块 / 胶囊，见 `player_seek_bar_painter.dart`，色标随样式）；拖动实时预览缩略图，`FastThumbnails` 经 FFI 调用自建 libmpv 的 `mk_thumbnail_*`。
 - **超分**：`SuperResolutionService` 管理 Anime4K 着色器链，7 档模式 × 3 质量档。
 - **章节与跳过**：`ChapterTracker` 读 mpv `chapter-list` 并跟踪当前位置；`ChapterSkipSettings`（六类片段）与 `IntroOutroSettings`（片头片尾秒数）驱动自动跳过。
+- **AB 段循环**：`PlayerSessionState` 记 A/B 两点并写 mpv `ab-loop-a` / `ab-loop-b`，循环由 mpv 执行；切集时清空（mpv 属性会跨文件保留）。
+- **画面翻转**：水平/垂直翻转由播放页给 `Video` 套 `Transform.flip`（共享会话状态里存开关）；弹幕在 Flutter 层保持正向。
 - **解码**：`DecodeSettings` 持久化档位（默认「硬解+」）与预设，解码链在开播前由 `utils/decode_policy.dart` 定一次并写入 mpv。
 - **诊断**：`player_diagnostics` 纯函数 + 诊断面板按秒采样 mpv 属性（缓存 / 丢帧 / 渲染延迟 / 硬解 / 音画同步）。
 

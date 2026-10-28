@@ -219,6 +219,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerActionEqualizer => '音频均衡器';
 
   @override
+  String get playerActionAbLoop => 'AB 循环';
+
+  @override
+  String get playerActionFlip => '画面翻转';
+
+  @override
   String get commonName => '名称';
 
   @override
@@ -2558,6 +2564,41 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerIntroOutroSkipDesc => '通过手动设置秒数来跳过片头片尾';
 
   @override
+  String get playerAbLoopDesc => '在 A、B 两点之间反复播放';
+
+  @override
+  String get playerAbLoopPointA => 'A 点';
+
+  @override
+  String get playerAbLoopPointB => 'B 点';
+
+  @override
+  String get playerAbLoopSetA => '设为 A';
+
+  @override
+  String get playerAbLoopSetB => '设为 B';
+
+  @override
+  String get playerAbLoopUnset => '未设置';
+
+  @override
+  String playerAbLoopCurrent(String time) {
+    return '当前位置 $time';
+  }
+
+  @override
+  String get playerAbLoopClear => '清除 AB 循环';
+
+  @override
+  String get playerFlipHorizontal => '水平翻转';
+
+  @override
+  String get playerFlipVertical => '垂直翻转';
+
+  @override
+  String get playerFlipDesc => '画面与字幕一起镜像，弹幕保持正向';
+
+  @override
   String get playerNoOtherVideos => '当前文件夹没有其他视频';
 
   @override
@@ -4890,6 +4931,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get playerActionEqualizer => '音訊等化器';
+
+  @override
+  String get playerActionAbLoop => 'AB 循環';
+
+  @override
+  String get playerActionFlip => '畫面翻轉';
 
   @override
   String get commonName => '名稱';
@@ -7229,6 +7276,41 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get playerIntroOutroSkipDesc => '透過手動設定秒數來跳過片頭片尾';
+
+  @override
+  String get playerAbLoopDesc => '在 A、B 兩點之間反覆播放';
+
+  @override
+  String get playerAbLoopPointA => 'A 點';
+
+  @override
+  String get playerAbLoopPointB => 'B 點';
+
+  @override
+  String get playerAbLoopSetA => '設為 A';
+
+  @override
+  String get playerAbLoopSetB => '設為 B';
+
+  @override
+  String get playerAbLoopUnset => '未設定';
+
+  @override
+  String playerAbLoopCurrent(String time) {
+    return '目前位置 $time';
+  }
+
+  @override
+  String get playerAbLoopClear => '清除 AB 循環';
+
+  @override
+  String get playerFlipHorizontal => '水平翻轉';
+
+  @override
+  String get playerFlipVertical => '垂直翻轉';
+
+  @override
+  String get playerFlipDesc => '畫面與字幕一起鏡像，彈幕保持正向';
 
   @override
   String get playerNoOtherVideos => '當前資料夾沒有其他影片';

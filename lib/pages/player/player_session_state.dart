@@ -55,6 +55,7 @@ class PlayerSessionState extends ChangeNotifier {
     Future<void> Function(Duration position)? seek,
     Duration Function()? readPosition,
     Duration Function()? readDuration,
+    Future<void> Function(String name, String value)? setMpvProperty,
   })  : _player = player,
         _settings = settings ?? PlayerControlsSettings.instance,
         _setSystemVolume = setSystemVolume ?? DeviceServices.setSystemVolume,
@@ -68,9 +69,21 @@ class PlayerSessionState extends ChangeNotifier {
         _readPosition =
             readPosition ?? (() => player?.state.position ?? Duration.zero),
         _readDuration =
-            readDuration ?? (() => player?.state.duration ?? Duration.zero) {
+            readDuration ?? (() => player?.state.duration ?? Duration.zero),
+        _setMpvProperty = setMpvProperty ?? _defaultSetMpvProperty(player) {
     // 倍速记忆：启用时恢复上次倍速，否则本次会话从 1.0x 开始
     _rate.value = _settings.rememberSpeed ? _settings.lastSpeed : 1.0;
+  }
+
+  /// 写 mpv 属性（AB 循环点）
+  static Future<void> Function(String, String) _defaultSetMpvProperty(
+    Player? player,
+  ) {
+    return (name, value) async {
+      final platform = player?.platform;
+      if (platform is! NativePlayer) return;
+      await platform.setProperty(name, value);
+    };
   }
 
   final Player? _player;
@@ -83,6 +96,7 @@ class PlayerSessionState extends ChangeNotifier {
   final Future<void> Function(Duration position) _seek;
   final Duration Function() _readPosition;
   final Duration Function() _readDuration;
+  final Future<void> Function(String name, String value) _setMpvProperty;
 
   bool _disposed = false;
 
@@ -503,6 +517,105 @@ class PlayerSessionState extends ChangeNotifier {
       ..translateByDouble(offset.dx + w, offset.dy + h, 0, 1)
       ..scaleByDouble(_zoomScale, _zoomScale, _zoomScale, 1)
       ..translateByDouble(-w, -h, 0, 1);
+  }
+
+  // ── AB 段循环（mpv ab-loop-a / ab-loop-b）──────────────────
+  //
+  // 循环由 mpv 自己执行（播到 B 点自动回 A 点），本类只记两点并写属性；
+  // 横竖屏两页共用同一份，转屏不会丢。
+
+  Duration? _abLoopA;
+  Duration? _abLoopB;
+
+  /// A 点（null = 未设置）
+  Duration? get abLoopA => _abLoopA;
+
+  /// B 点（null = 未设置）
+  Duration? get abLoopB => _abLoopB;
+
+  /// 是否已设置任一端点（面板据此启用「清除」）
+  bool get hasAbLoop => _abLoopA != null || _abLoopB != null;
+
+  /// 把当前播放位置设为 A 点
+  Future<void> setAbLoopA(Duration position) async {
+    _abLoopA = position;
+    _notify();
+    await _writeMpvProperty('ab-loop-a', _mpvSeconds(position));
+  }
+
+  /// 把当前播放位置设为 B 点
+  Future<void> setAbLoopB(Duration position) async {
+    _abLoopB = position;
+    _notify();
+    await _writeMpvProperty('ab-loop-b', _mpvSeconds(position));
+  }
+
+  /// 只清掉 A 点（B 点保留）
+  Future<void> clearAbLoopA() async {
+    _abLoopA = null;
+    _notify();
+    await _writeMpvProperty('ab-loop-a', 'no');
+  }
+
+  /// 只清掉 B 点（A 点保留）
+  Future<void> clearAbLoopB() async {
+    _abLoopB = null;
+    _notify();
+    await _writeMpvProperty('ab-loop-b', 'no');
+  }
+
+  /// 清掉两端点，结束 AB 循环
+  Future<void> clearAbLoop() async {
+    _abLoopA = null;
+    _abLoopB = null;
+    _notify();
+    await _writeMpvProperty('ab-loop-a', 'no');
+    await _writeMpvProperty('ab-loop-b', 'no');
+  }
+
+  /// 切集时调用：mpv 的 ab-loop 属性会**跨文件保留**，不清的话上一集的
+  /// 时间点会套到新视频上（新视频更短时还会直接失效/落在片尾）。
+  /// 没设过端点时直接返回，不碰 mpv（切集路径不白等属性写入）。
+  Future<void> resetAbLoopForNewMedia() async {
+    if (!hasAbLoop) return;
+    await clearAbLoop();
+  }
+
+  // ── 画面翻转（由播放页把 Video 包一层 Transform.flip）──────
+  //
+  // 不走 mpv 的 vf 滤镜：本项目的 libmpv 是精简构建，FFmpeg 只编了
+  // 少量滤镜（没有 hflip / vflip），`vf add vflip` 会直接报不支持并中断播放。
+  // 这里只存两个开关，真正的翻转由两页的 Transform 完成（见播放页 build）。
+
+  bool _flipHorizontal = false;
+  bool _flipVertical = false;
+
+  bool get flipHorizontal => _flipHorizontal;
+  bool get flipVertical => _flipVertical;
+
+  void setFlipHorizontal(bool value) {
+    if (_flipHorizontal == value) return;
+    _flipHorizontal = value;
+    _notify();
+  }
+
+  void setFlipVertical(bool value) {
+    if (_flipVertical == value) return;
+    _flipVertical = value;
+    _notify();
+  }
+
+  /// 秒数文本（mpv 的 time 属性按秒解析，毫秒精度够用）
+  String _mpvSeconds(Duration d) =>
+      (d.inMilliseconds / 1000).toStringAsFixed(3);
+
+  Future<void> _writeMpvProperty(String name, String value) async {
+    try {
+      await _setMpvProperty(name, value);
+    } catch (e) {
+      // 播放器未就绪/已销毁：状态照记，不打断播放
+      debugPrint('PlayerSessionState: 写 mpv 属性 $name 失败: $e');
+    }
   }
 
   void _notify() {

@@ -325,4 +325,86 @@ void main() {
       expect(s.zoomed, isFalse);
     });
   });
+
+  group('AB 循环与画面翻转', () {
+    late List<String> properties;
+
+    /// 不带播放器、把 mpv 写入换成记录回调（与 [build] 同一思路）
+    PlayerSessionState buildWithMpv() {
+      properties = [];
+      return PlayerSessionState(
+        settings: settings,
+        setSystemVolume: (_) async {},
+        setWindowBrightness: (_) async {},
+        setMpvVolume: (_) async {},
+        setPlaybackRate: (_) async {},
+        seek: (_) async {},
+        setMpvProperty: (name, value) async => properties.add('$name=$value'),
+      );
+    }
+
+    test('设置 A/B 点写入 mpv 属性（秒，三位小数）', () async {
+      final s = buildWithMpv();
+      await s.setAbLoopA(const Duration(milliseconds: 12345));
+      await s.setAbLoopB(const Duration(seconds: 90));
+
+      expect(s.abLoopA, const Duration(milliseconds: 12345));
+      expect(s.abLoopB, const Duration(seconds: 90));
+      expect(s.hasAbLoop, isTrue);
+      expect(properties, ['ab-loop-a=12.345', 'ab-loop-b=90.000']);
+    });
+
+    test('单独清除端点只复位对应属性，另一个保留', () async {
+      final s = buildWithMpv();
+      await s.setAbLoopA(const Duration(seconds: 10));
+      await s.setAbLoopB(const Duration(seconds: 20));
+      properties.clear();
+
+      await s.clearAbLoopA();
+      expect(s.abLoopA, isNull);
+      expect(s.abLoopB, const Duration(seconds: 20));
+      expect(properties, ['ab-loop-a=no']);
+
+      properties.clear();
+      await s.clearAbLoopB();
+      expect(s.hasAbLoop, isFalse);
+      expect(properties, ['ab-loop-b=no']);
+    });
+
+    test('清除 AB 循环两端一起复位（切集走同一条）', () async {
+      final s = buildWithMpv();
+      await s.setAbLoopA(const Duration(seconds: 5));
+      await s.setAbLoopB(const Duration(seconds: 8));
+      properties.clear();
+
+      await s.resetAbLoopForNewMedia();
+      expect(s.abLoopA, isNull);
+      expect(s.abLoopB, isNull);
+      expect(properties, ['ab-loop-a=no', 'ab-loop-b=no']);
+    });
+
+    test('没设过端点时切集不写 mpv 属性', () async {
+      final s = buildWithMpv();
+      await s.resetAbLoopForNewMedia();
+      expect(properties, isEmpty);
+    });
+
+    test('水平/垂直翻转只改共享状态（由播放页 Transform 生效）', () async {
+      final s = buildWithMpv();
+
+      s.setFlipHorizontal(true);
+      expect(s.flipHorizontal, isTrue);
+      expect(s.flipVertical, isFalse);
+
+      s.setFlipVertical(true);
+      expect(s.flipVertical, isTrue);
+
+      s.setFlipHorizontal(false);
+      expect(s.flipHorizontal, isFalse);
+      expect(s.flipVertical, isTrue);
+
+      // 翻转不写任何 mpv 属性/命令
+      expect(properties, isEmpty);
+    });
+  });
 }

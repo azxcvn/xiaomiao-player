@@ -519,6 +519,18 @@ abstract class AppLocalizations {
   /// **'音频均衡器'**
   String get playerActionEqualizer;
 
+  /// 播放器顶栏可自定义按钮动作名
+  ///
+  /// In zh, this message translates to:
+  /// **'AB 循环'**
+  String get playerActionAbLoop;
+
+  /// 播放器顶栏可自定义按钮动作名
+  ///
+  /// In zh, this message translates to:
+  /// **'画面翻转'**
+  String get playerActionFlip;
+
   /// 通用：排序维度 / 字段名（多处复用，同一句中文只留一个键）
   ///
   /// In zh, this message translates to:
@@ -4772,6 +4784,72 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'通过手动设置秒数来跳过片头片尾'**
   String get playerIntroOutroSkipDesc;
+
+  /// 播放器 AB 循环面板：说明
+  ///
+  /// In zh, this message translates to:
+  /// **'在 A、B 两点之间反复播放'**
+  String get playerAbLoopDesc;
+
+  /// 播放器 AB 循环面板：A 点
+  ///
+  /// In zh, this message translates to:
+  /// **'A 点'**
+  String get playerAbLoopPointA;
+
+  /// 播放器 AB 循环面板：B 点
+  ///
+  /// In zh, this message translates to:
+  /// **'B 点'**
+  String get playerAbLoopPointB;
+
+  /// 播放器 AB 循环面板：把当前位置设为 A 点
+  ///
+  /// In zh, this message translates to:
+  /// **'设为 A'**
+  String get playerAbLoopSetA;
+
+  /// 播放器 AB 循环面板：把当前位置设为 B 点
+  ///
+  /// In zh, this message translates to:
+  /// **'设为 B'**
+  String get playerAbLoopSetB;
+
+  /// 播放器 AB 循环面板：端点未设置
+  ///
+  /// In zh, this message translates to:
+  /// **'未设置'**
+  String get playerAbLoopUnset;
+
+  /// 播放器 AB 循环面板：实时当前位置
+  ///
+  /// In zh, this message translates to:
+  /// **'当前位置 {time}'**
+  String playerAbLoopCurrent(String time);
+
+  /// 播放器 AB 循环面板：清除两端点
+  ///
+  /// In zh, this message translates to:
+  /// **'清除 AB 循环'**
+  String get playerAbLoopClear;
+
+  /// 播放器画面翻转面板：水平翻转
+  ///
+  /// In zh, this message translates to:
+  /// **'水平翻转'**
+  String get playerFlipHorizontal;
+
+  /// 播放器画面翻转面板：垂直翻转
+  ///
+  /// In zh, this message translates to:
+  /// **'垂直翻转'**
+  String get playerFlipVertical;
+
+  /// 播放器画面翻转面板：说明
+  ///
+  /// In zh, this message translates to:
+  /// **'画面与字幕一起镜像，弹幕保持正向'**
+  String get playerFlipDesc;
 
   /// 播放器播放列表面板：空态
   ///

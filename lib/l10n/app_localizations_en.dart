@@ -219,6 +219,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerActionEqualizer => 'Equalizer';
 
   @override
+  String get playerActionAbLoop => 'A-B Loop';
+
+  @override
+  String get playerActionFlip => 'Picture Flip';
+
+  @override
   String get commonName => 'Name';
 
   @override
@@ -2676,6 +2682,42 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get playerIntroOutroSkipDesc =>
       'Skip intro/outro by setting the seconds manually';
+
+  @override
+  String get playerAbLoopDesc => 'Loop playback between points A and B';
+
+  @override
+  String get playerAbLoopPointA => 'Point A';
+
+  @override
+  String get playerAbLoopPointB => 'Point B';
+
+  @override
+  String get playerAbLoopSetA => 'Set A';
+
+  @override
+  String get playerAbLoopSetB => 'Set B';
+
+  @override
+  String get playerAbLoopUnset => 'Not set';
+
+  @override
+  String playerAbLoopCurrent(String time) {
+    return 'Current position $time';
+  }
+
+  @override
+  String get playerAbLoopClear => 'Clear A-B loop';
+
+  @override
+  String get playerFlipHorizontal => 'Flip horizontally';
+
+  @override
+  String get playerFlipVertical => 'Flip vertically';
+
+  @override
+  String get playerFlipDesc =>
+      'Mirrors the picture and subtitles; danmaku stays upright';
 
   @override
   String get playerNoOtherVideos => 'No other videos in this folder';

@@ -172,6 +172,8 @@ String playerTopActionLabel(AppLocalizations l10n, PlayerTopAction action) =>
       PlayerTopAction.equalizer => l10n.playerActionEqualizer,
       PlayerTopAction.buttonSize => l10n.playerButtonSize,
       PlayerTopAction.postProcess => l10n.playerPostProcess,
+      PlayerTopAction.abLoop => l10n.playerActionAbLoop,
+      PlayerTopAction.flip => l10n.playerActionFlip,
     };
 
 // ── 首页排序 / 字段（ViewSettings）──────────────────────────────

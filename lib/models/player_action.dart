@@ -85,15 +85,19 @@ enum PlayerTopAction {
   diagnostics('diagnostics', Icons.monitor_heart_outlined, true),
   // 枚举声明序 = 未自定义槽位时「更多」面板与「可添加」列表的默认展示序：
   // 字幕/弹幕/音频/比例/**解码/章节**/投屏/画中画/听视频/循环/片头片尾/
-  // **播放诊断**/均衡器
+  // **播放诊断**/均衡器/按钮大小/画质增强/AB 循环/画面翻转
   //（工作.md：解码与章节在「比例」之后、「画中画」之前；播放诊断在「片头片尾」
-  //  之后、「音频均衡器」之前）
+  //  之后、「音频均衡器」之前；AB 循环与画面翻转排在最后，紧挨「自定义」入口）
   equalizer('equalizer', Icons.equalizer_outlined, true),
   // 面板类动作：可直接放进顶栏槽位。竖屏没有「按钮大小」面板（尺寸固定），
   // 故 buttonSize 仅横屏；画质增强横竖屏都能用。
   buttonSize('button_size', Icons.photo_size_select_large, true,
       landscapeOnly: true),
-  postProcess('post_process', Icons.auto_awesome, true);
+  postProcess('post_process', Icons.auto_awesome, true),
+  // AB 段循环：已接入，点击呼出 A/B 两点设置面板（两点之间反复播放）
+  abLoop('ab_loop', Icons.all_inclusive, true),
+  // 画面翻转：已接入，点击呼出水平 / 垂直翻转面板
+  flip('flip', Icons.flip, true);
 
   /// 持久化标识（稳定，勿改）
   final String id;

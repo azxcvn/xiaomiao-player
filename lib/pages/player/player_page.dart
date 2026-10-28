@@ -22,6 +22,7 @@ import 'package:moumou/pages/player/player_portrait_page.dart';
 import 'package:moumou/pages/player/player_session_state.dart';
 import 'package:moumou/pages/player/views/audio_panel.dart';
 import 'package:moumou/pages/player/views/equalizer_panel.dart';
+import 'package:moumou/pages/player/views/player_ab_loop_panel.dart';
 import 'package:moumou/pages/player/views/player_action_grid.dart';
 import 'package:moumou/pages/player/views/player_bili_playlist_panel.dart';
 import 'package:moumou/pages/player/views/player_bottom_bar.dart';
@@ -38,6 +39,7 @@ import 'package:moumou/pages/player/views/player_danmaku_settings_panel.dart';
 import 'package:moumou/pages/player/views/player_decode_panel.dart';
 import 'package:moumou/pages/player/views/player_diagnostics_panel.dart';
 import 'package:moumou/pages/player/views/player_fit_panel.dart';
+import 'package:moumou/pages/player/views/player_flip_panel.dart';
 import 'package:moumou/pages/player/views/player_gesture_indicator.dart';
 import 'package:moumou/pages/player/views/player_gesture_layer.dart';
 import 'package:moumou/pages/player/views/player_intro_outro_panel.dart';
@@ -95,6 +97,7 @@ import 'package:moumou/utils/pip_aspect.dart';
 import 'package:moumou/utils/playback_completion.dart';
 import 'package:moumou/utils/playback_history.dart';
 import 'package:moumou/utils/playback_restore.dart';
+import 'package:moumou/utils/player_controls_visibility.dart';
 import 'package:moumou/utils/player_diagnostics.dart';
 import 'package:moumou/utils/player_exit.dart';
 import 'package:moumou/utils/player_gestures.dart';
@@ -755,13 +758,25 @@ class _PlayerPageState extends State<PlayerPage>
           // 一次性标志，任何一次播放状态变化后立即清掉，不影响别的暂停路径
           final suppress = !p && _suppressControlsOnNextPause;
           _suppressControlsOnNextPause = false;
-          // 暂停时总是显示控制层（含中央播放键）；
-          // 退出期间 pause 冻结末帧不弹控制层（防退出时控制条闪现）
-          if (!p && !suppress && !_locked && !_exiting) {
+          // 暂停时呼出控制层（含中央播放键），但播完引起的暂停除外
+          // （mpv 播完先置 pause、后置 eof-reached，只看 completed 会漏；
+          // 单集循环 seek 0 重播时呼出会让每一遍循环都闪一下 UI）；
+          // 退出期间 pause 冻结末帧同样不弹控制层（防退出时控制条闪现）
+          if (shouldRevealControlsOnPause(
+                completed: _player.state.completed,
+                atEnd: isNearPlaybackEnd(_position, _duration),
+                suppressed: suppress,
+              ) &&
+              !p &&
+              !_locked &&
+              !_exiting) {
             _controlsVisible = true;
             _controlsController.forward();
           }
         });
+        // 恢复播放：控制层若还开着（暂停时呼出的那份没有隐藏计时），
+        // 重新开始自动隐藏，否则会一直挂在画面上
+        if (p && _controlsVisible) _resetHideTimer();
       }),
     );
     // 缓冲状态（工作.md 第 6 点）：联网加载/seek 缓冲时置 true，驱动中央转圈动画
@@ -1003,6 +1018,8 @@ class _PlayerPageState extends State<PlayerPage>
   /// [restoreTo] 非空时走 [openAndRestore] 的确定性恢复流程（等起播 → seek →
   /// 确认 → 重试），切 4K/HDR 等高码率流也能可靠恢复到原进度。
   Future<void> _openBiliMedia({Duration? restoreTo}) async {
+    // AB 循环：换集后上一集的 A/B 两点作废（mpv 的 ab-loop 属性会跨文件保留）
+    await _session.resetAbLoopForNewMedia();
     final m = _biliMedia!;
     final videoPath = await _registerBiliProxy(m);
     // mpv 缓存/网络调参：B 站为在线来源（open 前写入，§4.26）
@@ -1486,6 +1503,16 @@ class _PlayerPageState extends State<PlayerPage>
       // 期间已解锁（或页面已销毁）就不再动它
       if (mounted && _locked) _unlockController.reverse();
     });
+  }
+
+  /// 显式呼出控制层（「自动暂停停在结尾」用）。
+  ///
+  /// 播完引起的暂停在 [shouldRevealControlsOnPause] 里一律不呼出；自动暂停
+  /// 停在结尾是唯一例外——它确实停在末尾，用户需要看到中央播放键。
+  void _revealControls() {
+    if (!mounted || _locked || _exiting) return;
+    setState(() => _controlsVisible = true);
+    _controlsController.forward();
   }
 
   void _toggleControls() {
@@ -2182,6 +2209,8 @@ class _PlayerPageState extends State<PlayerPage>
     try {
       // 章节功能：先清空旧媒体的章节标记（防 open 期间旧数据闪现）
       _chapterTracker.clear();
+      // AB 循环：上一集的 A/B 两点作废（mpv 的 ab-loop 属性会跨文件保留）
+      await _session.resetAbLoopForNewMedia();
       // 字幕功能：清空旧媒体轨道（切集后重新加载）
       _subtitleController.clear();
       // 来源标记随新媒体一起换：本地切集为 null（防串到本地视频），
@@ -2472,6 +2501,10 @@ class _PlayerPageState extends State<PlayerPage>
         _openButtonSizePanel();
       case PlayerTopAction.postProcess:
         _openPostProcessPanel();
+      case PlayerTopAction.abLoop:
+        _openAbLoopPanel();
+      case PlayerTopAction.flip:
+        _openFlipPanel();
     }
   }
 
@@ -2504,6 +2537,10 @@ class _PlayerPageState extends State<PlayerPage>
         return _buttonSizePanelPage();
       case PlayerTopAction.postProcess:
         return _postProcessPanelPage();
+      case PlayerTopAction.abLoop:
+        return _abLoopPanelPage();
+      case PlayerTopAction.flip:
+        return _flipPanelPage();
       default:
         return null;
     }
@@ -2544,6 +2581,9 @@ class _PlayerPageState extends State<PlayerPage>
         break; // 已在上方 _panelPageFor 分支处理
       case PlayerTopAction.buttonSize:
       case PlayerTopAction.postProcess:
+        break; // 已在上方 _panelPageFor 分支处理
+      case PlayerTopAction.abLoop:
+      case PlayerTopAction.flip:
         break; // 已在上方 _panelPageFor 分支处理
     }
   }
@@ -2855,6 +2895,36 @@ class _PlayerPageState extends State<PlayerPage>
   Future<void> _openLoopPanel() async {
     _hideTimer?.cancel();
     await showPlayerPanel(context, pages: [_loopPanelPage()]);
+    _resetHideTimer();
+  }
+
+  /// AB 段循环面板页（顶栏/更多「AB 循环」动作弹出）：
+  /// A/B 两点就存在共享会话状态里，转屏不丢。
+  PlayerPanelPage _abLoopPanelPage() => PlayerPanelPage(
+        title: AppLocalizations.of(context).playerActionAbLoop,
+        body: PlayerAbLoopPanel(
+          session: _session,
+          positionListenable: _positionNotifier,
+        ),
+      );
+
+  /// 打开 AB 段循环面板（顶栏/更多「AB 循环」动作）
+  Future<void> _openAbLoopPanel() async {
+    _hideTimer?.cancel();
+    await showPlayerPanel(context, pages: [_abLoopPanelPage()]);
+    _resetHideTimer();
+  }
+
+  /// 画面翻转面板页（顶栏/更多「画面翻转」动作弹出）：水平 / 垂直两个开关
+  PlayerPanelPage _flipPanelPage() => PlayerPanelPage(
+        title: AppLocalizations.of(context).playerActionFlip,
+        body: PlayerFlipPanel(session: _session),
+      );
+
+  /// 打开画面翻转面板（顶栏/更多「画面翻转」动作）
+  Future<void> _openFlipPanel() async {
+    _hideTimer?.cancel();
+    await showPlayerPanel(context, pages: [_flipPanelPage()]);
     _resetHideTimer();
   }
 
@@ -3398,6 +3468,8 @@ class _PlayerPageState extends State<PlayerPage>
           _markCompleted();
           _player.seek(_duration);
           _player.pause();
+          // 播完引起的暂停不自动呼出，这里显式补上（让用户看到播放键）
+          _revealControls();
       }
     } finally {
       _isHandlingEndOfFile = false;
@@ -3655,15 +3727,22 @@ class _PlayerPageState extends State<PlayerPage>
                     listenable: Listenable.merge([_settings, _audioActive]),
                     builder: (context, _) => Transform(
                       transform: _session.zoomMatrix(_viewportWidth, _viewportHeight),
-                      child: Video(
-                        key: ValueKey('fit-${_settings.videoFit.index}'),
-                        controller: _controller,
-                        controls: NoVideoControls,
-                        fit: _settings.videoFit.boxFit,
-                        aspectRatio: _settings.videoFit.aspectRatio,
-                        // 听视频页打开期间退后台不暂停（后台播放）；否则保持
-                        // 默认「退后台暂停」。
-                        pauseUponEnteringBackgroundMode: !_audioActive.value,
+                      // 画面翻转：在缩放外层再套一层镜像（绕自身中心，不影响
+                      // 缩放/平移）。走 Flutter 而不是 mpv vf —— 本项目的
+                      // libmpv 精简构建没有 hflip / vflip 滤镜。
+                      child: Transform.flip(
+                        flipX: _session.flipHorizontal,
+                        flipY: _session.flipVertical,
+                        child: Video(
+                          key: ValueKey('fit-${_settings.videoFit.index}'),
+                          controller: _controller,
+                          controls: NoVideoControls,
+                          fit: _settings.videoFit.boxFit,
+                          aspectRatio: _settings.videoFit.aspectRatio,
+                          // 听视频页打开期间退后台不暂停（后台播放）；否则保持
+                          // 默认「退后台暂停」。
+                          pauseUponEnteringBackgroundMode: !_audioActive.value,
+                        ),
                       ),
                     ),
                   ),

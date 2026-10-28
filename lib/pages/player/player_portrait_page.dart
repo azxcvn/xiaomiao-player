@@ -19,6 +19,7 @@ import 'package:moumou/pages/player/views/audio_panel.dart';
 import 'package:moumou/pages/player/views/equalizer_panel.dart';
 import 'package:moumou/pages/player/views/player_center_cluster.dart';
 import 'package:moumou/pages/player/views/player_action_grid.dart';
+import 'package:moumou/pages/player/views/player_ab_loop_panel.dart';
 import 'package:moumou/pages/player/views/player_bili_playlist_panel.dart';
 import 'package:moumou/pages/player/views/player_chapter_bar.dart';
 import 'package:moumou/pages/player/views/player_chapter_panel.dart';
@@ -30,6 +31,7 @@ import 'package:moumou/pages/player/views/player_danmaku_settings_panel.dart';
 import 'package:moumou/pages/player/views/player_decode_panel.dart';
 import 'package:moumou/pages/player/views/player_diagnostics_panel.dart';
 import 'package:moumou/pages/player/views/player_fit_panel.dart';
+import 'package:moumou/pages/player/views/player_flip_panel.dart';
 import 'package:moumou/pages/player/views/player_gesture_indicator.dart';
 import 'package:moumou/pages/player/views/player_gesture_layer.dart';
 import 'package:moumou/pages/player/views/player_intro_outro_panel.dart';
@@ -73,6 +75,7 @@ import 'package:moumou/utils/pip_aspect.dart';
 import 'package:moumou/utils/playback_completion.dart';
 import 'package:moumou/utils/playback_history.dart';
 import 'package:moumou/utils/playback_restore.dart';
+import 'package:moumou/utils/player_controls_visibility.dart';
 import 'package:moumou/utils/player_diagnostics.dart';
 import 'package:moumou/utils/player_gestures.dart';
 import 'package:moumou/utils/player_orientation.dart';
@@ -614,9 +617,20 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
           // 与横屏页同款）；一次性标志，任何一次状态变化后立即清掉
           final suppress = !p && _suppressControlsOnNextPause;
           _suppressControlsOnNextPause = false;
-          // 暂停时总是显示控制层（含中央播放键）
-          if (!p && !suppress) _controlsVisible = true;
+          // 暂停时呼出控制层（含中央播放键），但播完引起的暂停除外
+          // （mpv 播完先置 pause、后置 eof-reached，与横屏页同款判定）
+          if (!p &&
+              !_locked &&
+              shouldRevealControlsOnPause(
+                completed: _player.state.completed,
+                atEnd: isNearPlaybackEnd(_position, _duration),
+                suppressed: suppress,
+              )) {
+            _controlsVisible = true;
+          }
         });
+        // 恢复播放：控制层若还开着，重新开始自动隐藏（与横屏页同款）
+        if (p && _controlsVisible) _resetHideTimer();
       }),
     );
     // 缓冲状态：联网加载/seek 缓冲时驱动中央转圈动画
@@ -693,6 +707,12 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       // 期间已解锁（或页面已销毁）就不再动它
       if (mounted && _locked) _unlockController.reverse();
     });
+  }
+
+  /// 显式呼出控制层（「自动暂停停在结尾」用，与横屏页同款）
+  void _revealControls() {
+    if (!mounted || _locked) return;
+    setState(() => _controlsVisible = true);
   }
 
   void _toggleControls() {
@@ -1074,6 +1094,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     try {
       // 章节功能：先清空旧媒体的章节标记（防 open 期间旧数据闪现）
       _chapterTracker.clear();
+      // AB 循环：上一集的 A/B 两点作废（mpv 的 ab-loop 属性会跨文件保留）
+      await _session.resetAbLoopForNewMedia();
       // 字幕功能：清空旧媒体轨道（切集后重新加载）
       _subtitleController.clear();
       // 本地列表切集：来源必为本地文件，网络来源标记一起清掉（防串到本地视频）
@@ -1322,6 +1344,8 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
           _markCompleted();
           _player.seek(_duration);
           _player.pause();
+          // 播完引起的暂停不自动呼出，这里显式补上（与横屏页同款）
+          _revealControls();
       }
     } finally {
       _isHandlingEndOfFile = false;
@@ -1408,6 +1432,21 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
   PlayerPanelPage _loopPanelPage() => PlayerPanelPage(
         title: AppLocalizations.of(context).playerActionLoop,
         body: const PlayerLoopPanel(),
+      );
+
+  /// AB 段循环面板页（顶栏/更多「AB 循环」动作弹出）
+  PlayerPanelPage _abLoopPanelPage() => PlayerPanelPage(
+        title: AppLocalizations.of(context).playerActionAbLoop,
+        body: PlayerAbLoopPanel(
+          session: _session,
+          positionListenable: _positionNotifier,
+        ),
+      );
+
+  /// 画面翻转面板页（顶栏/更多「画面翻转」动作弹出）
+  PlayerPanelPage _flipPanelPage() => PlayerPanelPage(
+        title: AppLocalizations.of(context).playerActionFlip,
+        body: PlayerFlipPanel(session: _session),
       );
 
   PlayerPanelPage _decodePanelPage() => PlayerPanelPage(
@@ -1561,6 +1600,10 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         return null;
       case PlayerTopAction.postProcess:
         return _postProcessPanelPage();
+      case PlayerTopAction.abLoop:
+        return _abLoopPanelPage();
+      case PlayerTopAction.flip:
+        return _flipPanelPage();
       default:
         return null;
     }
@@ -1741,6 +1784,9 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       case PlayerTopAction.buttonSize:
       case PlayerTopAction.postProcess:
         break; // 已在上方 _panelPageFor 分支处理
+      case PlayerTopAction.abLoop:
+      case PlayerTopAction.flip:
+        break; // 已在上方 _panelPageFor 分支处理
     }
   }
 
@@ -1778,6 +1824,9 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
         break; // 已在上方 _panelPageFor 分支处理
       case PlayerTopAction.buttonSize:
       case PlayerTopAction.postProcess:
+        break; // 已在上方 _panelPageFor 分支处理
+      case PlayerTopAction.abLoop:
+      case PlayerTopAction.flip:
         break; // 已在上方 _panelPageFor 分支处理
     }
   }
@@ -2373,17 +2422,22 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
                     listenable: Listenable.merge([_settings, _audioActive]),
                     builder: (context, _) => Transform(
                       transform: _session.zoomMatrix(_viewportWidth, _viewportHeight),
-                      child: Video(
-                        // ⚠️ key 随 fit 变化：4:3 → 自动时强制重建，
-                        // 否则 Video 内部渲染纹理尺寸缓存不刷新（工作.md 第 3 点）
-                        key: ValueKey('fit-${_settings.videoFit.index}'),
-                        controller: _controller,
-                        controls: NoVideoControls,
-                        fit: _settings.videoFit.boxFit,
-                        aspectRatio: _settings.videoFit.aspectRatio,
-                        // 听视频页打开期间退后台不暂停（后台播放）；否则保持
-                        // 默认「退后台暂停」。
-                        pauseUponEnteringBackgroundMode: !_audioActive.value,
+                      // 画面翻转：与横屏同一份开关，镜像套在缩放外层
+                      child: Transform.flip(
+                        flipX: _session.flipHorizontal,
+                        flipY: _session.flipVertical,
+                        child: Video(
+                          // ⚠️ key 随 fit 变化：4:3 → 自动时强制重建，
+                          // 否则 Video 内部渲染纹理尺寸缓存不刷新（工作.md 第 3 点）
+                          key: ValueKey('fit-${_settings.videoFit.index}'),
+                          controller: _controller,
+                          controls: NoVideoControls,
+                          fit: _settings.videoFit.boxFit,
+                          aspectRatio: _settings.videoFit.aspectRatio,
+                          // 听视频页打开期间退后台不暂停（后台播放）；否则保持
+                          // 默认「退后台暂停」。
+                          pauseUponEnteringBackgroundMode: !_audioActive.value,
+                        ),
                       ),
                     ),
                   ),

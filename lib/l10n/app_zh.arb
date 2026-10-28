@@ -103,6 +103,14 @@
   "playerActionIntroOutro": "片头片尾",
   "playerActionDiagnostics": "播放诊断",
   "playerActionEqualizer": "音频均衡器",
+  "playerActionAbLoop": "AB 循环",
+  "@playerActionAbLoop": {
+    "description": "播放器顶栏可自定义按钮动作名"
+  },
+  "playerActionFlip": "画面翻转",
+  "@playerActionFlip": {
+    "description": "播放器顶栏可自定义按钮动作名"
+  },
   "commonName": "名称",
   "@commonName": {
     "description": "通用：排序维度 / 字段名（多处复用，同一句中文只留一个键）"
@@ -2500,6 +2508,55 @@
   "playerIntroOutroSkipDesc": "通过手动设置秒数来跳过片头片尾",
   "@playerIntroOutroSkipDesc": {
     "description": "播放器片头片尾面板：总开关说明"
+  },
+  "playerAbLoopDesc": "在 A、B 两点之间反复播放",
+  "@playerAbLoopDesc": {
+    "description": "播放器 AB 循环面板：说明"
+  },
+  "playerAbLoopPointA": "A 点",
+  "@playerAbLoopPointA": {
+    "description": "播放器 AB 循环面板：A 点"
+  },
+  "playerAbLoopPointB": "B 点",
+  "@playerAbLoopPointB": {
+    "description": "播放器 AB 循环面板：B 点"
+  },
+  "playerAbLoopSetA": "设为 A",
+  "@playerAbLoopSetA": {
+    "description": "播放器 AB 循环面板：把当前位置设为 A 点"
+  },
+  "playerAbLoopSetB": "设为 B",
+  "@playerAbLoopSetB": {
+    "description": "播放器 AB 循环面板：把当前位置设为 B 点"
+  },
+  "playerAbLoopUnset": "未设置",
+  "@playerAbLoopUnset": {
+    "description": "播放器 AB 循环面板：端点未设置"
+  },
+  "playerAbLoopCurrent": "当前位置 {time}",
+  "@playerAbLoopCurrent": {
+    "description": "播放器 AB 循环面板：实时当前位置",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "playerAbLoopClear": "清除 AB 循环",
+  "@playerAbLoopClear": {
+    "description": "播放器 AB 循环面板：清除两端点"
+  },
+  "playerFlipHorizontal": "水平翻转",
+  "@playerFlipHorizontal": {
+    "description": "播放器画面翻转面板：水平翻转"
+  },
+  "playerFlipVertical": "垂直翻转",
+  "@playerFlipVertical": {
+    "description": "播放器画面翻转面板：垂直翻转"
+  },
+  "playerFlipDesc": "画面与字幕一起镜像，弹幕保持正向",
+  "@playerFlipDesc": {
+    "description": "播放器画面翻转面板：说明"
   },
   "playerNoOtherVideos": "当前文件夹没有其他视频",
   "@playerNoOtherVideos": {
