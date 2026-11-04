@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/models/player_loop.dart';
 import 'package:moumou/models/playlist_sort.dart';
 import 'package:moumou/models/video_file.dart';
 import 'package:moumou/pages/player/views/audio_player_panels.dart';
@@ -13,6 +14,7 @@ import 'package:moumou/services/device_services.dart';
 import 'package:moumou/services/fast_thumbnails.dart';
 import 'package:moumou/services/playback_progress_service.dart';
 import 'package:moumou/services/playback_tuning.dart';
+import 'package:moumou/services/player_controls_settings.dart';
 import 'package:moumou/services/super_resolution_service.dart';
 import 'package:moumou/utils/audio_shuffle.dart';
 import 'package:moumou/utils/formatters.dart';
@@ -34,7 +36,10 @@ import 'package:moumou/widgets/raw_thumb_image.dart';
 ///   倍速/播放列表面板为**深色胶囊风格**
 ///   （见 [audio_player_panels.dart]），均带右上角关闭按钮；
 /// - **定时关闭**（阶段1 第 2 点）：15/30/60 分钟或播完当前曲目，到时自动暂停；
-/// - 列表面板支持**随机播放**（时间刻算法 [audioShuffleNextIndex]）与**列表循环**；
+/// - 列表面板支持**随机播放**（时间刻算法 [audioShuffleNextIndex]）与
+///   **循环模式三态**（关闭 / 单曲循环 / 列表循环）；循环值复用播放页的全局
+///   设置 `PlayerControlsSettings.loopMode`（持久化，两处联动），随机播放则是
+///   本页局部状态；
 /// - 本界面内切歌**不恢复上次进度**（每首从 0 开始，像听歌一样）；
 ///   切走前保存原视频进度，退出界面后播放页从对应进度继续。
 ///
@@ -124,9 +129,11 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   /// 随机播放（本页局部状态，退出不持久化）
   bool _shuffle = false;
 
-  /// 循环模式（本页局部状态）：off / 单曲循环 / 列表循环，
-  /// 列表面板里点击循环按钮三态切换（用户反馈：缺少单曲循环）
-  AudioRepeatMode _repeatMode = AudioRepeatMode.off;
+  /// 循环模式：**复用播放页的全局设置**（[PlayerControlsSettings.loopMode]，
+  /// shared_preferences 持久化）——「单曲循环 / 列表循环」与播放页「循环播放」
+  /// 面板是同一个值：退出听视频、重启 App 都保留；反过来在播放页改了循环，
+  /// 进听视频也是这个值。
+  LoopMode get _loopMode => PlayerControlsSettings.instance.loopMode;
 
   // ── 定时关闭（工作.md 阶段1 第 2 点）────────────────────
 
@@ -156,11 +163,11 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   bool get _hasNext {
     if (_videos.isEmpty) return false;
     return _currentIndex < _videos.length - 1 ||
-        _repeatMode == AudioRepeatMode.loopAll;
+        _loopMode == LoopMode.loopAll;
   }
 
   bool get _hasPrevious =>
-      _currentIndex > 0 || _repeatMode == AudioRepeatMode.loopAll;
+      _currentIndex > 0 || _loopMode == LoopMode.loopAll;
 
   @override
   void initState() {
@@ -231,6 +238,14 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
         if (completed) _onCompleted();
       }),
     );
+    // 循环模式读的是全局播放设置（[PlayerControlsSettings.loopMode]）：
+    // 「上一集/下一集」的可用态由它决定，设置一变就重建
+    PlayerControlsSettings.instance.addListener(_onPlaybackSettingsChanged);
+  }
+
+  /// 全局播放设置变化（本页只用到循环模式）：重建以刷新按钮可用态。
+  void _onPlaybackSettingsChanged() {
+    if (mounted) setState(() {});
   }
 
   /// 进入沉浸式全屏
@@ -377,9 +392,9 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   /// 下一首：随机模式用时间刻算法；单曲循环回到当前；否则顺序（列表循环回绕）
   void _next() {
     if (_videos.isEmpty) return;
-    if (_repeatMode == AudioRepeatMode.single) {
-      // 单曲循环：seek 0 重播
-      _player.seek(Duration.zero);
+    if (_loopMode == LoopMode.repeatOne) {
+      // 单曲循环：回到当前曲目开头重播
+      unawaited(_replayCurrentTrack());
       return;
     }
     if (_shuffle) {
@@ -393,7 +408,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     }
     if (_currentIndex < _videos.length - 1) {
       _switchTo(_currentIndex + 1);
-    } else if (_repeatMode == AudioRepeatMode.loopAll) {
+    } else if (_loopMode == LoopMode.loopAll) {
       _switchTo(0);
     }
   }
@@ -401,8 +416,8 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   /// 上一首：随机模式用时间刻算法；单曲循环回到当前；否则顺序（列表循环回绕）
   void _previous() {
     if (_videos.isEmpty) return;
-    if (_repeatMode == AudioRepeatMode.single) {
-      _player.seek(Duration.zero);
+    if (_loopMode == LoopMode.repeatOne) {
+      unawaited(_replayCurrentTrack());
       return;
     }
     if (_shuffle) {
@@ -416,7 +431,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     }
     if (_currentIndex > 0) {
       _switchTo(_currentIndex - 1);
-    } else if (_repeatMode == AudioRepeatMode.loopAll) {
+    } else if (_loopMode == LoopMode.loopAll) {
       _switchTo(_videos.length - 1);
     }
   }
@@ -440,9 +455,9 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
       if (mounted) setState(() {});
       return;
     }
-    if (_repeatMode == AudioRepeatMode.single) {
-      // 单曲循环：seek 0 重播（media_kit seek 会重置 completed，可再次触发）
-      _player.seek(Duration.zero);
+    if (_loopMode == LoopMode.repeatOne) {
+      // 单曲循环：回到开头重播（不能只 seek，见 [_replayCurrentTrack]）
+      unawaited(_replayCurrentTrack());
       return;
     }
     if (_shuffle) {
@@ -456,13 +471,30 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     }
     if (_currentIndex < _videos.length - 1) {
       _switchTo(_currentIndex + 1);
-    } else if (_repeatMode == AudioRepeatMode.loopAll) {
+    } else if (_loopMode == LoopMode.loopAll) {
       _switchTo(0);
     } else {
       // 最后一首且不循环：停在末尾
       unawaited(_saveProgress());
       _player.seek(_durationNotifier.value);
       _player.pause();
+    }
+  }
+
+  /// 单曲循环重播：seek 0 **之后必须显式 play**。
+  ///
+  /// mpv 开 `keep-open` 播完时是「先把 pause 置真、再置 eof-reached」，所以
+  /// `completed` 到达时播放器已经停在暂停态；此时只 `seek(0)` 不会解除暂停，
+  /// 也不会再有 `playing=true` 事件——表现就是「进度回到 0 但不起播、中央按钮
+  /// 还停在三角形」。与横屏/竖屏播放页的 `EndOfFileAction.replayCurrent`
+  /// 同一手法（先 seek 再 play）。先 await seek 再 play：保证 `completed` 已被
+  /// 清掉，play 不会再走它内部「completed 则 seek 0 + playlist-pos 0」那条路。
+  Future<void> _replayCurrentTrack() async {
+    try {
+      await _player.seek(Duration.zero);
+      await _player.play();
+    } on AssertionError {
+      // 播放器已被销毁（播放页已退出）：静默返回
     }
   }
 
@@ -556,10 +588,13 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
       videos: _videos,
       currentIndex: _currentIndex,
       shuffle: _shuffle,
-      repeatMode: _repeatMode,
+      repeatMode: _loopMode,
       onSelect: _switchTo,
       onToggleShuffle: () => setState(() => _shuffle = !_shuffle),
-      onCycleRepeat: () => setState(() => _repeatMode = _repeatMode.next),
+      // 循环写回全局设置（与播放页同一个值）：不 setState，改由
+      // [PlayerControlsSettings] 的通知统一触发重建
+      onRepeatModeChanged: (mode) =>
+          unawaited(PlayerControlsSettings.instance.setLoopMode(mode)),
     );
   }
 
@@ -579,6 +614,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     for (final s in _subs) {
       s.cancel();
     }
+    PlayerControlsSettings.instance.removeListener(_onPlaybackSettingsChanged);
     // 定时关闭定时器清理 + 后台播放前台服务停止（工作.md 阶段1 第 2 点）
     _sleepTimer?.cancel();
     DeviceServices.stopBackgroundPlayback();

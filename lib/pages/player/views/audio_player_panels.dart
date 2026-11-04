@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:moumou/l10n/app_localizations.dart';
+import 'package:moumou/models/player_loop.dart';
 import 'package:moumou/models/video_file.dart';
 import 'package:moumou/utils/app_dialog.dart';
 
@@ -18,21 +21,23 @@ import 'package:moumou/utils/app_dialog.dart';
 const Color kAudioPanelBg = Color(0xFF1C1C24);
 
 /// 听视频循环模式：关闭 → 单曲循环 → 列表循环（点击循环按钮三态切换）
-enum AudioRepeatMode {
-  off(Icons.repeat_rounded),
-  single(Icons.repeat_one_rounded),
-  loopAll(Icons.repeat_rounded);
+///
+/// 值本身复用播放页的全局设置 [LoopMode]（`PlayerControlsSettings.loopMode`，
+/// shared_preferences 持久化），这里只提供听视频的**点击顺序**与展示映射。
+/// 注意点击顺序与 [LoopMode] 的枚举顺序不同：枚举顺序 off / loopAll /
+/// repeatOne 是持久化约定（按 index 存），不能为了 UI 顺序去改它。
+LoopMode _nextLoopMode(LoopMode mode) => switch (mode) {
+      LoopMode.off => LoopMode.repeatOne,
+      LoopMode.repeatOne => LoopMode.loopAll,
+      LoopMode.loopAll => LoopMode.off,
+    };
 
-  final IconData icon;
-  const AudioRepeatMode(this.icon);
-
-  /// 三态循环：off → single → loopAll → off
-  AudioRepeatMode get next => switch (this) {
-        AudioRepeatMode.off => AudioRepeatMode.single,
-        AudioRepeatMode.single => AudioRepeatMode.loopAll,
-        AudioRepeatMode.loopAll => AudioRepeatMode.off,
-      };
-}
+/// 循环按钮图标：关闭与列表循环都是重复箭头，单曲循环多一个「1」
+IconData _loopModeIcon(LoopMode mode) => switch (mode) {
+      LoopMode.off => Icons.repeat_rounded,
+      LoopMode.repeatOne => Icons.repeat_one_rounded,
+      LoopMode.loopAll => Icons.repeat_rounded,
+    };
 
 /// 定时关闭预设：关闭 / 15 分钟 / 30 分钟 / 60 分钟 / 自定义 / 播完当前曲目
 enum AudioSleepPreset {
@@ -47,12 +52,13 @@ enum AudioSleepPreset {
   const AudioSleepPreset(this.duration);
 }
 
-/// 循环模式文案（枚举成员顺序与语义一一对应）
-String _repeatModeLabel(AppLocalizations l10n, AudioRepeatMode mode) =>
+/// 循环模式文案（听视频这边仍用「单曲循环」的说法：循环单位是曲目；
+/// 关闭复用 audioRepeatOff「循环关闭」，列表循环复用 loopModeLoopAll）
+String _repeatModeLabel(AppLocalizations l10n, LoopMode mode) =>
     switch (mode) {
-      AudioRepeatMode.off => l10n.audioRepeatOff,
-      AudioRepeatMode.single => l10n.audioRepeatSingle,
-      AudioRepeatMode.loopAll => l10n.loopModeLoopAll,
+      LoopMode.off => l10n.audioRepeatOff,
+      LoopMode.repeatOne => l10n.audioRepeatSingle,
+      LoopMode.loopAll => l10n.loopModeLoopAll,
     };
 
 /// 定时关闭预设文案
@@ -179,16 +185,81 @@ Future<void> showAudioSpeedSheet(
 // 播放列表面板
 // ────────────────────────────────────────────────────────────
 
+/// 曲目行的**估算**行高（dense ListTile 在 1.0x 字号下约 48dp）。
+///
+/// 只用于「打开面板后把正在播放的曲目滚进视野」的初始偏移：真实行高随全局
+/// 字号缩放（0.85x – 1.6x）变化，估算偏差只影响落点差几行，随后由
+/// [_revealCurrentTile] 按真实布局精确居中。
+const double _kAudioTileEstimateHeight = 56;
+
+/// [_revealCurrentTile] 的最大重试轮数（长列表里估算偏差太大时修正一次就够）
+const int _kRevealAttempts = 2;
+
+/// 把当前播放项滚到列表中间（面板第一行建出来后调用）。
+///
+/// `ListView.builder` 只为视口附近的行建 widget，所以分两步：
+/// 1. 打开时由 [ScrollController.initialScrollOffset] 按估算行高先滚过去，
+///    让当前行进入构建范围（没建出来的行谈不上定位）；
+/// 2. 当前行建出来之后，用 `Scrollable.ensureVisible` 按**真实布局**居中——
+///    行高随全局字号缩放而变，估算只负责命中、不负责对齐。
+///
+/// 估算误差在长列表里会累计（1000 行能差几十行），这时第 2 步拿不到子节点：
+/// 改用「均匀行高」比例配真实 [ScrollMetrics.maxScrollExtent] 修正一次再重试，
+/// 最多重试 [_kRevealAttempts] 轮；仍拿不到就静默放弃，面板本身照常可用。
+void _revealCurrentTile(
+  GlobalKey tileKey,
+  ScrollController controller,
+  int index,
+  int count, {
+  int attempt = 0,
+}) {
+  final ctx = tileKey.currentContext;
+  if (ctx != null) {
+    unawaited(
+      Scrollable.ensureVisible(
+        ctx,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 150),
+      ),
+    );
+    return;
+  }
+  if (attempt >= _kRevealAttempts || !controller.hasClients || count < 2) {
+    return;
+  }
+  final pos = controller.position;
+  if (!pos.hasContentDimensions || pos.maxScrollExtent <= 0) return;
+  // 均匀行高下「第 index 行」占整条列表的相对位置 × 真实可滚范围：结果恒在
+  // 范围内（不会滚出界），偏差被压到一个视口内，下一轮就能建出当前行
+  final target = (index / (count - 1)) * pos.maxScrollExtent;
+  controller.jumpTo(
+    target.clamp(pos.minScrollExtent, pos.maxScrollExtent),
+  );
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    _revealCurrentTile(
+      tileKey,
+      controller,
+      index,
+      count,
+      attempt: attempt + 1,
+    );
+  });
+}
+
 /// 播放列表面板：曲目列表（当前项高亮）+ 随机/循环胶囊，右上角关闭按钮。
+///
+/// [repeatMode] 是**全局循环设置**当前值（[LoopMode]），点击循环按钮按
+/// 「关闭 → 单曲循环 → 列表循环」顺序切换并通过 [onRepeatModeChanged]
+/// 写回（由页面写入 `PlayerControlsSettings`）。
 Future<void> showAudioPlaylistSheet(
   BuildContext context, {
   required List<VideoFile> videos,
   required int currentIndex,
   required bool shuffle,
-  required AudioRepeatMode repeatMode,
+  required LoopMode repeatMode,
   required ValueChanged<int> onSelect,
   required VoidCallback onToggleShuffle,
-  required VoidCallback onCycleRepeat,
+  required ValueChanged<LoopMode> onRepeatModeChanged,
 }) {
   final l10n = AppLocalizations.of(context);
   final bottomInset = MediaQuery.paddingOf(context).bottom;
@@ -198,7 +269,14 @@ Future<void> showAudioPlaylistSheet(
   // 面板内本地状态：随机/循环的展示值随点击即时更新，同时回调写回页面逻辑状态。
   var localShuffle = shuffle;
   var localRepeat = repeatMode;
-  return showModalBottomSheet<void>(
+  // 打开就落到正在播放的曲目（见 [_revealCurrentTile]）：靠后的索引（第 19 集）
+  // 此刻还没建 widget，只能先按估算行高把滚动位置放过去，让它进入构建范围。
+  final scrollController = ScrollController(
+    initialScrollOffset: currentIndex * _kAudioTileEstimateHeight,
+  );
+  final currentTileKey = GlobalKey();
+  var revealScheduled = false;
+  final sheetFuture = showModalBottomSheet<void>(
     context: context,
     backgroundColor: kAudioPanelBg,
     isScrollControlled: true,
@@ -222,12 +300,27 @@ Future<void> showAudioPlaylistSheet(
               const SizedBox(height: 4),
               Expanded(
                 child: ListView.builder(
+                  controller: scrollController,
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   itemCount: videos.length,
                   itemBuilder: (context, i) {
                     final cur = i == currentIndex;
                     final v = videos[i];
+                    // 第一行建出来就安排一次「滚到当前曲目」：不依赖当前行本身
+                    // 是否已建出来（长列表里估算偏差可能刚好错过当前行）
+                    if (!revealScheduled) {
+                      revealScheduled = true;
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        _revealCurrentTile(
+                          currentTileKey,
+                          scrollController,
+                          currentIndex,
+                          videos.length,
+                        );
+                      });
+                    }
                     return ListTile(
+                      key: cur ? currentTileKey : null,
                       dense: true,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -278,11 +371,11 @@ Future<void> showAudioPlaylistSheet(
                     const SizedBox(width: 12),
                     _AudioChip(
                       label: _repeatModeLabel(l10n, localRepeat),
-                      icon: localRepeat.icon,
-                      selected: localRepeat != AudioRepeatMode.off,
+                      icon: _loopModeIcon(localRepeat),
+                      selected: localRepeat != LoopMode.off,
                       onTap: () {
-                        localRepeat = localRepeat.next;
-                        onCycleRepeat();
+                        localRepeat = _nextLoopMode(localRepeat);
+                        onRepeatModeChanged(localRepeat);
                         setSheetState(() {});
                       },
                     ),
@@ -295,6 +388,9 @@ Future<void> showAudioPlaylistSheet(
       ),
     ),
   );
+  // 弹层没有 State 可挂 dispose，面板关掉后再释放滚动控制器
+  unawaited(sheetFuture.whenComplete(scrollController.dispose));
+  return sheetFuture;
 }
 
 // ────────────────────────────────────────────────────────────
