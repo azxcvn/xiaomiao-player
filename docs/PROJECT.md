@@ -55,7 +55,9 @@ lib/
 │   ├── app_zh.arb             # 中文模板：键 / 描述 / 占位符的唯一权威（源语言）
 │   ├── app_en.arb             # 英文（不写 @ 元数据；缺键由 untranslated-messages-file 兜住）
 │   ├── app_zh_Hant.arb        # 繁體中文（不写 @ 元数据）
-│   ├── app_localizations.dart # gen_l10n 生成物（另有 _zh / _en，以及 zh 文件里的 AppLocalizationsZhHant 子类；入库，避免忘了生成导致 analyze 报错）
+│   ├── app_localizations.dart # gen_l10n 生成物（抽象基类；入库，避免忘了生成导致 analyze 报错）
+│   ├── app_localizations_zh.dart # 生成物：简体 + 繁體（AppLocalizationsZhHant 子类）
+│   ├── app_localizations_en.dart # 生成物：英文
 │   ├── label_maps.dart        # 表（枚举 / 映射表）→ 文案 的 UI 侧映射
 │   ├── error_texts.dart       # 服务层「码 + 参数」→ 文案 + 统一入口 serviceErrorText
 │   ├── legal.dart             # 长文正文按语言取（legalTextsFor，未知语言回落中文；繁体靠 script 判定）
@@ -83,6 +85,7 @@ lib/
 │   ├── network_file.dart      # 远程目录/文件条目模型
 │   ├── danmaku_auto_match_cache.dart # 弹幕自动匹配缓存模型（番剧 + 集列表）
 │   ├── danmaku_font_mode.dart # 弹幕字体三态枚举（跟随系统/跟随 App/自定义）
+│   ├── danmaku_color_mode.dart # 弹幕颜色三态枚举（原色 / 随机色 / 指定色）
 │   ├── cast_device.dart       # 投屏目标设备模型（DLNA MediaRenderer）
 │   ├── bilibili_user.dart     # 哔哩哔哩用户信息模型（nav 接口）
 │   ├── bili_bangumi.dart      # 番剧（PGC）模型：索引/搜索/季详情/选集/多季/时间表
@@ -106,6 +109,7 @@ lib/
 │   ├── playback_progress_service.dart  # 播放进度（ChangeNotifier + 持久化 + 串行写盘）
 │   ├── playback_history_service.dart # 播放历史（记录/去重置顶/上限淘汰/删除/清空/开关）
 │   ├── playback_tuning.dart   # 每次 open 前的 mpv 缓存/网络调参（本地/在线两档）
+│   ├── tls_ca_bundle.dart     # https 播放用 CA 证书库（assets 拷到沙盒，供 libmpv 的 mbedTLS 使用）
 │   ├── player_controls_settings.dart   # 播放器控制设置（槽位/手势/倍速/比例/长按/方向/顶部信息等）
 │   ├── decode_settings.dart   # 解码设置（硬解/软解档位 + 解码预设，默认硬解+）
 │   ├── player_renderer_settings.dart # open 前的渲染/seek/解码链属性注入
@@ -113,7 +117,9 @@ lib/
 │   ├── dolby_vision_settings.dart # 杜比视界偏色提示「不再提示」记忆
 │   ├── fast_thumbnails.dart   # 快速缩略图引擎（FFI 直连自建 libmpv.so 的 mk_thumbnail_*，长驻 worker + 单飞顶旧调度）
 │   ├── crash_log_service.dart # 崩溃日志：列表/读取/删除/清空/导出
+│   ├── build_info_service.dart # 构建信息（提交哈希读取 + 复制提示码）
 │   ├── cache_manager_service.dart # 缓存管理：列表封面磁盘缓存 + 网络弹幕缓存的查询与清除
+│   ├── bili_image_cache_service.dart # 哔哩哔哩封面磁盘缓存（按 URL 落盘，二次进入不重下）
 │   ├── super_resolution_service.dart   # 超分：模式持久化、着色器安装期优化后拷贝、mpv 应用
 │   ├── player_shader_pipeline.dart     # 着色器链统一出口（超分 → 后处理，避免互相覆盖）
 │   ├── post_process_service.dart       # 后处理：基础调节（mpv 属性）+ 风格化着色器生成与持久化
@@ -130,6 +136,7 @@ lib/
 │   ├── subtitle_settings.dart # 字幕设置（延迟/大小/位置/颜色/描边/背景框/内嵌样式覆盖/自定义字体/外挂记忆）
 │   ├── subtitle_service.dart  # 字幕控制器（单选模型 + 同名自动加载 + 按字段样式写入 + 等待式轨道刷新 + 切轨钉回）
 │   ├── app_font_settings.dart # App 全局字体设置
+│   ├── wallpaper_settings.dart # 壁纸设置（缩放模式/缩放/位移/模糊/透明度/卡片透明度 + 持久化）
 │   ├── equalizer_settings.dart # 音频均衡器设置（5 频段/低音增强/虚拟环绕/预设）
 │   ├── danmaku_service.dart    # 弹幕控制器（本地/手动/网络弹幕装载 + 生效集重算 + 秒桶发射 + 渲染层联动 + 切集自动匹配）
 │   ├── danmaku_scheduler.dart  # 弹幕调度器（纯逻辑：秒桶 + 前向补发 + seek 跳变 + 代数失效 + 整体替换）
@@ -141,6 +148,7 @@ lib/
 │   ├── danmaku_search_history.dart  # 网络弹幕搜索历史（去重/上限淘汰/一键清除）
 │   ├── danmaku_auto_match_cache_store.dart # 弹幕自动匹配缓存存储
 │   ├── danmaku_network_service.dart # 弹幕网络服务（搜索合并/文件匹配/下载落盘 + 文件前 16MB MD5）
+│   ├── danmaku_search_store.dart # 网络弹幕搜索会话状态（跨面板重建存活 + 生命周期）
 │   ├── app_locale_settings.dart # 语言偏好（键 app_locale，只允许 'zh' / 'zh_Hant' / 'en'，默认 zh；繁体走 Locale.fromSubtags）
 │   ├── privacy_policy_settings.dart # 隐私政策同意状态（长文正文见 lib/l10n/legal_zh.dart / legal_zh_hant.dart / legal_en.dart）
 │   ├── network/                    # 网络存储（WebDAV / SMB / FTP）抽象层
@@ -152,6 +160,7 @@ lib/
 │   │   ├── smb_pipeline.dart       # SMB 并发预读管线（多句柄 + 取消/背压/出错即停）
 │   │   ├── network_subtitle_stream.dart # 远端同名字幕：一次性连接列目录 + 注册回环字幕流
 │   │   ├── network_directory_cache.dart # 网络目录列表短时缓存（LRU + TTL，返回上级瞬时打开）
+│   │   ├── network_playlist_source.dart # 网络播放列表数据源（远端同目录兄弟视频 → 播放列表）
 │   │   ├── network_view_settings.dart   # 网络浏览设置（排序偏好 + 显示隐藏项 + 已播放时长记忆）
 │   │   ├── webdav_client.dart      # WebDAV 客户端（PROPFIND 列表 / Range 流式读取）
 │   │   ├── ftp_client.dart         # FTP 客户端（被动模式双连接 / MLSD→LIST 回退 / REST 偏移）
@@ -190,6 +199,8 @@ lib/
 │   └── ...                    # 其余服务模块
 ├── widgets/                   # 可复用 UI 组件（跨页面）
 │   ├── app_frame.dart         # ★ 全局框架：安全区 + 播放页全屏检测
+│   ├── wallpaper_layer.dart   # 壁纸渲染层（实机与调整页预览共用同一套渲染）
+│   ├── wallpaper_surface.dart # 卡片底色：壁纸生效时半透明（透明度可调）
 │   ├── app_dialog.dart        # showAppDialog（统一弹窗动画）
 │   ├── player_panel.dart      # ★ 右侧滑入面板壳 + showPlayerPanel（横屏二级界面外壳）
 │   ├── player_bottom_panel.dart # ★ 竖屏底部弹出面板壳 + showPlayerBottomPanel
@@ -198,12 +209,14 @@ lib/
 │   ├── folder_card.dart       # 文件夹卡片（列表/树状共用，含多选勾选态）
 │   ├── video_card.dart        # 视频卡片（列表/树状/详情共用，含多选勾选态）
 │   ├── settings_ui.dart       # 设置页公共组件 + 播放器暗色面板强调色派生
+│   ├── color_editor_row.dart  # 通用颜色编辑行（预览点 + 预设色 + RGBA 滑杆）
 │   ├── seek_bar_style_preview.dart # 设置页进度条样式预览条（复用真实 painter）
 │   ├── raw_thumb_image.dart   # RGBA 帧直渲组件（帧切换保持上一帧无缝）
 │   ├── capsule_nav_bar.dart   # 悬浮胶囊导航
 │   ├── main_scaffold.dart     # 主壳（PageView + 悬浮胶囊）
 │   ├── speed_dial_fab.dart    # 首页速拨（最近播放/打开链接/哔哩番剧/网络存储）
 │   ├── bili_cover_card.dart   # 番剧封面卡片（索引/推荐/时间表共用）
+│   ├── bili_cover_image.dart  # 哔哩哔哩封面图（磁盘缓存 → 下载 → 按显示尺寸解码）
 │   ├── bili_episode_tile.dart # 番剧单集磁贴（内联选集/全屏选集页共用）
 │   ├── directory_picker_dialog.dart # 目录选择器弹窗（返回真实路径 + 存储卷跳转）
 │   ├── storage_root_selector.dart # 存储卷跳转胶囊行（内部存储 / SD 卡 / U 盘）
@@ -252,6 +265,7 @@ lib/
 │   │       ├── player_danmaku_buttons.dart# 弹幕开关/设置按钮组
 │   │       ├── player_danmaku_panel.dart  # 弹幕二级界面（本地/网络/自动匹配/设置）
 │   │       ├── player_danmaku_network_panel.dart # 网络弹幕搜索三级界面
+│   │       ├── player_danmaku_episodes_panel.dart # 网络弹幕集数二级界面（集列表 + 跳转）
 │   │       ├── player_danmaku_settings_panel.dart # 弹幕设置面板（样式/配置/偏移/字体）
 │   │       ├── player_bili_playlist_panel.dart   # 番剧剧集列表面板
 │   │       ├── player_bottom_bar.dart     # 底栏：进度条 + 下一集 + 时间 + 弹幕按钮 + 按钮簇
@@ -273,6 +287,9 @@ lib/
 │   │       ├── player_post_process_panel.dart      # 后处理面板（基础调节 + 风格化效果）
 │   │       ├── player_decode_panel.dart          # 解码面板
 │   │       ├── player_diagnostics_panel.dart     # 播放诊断面板
+│   │       ├── player_customize_panel.dart        # 「自定义」控制栏页（预览条 + 可添加网格 + 重置）
+│   │       ├── player_action_grid.dart            # 控制栏自定义网格（网格项 / 紧凑网格 / 5 格预览条）
+│   │       ├── player_button_size_panel.dart      # 控制栏按钮大小面板（0.8–1.4，拖动时其余内容淡出）
 │   │       ├── player_play_pause_button.dart  # 播放/暂停图标形变动画
 │   │       ├── player_gesture_layer.dart      # ★ 手势层（裸识别器方案）
 │   │       ├── player_gesture_indicator.dart  # 音量/亮度手势指示器
@@ -283,7 +300,7 @@ lib/
 │   │       ├── audio_panel.dart               # 音频面板（音轨/外部音轨/声道/音频处理）
 │   │       ├── equalizer_panel.dart           # 均衡器面板
 │   │       ├── subtitle_panel.dart            # 字幕面板（轨道/导入/样式/杂项/字体）
-│   │       ├── subtitle_file_picker.dart      # 外挂字幕选择（系统/自建选择器）
+│   │       ├── subtitle_file_picker.dart      # 文件选择器（字幕/音频/弹幕共用；系统 / 自建两路 + 行尾集数胶囊）
 │   │       ├── player_resume_indicator.dart   # 恢复进度指示器
 │   │       ├── player_swipe_seek_overlay.dart # 水平滑动 seek 预览浮层
 │   │       ├── player_thumbnail_preview.dart  # 缩略图预览气泡
@@ -299,6 +316,7 @@ lib/
 │   ├── settings/
 │   │   ├── settings_page.dart # 设置主页（分组结构）
 │   │   ├── appearance_page.dart      # 外观设置子页（模式/主题色/动态色/自定义选色/调色板）
+│   │   ├── wallpaper_editor_page.dart # 壁纸调整页（适应/填充 + 手势缩放 + 5 条滑杆 + 保存）
 │   │   ├── playback_history_page.dart # 历史记录页
 │   │   ├── font_page.dart            # App 字体设置页
 │   │   ├── player_settings_page.dart # 播放器设置子页
@@ -323,7 +341,9 @@ lib/
     ├── app_dialog.dart        # showAppDialog（统一弹窗动画）
     ├── error_codes.dart       # 服务层错误码表（纯数据，无 Flutter / l10n 依赖）
     ├── anime4k_patch.dart     # Anime4K 着色器安装期优化纯函数
+    ├── post_process_shaders.dart # 后处理着色器源码生成（暗角/扫描线/胶片颗粒等）
     ├── formatters.dart        # 大小/日期/时长/倍速/网速格式化 + 截图文件名 + 底栏时间文本
+    ├── media_labels.dart      # 视频列表字段展示文本（分辨率 / 帧率 / 字幕类型）
     ├── url_media.dart         # 在线直链纯函数（规范化补协议 / 协议白名单 / 标题提取）
     ├── natural_compare.dart   # 自然序（数字感知）比较
     ├── folder_pin.dart        # 固定文件夹排序纯函数
@@ -337,6 +357,8 @@ lib/
     ├── player_gestures.dart   # 双击判定 + 滑动手势数学
     ├── player_diagnostics.dart # 播放诊断纯函数
     ├── player_controls_visibility.dart # 暂停时是否呼出控制层（EOF 引起的暂停不呼出）
+    ├── player_exit.dart       # 播放页退出纯函数（先关面板/弹窗，再关播放页本身）
+    ├── player_orientation.dart # 播放页方向策略（横屏页/竖屏页/听视频页共用）
     ├── retry_policy.dart      # 统一网络重试 / 超时分级 / 体积上限快速失败
     ├── async_session.dart     # 会话号令牌
     ├── async_single_flight.dart # 在飞去重
@@ -346,11 +368,15 @@ lib/
     ├── chapter_utils.dart     # 章节纯函数（标题分类/片段派生/当前章节/跳过目标）
     ├── intro_outro_skip.dart  # 片头片尾动作决策纯函数
     ├── mpv_tuning.dart        # mpv 移动端缓存/网络调参模板
+    ├── decode_policy.dart     # 解码链选择纯函数（档位 + 渲染后端 → hwdec 链）
     ├── audio_shuffle.dart     # 听视频随机播放算法
     ├── subtitle_auto_match.dart # 同名字幕自动匹配纯函数
     ├── network_subtitle_match.dart # 远端同名字幕匹配纯函数（远端路径取目录/文件名 + 挑最佳字幕）
     ├── network_entry_filter.dart # 网络目录隐藏项过滤 + 本目录搜索（纯函数）
     ├── network_sort.dart      # 网络目录排序（只有名称/日期；时间缺失恒排末尾）
+    ├── network_playlist.dart  # 网络播放列表纯函数（远端列目录 → 播放列表 + 当前项键）
+    ├── subtitle_encoding.dart # 外挂字幕编码识别 + 转 UTF-8（GBK 兜底）
+    ├── subtitle_language.dart # 内嵌字幕「中文优先」选择纯函数
     ├── subtitle_memory.dart   # 外挂字幕记忆路径失效分流
     ├── subtitle_style_properties.dart # 字幕样式「字段 → mpv 属性」写入表
     ├── danmaku_timeline.dart  # 弹幕时间轴纯函数（同秒错峰 + 时间轴偏移）
@@ -361,7 +387,8 @@ lib/
     ├── danmaku_merge.dart     # 弹幕合并纯函数
     ├── danmaku_blocklist.dart # 弹幕屏蔽词纯函数
     ├── danmaku_pipeline.dart  # 弹幕生效集流水线纯函数（屏蔽 → 合并 → 去重）
-    ├── danmaku_episode.dart   # 弹幕集数提取/匹配纯函数
+    ├── danmaku_episode.dart   # 弹幕集数匹配 / 自动定位纯函数（集数提取见 episode_number.dart）
+    ├── episode_number.dart    # 文件名集数解析（分词 + 语境判定，解析不出返回 null）
     ├── dandan_signature.dart  # 弹弹Play 签名纯函数
     ├── dandan_comment.dart    # 弹弹Play 评论 → 弹幕条目 / B 站 XML 纯函数
     ├── danmaku_xml.dart       # B 站 XML 弹幕解析/生成纯函数
@@ -369,6 +396,7 @@ lib/
     ├── ftp_parser.dart        # FTP 目录列表解析（MLSD + Unix LIST）
     ├── http_byte_range.dart   # HTTP Range 头解析
     ├── network_path.dart      # 网络路径规范化 / 校验 / 子路径拼接
+    ├── bili_image_url.dart    # 哔哩哔哩封面 URL（按显示尺寸拼缩略参数）
     ├── bili_wbi.dart          # WBI 签名纯函数
     ├── bili_app_sign.dart     # TV 端 appSign 纯函数
     ├── bili_fingerprint_utils.dart # 反爬指纹纯函数
@@ -379,7 +407,7 @@ lib/
     ├── network_mime_types.dart # 文件名 → MIME 类型映射
     ├── wyzie_query.dart       # Wyzie 字幕查询纯函数
     ├── wyzie_filename.dart    # 字幕落盘文件名纯函数（来源无关，Wyzie 侧为便捷入口）
-    ├── custom_subtitle_parser.dart # 自定义字幕源：地址模板展开 + 响应自动嗅探（纯函数）
+    └── custom_subtitle_parser.dart # 自定义字幕源：地址模板展开 + 响应自动嗅探（纯函数）
 ```
 
 ---

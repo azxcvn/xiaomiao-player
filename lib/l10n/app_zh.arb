@@ -2063,6 +2063,15 @@
   "@playerEpisodeNumber": {
     "description": "播放器弹幕集数跳转：输入框标签"
   },
+  "playerEpisodeBadge": "第{number}集",
+  "@playerEpisodeBadge": {
+    "description": "文件选择器（字幕/音频/弹幕）行尾胶囊：从文件名识别出的集数；识别不出来就不显示",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
   "playerDanmakuNetworkSearchHint": "输入番剧名称",
   "@playerDanmakuNetworkSearchHint": {
     "description": "播放器网络弹幕面板：搜索框提示"

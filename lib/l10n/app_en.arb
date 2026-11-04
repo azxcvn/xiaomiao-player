@@ -688,6 +688,7 @@
   "playerEpisodeTotalFromServer": "{total, plural, =1{1 episode · from {server}} other{{total} episodes · from {server}}}",
   "playerJumpToEpisode": "Jump to",
   "playerEpisodeNumber": "Episode number",
+  "playerEpisodeBadge": "Ep {number}",
   "playerDanmakuNetworkSearchHint": "Enter an anime title",
   "playerDanmakuStopSearch": "Stop search",
   "playerDanmakuResultCountUnit": "{count, plural, =1{1 title} other{{count} titles}}",

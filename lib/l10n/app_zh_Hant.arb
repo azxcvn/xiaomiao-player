@@ -688,6 +688,7 @@
   "playerEpisodeTotalFromServer": "{total, plural, other{共 {total} 集 · 來自 {server}}}",
   "playerJumpToEpisode": "跳至第",
   "playerEpisodeNumber": "集數",
+  "playerEpisodeBadge": "第{number}集",
   "playerDanmakuNetworkSearchHint": "輸入番劇名稱",
   "playerDanmakuStopSearch": "停止搜尋",
   "playerDanmakuResultCountUnit": "{count, plural, other{{count} 部}}",

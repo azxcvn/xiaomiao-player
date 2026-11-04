@@ -2214,6 +2214,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerEpisodeNumber => '集数';
 
   @override
+  String playerEpisodeBadge(String number) {
+    return '第$number集';
+  }
+
+  @override
   String get playerDanmakuNetworkSearchHint => '输入番剧名称';
 
   @override
@@ -6950,6 +6955,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get playerEpisodeNumber => '集數';
+
+  @override
+  String playerEpisodeBadge(String number) {
+    return '第$number集';
+  }
 
   @override
   String get playerDanmakuNetworkSearchHint => '輸入番劇名稱';

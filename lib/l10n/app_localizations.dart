@@ -4227,6 +4227,12 @@ abstract class AppLocalizations {
   /// **'集数'**
   String get playerEpisodeNumber;
 
+  /// 文件选择器（字幕/音频/弹幕）行尾胶囊：从文件名识别出的集数；识别不出来就不显示
+  ///
+  /// In zh, this message translates to:
+  /// **'第{number}集'**
+  String playerEpisodeBadge(String number);
+
   /// 播放器网络弹幕面板：搜索框提示
   ///
   /// In zh, this message translates to:

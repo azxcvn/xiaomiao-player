@@ -168,6 +168,64 @@ void main() {
     // 路径行故意比默认更慢（用户要求「速度千万不要太快」）
     expect(marquee.pixelsPerSecond, lessThan(kMarqueePixelsPerSecond));
   });
+  testWidgets('行尾胶囊：显示识别出的集数，识别不出就不显示', (tester) async {
+    // 用户反馈：文件名很长时尾部（集数）被省略号吞掉，看不出是第几集。
+    // 胶囊把集数钉在行尾；解析不出来的文件（年份 / 合集）不得硬凑一个集数。
+    const dir = '$root/Anime';
+    SharedPreferences.setMockInitialValues({
+      'subtitle_picker_last_folder': dir,
+    });
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+      if (call.method != 'listDirectory') return null;
+      final path = call.arguments['path'] as String;
+      if (path != dir) return null;
+      return <Map<String, dynamic>>[
+        {
+          'name': '这是一个很长很长的文件夹名称但它只是文件夹',
+          'path': '$dir/这是一个很长很长的文件夹名称但它只是文件夹',
+          'isDirectory': true,
+          'size': 0,
+          'modifiedMs': 0,
+        },
+        {
+          'name': '[sweetSub] 某个标题特别长的番剧名称 - 19 [1080p][简繁].srt',
+          'path': '$dir/ep19.srt',
+          'isDirectory': false,
+          'size': 1024,
+          'modifiedMs': 0,
+        },
+        {
+          'name': 'Movie 2024.srt',
+          'path': '$dir/movie.srt',
+          'isDirectory': false,
+          'size': 1024,
+          'modifiedMs': 0,
+        },
+        {
+          'name': '番名 合集.srt',
+          'path': '$dir/batch.srt',
+          'isDirectory': false,
+          'size': 1024,
+          'modifiedMs': 0,
+        },
+      ];
+    });
+
+    await tester.pumpWidget(buildPanel());
+    // 路径行可能进入跑马灯循环（无限动画），只能定帧 pump
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('第19集'), findsOneWidget, reason: '识别出的集数要显示在行尾');
+
+    // 严格数一遍「第 N 集」胶囊：只有第 19 集那一条，年份与合集不得出胶囊
+    final badges = find.byWidgetPredicate(
+      (w) => w is Text && RegExp(r'^第\d+集$').hasMatch(w.data ?? ''),
+    );
+    expect(badges, findsOneWidget, reason: '解析不出来就不出胶囊（宁缺勿错）');
+  });
 }
 
 Future<void> _noopPicked(String path) async {}

@@ -4,6 +4,7 @@ import 'package:moumou/l10n/label_maps.dart';
 import 'package:moumou/models/subtitle_dir.dart';
 import 'package:moumou/models/subtitle_track.dart';
 import 'package:moumou/services/device_services.dart';
+import 'package:moumou/utils/episode_number.dart';
 import 'package:moumou/widgets/marquee_text.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:moumou/widgets/storage_root_selector.dart';
@@ -310,6 +311,10 @@ class _SubtitleFilePickerPanelState extends State<SubtitleFilePickerPanel> {
                   itemCount: _entries.length,
                   itemBuilder: (context, i) {
                     final e = _entries[i];
+                    // 文件名尾部（集数）正是被省略号吞掉的那一段：
+                    // 抠出来钉在行尾，名字再长也能一眼看出是第几集
+                    final episode =
+                        e.isDirectory ? null : extractEpisodeNumber(e.name);
                     return ListTile(
                       dense: true,
                       leading: Icon(
@@ -321,14 +326,21 @@ class _SubtitleFilePickerPanelState extends State<SubtitleFilePickerPanel> {
                             ? const Color(0xFF64B5F6)
                             : Colors.white70,
                       ),
-                      title: Text(
-                        e.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
+                      title: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              e.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          if (episode != null) _EpisodeBadge(episode),
+                        ],
                       ),
                       onTap: () => e.isDirectory
                           ? _openFolder(e.path)
@@ -359,6 +371,51 @@ class _SubtitleFilePickerPanelState extends State<SubtitleFilePickerPanel> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// 集数胶囊的强调色（与路径标签、排序胶囊同色，跟随面板暗色主题的固定蓝）
+const Color _kPickerAccent = Color(0xFF4FC3F7);
+
+/// 行尾的「第 N 集」胶囊。
+///
+/// 长文件名会被省略号吃掉尾部，而集数恰恰在尾部 —— 把它单独抠出来钉在行尾，
+/// 名字再长也能一眼看到是第几集。解析不出来（[extractEpisodeNumber] 为 null）
+/// 时调用方直接不创建本组件：**宁可不出，也不出错**（错集数会让人选错文件）。
+///
+/// 宽度随文案自适应：中文「第1123集」约 78dp，英文「Ep 1123」约 55dp；行内标题
+/// 是 `Expanded`，胶囊变宽只会压缩文件名，不会溢出。
+class _EpisodeBadge extends StatelessWidget {
+  /// 集数（`12.5` 这类小数集原样显示，不四舍五入骗人）
+  final double episode;
+
+  const _EpisodeBadge(this.episode);
+
+  static String _format(double value) {
+    if (value == value.roundToDouble()) return value.round().toString();
+    return value.toStringAsFixed(1);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      margin: const EdgeInsets.only(left: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      decoration: BoxDecoration(
+        color: _kPickerAccent.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        l10n.playerEpisodeBadge(_format(episode)),
+        maxLines: 1,
+        style: const TextStyle(
+          color: _kPickerAccent,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

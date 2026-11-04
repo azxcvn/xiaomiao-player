@@ -2305,6 +2305,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerEpisodeNumber => 'Episode number';
 
   @override
+  String playerEpisodeBadge(String number) {
+    return 'Ep $number';
+  }
+
+  @override
   String get playerDanmakuNetworkSearchHint => 'Enter an anime title';
 
   @override
