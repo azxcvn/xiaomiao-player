@@ -3648,6 +3648,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get networkNoAccountsHint => '点击右下角 + 添加 WebDAV / SMB / FTP 账户';
 
   @override
+  String get homeRandomPlay => '随机播放';
+
+  @override
   String get homeSearchVideos => '搜索视频';
 
   @override
@@ -8389,6 +8392,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get networkNoAccountsHint => '點選右下角 + 新增 WebDAV / SMB / FTP 帳戶';
+
+  @override
+  String get homeRandomPlay => '隨機播放';
 
   @override
   String get homeSearchVideos => '搜尋影片';

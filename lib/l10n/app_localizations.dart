@@ -6693,6 +6693,12 @@ abstract class AppLocalizations {
   /// **'点击右下角 + 添加 WebDAV / SMB / FTP 账户'**
   String get networkNoAccountsHint;
 
+  /// 从当前文件夹可见的视频中随机选择一个并播放
+  ///
+  /// In zh, this message translates to:
+  /// **'随机播放'**
+  String get homeRandomPlay;
+
   /// 文件夹详情页：搜索视频
   ///
   /// In zh, this message translates to:

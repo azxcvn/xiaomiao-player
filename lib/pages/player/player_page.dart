@@ -97,6 +97,7 @@ import 'package:moumou/utils/pip_aspect.dart';
 import 'package:moumou/utils/playback_completion.dart';
 import 'package:moumou/utils/playback_history.dart';
 import 'package:moumou/utils/playback_restore.dart';
+import 'package:moumou/utils/video_playback.dart';
 import 'package:moumou/utils/player_controls_visibility.dart';
 import 'package:moumou/utils/player_diagnostics.dart';
 import 'package:moumou/utils/player_exit.dart';
@@ -124,6 +125,9 @@ class PlayerPage extends StatefulWidget {
   final String path;
   final String title;
   final List<VideoFile>? playlist;
+
+  /// 由随机按钮开启，仅对本次播放会话生效：随机续播且不恢复历史位置。
+  final bool randomPlayback;
 
   /// 网络存储播放来源（null = 本地文件）：网络浏览页用 [VideoFile.remotePath]
   /// / [VideoFile.connectionId] 带上「这条流来自哪个连接、远端哪个文件」，
@@ -164,6 +168,7 @@ class PlayerPage extends StatefulWidget {
     required this.path,
     required this.title,
     this.playlist,
+    this.randomPlayback = false,
     this.networkSource,
     this.onDurationKnown,
     this.biliMedia,
@@ -501,7 +506,11 @@ class _PlayerPageState extends State<PlayerPage>
     final list = _playlist;
     if (list.isEmpty) return false;
     final idx = list.indexWhere((v) => v.path == _playlistKey);
-    return idx >= 0 && idx < list.length - 1;
+    return hasNextVideo(
+      length: list.length,
+      currentIndex: idx,
+      randomPlayback: widget.randomPlayback,
+    );
   }
 
   /// 是否有可循环的播放列表（EOF「列表循环」判定用，两种来源合并）
@@ -851,16 +860,12 @@ class _PlayerPageState extends State<PlayerPage>
       }
     }
     final saved = PlaybackProgressService.instance.getProgress(path);
-    if (saved == null || saved <= Duration.zero) return null;
-    if (listDuration != null &&
-        !shouldRestorePosition(
-          listDuration,
-          saved,
-          maxRestoreRatio: _settings.watchThreshold,
-        )) {
-      return null;
-    }
-    return saved;
+    return videoResumePosition(
+      saved: saved,
+      duration: listDuration,
+      watchThreshold: _settings.watchThreshold,
+      randomPlayback: widget.randomPlayback,
+    );
   }
 
   /// 播放历史（工作.md：播放历史记录功能）：记录一次播放。
@@ -2036,13 +2041,32 @@ class _PlayerPageState extends State<PlayerPage>
     if (list.isEmpty) return;
     final key = _playlistKey;
     final idx = list.indexWhere((v) => v.path == key);
-    if (idx < 0 || idx >= list.length - 1) return;
-    final next = list[idx + 1];
+    final nextIndex = nextVideoIndex(
+      length: list.length,
+      currentIndex: idx,
+      randomPlayback: widget.randomPlayback,
+    );
+    if (nextIndex == null) return;
+    final next = list[nextIndex];
+    if (widget.randomPlayback && next.path == key) {
+      if (_isSwitchingVideo) return;
+      _isSwitchingVideo = true;
+      try {
+        PlaybackProgressService.instance.releaseCompleted(key);
+        _introOutroTracker.reset();
+        await restartVideoFromBeginning(_player);
+        _introOutroTracker.markReady();
+      } finally {
+        _isSwitchingVideo = false;
+      }
+      return;
+    }
     await _switchToVideo(next);
   }
 
   /// 列表循环：回到播放列表第一集（B 站番剧回到第一集）。
   Future<void> _playFirst() async {
+    if (widget.randomPlayback) return _playNext();
     if (_biliMedia != null) {
       final items = _biliItems;
       if (items.isEmpty) return;
@@ -3093,6 +3117,7 @@ class _PlayerPageState extends State<PlayerPage>
           initialPath: _path,
           initialTitle: _title,
           playlistListenable: _playlistNotifier,
+          randomPlayback: widget.randomPlayback,
           // 网络存储播放：来源透传给竖屏页（字幕远端同名扫描要用）
           networkSource: _networkSource,
           // 跟随手机方向进来的竖屏页：不锁竖屏（窗口转横屏时自己 pop 回本页）
@@ -3245,6 +3270,7 @@ class _PlayerPageState extends State<PlayerPage>
           initialPath: _path,
           initialTitle: _title,
           playlist: _playlist,
+          randomPlayback: widget.randomPlayback,
           // 网络存储播放：来源透传给听视频页（歌单定位与切歌都按远端路径）
           networkSource: _networkSource,
           // 网络歌单切歌由本页执行（回环流的注册与释放都在本页）
