@@ -99,6 +99,10 @@ bool isAnime4kResolutionBlocked(int width, int height) {
   return longSide >= 3840 || shortSide >= 2160;
 }
 
+/// 源尺寸已就绪且低于禁用阈值时才实际加载超分，避免未知尺寸先应用记忆档位。
+bool canApplyAnime4kResolution(int width, int height) =>
+    width > 0 && height > 0 && !isAnime4kResolutionBlocked(width, height);
+
 /// 由 mode × quality 生成 Anime4K 着色器链（文件名列表，按 mpv 加载顺序）。
 ///
 /// 结构对齐 mpv-android-anime4k 的 [Anime4KManager.getShaderChain]：

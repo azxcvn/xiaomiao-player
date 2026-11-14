@@ -728,6 +728,7 @@ class _PlayerPageState extends State<PlayerPage>
     // 倍速记忆：启用时恢复上次倍速（唯一真值在共享会话状态里，B4/P1-2）
     // 进入播放器：未开启记忆时本次会话从「关闭/均衡」开始超分
     // （退出播放/重启后自动回到默认关闭，记忆开启才恢复上次设置）
+    _subs.add(SuperResolutionService.instance.watchVideoResolution(_player));
     SuperResolutionService.instance.enterPlayer();
     // 同步系统音量/亮度作为本次会话起点（音量从手机当前音量开始）；
     // 会话状态不直接 setState，完成后由本页刷新一次

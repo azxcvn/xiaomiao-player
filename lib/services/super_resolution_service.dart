@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -204,6 +205,22 @@ class SuperResolutionService extends ChangeNotifier {
     }
   }
 
+  /// 由持有 Player 的页面注册并取消；横屏、竖屏和听视频共用同一播放器。
+  /// 首次解码和切集时，源尺寸可能晚于时长上报，届时重新应用或清除超分链。
+  StreamSubscription<VideoParams> watchVideoResolution(Player player) =>
+      player.stream.videoParams
+          .distinct((previous, next) =>
+              previous.w == next.w && previous.h == next.h)
+          .listen((_) {
+        notifyListeners();
+        unawaited(apply(player));
+      });
+
+  bool _resolutionAllowsAnime(Player player) {
+    final params = player.state.videoParams;
+    return canApplyAnime4kResolution(params.w ?? 0, params.h ?? 0);
+  }
+
   /// 把当前模式应用到 [player]（打开媒体后调用；切档/下一集后重放）。
   ///
   /// 链路统一交给 [PlayerShaderPipeline]（拼 超分 → 后处理 的完整链），
@@ -216,11 +233,9 @@ class SuperResolutionService extends ChangeNotifier {
       final native = player.platform as NativePlayer;
       await native.waitForPlayerInitialization;
       await native.waitForVideoControllerInitializationIfAttached;
-      // 4K/8K 硬性禁用：不加载任何超分着色器（后处理链仍由 pipeline 保留）
-      if (isAnime4kResolutionBlocked(
-        player.state.width ?? 0,
-        player.state.height ?? 0,
-      )) {
+      // 使用解码源尺寸；未知时先清除，尺寸就绪后由监听恢复普通视频的记忆档位。
+      // 4K/8K 不加载超分着色器，后处理链仍由 pipeline 保留。
+      if (!_resolutionAllowsAnime(player)) {
         await PlayerShaderPipeline.instance.setAnime(player, const []);
         return;
       }
@@ -237,7 +252,11 @@ class SuperResolutionService extends ChangeNotifier {
         deblur: _deblur,
       );
       final paths = chain.map((s) => p.join(dir.path, s)).toList();
-      await PlayerShaderPipeline.instance.setAnime(player, paths);
+      // 安装着色器期间可能已切到另一视频，写链前按当前源尺寸再核对一次。
+      await PlayerShaderPipeline.instance.setAnime(
+        player,
+        _resolutionAllowsAnime(player) ? paths : const [],
+      );
     } catch (e) {
       // 播放器未就绪 / 渲染器不支持时静默失败，不打断播放
       debugPrint('SuperResolutionService: failed to apply shaders: $e');
