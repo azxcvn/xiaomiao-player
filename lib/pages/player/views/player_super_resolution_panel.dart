@@ -65,8 +65,8 @@ class _PlayerSuperResolutionPanelState
     final player = widget.player;
     if (player == null) return false;
     return isAnime4kResolutionBlocked(
-      player.state.width ?? 0,
-      player.state.height ?? 0,
+      player.state.videoParams.w ?? 0,
+      player.state.videoParams.h ?? 0,
     );
   }
 

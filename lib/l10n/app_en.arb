@@ -1100,6 +1100,7 @@
   "networkDeleteAccount": "Delete account",
   "networkNoAccounts": "No network storage accounts yet",
   "networkNoAccountsHint": "Tap + in the bottom right to add a WebDAV / SMB / FTP account",
+  "homeRandomPlay": "Play a random video",
   "homeSearchVideos": "Search videos",
   "homeSearchFoldersAndVideos": "Search folders and videos",
   "homeSortAndFields": "Sort & fields",

@@ -21,6 +21,7 @@ import 'package:moumou/widgets/file_selection_ui.dart';
 import 'package:moumou/widgets/folder_actions.dart';
 import 'package:moumou/widgets/folder_card.dart';
 import 'package:moumou/widgets/options_sheet.dart';
+import 'package:moumou/widgets/random_video_button.dart';
 import 'package:moumou/widgets/video_card.dart';
 
 /// 树状模式的目录浏览页：显示当前文件夹的直接子文件夹（FolderCard）与
@@ -32,7 +33,7 @@ import 'package:moumou/widgets/video_card.dart';
 /// [path] 为从顶层到当前节点的完整路径链（不含首页），用于面包屑导航：
 /// 点击任意上级层级可 popUntil 跳回。
 ///
-/// 右上角从左到右：**搜索**（文件夹 + 视频）→ 排序与视图。
+/// 右上角从左到右：**搜索**（文件夹 + 视频）→ 随机播放 → 排序与视图。
 ///
 /// 下拉刷新 = **只更新当前目录整棵子树**（`VideoScanner.refreshPath`），不像首页
 /// 那样整盘重扫；空目录也能拉（`.nomedia` / 隐藏目录正是「看着是空的、其实有视频」）。
@@ -263,9 +264,11 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
     if (mounted) await _reloadCurrentNode();
   }
 
-  Future<void> _openVideo(VideoFile video) async {
+  Future<void> _openVideo(VideoFile video, {bool randomPlayback = false}) async {
     // 传当前目录的排序视频列表，作为播放页「下一集」的兄弟列表
-    final children = widget.viewSettings.sortTree(_node.children);
+    final children = randomPlayback
+        ? _visibleChildren()
+        : widget.viewSettings.sortTree(_node.children);
     final playlist = [
       for (final c in children)
         if (!c.isFolder) c.video!,
@@ -275,6 +278,7 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
         path: video.path,
         title: video.name,
         playlist: playlist,
+        randomPlayback: randomPlayback,
         // 播放列表「跟随主界面」用它显示当前排序；顺序直接用上面的 playlist
         mainSort: (
           field: widget.viewSettings.videoSortField,
@@ -399,6 +403,13 @@ class _TreeFolderPageState extends State<TreeFolderPage> {
             tooltip: l10n.commonSearch,
             onPressed: _toggleSearch,
           ),
+        RandomVideoButton(
+          videos: [
+            for (final child in _visibleChildren())
+              if (!child.isFolder) child.video!,
+          ],
+          onSelected: (video) => _openVideo(video, randomPlayback: true),
+        ),
         // 目录为空时没有可排序内容，不显示排序入口
         if (_node.children.isNotEmpty)
           IconButton(

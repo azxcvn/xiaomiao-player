@@ -17,10 +17,11 @@ import 'package:moumou/widgets/app_frame.dart';
 import 'package:moumou/widgets/file_selection_ui.dart';
 import 'package:moumou/widgets/folder_actions.dart';
 import 'package:moumou/widgets/options_sheet.dart';
+import 'package:moumou/widgets/random_video_button.dart';
 import 'package:moumou/widgets/video_card.dart';
 
 /// 文件夹视频列表页：列表模式下点击文件夹进入，只显示该文件夹内的视频。
-/// 右上角从左到右：**搜索** → 排序与字段。
+/// 右上角从左到右：**搜索** → 随机播放 → 排序与字段。
 ///
 /// 下拉刷新 = **只更新当前文件夹整棵子树**（`VideoScanner.refreshPath`），不像
 /// 首页那样整盘重扫；空文件夹也能拉。
@@ -154,14 +155,17 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
     });
   }
 
-  Future<void> _openPlayer(VideoFile video) async {
+  Future<void> _openPlayer(VideoFile video, {bool randomPlayback = false}) async {
     // 传当前可见的排序列表，作为播放页「下一集」的兄弟列表
-    final playlist = widget.viewSettings.sortVideos(_videos);
+    final playlist = randomPlayback
+        ? _visibleVideos()
+        : widget.viewSettings.sortVideos(_videos);
     await Navigator.of(context).push(
       playerPageRoute(PlayerPage(
         path: video.path,
         title: video.name,
         playlist: playlist,
+        randomPlayback: randomPlayback,
         // 播放列表「跟随主界面」用它显示当前排序；顺序直接用上面的 playlist
         mainSort: (
           field: widget.viewSettings.videoSortField,
@@ -263,6 +267,10 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
             tooltip: l10n.commonSearch,
             onPressed: _toggleSearch,
           ),
+        RandomVideoButton(
+          videos: _visibleVideos(),
+          onSelected: (video) => _openPlayer(video, randomPlayback: true),
+        ),
         IconButton(
           icon: const Icon(Icons.sort),
           tooltip: l10n.homeSortAndFields,

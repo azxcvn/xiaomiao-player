@@ -1099,6 +1099,7 @@
   "networkDeleteAccount": "刪除帳戶",
   "networkNoAccounts": "還沒有網路儲存帳戶",
   "networkNoAccountsHint": "點選右下角 + 新增 WebDAV / SMB / FTP 帳戶",
+  "homeRandomPlay": "隨機播放",
   "homeSearchVideos": "搜尋影片",
   "homeSearchFoldersAndVideos": "搜尋資料夾與影片",
   "homeSortAndFields": "排序與欄位",

@@ -3994,6 +3994,10 @@
   "@networkNoAccountsHint": {
     "description": "网络存储：空态说明"
   },
+  "homeRandomPlay": "随机播放",
+  "@homeRandomPlay": {
+    "description": "从当前文件夹可见的视频中随机选择一个并播放"
+  },
   "homeSearchVideos": "搜索视频",
   "@homeSearchVideos": {
     "description": "文件夹详情页：搜索视频"

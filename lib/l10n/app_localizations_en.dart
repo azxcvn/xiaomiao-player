@@ -3812,6 +3812,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap + in the bottom right to add a WebDAV / SMB / FTP account';
 
   @override
+  String get homeRandomPlay => 'Play a random video';
+
+  @override
   String get homeSearchVideos => 'Search videos';
 
   @override

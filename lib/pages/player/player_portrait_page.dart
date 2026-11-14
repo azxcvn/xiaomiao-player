@@ -75,6 +75,7 @@ import 'package:moumou/utils/pip_aspect.dart';
 import 'package:moumou/utils/playback_completion.dart';
 import 'package:moumou/utils/playback_history.dart';
 import 'package:moumou/utils/playback_restore.dart';
+import 'package:moumou/utils/video_playback.dart';
 import 'package:moumou/utils/player_controls_visibility.dart';
 import 'package:moumou/utils/player_diagnostics.dart';
 import 'package:moumou/utils/player_gestures.dart';
@@ -129,6 +130,7 @@ class PlayerPortraitPage extends StatefulWidget {
   /// 已被 push（「锁定竖屏」进入播放立即转竖屏），传快照会拿到空表 → 播放
   /// 列表面板空着、「下一集」置灰。
   final ValueListenable<List<VideoFile>> playlistListenable;
+  final bool randomPlayback;
 
   /// B 站番剧整季剧集列表（B 站在线播放时由横屏页传入，可空）
   final BiliPlaylist? biliPlaylist;
@@ -236,6 +238,7 @@ class PlayerPortraitPage extends StatefulWidget {
     required this.initialTitle,
     this.networkSource,
     required this.playlistListenable,
+    this.randomPlayback = false,
     this.biliPlaylist,
     this.initialBiliEpId,
     this.onBiliEpisodeSelected,
@@ -447,7 +450,11 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     final list = _playlist;
     if (list.isEmpty) return false;
     final idx = list.indexWhere((v) => v.path == _playlistKey);
-    return idx >= 0 && idx < list.length - 1;
+    return hasNextVideo(
+      length: list.length,
+      currentIndex: idx,
+      randomPlayback: widget.randomPlayback,
+    );
   }
 
   /// 当前排序下的剧集顺序（横屏页持有排序状态，本页读同一份）。
@@ -1005,8 +1012,26 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
     if (list.isEmpty) return;
     final key = _playlistKey;
     final idx = list.indexWhere((v) => v.path == key);
-    if (idx < 0 || idx >= list.length - 1) return;
-    final next = list[idx + 1];
+    final nextIndex = nextVideoIndex(
+      length: list.length,
+      currentIndex: idx,
+      randomPlayback: widget.randomPlayback,
+    );
+    if (nextIndex == null) return;
+    final next = list[nextIndex];
+    if (widget.randomPlayback && next.path == key) {
+      if (_isSwitchingVideo) return;
+      _isSwitchingVideo = true;
+      try {
+        PlaybackProgressService.instance.releaseCompleted(key);
+        _introOutroTracker.reset();
+        await restartVideoFromBeginning(_player);
+        _introOutroTracker.markReady();
+      } finally {
+        _isSwitchingVideo = false;
+      }
+      return;
+    }
     await _switchToVideo(next);
   }
 
@@ -1207,16 +1232,12 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
       }
     }
     final saved = PlaybackProgressService.instance.getProgress(path);
-    if (saved == null || saved <= Duration.zero) return null;
-    if (listDuration != null &&
-        !shouldRestorePosition(
-          listDuration,
-          saved,
-          maxRestoreRatio: _settings.watchThreshold,
-        )) {
-      return null;
-    }
-    return saved;
+    return videoResumePosition(
+      saved: saved,
+      duration: listDuration,
+      watchThreshold: _settings.watchThreshold,
+      randomPlayback: widget.randomPlayback,
+    );
   }
 
   /// 恢复到位后显示「已恢复上次播放进度」指示器（与横屏页同款）。
@@ -1230,6 +1251,7 @@ class _PlayerPortraitPageState extends State<PlayerPortraitPage>
 
   /// 列表循环：回到播放列表第一集（B 站番剧回到第一集）。
   Future<void> _playFirst() async {
+    if (widget.randomPlayback) return _playNext();
     if (widget.biliPlaylist != null) {
       final items = _biliItems;
       if (items.isEmpty) return;

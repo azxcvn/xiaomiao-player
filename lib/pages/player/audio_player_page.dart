@@ -8,6 +8,7 @@ import 'package:moumou/l10n/app_localizations.dart';
 import 'package:moumou/models/player_loop.dart';
 import 'package:moumou/models/playlist_sort.dart';
 import 'package:moumou/models/video_file.dart';
+import 'package:moumou/utils/video_playback.dart';
 import 'package:moumou/pages/player/views/audio_player_panels.dart';
 import 'package:moumou/pages/player/views/player_play_pause_button.dart';
 import 'package:moumou/services/device_services.dart';
@@ -57,6 +58,7 @@ class AudioPlayerPage extends StatefulWidget {
 
   /// 兄弟视频列表（「上一集/下一集」与播放列表用，可空）
   final List<VideoFile>? playlist;
+  final bool randomPlayback;
 
   /// 当前媒体的网络存储来源（null = 本地文件）：网络播放的媒体路径是回环
   /// 代理 URL，歌单定位/切歌要按**远端路径**（见 [playlistKeyOf]），切歌还要
@@ -77,6 +79,7 @@ class AudioPlayerPage extends StatefulWidget {
     required this.initialPath,
     required this.initialTitle,
     this.playlist,
+    this.randomPlayback = false,
     this.networkSource,
     this.onNetworkVideoSelected,
     this.onVideoChanged,
@@ -162,6 +165,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
 
   bool get _hasNext {
     if (_videos.isEmpty) return false;
+    if (widget.randomPlayback && _shuffle) return true;
     return _currentIndex < _videos.length - 1 ||
         _loopMode == LoopMode.loopAll;
   }
@@ -173,6 +177,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   void initState() {
     super.initState();
     _player = widget.player;
+    _shuffle = widget.randomPlayback;
     _path = widget.initialPath;
     _title = widget.initialTitle;
     _networkSource = widget.networkSource;
@@ -311,10 +316,22 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   /// 网络存储的歌单项没有可直接 open 的路径（[VideoFile.path] 是远端路径，
   /// 回环流的注册/释放归播放页）→ 交给 [AudioPlayerPage.onNetworkVideoSelected]
   /// 执行，本页只同步自身状态。
-  Future<void> _switchTo(int index) async {
+  Future<void> _switchTo(int index, {bool restartCurrent = false}) async {
+    if (_isSwitching) return;
     if (index < 0 || index >= _videos.length) return;
     final video = _videos[index];
-    if (video.path == _playlistKey) return; // 同一首：不动作
+    if (video.path == _playlistKey) {
+      if (restartCurrent) {
+        _isSwitching = true;
+        try {
+          PlaybackProgressService.instance.releaseCompleted(_playlistKey);
+          await _replayCurrentTrack();
+        } finally {
+          _isSwitching = false;
+        }
+      }
+      return;
+    }
     if (video.source == VideoSource.network) {
       await _switchToNetwork(index, video);
       return;
@@ -389,7 +406,19 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     }
   }
 
-  /// 下一首：随机模式用时间刻算法；单曲循环回到当前；否则顺序（列表循环回绕）
+  int _shuffleNextIndex() => widget.randomPlayback
+      ? nextVideoIndex(
+          length: _videos.length,
+          currentIndex: _currentIndex,
+          randomPlayback: true,
+        )!
+      : audioShuffleNextIndex(
+          listLength: _videos.length,
+          currentIndex: _currentIndex,
+          now: DateTime.now(),
+        );
+
+  /// 下一首：继承随机入口时重新抽取，否则沿用听视频原有模式。
   void _next() {
     if (_videos.isEmpty) return;
     if (_loopMode == LoopMode.repeatOne) {
@@ -398,12 +427,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
       return;
     }
     if (_shuffle) {
-      final next = audioShuffleNextIndex(
-        listLength: _videos.length,
-        currentIndex: _currentIndex,
-        now: DateTime.now(),
-      );
-      _switchTo(next);
+      _switchTo(_shuffleNextIndex(), restartCurrent: widget.randomPlayback);
       return;
     }
     if (_currentIndex < _videos.length - 1) {
@@ -421,12 +445,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
       return;
     }
     if (_shuffle) {
-      final next = audioShuffleNextIndex(
-        listLength: _videos.length,
-        currentIndex: _currentIndex,
-        now: DateTime.now(),
-      );
-      _switchTo(next);
+      _switchTo(_shuffleNextIndex(), restartCurrent: widget.randomPlayback);
       return;
     }
     if (_currentIndex > 0) {
@@ -461,12 +480,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
       return;
     }
     if (_shuffle) {
-      final next = audioShuffleNextIndex(
-        listLength: _videos.length,
-        currentIndex: _currentIndex,
-        now: DateTime.now(),
-      );
-      _switchTo(next);
+      _switchTo(_shuffleNextIndex(), restartCurrent: widget.randomPlayback);
       return;
     }
     if (_currentIndex < _videos.length - 1) {
@@ -491,8 +505,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   /// 清掉，play 不会再走它内部「completed 则 seek 0 + playlist-pos 0」那条路。
   Future<void> _replayCurrentTrack() async {
     try {
-      await _player.seek(Duration.zero);
-      await _player.play();
+      await restartVideoFromBeginning(_player);
     } on AssertionError {
       // 播放器已被销毁（播放页已退出）：静默返回
     }
